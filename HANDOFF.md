@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 6** — Gestell clerks as first hostiles (people doing jobs, not demons) + name-the-weather quest (Safety plaque vs Ord vs Nara). Guest-legal. Still no mint.
+**Next stage: 7** — Angel link stub (mock serial, no mint). Aura seed for linked bodies; guests stay aura 0; Winke still invisible to guests. `$REVERIE` stays disarmed.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -33,8 +33,12 @@ Execute `PROMPT.md`. Do not wait for a new user prompt.
 
 Local: `npx wrangler dev --port 8788` and `npm run dev`.
 
-## Stage 6 (do this next)
-Gestell clerks: server-owned hostiles that telegraph and die into wreckage. Quest: name the weather — Safety says stability, Ord says the process, Nara says the end of world as world. Completing it should change a POI, not a journal flag only.
+## Stage 6 (landed)
+- Gestell clerks Desk Three and Annex Runner: telegraph, strike, die into named wreckage. People doing jobs.
+- Name-the-weather: read Safety plaque, speak with Ord, speak with Nara. First completion strikes the plaque and turns Unnamed weather → Named weather.
+
+## Stage 7 (do this next)
+Angel link stub: mock serial `#0000` / test `#7777`. Signature-shaped message, no wallet spend. Linked body gets aura seed; guest aura stays 0; Winke copy hidden from guests. Claims still refuse. No Base, no `$REVERIE`.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

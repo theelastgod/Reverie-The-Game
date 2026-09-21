@@ -67,7 +67,7 @@ describe("world", () => {
 
   it("tick advances time and expires wreckage", () => {
     const w = emptyWorld();
-    w.wreckage = [{ id: "r", x: 1, y: 1, fromId: "a", until: 0.01 }];
+    w.wreckage = [{ id: "r", x: 1, y: 1, fromId: "a", fromName: "Guest", until: 0.01 }];
     const after = tickWorld(w, 0.05);
     expect(after.now).toBeCloseTo(0.05);
     expect(after.wreckage.length).toBe(0);

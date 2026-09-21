@@ -44,6 +44,7 @@ export class BootScene extends Phaser.Scene {
       ["nara", 0x7a1028],
       ["quill", 0x7eb6ff],
       ["ord", 0x5a5a5a],
+      ["clerk", 0x6a6a72],
     ];
     for (const [key, color] of npcs) {
       g.clear();

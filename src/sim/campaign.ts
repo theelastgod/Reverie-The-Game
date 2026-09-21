@@ -31,6 +31,29 @@ export type Beats = {
   burial: boolean;
 };
 
+export type WeatherHeard = {
+  safety: boolean;
+  nara: boolean;
+  ord: boolean;
+};
+
+export type Clerk = {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  hp: number;
+  telegraph: number;
+};
+
+export type Poi = {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  kind: "unnamed-weather" | "named-weather";
+};
+
 export const GUEST_LOCK = "A guest cannot prepare the ground.";
 
 export const NAVE_NPCS: Npc[] = [
@@ -55,7 +78,7 @@ export const GOING_UNDER: Rite = { id: "going-under", kind: "going-under", x: 69
 export const NPC_LINES: Record<NpcId, { first: string; later: string }> = {
   nara: {
     first:
-      "I don't need you to believe. I need the body in the ground. The city calls this debris. I call it someone.",
+      "I don't need you to believe. I need the body in the ground. The weather is the end of world as world, and you are walking in it.",
     later:
       "It's in the earth. Don't thank me. The weather is the end of world as world — remember that when Ord shows you a number.",
   },
@@ -75,8 +98,53 @@ export const NPC_LINES: Record<NpcId, { first: string; later: string }> = {
 export const ANGEL_UNDER =
   "The Care is open. You go under as death, not as a cutscene. Guests stop here.";
 
+export const WEATHER_NAMED =
+  "You named the weather. Safety still sells stability. The plaque is a lie the city paid for.";
+
+export const STRUCK_PLAQUE: Sign = {
+  id: "safety-plaque",
+  title: "Office of Safety — struck",
+  text: "Stability was the name they sold. The weather has another name now.",
+  x: 192,
+  y: 400,
+};
+
+export const CLERK_HP = 44;
+export const CLERK_AGGRO = 70;
+export const CLERK_DAMAGE = 14;
+export const CLERK_TELEGRAPH = 0.6;
+
 export function emptyBeats(): Beats {
   return { nara: false, quill: false, ord: false, burial: false };
+}
+
+export function emptyWeather(): WeatherHeard {
+  return { safety: false, nara: false, ord: false };
+}
+
+export function weatherComplete(w: WeatherHeard): boolean {
+  return w.safety && w.nara && w.ord;
+}
+
+export function naveClerks(): Clerk[] {
+  return [
+    { id: "clerk-desk-three", name: "Desk Three", x: 520, y: 480, hp: CLERK_HP, telegraph: 0 },
+    { id: "clerk-annex", name: "Annex Runner", x: 900, y: 360, hp: CLERK_HP, telegraph: 0 },
+  ];
+}
+
+export function naveSigns(): Sign[] {
+  return NAVE_SIGNS.map((s) => ({ ...s }));
+}
+
+export function navePois(): Poi[] {
+  return [
+    { id: "weather", name: "Unnamed weather", x: 192, y: 340, kind: "unnamed-weather" },
+  ];
+}
+
+export function namedWeatherPoi(): Poi {
+  return { id: "weather", name: "Named weather", x: 192, y: 340, kind: "named-weather" };
 }
 
 export function npcById(id: string): Npc | undefined {

@@ -11,11 +11,15 @@ import {
 import {
   applyBury,
   applyGoingUnder,
+  applyRead,
+  applyStrike,
   applyTalk,
   applyUse,
+  damageFor,
   emptyWorld,
   guestCanClaim,
   spawnGuest,
+  tickWorld,
 } from "./world";
 
 function placeNear(id: string, x: number, y: number, extra: Partial<ReturnType<typeof spawnGuest>> = {}) {
@@ -101,3 +105,63 @@ describe("Movement I beats", () => {
     expect(guestCanClaim(p)).toBe(false);
   });
 });
+
+describe("Gestell clerks and weather", () => {
+  it("clerks are job titles, not demons", () => {
+    const w = emptyWorld();
+    expect(w.clerks.map((c) => c.name)).toEqual(["Desk Three", "Annex Runner"]);
+    expect(w.clerks.every((c) => !/demon|devil|fiend/i.test(c.name))).toBe(true);
+  });
+
+  it("clerk telegraphs then strikes; strike drops named wreckage", () => {
+    const w = emptyWorld();
+    const clerk = w.clerks[0];
+    w.players.set("a", { ...spawnGuest("a"), x: clerk.x, y: clerk.y });
+    const wound = tickWorld(w, 0.05);
+    expect(wound.clerks[0].telegraph).toBeGreaterThan(0);
+    expect(wound.players.get("a")?.hp).toBe(100);
+    let cur = wound;
+    for (let i = 0; i < 20; i++) cur = tickWorld(cur, 0.05);
+    expect(cur.players.get("a")!.hp).toBeLessThan(100);
+
+    const fight = emptyWorld();
+    fight.players.set("a", { ...spawnGuest("a"), x: clerk.x, y: clerk.y });
+    const after = applyStrike(fight, "a");
+    expect(after.clerks.find((c) => c.id === clerk.id)?.hp).toBeLessThan(clerk.hp);
+    const dead = { ...fight, clerks: fight.clerks.map((c) => ({ ...c, hp: 10 })) };
+    dead.players.set("a", { ...spawnGuest("a"), x: clerk.x, y: clerk.y });
+    const kill = applyStrike(dead, "a");
+    expect(kill.clerks.find((c) => c.id === clerk.id)).toBeUndefined();
+    expect(kill.wreckage[0]?.fromName).toBe("Desk Three");
+  });
+
+  it("damageFor ignores token-shaped extras", () => {
+    const a = spawnGuest("a");
+    const rich = { ...a, bestand: 9999 } as typeof a & { reverie?: number };
+    rich.reverie = 1_000_000;
+    expect(damageFor(rich)).toBe(damageFor(a));
+    expect(guestCanClaim(rich)).toBe(false);
+  });
+
+  it("naming the weather from Safety, Ord, and Nara strikes the plaque POI", () => {
+    const nara = NAVE_NPCS.find((n) => n.id === "nara")!;
+    const ord = NAVE_NPCS.find((n) => n.id === "ord")!;
+    const sign = NAVE_SIGNS[0];
+    let w = emptyWorld();
+    w.players.set("a", { ...spawnGuest("a"), x: nara.x, y: nara.y });
+    w = applyTalk(w, "a", "nara");
+    w.players.set("a", { ...w.players.get("a")!, x: ord.x, y: ord.y });
+    w = applyTalk(w, "a", "ord");
+    expect(w.weatherNamed).toBe(false);
+    w.players.set("a", { ...w.players.get("a")!, x: sign.x, y: sign.y });
+    w = applyRead(w, "a", "safety-plaque");
+    expect(w.players.get("a")?.namedWeather).toBe(true);
+    expect(w.weatherNamed).toBe(true);
+    expect(w.signs[0]?.title).toBe("Office of Safety — struck");
+    expect(w.pois[0]?.kind).toBe("named-weather");
+    expect(w.pois[0]?.name).toBe("Named weather");
+    expect(w.players.get("a")?.heard).toContain("named the weather");
+    expect(guestCanClaim(w.players.get("a")!)).toBe(false);
+  });
+});
+

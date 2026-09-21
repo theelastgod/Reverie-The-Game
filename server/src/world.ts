@@ -1,6 +1,7 @@
 export {
   applyBury,
   applyGoingUnder,
+  applyRead,
   applyStrike,
   applyTalk,
   applyUse,

@@ -1,4 +1,4 @@
-import type { Npc, Rite, Sign } from "../sim/campaign";
+import type { Clerk, Npc, Poi, Rite, Sign } from "../sim/campaign";
 import type { Intent, Player, Wreckage } from "../sim/world";
 import type { YieldNode } from "../sim/nave";
 
@@ -10,8 +10,11 @@ export type Snap = {
   nodes: YieldNode[];
   wreckage: Wreckage[];
   rites: Rite[];
+  clerks: Clerk[];
   npcs: Npc[];
   signs: Sign[];
+  pois: Poi[];
+  weatherNamed: boolean;
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };
@@ -65,6 +68,10 @@ export class WorldSocket {
 
   goingUnder() {
     this.send({ t: "under" });
+  }
+
+  read(signId: string) {
+    this.send({ t: "read", signId });
   }
 
   private send(msg: unknown) {
