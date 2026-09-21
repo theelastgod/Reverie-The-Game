@@ -91,6 +91,12 @@ import {
   ANNOUNCE_NEED,
   ANNOUNCE_SPECTATOR,
   WINK_ANNOUNCE,
+  WET_GRID,
+  FLAG_COPY,
+  FLAG_SPECTATOR,
+  SPOILS_COPY,
+  GUEST_GRIEF,
+  CAMP_COPY,
   gestellTax,
   hallCopy,
   auraSeed,
@@ -114,6 +120,7 @@ import {
   applyM3,
   applyWatch,
   applyForge,
+  applyFlag,
   applyLastWord,
   applyClearing,
   applyPassing,
@@ -878,6 +885,71 @@ describe("Movement IV Clearing and Passing", () => {
     expect(guest.players.get("g")?.heard).toBe(CLEARING_SPECTATOR);
     expect(guest.players.get("g")?.wink).toBe("");
     expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
+  });
+});
+
+describe("Wet Grid flagged PvP", () => {
+  function angel(id: string, extra: Partial<ReturnType<typeof spawnGuest>> = {}) {
+    return {
+      ...spawnGuest(id),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      flagged: true,
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+      ...extra,
+    };
+  }
+
+  it("flagging is opt-in; guests cannot flag", () => {
+    const w = emptyWorld();
+    w.players.set("a", angel("a", { flagged: false }));
+    const flagged = applyFlag(w, "a");
+    expect(flagged.players.get("a")?.flagged).toBe(true);
+    expect(flagged.players.get("a")?.heard).toBe(FLAG_COPY);
+    w.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    const g = applyFlag(w, "g");
+    expect(g.players.get("g")?.flagged).toBe(false);
+    expect(g.players.get("g")?.heard).toBe(FLAG_SPECTATOR);
+    expect(guestCanClaim(g.players.get("g")!)).toBe(false);
+  });
+
+  it("flagged kill takes unbanked and copies, never cult or banked, never extra damage", () => {
+    const w = emptyWorld();
+    w.players.set("a", angel("a", { bestand: 10 }));
+    w.players.set("b", angel("b", { x: WET_GRID.x + 20, y: WET_GRID.y, bestand: 100, banked: 80, cultWink: true, fakeWinke: 2, hp: 20 }));
+    const after = applyStrike(w, "a");
+    const a = after.players.get("a")!;
+    const b = after.players.get("b")!;
+    expect(a.bestand).toBe(10 + 30);
+    expect(a.fakeWinke).toBe(1);
+    expect(a.heard).toBe(SPOILS_COPY);
+    expect(b.banked).toBe(80);
+    expect(b.cultWink).toBe(true);
+    expect(b.fakeWinke).toBe(1);
+    expect(b.bestand).toBe(70);
+    expect(damageFor(a)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(a)).toBe(false);
+  });
+
+  it("guest kills pay nothing; camping the same grave feeds Gestell and thins aura", () => {
+    const w = emptyWorld();
+    w.players.set("a", angel("a"));
+    w.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x + 10, y: WET_GRID.y, hp: 20, bestand: 90 });
+    const grief = applyStrike(w, "a");
+    expect(grief.players.get("a")?.heard).toBe(GUEST_GRIEF);
+    expect(grief.players.get("a")?.bestand).toBe(0);
+    expect(grief.players.get("g")?.bestand).toBe(90);
+
+    const duel = emptyWorld();
+    duel.players.set("a", angel("a", { lastKillId: "b" }));
+    duel.players.set("b", angel("b", { x: WET_GRID.x + 16, y: WET_GRID.y, hp: 20, bestand: 40 }));
+    const camp = applyStrike(duel, "a");
+    expect(camp.players.get("a")?.heard).toBe(CAMP_COPY);
+    expect(camp.players.get("a")?.aura).toBeLessThan(auraSeed(TEST_SERIAL));
+    expect(camp.gestell).toBeGreaterThan(duel.gestell);
+    expect(guestCanClaim(camp.players.get("a")!)).toBe(false);
   });
 });
 

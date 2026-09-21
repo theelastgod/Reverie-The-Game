@@ -19,6 +19,8 @@ import {
   PRIVATE_YIELD,
   WRECK_GARDEN,
   CLEARING_RING,
+  WET_GRID,
+  inWetGrid,
   IONE,
   movementReady,
   NAVE_NPCS,
@@ -360,6 +362,8 @@ export class NaveScene extends Phaser.Scene {
                     ? 0x3a3a3a
                     : poi.kind === "wreckage-garden"
                       ? 0x7a1028
+                      : poi.kind === "wet-grid"
+                          ? 0x7eb6ff
                       : poi.kind.startsWith("organ-")
                         ? 0xc9a56a
                         : poi.kind === "forge-tray"
@@ -474,6 +478,7 @@ export class NaveScene extends Phaser.Scene {
     const hall = nearPoint(me.x, me.y, HOUSE_HALL.x, HOUSE_HALL.y, 56);
     const annex = nearPoint(me.x, me.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
     const stall = nearPoint(me.x, me.y, CLEARING_STALL.x, CLEARING_STALL.y, 56);
+    const wet = inWetGrid(me.x, me.y);
     const forge =
       nearPoint(me.x, me.y, FORGE_TRAY.x, FORGE_TRAY.y, 64) ||
       (npcNear?.id === "quill" && me.beats.market);
@@ -497,7 +502,13 @@ export class NaveScene extends Phaser.Scene {
       (n) => n.kept && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
 
-    if (me.locked) {
+    if (wet && (me.guest || me.locked)) {
+      this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && me.flagged) {
+      this.prompt = me.heard || "Flagged. Click strike. Spoils: unbanked and copies. Cult stays. Guests are not loot.";
+    } else if (wet) {
+      this.prompt = "F — flag in the Wet Grid. Seconds. Spoils from people, not a faucet.";
+    } else if (me.locked) {
       this.prompt = care ? me.heard || "You see a door. You do not see what it is for." : me.heard || "A guest cannot prepare the ground.";
     } else if (hall && me.inCare && !me.guest) {
       this.prompt = me.beats.hall
@@ -612,7 +623,7 @@ export class NaveScene extends Phaser.Scene {
         ? me.locked
           ? `Guest · locked · aura 0`
           : `Guest · aura 0 · hp ${me.hp}`
-        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}`;
+        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.flagged ? " · flagged" : ""}`;
     }
     const stats = hud("stat-chip");
     if (stats) {

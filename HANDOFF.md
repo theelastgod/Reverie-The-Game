@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 20** — Flagged PvP spoils in Wet Grid (seconds-long fights). Unbanked + exhibition only. No token DPS. No mint.
+**Next stage: 21** — House war / Clearing contest as political PvP. Winning House gets tithe cut and omen, not damage. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -100,8 +100,13 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Mock #7777 is a Herald. F on a kept node pings it (`announced`). Sky-blue mark. Not a strike.
 - Non-Heralds and guests cannot announce. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 20 (do this next)
-Flagged PvP spoils in Wet Grid. Fights last seconds. Spoils: unbanked Bestand + exhibition only. Cult/banked never drop. No `$REVERIE` DPS. No mint. No Base.
+## Stage 20 (landed)
+- Wet Grid flag (F). Spoils on flagged Angel kills: 30% unbanked Bestand + 1 exhibition copy.
+- Cult Winke and banked Bestand never drop. Guests are not loot. Camping the same grave feeds Gestell and thins aura.
+- `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 21 (do this next)
+House war / Clearing contest as political PvP. Winning House gets tithe cut and omen, not a damage buff. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

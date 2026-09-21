@@ -90,7 +90,8 @@ export type Poi = {
     | "organ-cable"
     | "forge-tray"
     | "clearing-ring"
-    | "clearing-held";
+    | "clearing-held"
+    | "wet-grid";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -299,6 +300,32 @@ export const FORGE_SELL =
 export const FORGE_SPECTATOR = "Quill is doing something with paper. You cannot tell which sheet is the prayer.";
 export const FORGE_NEED_MARKET = "Quill is not teaching until you have stood at the listing.";
 
+export const WET_GRID = { id: "wet-grid", x: 720, y: 520, r: 110 };
+export const FLAG_COPY =
+  "You flagged. Wet Grid spoils are unbanked Bestand and exhibition copies. Cult and banked stay. Guests are not loot.";
+export const FLAG_SPECTATOR = "A wet street. You are not flagged. You are not spoils.";
+export const SPOILS_COPY = "Spoils from a person. Unbanked and copies. The cult hint stayed in the grave.";
+export const GUEST_GRIEF = "A guest is not a spoils path. The server will not pay you for that.";
+export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
+
+export function inWetGrid(x: number, y: number): boolean {
+  const dx = x - WET_GRID.x;
+  const dy = y - WET_GRID.y;
+  return dx * dx + dy * dy <= WET_GRID.r * WET_GRID.r;
+}
+
+export function wetGridPoi(): Poi {
+  return { id: WET_GRID.id, name: "Wet Grid", x: WET_GRID.x, y: WET_GRID.y, kind: "wet-grid" };
+}
+
+export const WET_PLAQUE: Sign = {
+  id: WET_GRID.id,
+  title: "Wet Grid — flagged",
+  text: "Opt in. Seconds. Spoils from people, not a faucet. Guests are not loot.",
+  x: WET_GRID.x,
+  y: WET_GRID.y,
+};
+
 export function forgePoi(): Poi {
   return {
     id: FORGE_TRAY.id,
@@ -444,6 +471,7 @@ export function naveSigns(): Sign[] {
     { ...OPERATOR_PLAQUE },
     { ...FORGE_PLAQUE },
     { ...CLEARING_PLAQUE },
+    { ...WET_PLAQUE },
   ];
 }
 
@@ -457,6 +485,7 @@ export function navePois(): Poi[] {
     operatorPoi(),
     m3Poi(false),
     clearingPoi(false),
+    wetGridPoi(),
   ];
 }
 

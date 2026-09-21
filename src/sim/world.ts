@@ -103,6 +103,13 @@ import {
   FORGE_SPOT,
   FORGE_SPECTATOR,
   WINK_FORGE,
+  WET_GRID,
+  FLAG_COPY,
+  FLAG_SPECTATOR,
+  SPOILS_COPY,
+  GUEST_GRIEF,
+  CAMP_COPY,
+  inWetGrid,
   CLEARING_RING,
   CLEARING_PREPARE,
   CLEARING_NEED_MORTAL,
@@ -179,6 +186,9 @@ export type Player = {
   fakeWinke: number;
   house: House;
   messenger: Messenger;
+  flagged: boolean;
+  banked: number;
+  lastKillId: string;
 };
 
 export type WorldState = {
@@ -231,6 +241,9 @@ export function spawnGuest(id: string): Player {
     fakeWinke: 0,
     house: "",
     messenger: "",
+    flagged: false,
+    banked: 0,
+    lastKillId: "",
   };
 }
 
@@ -368,6 +381,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
   players.set(attackerId, attacker);
   const dmg = damageFor(a);
   let wreckage = w.wreckage;
+  let gestell = w.gestell;
   for (const [id, b] of w.players) {
     if (id === attackerId || b.hp <= 0) continue;
     const dx = b.x - a.x;
@@ -379,7 +393,20 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         ...wreckage,
         { id: `w-${id}-${w.now}`, x: b.x, y: b.y, fromId: id, fromName: b.guest ? "Guest" : "Angel", until: w.now + 45 },
       ];
-      const drop = Math.floor(b.bestand * 0.3);
+      const grief = a.guest || b.guest || b.locked;
+      const flaggedFight = !grief && a.flagged && b.flagged;
+      const drop = flaggedFight ? Math.floor(b.bestand * 0.3) : 0;
+      const fakeDrop = flaggedFight && b.fakeWinke > 0 ? 1 : 0;
+      const camp = flaggedFight && a.lastKillId === id;
+      const killer = players.get(attackerId)!;
+      players.set(attackerId, {
+        ...killer,
+        bestand: killer.bestand + drop,
+        fakeWinke: killer.fakeWinke + fakeDrop,
+        aura: camp ? Math.max(0, killer.aura - 4) : killer.aura,
+        lastKillId: id,
+        heard: grief ? GUEST_GRIEF : camp ? CAMP_COPY : drop ? SPOILS_COPY : killer.heard,
+      });
       players.set(id, {
         ...spawnGuest(id),
         bestand: b.bestand - drop,
@@ -397,10 +424,14 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         inM3: b.inM3,
         current: b.current,
         cultWink: b.cultWink,
-        fakeWinke: b.fakeWinke,
+        fakeWinke: b.fakeWinke - fakeDrop,
         house: b.house,
         messenger: b.messenger,
+        flagged: b.flagged,
+        banked: b.banked,
+        lastKillId: b.lastKillId,
       });
+      if (camp) gestell = Math.min(100, gestell + 4);
     } else {
       players.set(id, { ...b, hp });
     }
@@ -424,7 +455,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       clerks.push({ ...c, hp });
     }
   }
-  return { ...w, players, wreckage, clerks };
+  return { ...w, players, wreckage, clerks, gestell };
 }
 
 export function applyUse(
@@ -531,6 +562,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) return applyMarket(w, playerId);
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
+  if (sign.id === WET_GRID.id) return applyFlag(w, playerId);
   if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
   if (sign.id === OPERATOR_DESK.id) return applyOperator(w, playerId, "hear");
   if (sign.id === ORGAN_STRAIT.id || sign.id === ORGAN_FOUNDRY.id || sign.id === ORGAN_CABLE.id) {
@@ -874,6 +906,22 @@ export function applyM3(w: WorldState, playerId: string): WorldState {
     readiness: p.readiness + (first ? 1 : 0),
     x: first ? ORGAN_STRAIT.x : p.x,
     y: first ? ORGAN_STRAIT.y : p.y,
+  });
+  return { ...w, players };
+}
+
+export function applyFlag(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: FLAG_SPECTATOR, flagged: false });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    flagged: true,
+    heard: FLAG_COPY,
   });
   return { ...w, players };
 }
