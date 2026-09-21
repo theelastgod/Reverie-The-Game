@@ -1,5 +1,14 @@
 import Phaser from "phaser";
-import { GOING_UNDER, movementReady, NAVE_NPCS, NAVE_SIGNS, nearPoint } from "../sim/campaign";
+import {
+  formatSerial,
+  GOING_UNDER,
+  movementReady,
+  NAVE_NPCS,
+  NAVE_SIGNS,
+  nearPoint,
+  TEST_SERIAL,
+  winkeVisible,
+} from "../sim/campaign";
 import { COLS, ROWS, TILE, YieldNode } from "../sim/nave";
 import { WorldSocket } from "../net/worldSocket";
 import type { Player } from "../sim/world";
@@ -75,6 +84,7 @@ export class NaveScene extends Phaser.Scene {
     this.input.keyboard.addKey("F").on("down", () => this.interact());
     this.input.keyboard.addKey("SPACE").on("down", () => this.net.strike());
     this.input.on("pointerdown", () => this.net.strike());
+    hud("mock-link")?.addEventListener("click", () => this.net.link(TEST_SERIAL));
 
     this.net.connect();
   }
@@ -336,9 +346,18 @@ export class NaveScene extends Phaser.Scene {
       promptEl.style.display = "block";
     }
     const guest = hud("guest-chip");
-    if (guest) guest.textContent = me.locked ? `Guest · locked · aura ${me.aura}` : `Guest · aura ${me.aura} · hp ${me.hp}`;
+    if (guest) {
+      guest.textContent = me.guest
+        ? me.locked
+          ? `Guest · locked · aura 0`
+          : `Guest · aura 0 · hp ${me.hp}`
+        : `Angel ${formatSerial(me.serial)} · aura ${me.aura} · hp ${me.hp}`;
+    }
     const stats = hud("stat-chip");
-    if (stats) stats.textContent = `Bestand ${me.bestand} · Winke ${me.winke} · Gestell ${snap.gestell}`;
+    if (stats) {
+      const winke = winkeVisible(me.guest) ? `Winke ${me.winke}` : "Winke —";
+      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}`;
+    }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;
   }

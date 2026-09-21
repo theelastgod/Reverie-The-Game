@@ -55,6 +55,8 @@ export type Poi = {
 };
 
 export const GUEST_LOCK = "A guest cannot prepare the ground.";
+export const TEST_SERIAL = 7777;
+export const MOCK_SIG = "mock";
 
 export const NAVE_NPCS: Npc[] = [
   { id: "nara", name: "Nara Vale", role: "Sexton", x: 240, y: 720 },
@@ -177,4 +179,17 @@ export function naveRites(): Rite[] {
 
 export function displayName(id: NpcId): string {
   return npcById(id)?.name ?? "Someone";
+}
+
+export function formatSerial(serial: number | null): string {
+  if (serial == null || serial <= 0) return "#0000";
+  return `#${String(serial).padStart(4, "0")}`;
+}
+
+export function auraSeed(serial: number): number {
+  return 8 + (serial % 13);
+}
+
+export function winkeVisible(guest: boolean): boolean {
+  return !guest;
 }

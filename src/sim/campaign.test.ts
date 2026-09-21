@@ -2,15 +2,21 @@ import { describe, expect, it } from "vitest";
 import {
   GUEST_LOCK,
   GOING_UNDER,
+  MOCK_SIG,
+  TEST_SERIAL,
+  auraSeed,
+  formatSerial,
   movementReady,
   NAVE_NPCS,
   NAVE_SIGNS,
   NPC_LINES,
   displayName,
+  winkeVisible,
 } from "./campaign";
 import {
   applyBury,
   applyGoingUnder,
+  applyLink,
   applyRead,
   applyStrike,
   applyTalk,
@@ -162,6 +168,34 @@ describe("Gestell clerks and weather", () => {
     expect(w.pois[0]?.name).toBe("Named weather");
     expect(w.players.get("a")?.heard).toContain("named the weather");
     expect(guestCanClaim(w.players.get("a")!)).toBe(false);
+  });
+});
+
+describe("Angel link stub", () => {
+  it("guest stays #0000 with aura 0 and hidden Winke", () => {
+    const g = spawnGuest("g1");
+    expect(formatSerial(g.serial)).toBe("#0000");
+    expect(g.aura).toBe(0);
+    expect(winkeVisible(g.guest)).toBe(false);
+    expect(guestCanClaim(g)).toBe(false);
+  });
+
+  it("mock #7777 seeds aura, still cannot claim, damage unchanged", () => {
+    const w = emptyWorld();
+    w.players.set("a", spawnGuest("a"));
+    expect(applyLink(w, "a", 1, MOCK_SIG).players.get("a")?.guest).toBe(true);
+    expect(applyLink(w, "a", TEST_SERIAL, "wallet").players.get("a")?.guest).toBe(true);
+    const linked = applyLink(w, "a", TEST_SERIAL, MOCK_SIG);
+    const p = linked.players.get("a")!;
+    expect(p.guest).toBe(false);
+    expect(p.serial).toBe(7777);
+    expect(p.aura).toBe(auraSeed(7777));
+    expect(p.aura).toBeGreaterThan(0);
+    expect(formatSerial(p.serial)).toBe("#7777");
+    expect(winkeVisible(p.guest)).toBe(true);
+    expect(guestCanClaim(p)).toBe(false);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
+    expect(p.heard).not.toMatch(/\$REVERIE|APY|yield/i);
   });
 });
 

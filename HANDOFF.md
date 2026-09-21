@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 7** — Angel link stub (mock serial, no mint). Aura seed for linked bodies; guests stay aura 0; Winke still invisible to guests. `$REVERIE` stays disarmed.
+**Next stage: 8** — Care door stub: mock-linked Angel completes going-under and sees a Wink guests cannot. Still no mint, no claims desk.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -37,8 +37,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Gestell clerks Desk Three and Annex Runner: telegraph, strike, die into named wreckage. People doing jobs.
 - Name-the-weather: read Safety plaque, speak with Ord, speak with Nara. First completion strikes the plaque and turns Unnamed weather → Named weather.
 
-## Stage 7 (do this next)
-Angel link stub: mock serial `#0000` / test `#7777`. Signature-shaped message, no wallet spend. Linked body gets aura seed; guest aura stays 0; Winke copy hidden from guests. Claims still refuse. No Base, no `$REVERIE`.
+## Stage 7 (landed)
+- Mock Angel link: `{ t: "link", serial: 7777, sig: "mock" }` only. `#0000` guest, `#7777` test Angel.
+- Aura seed from serial. Guests stay aura 0. Winke hidden from guests. `damageFor` ignores link. Claims still refuse.
+
+## Stage 8 (do this next)
+Care door after going-under for linked Angels. A Wink line only they see. Guests remain locked spectators. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

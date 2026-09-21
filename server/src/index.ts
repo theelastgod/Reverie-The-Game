@@ -1,6 +1,7 @@
 import {
   applyBury,
   applyGoingUnder,
+  applyLink,
   applyRead,
   applyStrike,
   applyTalk,
@@ -56,6 +57,8 @@ export class ReverieWorld {
       choice?: "extract" | "keep";
       npcId?: string;
       signId?: string;
+      serial?: number;
+      sig?: string;
     };
     try {
       data = JSON.parse(msg);
@@ -86,6 +89,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "read" && data.signId) {
       this.w = applyRead(this.w, id, data.signId);
+      this.broadcast();
+    } else if (data.t === "link" && typeof data.serial === "number") {
+      this.w = applyLink(this.w, id, data.serial, typeof data.sig === "string" ? data.sig : "");
       this.broadcast();
     }
   }

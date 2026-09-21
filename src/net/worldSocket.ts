@@ -74,6 +74,10 @@ export class WorldSocket {
     this.send({ t: "read", signId });
   }
 
+  link(serial: number) {
+    this.send({ t: "link", serial, sig: "mock" });
+  }
+
   private send(msg: unknown) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(msg));
   }

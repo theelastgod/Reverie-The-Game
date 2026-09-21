@@ -27,6 +27,10 @@ import {
   weatherComplete,
   WeatherHeard,
   WEATHER_NAMED,
+  MOCK_SIG,
+  TEST_SERIAL,
+  auraSeed,
+  formatSerial,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -65,6 +69,7 @@ export type Player = {
   namedWeather: boolean;
   locked: boolean;
   heard: string;
+  serial: number | null;
 };
 
 export type WorldState = {
@@ -98,6 +103,7 @@ export function spawnGuest(id: string): Player {
     namedWeather: false,
     locked: false,
     heard: "",
+    serial: null,
   };
 }
 
@@ -191,6 +197,7 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
             namedWeather: hit.namedWeather,
             locked: hit.locked,
             heard: `${c.name} did their job.`,
+            serial: hit.serial,
           });
         } else {
           players.set(hit.id, { ...hit, hp });
@@ -239,6 +246,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         namedWeather: b.namedWeather,
         locked: b.locked,
         heard: b.heard,
+        serial: b.serial,
       });
     } else {
       players.set(id, { ...b, hp });
@@ -375,6 +383,22 @@ export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
     heard: ANGEL_UNDER,
   });
   return { ...w, players, rites };
+}
+
+export function applyLink(w: WorldState, playerId: string, serial: number, sig: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  if (sig !== MOCK_SIG || serial !== TEST_SERIAL) return w;
+  const players = new Map(w.players);
+  players.set(playerId, {
+    ...p,
+    guest: false,
+    serial,
+    aura: Math.max(p.aura, auraSeed(serial)),
+    locked: false,
+    heard: `Angel ${formatSerial(serial)} linked. Aura seeded. Claims stay disarmed.`,
+  });
+  return { ...w, players };
 }
 
 export function snapshot(w: WorldState) {
