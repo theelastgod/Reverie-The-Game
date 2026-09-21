@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { GOING_UNDER, movementReady, NAVE_NPCS, NAVE_SIGNS, nearPoint } from "../sim/campaign";
 import { COLS, ROWS, TILE, YieldNode } from "../sim/nave";
 import { WorldSocket } from "../net/worldSocket";
 import type { Player } from "../sim/world";
@@ -12,10 +13,13 @@ export class NaveScene extends Phaser.Scene {
   private bodies = new Map<string, Phaser.GameObjects.Image>();
   private nodeMarks = new Map<string, Phaser.GameObjects.Arc>();
   private wreckMarks = new Map<string, Phaser.GameObjects.Arc>();
+  private npcMarks = new Map<string, Phaser.GameObjects.Image>();
+  private riteMarks = new Map<string, Phaser.GameObjects.Arc>();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<"W" | "A" | "S" | "D", Phaser.Input.Keyboard.Key>;
   private prompt = "";
   private following = false;
+  private signsDrawn = false;
 
   constructor() {
     super("nave");
@@ -41,12 +45,14 @@ export class NaveScene extends Phaser.Scene {
       })
       .setDepth(5);
     this.add
-      .text(TILE * 2, TILE * 2.9, "WASD walk · click strike · E extract · Q keep", {
+      .text(TILE * 2, TILE * 2.9, "WASD walk · F speak / bury / go under · E extract · Q keep", {
         fontFamily: "Space Grotesk, sans-serif",
         fontSize: "13px",
         color: "#e8e8e8",
       })
       .setDepth(5);
+
+    this.drawSigns();
 
     this.cameras.main.setBounds(0, 0, COLS * TILE, ROWS * TILE);
     this.cameras.main.setZoom(1.15);
@@ -61,24 +67,76 @@ export class NaveScene extends Phaser.Scene {
     };
     this.input.keyboard.addKey("E").on("down", () => this.useNear("extract"));
     this.input.keyboard.addKey("Q").on("down", () => this.useNear("keep"));
+    this.input.keyboard.addKey("F").on("down", () => this.interact());
     this.input.keyboard.addKey("SPACE").on("down", () => this.net.strike());
     this.input.on("pointerdown", () => this.net.strike());
 
     this.net.connect();
   }
 
+  private drawSigns() {
+    if (this.signsDrawn) return;
+    this.signsDrawn = true;
+    for (const s of NAVE_SIGNS) {
+      this.add.rectangle(s.x, s.y, 86, 28, 0xffffff).setStrokeStyle(3, 0x0a0a0a).setDepth(4);
+      this.add
+        .text(s.x, s.y - 2, s.title, {
+          fontFamily: "Space Grotesk, sans-serif",
+          fontSize: "9px",
+          color: "#0a0a0a",
+          align: "center",
+        })
+        .setOrigin(0.5)
+        .setDepth(5);
+    }
+    for (const n of NAVE_NPCS) {
+      if (this.npcMarks.has(n.id)) continue;
+      const img = this.add.image(n.x, n.y, n.id).setDisplaySize(52, 64).setDepth(9);
+      this.add
+        .text(n.x, n.y - 40, n.name, {
+          fontFamily: "Space Grotesk, sans-serif",
+          fontSize: "11px",
+          color: "#e8d5a3",
+        })
+        .setOrigin(0.5)
+        .setDepth(11);
+      this.npcMarks.set(n.id, img);
+    }
+  }
+
   private useNear(choice: "extract" | "keep") {
     const me = this.net.you;
     const nodes = this.net.snap?.nodes ?? [];
-    if (!me) return;
+    if (!me || me.locked) return;
     const n = nodes.find((node) => !node.depleted && Phaser.Math.Distance.Between(me.x, me.y, node.x, node.y) < 40);
     if (n) this.net.use(n.id, choice);
+  }
+
+  private interact() {
+    const me = this.net.you;
+    if (!me) return;
+    const npc = NAVE_NPCS.find((n) => nearPoint(me.x, me.y, n.x, n.y));
+    if (npc) {
+      this.net.talk(npc.id);
+      return;
+    }
+    if (me.locked) return;
+    const rites = this.net.snap?.rites ?? [];
+    const burial = rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
+    const wreck = this.net.snap?.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 56));
+    if (burial || wreck) {
+      this.net.bury();
+      return;
+    }
+    if (movementReady(me.beats) && nearPoint(me.x, me.y, GOING_UNDER.x, GOING_UNDER.y, 56)) {
+      this.net.goingUnder();
+    }
   }
 
   private bodyFor(p: Player): Phaser.GameObjects.Image {
     let img = this.bodies.get(p.id);
     if (!img) {
-      img = this.add.image(p.x, p.y, "guest").setDepth(10);
+      img = this.add.image(p.x, p.y, "guest").setDisplaySize(40, 48).setDepth(10);
       this.bodies.set(p.id, img);
     }
     return img;
@@ -93,6 +151,28 @@ export class NaveScene extends Phaser.Scene {
         this.nodeMarks.set(n.id, g);
       }
       g.setFillStyle(n.kept ? 0xc9a56a : n.depleted ? 0x3a3a3a : 0x88a0c8, 0.9);
+    }
+  }
+
+  private syncRites() {
+    const rites = this.net.snap?.rites ?? [];
+    for (const r of rites) {
+      let g = this.riteMarks.get(r.id);
+      if (!g) {
+        g = this.add.circle(r.x, r.y, r.kind === "going-under" ? 18 : 12, 0x7a1028, 0.75).setDepth(4);
+        const label = r.kind === "going-under" ? "GOING-UNDER" : "BURIAL";
+        this.add
+          .text(r.x, r.y + 22, label, {
+            fontFamily: "Space Grotesk, sans-serif",
+            fontSize: "10px",
+            color: "#c9a56a",
+          })
+          .setOrigin(0.5)
+          .setDepth(5);
+        this.riteMarks.set(r.id, g);
+      }
+      if (r.kind === "burial") g.setFillStyle(r.done ? 0xc9a56a : 0x7a1028, 0.8);
+      else g.setFillStyle(r.done ? 0x7eb6ff : 0xc9a56a, 0.85);
     }
   }
 
@@ -130,6 +210,7 @@ export class NaveScene extends Phaser.Scene {
     }
 
     this.syncNodes(snap.nodes);
+    this.syncRites();
     const wreckSeen = new Set<string>();
     for (const r of snap.wreckage) {
       wreckSeen.add(r.id);
@@ -146,20 +227,46 @@ export class NaveScene extends Phaser.Scene {
       }
     }
 
-    const near = snap.nodes.find(
+    const npcNear = NAVE_NPCS.find((n) => nearPoint(me.x, me.y, n.x, n.y));
+    const burial = snap.rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
+    const sign = NAVE_SIGNS.find((s) => nearPoint(me.x, me.y, s.x, s.y, 56));
+    const under = nearPoint(me.x, me.y, GOING_UNDER.x, GOING_UNDER.y, 56);
+    const nearNode = snap.nodes.find(
       (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
-    this.prompt = near
-      ? "E extract Bestand · Q keep (Winke). A guest cannot cash out."
-      : "";
+
+    if (me.locked) {
+      this.prompt = me.heard || "A guest cannot prepare the ground.";
+    } else if (me.heard && (npcNear || burial || under)) {
+      this.prompt = me.heard;
+    } else if (npcNear) {
+      this.prompt = `F speak with ${npcNear.name} · ${npcNear.role}`;
+    } else if (burial) {
+      this.prompt = "F bury the unnamed. Nara Vale is watching.";
+    } else if (under && movementReady(me.beats)) {
+      this.prompt = "F — the first going-under. Guests stop here.";
+    } else if (under) {
+      this.prompt = "A Wink you cannot spend yet. Speak with Nara Vale, Quill, and Ord. Bury the plot.";
+    } else if (sign) {
+      this.prompt = `${sign.title}: ${sign.text}`;
+    } else if (nearNode) {
+      this.prompt = "E extract Bestand · Q keep (Winke). A guest cannot cash out.";
+    } else if (me.heard) {
+      this.prompt = me.heard;
+    } else {
+      this.prompt = "";
+    }
+
     const promptEl = hud("prompt-chip");
     if (promptEl) {
-      promptEl.textContent = this.prompt || "Strike leaves wreckage. Guests cannot claim.";
+      promptEl.textContent = this.prompt || "Strike leaves wreckage. F to speak. Guests cannot claim.";
       promptEl.style.display = "block";
     }
     const guest = hud("guest-chip");
-    if (guest) guest.textContent = `Guest · aura ${me.aura} · hp ${me.hp}`;
+    if (guest) guest.textContent = me.locked ? `Guest · locked · aura ${me.aura}` : `Guest · aura ${me.aura} · hp ${me.hp}`;
     const stats = hud("stat-chip");
     if (stats) stats.textContent = `Bestand ${me.bestand} · Winke ${me.winke} · Gestell ${snap.gestell}`;
+    const lock = hud("lock-panel");
+    if (lock) lock.hidden = !me.locked;
   }
 }

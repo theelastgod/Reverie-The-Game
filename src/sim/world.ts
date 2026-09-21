@@ -1,3 +1,19 @@
+import {
+  ANGEL_UNDER,
+  Beats,
+  emptyBeats,
+  GUEST_LOCK,
+  GOING_UNDER,
+  lineFor,
+  movementReady,
+  naveRites,
+  NAVE_NPCS,
+  NAVE_SIGNS,
+  nearPoint,
+  NpcId,
+  npcById,
+  Rite,
+} from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
 export const TICK_HZ = 20;
@@ -29,6 +45,9 @@ export type Player = {
   hp: number;
   strikeCd: number;
   readiness: number;
+  beats: Beats;
+  locked: boolean;
+  heard: string;
 };
 
 export type WorldState = {
@@ -36,6 +55,7 @@ export type WorldState = {
   intents: Map<string, Intent>;
   nodes: YieldNode[];
   wreckage: Wreckage[];
+  rites: Rite[];
   gestell: number;
   now: number;
 };
@@ -52,6 +72,9 @@ export function spawnGuest(id: string): Player {
     hp: MAX_HP,
     strikeCd: 0,
     readiness: 0,
+    beats: emptyBeats(),
+    locked: false,
+    heard: "",
   };
 }
 
@@ -88,6 +111,7 @@ export function emptyWorld(): WorldState {
     intents: new Map(),
     nodes: naveNodes(),
     wreckage: [],
+    rites: naveRites(),
     gestell: 12,
     now: 0,
   };
@@ -133,6 +157,9 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         winke: b.winke,
         aura: Math.max(0, b.aura - 8),
         guest: b.guest,
+        beats: { ...b.beats },
+        locked: b.locked,
+        heard: b.heard,
       });
     } else {
       players.set(id, { ...b, hp });
@@ -148,7 +175,7 @@ export function applyUse(
   choice: "extract" | "keep",
 ): WorldState {
   const p = w.players.get(playerId);
-  if (!p || p.hp <= 0) return w;
+  if (!p || p.hp <= 0 || p.locked) return w;
   const idx = w.nodes.findIndex((n) => n.id === nodeId);
   if (idx < 0) return w;
   const node = w.nodes[idx];
@@ -165,6 +192,62 @@ export function applyUse(
   return { ...w, nodes, players, gestell: Math.max(0, w.gestell - 3) };
 }
 
+export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
+  const p = w.players.get(playerId);
+  const npc = npcById(npcId);
+  if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
+  const id = npc.id as NpcId;
+  const heard = lineFor(id, p.beats);
+  const beats = { ...p.beats, [id]: true };
+  const players = new Map(w.players);
+  players.set(playerId, { ...p, beats, heard });
+  return { ...w, players };
+}
+
+export function applyBury(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || p.locked) return w;
+  const players = new Map(w.players);
+  const plot = w.rites.find((r) => r.kind === "burial" && !r.done);
+  if (plot && nearPoint(p.x, p.y, plot.x, plot.y)) {
+    const rites = w.rites.map((r) => (r.id === plot.id ? { ...r, done: true } : r));
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, nara: true, burial: true },
+      readiness: p.readiness + 1,
+      heard: lineFor("nara", { ...p.beats, nara: true, burial: true }),
+    });
+    return { ...w, players, rites };
+  }
+  const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
+  if (!wreck) return w;
+  players.set(playerId, {
+    ...p,
+    readiness: p.readiness + 1,
+    heard: "Nara Vale would call this someone. You put them in the ground.",
+  });
+  return { ...w, players, wreckage: w.wreckage.filter((r) => r.id !== wreck.id) };
+}
+
+export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || p.locked) return w;
+  if (!movementReady(p.beats) || !nearPoint(p.x, p.y, GOING_UNDER.x, GOING_UNDER.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest) {
+    players.set(playerId, { ...p, locked: true, heard: GUEST_LOCK });
+    return { ...w, players };
+  }
+  const rites = w.rites.map((r) => (r.kind === "going-under" ? { ...r, done: true } : r));
+  players.set(playerId, {
+    ...p,
+    winke: p.winke + 1,
+    readiness: p.readiness + 1,
+    heard: ANGEL_UNDER,
+  });
+  return { ...w, players, rites };
+}
+
 export function snapshot(w: WorldState) {
   return {
     t: "snap" as const,
@@ -173,5 +256,8 @@ export function snapshot(w: WorldState) {
     players: [...w.players.values()],
     nodes: w.nodes,
     wreckage: w.wreckage,
+    rites: w.rites,
+    npcs: NAVE_NPCS,
+    signs: NAVE_SIGNS,
   };
 }

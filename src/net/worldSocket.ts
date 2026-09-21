@@ -1,3 +1,4 @@
+import type { Npc, Rite, Sign } from "../sim/campaign";
 import type { Intent, Player, Wreckage } from "../sim/world";
 import type { YieldNode } from "../sim/nave";
 
@@ -8,6 +9,9 @@ export type Snap = {
   players: Player[];
   nodes: YieldNode[];
   wreckage: Wreckage[];
+  rites: Rite[];
+  npcs: Npc[];
+  signs: Sign[];
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };
@@ -49,6 +53,18 @@ export class WorldSocket {
 
   use(nodeId: string, choice: "extract" | "keep") {
     this.send({ t: "use", nodeId, choice });
+  }
+
+  talk(npcId: string) {
+    this.send({ t: "talk", npcId });
+  }
+
+  bury() {
+    this.send({ t: "bury" });
+  }
+
+  goingUnder() {
+    this.send({ t: "under" });
   }
 
   private send(msg: unknown) {

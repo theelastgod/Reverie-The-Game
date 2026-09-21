@@ -39,7 +39,26 @@ export class BootScene extends Phaser.Scene {
     g.fillStyle(0xff2d6b, 1);
     g.fillRect(6, 8, 20, 3);
     g.generateTexture("guest", 32, 40);
+
+    const npcs: [string, number][] = [
+      ["nara", 0x7a1028],
+      ["quill", 0x7eb6ff],
+      ["ord", 0x5a5a5a],
+    ];
+    for (const [key, color] of npcs) {
+      g.clear();
+      g.fillStyle(color, 1);
+      g.fillCircle(16, 20, 11);
+      g.fillStyle(0xe8e4dc, 1);
+      g.fillCircle(16, 14, 7);
+      g.generateTexture(key, 32, 40);
+    }
     g.destroy();
+
+    this.load.image("guest", "/assets/guest.jpg");
+    this.load.image("nara", "/assets/nara.jpg");
+    this.load.image("quill", "/assets/quill.jpg");
+    this.load.image("ord", "/assets/ord.jpg");
   }
 
   create() {

@@ -23,6 +23,6 @@ npx wrangler dev --port 8788
 npm run dev
 ```
 
-Play at http://127.0.0.1:5175 — WASD, click/space strike, E extract, Q keep. Guests cannot claim.
+Play at http://127.0.0.1:5175 — WASD, click/space strike, F speak / bury / going-under, E extract, Q keep. Guests lock at the first going-under and cannot claim.
 
 Brief: https://reverie-the-game.wendellphillips.workers.dev

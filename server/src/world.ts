@@ -1,5 +1,8 @@
 export {
+  applyBury,
+  applyGoingUnder,
   applyStrike,
+  applyTalk,
   applyUse,
   guestCanClaim,
   spawnGuest,

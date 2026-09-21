@@ -1,5 +1,8 @@
 import {
+  applyBury,
+  applyGoingUnder,
   applyStrike,
+  applyTalk,
   applyUse,
   DT,
   emptyWorld,
@@ -45,7 +48,7 @@ export class ReverieWorld {
   async webSocketMessage(ws: WebSocket, msg: string | ArrayBuffer) {
     const id = this.sessions.get(ws) ?? (ws.deserializeAttachment() as { id?: string } | null)?.id;
     if (!id || typeof msg !== "string") return;
-    let data: { t?: string; intent?: Intent; nodeId?: string; choice?: "extract" | "keep" };
+    let data: { t?: string; intent?: Intent; nodeId?: string; choice?: "extract" | "keep"; npcId?: string };
     try {
       data = JSON.parse(msg);
     } catch {
@@ -63,6 +66,15 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "use" && data.nodeId && (data.choice === "extract" || data.choice === "keep")) {
       this.w = applyUse(this.w, id, data.nodeId, data.choice);
+      this.broadcast();
+    } else if (data.t === "talk" && data.npcId) {
+      this.w = applyTalk(this.w, id, data.npcId);
+      this.broadcast();
+    } else if (data.t === "bury") {
+      this.w = applyBury(this.w, id);
+      this.broadcast();
+    } else if (data.t === "under") {
+      this.w = applyGoingUnder(this.w, id);
       this.broadcast();
     }
   }

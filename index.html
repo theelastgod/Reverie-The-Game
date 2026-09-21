@@ -25,6 +25,22 @@
       }
       .chip.hot { background: #ff2d6b; color: #fff; }
       .chip.acid { background: #d4ff00; }
+      #lock-panel {
+        position: absolute; inset: 18% 12%; max-width: 36rem; margin: auto; height: fit-content;
+        pointer-events: auto; border: 3px solid #0a0a0a; background: #fff;
+        box-shadow: 8px 8px 0 #0a0a0a; padding: 24px 28px; text-align: left;
+      }
+      #lock-panel img { width: 48px; }
+      #lock-panel h2 {
+        font-family: Anton, Impact, sans-serif; font-weight: 400; letter-spacing: 0.04em;
+        font-size: 1.6rem; margin: 12px 0 8px;
+      }
+      #lock-panel p { margin: 0; color: #5a5a5a; font-size: 14px; line-height: 1.45; }
+      #lock-panel .cta {
+        margin-top: 16px; display: inline-block; border: 3px solid #0a0a0a; padding: 8px 12px;
+        background: #e8e8e8; font-weight: 700; font-size: 12px; letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
       #boot-title {
         position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
         background: #0a0a0a; z-index: 10; color: #c9a56a; font-family: "Anton", Impact, sans-serif;
@@ -48,6 +64,15 @@
       </div>
       <div class="chip" id="prompt-chip" style="position:absolute;bottom:16px;left:12px;right:12px;max-width:42rem;">
         Connecting to the Nave…
+      </div>
+      <div id="lock-panel" hidden>
+        <img src="/assets/wing-star.png" alt="" />
+        <h2>A GUEST CANNOT PREPARE THE GROUND</h2>
+        <p>
+          The going-under is not a lecture. It is a death you have to be an Angel to die.
+          Stay in the Nave as a spectator. Angel link and mint stay disarmed.
+        </p>
+        <span class="cta">Angel link · disarmed</span>
       </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
