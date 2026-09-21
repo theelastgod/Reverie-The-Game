@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 15** — Failed Passing from last season, visible to ruin-sight. No mint.
+**Next stage: 16** — Forged Winke / cult vs exhibition copies. Quill can teach you to spot them — or sell them. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -76,8 +76,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Cold-funded Movement III door opens Strait / Foundry / Cable plaques (invented organs, no country names).
 - Ord’s map: extract here lights a factory there. Guests cannot enter. `damageFor` unchanged.
 
-## Stage 15 (do this next)
-Ruin-angels see a failed Passing from last season. No mint. No Base.
+## Stage 15 (landed)
+- Going-under seeds last season’s failed Passing. Ruin-sight is mock #7777 only.
+- F watch (not loot). Guests see asphalt. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 16 (do this next)
+Reversal: the last god’s hint can be forged (exhibition Winke). Cult vs fake. Quill can teach you to spot copies — or sell them. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

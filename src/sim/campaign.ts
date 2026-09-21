@@ -43,6 +43,7 @@ export type Beats = {
   foundry: boolean;
   cable: boolean;
   map: boolean;
+  failed: boolean;
 };
 
 export type WeatherHeard = {
@@ -365,6 +366,7 @@ export function emptyBeats(): Beats {
     foundry: false,
     cable: false,
     map: false,
+    failed: false,
   };
 }
 
@@ -491,4 +493,38 @@ export function serialHistory(serial: number): HistoryMark | null {
 export function visibleHistory(guest: boolean, serial: number | null, marks: HistoryMark[]): HistoryMark[] {
   if (guest || serial == null || serial <= 0) return [];
   return marks.filter((m) => m.serial === serial);
+}
+
+export type FailedPassing = {
+  id: string;
+  x: number;
+  y: number;
+  season: string;
+  line: string;
+};
+
+export const FAILED_PASSING: FailedPassing = {
+  id: "passing-last",
+  x: 600,
+  y: 400,
+  season: "last hour",
+  line: "Last season’s Passing failed. The hour went by. The city kept the weather.",
+};
+
+export const WINK_FAILED =
+  "You face the wreckage. The storm is at your back. This is not a fight bonus. The token does not buy the hour.";
+export const WATCH_FAILED =
+  "You watched the failed hour. You did not loot it. Readiness is slower than salvage.";
+export const FAILED_SPECTATOR = "Asphalt. You do not see a season.";
+
+export function ruinSight(guest: boolean, serial: number | null): boolean {
+  return !guest && serial === TEST_SERIAL;
+}
+
+export function visibleFailed(
+  guest: boolean,
+  serial: number | null,
+  marks: FailedPassing[],
+): FailedPassing[] {
+  return ruinSight(guest, serial) ? marks : [];
 }

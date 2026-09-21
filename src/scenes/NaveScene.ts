@@ -19,6 +19,7 @@ import {
   NAVE_SIGNS,
   nearPoint,
   TEST_SERIAL,
+  visibleFailed,
   visibleHistory,
   winkeVisible,
   type Sign,
@@ -44,6 +45,7 @@ export class NaveScene extends Phaser.Scene {
   private signLabels = new Map<string, Phaser.GameObjects.Text>();
   private poiMarks = new Map<string, Phaser.GameObjects.Arc>();
   private histMarks = new Map<string, Phaser.GameObjects.Image>();
+  private failMarks = new Map<string, Phaser.GameObjects.Image>();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<"W" | "A" | "S" | "D", Phaser.Input.Keyboard.Key>;
   private prompt = "";
@@ -183,6 +185,13 @@ export class NaveScene extends Phaser.Scene {
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     const garden = rites.find((r) => r.kind === "garden" && !r.done && nearPoint(me.x, me.y, r.x, r.y, 56));
+    const failed = visibleFailed(me.guest, me.serial, this.net.snap?.failed ?? []).find((h) =>
+      nearPoint(me.x, me.y, h.x, h.y, 56),
+    );
+    if (failed) {
+      this.net.watch();
+      return;
+    }
     if (burial || wreck || hist || garden) {
       this.net.bury();
       return;
@@ -398,6 +407,21 @@ export class NaveScene extends Phaser.Scene {
         this.histMarks.delete(id);
       }
     }
+    const failSeen = new Set<string>();
+    for (const f of visibleFailed(me.guest, me.serial, snap.failed ?? [])) {
+      failSeen.add(f.id);
+      let img = this.failMarks.get(f.id);
+      if (!img) {
+        img = this.add.image(f.x, f.y, "failed-passing").setDisplaySize(56, 32).setDepth(6);
+        this.failMarks.set(f.id, img);
+      }
+    }
+    for (const [id, img] of this.failMarks) {
+      if (!failSeen.has(id)) {
+        img.destroy();
+        this.failMarks.delete(id);
+      }
+    }
 
     const npcNear = NAVE_NPCS.find((n) => nearPoint(me.x, me.y, n.x, n.y));
     const burial = snap.rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
@@ -415,6 +439,9 @@ export class NaveScene extends Phaser.Scene {
     const foundry = nearPoint(me.x, me.y, ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y, 56);
     const cable = nearPoint(me.x, me.y, ORGAN_CABLE.x, ORGAN_CABLE.y, 56);
     const histNear = visibleHistory(me.guest, me.serial, snap.history ?? []).find((h) =>
+      nearPoint(me.x, me.y, h.x, h.y, 56),
+    );
+    const failNear = visibleFailed(me.guest, me.serial, snap.failed ?? []).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     const nearNode = snap.nodes.find(
@@ -479,6 +506,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `F speak with ${npcNear.name} · ${npcNear.role}`;
     } else if (burial) {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
+    } else if (failNear) {
+      this.prompt = me.beats.failed
+        ? me.heard || "Last season’s Passing failed. You already watched."
+        : "F — watch the failed Passing. Ruin-sight only. Do not loot it.";
     } else if (histNear) {
       this.prompt = "F — bury a prior hour. Only your serial can see this wreckage.";
     } else if (under && movementReady(me.beats)) {

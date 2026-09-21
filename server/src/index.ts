@@ -4,6 +4,7 @@ import {
   applyGoingUnder,
   applyLink,
   applyM3,
+  applyWatch,
   applyOperator,
   applyRead,
   applyStrike,
@@ -105,6 +106,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "m3") {
       this.w = applyM3(this.w, id);
+      this.broadcast();
+    } else if (data.t === "watch") {
+      this.w = applyWatch(this.w, id);
       this.broadcast();
     }
   }

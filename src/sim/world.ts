@@ -32,6 +32,8 @@ import {
   auraSeed,
   formatSerial,
   annexPoi,
+  FailedPassing,
+  FAILED_PASSING,
   HistoryMark,
   CLEARING_PRICE,
   CLEARING_STALL,
@@ -63,6 +65,10 @@ import {
   visibleHistory,
   visibleWink,
   WINK_HISTORY,
+  WATCH_FAILED,
+  WINK_FAILED,
+  FAILED_SPECTATOR,
+  visibleFailed,
   OPERATOR_DESK,
   OPERATOR_NEED_HALL,
   OPERATOR_OFFER,
@@ -149,6 +155,7 @@ export type WorldState = {
   frozen: boolean;
   passing: Passing;
   history: HistoryMark[];
+  failed: FailedPassing[];
   clearingOpen: boolean;
   m3Open: boolean;
   gestell: number;
@@ -226,6 +233,7 @@ export function emptyWorld(): WorldState {
     frozen: false,
     passing: emptyPassing(),
     history: [],
+    failed: [],
     clearingOpen: false,
     m3Open: false,
     gestell: 12,
@@ -542,7 +550,8 @@ export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
   });
   const care = openCareWorld(w);
   const planted = plantGarden({ ...w, rites, pois: care.pois });
-  return { ...w, players, rites: planted.rites, pois: planted.pois, signs: care.signs, careOpen: true };
+  const failed = w.failed.some((f) => f.id === FAILED_PASSING.id) ? w.failed : [...w.failed, { ...FAILED_PASSING }];
+  return { ...w, players, rites: planted.rites, pois: planted.pois, signs: care.signs, careOpen: true, failed };
 }
 
 function openCareWorld(w: WorldState): Pick<WorldState, "pois" | "signs" | "careOpen"> {
@@ -756,6 +765,29 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
   return { ...w, players };
 }
 
+export function applyWatch(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const mark = visibleFailed(p.guest, p.serial, w.failed).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
+  if (!mark) {
+    if (w.failed.some((m) => nearPoint(p.x, p.y, m.x, m.y, 56))) {
+      const players = new Map(w.players);
+      players.set(playerId, { ...p, heard: FAILED_SPECTATOR, wink: "" });
+      return { ...w, players };
+    }
+    return w;
+  }
+  const players = new Map(w.players);
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, failed: true },
+    heard: WATCH_FAILED,
+    wink: visibleWink(false, WINK_FAILED),
+    readiness: p.readiness + (p.beats.failed ? 0 : 1),
+  });
+  return { ...w, players };
+}
+
 export function applyM3(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, M3_DOOR.x, M3_DOOR.y, 56)) return w;
@@ -819,6 +851,7 @@ export function snapshot(w: WorldState) {
     passing: w.passing,
     tax: gestellTax(w.gestell),
     history: w.history,
+    failed: w.failed,
     clearingOpen: w.clearingOpen,
     m3Open: w.m3Open,
   };

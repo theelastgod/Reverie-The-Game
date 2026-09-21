@@ -1,4 +1,4 @@
-import type { Clerk, HistoryMark, Npc, Passing, Poi, Rite, Sign } from "../sim/campaign";
+import type { Clerk, FailedPassing, HistoryMark, Npc, Passing, Poi, Rite, Sign } from "../sim/campaign";
 import type { Intent, Player, Wreckage } from "../sim/world";
 import type { YieldNode } from "../sim/nave";
 
@@ -20,6 +20,7 @@ export type Snap = {
   passing: Passing;
   tax: number;
   history: HistoryMark[];
+  failed: FailedPassing[];
   clearingOpen: boolean;
   m3Open: boolean;
 };
@@ -95,6 +96,10 @@ export class WorldSocket {
 
   m3() {
     this.send({ t: "m3" });
+  }
+
+  watch() {
+    this.send({ t: "watch" });
   }
 
   private send(msg: unknown) {

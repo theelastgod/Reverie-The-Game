@@ -47,6 +47,12 @@ import {
   ORGAN_STRAIT,
   ORGAN_FOUNDRY,
   ORGAN_CABLE,
+  FAILED_PASSING,
+  WATCH_FAILED,
+  WINK_FAILED,
+  FAILED_SPECTATOR,
+  ruinSight,
+  visibleFailed,
   gestellTax,
   hallCopy,
   auraSeed,
@@ -68,6 +74,7 @@ import {
   applyGoingUnder,
   applyLink,
   applyM3,
+  applyWatch,
   applyMarket,
   applyOperator,
   applyRead,
@@ -560,6 +567,40 @@ describe("Movement III organs", () => {
     const guest = applyM3(gWorld, "g");
     expect(guest.players.get("g")?.inM3).toBe(false);
     expect(guest.players.get("g")?.heard).toBe(M3_SPECTATOR);
+  });
+});
+
+describe("failed Passing ruin-sight", () => {
+  it("only mock #7777 sees last season; watching is not loot and not damage", () => {
+    const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), nara: true, quill: true, ord: true, burial: true },
+    });
+    const under = applyGoingUnder(w, "a");
+    expect(under.failed).toEqual([{ ...FAILED_PASSING }]);
+    expect(visibleFailed(true, null, under.failed)).toEqual([]);
+    expect(ruinSight(false, TEST_SERIAL)).toBe(true);
+    expect(visibleFailed(false, TEST_SERIAL, under.failed)).toHaveLength(1);
+
+    under.players.set("a", { ...under.players.get("a")!, x: FAILED_PASSING.x, y: FAILED_PASSING.y });
+    const watched = applyWatch(under, "a");
+    const p = watched.players.get("a")!;
+    expect(p.beats.failed).toBe(true);
+    expect(p.heard).toBe(WATCH_FAILED);
+    expect(p.wink).toBe(WINK_FAILED);
+    expect(watched.failed).toHaveLength(1);
+    expect(p.bestand).toBe(0);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const gWorld = { ...under };
+    gWorld.players.set("g", { ...spawnGuest("g"), x: FAILED_PASSING.x, y: FAILED_PASSING.y, locked: true });
+    const guest = applyWatch(gWorld, "g");
+    expect(guest.players.get("g")?.beats.failed).toBe(false);
+    expect(guest.players.get("g")?.heard).toBe(FAILED_SPECTATOR);
+    expect(visibleFailed(true, null, guest.failed)).toEqual([]);
   });
 });
 
