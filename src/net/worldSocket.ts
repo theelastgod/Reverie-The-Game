@@ -16,6 +16,7 @@ export type Snap = {
   pois: Poi[];
   weatherNamed: boolean;
   careOpen: boolean;
+  tax: number;
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };

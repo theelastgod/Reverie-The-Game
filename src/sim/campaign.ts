@@ -31,6 +31,7 @@ export type Beats = {
   burial: boolean;
   under: boolean;
   care: boolean;
+  hall: boolean;
 };
 
 export type WeatherHeard = {
@@ -53,7 +54,7 @@ export type Poi = {
   name: string;
   x: number;
   y: number;
-  kind: "unnamed-weather" | "named-weather" | "care-shut" | "care-open";
+  kind: "unnamed-weather" | "named-weather" | "care-shut" | "care-open" | "house-hall";
 };
 
 export const GUEST_LOCK = "A guest cannot prepare the ground.";
@@ -103,9 +104,29 @@ export const ANGEL_UNDER =
   "The Care is open. You go under as death, not as a cutscene. Guests stop here.";
 
 export const CARE_DOOR = { id: "care-door", x: 1104, y: 168 };
+export const HOUSE_HALL = { id: "house-hall", x: 1184, y: 248 };
 export const WINK_CARE =
   "The Care does not keep you. It only lets you be mortal in a warehouse. The last god is not in the next room.";
 export const CARE_SPECTATOR = "You see a door. You do not see what it is for.";
+export const WINK_HALL =
+  "The tax is already priced. It will never make you hit harder. Who owns the nodes: the Houses, and the weather.";
+
+export function gestellTax(gestell: number): number {
+  const n = Math.max(0, Math.min(100, Math.floor(gestell)));
+  return Math.floor(n / 4);
+}
+
+export function hallCopy(tax: number): string {
+  return `House of Mortals. The nodes belong to the process. Tithe ${tax}. The number does not strike.`;
+}
+
+export const HALL_PLAQUE: Sign = {
+  id: HOUSE_HALL.id,
+  title: "House of Mortals",
+  text: "The nodes are standing-reserve. Tithe is a number. Combat is not.",
+  x: HOUSE_HALL.x,
+  y: HOUSE_HALL.y,
+};
 
 export const WEATHER_NAMED =
   "You named the weather. Safety still sells stability. The plaque is a lie the city paid for.";
@@ -124,7 +145,7 @@ export const CLERK_DAMAGE = 14;
 export const CLERK_TELEGRAPH = 0.6;
 
 export function emptyBeats(): Beats {
-  return { nara: false, quill: false, ord: false, burial: false, under: false, care: false };
+  return { nara: false, quill: false, ord: false, burial: false, under: false, care: false, hall: false };
 }
 
 export function emptyWeather(): WeatherHeard {
@@ -155,6 +176,14 @@ export function navePois(): Poi[] {
 
 export function openCarePoi(): Poi {
   return { id: CARE_DOOR.id, name: "The Care", x: CARE_DOOR.x, y: CARE_DOOR.y, kind: "care-open" };
+}
+
+export function houseHallPoi(): Poi {
+  return { id: HOUSE_HALL.id, name: "House of Mortals", x: HOUSE_HALL.x, y: HOUSE_HALL.y, kind: "house-hall" };
+}
+
+export function hallPlaque(): Sign {
+  return { ...HALL_PLAQUE };
 }
 
 export function visibleWink(guest: boolean, wink: string): string {

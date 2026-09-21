@@ -33,7 +33,13 @@ import {
   formatSerial,
   CARE_DOOR,
   CARE_SPECTATOR,
+  HOUSE_HALL,
   WINK_CARE,
+  WINK_HALL,
+  gestellTax,
+  hallCopy,
+  hallPlaque,
+  houseHallPoi,
   openCarePoi,
   visibleWink,
 } from "./campaign";
@@ -305,7 +311,8 @@ export function applyUse(
   const players = new Map(w.players);
   if (choice === "extract") {
     nodes[idx] = { ...node, depleted: true, kept: false };
-    players.set(playerId, { ...p, bestand: p.bestand + 40 });
+    const tax = p.beats.hall ? gestellTax(w.gestell) : 0;
+    players.set(playerId, { ...p, bestand: p.bestand + Math.max(0, 40 - tax) });
     return { ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) };
   }
   nodes[idx] = { ...node, depleted: true, kept: true };
@@ -351,6 +358,19 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   const p = w.players.get(playerId);
   const sign = w.signs.find((s) => s.id === signId);
   if (!p || p.hp <= 0 || !sign || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
+  if (sign.id === HOUSE_HALL.id) {
+    if (!p.inCare || p.guest || p.locked) return w;
+    const tax = gestellTax(w.gestell);
+    const players = new Map(w.players);
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, hall: true },
+      heard: hallCopy(tax),
+      wink: visibleWink(false, WINK_HALL),
+      readiness: p.readiness + (p.beats.hall ? 0 : 1),
+    });
+    return { ...w, players };
+  }
   const weather = { ...p.weather, safety: true };
   const heard = `${sign.title}: ${sign.text}`;
   return withNamedWeather(w, playerId, { ...p, weather, heard });
@@ -398,8 +418,15 @@ export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
     beats: { ...p.beats, under: true },
     heard: ANGEL_UNDER,
   });
-  const pois = w.careOpen ? w.pois : w.pois.map((poi) => (poi.id === CARE_DOOR.id ? openCarePoi() : poi));
-  return { ...w, players, rites, pois, careOpen: true };
+  return { ...w, players, rites, ...openCareWorld(w) };
+}
+
+function openCareWorld(w: WorldState): Pick<WorldState, "pois" | "signs" | "careOpen"> {
+  if (w.careOpen) return { pois: w.pois, signs: w.signs, careOpen: true };
+  const pois = w.pois.map((poi) => (poi.id === CARE_DOOR.id ? openCarePoi() : poi));
+  if (!pois.some((poi) => poi.id === HOUSE_HALL.id)) pois.push(houseHallPoi());
+  const signs = w.signs.some((s) => s.id === HOUSE_HALL.id) ? w.signs : [...w.signs, hallPlaque()];
+  return { pois, signs, careOpen: true };
 }
 
 export function applyCare(w: WorldState, playerId: string): WorldState {
@@ -411,13 +438,16 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: p.guest || p.locked ? CARE_SPECTATOR : p.heard, wink: visibleWink(true, WINK_CARE) });
     return { ...w, players };
   }
+  const first = !p.beats.care;
   players.set(playerId, {
     ...p,
     beats: { ...p.beats, care: true },
     inCare: true,
     wink: visibleWink(false, WINK_CARE),
     heard: WINK_CARE,
-    readiness: p.readiness + (p.beats.care ? 0 : 1),
+    readiness: p.readiness + (first ? 1 : 0),
+    x: first ? HOUSE_HALL.x - 48 : p.x,
+    y: first ? HOUSE_HALL.y : p.y,
   });
   return { ...w, players };
 }
@@ -453,5 +483,6 @@ export function snapshot(w: WorldState) {
     pois: w.pois,
     weatherNamed: w.weatherNamed,
     careOpen: w.careOpen,
+    tax: gestellTax(w.gestell),
   };
 }

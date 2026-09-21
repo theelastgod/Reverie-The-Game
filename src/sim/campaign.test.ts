@@ -4,9 +4,14 @@ import {
   CARE_SPECTATOR,
   GUEST_LOCK,
   GOING_UNDER,
+  HALL_PLAQUE,
+  HOUSE_HALL,
   MOCK_SIG,
   TEST_SERIAL,
   WINK_CARE,
+  WINK_HALL,
+  gestellTax,
+  hallCopy,
   auraSeed,
   formatSerial,
   movementReady,
@@ -14,6 +19,7 @@ import {
   NAVE_SIGNS,
   NPC_LINES,
   displayName,
+  emptyBeats,
   visibleWink,
   winkeVisible,
 } from "./campaign";
@@ -23,6 +29,7 @@ import {
   applyGoingUnder,
   applyLink,
   applyRead,
+  snapshot,
   applyStrike,
   applyTalk,
   applyUse,
@@ -78,7 +85,7 @@ describe("Movement I beats", () => {
 
   it("guest lock copy fires at going-under after the three intros and burial", () => {
     const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
-      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
     });
     expect(movementReady(w.players.get("a")!.beats)).toBe(true);
     const locked = applyGoingUnder(w, "a");
@@ -106,7 +113,7 @@ describe("Movement I beats", () => {
     const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
       guest: false,
       aura: 12,
-      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
     });
     const after = applyGoingUnder(w, "a");
     const p = after.players.get("a")!;
@@ -116,6 +123,8 @@ describe("Movement I beats", () => {
     expect(p.beats.under).toBe(true);
     expect(after.careOpen).toBe(true);
     expect(after.pois.find((poi) => poi.id === CARE_DOOR.id)?.kind).toBe("care-open");
+    expect(after.pois.find((poi) => poi.id === HOUSE_HALL.id)?.name).toBe("House of Mortals");
+    expect(after.signs.find((s) => s.id === HOUSE_HALL.id)?.title).toBe("House of Mortals");
     expect(guestCanClaim(p)).toBe(false);
   });
 });
@@ -125,12 +134,12 @@ describe("Care door and Wink", () => {
     guest: false,
     serial: TEST_SERIAL,
     aura: auraSeed(TEST_SERIAL),
-    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false },
+    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
   };
 
   it("linked Angel going-under opens the Care; guest lock does not", () => {
     const guestW = placeNear("g", GOING_UNDER.x, GOING_UNDER.y, {
-      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
     });
     const guestAfter = applyGoingUnder(guestW, "g");
     expect(guestAfter.careOpen).toBe(false);
@@ -168,6 +177,85 @@ describe("Care door and Wink", () => {
     expect(g.heard).toBe(CARE_SPECTATOR);
     expect(visibleWink(g.guest, WINK_CARE)).toBe("");
     expect(guestCanClaim(g)).toBe(false);
+  });
+});
+
+describe("Movement II House hall", () => {
+  const ready = {
+    guest: false,
+    serial: TEST_SERIAL,
+    aura: auraSeed(TEST_SERIAL),
+    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
+  };
+
+  function angelInHall() {
+    const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, ready);
+    const open = applyGoingUnder(w, "a");
+    open.players.set("a", { ...open.players.get("a")!, x: CARE_DOOR.x, y: CARE_DOOR.y });
+    const care = applyCare(open, "a");
+    const p = care.players.get("a")!;
+    care.players.set("a", { ...p, x: HOUSE_HALL.x, y: HOUSE_HALL.y });
+    return care;
+  }
+
+  it("gestell tax is a climate number and never a damage stick", () => {
+    expect(gestellTax(12)).toBe(3);
+    expect(gestellTax(0)).toBe(0);
+    expect(gestellTax(100)).toBe(25);
+    expect(gestellTax(-4)).toBe(0);
+    const snap = snapshot(emptyWorld());
+    expect(snap.tax).toBe(gestellTax(snap.gestell));
+    const rich = { ...spawnGuest("a"), bestand: 9999, beats: { ...emptyBeats(), hall: true } };
+    expect(damageFor(rich)).toBe(damageFor(spawnGuest("b")));
+    expect(damageFor({ ...rich, aura: 99 })).toBe(damageFor(spawnGuest("b")));
+    expect(guestCanClaim(rich)).toBe(false);
+  });
+
+  it("linked Angel in the Care reads the House hall and hears the tithe", () => {
+    const w = angelInHall();
+    const after = applyRead(w, "a", HOUSE_HALL.id);
+    const p = after.players.get("a")!;
+    const tax = gestellTax(after.gestell);
+    expect(p.beats.hall).toBe(true);
+    expect(p.heard).toBe(hallCopy(tax));
+    expect(p.heard).toContain(String(tax));
+    expect(p.heard).toContain("House of Mortals");
+    expect(p.heard).not.toMatch(/house_hall|HOUSE_HALL/);
+    expect(p.wink).toBe(WINK_HALL);
+    expect(visibleWink(p.guest, p.wink)).toBe(WINK_HALL);
+    expect(HALL_PLAQUE.title).toBe("House of Mortals");
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
+    expect(guestCanClaim(p)).toBe(false);
+  });
+
+  it("guest cannot read the House hall even when the Care is open", () => {
+    const w = angelInHall();
+    w.players.set("g", {
+      ...spawnGuest("g"),
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+      locked: true,
+    });
+    const after = applyRead(w, "g", HOUSE_HALL.id);
+    const g = after.players.get("g")!;
+    expect(g.beats.hall).toBe(false);
+    expect(g.wink).toBe("");
+    expect(g.heard).not.toBe(hallCopy(gestellTax(w.gestell)));
+    expect(guestCanClaim(g)).toBe(false);
+  });
+
+  it("hall tax skims extract Bestand and still does not change damage", () => {
+    const w = angelInHall();
+    const taxed = applyRead(w, "a", HOUSE_HALL.id);
+    const node = taxed.nodes[0];
+    taxed.players.set("a", { ...taxed.players.get("a")!, x: node.x, y: node.y });
+    const tax = gestellTax(taxed.gestell);
+    const after = applyUse(taxed, "a", node.id, "extract");
+    const p = after.players.get("a")!;
+    expect(p.bestand).toBe(40 - tax);
+    expect(p.bestand).toBeLessThan(40);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
+    expect(guestCanClaim(p)).toBe(false);
   });
 });
 

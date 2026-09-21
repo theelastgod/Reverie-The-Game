@@ -3,12 +3,14 @@ import {
   CARE_DOOR,
   formatSerial,
   GOING_UNDER,
+  HOUSE_HALL,
   movementReady,
   NAVE_NPCS,
   NAVE_SIGNS,
   nearPoint,
   TEST_SERIAL,
   winkeVisible,
+  type Sign,
 } from "../sim/campaign";
 import { COLS, ROWS, TILE, YieldNode } from "../sim/nave";
 import { WorldSocket } from "../net/worldSocket";
@@ -90,22 +92,28 @@ export class NaveScene extends Phaser.Scene {
     this.net.connect();
   }
 
+  private drawSign(s: Sign) {
+    if (this.signLabels.has(s.id)) return;
+    this.add.rectangle(s.x, s.y, 112, 28, 0xffffff).setStrokeStyle(3, 0x0a0a0a).setDepth(4);
+    if (s.id === HOUSE_HALL.id) {
+      this.add.image(s.x, s.y - 52, "house-hall").setDisplaySize(88, 50).setDepth(3);
+    }
+    const label = this.add
+      .text(s.x, s.y - 2, s.title, {
+        fontFamily: "Space Grotesk, sans-serif",
+        fontSize: "9px",
+        color: "#0a0a0a",
+        align: "center",
+      })
+      .setOrigin(0.5)
+      .setDepth(5);
+    this.signLabels.set(s.id, label);
+  }
+
   private drawSigns() {
     if (this.signsDrawn) return;
     this.signsDrawn = true;
-    for (const s of NAVE_SIGNS) {
-      this.add.rectangle(s.x, s.y, 96, 28, 0xffffff).setStrokeStyle(3, 0x0a0a0a).setDepth(4);
-      const label = this.add
-        .text(s.x, s.y - 2, s.title, {
-          fontFamily: "Space Grotesk, sans-serif",
-          fontSize: "9px",
-          color: "#0a0a0a",
-          align: "center",
-        })
-        .setOrigin(0.5)
-        .setDepth(5);
-      this.signLabels.set(s.id, label);
-    }
+    for (const s of NAVE_SIGNS) this.drawSign(s);
     for (const n of NAVE_NPCS) {
       if (this.npcMarks.has(n.id)) continue;
       const img = this.add.image(n.x, n.y, n.id).setDisplaySize(52, 64).setDepth(9);
@@ -255,14 +263,17 @@ export class NaveScene extends Phaser.Scene {
       const fill =
         poi.kind === "named-weather"
           ? 0xc9a56a
-          : poi.kind === "care-open"
-            ? 0x7eb6ff
-            : poi.kind === "care-shut"
-              ? 0x3a3a3a
-              : 0x5a5a5a;
+          : poi.kind === "house-hall"
+            ? 0xc9a56a
+            : poi.kind === "care-open"
+              ? 0x7eb6ff
+              : poi.kind === "care-shut"
+                ? 0x3a3a3a
+                : 0x5a5a5a;
       g.setFillStyle(fill, 0.85);
     }
     for (const s of this.net.snap?.signs ?? []) {
+      this.drawSign(s);
       this.signLabels.get(s.id)?.setText(s.title);
     }
   }
@@ -326,12 +337,19 @@ export class NaveScene extends Phaser.Scene {
     const clerkNear = snap.clerks.find((c) => nearPoint(me.x, me.y, c.x, c.y, 70));
     const under = nearPoint(me.x, me.y, GOING_UNDER.x, GOING_UNDER.y, 56);
     const care = nearPoint(me.x, me.y, CARE_DOOR.x, CARE_DOOR.y, 56);
+    const hall = nearPoint(me.x, me.y, HOUSE_HALL.x, HOUSE_HALL.y, 56);
     const nearNode = snap.nodes.find(
       (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
 
     if (me.locked) {
       this.prompt = care ? me.heard || "You see a door. You do not see what it is for." : me.heard || "A guest cannot prepare the ground.";
+    } else if (hall && me.inCare && !me.guest) {
+      this.prompt = me.beats.hall
+        ? me.heard
+        : `F read House of Mortals. Gestell tax ${snap.tax}. The number does not strike.`;
+    } else if (hall) {
+      this.prompt = "You see a hall. You do not see who owns the nodes.";
     } else if (care && snap.careOpen && !me.guest && me.beats.under) {
       this.prompt = me.wink || "F — the Care. A Wink only you can hold.";
     } else if (care && !me.guest && !me.beats.under) {
@@ -376,7 +394,9 @@ export class NaveScene extends Phaser.Scene {
     const stats = hud("stat-chip");
     if (stats) {
       const winke = winkeVisible(me.guest) ? `Winke ${me.winke}` : "Winke —";
-      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}`;
+      stats.textContent = me.inCare
+        ? `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell} · tax ${snap.tax}`
+        : `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;
@@ -386,6 +406,8 @@ export class NaveScene extends Phaser.Scene {
       wink.textContent = me.wink ? `Wink · ${me.wink}` : "";
     }
     const zone = hud("zone-chip");
-    if (zone) zone.textContent = me.inCare ? "The Care" : "Nave of Tubes";
+    if (zone) {
+      zone.textContent = me.inCare ? (hall ? "The Care · House hall" : "The Care") : "Nave of Tubes";
+    }
   }
 }

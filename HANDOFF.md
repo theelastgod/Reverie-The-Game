@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 9** — Movement II stub in The Care (House hall / Gestell tax copy). No mint.
+**Next stage: 10** — Safety Annex freeze stub (katechon): sign a freeze that protects a district and starves a Passing. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -46,8 +46,14 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - F at the door: linked Angel hears WINK_CARE (HUD wink chip). Guests hear spectator copy and never get the Wink.
 - Claims still refuse. No Base.
 
-## Stage 9 (do this next)
-Movement II stub inside The Care: House hall plaque, Gestell tax as a number, no combat power from it.
+## Stage 9 (landed)
+- House of Mortals hall plaque inside The Care (Angel going-under then F at the door).
+- `gestellTax` is climate/4. Snapshot carries `tax`. HUD shows it in the Care.
+- Reading the plaque is a Wink (`WINK_HALL`). Guests never hear it.
+- Hall tax skims extract Bestand. `damageFor` ignores tax, aura, and `$REVERIE`. Claims still refuse.
+
+## Stage 10 (do this next)
+Safety Annex freeze stub: sign a freeze (katechon) that protects a district and starves a Passing. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
