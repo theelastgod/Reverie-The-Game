@@ -16,7 +16,6 @@ import {
   navePois,
   naveRites,
   naveSigns,
-  NAVE_NPCS,
   nearPoint,
   NpcId,
   npcById,
@@ -104,6 +103,23 @@ import {
   FORGE_SPOT,
   FORGE_SPECTATOR,
   WINK_FORGE,
+  CLEARING_RING,
+  CLEARING_PREPARE,
+  CLEARING_NEED_MORTAL,
+  CLEARING_NEED_GARDEN,
+  CLEARING_SPECTATOR,
+  CLEARING_CONTEST,
+  CONTEST_PAY,
+  IONE,
+  IONE_SPECTATOR,
+  LAST_WORD,
+  LAST_WORD_GONE,
+  WINK_TURN,
+  PASSING_NEED,
+  clearingPoi,
+  liveNpcs,
+  passingCopy,
+  passingResult,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -169,6 +185,7 @@ export type WorldState = {
   clearingOpen: boolean;
   m3Open: boolean;
   forgedSold: boolean;
+  ioneGone: boolean;
   gestell: number;
   now: number;
 };
@@ -250,6 +267,7 @@ export function emptyWorld(): WorldState {
     clearingOpen: false,
     m3Open: false,
     forgedSold: false,
+    ioneGone: false,
     gestell: 12,
     now: 0,
   };
@@ -443,6 +461,7 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
     players.set(playerId, { ...p, heard: NARA_SILENCE });
     return { ...w, players };
   }
+  if (id === "ione") return applyLastWord(w, playerId);
   if (id === "quill" && p.beats.market && !p.guest && !p.locked) {
     return applyForge(w, playerId, "hear");
   }
@@ -486,6 +505,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) return applyMarket(w, playerId);
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
+  if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
   if (sign.id === OPERATOR_DESK.id) return applyOperator(w, playerId, "hear");
   if (sign.id === ORGAN_STRAIT.id || sign.id === ORGAN_FOUNDRY.id || sign.id === ORGAN_CABLE.id) {
     return applyOrgan(w, playerId, sign);
@@ -912,7 +932,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: NAVE_NPCS,
+    npcs: liveNpcs(w.ioneGone),
     signs: w.signs,
     pois: w.pois,
     weatherNamed: w.weatherNamed,
@@ -925,5 +945,130 @@ export function snapshot(w: WorldState) {
     clearingOpen: w.clearingOpen,
     m3Open: w.m3Open,
     forgedSold: w.forgedSold,
+    ioneGone: w.ioneGone,
+  };
+}
+
+export function applyLastWord(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, IONE.x, IONE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (w.ioneGone) {
+    players.set(playerId, { ...p, heard: LAST_WORD_GONE });
+    return { ...w, players };
+  }
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: IONE_SPECTATOR, wink: visibleWink(true, WINK_TURN) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, lastWord: true },
+    heard: LAST_WORD,
+    wink: visibleWink(false, WINK_TURN),
+    readiness: p.readiness + (p.beats.lastWord ? 0 : 1),
+  });
+  return { ...w, players, ioneGone: true };
+}
+
+export function applyClearing(
+  w: WorldState,
+  playerId: string,
+  choice: "keep" | "extract" | "pass",
+): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CLEARING_SPECTATOR, wink: visibleWink(true, WINK_TURN) });
+    return { ...w, players };
+  }
+  if (choice === "extract") {
+    players.set(playerId, {
+      ...p,
+      bestand: p.bestand + CONTEST_PAY,
+      aura: Math.max(0, p.aura - 2),
+      current: p.current || "cold",
+      heard: CLEARING_CONTEST,
+      wink: visibleWink(false, WINK_TURN),
+    });
+    return {
+      ...w,
+      players,
+      clearingOpen: false,
+      gestell: Math.min(100, w.gestell + 8),
+      pois: w.pois.map((poi) => (poi.id === CLEARING_RING.id ? clearingPoi(false) : poi)),
+    };
+  }
+  if (choice === "pass" || (choice === "keep" && p.beats.clearing && w.clearingOpen)) {
+    return applyPassing(w, playerId);
+  }
+  if (!p.beats.garden) {
+    players.set(playerId, { ...p, heard: CLEARING_NEED_GARDEN });
+    return { ...w, players };
+  }
+  if (!p.beats.lastWord) {
+    players.set(playerId, { ...p, heard: CLEARING_NEED_MORTAL });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, clearing: true },
+    heard: CLEARING_PREPARE,
+    wink: visibleWink(false, WINK_TURN),
+    readiness: p.readiness + (p.beats.clearing ? 0 : 1),
+  });
+  return {
+    ...w,
+    players,
+    clearingOpen: true,
+    gestell: Math.max(0, w.gestell - 4),
+    pois: w.pois.map((poi) => (poi.id === CLEARING_RING.id ? clearingPoi(true) : poi)),
+  };
+}
+
+export function applyPassing(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CLEARING_SPECTATOR, wink: visibleWink(true, WINK_TURN) });
+    return { ...w, players };
+  }
+  if (!w.clearingOpen) {
+    const failed = p.beats.clearing;
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, passing: failed },
+      heard: failed ? passingCopy("failed") : PASSING_NEED,
+      wink: visibleWink(false, WINK_TURN),
+    });
+    return failed
+      ? { ...w, players, passing: { ...w.passing, ready: 0, outcome: "failed" } }
+      : { ...w, players };
+  }
+  const dwellers = [...w.players.values()].filter((x) => !x.guest && !x.locked && x.beats.clearing).length;
+  const outcome = passingResult({
+    starved: w.passing.starved || w.frozen,
+    gestell: w.gestell,
+    clearingOpen: w.clearingOpen,
+    dwellers,
+    cold: p.current === "cold",
+  });
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, passing: true },
+    heard: passingCopy(outcome),
+    wink: visibleWink(false, WINK_TURN),
+    readiness: p.readiness + (outcome === "appearance" && !p.beats.passing ? 2 : 0),
+  });
+  return {
+    ...w,
+    players,
+    passing: {
+      ready: outcome === "appearance" ? w.passing.ready : 0,
+      starved: outcome !== "appearance" ? true : w.passing.starved,
+      outcome,
+    },
   };
 }

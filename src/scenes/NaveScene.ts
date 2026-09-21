@@ -16,6 +16,8 @@ import {
   FORGE_PAY,
   PRIVATE_YIELD,
   WRECK_GARDEN,
+  CLEARING_RING,
+  IONE,
   movementReady,
   NAVE_NPCS,
   NAVE_SIGNS,
@@ -40,6 +42,7 @@ export class NaveScene extends Phaser.Scene {
   private nodeMarks = new Map<string, Phaser.GameObjects.Arc>();
   private wreckMarks = new Map<string, Phaser.GameObjects.Arc>();
   private npcMarks = new Map<string, Phaser.GameObjects.Image>();
+  private npcNames = new Map<string, Phaser.GameObjects.Text>();
   private riteMarks = new Map<string, Phaser.GameObjects.Arc>();
   private clerkMarks = new Map<string, Phaser.GameObjects.Image>();
   private clerkTele = new Map<string, Phaser.GameObjects.Arc>();
@@ -123,6 +126,9 @@ export class NaveScene extends Phaser.Scene {
     if (s.id === ORGAN_STRAIT.id) {
       this.add.image(s.x, s.y - 52, "organ-strait").setDisplaySize(88, 50).setDepth(3);
     }
+    if (s.id === CLEARING_RING.id) {
+      this.add.image(s.x, s.y - 52, "clearing-ring").setDisplaySize(88, 50).setDepth(3);
+    }
     const label = this.add
       .text(s.x, s.y - 2, s.title, {
         fontFamily: "Space Grotesk, sans-serif",
@@ -139,10 +145,10 @@ export class NaveScene extends Phaser.Scene {
     if (this.signsDrawn) return;
     this.signsDrawn = true;
     for (const s of NAVE_SIGNS) this.drawSign(s);
-    for (const n of NAVE_NPCS) {
+    for (const n of [...NAVE_NPCS, IONE]) {
       if (this.npcMarks.has(n.id)) continue;
       const img = this.add.image(n.x, n.y, n.id).setDisplaySize(52, 64).setDepth(9);
-      this.add
+      const nm = this.add
         .text(n.x, n.y - 40, n.name, {
           fontFamily: "Space Grotesk, sans-serif",
           fontSize: "11px",
@@ -151,6 +157,7 @@ export class NaveScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setDepth(11);
       this.npcMarks.set(n.id, img);
+      this.npcNames.set(n.id, nm);
     }
   }
 
@@ -168,6 +175,10 @@ export class NaveScene extends Phaser.Scene {
       this.net.forge(choice === "extract" ? "sell" : "spot");
       return;
     }
+    if (nearPoint(me.x, me.y, CLEARING_RING.x, CLEARING_RING.y, 64)) {
+      this.net.clearing(choice === "extract" ? "extract" : "keep");
+      return;
+    }
     const n = nodes.find((node) => !node.depleted && Phaser.Math.Distance.Between(me.x, me.y, node.x, node.y) < 40);
     if (n) this.net.use(n.id, choice);
   }
@@ -175,7 +186,7 @@ export class NaveScene extends Phaser.Scene {
   private interact() {
     const me = this.net.you;
     if (!me) return;
-    const npc = NAVE_NPCS.find((n) => nearPoint(me.x, me.y, n.x, n.y));
+    const npc = (this.net.snap?.npcs ?? [...NAVE_NPCS, IONE]).find((n) => nearPoint(me.x, me.y, n.x, n.y));
     if (npc) {
       this.net.talk(npc.id);
       return;
@@ -202,6 +213,10 @@ export class NaveScene extends Phaser.Scene {
     }
     if (burial || wreck || hist || garden) {
       this.net.bury();
+      return;
+    }
+    if (nearPoint(me.x, me.y, CLEARING_RING.x, CLEARING_RING.y, 64)) {
+      this.net.clearing(me.beats.clearing ? "pass" : "keep");
       return;
     }
     if (nearPoint(me.x, me.y, M3_DOOR.x, M3_DOOR.y, 56)) {
@@ -339,6 +354,10 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                         : poi.kind === "forge-tray"
                           ? 0xe8d5a3
+                          : poi.kind === "clearing-held"
+                            ? 0x7eb6ff
+                            : poi.kind === "clearing-ring"
+                              ? 0xc9a56a
             : poi.kind === "care-shut"
                 ? 0x3a3a3a
                 : 0x5a5a5a;
@@ -387,6 +406,9 @@ export class NaveScene extends Phaser.Scene {
     this.syncRites();
     this.syncClerks();
     this.syncPois();
+    const ioneImg = this.npcMarks.get(IONE.id);
+    if (ioneImg) ioneImg.setVisible(!snap.ioneGone);
+    this.npcNames.get(IONE.id)?.setVisible(!snap.ioneGone);
     const wreckSeen = new Set<string>();
     for (const r of snap.wreckage) {
       wreckSeen.add(r.id);
@@ -433,7 +455,7 @@ export class NaveScene extends Phaser.Scene {
       }
     }
 
-    const npcNear = NAVE_NPCS.find((n) => nearPoint(me.x, me.y, n.x, n.y));
+    const npcNear = (snap.npcs ?? NAVE_NPCS).find((n) => nearPoint(me.x, me.y, n.x, n.y));
     const burial = snap.rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
     const sign = (snap.signs ?? NAVE_SIGNS).find((s) => nearPoint(me.x, me.y, s.x, s.y, 56));
     const clerkNear = snap.clerks.find((c) => nearPoint(me.x, me.y, c.x, c.y, 70));
@@ -457,6 +479,7 @@ export class NaveScene extends Phaser.Scene {
     const failNear = visibleFailed(me.guest, me.serial, snap.failed ?? []).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
+    const ring = nearPoint(me.x, me.y, CLEARING_RING.x, CLEARING_RING.y, 64);
     const nearNode = snap.nodes.find(
       (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
@@ -495,6 +518,18 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `Q keep the eye (cult). E sell a copy (+${FORGE_PAY} Bestand).`;
     } else if (forge && me.beats.market) {
       this.prompt = "F — Quill will teach the difference, or sell you the print.";
+    } else if (ring && (me.guest || me.locked)) {
+      this.prompt = "A ring in the asphalt. You cannot prepare the ground.";
+    } else if (ring && snap.passing.outcome) {
+      this.prompt = me.heard || "The hour already went by.";
+    } else if (ring && me.beats.clearing && snap.clearingOpen) {
+      this.prompt = "F — attempt the Passing. Q keep. E extract (contest). Solo cannot force a god.";
+    } else if (ring && me.beats.lastWord && me.beats.garden) {
+      this.prompt = "F / Q keep the Clearing. E extract is a contest. Mortality is done.";
+    } else if (ring && !me.beats.lastWord) {
+      this.prompt = "A mortality act is required. Speak a last word with Ione Kade.";
+    } else if (ring && !me.beats.garden) {
+      this.prompt = "Nara Vale will not stand in a hole you left as wreckage.";
     } else if (desk && (me.guest || me.locked)) {
       this.prompt = "A woman at a desk. She is not speaking to you.";
     } else if (desk && me.beats.cold) {
@@ -569,7 +604,13 @@ export class NaveScene extends Phaser.Scene {
       const winke = winkeVisible(me.guest) ? `Winke ${me.winke}` : "Winke —";
       const taxBit = me.inCare ? ` · tax ${snap.tax}` : "";
       const freezeBit = snap.frozen ? " · freeze" : "";
-      const passBit = snap.passing.starved ? " · Passing starved" : "";
+      const passBit = snap.passing.outcome
+        ? ` · Passing ${snap.passing.outcome}`
+        : snap.passing.starved
+          ? " · Passing starved"
+          : snap.clearingOpen
+            ? " · Clearing held"
+            : "";
       stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}`;
     }
     const lock = hud("lock-panel");
@@ -589,6 +630,10 @@ export class NaveScene extends Phaser.Scene {
             : cable
               ? "The Cable"
               : "Movement III"
+        : ring
+          ? snap.clearingOpen
+            ? "The Clearing · held"
+            : "The Clearing"
         : me.inCare
           ? hall
             ? "The Care · House hall"

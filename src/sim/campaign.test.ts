@@ -59,6 +59,26 @@ import {
   FORGE_SPECTATOR,
   WINK_FORGE,
   FAILED_SPECTATOR,
+  CLEARING_RING,
+  CLEARING_PREPARE,
+  CLEARING_NEED_MORTAL,
+  CLEARING_NEED_GARDEN,
+  CLEARING_SPECTATOR,
+  CLEARING_CONTEST,
+  CONTEST_PAY,
+  GESTELL_HOT,
+  IONE,
+  IONE_SPECTATOR,
+  LAST_WORD,
+  LAST_WORD_GONE,
+  WINK_TURN,
+  PASSING_APPEAR,
+  PASSING_ABSENCE,
+  PASSING_HIJACK,
+  PASSING_FAIL,
+  PASSING_NEED,
+  dwellNeed,
+  passingResult,
   ruinSight,
   visibleFailed,
   gestellTax,
@@ -84,6 +104,9 @@ import {
   applyM3,
   applyWatch,
   applyForge,
+  applyLastWord,
+  applyClearing,
+  applyPassing,
   applyMarket,
   applyOperator,
   applyRead,
@@ -665,6 +688,185 @@ describe("forged Winke", () => {
     expect(after.players.get("g")?.wink).toBe("");
     expect(after.forgedSold).toBe(false);
     expect(guestCanClaim(after.players.get("g")!)).toBe(false);
+  });
+});
+
+describe("Movement IV Clearing and Passing", () => {
+  function angelAt(x: number, y: number, extra: Partial<ReturnType<typeof spawnGuest>> = {}) {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: {
+        ...emptyBeats(),
+        nara: true,
+        quill: true,
+        ord: true,
+        burial: true,
+        under: true,
+        care: true,
+        hall: true,
+        garden: true,
+      },
+      x,
+      y,
+      ...extra,
+    });
+    return w;
+  }
+
+  it("Ione Kade last word is the mortality act; guests never hear it", () => {
+    const w = angelAt(IONE.x, IONE.y);
+    const after = applyLastWord(w, "a");
+    const p = after.players.get("a")!;
+    expect(p.beats.lastWord).toBe(true);
+    expect(p.heard).toBe(LAST_WORD);
+    expect(p.heard).toContain("Ione Kade");
+    expect(p.wink).toBe(WINK_TURN);
+    expect(after.ioneGone).toBe(true);
+    expect(snapshot(after).npcs.find((n) => n.id === "ione")).toBeUndefined();
+    expect(applyLastWord(after, "a").players.get("a")?.heard).toBe(LAST_WORD_GONE);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: IONE.x, y: IONE.y, locked: true });
+    const guest = applyLastWord(gWorld, "g");
+    expect(guest.ioneGone).toBe(false);
+    expect(guest.players.get("g")?.heard).toBe(IONE_SPECTATOR);
+    expect(guest.players.get("g")?.wink).toBe("");
+    expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
+  });
+
+  it("Clearing needs garden and last word; keeping does not mint", () => {
+    const noGarden = applyClearing(angelAt(CLEARING_RING.x, CLEARING_RING.y, { beats: { ...emptyBeats(), lastWord: true } }), "a", "keep");
+    expect(noGarden.players.get("a")?.heard).toBe(CLEARING_NEED_GARDEN);
+    expect(noGarden.clearingOpen).toBe(false);
+
+    const noWord = applyClearing(angelAt(CLEARING_RING.x, CLEARING_RING.y), "a", "keep");
+    expect(noWord.players.get("a")?.heard).toBe(CLEARING_NEED_MORTAL);
+    expect(noWord.clearingOpen).toBe(false);
+
+    const ready = angelAt(CLEARING_RING.x, CLEARING_RING.y, { beats: { ...emptyBeats(), garden: true, lastWord: true } });
+    const held = applyClearing(ready, "a", "keep");
+    const p = held.players.get("a")!;
+    expect(p.beats.clearing).toBe(true);
+    expect(p.heard).toBe(CLEARING_PREPARE);
+    expect(held.clearingOpen).toBe(true);
+    expect(held.pois.find((poi) => poi.id === CLEARING_RING.id)?.kind).toBe("clearing-held");
+    expect(held.gestell).toBeLessThan(ready.gestell);
+    expect(guestCanClaim(p)).toBe(false);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+  });
+
+  it("extract contests the Clearing and does not open a Passing", () => {
+    const ready = angelAt(CLEARING_RING.x, CLEARING_RING.y, { beats: { ...emptyBeats(), garden: true, lastWord: true } });
+    const held = applyClearing(ready, "a", "keep");
+    const took = applyClearing(held, "a", "extract");
+    const p = took.players.get("a")!;
+    expect(p.bestand).toBe(CONTEST_PAY);
+    expect(p.heard).toBe(CLEARING_CONTEST);
+    expect(took.clearingOpen).toBe(false);
+    expect(took.passing.outcome).toBe("");
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+  });
+
+  it("Gestell 100 blocks Passing without a Clearing", () => {
+    expect(dwellNeed(100)).toBe(2);
+    expect(dwellNeed(12)).toBe(1);
+    expect(passingResult({ starved: false, gestell: 100, clearingOpen: false, dwellers: 1, cold: false })).toBe("failed");
+    const w = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
+      beats: { ...emptyBeats(), garden: true, lastWord: true },
+    });
+    w.gestell = 100;
+    const attempt = applyPassing(w, "a");
+    const p = attempt.players.get("a")!;
+    expect(p.heard).toBe(PASSING_NEED);
+    expect(attempt.passing.outcome).toBe("");
+    const forced = applyClearing(w, "a", "pass");
+    expect(forced.players.get("a")?.heard).toBe(PASSING_NEED);
+    expect(guestCanClaim(p)).toBe(false);
+  });
+
+  it("solo cannot force Appearance when Gestell is maxed even with a held Clearing", () => {
+    const w = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
+      beats: { ...emptyBeats(), garden: true, lastWord: true },
+    });
+    const held = applyClearing(w, "a", "keep");
+    held.gestell = 100;
+    const after = applyPassing(held, "a");
+    const p = after.players.get("a")!;
+    expect(p.heard).toBe(PASSING_ABSENCE);
+    expect(after.passing.outcome).toBe("absence");
+    expect(after.passing.ready).toBe(0);
+    expect(p.heard).toContain("Nara Vale");
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+  });
+
+  it("two dwellers can pass a maxed Gestell; freeze hijacks; Cold hijacks", () => {
+    const w = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
+      beats: { ...emptyBeats(), garden: true, lastWord: true, clearing: true },
+    });
+    w.clearingOpen = true;
+    w.gestell = 100;
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), clearing: true },
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+    });
+    const appear = applyPassing(w, "a");
+    expect(appear.players.get("a")?.heard).toBe(PASSING_APPEAR);
+    expect(appear.passing.outcome).toBe("appearance");
+    expect(appear.passing.ready).toBe(PASSING_READY);
+    expect(appear.players.get("a")?.heard).not.toMatch(/\$REVERIE|APY|heidegger/i);
+    expect(appear.players.get("a")?.heard).toContain("No mint");
+
+    const frozen = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
+      beats: { ...emptyBeats(), garden: true, lastWord: true, clearing: true },
+    });
+    frozen.clearingOpen = true;
+    frozen.frozen = true;
+    frozen.passing = { ready: 0, starved: true, outcome: "" };
+    const hijack = applyPassing(frozen, "a");
+    expect(hijack.players.get("a")?.heard).toBe(PASSING_HIJACK);
+    expect(hijack.passing.outcome).toBe("hijack");
+
+    const cold = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
+      beats: { ...emptyBeats(), garden: true, lastWord: true, clearing: true },
+      current: "cold",
+    });
+    cold.clearingOpen = true;
+    cold.gestell = 80;
+    const coldHijack = applyPassing(cold, "a");
+    expect(coldHijack.passing.outcome).toBe("hijack");
+    expect(guestCanClaim(coldHijack.players.get("a")!)).toBe(false);
+  });
+
+  it("low Gestell Appearance is a trace; guests cannot keep the hole", () => {
+    const w = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
+      beats: { ...emptyBeats(), garden: true, lastWord: true },
+    });
+    const held = applyClearing(w, "a", "keep");
+    const after = applyPassing(held, "a");
+    expect(after.players.get("a")?.heard).toBe(PASSING_APPEAR);
+    expect(after.passing.outcome).toBe("appearance");
+    expect(GESTELL_HOT).toBe(91);
+    expect(PASSING_FAIL).toContain("Clearing");
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y });
+    const guest = applyClearing(gWorld, "g", "keep");
+    expect(guest.clearingOpen).toBe(false);
+    expect(guest.players.get("g")?.heard).toBe(CLEARING_SPECTATOR);
+    expect(guest.players.get("g")?.wink).toBe("");
+    expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
   });
 });
 

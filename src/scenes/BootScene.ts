@@ -44,6 +44,7 @@ export class BootScene extends Phaser.Scene {
       ["nara", 0x7a1028],
       ["quill", 0x7eb6ff],
       ["ord", 0x5a5a5a],
+      ["ione", 0x7a1028],
       ["clerk", 0x6a6a72],
     ];
     for (const [key, color] of npcs) {
@@ -67,6 +68,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image("wreckage-garden", "/assets/wreckage-garden.jpg");
     this.load.image("organ-strait", "/assets/organ-strait.jpg");
     this.load.image("failed-passing", "/assets/failed-passing.jpg");
+    this.load.image("clearing-ring", "/assets/clearing-ring.jpg");
+    this.load.image("ione", "/assets/ione.jpg");
   }
 
   create() {

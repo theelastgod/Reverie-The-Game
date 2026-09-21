@@ -6,6 +6,7 @@ import {
   applyM3,
   applyWatch,
   applyForge,
+  applyClearing,
   applyOperator,
   applyRead,
   applyStrike,
@@ -63,7 +64,7 @@ export class ReverieWorld {
       signId?: string;
       serial?: number;
       sig?: string;
-      choice?: "extract" | "keep" | "hear" | "take" | "refuse" | "spot" | "sell";
+      choice?: "extract" | "keep" | "hear" | "take" | "refuse" | "spot" | "sell" | "pass";
     };
     try {
       data = JSON.parse(msg);
@@ -114,6 +115,10 @@ export class ReverieWorld {
     } else if (data.t === "forge") {
       const choice = data.choice === "spot" || data.choice === "sell" || data.choice === "hear" ? data.choice : "hear";
       this.w = applyForge(this.w, id, choice);
+      this.broadcast();
+    } else if (data.t === "clearing") {
+      const choice = data.choice === "extract" || data.choice === "pass" || data.choice === "keep" ? data.choice : "keep";
+      this.w = applyClearing(this.w, id, choice);
       this.broadcast();
     }
   }

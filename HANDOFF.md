@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 17** — Movement IV stub: Clearing contest / Passing attempt. Mortality act required. No mint.
+**Next stage: 18** — House halls as perception (Earth/Sky/Mortals/Divinities). Cosmetic + gather/ritual, never raw damage. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -85,8 +85,14 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - F lesson. Q keep the eye (cult). E sell a print (+25 Bestand, aura wound). Selling does not open the hole.
 - Guests cannot tell which sheet is the prayer. `damageFor` unchanged.
 
-## Stage 17 (do this next)
-Movement IV stub: prepare a Clearing, mortality act, Passing attempt that can fail if Gestell is maxed. No mint. No Base.
+## Stage 17 (landed)
+- Ione Kade last word (mortality). She does not return.
+- F/Q keep a Clearing; E extract contests it (closes the hole, pays Bestand, aura wound).
+- Passing: Appearance / Absence / Hijack / Failed. Gestell 100 without a Clearing fails. Solo cannot force Appearance at Gestell ≥91. Two dwellers can. Freeze or Cold hijacks.
+- Guests cannot prepare the ground. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 18 (do this next)
+House halls as perception (Earth/Sky/Mortals/Divinities). Cosmetic + gather/ritual bonuses, never raw weapon damage. Mock house on #7777. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

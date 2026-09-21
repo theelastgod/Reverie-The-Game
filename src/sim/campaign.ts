@@ -1,4 +1,4 @@
-export type NpcId = "nara" | "quill" | "ord";
+export type NpcId = "nara" | "quill" | "ord" | "ione";
 
 export type Npc = {
   id: NpcId;
@@ -47,6 +47,9 @@ export type Beats = {
   forge: boolean;
   spot: boolean;
   sold: boolean;
+  lastWord: boolean;
+  clearing: boolean;
+  passing: boolean;
 };
 
 export type WeatherHeard = {
@@ -85,12 +88,17 @@ export type Poi = {
     | "organ-strait"
     | "organ-foundry"
     | "organ-cable"
-    | "forge-tray";
+    | "forge-tray"
+    | "clearing-ring"
+    | "clearing-held";
 };
+
+export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
 
 export type Passing = {
   ready: number;
   starved: boolean;
+  outcome: PassingOutcome;
 };
 
 export const GUEST_LOCK = "A guest cannot prepare the ground.";
@@ -102,6 +110,8 @@ export const NAVE_NPCS: Npc[] = [
   { id: "quill", name: "Quill", role: "Forger", x: 1080, y: 504 },
   { id: "ord", name: "Ord", role: "Ex-Safety", x: 400, y: 260 },
 ];
+
+export const IONE: Npc = { id: "ione", name: "Ione Kade", role: "Last word", x: 720, y: 500 };
 
 export const NAVE_SIGNS: Sign[] = [
   {
@@ -116,7 +126,7 @@ export const NAVE_SIGNS: Sign[] = [
 export const BURIAL_PLOT: Rite = { id: "nara-plot", kind: "burial", x: 240, y: 780, done: false };
 export const GOING_UNDER: Rite = { id: "going-under", kind: "going-under", x: 696, y: 120, done: false };
 
-export const NPC_LINES: Record<NpcId, { first: string; later: string }> = {
+export const NPC_LINES: Record<Exclude<NpcId, "ione">, { first: string; later: string }> = {
   nara: {
     first:
       "I don't need you to believe. I need the body in the ground. The weather is the end of world as world, and you are walking in it.",
@@ -182,11 +192,11 @@ export const ANNEX_PLAQUE: Sign = {
 };
 
 export function emptyPassing(): Passing {
-  return { ready: PASSING_READY, starved: false };
+  return { ready: PASSING_READY, starved: false, outcome: "" };
 }
 
 export function starvedPassing(): Passing {
-  return { ready: 0, starved: true };
+  return { ready: 0, starved: true, outcome: "" };
 }
 
 export const CLEARING_STALL = { id: "clearing-stall", x: 1200, y: 560 };
@@ -405,6 +415,9 @@ export function emptyBeats(): Beats {
     forge: false,
     spot: false,
     sold: false,
+    lastWord: false,
+    clearing: false,
+    passing: false,
   };
 }
 
@@ -424,7 +437,14 @@ export function naveClerks(): Clerk[] {
 }
 
 export function naveSigns(): Sign[] {
-  return [...NAVE_SIGNS.map((s) => ({ ...s })), { ...ANNEX_PLAQUE }, { ...STALL_PLAQUE }, { ...OPERATOR_PLAQUE }, { ...FORGE_PLAQUE }];
+  return [
+    ...NAVE_SIGNS.map((s) => ({ ...s })),
+    { ...ANNEX_PLAQUE },
+    { ...STALL_PLAQUE },
+    { ...OPERATOR_PLAQUE },
+    { ...FORGE_PLAQUE },
+    { ...CLEARING_PLAQUE },
+  ];
 }
 
 export function navePois(): Poi[] {
@@ -436,6 +456,7 @@ export function navePois(): Poi[] {
     forgePoi(),
     operatorPoi(),
     m3Poi(false),
+    clearingPoi(false),
   ];
 }
 
@@ -460,6 +481,7 @@ export function namedWeatherPoi(): Poi {
 }
 
 export function npcById(id: string): Npc | undefined {
+  if (id === IONE.id) return IONE;
   return NAVE_NPCS.find((n) => n.id === id);
 }
 
@@ -472,6 +494,7 @@ export function nearPoint(px: number, py: number, x: number, y: number, reach = 
 export function lineFor(id: NpcId, beats: Beats): string {
   const npc = npcById(id);
   if (!npc) return "";
+  if (id === "ione") return beats.lastWord ? LAST_WORD_GONE : LAST_WORD;
   if (id === "nara" && beats.garden) return NARA_AFTER_GARDEN;
   if (id === "ord" && beats.map) return ORD_MAP;
   const pack = NPC_LINES[id];
@@ -566,4 +589,81 @@ export function visibleFailed(
   marks: FailedPassing[],
 ): FailedPassing[] {
   return ruinSight(guest, serial) ? marks : [];
+}
+
+export const GESTELL_HOT = 91;
+export const DWELL_SOLO = 1;
+export const DWELL_MAXED = 2;
+export const CONTEST_PAY = 40;
+
+export const CLEARING_RING = { id: "clearing-ring", x: 720, y: 580 };
+
+export const LAST_WORD =
+  "Ione Kade: I will not be in the next hour. Do not make a story of it. Stand in the hole.";
+export const LAST_WORD_GONE = "Ione Kade is not here. That was the last word.";
+export const IONE_SPECTATOR = "Someone is leaving. You do not get a last word.";
+export const WINK_TURN =
+  "The hour does not arrive as a body. It is a trace, or it is not. You cannot buy it.";
+
+export const CLEARING_PREPARE =
+  "You keep the hole. The party still willing stands in it. The Passing is not yet the weather.";
+export const CLEARING_NEED_MORTAL = "A mortality act is required. Ione Kade is still here to speak a last word.";
+export const CLEARING_NEED_GARDEN = "Nara Vale will not stand in a hole you left as wreckage.";
+export const CLEARING_SPECTATOR = "A ring in the asphalt. You cannot prepare the ground.";
+export const CLEARING_CONTEST =
+  "You extracted the Clearing. Cold is a current. The hole closes. The hour does not open.";
+export const PASSING_APPEAR =
+  "A trace, not a face. The city is briefly world again. No mint. The token does not buy the hour.";
+export const PASSING_ABSENCE =
+  "The hour went by. Absence is honest. Nara Vale stays. Solo cannot force a god.";
+export const PASSING_HIJACK =
+  "Safety or Cold claimed the rite. The world continues. You are marked. No mint.";
+export const PASSING_FAIL = "Gestell is maxed. Without a Clearing the hour does not open.";
+export const PASSING_NEED = "The Clearing is not held. Keep the hole first.";
+
+export const CLEARING_PLAQUE: Sign = {
+  id: CLEARING_RING.id,
+  title: "The Clearing",
+  text: "Keep the hole. The hour is not a character. Mortality first.",
+  x: CLEARING_RING.x,
+  y: CLEARING_RING.y,
+};
+
+export function clearingPoi(held: boolean): Poi {
+  return {
+    id: CLEARING_RING.id,
+    name: held ? "Clearing — held" : "The Clearing",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+    kind: held ? "clearing-held" : "clearing-ring",
+  };
+}
+
+export function dwellNeed(gestell: number): number {
+  return gestell >= GESTELL_HOT ? DWELL_MAXED : DWELL_SOLO;
+}
+
+export function passingResult(args: {
+  starved: boolean;
+  gestell: number;
+  clearingOpen: boolean;
+  dwellers: number;
+  cold: boolean;
+}): Exclude<PassingOutcome, ""> {
+  if (!args.clearingOpen) return "failed";
+  if (args.starved) return "hijack";
+  if (args.gestell >= GESTELL_HOT && args.dwellers < dwellNeed(args.gestell)) return "absence";
+  if (args.cold && args.gestell >= 71) return "hijack";
+  return "appearance";
+}
+
+export function passingCopy(outcome: Exclude<PassingOutcome, "">): string {
+  if (outcome === "appearance") return PASSING_APPEAR;
+  if (outcome === "absence") return PASSING_ABSENCE;
+  if (outcome === "hijack") return PASSING_HIJACK;
+  return PASSING_FAIL;
+}
+
+export function liveNpcs(ioneGone: boolean): Npc[] {
+  return ioneGone ? NAVE_NPCS : [...NAVE_NPCS, IONE];
 }
