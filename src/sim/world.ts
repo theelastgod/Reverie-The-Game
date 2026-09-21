@@ -132,6 +132,12 @@ import {
   houseName,
   earthTax,
   divinitiesKeep,
+  emptyWar,
+  HouseWar,
+  scoreWar,
+  resolveWar,
+  warTax,
+  WINK_WAR,
   Messenger,
   messengerFor,
   messengerName,
@@ -211,6 +217,7 @@ export type WorldState = {
   forgedSold: boolean;
   ioneGone: boolean;
   announced: string | null;
+  war: HouseWar;
   gestell: number;
   now: number;
 };
@@ -299,6 +306,7 @@ export function emptyWorld(): WorldState {
     forgedSold: false,
     ioneGone: false,
     announced: null,
+    war: emptyWar(),
     gestell: 12,
     now: 0,
   };
@@ -312,10 +320,22 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
     players.set(id, stepPlayer(p, intent, dt));
   }
   const afterClerks = tickClerks({ ...w, now, players }, dt);
+  const afterWar = tickHouseWar(afterClerks, dt);
   return {
-    ...afterClerks,
-    wreckage: afterClerks.wreckage.filter((r) => r.until > now),
+    ...afterWar,
+    wreckage: afterWar.wreckage.filter((r) => r.until > now),
   };
+}
+
+export function tickHouseWar(w: WorldState, dt: number): WorldState {
+  if (!w.clearingOpen || w.war.winner) return w;
+  const keep = { ...w.war.keep };
+  for (const p of w.players.values()) {
+    if (p.guest || p.locked || !p.house || p.hp <= 0) continue;
+    if (!nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) continue;
+    keep[p.house] += dt;
+  }
+  return { ...w, war: resolveWar({ ...w.war, keep }, "keep") };
 }
 
 export function tickClerks(w: WorldState, dt: number): WorldState {
@@ -479,7 +499,7 @@ export function applyUse(
   const players = new Map(w.players);
   if (choice === "extract") {
     nodes[idx] = { ...node, depleted: true, kept: false };
-    const tax = p.beats.hall ? earthTax(gestellTax(w.gestell), p.house) : 0;
+    const tax = p.beats.hall ? warTax(earthTax(gestellTax(w.gestell), p.house), p.house, w.war) : 0;
     players.set(playerId, { ...p, bestand: p.bestand + Math.max(0, 40 - tax) });
     return { ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) };
   }
@@ -1023,6 +1043,7 @@ export function snapshot(w: WorldState) {
     forgedSold: w.forgedSold,
     ioneGone: w.ioneGone,
     announced: w.announced,
+    war: w.war,
   };
 }
 
@@ -1084,17 +1105,19 @@ export function applyClearing(
     return { ...w, players };
   }
   if (choice === "extract") {
+    const war = scoreWar(w.war, p.house, "extract");
     players.set(playerId, {
       ...p,
       bestand: p.bestand + CONTEST_PAY,
       aura: Math.max(0, p.aura - 2),
       current: p.current || "cold",
-      heard: CLEARING_CONTEST,
-      wink: visibleWink(false, WINK_TURN),
+      heard: war.winner && !w.war.winner ? war.omen : CLEARING_CONTEST,
+      wink: visibleWink(false, war.winner ? WINK_WAR : WINK_TURN),
     });
     return {
       ...w,
       players,
+      war,
       clearingOpen: false,
       gestell: Math.min(100, w.gestell + 8),
       pois: w.pois.map((poi) => (poi.id === CLEARING_RING.id ? clearingPoi(false) : poi)),
@@ -1111,16 +1134,18 @@ export function applyClearing(
     players.set(playerId, { ...p, heard: CLEARING_NEED_MORTAL });
     return { ...w, players };
   }
+  const war = scoreWar(w.war, p.house, "keep");
   players.set(playerId, {
     ...p,
     beats: { ...p.beats, clearing: true },
-    heard: CLEARING_PREPARE,
-    wink: visibleWink(false, WINK_TURN),
+    heard: war.winner && !w.war.winner ? war.omen : CLEARING_PREPARE,
+    wink: visibleWink(false, war.winner ? WINK_WAR : WINK_TURN),
     readiness: p.readiness + (p.beats.clearing ? 0 : 1),
   });
   return {
     ...w,
     players,
+    war,
     clearingOpen: true,
     gestell: Math.max(0, w.gestell - 4),
     pois: w.pois.map((poi) => (poi.id === CLEARING_RING.id ? clearingPoi(true) : poi)),

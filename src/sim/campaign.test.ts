@@ -91,6 +91,13 @@ import {
   ANNOUNCE_NEED,
   ANNOUNCE_SPECTATOR,
   WINK_ANNOUNCE,
+  WAR_WIN,
+  WAR_TITHE,
+  WAR_OMEN_KEEP,
+  WAR_OMEN_EXTRACT,
+  WINK_WAR,
+  warTax,
+  emptyWar,
   WET_GRID,
   FLAG_COPY,
   FLAG_SPECTATOR,
@@ -885,6 +892,98 @@ describe("Movement IV Clearing and Passing", () => {
     expect(guest.players.get("g")?.heard).toBe(CLEARING_SPECTATOR);
     expect(guest.players.get("g")?.wink).toBe("");
     expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
+  });
+});
+
+describe("House war on the Clearing", () => {
+  function mortal(id: string, extra: Partial<ReturnType<typeof spawnGuest>> = {}) {
+    return {
+      ...spawnGuest(id),
+      guest: false,
+      serial: TEST_SERIAL,
+      house: "mortals" as const,
+      beats: { ...emptyBeats(), garden: true, lastWord: true },
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+      ...extra,
+    };
+  }
+
+  it("two House keeps win tithe and omen, never damage", () => {
+    const w = emptyWorld();
+    w.players.set("a", mortal("a"));
+    w.players.set("b", mortal("b", { serial: 1 }));
+    const first = applyClearing(w, "a", "keep");
+    expect(first.war.keep.mortals).toBe(1);
+    expect(first.war.winner).toBe("");
+    const won = applyClearing(first, "b", "keep");
+    expect(won.war.winner).toBe("mortals");
+    expect(won.war.titheCut).toBe(WAR_TITHE);
+    expect(won.war.omen).toBe(WAR_OMEN_KEEP);
+    expect(won.players.get("b")?.heard).toBe(WAR_OMEN_KEEP);
+    expect(won.players.get("b")?.wink).toBe(WINK_WAR);
+    expect(snapshot(won).war.winner).toBe("mortals");
+    expect(damageFor(won.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(damageFor(won.players.get("b")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(won.players.get("a")!)).toBe(false);
+  });
+
+  it("two extracts win the Cold omen; guests do not score", () => {
+    const w = emptyWorld();
+    w.players.set("e", {
+      ...spawnGuest("e"),
+      guest: false,
+      house: "earth",
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+    });
+    const one = applyClearing(w, "e", "extract");
+    expect(one.war.winner).toBe("");
+    const two = applyClearing(one, "e", "extract");
+    expect(two.war.winner).toBe("earth");
+    expect(two.war.omen).toBe(WAR_OMEN_EXTRACT);
+    expect(two.war.titheCut).toBe(WAR_TITHE);
+    expect(WAR_WIN).toBe(2);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y });
+    const guest = applyClearing(gWorld, "g", "extract");
+    expect(guest.war.extract.earth).toBe(0);
+    expect(guest.war.winner).toBe("");
+    expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
+  });
+
+  it("winning House skims less tithe and still cannot buy a strike", () => {
+    expect(warTax(8, "mortals", { ...emptyWar(), winner: "mortals", titheCut: 2 })).toBe(6);
+    expect(warTax(8, "sky", { ...emptyWar(), winner: "mortals", titheCut: 2 })).toBe(8);
+    const w = emptyWorld();
+    w.war = { ...emptyWar(), winner: "mortals", titheCut: WAR_TITHE, omen: WAR_OMEN_KEEP };
+    const node = w.nodes[0];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      house: "mortals",
+      beats: { ...emptyBeats(), hall: true },
+      x: node.x,
+      y: node.y,
+    });
+    const tax = gestellTax(w.gestell);
+    const after = applyUse(w, "a", node.id, "extract");
+    expect(after.players.get("a")?.bestand).toBe(40 - warTax(earthTax(tax, "mortals"), "mortals", w.war));
+    expect(after.players.get("a")?.bestand).toBeGreaterThan(40 - tax);
+    expect(damageFor(after.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(after.players.get("a")!)).toBe(false);
+  });
+
+  it("holding the ring ticks a keep win without extra damage", () => {
+    const w = emptyWorld();
+    w.clearingOpen = true;
+    w.players.set("a", mortal("a"));
+    let cur = w;
+    for (let i = 0; i < 50; i++) cur = tickWorld(cur, 0.05);
+    expect(cur.war.winner).toBe("mortals");
+    expect(cur.war.omen).toBe(WAR_OMEN_KEEP);
+    expect(damageFor(cur.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
   });
 });
 

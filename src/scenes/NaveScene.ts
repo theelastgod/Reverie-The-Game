@@ -131,7 +131,7 @@ export class NaveScene extends Phaser.Scene {
       this.add.image(s.x, s.y - 52, "organ-strait").setDisplaySize(88, 50).setDepth(3);
     }
     if (s.id === CLEARING_RING.id) {
-      this.add.image(s.x, s.y - 52, "clearing-ring").setDisplaySize(88, 50).setDepth(3);
+      this.add.image(s.x, s.y - 52, "house-war").setDisplaySize(88, 50).setDepth(3);
     }
     const label = this.add
       .text(s.x, s.y - 2, s.title, {
@@ -544,6 +544,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — Quill will teach the difference, or sell you the print.";
     } else if (ring && (me.guest || me.locked)) {
       this.prompt = "A ring in the asphalt. You cannot prepare the ground.";
+    } else if (ring && snap.war?.winner) {
+      this.prompt = snap.war.omen || me.heard;
     } else if (ring && snap.passing.outcome) {
       this.prompt = me.heard || "The hour already went by.";
     } else if (ring && me.beats.clearing && snap.clearingOpen) {
@@ -631,6 +633,7 @@ export class NaveScene extends Phaser.Scene {
       const taxBit = me.inCare ? ` · tax ${snap.tax}` : "";
       const freezeBit = snap.frozen ? " · freeze" : "";
       const omenBit = me.house === "sky" && !snap.passing.outcome ? ` · omen ${snap.passing.ready}` : "";
+      const warBit = snap.war?.winner ? ` · ${houseName(snap.war.winner)} omen` : "";
       const passBit = snap.passing.outcome
         ? ` · Passing ${snap.passing.outcome}`
         : snap.passing.starved
@@ -638,7 +641,7 @@ export class NaveScene extends Phaser.Scene {
           : snap.clearingOpen
             ? " · Clearing held"
             : omenBit;
-      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}`;
+      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;

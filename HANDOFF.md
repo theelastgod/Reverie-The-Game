@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 21** — House war / Clearing contest as political PvP. Winning House gets tithe cut and omen, not damage. No mint.
+**Next stage: 22** — Ruin duel at wreckage (1v1). Spectator aura gain capped. No token DPS. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -105,8 +105,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Cult Winke and banked Bestand never drop. Guests are not loot. Camping the same grave feeds Gestell and thins aura.
 - `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 21 (do this next)
-House war / Clearing contest as political PvP. Winning House gets tithe cut and omen, not a damage buff. No mint. No Base.
+## Stage 21 (landed)
+- Clearing keep/extract scores House war. Two keeps or a ring-hold win Readiness omen; two extracts win Cold omen.
+- Winner: tithe cut and omen, never a damage buff. Guests do not score. Claims stay disarmed.
+
+## Stage 22 (do this next)
+Ruin duel at a wreckage. 1v1. Ruin-angel kit is flavor, not DPS. Spectator aura gain small and capped. Cult/banked never drop. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

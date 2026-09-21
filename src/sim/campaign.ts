@@ -579,6 +579,72 @@ export function divinitiesKeep(house: House): number {
   return house === "divinities" ? 2 : 1;
 }
 
+export type HouseScores = Record<Exclude<House, "">, number>;
+
+export type HouseWar = {
+  keep: HouseScores;
+  extract: HouseScores;
+  winner: House;
+  omen: string;
+  titheCut: number;
+};
+
+export const WAR_WIN = 2;
+export const WAR_TITHE = 2;
+export const WAR_OMEN_KEEP =
+  "House omen: the hole holds. Tithe eases. The number does not strike.";
+export const WAR_OMEN_EXTRACT =
+  "House omen: the hole is stock. Tithe eases. Combat is not.";
+export const WINK_WAR = "Friends split here. Tithe and omen, never a bigger stick.";
+
+export function emptyScores(): HouseScores {
+  return { earth: 0, sky: 0, mortals: 0, divinities: 0 };
+}
+
+export function emptyWar(): HouseWar {
+  return { keep: emptyScores(), extract: emptyScores(), winner: "", omen: "", titheCut: 0 };
+}
+
+export function leadingHouse(scores: HouseScores): House {
+  let best: House = "";
+  let n = 0;
+  for (const h of HOUSES) {
+    if (scores[h] > n) {
+      n = scores[h];
+      best = h;
+    }
+  }
+  return n > 0 ? best : "";
+}
+
+export function scoreWar(war: HouseWar, house: House, side: "keep" | "extract"): HouseWar {
+  if (!house || war.winner) return war;
+  const next = {
+    ...war,
+    keep: { ...war.keep },
+    extract: { ...war.extract },
+  };
+  next[side][house] += 1;
+  return resolveWar(next, side);
+}
+
+export function resolveWar(war: HouseWar, side: "keep" | "extract"): HouseWar {
+  if (war.winner) return war;
+  const lead = leadingHouse(war[side]);
+  if (!lead || war[side][lead] < WAR_WIN) return war;
+  return {
+    ...war,
+    winner: lead,
+    titheCut: WAR_TITHE,
+    omen: side === "keep" ? WAR_OMEN_KEEP : WAR_OMEN_EXTRACT,
+  };
+}
+
+export function warTax(tax: number, house: House, war: HouseWar): number {
+  if (house && house === war.winner) return Math.max(0, tax - war.titheCut);
+  return tax;
+}
+
 export type Messenger =
   | ""
   | "herald"
