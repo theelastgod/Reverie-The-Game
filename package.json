@@ -1,0 +1,24 @@
+{
+  "name": "reverie-the-game",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Reverie: The Game — top-down 2D MMO RPG",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5175",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "deploy:site": "npx wrangler pages deploy site --project-name reverie-the-game"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.9",
+    "wrangler": "^4.125.0"
+  }
+}

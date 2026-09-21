@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reverie: The Game</title>
+    <link rel="icon" href="/assets/wing-star.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+    <style>
+      html, body { margin: 0; height: 100%; background: #0a0a0a; overflow: hidden; }
+      #hud {
+        position: fixed; inset: 0; pointer-events: none; z-index: 5;
+        font-family: "Space Grotesk", system-ui, sans-serif; color: #0a0a0a;
+      }
+      #hud .top {
+        pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start;
+        padding: 12px;
+      }
+      .chip {
+        border: 3px solid #0a0a0a; background: #fff; box-shadow: 4px 4px 0 #0a0a0a;
+        padding: 8px 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+        font-size: 12px;
+      }
+      .chip.hot { background: #ff2d6b; color: #fff; }
+      .chip.acid { background: #d4ff00; }
+      #boot-title {
+        position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: #0a0a0a; z-index: 10; color: #c9a56a; font-family: "Anton", Impact, sans-serif;
+      }
+      #boot-title img { width: 160px; margin-bottom: 18px; }
+      #boot-title h1 { margin: 0; font-size: clamp(2.5rem, 8vw, 4.5rem); letter-spacing: 0.04em; font-weight: 400; }
+      #boot-title p { font-family: "Space Grotesk", sans-serif; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+    </style>
+  </head>
+  <body>
+    <div id="boot-title">
+      <img src="/assets/wing-star.png" alt="" />
+      <h1>REVERIE</h1>
+      <p>The Game · click to enter the Nave</p>
+    </div>
+    <div id="hud" hidden>
+      <div class="top">
+        <div class="chip hot" id="guest-chip">Guest · aura 0</div>
+        <div class="chip acid" id="zone-chip">Nave of Tubes</div>
+        <div class="chip" id="stat-chip">Bestand 0 · Winke 0</div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
