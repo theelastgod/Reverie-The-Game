@@ -50,6 +50,14 @@ import {
   FAILED_PASSING,
   WATCH_FAILED,
   WINK_FAILED,
+  FORGE_TRAY,
+  FORGE_PAY,
+  FORGE_LESSON,
+  FORGE_NEED_MARKET,
+  FORGE_SELL,
+  FORGE_SPOT,
+  FORGE_SPECTATOR,
+  WINK_FORGE,
   FAILED_SPECTATOR,
   ruinSight,
   visibleFailed,
@@ -75,6 +83,7 @@ import {
   applyLink,
   applyM3,
   applyWatch,
+  applyForge,
   applyMarket,
   applyOperator,
   applyRead,
@@ -601,6 +610,61 @@ describe("failed Passing ruin-sight", () => {
     expect(guest.players.get("g")?.beats.failed).toBe(false);
     expect(guest.players.get("g")?.heard).toBe(FAILED_SPECTATOR);
     expect(visibleFailed(true, null, guest.failed)).toEqual([]);
+  });
+});
+
+describe("forged Winke", () => {
+  function angelAtQuill(market = true) {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), market, hall: true, quill: true },
+      x: FORGE_TRAY.x,
+      y: FORGE_TRAY.y,
+    });
+    return w;
+  }
+
+  it("Quill teaches cult vs copy; spotting keeps the cult hint; selling does not open anything", () => {
+    const heard = applyForge(angelAtQuill(true), "a", "hear");
+    const p = heard.players.get("a")!;
+    expect(p.heard).toBe(FORGE_LESSON);
+    expect(p.wink).toBe(WINK_FORGE);
+    expect(p.beats.forge).toBe(true);
+    expect(p.cultWink).toBe(false);
+
+    const spotted = applyForge(heard, "a", "spot");
+    const s = spotted.players.get("a")!;
+    expect(s.cultWink).toBe(true);
+    expect(s.fakeWinke).toBe(0);
+    expect(s.heard).toBe(FORGE_SPOT);
+    expect(spotted.forgedSold).toBe(false);
+    expect(damageFor(s)).toBe(damageFor(spawnGuest("g")));
+
+    const sold = applyForge(heard, "a", "sell");
+    const k = sold.players.get("a")!;
+    expect(k.bestand).toBe(FORGE_PAY);
+    expect(k.fakeWinke).toBe(1);
+    expect(k.cultWink).toBe(false);
+    expect(k.aura).toBe(auraSeed(TEST_SERIAL) - 3);
+    expect(k.heard).toBe(FORGE_SELL);
+    expect(sold.forgedSold).toBe(true);
+    expect(sold.clearingOpen).toBe(false);
+    expect(guestCanClaim(k)).toBe(false);
+  });
+
+  it("without the listing Quill will not teach; guests never hear the Wink", () => {
+    expect(applyForge(angelAtQuill(false), "a", "hear").players.get("a")?.heard).toBe(FORGE_NEED_MARKET);
+    const w = emptyWorld();
+    w.players.set("g", { ...spawnGuest("g"), x: FORGE_TRAY.x, y: FORGE_TRAY.y, locked: true });
+    const after = applyForge(w, "g", "sell");
+    expect(after.players.get("g")?.heard).toBe(FORGE_SPECTATOR);
+    expect(after.players.get("g")?.wink).toBe("");
+    expect(after.forgedSold).toBe(false);
+    expect(guestCanClaim(after.players.get("g")!)).toBe(false);
   });
 });
 

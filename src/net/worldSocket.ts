@@ -23,6 +23,7 @@ export type Snap = {
   failed: FailedPassing[];
   clearingOpen: boolean;
   m3Open: boolean;
+  forgedSold: boolean;
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };
@@ -92,6 +93,10 @@ export class WorldSocket {
 
   operator(choice: "hear" | "take" | "refuse") {
     this.send({ t: "operator", choice });
+  }
+
+  forge(choice: "hear" | "spot" | "sell") {
+    this.send({ t: "forge", choice });
   }
 
   m3() {

@@ -44,6 +44,9 @@ export type Beats = {
   cable: boolean;
   map: boolean;
   failed: boolean;
+  forge: boolean;
+  spot: boolean;
+  sold: boolean;
 };
 
 export type WeatherHeard = {
@@ -81,7 +84,8 @@ export type Poi = {
     | "wreckage-garden"
     | "organ-strait"
     | "organ-foundry"
-    | "organ-cable";
+    | "organ-cable"
+    | "forge-tray";
 };
 
 export type Passing = {
@@ -272,6 +276,37 @@ export const ORGAN_PLAQUES: Sign[] = [
   },
 ];
 
+export const FORGE_TRAY = { id: "forge-tray", x: 1080, y: 600 };
+export const FORGE_PAY = 25;
+export const FORGE_LESSON =
+  "Quill fans two hints. One was buried. One was printed. The printed one lists. The buried one opens. I can teach the difference. I can also sell the print.";
+export const WINK_FORGE =
+  "The last god's hint can be forged. Exhibition Winke travel. Cult Winke stay in the hand that buried.";
+export const FORGE_SPOT =
+  "You keep the eye. The cult hint does not list. Copies will not open the hole.";
+export const FORGE_SELL =
+  "You sold a copy. Twenty-five Bestand. Aura thins. The cult hint is not in the bag you sold.";
+export const FORGE_SPECTATOR = "Quill is doing something with paper. You cannot tell which sheet is the prayer.";
+export const FORGE_NEED_MARKET = "Quill is not teaching until you have stood at the listing.";
+
+export function forgePoi(): Poi {
+  return {
+    id: FORGE_TRAY.id,
+    name: "Quill's tray",
+    x: FORGE_TRAY.x,
+    y: FORGE_TRAY.y,
+    kind: "forge-tray",
+  };
+}
+
+export const FORGE_PLAQUE: Sign = {
+  id: FORGE_TRAY.id,
+  title: "Cult / copy",
+  text: "One hint was buried. One was printed. Quill sells both. Only one opens.",
+  x: FORGE_TRAY.x,
+  y: FORGE_TRAY.y,
+};
+
 export function gardenPoi(buried: boolean): Poi {
   return {
     id: WRECK_GARDEN.id,
@@ -367,6 +402,9 @@ export function emptyBeats(): Beats {
     cable: false,
     map: false,
     failed: false,
+    forge: false,
+    spot: false,
+    sold: false,
   };
 }
 
@@ -386,7 +424,7 @@ export function naveClerks(): Clerk[] {
 }
 
 export function naveSigns(): Sign[] {
-  return [...NAVE_SIGNS.map((s) => ({ ...s })), { ...ANNEX_PLAQUE }, { ...STALL_PLAQUE }, { ...OPERATOR_PLAQUE }];
+  return [...NAVE_SIGNS.map((s) => ({ ...s })), { ...ANNEX_PLAQUE }, { ...STALL_PLAQUE }, { ...OPERATOR_PLAQUE }, { ...FORGE_PLAQUE }];
 }
 
 export function navePois(): Poi[] {
@@ -395,6 +433,7 @@ export function navePois(): Poi[] {
     { id: CARE_DOOR.id, name: "The Care (shut)", x: CARE_DOOR.x, y: CARE_DOOR.y, kind: "care-shut" },
     annexPoi(false),
     stallPoi(),
+    forgePoi(),
     operatorPoi(),
     m3Poi(false),
   ];

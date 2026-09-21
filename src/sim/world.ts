@@ -96,6 +96,14 @@ import {
   gardenPoi,
   organPoi,
   organsComplete,
+  FORGE_TRAY,
+  FORGE_PAY,
+  FORGE_LESSON,
+  FORGE_NEED_MARKET,
+  FORGE_SELL,
+  FORGE_SPOT,
+  FORGE_SPECTATOR,
+  WINK_FORGE,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -139,6 +147,8 @@ export type Player = {
   inCare: boolean;
   inM3: boolean;
   current: "" | "cold" | "readiness";
+  cultWink: boolean;
+  fakeWinke: number;
 };
 
 export type WorldState = {
@@ -158,6 +168,7 @@ export type WorldState = {
   failed: FailedPassing[];
   clearingOpen: boolean;
   m3Open: boolean;
+  forgedSold: boolean;
   gestell: number;
   now: number;
 };
@@ -184,6 +195,8 @@ export function spawnGuest(id: string): Player {
     inCare: false,
     inM3: false,
     current: "",
+    cultWink: false,
+    fakeWinke: 0,
   };
 }
 
@@ -236,6 +249,7 @@ export function emptyWorld(): WorldState {
     failed: [],
     clearingOpen: false,
     m3Open: false,
+    forgedSold: false,
     gestell: 12,
     now: 0,
   };
@@ -429,6 +443,9 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
     players.set(playerId, { ...p, heard: NARA_SILENCE });
     return { ...w, players };
   }
+  if (id === "quill" && p.beats.market && !p.guest && !p.locked) {
+    return applyForge(w, playerId, "hear");
+  }
   if (id === "ord" && w.m3Open && !p.guest) {
     players.set(playerId, {
       ...p,
@@ -468,6 +485,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) return applyMarket(w, playerId);
+  if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
   if (sign.id === OPERATOR_DESK.id) return applyOperator(w, playerId, "hear");
   if (sign.id === ORGAN_STRAIT.id || sign.id === ORGAN_FOUNDRY.id || sign.id === ORGAN_CABLE.id) {
     return applyOrgan(w, playerId, sign);
@@ -814,6 +832,58 @@ export function applyM3(w: WorldState, playerId: string): WorldState {
   return { ...w, players };
 }
 
+export function applyForge(
+  w: WorldState,
+  playerId: string,
+  choice: "hear" | "spot" | "sell",
+): WorldState {
+  const p = w.players.get(playerId);
+  const atTray = p && nearPoint(p.x, p.y, FORGE_TRAY.x, FORGE_TRAY.y, 64);
+  const atQuill = p && nearPoint(p.x, p.y, 1080, 504, 64);
+  if (!p || p.hp <= 0 || (!atTray && !atQuill)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: FORGE_SPECTATOR, wink: visibleWink(true, WINK_FORGE) });
+    return { ...w, players };
+  }
+  if (!p.beats.market) {
+    players.set(playerId, { ...p, heard: FORGE_NEED_MARKET });
+    return { ...w, players };
+  }
+  if (choice === "hear" || !p.beats.forge) {
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, forge: true },
+      heard: FORGE_LESSON,
+      wink: visibleWink(false, WINK_FORGE),
+      readiness: p.readiness + (p.beats.forge ? 0 : 1),
+    });
+    return { ...w, players };
+  }
+  if (choice === "spot") {
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, spot: true },
+      cultWink: true,
+      heard: FORGE_SPOT,
+      wink: visibleWink(false, WINK_FORGE),
+      readiness: p.readiness + (p.beats.spot ? 0 : 1),
+    });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, sold: true },
+    fakeWinke: p.fakeWinke + 1,
+    bestand: p.bestand + FORGE_PAY,
+    aura: Math.max(0, p.aura - 3),
+    cultWink: false,
+    heard: FORGE_SELL,
+    wink: visibleWink(false, WINK_FORGE),
+  });
+  return { ...w, players, forgedSold: true };
+}
+
 export function applyLink(w: WorldState, playerId: string, serial: number, sig: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
@@ -854,5 +924,6 @@ export function snapshot(w: WorldState) {
     failed: w.failed,
     clearingOpen: w.clearingOpen,
     m3Open: w.m3Open,
+    forgedSold: w.forgedSold,
   };
 }

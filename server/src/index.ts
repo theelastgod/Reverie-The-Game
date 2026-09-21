@@ -5,6 +5,7 @@ import {
   applyLink,
   applyM3,
   applyWatch,
+  applyForge,
   applyOperator,
   applyRead,
   applyStrike,
@@ -62,7 +63,7 @@ export class ReverieWorld {
       signId?: string;
       serial?: number;
       sig?: string;
-      choice?: "extract" | "keep" | "hear" | "take" | "refuse";
+      choice?: "extract" | "keep" | "hear" | "take" | "refuse" | "spot" | "sell";
     };
     try {
       data = JSON.parse(msg);
@@ -109,6 +110,10 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "watch") {
       this.w = applyWatch(this.w, id);
+      this.broadcast();
+    } else if (data.t === "forge") {
+      const choice = data.choice === "spot" || data.choice === "sell" || data.choice === "hear" ? data.choice : "hear";
+      this.w = applyForge(this.w, id, choice);
       this.broadcast();
     }
   }

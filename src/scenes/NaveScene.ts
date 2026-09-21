@@ -12,6 +12,8 @@ import {
   ORGAN_STRAIT,
   ORGAN_FOUNDRY,
   ORGAN_CABLE,
+  FORGE_TRAY,
+  FORGE_PAY,
   PRIVATE_YIELD,
   WRECK_GARDEN,
   movementReady,
@@ -158,6 +160,12 @@ export class NaveScene extends Phaser.Scene {
     if (!me || me.locked) return;
     if (nearPoint(me.x, me.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56) && me.beats.yield) {
       this.net.operator(choice === "extract" ? "take" : "refuse");
+      return;
+    }
+    const atForge =
+      nearPoint(me.x, me.y, FORGE_TRAY.x, FORGE_TRAY.y, 64) || nearPoint(me.x, me.y, 1080, 504, 64);
+    if (atForge && me.beats.forge) {
+      this.net.forge(choice === "extract" ? "sell" : "spot");
       return;
     }
     const n = nodes.find((node) => !node.depleted && Phaser.Math.Distance.Between(me.x, me.y, node.x, node.y) < 40);
@@ -329,6 +337,8 @@ export class NaveScene extends Phaser.Scene {
                       ? 0x7a1028
                       : poi.kind.startsWith("organ-")
                         ? 0xc9a56a
+                        : poi.kind === "forge-tray"
+                          ? 0xe8d5a3
             : poi.kind === "care-shut"
                 ? 0x3a3a3a
                 : 0x5a5a5a;
@@ -432,6 +442,9 @@ export class NaveScene extends Phaser.Scene {
     const hall = nearPoint(me.x, me.y, HOUSE_HALL.x, HOUSE_HALL.y, 56);
     const annex = nearPoint(me.x, me.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
     const stall = nearPoint(me.x, me.y, CLEARING_STALL.x, CLEARING_STALL.y, 56);
+    const forge =
+      nearPoint(me.x, me.y, FORGE_TRAY.x, FORGE_TRAY.y, 64) ||
+      (npcNear?.id === "quill" && me.beats.market);
     const desk = nearPoint(me.x, me.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56);
     const m3 = nearPoint(me.x, me.y, M3_DOOR.x, M3_DOOR.y, 56);
     const gardenNear = snap.rites.find((r) => r.kind === "garden" && nearPoint(me.x, me.y, r.x, r.y, 56));
@@ -472,6 +485,16 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — Quill listed a Clearing. It looks like freedom.";
     } else if (stall) {
       this.prompt = "Quill is selling something. You do not yet have the eyes for the price.";
+    } else if (forge && (me.guest || me.locked)) {
+      this.prompt = "Quill is doing something with paper. You cannot tell which sheet is the prayer.";
+    } else if (forge && me.beats.spot) {
+      this.prompt = me.heard || "You kept the eye. The cult hint does not list.";
+    } else if (forge && me.beats.sold) {
+      this.prompt = me.heard || "You sold a copy. The cult hint is not in the bag.";
+    } else if (forge && me.beats.forge) {
+      this.prompt = `Q keep the eye (cult). E sell a copy (+${FORGE_PAY} Bestand).`;
+    } else if (forge && me.beats.market) {
+      this.prompt = "F — Quill will teach the difference, or sell you the print.";
     } else if (desk && (me.guest || me.locked)) {
       this.prompt = "A woman at a desk. She is not speaking to you.";
     } else if (desk && me.beats.cold) {

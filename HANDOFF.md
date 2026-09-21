@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 16** — Forged Winke / cult vs exhibition copies. Quill can teach you to spot them — or sell them. No mint.
+**Next stage: 17** — Movement IV stub: Clearing contest / Passing attempt. Mortality act required. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -80,8 +80,13 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Going-under seeds last season’s failed Passing. Ruin-sight is mock #7777 only.
 - F watch (not loot). Guests see asphalt. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 16 (do this next)
-Reversal: the last god’s hint can be forged (exhibition Winke). Cult vs fake. Quill can teach you to spot copies — or sell them. No mint. No Base.
+## Stage 16 (landed)
+- Quill’s tray after the listing: cult Winke vs exhibition copies.
+- F lesson. Q keep the eye (cult). E sell a print (+25 Bestand, aura wound). Selling does not open the hole.
+- Guests cannot tell which sheet is the prayer. `damageFor` unchanged.
+
+## Stage 17 (do this next)
+Movement IV stub: prepare a Clearing, mortality act, Passing attempt that can fail if Gestell is maxed. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
