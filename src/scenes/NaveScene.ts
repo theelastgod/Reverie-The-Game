@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import {
+  CARE_DOOR,
   formatSerial,
   GOING_UNDER,
   movementReady,
@@ -149,6 +150,10 @@ export class NaveScene extends Phaser.Scene {
       this.net.bury();
       return;
     }
+    if (nearPoint(me.x, me.y, CARE_DOOR.x, CARE_DOOR.y, 56)) {
+      this.net.care();
+      return;
+    }
     if (movementReady(me.beats) && nearPoint(me.x, me.y, GOING_UNDER.x, GOING_UNDER.y, 56)) {
       this.net.goingUnder();
     }
@@ -247,7 +252,15 @@ export class NaveScene extends Phaser.Scene {
         g = this.add.circle(poi.x, poi.y, 14, 0x5a5a5a, 0.7).setDepth(4);
         this.poiMarks.set(poi.id, g);
       }
-      g.setFillStyle(poi.kind === "named-weather" ? 0xc9a56a : 0x5a5a5a, 0.85);
+      const fill =
+        poi.kind === "named-weather"
+          ? 0xc9a56a
+          : poi.kind === "care-open"
+            ? 0x7eb6ff
+            : poi.kind === "care-shut"
+              ? 0x3a3a3a
+              : 0x5a5a5a;
+      g.setFillStyle(fill, 0.85);
     }
     for (const s of this.net.snap?.signs ?? []) {
       this.signLabels.get(s.id)?.setText(s.title);
@@ -312,12 +325,19 @@ export class NaveScene extends Phaser.Scene {
     const sign = (snap.signs ?? NAVE_SIGNS).find((s) => nearPoint(me.x, me.y, s.x, s.y, 56));
     const clerkNear = snap.clerks.find((c) => nearPoint(me.x, me.y, c.x, c.y, 70));
     const under = nearPoint(me.x, me.y, GOING_UNDER.x, GOING_UNDER.y, 56);
+    const care = nearPoint(me.x, me.y, CARE_DOOR.x, CARE_DOOR.y, 56);
     const nearNode = snap.nodes.find(
       (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
 
     if (me.locked) {
-      this.prompt = me.heard || "A guest cannot prepare the ground.";
+      this.prompt = care ? me.heard || "You see a door. You do not see what it is for." : me.heard || "A guest cannot prepare the ground.";
+    } else if (care && snap.careOpen && !me.guest && me.beats.under) {
+      this.prompt = me.wink || "F — the Care. A Wink only you can hold.";
+    } else if (care && !me.guest && !me.beats.under) {
+      this.prompt = "The Care is shut until you go under.";
+    } else if (care) {
+      this.prompt = "You see a door. You do not see what it is for.";
     } else if (me.heard && (npcNear || burial || under)) {
       this.prompt = me.heard;
     } else if (npcNear) {
@@ -360,5 +380,12 @@ export class NaveScene extends Phaser.Scene {
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;
+    const wink = hud("wink-chip");
+    if (wink) {
+      wink.hidden = me.guest || !me.wink;
+      wink.textContent = me.wink ? `Wink · ${me.wink}` : "";
+    }
+    const zone = hud("zone-chip");
+    if (zone) zone.textContent = me.inCare ? "The Care" : "Nave of Tubes";
   }
 }

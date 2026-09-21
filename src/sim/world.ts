@@ -31,6 +31,11 @@ import {
   TEST_SERIAL,
   auraSeed,
   formatSerial,
+  CARE_DOOR,
+  CARE_SPECTATOR,
+  WINK_CARE,
+  openCarePoi,
+  visibleWink,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -70,6 +75,8 @@ export type Player = {
   locked: boolean;
   heard: string;
   serial: number | null;
+  wink: string;
+  inCare: boolean;
 };
 
 export type WorldState = {
@@ -82,6 +89,7 @@ export type WorldState = {
   signs: Sign[];
   pois: Poi[];
   weatherNamed: boolean;
+  careOpen: boolean;
   gestell: number;
   now: number;
 };
@@ -104,6 +112,8 @@ export function spawnGuest(id: string): Player {
     locked: false,
     heard: "",
     serial: null,
+    wink: "",
+    inCare: false,
   };
 }
 
@@ -149,6 +159,7 @@ export function emptyWorld(): WorldState {
     signs: naveSigns(),
     pois: navePois(),
     weatherNamed: false,
+    careOpen: false,
     gestell: 12,
     now: 0,
   };
@@ -198,6 +209,8 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
             locked: hit.locked,
             heard: `${c.name} did their job.`,
             serial: hit.serial,
+            wink: hit.wink,
+            inCare: hit.inCare,
           });
         } else {
           players.set(hit.id, { ...hit, hp });
@@ -247,6 +260,8 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         locked: b.locked,
         heard: b.heard,
         serial: b.serial,
+        wink: b.wink,
+        inCare: b.inCare,
       });
     } else {
       players.set(id, { ...b, hp });
@@ -380,9 +395,31 @@ export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
     ...p,
     winke: p.winke + 1,
     readiness: p.readiness + 1,
+    beats: { ...p.beats, under: true },
     heard: ANGEL_UNDER,
   });
-  return { ...w, players, rites };
+  const pois = w.careOpen ? w.pois : w.pois.map((poi) => (poi.id === CARE_DOOR.id ? openCarePoi() : poi));
+  return { ...w, players, rites, pois, careOpen: true };
+}
+
+export function applyCare(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  if (!nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked || !w.careOpen || !p.beats.under) {
+    players.set(playerId, { ...p, heard: p.guest || p.locked ? CARE_SPECTATOR : p.heard, wink: visibleWink(true, WINK_CARE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, care: true },
+    inCare: true,
+    wink: visibleWink(false, WINK_CARE),
+    heard: WINK_CARE,
+    readiness: p.readiness + (p.beats.care ? 0 : 1),
+  });
+  return { ...w, players };
 }
 
 export function applyLink(w: WorldState, playerId: string, serial: number, sig: string): WorldState {
@@ -415,5 +452,6 @@ export function snapshot(w: WorldState) {
     signs: w.signs,
     pois: w.pois,
     weatherNamed: w.weatherNamed,
+    careOpen: w.careOpen,
   };
 }

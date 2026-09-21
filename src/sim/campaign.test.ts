@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  CARE_DOOR,
+  CARE_SPECTATOR,
   GUEST_LOCK,
   GOING_UNDER,
   MOCK_SIG,
   TEST_SERIAL,
+  WINK_CARE,
   auraSeed,
   formatSerial,
   movementReady,
@@ -11,10 +14,12 @@ import {
   NAVE_SIGNS,
   NPC_LINES,
   displayName,
+  visibleWink,
   winkeVisible,
 } from "./campaign";
 import {
   applyBury,
+  applyCare,
   applyGoingUnder,
   applyLink,
   applyRead,
@@ -73,7 +78,7 @@ describe("Movement I beats", () => {
 
   it("guest lock copy fires at going-under after the three intros and burial", () => {
     const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
-      beats: { nara: true, quill: true, ord: true, burial: true },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false },
     });
     expect(movementReady(w.players.get("a")!.beats)).toBe(true);
     const locked = applyGoingUnder(w, "a");
@@ -101,14 +106,68 @@ describe("Movement I beats", () => {
     const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
       guest: false,
       aura: 12,
-      beats: { nara: true, quill: true, ord: true, burial: true },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false },
     });
     const after = applyGoingUnder(w, "a");
     const p = after.players.get("a")!;
     expect(p.locked).toBe(false);
     expect(p.winke).toBe(1);
     expect(p.heard).toContain("Care");
+    expect(p.beats.under).toBe(true);
+    expect(after.careOpen).toBe(true);
+    expect(after.pois.find((poi) => poi.id === CARE_DOOR.id)?.kind).toBe("care-open");
     expect(guestCanClaim(p)).toBe(false);
+  });
+});
+
+describe("Care door and Wink", () => {
+  const ready = {
+    guest: false,
+    serial: TEST_SERIAL,
+    aura: auraSeed(TEST_SERIAL),
+    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false },
+  };
+
+  it("linked Angel going-under opens the Care; guest lock does not", () => {
+    const guestW = placeNear("g", GOING_UNDER.x, GOING_UNDER.y, {
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false },
+    });
+    const guestAfter = applyGoingUnder(guestW, "g");
+    expect(guestAfter.careOpen).toBe(false);
+    expect(visibleWink(true, WINK_CARE)).toBe("");
+
+    const angelW = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, ready);
+    const open = applyGoingUnder(angelW, "a");
+    expect(open.careOpen).toBe(true);
+    const atDoor = { ...open };
+    atDoor.players.set("a", { ...open.players.get("a")!, x: CARE_DOOR.x, y: CARE_DOOR.y });
+    const seen = applyCare(atDoor, "a");
+    const p = seen.players.get("a")!;
+    expect(p.wink).toBe(WINK_CARE);
+    expect(p.inCare).toBe(true);
+    expect(p.beats.care).toBe(true);
+    expect(visibleWink(p.guest, p.wink)).toBe(WINK_CARE);
+    expect(guestCanClaim(p)).toBe(false);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
+  });
+
+  it("guest at an open Care door is a spectator and never hears the Wink", () => {
+    const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, ready);
+    const open = applyGoingUnder(w, "a");
+    open.players.set("g", {
+      ...spawnGuest("g"),
+      x: CARE_DOOR.x,
+      y: CARE_DOOR.y,
+      locked: true,
+      heard: GUEST_LOCK,
+    });
+    const after = applyCare(open, "g");
+    const g = after.players.get("g")!;
+    expect(g.wink).toBe("");
+    expect(g.inCare).toBe(false);
+    expect(g.heard).toBe(CARE_SPECTATOR);
+    expect(visibleWink(g.guest, WINK_CARE)).toBe("");
+    expect(guestCanClaim(g)).toBe(false);
   });
 });
 

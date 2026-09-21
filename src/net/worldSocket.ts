@@ -15,6 +15,7 @@ export type Snap = {
   signs: Sign[];
   pois: Poi[];
   weatherNamed: boolean;
+  careOpen: boolean;
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };
@@ -76,6 +77,10 @@ export class WorldSocket {
 
   link(serial: number) {
     this.send({ t: "link", serial, sig: "mock" });
+  }
+
+  care() {
+    this.send({ t: "care" });
   }
 
   private send(msg: unknown) {

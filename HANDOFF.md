@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 8** — Care door stub: mock-linked Angel completes going-under and sees a Wink guests cannot. Still no mint, no claims desk.
+**Next stage: 9** — Movement II stub in The Care (House hall / Gestell tax copy). No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -41,8 +41,13 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Mock Angel link: `{ t: "link", serial: 7777, sig: "mock" }` only. `#0000` guest, `#7777` test Angel.
 - Aura seed from serial. Guests stay aura 0. Winke hidden from guests. `damageFor` ignores link. Claims still refuse.
 
-## Stage 8 (do this next)
-Care door after going-under for linked Angels. A Wink line only they see. Guests remain locked spectators. No Base.
+## Stage 8 (landed)
+- Care door POI. Angel going-under opens it.
+- F at the door: linked Angel hears WINK_CARE (HUD wink chip). Guests hear spectator copy and never get the Wink.
+- Claims still refuse. No Base.
+
+## Stage 9 (do this next)
+Movement II stub inside The Care: House hall plaque, Gestell tax as a number, no combat power from it.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

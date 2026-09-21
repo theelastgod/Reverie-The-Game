@@ -29,6 +29,8 @@ export type Beats = {
   quill: boolean;
   ord: boolean;
   burial: boolean;
+  under: boolean;
+  care: boolean;
 };
 
 export type WeatherHeard = {
@@ -51,7 +53,7 @@ export type Poi = {
   name: string;
   x: number;
   y: number;
-  kind: "unnamed-weather" | "named-weather";
+  kind: "unnamed-weather" | "named-weather" | "care-shut" | "care-open";
 };
 
 export const GUEST_LOCK = "A guest cannot prepare the ground.";
@@ -100,6 +102,11 @@ export const NPC_LINES: Record<NpcId, { first: string; later: string }> = {
 export const ANGEL_UNDER =
   "The Care is open. You go under as death, not as a cutscene. Guests stop here.";
 
+export const CARE_DOOR = { id: "care-door", x: 1104, y: 168 };
+export const WINK_CARE =
+  "The Care does not keep you. It only lets you be mortal in a warehouse. The last god is not in the next room.";
+export const CARE_SPECTATOR = "You see a door. You do not see what it is for.";
+
 export const WEATHER_NAMED =
   "You named the weather. Safety still sells stability. The plaque is a lie the city paid for.";
 
@@ -117,7 +124,7 @@ export const CLERK_DAMAGE = 14;
 export const CLERK_TELEGRAPH = 0.6;
 
 export function emptyBeats(): Beats {
-  return { nara: false, quill: false, ord: false, burial: false };
+  return { nara: false, quill: false, ord: false, burial: false, under: false, care: false };
 }
 
 export function emptyWeather(): WeatherHeard {
@@ -142,7 +149,16 @@ export function naveSigns(): Sign[] {
 export function navePois(): Poi[] {
   return [
     { id: "weather", name: "Unnamed weather", x: 192, y: 340, kind: "unnamed-weather" },
+    { id: CARE_DOOR.id, name: "The Care (shut)", x: CARE_DOOR.x, y: CARE_DOOR.y, kind: "care-shut" },
   ];
+}
+
+export function openCarePoi(): Poi {
+  return { id: CARE_DOOR.id, name: "The Care", x: CARE_DOOR.x, y: CARE_DOOR.y, kind: "care-open" };
+}
+
+export function visibleWink(guest: boolean, wink: string): string {
+  return guest ? "" : wink;
 }
 
 export function namedWeatherPoi(): Poi {
