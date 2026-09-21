@@ -5,6 +5,8 @@ import {
   GOING_UNDER,
   HOUSE_HALL,
   SAFETY_ANNEX,
+  CLEARING_STALL,
+  CLEARING_PRICE,
   movementReady,
   NAVE_NPCS,
   NAVE_SIGNS,
@@ -103,6 +105,9 @@ export class NaveScene extends Phaser.Scene {
     }
     if (s.id === SAFETY_ANNEX.id) {
       this.add.image(s.x, s.y - 52, "safety-annex").setDisplaySize(88, 50).setDepth(3);
+    }
+    if (s.id === CLEARING_STALL.id) {
+      this.add.image(s.x, s.y - 52, "clearing-stall").setDisplaySize(88, 50).setDepth(3);
     }
     const label = this.add
       .text(s.x, s.y - 2, s.title, {
@@ -278,6 +283,8 @@ export class NaveScene extends Phaser.Scene {
               ? 0x7eb6ff
               : poi.kind === "safety-annex"
                 ? 0xe8e8e8
+              : poi.kind === "clearing-listed"
+                ? 0x7eb6ff
             : poi.kind === "care-open"
               ? 0x7eb6ff
               : poi.kind === "care-shut"
@@ -367,6 +374,7 @@ export class NaveScene extends Phaser.Scene {
     const care = nearPoint(me.x, me.y, CARE_DOOR.x, CARE_DOOR.y, 56);
     const hall = nearPoint(me.x, me.y, HOUSE_HALL.x, HOUSE_HALL.y, 56);
     const annex = nearPoint(me.x, me.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
+    const stall = nearPoint(me.x, me.y, CLEARING_STALL.x, CLEARING_STALL.y, 56);
     const histNear = visibleHistory(me.guest, me.serial, snap.history ?? []).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
@@ -390,6 +398,14 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — sign the freeze. The district holds. The Passing will starve.";
     } else if (annex) {
       this.prompt = "Safety Annex. The desk will not take a name that has not read the hall.";
+    } else if (stall && (me.guest || me.locked)) {
+      this.prompt = "A stall of lights. You cannot afford a sky you cannot see.";
+    } else if (stall && me.beats.market) {
+      this.prompt = `F — buy the copy. ${CLEARING_PRICE} Bestand. The Clearing stays closed.`;
+    } else if (stall && me.beats.hall) {
+      this.prompt = "F — Quill listed a Clearing. It looks like freedom.";
+    } else if (stall) {
+      this.prompt = "Quill is selling something. You do not yet have the eyes for the price.";
     } else if (care && snap.careOpen && !me.guest && me.beats.under) {
       this.prompt = me.wink || "F — the Care. A Wink only you can hold.";
     } else if (care && !me.guest && !me.beats.under) {

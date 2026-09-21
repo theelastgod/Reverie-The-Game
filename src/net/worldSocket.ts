@@ -20,6 +20,7 @@ export type Snap = {
   passing: Passing;
   tax: number;
   history: HistoryMark[];
+  clearingOpen: boolean;
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };

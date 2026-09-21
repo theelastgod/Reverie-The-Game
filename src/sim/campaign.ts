@@ -33,6 +33,7 @@ export type Beats = {
   care: boolean;
   hall: boolean;
   freeze: boolean;
+  market: boolean;
 };
 
 export type WeatherHeard = {
@@ -55,7 +56,15 @@ export type Poi = {
   name: string;
   x: number;
   y: number;
-  kind: "unnamed-weather" | "named-weather" | "care-shut" | "care-open" | "house-hall" | "safety-annex" | "safety-frozen";
+  kind:
+    | "unnamed-weather"
+    | "named-weather"
+    | "care-shut"
+    | "care-open"
+    | "house-hall"
+    | "safety-annex"
+    | "safety-frozen"
+    | "clearing-listed";
 };
 
 export type Passing = {
@@ -159,6 +168,34 @@ export function starvedPassing(): Passing {
   return { ready: 0, starved: true };
 }
 
+export const CLEARING_STALL = { id: "clearing-stall", x: 1200, y: 560 };
+export const CLEARING_PRICE = 40;
+export const MARKET_LISTING =
+  "Quill listed a Clearing. Forty Bestand. Copies travel. The hole does not.";
+export const WINK_MARKET = "It looks like freedom. It is a stall. The sky is already priced.";
+export const MARKET_BUY =
+  "You bought a copy. The Clearing is still closed. Aura thins when you treat the hole as stock.";
+export const MARKET_SPECTATOR = "A stall of lights. You cannot afford a sky you cannot see.";
+export const MARKET_NEED_HALL = "Quill is selling something. You do not yet have the eyes for the price.";
+
+export const STALL_PLAQUE: Sign = {
+  id: CLEARING_STALL.id,
+  title: "Clearing — listed",
+  text: "Forty Bestand. Exhibition copy. Cult objects do not hang here.",
+  x: CLEARING_STALL.x,
+  y: CLEARING_STALL.y,
+};
+
+export function stallPoi(): Poi {
+  return {
+    id: CLEARING_STALL.id,
+    name: "Clearing — listed",
+    x: CLEARING_STALL.x,
+    y: CLEARING_STALL.y,
+    kind: "clearing-listed",
+  };
+}
+
 export function annexPoi(frozen: boolean): Poi {
   return {
     id: SAFETY_ANNEX.id,
@@ -186,7 +223,17 @@ export const CLERK_DAMAGE = 14;
 export const CLERK_TELEGRAPH = 0.6;
 
 export function emptyBeats(): Beats {
-  return { nara: false, quill: false, ord: false, burial: false, under: false, care: false, hall: false, freeze: false };
+  return {
+    nara: false,
+    quill: false,
+    ord: false,
+    burial: false,
+    under: false,
+    care: false,
+    hall: false,
+    freeze: false,
+    market: false,
+  };
 }
 
 export function emptyWeather(): WeatherHeard {
@@ -205,7 +252,7 @@ export function naveClerks(): Clerk[] {
 }
 
 export function naveSigns(): Sign[] {
-  return [...NAVE_SIGNS.map((s) => ({ ...s })), { ...ANNEX_PLAQUE }];
+  return [...NAVE_SIGNS.map((s) => ({ ...s })), { ...ANNEX_PLAQUE }, { ...STALL_PLAQUE }];
 }
 
 export function navePois(): Poi[] {
@@ -213,6 +260,7 @@ export function navePois(): Poi[] {
     { id: "weather", name: "Unnamed weather", x: 192, y: 340, kind: "unnamed-weather" },
     { id: CARE_DOOR.id, name: "The Care (shut)", x: CARE_DOOR.x, y: CARE_DOOR.y, kind: "care-shut" },
     annexPoi(false),
+    stallPoi(),
   ];
 }
 

@@ -33,6 +33,8 @@ import {
   formatSerial,
   annexPoi,
   HistoryMark,
+  CLEARING_PRICE,
+  CLEARING_STALL,
   CARE_DOOR,
   CARE_SPECTATOR,
   emptyPassing,
@@ -44,9 +46,14 @@ import {
   Passing,
   SAFETY_ANNEX,
   starvedPassing,
+  MARKET_BUY,
+  MARKET_LISTING,
+  MARKET_NEED_HALL,
+  MARKET_SPECTATOR,
   WINK_CARE,
   WINK_FREEZE,
   WINK_HALL,
+  WINK_MARKET,
   gestellTax,
   hallCopy,
   hallPlaque,
@@ -113,6 +120,7 @@ export type WorldState = {
   frozen: boolean;
   passing: Passing;
   history: HistoryMark[];
+  clearingOpen: boolean;
   gestell: number;
   now: number;
 };
@@ -186,6 +194,7 @@ export function emptyWorld(): WorldState {
     frozen: false,
     passing: emptyPassing(),
     history: [],
+    clearingOpen: false,
     gestell: 12,
     now: 0,
   };
@@ -397,6 +406,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return { ...w, players };
   }
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
+  if (sign.id === CLEARING_STALL.id) return applyMarket(w, playerId);
   const weather = { ...p.weather, safety: true };
   const heard = `${sign.title}: ${sign.text}`;
   return withNamedWeather(w, playerId, { ...p, weather, heard });
@@ -489,6 +499,42 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
   return { ...w, players };
 }
 
+export function applyMarket(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: MARKET_SPECTATOR, wink: visibleWink(true, WINK_MARKET) });
+    return { ...w, players };
+  }
+  if (!p.beats.hall) {
+    players.set(playerId, { ...p, heard: MARKET_NEED_HALL });
+    return { ...w, players };
+  }
+  if (!p.beats.market) {
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, market: true },
+      heard: MARKET_LISTING,
+      wink: visibleWink(false, WINK_MARKET),
+      readiness: p.readiness + 1,
+    });
+    return { ...w, players };
+  }
+  if (p.bestand < CLEARING_PRICE) {
+    players.set(playerId, { ...p, heard: MARKET_LISTING });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    bestand: p.bestand - CLEARING_PRICE,
+    aura: Math.max(0, p.aura - 2),
+    heard: MARKET_BUY,
+    wink: visibleWink(false, WINK_MARKET),
+  });
+  return { ...w, players, clearingOpen: false };
+}
+
 export function applyFreeze(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56)) return w;
@@ -558,5 +604,6 @@ export function snapshot(w: WorldState) {
     passing: w.passing,
     tax: gestellTax(w.gestell),
     history: w.history,
+    clearingOpen: w.clearingOpen,
   };
 }

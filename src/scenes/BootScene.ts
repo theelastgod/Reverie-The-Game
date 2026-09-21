@@ -63,6 +63,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("house-hall", "/assets/house-hall.jpg");
     this.load.image("safety-annex", "/assets/safety-annex.jpg");
     this.load.image("serial-wreckage", "/assets/serial-wreckage.jpg");
+    this.load.image("clearing-stall", "/assets/clearing-stall.jpg");
   }
 
   create() {

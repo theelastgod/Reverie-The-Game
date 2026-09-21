@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   CARE_DOOR,
   CARE_SPECTATOR,
+  CLEARING_PRICE,
+  CLEARING_STALL,
   GUEST_LOCK,
   GOING_UNDER,
   FREEZE_COPY,
@@ -19,6 +21,11 @@ import {
   WINK_FREEZE,
   WINK_HISTORY,
   WINK_HALL,
+  WINK_MARKET,
+  MARKET_BUY,
+  MARKET_LISTING,
+  MARKET_NEED_HALL,
+  MARKET_SPECTATOR,
   gestellTax,
   hallCopy,
   auraSeed,
@@ -39,6 +46,7 @@ import {
   applyFreeze,
   applyGoingUnder,
   applyLink,
+  applyMarket,
   applyRead,
   snapshot,
   applyStrike,
@@ -96,7 +104,7 @@ describe("Movement I beats", () => {
 
   it("guest lock copy fires at going-under after the three intros and burial", () => {
     const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
-      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false, market: false },
     });
     expect(movementReady(w.players.get("a")!.beats)).toBe(true);
     const locked = applyGoingUnder(w, "a");
@@ -124,7 +132,7 @@ describe("Movement I beats", () => {
     const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
       guest: false,
       aura: 12,
-      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false, market: false },
     });
     const after = applyGoingUnder(w, "a");
     const p = after.players.get("a")!;
@@ -145,12 +153,12 @@ describe("Care door and Wink", () => {
     guest: false,
     serial: TEST_SERIAL,
     aura: auraSeed(TEST_SERIAL),
-    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
+    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false, market: false },
   };
 
   it("linked Angel going-under opens the Care; guest lock does not", () => {
     const guestW = placeNear("g", GOING_UNDER.x, GOING_UNDER.y, {
-      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false, market: false },
     });
     const guestAfter = applyGoingUnder(guestW, "g");
     expect(guestAfter.careOpen).toBe(false);
@@ -196,7 +204,7 @@ describe("Movement II House hall", () => {
     guest: false,
     serial: TEST_SERIAL,
     aura: auraSeed(TEST_SERIAL),
-    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
+    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false, market: false },
   };
 
   function angelInHall() {
@@ -332,6 +340,57 @@ describe("Safety Annex freeze", () => {
     expect(after.frozen).toBe(false);
     expect(after.players.get("g")?.heard).toBe(FREEZE_SPECTATOR);
     expect(after.players.get("g")?.wink).toBe("");
+    expect(guestCanClaim(after.players.get("g")!)).toBe(false);
+  });
+});
+
+describe("Iridescent Clearing listing", () => {
+  function angelAtStall(hall = true, extra: Partial<ReturnType<typeof spawnGuest>> = {}) {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), hall, nara: true, quill: true, ord: true, burial: true },
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+      ...extra,
+    });
+    return w;
+  }
+
+  it("hall-read Angel sees the listing Wink; buying a copy does not open the Clearing", () => {
+    const w = angelAtStall(true, { bestand: 80 });
+    const listed = applyMarket(w, "a");
+    const p = listed.players.get("a")!;
+    expect(p.beats.market).toBe(true);
+    expect(p.heard).toBe(MARKET_LISTING);
+    expect(p.wink).toBe(WINK_MARKET);
+    expect(listed.clearingOpen).toBe(false);
+    expect(CLEARING_PRICE).toBe(40);
+
+    const bought = applyMarket(listed, "a");
+    const b = bought.players.get("a")!;
+    expect(b.bestand).toBe(40);
+    expect(b.aura).toBe(auraSeed(TEST_SERIAL) - 2);
+    expect(b.heard).toBe(MARKET_BUY);
+    expect(bought.clearingOpen).toBe(false);
+    expect(damageFor(b)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(b)).toBe(false);
+  });
+
+  it("without the hall the stall is unread; guests never hear the Wink", () => {
+    const closed = applyMarket(angelAtStall(false), "a");
+    expect(closed.players.get("a")?.heard).toBe(MARKET_NEED_HALL);
+    expect(closed.players.get("a")?.beats.market).toBe(false);
+
+    const w = emptyWorld();
+    w.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y });
+    const after = applyMarket(w, "g");
+    expect(after.players.get("g")?.heard).toBe(MARKET_SPECTATOR);
+    expect(after.players.get("g")?.wink).toBe("");
+    expect(after.clearingOpen).toBe(false);
     expect(guestCanClaim(after.players.get("g")!)).toBe(false);
   });
 });
