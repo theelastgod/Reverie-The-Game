@@ -7,8 +7,13 @@ import {
   SAFETY_ANNEX,
   CLEARING_STALL,
   CLEARING_PRICE,
+  M3_DOOR,
   OPERATOR_DESK,
+  ORGAN_STRAIT,
+  ORGAN_FOUNDRY,
+  ORGAN_CABLE,
   PRIVATE_YIELD,
+  WRECK_GARDEN,
   movementReady,
   NAVE_NPCS,
   NAVE_SIGNS,
@@ -111,6 +116,9 @@ export class NaveScene extends Phaser.Scene {
     if (s.id === CLEARING_STALL.id) {
       this.add.image(s.x, s.y - 52, "clearing-stall").setDisplaySize(88, 50).setDepth(3);
     }
+    if (s.id === ORGAN_STRAIT.id) {
+      this.add.image(s.x, s.y - 52, "organ-strait").setDisplaySize(88, 50).setDepth(3);
+    }
     const label = this.add
       .text(s.x, s.y - 2, s.title, {
         fontFamily: "Space Grotesk, sans-serif",
@@ -174,8 +182,13 @@ export class NaveScene extends Phaser.Scene {
     const hist = visibleHistory(me.guest, me.serial, this.net.snap?.history ?? []).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
-    if (burial || wreck || hist) {
+    const garden = rites.find((r) => r.kind === "garden" && !r.done && nearPoint(me.x, me.y, r.x, r.y, 56));
+    if (burial || wreck || hist || garden) {
       this.net.bury();
+      return;
+    }
+    if (nearPoint(me.x, me.y, M3_DOOR.x, M3_DOOR.y, 56)) {
+      this.net.m3();
       return;
     }
     if (nearPoint(me.x, me.y, CARE_DOOR.x, CARE_DOOR.y, 56)) {
@@ -214,7 +227,10 @@ export class NaveScene extends Phaser.Scene {
       let g = this.riteMarks.get(r.id);
       if (!g) {
         g = this.add.circle(r.x, r.y, r.kind === "going-under" ? 18 : 12, 0x7a1028, 0.75).setDepth(4);
-        const label = r.kind === "going-under" ? "GOING-UNDER" : "BURIAL";
+        if (r.kind === "garden") {
+          this.add.image(r.x, r.y - 36, "wreckage-garden").setDisplaySize(72, 40).setDepth(3);
+        }
+        const label = r.kind === "going-under" ? "GOING-UNDER" : r.kind === "garden" ? "WRECKAGE GARDEN" : "BURIAL";
         this.add
           .text(r.x, r.y + 22, label, {
             fontFamily: "Space Grotesk, sans-serif",
@@ -226,6 +242,7 @@ export class NaveScene extends Phaser.Scene {
         this.riteMarks.set(r.id, g);
       }
       if (r.kind === "burial") g.setFillStyle(r.done ? 0xc9a56a : 0x7a1028, 0.8);
+      else if (r.kind === "garden") g.setFillStyle(r.done ? 0xc9a56a : 0x7a1028, 0.85);
       else g.setFillStyle(r.done ? 0x7eb6ff : 0xc9a56a, 0.85);
     }
   }
@@ -299,6 +316,10 @@ export class NaveScene extends Phaser.Scene {
                   ? 0xff2d6b
                   : poi.kind === "m3-shut"
                     ? 0x3a3a3a
+                    : poi.kind === "wreckage-garden"
+                      ? 0x7a1028
+                      : poi.kind.startsWith("organ-")
+                        ? 0xc9a56a
             : poi.kind === "care-shut"
                 ? 0x3a3a3a
                 : 0x5a5a5a;
@@ -388,6 +409,11 @@ export class NaveScene extends Phaser.Scene {
     const annex = nearPoint(me.x, me.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
     const stall = nearPoint(me.x, me.y, CLEARING_STALL.x, CLEARING_STALL.y, 56);
     const desk = nearPoint(me.x, me.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56);
+    const m3 = nearPoint(me.x, me.y, M3_DOOR.x, M3_DOOR.y, 56);
+    const gardenNear = snap.rites.find((r) => r.kind === "garden" && nearPoint(me.x, me.y, r.x, r.y, 56));
+    const strait = nearPoint(me.x, me.y, ORGAN_STRAIT.x, ORGAN_STRAIT.y, 56);
+    const foundry = nearPoint(me.x, me.y, ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y, 56);
+    const cable = nearPoint(me.x, me.y, ORGAN_CABLE.x, ORGAN_CABLE.y, 56);
     const histNear = visibleHistory(me.guest, me.serial, snap.history ?? []).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
@@ -431,6 +457,16 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — Vesper Hale, Concentrator. A private yield. Human.";
     } else if (desk) {
       this.prompt = "A concentrator. She will not quote until you have read the hall.";
+    } else if (m3 && (me.guest || me.locked)) {
+      this.prompt = "A door with a number. You do not travel organs.";
+    } else if (m3 && snap.m3Open && !me.guest) {
+      this.prompt = me.inM3 ? me.heard || "The Third Movement is organs, not nations." : "F — enter Movement III. Strait / Foundry / Cable.";
+    } else if (m3) {
+      this.prompt = "Movement III is shut. The private yield funds this door the Cold way.";
+    } else if (gardenNear && !gardenNear.done && !me.guest) {
+      this.prompt = "F bury the Clearing that Movement I over-extracted. Nara Vale will not speak until you do.";
+    } else if ((strait || foundry || cable) && snap.m3Open && !me.guest) {
+      this.prompt = "F read the organ. Extract here lights a factory there. No country names.";
     } else if (care && snap.careOpen && !me.guest && me.beats.under) {
       this.prompt = me.wink || "F — the Care. A Wink only you can hold.";
     } else if (care && !me.guest && !me.beats.under) {
@@ -491,7 +527,19 @@ export class NaveScene extends Phaser.Scene {
     }
     const zone = hud("zone-chip");
     if (zone) {
-      zone.textContent = me.inCare ? (hall ? "The Care · House hall" : "The Care") : "Nave of Tubes";
+      zone.textContent = me.inM3
+        ? strait
+          ? "The Strait"
+          : foundry
+            ? "The Foundry"
+            : cable
+              ? "The Cable"
+              : "Movement III"
+        : me.inCare
+          ? hall
+            ? "The Care · House hall"
+            : "The Care"
+          : "Nave of Tubes";
     }
   }
 }

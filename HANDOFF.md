@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 14** — Movement III stub: Strait / Foundry / Cable organs. The Clearing you touched in I is wreckage. No mint.
+**Next stage: 15** — Failed Passing from last season, visible to ruin-sight. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -71,8 +71,13 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Hall-read Angels hear the offer Wink. E take = Cold, +90 Bestand, Movement III funded. Q refuse = Readiness, door stays shut.
 - Guests get spectator copy. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 14 (do this next)
-Movement III stub: districts as organs (Strait / Foundry / Cable). The Clearing from Movement I returns as wreckage. Nara will not speak until it is buried. No mint.
+## Stage 14 (landed)
+- Going-under plants a wreckage garden (the Movement I Clearing, gone). Nara Vale is silent until it is buried.
+- Cold-funded Movement III door opens Strait / Foundry / Cable plaques (invented organs, no country names).
+- Ord’s map: extract here lights a factory there. Guests cannot enter. `damageFor` unchanged.
+
+## Stage 15 (do this next)
+Ruin-angels see a failed Passing from last season. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

@@ -35,6 +35,18 @@ import {
   OPERATOR_TAKE,
   PRIVATE_YIELD,
   WINK_OPERATOR,
+  WINK_GARDEN,
+  WINK_ORGANS,
+  WRECK_GARDEN,
+  NARA_SILENCE,
+  NARA_AFTER_GARDEN,
+  GARDEN_BURY,
+  M3_ENTER,
+  M3_SPECTATOR,
+  ORD_MAP,
+  ORGAN_STRAIT,
+  ORGAN_FOUNDRY,
+  ORGAN_CABLE,
   gestellTax,
   hallCopy,
   auraSeed,
@@ -55,6 +67,7 @@ import {
   applyFreeze,
   applyGoingUnder,
   applyLink,
+  applyM3,
   applyMarket,
   applyOperator,
   applyRead,
@@ -464,6 +477,89 @@ describe("Vesper Hale private yield", () => {
     expect(after.players.get("g")?.wink).toBe("");
     expect(after.m3Open).toBe(false);
     expect(guestCanClaim(after.players.get("g")!)).toBe(false);
+  });
+});
+
+describe("Movement III organs", () => {
+  const ready = {
+    guest: false,
+    serial: TEST_SERIAL,
+    aura: auraSeed(TEST_SERIAL),
+    beats: { ...emptyBeats(), nara: true, quill: true, ord: true, burial: true, hall: true, under: true, care: true, yield: true },
+  };
+
+  function funded() {
+    const w = emptyWorld();
+    w.players.set("a", { ...spawnGuest("a"), ...ready, x: OPERATOR_DESK.x, y: OPERATOR_DESK.y, inCare: true });
+    return applyOperator(applyOperator(w, "a", "hear"), "a", "take");
+  }
+
+  it("going-under plants the wrecked Clearing; Nara is silent until burial", () => {
+    const nara = NAVE_NPCS.find((n) => n.id === "nara")!;
+    const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), nara: true, quill: true, ord: true, burial: true },
+    });
+    const under = applyGoingUnder(w, "a");
+    expect(under.rites.find((r) => r.kind === "garden")?.done).toBe(false);
+    expect(under.pois.find((p) => p.id === WRECK_GARDEN.id)?.name).toBe("Wreckage garden");
+    under.players.set("a", { ...under.players.get("a")!, x: nara.x, y: nara.y });
+    const silent = applyTalk(under, "a", "nara");
+    expect(silent.players.get("a")?.heard).toBe(NARA_SILENCE);
+    silent.players.set("a", { ...silent.players.get("a")!, x: WRECK_GARDEN.x, y: WRECK_GARDEN.y });
+    const buried = applyBury(silent, "a");
+    const p = buried.players.get("a")!;
+    expect(p.beats.garden).toBe(true);
+    expect(p.heard).toBe(GARDEN_BURY);
+    expect(p.wink).toBe(WINK_GARDEN);
+    expect(buried.rites.find((r) => r.kind === "garden")?.done).toBe(true);
+    buried.players.set("a", { ...p, x: nara.x, y: nara.y });
+    const after = applyTalk(buried, "a", "nara");
+    expect(after.players.get("a")?.heard).toBe(NARA_AFTER_GARDEN);
+    expect(guestCanClaim(p)).toBe(false);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+  });
+
+  it("Cold-funded door opens Strait / Foundry / Cable; guests cannot enter", () => {
+    const open = funded();
+    expect(open.m3Open).toBe(true);
+    expect(open.pois.find((p) => p.id === ORGAN_STRAIT.id)?.name).toBe("The Strait");
+    expect(open.pois.find((p) => p.id === ORGAN_FOUNDRY.id)?.name).toBe("The Foundry");
+    expect(open.pois.find((p) => p.id === ORGAN_CABLE.id)?.name).toBe("The Cable");
+    expect(open.signs.find((s) => s.id === ORGAN_STRAIT.id)?.text).not.toMatch(/hormuz|hsinchu|palantir|midgar/i);
+
+    open.players.set("a", { ...open.players.get("a")!, x: M3_DOOR.x, y: M3_DOOR.y });
+    const inside = applyM3(open, "a");
+    const p = inside.players.get("a")!;
+    expect(p.inM3).toBe(true);
+    expect(p.beats.m3).toBe(true);
+    expect(p.heard).toBe(M3_ENTER);
+    expect(p.x).toBe(ORGAN_STRAIT.x);
+
+    inside.players.set("a", { ...p, x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y });
+    const strait = applyRead(inside, "a", ORGAN_STRAIT.id);
+    expect(strait.players.get("a")?.beats.strait).toBe(true);
+    strait.players.set("a", { ...strait.players.get("a")!, x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y });
+    const foundry = applyRead(strait, "a", ORGAN_FOUNDRY.id);
+    foundry.players.set("a", { ...foundry.players.get("a")!, x: ORGAN_CABLE.x, y: ORGAN_CABLE.y });
+    const cable = applyRead(foundry, "a", ORGAN_CABLE.id);
+    expect(cable.players.get("a")?.beats.cable).toBe(true);
+    expect(cable.players.get("a")?.wink).toBe(WINK_ORGANS);
+
+    const ord = NAVE_NPCS.find((n) => n.id === "ord")!;
+    cable.players.set("a", { ...cable.players.get("a")!, x: ord.x, y: ord.y });
+    const mapped = applyTalk(cable, "a", "ord");
+    expect(mapped.players.get("a")?.heard).toBe(ORD_MAP);
+    expect(mapped.players.get("a")?.heard).not.toMatch(/hormuz|taiwan|iran/i);
+    expect(damageFor(mapped.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(mapped.players.get("a")!)).toBe(false);
+
+    const gWorld = funded();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: M3_DOOR.x, y: M3_DOOR.y, locked: true });
+    const guest = applyM3(gWorld, "g");
+    expect(guest.players.get("g")?.inM3).toBe(false);
+    expect(guest.players.get("g")?.heard).toBe(M3_SPECTATOR);
   });
 });
 

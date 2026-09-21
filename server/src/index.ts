@@ -3,6 +3,7 @@ import {
   applyCare,
   applyGoingUnder,
   applyLink,
+  applyM3,
   applyOperator,
   applyRead,
   applyStrike,
@@ -101,6 +102,9 @@ export class ReverieWorld {
     } else if (data.t === "operator") {
       const choice = data.choice === "take" || data.choice === "refuse" || data.choice === "hear" ? data.choice : "hear";
       this.w = applyOperator(this.w, id, choice);
+      this.broadcast();
+    } else if (data.t === "m3") {
+      this.w = applyM3(this.w, id);
       this.broadcast();
     }
   }

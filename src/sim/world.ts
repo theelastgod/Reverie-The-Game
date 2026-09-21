@@ -72,6 +72,24 @@ import {
   PRIVATE_YIELD,
   WINK_OPERATOR,
   m3Poi,
+  GARDEN_BURY,
+  GARDEN_RITE,
+  M3_DOOR,
+  M3_ENTER,
+  M3_SPECTATOR,
+  NARA_SILENCE,
+  ORD_MAP,
+  ORGAN_CABLE,
+  ORGAN_FOUNDRY,
+  ORGAN_NEED_M3,
+  ORGAN_PLAQUES,
+  ORGAN_STRAIT,
+  WINK_GARDEN,
+  WINK_ORGANS,
+  WRECK_GARDEN,
+  gardenPoi,
+  organPoi,
+  organsComplete,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -113,6 +131,7 @@ export type Player = {
   serial: number | null;
   wink: string;
   inCare: boolean;
+  inM3: boolean;
   current: "" | "cold" | "readiness";
 };
 
@@ -156,6 +175,7 @@ export function spawnGuest(id: string): Player {
     serial: null,
     wink: "",
     inCare: false,
+    inM3: false,
     current: "",
   };
 }
@@ -259,6 +279,8 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
             serial: hit.serial,
             wink: hit.wink,
             inCare: hit.inCare,
+            inM3: hit.inM3,
+            current: hit.current,
           });
         } else {
           players.set(hit.id, { ...hit, hp });
@@ -310,6 +332,8 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         serial: b.serial,
         wink: b.wink,
         inCare: b.inCare,
+        inM3: b.inM3,
+        current: b.current,
       });
     } else {
       players.set(id, { ...b, hp });
@@ -391,6 +415,22 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   const npc = npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
+  const players = new Map(w.players);
+  const gardenOpen = w.rites.some((r) => r.kind === "garden" && !r.done);
+  if (id === "nara" && gardenOpen && (p.beats.under || w.m3Open)) {
+    players.set(playerId, { ...p, heard: NARA_SILENCE });
+    return { ...w, players };
+  }
+  if (id === "ord" && w.m3Open && !p.guest) {
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, ord: true, map: true },
+      heard: ORD_MAP,
+      wink: visibleWink(false, WINK_ORGANS),
+      readiness: p.readiness + (p.beats.map ? 0 : 1),
+    });
+    return { ...w, players };
+  }
   const heard = lineFor(id, p.beats);
   const beats = { ...p.beats, [id]: true };
   const weather = {
@@ -421,6 +461,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) return applyMarket(w, playerId);
   if (sign.id === OPERATOR_DESK.id) return applyOperator(w, playerId, "hear");
+  if (sign.id === ORGAN_STRAIT.id || sign.id === ORGAN_FOUNDRY.id || sign.id === ORGAN_CABLE.id) {
+    return applyOrgan(w, playerId, sign);
+  }
   const weather = { ...p.weather, safety: true };
   const heard = `${sign.title}: ${sign.text}`;
   return withNamedWeather(w, playerId, { ...p, weather, heard });
@@ -440,6 +483,24 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
       heard: lineFor("nara", { ...p.beats, nara: true, burial: true }),
     });
     return { ...w, players, rites };
+  }
+  const garden = w.rites.find((r) => r.kind === "garden" && !r.done);
+  if (garden && nearPoint(p.x, p.y, garden.x, garden.y, 56)) {
+    if (p.guest) return w;
+    const rites = w.rites.map((r) => (r.id === garden.id ? { ...r, done: true } : r));
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, garden: true },
+      readiness: p.readiness + 1,
+      heard: GARDEN_BURY,
+      wink: visibleWink(false, WINK_GARDEN),
+    });
+    return {
+      ...w,
+      players,
+      rites,
+      pois: w.pois.map((poi) => (poi.id === WRECK_GARDEN.id ? gardenPoi(true) : poi)),
+    };
   }
   const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
   if (wreck) {
@@ -479,7 +540,9 @@ export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
     beats: { ...p.beats, under: true },
     heard: ANGEL_UNDER,
   });
-  return { ...w, players, rites, ...openCareWorld(w) };
+  const care = openCareWorld(w);
+  const planted = plantGarden({ ...w, rites, pois: care.pois });
+  return { ...w, players, rites: planted.rites, pois: planted.pois, signs: care.signs, careOpen: true };
 }
 
 function openCareWorld(w: WorldState): Pick<WorldState, "pois" | "signs" | "careOpen"> {
@@ -488,6 +551,31 @@ function openCareWorld(w: WorldState): Pick<WorldState, "pois" | "signs" | "care
   if (!pois.some((poi) => poi.id === HOUSE_HALL.id)) pois.push(houseHallPoi());
   const signs = w.signs.some((s) => s.id === HOUSE_HALL.id) ? w.signs : [...w.signs, hallPlaque()];
   return { pois, signs, careOpen: true };
+}
+
+function plantGarden(w: Pick<WorldState, "rites" | "pois">): Pick<WorldState, "rites" | "pois"> {
+  if (w.rites.some((r) => r.kind === "garden")) return { rites: w.rites, pois: w.pois };
+  const pois = w.pois.some((p) => p.id === WRECK_GARDEN.id) ? w.pois : [...w.pois, gardenPoi(false)];
+  return { rites: [...w.rites, { ...GARDEN_RITE }], pois };
+}
+
+function openOrgans(w: WorldState): Pick<WorldState, "signs" | "pois"> {
+  let signs = w.signs;
+  for (const s of ORGAN_PLAQUES) {
+    if (!signs.some((x) => x.id === s.id)) signs = [...signs, { ...s }];
+  }
+  let pois = w.pois;
+  const organs: [string, number, number, string][] = [
+    [ORGAN_STRAIT.id, ORGAN_STRAIT.x, ORGAN_STRAIT.y, "The Strait"],
+    [ORGAN_FOUNDRY.id, ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y, "The Foundry"],
+    [ORGAN_CABLE.id, ORGAN_CABLE.x, ORGAN_CABLE.y, "The Cable"],
+  ];
+  for (const [id, x, y, name] of organs) {
+    if (!pois.some((p) => p.id === id)) {
+      pois = [...pois, organPoi(id as "organ-strait" | "organ-foundry" | "organ-cable", x, y, name)];
+    }
+  }
+  return { signs, pois };
 }
 
 export function applyCare(w: WorldState, playerId: string): WorldState {
@@ -620,9 +708,17 @@ export function applyOperator(
       heard: OPERATOR_TAKE,
       wink: visibleWink(false, WINK_OPERATOR),
     });
-    const pois = w.pois.map((poi) => (poi.id === "m3-door" ? m3Poi(true) : poi));
+    let pois = w.pois.map((poi) => (poi.id === "m3-door" ? m3Poi(true) : poi));
     if (!pois.some((poi) => poi.id === "m3-door")) pois.push(m3Poi(true));
-    return { ...w, players, m3Open: true, pois, gestell: Math.min(100, w.gestell + 8) };
+    const organs = openOrgans({ ...w, pois });
+    return {
+      ...w,
+      players,
+      m3Open: true,
+      pois: organs.pois,
+      signs: organs.signs,
+      gestell: Math.min(100, w.gestell + 8),
+    };
   }
   players.set(playerId, {
     ...p,
@@ -631,6 +727,57 @@ export function applyOperator(
     readiness: p.readiness + 2,
     heard: OPERATOR_REFUSE,
     wink: visibleWink(false, WINK_OPERATOR),
+  });
+  return { ...w, players };
+}
+
+export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: M3_SPECTATOR, wink: "" });
+    return { ...w, players };
+  }
+  if (!w.m3Open) {
+    players.set(playerId, { ...p, heard: ORGAN_NEED_M3 });
+    return { ...w, players };
+  }
+  const key = sign.id === ORGAN_STRAIT.id ? "strait" : sign.id === ORGAN_FOUNDRY.id ? "foundry" : "cable";
+  const beats = { ...p.beats, [key]: true };
+  const done = organsComplete(beats);
+  players.set(playerId, {
+    ...p,
+    beats,
+    heard: `${sign.title}: ${sign.text}`,
+    wink: visibleWink(false, done ? WINK_ORGANS : p.wink),
+    readiness: p.readiness + (p.beats[key] ? 0 : 1),
+  });
+  return { ...w, players };
+}
+
+export function applyM3(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, M3_DOOR.x, M3_DOOR.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: M3_SPECTATOR, wink: "" });
+    return { ...w, players };
+  }
+  if (!w.m3Open) {
+    players.set(playerId, { ...p, heard: ORGAN_NEED_M3 });
+    return { ...w, players };
+  }
+  const first = !p.beats.m3;
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, m3: true },
+    inM3: true,
+    wink: visibleWink(false, WINK_ORGANS),
+    heard: M3_ENTER,
+    readiness: p.readiness + (first ? 1 : 0),
+    x: first ? ORGAN_STRAIT.x : p.x,
+    y: first ? ORGAN_STRAIT.y : p.y,
   });
   return { ...w, players };
 }

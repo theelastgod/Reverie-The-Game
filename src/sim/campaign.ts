@@ -18,7 +18,7 @@ export type Sign = {
 
 export type Rite = {
   id: string;
-  kind: "burial" | "going-under";
+  kind: "burial" | "going-under" | "garden";
   x: number;
   y: number;
   done: boolean;
@@ -37,6 +37,12 @@ export type Beats = {
   yield: boolean;
   cold: boolean;
   refuse: boolean;
+  garden: boolean;
+  m3: boolean;
+  strait: boolean;
+  foundry: boolean;
+  cable: boolean;
+  map: boolean;
 };
 
 export type WeatherHeard = {
@@ -70,7 +76,11 @@ export type Poi = {
     | "clearing-listed"
     | "operator-desk"
     | "m3-shut"
-    | "m3-open";
+    | "m3-open"
+    | "wreckage-garden"
+    | "organ-strait"
+    | "organ-foundry"
+    | "organ-cable";
 };
 
 export type Passing = {
@@ -214,6 +224,70 @@ export const OPERATOR_PLAQUE: Sign = {
 };
 
 export const M3_DOOR = { id: "m3-door", x: 1260, y: 120 };
+export const WRECK_GARDEN = { id: "wreckage-garden", x: 360, y: 700 };
+export const ORGAN_STRAIT = { id: "organ-strait", x: 240, y: 88 };
+export const ORGAN_FOUNDRY = { id: "organ-foundry", x: 520, y: 88 };
+export const ORGAN_CABLE = { id: "organ-cable", x: 800, y: 88 };
+
+export const GARDEN_RITE: Rite = { id: WRECK_GARDEN.id, kind: "garden", x: WRECK_GARDEN.x, y: WRECK_GARDEN.y, done: false };
+
+export const NARA_SILENCE =
+  "Nara Vale looks at the garden that used to be a hole. She will not speak until it is in the ground.";
+export const NARA_AFTER_GARDEN =
+  "You put it in the earth. I will walk to the Strait. I will not forgive the factory.";
+export const GARDEN_BURY =
+  "The Clearing from the first hour is wreckage now. You put it in the ground. Nara Vale will speak.";
+export const WINK_GARDEN =
+  "You took a hole and called it weather. It came back as earth. Only burial makes it world again.";
+export const ORD_MAP =
+  "Strait, Foundry, Cable. Extract in the Strait and the Foundry lights. There is no country here. There is only the process.";
+export const WINK_ORGANS =
+  "Three organs. One weather. The map is not a stick. Owning a token will not make you hit it harder.";
+export const M3_ENTER = "The Third Movement is organs, not nations. The Clearing you touched is already a garden.";
+export const M3_SPECTATOR = "A door with a number. You do not travel organs.";
+export const ORGAN_NEED_M3 = "The organs are shut. Movement III is not funded.";
+
+export const ORGAN_PLAQUES: Sign[] = [
+  {
+    id: ORGAN_STRAIT.id,
+    title: "The Strait",
+    text: "Water that is not water. Ore and hulls pass. Extract here, the Foundry breathes.",
+    x: ORGAN_STRAIT.x,
+    y: ORGAN_STRAIT.y,
+  },
+  {
+    id: ORGAN_FOUNDRY.id,
+    title: "The Foundry",
+    text: "Heat without a nation. The Cable drinks what you take.",
+    x: ORGAN_FOUNDRY.x,
+    y: ORGAN_FOUNDRY.y,
+  },
+  {
+    id: ORGAN_CABLE.id,
+    title: "The Cable",
+    text: "Signal as flesh. The Strait is already paying for this light.",
+    x: ORGAN_CABLE.x,
+    y: ORGAN_CABLE.y,
+  },
+];
+
+export function gardenPoi(buried: boolean): Poi {
+  return {
+    id: WRECK_GARDEN.id,
+    name: buried ? "Wreckage garden — buried" : "Wreckage garden",
+    x: WRECK_GARDEN.x,
+    y: WRECK_GARDEN.y,
+    kind: "wreckage-garden",
+  };
+}
+
+export function organPoi(id: "organ-strait" | "organ-foundry" | "organ-cable", x: number, y: number, name: string): Poi {
+  return { id, name, x, y, kind: id };
+}
+
+export function organsComplete(beats: Beats): boolean {
+  return beats.strait && beats.foundry && beats.cable;
+}
 
 export function operatorPoi(): Poi {
   return {
@@ -285,6 +359,12 @@ export function emptyBeats(): Beats {
     yield: false,
     cold: false,
     refuse: false,
+    garden: false,
+    m3: false,
+    strait: false,
+    foundry: false,
+    cable: false,
+    map: false,
   };
 }
 
@@ -351,6 +431,8 @@ export function nearPoint(px: number, py: number, x: number, y: number, reach = 
 export function lineFor(id: NpcId, beats: Beats): string {
   const npc = npcById(id);
   if (!npc) return "";
+  if (id === "nara" && beats.garden) return NARA_AFTER_GARDEN;
+  if (id === "ord" && beats.map) return ORD_MAP;
   const pack = NPC_LINES[id];
   return beats[id] || (id === "nara" && beats.burial) ? pack.later : pack.first;
 }

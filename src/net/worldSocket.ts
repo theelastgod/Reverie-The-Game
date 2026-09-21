@@ -93,6 +93,10 @@ export class WorldSocket {
     this.send({ t: "operator", choice });
   }
 
+  m3() {
+    this.send({ t: "m3" });
+  }
+
   private send(msg: unknown) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(msg));
   }
