@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 11** — Angel serial history as wreckage only that Angel can see. No mint.
+**Next stage: 12** — Iridescent reversal stub: the resistance is already pricing Clearings. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -57,8 +57,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Freeze protects the district (extract refused). Passing `ready` → 0, `starved: true`.
 - Guests get spectator copy. `damageFor` unchanged. Claims still refuse.
 
-## Stage 11 (do this next)
-Personal: Angel serial history appears as wreckage only that Angel can see. No mint. No Base.
+## Stage 11 (landed)
+- Mock link #7777 seeds a prior-hour wreckage only that serial can see.
+- Guests and other serials get empty `visibleHistory`. Bury is a Wink. Claims stay disarmed.
+
+## Stage 12 (do this next)
+Reversal stub: the “resistance” is already pricing Clearings. Iridescent current looks like freedom and is a market. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

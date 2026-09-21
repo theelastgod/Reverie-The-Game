@@ -9,6 +9,7 @@ import {
   FREEZE_NEED_HALL,
   FREEZE_SPECTATOR,
   HALL_PLAQUE,
+  HISTORY_7777,
   HOUSE_HALL,
   PASSING_READY,
   SAFETY_ANNEX,
@@ -16,6 +17,7 @@ import {
   TEST_SERIAL,
   WINK_CARE,
   WINK_FREEZE,
+  WINK_HISTORY,
   WINK_HALL,
   gestellTax,
   hallCopy,
@@ -27,6 +29,7 @@ import {
   NPC_LINES,
   displayName,
   emptyBeats,
+  visibleHistory,
   visibleWink,
   winkeVisible,
 } from "./campaign";
@@ -417,6 +420,39 @@ describe("Angel link stub", () => {
     expect(guestCanClaim(p)).toBe(false);
     expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
     expect(p.heard).not.toMatch(/\$REVERIE|APY|yield/i);
+    expect(linked.history).toEqual([{ ...HISTORY_7777 }]);
+    expect(visibleHistory(true, null, linked.history)).toEqual([]);
+    expect(visibleHistory(false, TEST_SERIAL, linked.history)).toHaveLength(1);
+  });
+});
+
+describe("serial history wreckage", () => {
+  it("only the linked serial sees and may bury the prior hour", () => {
+    const w = emptyWorld();
+    w.players.set("a", spawnGuest("a"));
+    const linked = applyLink(w, "a", TEST_SERIAL, MOCK_SIG);
+    expect(visibleHistory(false, 1, linked.history)).toEqual([]);
+    const angel = linked.players.get("a")!;
+    linked.players.set("a", { ...angel, x: HISTORY_7777.x, y: HISTORY_7777.y });
+    const buried = applyBury(linked, "a");
+    const p = buried.players.get("a")!;
+    expect(p.heard).toBe(HISTORY_7777.line);
+    expect(p.wink).toBe(WINK_HISTORY);
+    expect(buried.history).toEqual([]);
+    expect(p.readiness).toBe(angel.readiness + 1);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
+    expect(guestCanClaim(p)).toBe(false);
+  });
+
+  it("guest standing on the mark sees nothing and cannot bury it", () => {
+    const w = emptyWorld();
+    w.history = [{ ...HISTORY_7777 }];
+    w.players.set("g", { ...spawnGuest("g"), x: HISTORY_7777.x, y: HISTORY_7777.y });
+    const after = applyBury(w, "g");
+    expect(after.history).toHaveLength(1);
+    expect(after.players.get("g")?.wink).toBe("");
+    expect(visibleHistory(true, null, after.history)).toEqual([]);
+    expect(guestCanClaim(after.players.get("g")!)).toBe(false);
   });
 });
 

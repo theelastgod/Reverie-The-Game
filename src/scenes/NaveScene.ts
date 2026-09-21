@@ -10,6 +10,7 @@ import {
   NAVE_SIGNS,
   nearPoint,
   TEST_SERIAL,
+  visibleHistory,
   winkeVisible,
   type Sign,
 } from "../sim/campaign";
@@ -33,6 +34,7 @@ export class NaveScene extends Phaser.Scene {
   private clerkNames = new Map<string, Phaser.GameObjects.Text>();
   private signLabels = new Map<string, Phaser.GameObjects.Text>();
   private poiMarks = new Map<string, Phaser.GameObjects.Arc>();
+  private histMarks = new Map<string, Phaser.GameObjects.Image>();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<"W" | "A" | "S" | "D", Phaser.Input.Keyboard.Key>;
   private prompt = "";
@@ -158,7 +160,10 @@ export class NaveScene extends Phaser.Scene {
     const rites = this.net.snap?.rites ?? [];
     const burial = rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
     const wreck = this.net.snap?.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 56));
-    if (burial || wreck) {
+    const hist = visibleHistory(me.guest, me.serial, this.net.snap?.history ?? []).find((h) =>
+      nearPoint(me.x, me.y, h.x, h.y, 56),
+    );
+    if (burial || wreck || hist) {
       this.net.bury();
       return;
     }
@@ -338,6 +343,21 @@ export class NaveScene extends Phaser.Scene {
         this.wreckMarks.delete(id);
       }
     }
+    const histSeen = new Set<string>();
+    for (const h of visibleHistory(me.guest, me.serial, snap.history ?? [])) {
+      histSeen.add(h.id);
+      let img = this.histMarks.get(h.id);
+      if (!img) {
+        img = this.add.image(h.x, h.y, "serial-wreckage").setDisplaySize(48, 48).setDepth(6);
+        this.histMarks.set(h.id, img);
+      }
+    }
+    for (const [id, img] of this.histMarks) {
+      if (!histSeen.has(id)) {
+        img.destroy();
+        this.histMarks.delete(id);
+      }
+    }
 
     const npcNear = NAVE_NPCS.find((n) => nearPoint(me.x, me.y, n.x, n.y));
     const burial = snap.rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
@@ -347,6 +367,9 @@ export class NaveScene extends Phaser.Scene {
     const care = nearPoint(me.x, me.y, CARE_DOOR.x, CARE_DOOR.y, 56);
     const hall = nearPoint(me.x, me.y, HOUSE_HALL.x, HOUSE_HALL.y, 56);
     const annex = nearPoint(me.x, me.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
+    const histNear = visibleHistory(me.guest, me.serial, snap.history ?? []).find((h) =>
+      nearPoint(me.x, me.y, h.x, h.y, 56),
+    );
     const nearNode = snap.nodes.find(
       (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
@@ -379,6 +402,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `F speak with ${npcNear.name} · ${npcNear.role}`;
     } else if (burial) {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
+    } else if (histNear) {
+      this.prompt = "F — bury a prior hour. Only your serial can see this wreckage.";
     } else if (under && movementReady(me.beats)) {
       this.prompt = "F — the first going-under. Guests stop here.";
     } else if (under) {

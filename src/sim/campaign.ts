@@ -280,3 +280,31 @@ export function auraSeed(serial: number): number {
 export function winkeVisible(guest: boolean): boolean {
   return !guest;
 }
+
+export type HistoryMark = {
+  id: string;
+  serial: number;
+  x: number;
+  y: number;
+  line: string;
+};
+
+export const HISTORY_7777: HistoryMark = {
+  id: "hist-7777",
+  serial: TEST_SERIAL,
+  x: 760,
+  y: 640,
+  line: "A prior hour. You stood here and left the body in the weather.",
+};
+
+export const WINK_HISTORY =
+  "Only you can face this wreckage. The serial remembers. The city does not.";
+
+export function serialHistory(serial: number): HistoryMark | null {
+  return serial === TEST_SERIAL ? { ...HISTORY_7777 } : null;
+}
+
+export function visibleHistory(guest: boolean, serial: number | null, marks: HistoryMark[]): HistoryMark[] {
+  if (guest || serial == null || serial <= 0) return [];
+  return marks.filter((m) => m.serial === serial);
+}

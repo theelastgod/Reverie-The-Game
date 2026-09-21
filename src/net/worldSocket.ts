@@ -1,4 +1,4 @@
-import type { Clerk, Npc, Passing, Poi, Rite, Sign } from "../sim/campaign";
+import type { Clerk, HistoryMark, Npc, Passing, Poi, Rite, Sign } from "../sim/campaign";
 import type { Intent, Player, Wreckage } from "../sim/world";
 import type { YieldNode } from "../sim/nave";
 
@@ -19,6 +19,7 @@ export type Snap = {
   frozen: boolean;
   passing: Passing;
   tax: number;
+  history: HistoryMark[];
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };

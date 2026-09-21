@@ -32,6 +32,7 @@ import {
   auraSeed,
   formatSerial,
   annexPoi,
+  HistoryMark,
   CARE_DOOR,
   CARE_SPECTATOR,
   emptyPassing,
@@ -51,7 +52,10 @@ import {
   hallPlaque,
   houseHallPoi,
   openCarePoi,
+  serialHistory,
+  visibleHistory,
   visibleWink,
+  WINK_HISTORY,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -108,6 +112,7 @@ export type WorldState = {
   careOpen: boolean;
   frozen: boolean;
   passing: Passing;
+  history: HistoryMark[];
   gestell: number;
   now: number;
 };
@@ -180,6 +185,7 @@ export function emptyWorld(): WorldState {
     careOpen: false,
     frozen: false,
     passing: emptyPassing(),
+    history: [],
     gestell: 12,
     now: 0,
   };
@@ -412,13 +418,24 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
     return { ...w, players, rites };
   }
   const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
-  if (!wreck) return w;
+  if (wreck) {
+    players.set(playerId, {
+      ...p,
+      readiness: p.readiness + 1,
+      heard: "Nara Vale would call this someone. You put them in the ground.",
+    });
+    return { ...w, players, wreckage: w.wreckage.filter((r) => r.id !== wreck.id) };
+  }
+  const mark = visibleHistory(p.guest, p.serial, w.history).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
+  if (!mark) return w;
   players.set(playerId, {
     ...p,
     readiness: p.readiness + 1,
-    heard: "Nara Vale would call this someone. You put them in the ground.",
+    winke: p.winke + 1,
+    heard: mark.line,
+    wink: visibleWink(false, WINK_HISTORY),
   });
-  return { ...w, players, wreckage: w.wreckage.filter((r) => r.id !== wreck.id) };
+  return { ...w, players, history: w.history.filter((m) => m.id !== mark.id) };
 }
 
 export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
@@ -517,7 +534,9 @@ export function applyLink(w: WorldState, playerId: string, serial: number, sig: 
     locked: false,
     heard: `Angel ${formatSerial(serial)} linked. Aura seeded. Claims stay disarmed.`,
   });
-  return { ...w, players };
+  const mark = serialHistory(serial);
+  const history = mark && !w.history.some((m) => m.id === mark.id) ? [...w.history, mark] : w.history;
+  return { ...w, players, history };
 }
 
 export function snapshot(w: WorldState) {
@@ -538,5 +557,6 @@ export function snapshot(w: WorldState) {
     frozen: w.frozen,
     passing: w.passing,
     tax: gestellTax(w.gestell),
+    history: w.history,
   };
 }
