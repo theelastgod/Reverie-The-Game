@@ -16,4 +16,13 @@ Site (Cloudflare Pages): see deploy notes in `PROMPT.md` § Technical.
 
 ## Local
 
-This repo currently ships the brief and a static document site. The game engine is specified in the prompt; it is not implemented in this commit.
+Two processes:
+
+```
+npx wrangler dev --port 8788
+npm run dev
+```
+
+Play at http://127.0.0.1:5175 — WASD, click/space strike, E extract, Q keep. Guests cannot claim.
+
+Brief: https://reverie-the-game.wendellphillips.workers.dev

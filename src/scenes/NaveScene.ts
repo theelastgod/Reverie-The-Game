@@ -1,13 +1,21 @@
 import Phaser from "phaser";
+import { COLS, ROWS, TILE, YieldNode } from "../sim/nave";
+import { WorldSocket } from "../net/worldSocket";
+import type { Player } from "../sim/world";
 
-const TILE = 48;
-const COLS = 28;
-const ROWS = 20;
+function hud(id: string): HTMLElement | null {
+  return document.getElementById(id);
+}
 
 export class NaveScene extends Phaser.Scene {
-  private player!: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
+  private net = new WorldSocket();
+  private bodies = new Map<string, Phaser.GameObjects.Image>();
+  private nodeMarks = new Map<string, Phaser.GameObjects.Arc>();
+  private wreckMarks = new Map<string, Phaser.GameObjects.Arc>();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: Record<"W" | "A" | "S" | "D", Phaser.Input.Keyboard.Key>;
+  private prompt = "";
+  private following = false;
 
   constructor() {
     super("nave");
@@ -15,20 +23,14 @@ export class NaveScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.setBackgroundColor("#16141c");
-    const walls = this.physics.add.staticGroup();
 
     for (let y = 0; y < ROWS; y++) {
       for (let x = 0; x < COLS; x++) {
         const edge = x === 0 || y === 0 || x === COLS - 1 || y === ROWS - 1;
         const aisle = x === 9 || x === 18;
-        const key = edge || (aisle && y > 3 && y < ROWS - 3 && y % 4 !== 0) ? "tile-wall" : "tile-nave";
-        const img = this.add.image(x * TILE + TILE / 2, y * TILE + TILE / 2, key);
-        if (key === "tile-wall") walls.add(img);
+        const wall = edge || (aisle && y > 3 && y < ROWS - 3 && y % 4 !== 0);
+        this.add.image(x * TILE + TILE / 2, y * TILE + TILE / 2, wall ? "tile-wall" : "tile-nave");
       }
-    }
-
-    for (let i = 0; i < 8; i++) {
-      this.add.image(120 + i * 140, 180, "prop-crt").setDepth(2);
     }
 
     this.add
@@ -39,21 +41,14 @@ export class NaveScene extends Phaser.Scene {
       })
       .setDepth(5);
     this.add
-      .text(TILE * 2, TILE * 2.9, "The city is already over. WASD to walk.", {
+      .text(TILE * 2, TILE * 2.9, "WASD walk · click strike · E extract · Q keep", {
         fontFamily: "Space Grotesk, sans-serif",
         fontSize: "13px",
         color: "#e8e8e8",
       })
       .setDepth(5);
 
-    this.player = this.physics.add.sprite(TILE * 4, TILE * 10, "guest");
-    this.player.setCollideWorldBounds(true);
-    this.player.setDepth(10);
-    this.physics.add.collider(this.player, walls);
-
-    this.physics.world.setBounds(0, 0, COLS * TILE, ROWS * TILE);
     this.cameras.main.setBounds(0, 0, COLS * TILE, ROWS * TILE);
-    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setZoom(1.15);
 
     if (!this.input.keyboard) throw new Error("keyboard");
@@ -64,18 +59,107 @@ export class NaveScene extends Phaser.Scene {
       S: this.input.keyboard.addKey("S"),
       D: this.input.keyboard.addKey("D"),
     };
+    this.input.keyboard.addKey("E").on("down", () => this.useNear("extract"));
+    this.input.keyboard.addKey("Q").on("down", () => this.useNear("keep"));
+    this.input.keyboard.addKey("SPACE").on("down", () => this.net.strike());
+    this.input.on("pointerdown", () => this.net.strike());
+
+    this.net.connect();
+  }
+
+  private useNear(choice: "extract" | "keep") {
+    const me = this.net.you;
+    const nodes = this.net.snap?.nodes ?? [];
+    if (!me) return;
+    const n = nodes.find((node) => !node.depleted && Phaser.Math.Distance.Between(me.x, me.y, node.x, node.y) < 40);
+    if (n) this.net.use(n.id, choice);
+  }
+
+  private bodyFor(p: Player): Phaser.GameObjects.Image {
+    let img = this.bodies.get(p.id);
+    if (!img) {
+      img = this.add.image(p.x, p.y, "guest").setDepth(10);
+      this.bodies.set(p.id, img);
+    }
+    return img;
+  }
+
+  private syncNodes(nodes: YieldNode[]) {
+    for (const n of nodes) {
+      let g = this.nodeMarks.get(n.id);
+      if (!g) {
+        g = this.add.circle(n.x, n.y, 16, 0x88a0c8, 0.85).setDepth(3);
+        this.add.image(n.x, n.y, "prop-crt").setDepth(4);
+        this.nodeMarks.set(n.id, g);
+      }
+      g.setFillStyle(n.kept ? 0xc9a56a : n.depleted ? 0x3a3a3a : 0x88a0c8, 0.9);
+    }
   }
 
   update() {
-    const speed = 160;
-    let vx = 0;
-    let vy = 0;
-    if (this.cursors.left.isDown || this.wasd.A.isDown) vx -= 1;
-    if (this.cursors.right.isDown || this.wasd.D.isDown) vx += 1;
-    if (this.cursors.up.isDown || this.wasd.W.isDown) vy -= 1;
-    if (this.cursors.down.isDown || this.wasd.S.isDown) vy += 1;
-    const v = new Phaser.Math.Vector2(vx, vy);
-    if (v.lengthSq() > 0) v.normalize().scale(speed);
-    this.player.setVelocity(v.x, v.y);
+    const intent = {
+      up: this.cursors.up.isDown || this.wasd.W.isDown,
+      down: this.cursors.down.isDown || this.wasd.S.isDown,
+      left: this.cursors.left.isDown || this.wasd.A.isDown,
+      right: this.cursors.right.isDown || this.wasd.D.isDown,
+    };
+    this.net.sendIntent(intent);
+
+    const snap = this.net.snap;
+    const me = this.net.you;
+    if (!snap || !me) return;
+
+    const seen = new Set<string>();
+    for (const p of snap.players) {
+      seen.add(p.id);
+      const img = this.bodyFor(p);
+      img.x += (p.x - img.x) * 0.35;
+      img.y += (p.y - img.y) * 0.35;
+      img.setAlpha(p.id === me.id ? 1 : 0.85);
+      img.setTint(p.hp < 40 ? 0xff2d6b : 0xffffff);
+      if (p.id === me.id && !this.following) {
+        this.cameras.main.startFollow(img, true, 0.12, 0.12);
+        this.following = true;
+      }
+    }
+    for (const [id, img] of this.bodies) {
+      if (!seen.has(id)) {
+        img.destroy();
+        this.bodies.delete(id);
+      }
+    }
+
+    this.syncNodes(snap.nodes);
+    const wreckSeen = new Set<string>();
+    for (const r of snap.wreckage) {
+      wreckSeen.add(r.id);
+      let m = this.wreckMarks.get(r.id);
+      if (!m) {
+        m = this.add.circle(r.x, r.y, 10, 0xff2d6b, 0.7).setDepth(6);
+        this.wreckMarks.set(r.id, m);
+      }
+    }
+    for (const [id, m] of this.wreckMarks) {
+      if (!wreckSeen.has(id)) {
+        m.destroy();
+        this.wreckMarks.delete(id);
+      }
+    }
+
+    const near = snap.nodes.find(
+      (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
+    );
+    this.prompt = near
+      ? "E extract Bestand · Q keep (Winke). A guest cannot cash out."
+      : "";
+    const promptEl = hud("prompt-chip");
+    if (promptEl) {
+      promptEl.textContent = this.prompt || "Strike leaves wreckage. Guests cannot claim.";
+      promptEl.style.display = "block";
+    }
+    const guest = hud("guest-chip");
+    if (guest) guest.textContent = `Guest · aura ${me.aura} · hp ${me.hp}`;
+    const stats = hud("stat-chip");
+    if (stats) stats.textContent = `Bestand ${me.bestand} · Winke ${me.winke} · Gestell ${snap.gestell}`;
   }
 }

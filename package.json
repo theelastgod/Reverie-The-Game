@@ -6,6 +6,8 @@
   "description": "Reverie: The Game — top-down 2D MMO RPG",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5175",
+    "dev:world": "wrangler dev --port 8788",
+    "dev:online": "wrangler dev --port 8788",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

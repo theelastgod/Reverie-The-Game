@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 2** — server-authoritative movement (Worker + Durable Object ~20 Hz).
+**Next stage: 5** — Movement I authored beats after the extract/keep node (Nara/Quill/Ord intro, guest lock stub).
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -18,11 +18,16 @@ Execute `PROMPT.md`. Do not wait for a new user prompt.
 - Phaser client scaffold: Boot + Nave, WASD guest body, brutalist HUD.
 - Sim tests: guest aura 0, guest cannot claim, intent moves.
 
-## Stage 2 (do this now)
-Server-authoritative move: Cloudflare Worker + Durable Object ~20 Hz. Client sends intents. Collision on server. Guest id. Tests for move.
+## Stage 2–4 (landed this pass)
+- Shared Nave walls; server `stepPlayer` collides.
+- Client sends intents over `/ws` (Vite proxies to wrangler :8788). Snapshots lerp other bodies.
+- Melee strike (click/space), wreckage on death, extract vs keep on CRT nodes.
+- Guest still cannot claim.
 
-Then Stage 3: wreckage + simple melee telegraph.
-Then Stage 4: Movement I first quest (extract vs keep).
+Local: `npx wrangler dev --port 8788` and `npm run dev`.
+
+## Stage 5 (do this next)
+Movement I named beats: Nara burial, Quill market line, Ord numbers, guest-lock copy at first going-under (still no mint). Wire a second player-visible NPC or sign. Imagine guest sprite from brand influence.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
