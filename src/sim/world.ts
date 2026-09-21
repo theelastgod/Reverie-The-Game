@@ -1,4 +1,5 @@
 export const TICK_HZ = 20;
+export const DT = 1 / TICK_HZ;
 export const SPEED = 160;
 export const WORLD_W = 28 * 48;
 export const WORLD_H = 20 * 48;
