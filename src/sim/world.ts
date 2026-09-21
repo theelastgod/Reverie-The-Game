@@ -31,10 +31,20 @@ import {
   TEST_SERIAL,
   auraSeed,
   formatSerial,
+  annexPoi,
   CARE_DOOR,
   CARE_SPECTATOR,
+  emptyPassing,
+  FREEZE_COPY,
+  FREEZE_EXTRACT,
+  FREEZE_NEED_HALL,
+  FREEZE_SPECTATOR,
   HOUSE_HALL,
+  Passing,
+  SAFETY_ANNEX,
+  starvedPassing,
   WINK_CARE,
+  WINK_FREEZE,
   WINK_HALL,
   gestellTax,
   hallCopy,
@@ -96,6 +106,8 @@ export type WorldState = {
   pois: Poi[];
   weatherNamed: boolean;
   careOpen: boolean;
+  frozen: boolean;
+  passing: Passing;
   gestell: number;
   now: number;
 };
@@ -166,6 +178,8 @@ export function emptyWorld(): WorldState {
     pois: navePois(),
     weatherNamed: false,
     careOpen: false,
+    frozen: false,
+    passing: emptyPassing(),
     gestell: 12,
     now: 0,
   };
@@ -307,6 +321,11 @@ export function applyUse(
   if (idx < 0) return w;
   const node = w.nodes[idx];
   if (node.depleted || !nearNode(p.x, p.y, node)) return w;
+  if (choice === "extract" && w.frozen) {
+    const players = new Map(w.players);
+    players.set(playerId, { ...p, heard: FREEZE_EXTRACT });
+    return { ...w, players };
+  }
   const nodes = w.nodes.slice();
   const players = new Map(w.players);
   if (choice === "extract") {
@@ -371,6 +390,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     });
     return { ...w, players };
   }
+  if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   const weather = { ...p.weather, safety: true };
   const heard = `${sign.title}: ${sign.text}`;
   return withNamedWeather(w, playerId, { ...p, weather, heard });
@@ -452,6 +472,38 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
   return { ...w, players };
 }
 
+export function applyFreeze(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: FREEZE_SPECTATOR, wink: visibleWink(true, WINK_FREEZE) });
+    return { ...w, players };
+  }
+  if (!p.beats.hall) {
+    players.set(playerId, { ...p, heard: FREEZE_NEED_HALL });
+    return { ...w, players };
+  }
+  if (w.frozen) {
+    players.set(playerId, { ...p, heard: FREEZE_COPY, wink: visibleWink(false, WINK_FREEZE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, freeze: true },
+    heard: FREEZE_COPY,
+    wink: visibleWink(false, WINK_FREEZE),
+    readiness: p.readiness + (p.beats.freeze ? 0 : 1),
+  });
+  return {
+    ...w,
+    players,
+    frozen: true,
+    passing: starvedPassing(),
+    pois: w.pois.map((poi) => (poi.id === SAFETY_ANNEX.id ? annexPoi(true) : poi)),
+  };
+}
+
 export function applyLink(w: WorldState, playerId: string, serial: number, sig: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
@@ -483,6 +535,8 @@ export function snapshot(w: WorldState) {
     pois: w.pois,
     weatherNamed: w.weatherNamed,
     careOpen: w.careOpen,
+    frozen: w.frozen,
+    passing: w.passing,
     tax: gestellTax(w.gestell),
   };
 }

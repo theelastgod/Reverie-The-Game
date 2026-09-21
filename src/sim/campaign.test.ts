@@ -4,11 +4,18 @@ import {
   CARE_SPECTATOR,
   GUEST_LOCK,
   GOING_UNDER,
+  FREEZE_COPY,
+  FREEZE_EXTRACT,
+  FREEZE_NEED_HALL,
+  FREEZE_SPECTATOR,
   HALL_PLAQUE,
   HOUSE_HALL,
+  PASSING_READY,
+  SAFETY_ANNEX,
   MOCK_SIG,
   TEST_SERIAL,
   WINK_CARE,
+  WINK_FREEZE,
   WINK_HALL,
   gestellTax,
   hallCopy,
@@ -26,6 +33,7 @@ import {
 import {
   applyBury,
   applyCare,
+  applyFreeze,
   applyGoingUnder,
   applyLink,
   applyRead,
@@ -85,7 +93,7 @@ describe("Movement I beats", () => {
 
   it("guest lock copy fires at going-under after the three intros and burial", () => {
     const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
-      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
     });
     expect(movementReady(w.players.get("a")!.beats)).toBe(true);
     const locked = applyGoingUnder(w, "a");
@@ -113,7 +121,7 @@ describe("Movement I beats", () => {
     const w = placeNear("a", GOING_UNDER.x, GOING_UNDER.y, {
       guest: false,
       aura: 12,
-      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
     });
     const after = applyGoingUnder(w, "a");
     const p = after.players.get("a")!;
@@ -134,12 +142,12 @@ describe("Care door and Wink", () => {
     guest: false,
     serial: TEST_SERIAL,
     aura: auraSeed(TEST_SERIAL),
-    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
+    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
   };
 
   it("linked Angel going-under opens the Care; guest lock does not", () => {
     const guestW = placeNear("g", GOING_UNDER.x, GOING_UNDER.y, {
-      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
+      beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
     });
     const guestAfter = applyGoingUnder(guestW, "g");
     expect(guestAfter.careOpen).toBe(false);
@@ -185,7 +193,7 @@ describe("Movement II House hall", () => {
     guest: false,
     serial: TEST_SERIAL,
     aura: auraSeed(TEST_SERIAL),
-    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false },
+    beats: { nara: true, quill: true, ord: true, burial: true, under: false, care: false, hall: false, freeze: false },
   };
 
   function angelInHall() {
@@ -256,6 +264,72 @@ describe("Movement II House hall", () => {
     expect(p.bestand).toBeLessThan(40);
     expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
     expect(guestCanClaim(p)).toBe(false);
+  });
+});
+
+describe("Safety Annex freeze", () => {
+  function angelAtAnnex(hall = true) {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), hall, care: true, under: true, nara: true, quill: true, ord: true, burial: true },
+      inCare: false,
+      x: SAFETY_ANNEX.x,
+      y: SAFETY_ANNEX.y,
+    });
+    return w;
+  }
+
+  it("Passing starts ready and is not starved", () => {
+    const snap = snapshot(emptyWorld());
+    expect(snap.passing.ready).toBe(PASSING_READY);
+    expect(snap.passing.starved).toBe(false);
+    expect(snap.frozen).toBe(false);
+  });
+
+  it("Angel who read the hall may sign; freeze starves the Passing and blocks extract", () => {
+    const w = angelAtAnnex(true);
+    const after = applyFreeze(w, "a");
+    const p = after.players.get("a")!;
+    expect(p.beats.freeze).toBe(true);
+    expect(p.heard).toBe(FREEZE_COPY);
+    expect(p.wink).toBe(WINK_FREEZE);
+    expect(after.frozen).toBe(true);
+    expect(after.passing.starved).toBe(true);
+    expect(after.passing.ready).toBe(0);
+    expect(after.pois.find((poi) => poi.id === SAFETY_ANNEX.id)?.kind).toBe("safety-frozen");
+    expect(p.heard).not.toMatch(/heidegger|katechon|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const node = after.nodes[0];
+    after.players.set("a", { ...p, x: node.x, y: node.y });
+    const blocked = applyUse(after, "a", node.id, "extract");
+    expect(blocked.players.get("a")?.bestand).toBe(0);
+    expect(blocked.nodes[0].depleted).toBe(false);
+    expect(blocked.players.get("a")?.heard).toBe(FREEZE_EXTRACT);
+  });
+
+  it("without the hall the Annex refuses the signature", () => {
+    const w = angelAtAnnex(false);
+    const after = applyFreeze(w, "a");
+    expect(after.frozen).toBe(false);
+    expect(after.passing.starved).toBe(false);
+    expect(after.players.get("a")?.heard).toBe(FREEZE_NEED_HALL);
+    expect(after.players.get("a")?.beats.freeze).toBe(false);
+  });
+
+  it("guest cannot sign the freeze", () => {
+    const w = emptyWorld();
+    w.players.set("g", { ...spawnGuest("g"), x: SAFETY_ANNEX.x, y: SAFETY_ANNEX.y, locked: true });
+    const after = applyFreeze(w, "g");
+    expect(after.frozen).toBe(false);
+    expect(after.players.get("g")?.heard).toBe(FREEZE_SPECTATOR);
+    expect(after.players.get("g")?.wink).toBe("");
+    expect(guestCanClaim(after.players.get("g")!)).toBe(false);
   });
 });
 

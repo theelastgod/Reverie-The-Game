@@ -32,6 +32,7 @@ export type Beats = {
   under: boolean;
   care: boolean;
   hall: boolean;
+  freeze: boolean;
 };
 
 export type WeatherHeard = {
@@ -54,7 +55,12 @@ export type Poi = {
   name: string;
   x: number;
   y: number;
-  kind: "unnamed-weather" | "named-weather" | "care-shut" | "care-open" | "house-hall";
+  kind: "unnamed-weather" | "named-weather" | "care-shut" | "care-open" | "house-hall" | "safety-annex" | "safety-frozen";
+};
+
+export type Passing = {
+  ready: number;
+  starved: boolean;
 };
 
 export const GUEST_LOCK = "A guest cannot prepare the ground.";
@@ -128,6 +134,41 @@ export const HALL_PLAQUE: Sign = {
   y: HOUSE_HALL.y,
 };
 
+export const SAFETY_ANNEX = { id: "safety-annex", x: 320, y: 320 };
+export const PASSING_READY = 8;
+export const FREEZE_COPY =
+  "You signed the freeze. The district holds. The Passing will go hungry. Peace is a kind of weather.";
+export const WINK_FREEZE = "You bought time. You spent a god. The hour does not forgive the signature.";
+export const FREEZE_SPECTATOR = "A desk. Paper. You are not the one who signs.";
+export const FREEZE_NEED_HALL = "The Annex will not take a name that has not read the hall.";
+export const FREEZE_EXTRACT = "The freeze holds the nodes. Extraction is postponed. The Passing stays hungry.";
+
+export const ANNEX_PLAQUE: Sign = {
+  id: SAFETY_ANNEX.id,
+  title: "Safety Annex",
+  text: "Sign here. The district holds. The hour does not.",
+  x: SAFETY_ANNEX.x,
+  y: SAFETY_ANNEX.y,
+};
+
+export function emptyPassing(): Passing {
+  return { ready: PASSING_READY, starved: false };
+}
+
+export function starvedPassing(): Passing {
+  return { ready: 0, starved: true };
+}
+
+export function annexPoi(frozen: boolean): Poi {
+  return {
+    id: SAFETY_ANNEX.id,
+    name: frozen ? "Safety Annex — freeze" : "Safety Annex",
+    x: SAFETY_ANNEX.x,
+    y: SAFETY_ANNEX.y,
+    kind: frozen ? "safety-frozen" : "safety-annex",
+  };
+}
+
 export const WEATHER_NAMED =
   "You named the weather. Safety still sells stability. The plaque is a lie the city paid for.";
 
@@ -145,7 +186,7 @@ export const CLERK_DAMAGE = 14;
 export const CLERK_TELEGRAPH = 0.6;
 
 export function emptyBeats(): Beats {
-  return { nara: false, quill: false, ord: false, burial: false, under: false, care: false, hall: false };
+  return { nara: false, quill: false, ord: false, burial: false, under: false, care: false, hall: false, freeze: false };
 }
 
 export function emptyWeather(): WeatherHeard {
@@ -164,13 +205,14 @@ export function naveClerks(): Clerk[] {
 }
 
 export function naveSigns(): Sign[] {
-  return NAVE_SIGNS.map((s) => ({ ...s }));
+  return [...NAVE_SIGNS.map((s) => ({ ...s })), { ...ANNEX_PLAQUE }];
 }
 
 export function navePois(): Poi[] {
   return [
     { id: "weather", name: "Unnamed weather", x: 192, y: 340, kind: "unnamed-weather" },
     { id: CARE_DOOR.id, name: "The Care (shut)", x: CARE_DOOR.x, y: CARE_DOOR.y, kind: "care-shut" },
+    annexPoi(false),
   ];
 }
 

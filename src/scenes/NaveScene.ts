@@ -4,6 +4,7 @@ import {
   formatSerial,
   GOING_UNDER,
   HOUSE_HALL,
+  SAFETY_ANNEX,
   movementReady,
   NAVE_NPCS,
   NAVE_SIGNS,
@@ -97,6 +98,9 @@ export class NaveScene extends Phaser.Scene {
     this.add.rectangle(s.x, s.y, 112, 28, 0xffffff).setStrokeStyle(3, 0x0a0a0a).setDepth(4);
     if (s.id === HOUSE_HALL.id) {
       this.add.image(s.x, s.y - 52, "house-hall").setDisplaySize(88, 50).setDepth(3);
+    }
+    if (s.id === SAFETY_ANNEX.id) {
+      this.add.image(s.x, s.y - 52, "safety-annex").setDisplaySize(88, 50).setDepth(3);
     }
     const label = this.add
       .text(s.x, s.y - 2, s.title, {
@@ -265,6 +269,10 @@ export class NaveScene extends Phaser.Scene {
           ? 0xc9a56a
           : poi.kind === "house-hall"
             ? 0xc9a56a
+            : poi.kind === "safety-frozen"
+              ? 0x7eb6ff
+              : poi.kind === "safety-annex"
+                ? 0xe8e8e8
             : poi.kind === "care-open"
               ? 0x7eb6ff
               : poi.kind === "care-shut"
@@ -338,6 +346,7 @@ export class NaveScene extends Phaser.Scene {
     const under = nearPoint(me.x, me.y, GOING_UNDER.x, GOING_UNDER.y, 56);
     const care = nearPoint(me.x, me.y, CARE_DOOR.x, CARE_DOOR.y, 56);
     const hall = nearPoint(me.x, me.y, HOUSE_HALL.x, HOUSE_HALL.y, 56);
+    const annex = nearPoint(me.x, me.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
     const nearNode = snap.nodes.find(
       (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
@@ -350,6 +359,14 @@ export class NaveScene extends Phaser.Scene {
         : `F read House of Mortals. Gestell tax ${snap.tax}. The number does not strike.`;
     } else if (hall) {
       this.prompt = "You see a hall. You do not see who owns the nodes.";
+    } else if (annex && (me.guest || me.locked)) {
+      this.prompt = "A desk. Paper. You are not the one who signs.";
+    } else if (annex && snap.frozen) {
+      this.prompt = me.heard || "The freeze holds. The Passing stays hungry.";
+    } else if (annex && me.beats.hall) {
+      this.prompt = "F — sign the freeze. The district holds. The Passing will starve.";
+    } else if (annex) {
+      this.prompt = "Safety Annex. The desk will not take a name that has not read the hall.";
     } else if (care && snap.careOpen && !me.guest && me.beats.under) {
       this.prompt = me.wink || "F — the Care. A Wink only you can hold.";
     } else if (care && !me.guest && !me.beats.under) {
@@ -394,9 +411,10 @@ export class NaveScene extends Phaser.Scene {
     const stats = hud("stat-chip");
     if (stats) {
       const winke = winkeVisible(me.guest) ? `Winke ${me.winke}` : "Winke —";
-      stats.textContent = me.inCare
-        ? `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell} · tax ${snap.tax}`
-        : `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}`;
+      const taxBit = me.inCare ? ` · tax ${snap.tax}` : "";
+      const freezeBit = snap.frozen ? " · freeze" : "";
+      const passBit = snap.passing.starved ? " · Passing starved" : "";
+      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;

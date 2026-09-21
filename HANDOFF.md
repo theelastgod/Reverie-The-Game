@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 10** — Safety Annex freeze stub (katechon): sign a freeze that protects a district and starves a Passing. No mint.
+**Next stage: 11** — Angel serial history as wreckage only that Angel can see. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -52,8 +52,13 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Reading the plaque is a Wink (`WINK_HALL`). Guests never hear it.
 - Hall tax skims extract Bestand. `damageFor` ignores tax, aura, and `$REVERIE`. Claims still refuse.
 
-## Stage 10 (do this next)
-Safety Annex freeze stub: sign a freeze (katechon) that protects a district and starves a Passing. No mint. No Base.
+## Stage 10 (landed)
+- Safety Annex desk in the Nave. Angel who read the House hall may sign a freeze.
+- Freeze protects the district (extract refused). Passing `ready` → 0, `starved: true`.
+- Guests get spectator copy. `damageFor` unchanged. Claims still refuse.
+
+## Stage 11 (do this next)
+Personal: Angel serial history appears as wreckage only that Angel can see. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
