@@ -63,6 +63,15 @@ import {
   visibleHistory,
   visibleWink,
   WINK_HISTORY,
+  OPERATOR_DESK,
+  OPERATOR_NEED_HALL,
+  OPERATOR_OFFER,
+  OPERATOR_REFUSE,
+  OPERATOR_SPECTATOR,
+  OPERATOR_TAKE,
+  PRIVATE_YIELD,
+  WINK_OPERATOR,
+  m3Poi,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -104,6 +113,7 @@ export type Player = {
   serial: number | null;
   wink: string;
   inCare: boolean;
+  current: "" | "cold" | "readiness";
 };
 
 export type WorldState = {
@@ -121,6 +131,7 @@ export type WorldState = {
   passing: Passing;
   history: HistoryMark[];
   clearingOpen: boolean;
+  m3Open: boolean;
   gestell: number;
   now: number;
 };
@@ -145,6 +156,7 @@ export function spawnGuest(id: string): Player {
     serial: null,
     wink: "",
     inCare: false,
+    current: "",
   };
 }
 
@@ -195,6 +207,7 @@ export function emptyWorld(): WorldState {
     passing: emptyPassing(),
     history: [],
     clearingOpen: false,
+    m3Open: false,
     gestell: 12,
     now: 0,
   };
@@ -407,6 +420,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) return applyMarket(w, playerId);
+  if (sign.id === OPERATOR_DESK.id) return applyOperator(w, playerId, "hear");
   const weather = { ...p.weather, safety: true };
   const heard = `${sign.title}: ${sign.text}`;
   return withNamedWeather(w, playerId, { ...p, weather, heard });
@@ -567,6 +581,60 @@ export function applyFreeze(w: WorldState, playerId: string): WorldState {
   };
 }
 
+export function applyOperator(
+  w: WorldState,
+  playerId: string,
+  choice: "hear" | "take" | "refuse",
+): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: OPERATOR_SPECTATOR, wink: visibleWink(true, WINK_OPERATOR) });
+    return { ...w, players };
+  }
+  if (!p.beats.hall) {
+    players.set(playerId, { ...p, heard: OPERATOR_NEED_HALL });
+    return { ...w, players };
+  }
+  if (choice === "hear" || !p.beats.yield) {
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, yield: true },
+      heard: OPERATOR_OFFER,
+      wink: visibleWink(false, WINK_OPERATOR),
+      readiness: p.readiness + (p.beats.yield ? 0 : 1),
+    });
+    return { ...w, players };
+  }
+  if (p.beats.cold || p.beats.refuse) {
+    players.set(playerId, { ...p, heard: p.beats.cold ? OPERATOR_TAKE : OPERATOR_REFUSE });
+    return { ...w, players };
+  }
+  if (choice === "take") {
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, cold: true },
+      current: "cold",
+      bestand: p.bestand + PRIVATE_YIELD,
+      heard: OPERATOR_TAKE,
+      wink: visibleWink(false, WINK_OPERATOR),
+    });
+    const pois = w.pois.map((poi) => (poi.id === "m3-door" ? m3Poi(true) : poi));
+    if (!pois.some((poi) => poi.id === "m3-door")) pois.push(m3Poi(true));
+    return { ...w, players, m3Open: true, pois, gestell: Math.min(100, w.gestell + 8) };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, refuse: true },
+    current: "readiness",
+    readiness: p.readiness + 2,
+    heard: OPERATOR_REFUSE,
+    wink: visibleWink(false, WINK_OPERATOR),
+  });
+  return { ...w, players };
+}
+
 export function applyLink(w: WorldState, playerId: string, serial: number, sig: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
@@ -605,5 +673,6 @@ export function snapshot(w: WorldState) {
     tax: gestellTax(w.gestell),
     history: w.history,
     clearingOpen: w.clearingOpen,
+    m3Open: w.m3Open,
   };
 }

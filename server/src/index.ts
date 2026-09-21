@@ -3,6 +3,7 @@ import {
   applyCare,
   applyGoingUnder,
   applyLink,
+  applyOperator,
   applyRead,
   applyStrike,
   applyTalk,
@@ -55,11 +56,11 @@ export class ReverieWorld {
       t?: string;
       intent?: Intent;
       nodeId?: string;
-      choice?: "extract" | "keep";
       npcId?: string;
       signId?: string;
       serial?: number;
       sig?: string;
+      choice?: "extract" | "keep" | "hear" | "take" | "refuse";
     };
     try {
       data = JSON.parse(msg);
@@ -96,6 +97,10 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "care") {
       this.w = applyCare(this.w, id);
+      this.broadcast();
+    } else if (data.t === "operator") {
+      const choice = data.choice === "take" || data.choice === "refuse" || data.choice === "hear" ? data.choice : "hear";
+      this.w = applyOperator(this.w, id, choice);
       this.broadcast();
     }
   }

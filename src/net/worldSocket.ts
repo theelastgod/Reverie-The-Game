@@ -21,6 +21,7 @@ export type Snap = {
   tax: number;
   history: HistoryMark[];
   clearingOpen: boolean;
+  m3Open: boolean;
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };
@@ -86,6 +87,10 @@ export class WorldSocket {
 
   care() {
     this.send({ t: "care" });
+  }
+
+  operator(choice: "hear" | "take" | "refuse") {
+    this.send({ t: "operator", choice });
   }
 
   private send(msg: unknown) {

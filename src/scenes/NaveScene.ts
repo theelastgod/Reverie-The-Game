@@ -7,6 +7,8 @@ import {
   SAFETY_ANNEX,
   CLEARING_STALL,
   CLEARING_PRICE,
+  OPERATOR_DESK,
+  PRIVATE_YIELD,
   movementReady,
   NAVE_NPCS,
   NAVE_SIGNS,
@@ -144,6 +146,10 @@ export class NaveScene extends Phaser.Scene {
     const me = this.net.you;
     const nodes = this.net.snap?.nodes ?? [];
     if (!me || me.locked) return;
+    if (nearPoint(me.x, me.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56) && me.beats.yield) {
+      this.net.operator(choice === "extract" ? "take" : "refuse");
+      return;
+    }
     const n = nodes.find((node) => !node.depleted && Phaser.Math.Distance.Between(me.x, me.y, node.x, node.y) < 40);
     if (n) this.net.use(n.id, choice);
   }
@@ -287,7 +293,13 @@ export class NaveScene extends Phaser.Scene {
                 ? 0x7eb6ff
             : poi.kind === "care-open"
               ? 0x7eb6ff
-              : poi.kind === "care-shut"
+              : poi.kind === "operator-desk"
+                ? 0xc9a56a
+                : poi.kind === "m3-open"
+                  ? 0xff2d6b
+                  : poi.kind === "m3-shut"
+                    ? 0x3a3a3a
+            : poi.kind === "care-shut"
                 ? 0x3a3a3a
                 : 0x5a5a5a;
       g.setFillStyle(fill, 0.85);
@@ -375,6 +387,7 @@ export class NaveScene extends Phaser.Scene {
     const hall = nearPoint(me.x, me.y, HOUSE_HALL.x, HOUSE_HALL.y, 56);
     const annex = nearPoint(me.x, me.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
     const stall = nearPoint(me.x, me.y, CLEARING_STALL.x, CLEARING_STALL.y, 56);
+    const desk = nearPoint(me.x, me.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56);
     const histNear = visibleHistory(me.guest, me.serial, snap.history ?? []).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
@@ -406,6 +419,18 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — Quill listed a Clearing. It looks like freedom.";
     } else if (stall) {
       this.prompt = "Quill is selling something. You do not yet have the eyes for the price.";
+    } else if (desk && (me.guest || me.locked)) {
+      this.prompt = "A woman at a desk. She is not speaking to you.";
+    } else if (desk && me.beats.cold) {
+      this.prompt = me.heard || "You took the private yield. Movement III is funded.";
+    } else if (desk && me.beats.refuse) {
+      this.prompt = me.heard || "You refused. The door stays shut.";
+    } else if (desk && me.beats.yield) {
+      this.prompt = `E take +${PRIVATE_YIELD} Bestand (Cold). Q refuse (Readiness). She is not a boss.`;
+    } else if (desk && me.beats.hall) {
+      this.prompt = "F — Vesper Hale, Concentrator. A private yield. Human.";
+    } else if (desk) {
+      this.prompt = "A concentrator. She will not quote until you have read the hall.";
     } else if (care && snap.careOpen && !me.guest && me.beats.under) {
       this.prompt = me.wink || "F — the Care. A Wink only you can hold.";
     } else if (care && !me.guest && !me.beats.under) {

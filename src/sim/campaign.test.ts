@@ -26,6 +26,15 @@ import {
   MARKET_LISTING,
   MARKET_NEED_HALL,
   MARKET_SPECTATOR,
+  M3_DOOR,
+  OPERATOR_DESK,
+  OPERATOR_NEED_HALL,
+  OPERATOR_OFFER,
+  OPERATOR_REFUSE,
+  OPERATOR_SPECTATOR,
+  OPERATOR_TAKE,
+  PRIVATE_YIELD,
+  WINK_OPERATOR,
   gestellTax,
   hallCopy,
   auraSeed,
@@ -47,6 +56,7 @@ import {
   applyGoingUnder,
   applyLink,
   applyMarket,
+  applyOperator,
   applyRead,
   snapshot,
   applyStrike,
@@ -391,6 +401,68 @@ describe("Iridescent Clearing listing", () => {
     expect(after.players.get("g")?.heard).toBe(MARKET_SPECTATOR);
     expect(after.players.get("g")?.wink).toBe("");
     expect(after.clearingOpen).toBe(false);
+    expect(guestCanClaim(after.players.get("g")!)).toBe(false);
+  });
+});
+
+describe("Vesper Hale private yield", () => {
+  function angelAtDesk(hall = true) {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), hall, nara: true, quill: true, ord: true, burial: true, under: true, care: true },
+      inCare: true,
+      x: OPERATOR_DESK.x,
+      y: OPERATOR_DESK.y,
+    });
+    return w;
+  }
+
+  it("offer then take funds Movement III the Cold way without buying damage", () => {
+    const heard = applyOperator(angelAtDesk(true), "a", "hear");
+    const p = heard.players.get("a")!;
+    expect(p.heard).toBe(OPERATOR_OFFER);
+    expect(p.wink).toBe(WINK_OPERATOR);
+    expect(p.beats.yield).toBe(true);
+    expect(heard.m3Open).toBe(false);
+
+    const took = applyOperator(heard, "a", "take");
+    const t = took.players.get("a")!;
+    expect(t.bestand).toBe(PRIVATE_YIELD);
+    expect(t.current).toBe("cold");
+    expect(t.beats.cold).toBe(true);
+    expect(t.heard).toBe(OPERATOR_TAKE);
+    expect(took.m3Open).toBe(true);
+    expect(took.pois.find((poi) => poi.id === M3_DOOR.id)?.kind).toBe("m3-open");
+    expect(took.gestell).toBeGreaterThan(heard.gestell);
+    expect(damageFor(t)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(t)).toBe(false);
+    expect(t.heard).not.toMatch(/heidegger|sephiroth|\$REVERIE/i);
+  });
+
+  it("refuse is Readiness and does not open Movement III", () => {
+    const heard = applyOperator(angelAtDesk(true), "a", "hear");
+    const refused = applyOperator(heard, "a", "refuse");
+    const p = refused.players.get("a")!;
+    expect(p.current).toBe("readiness");
+    expect(p.beats.refuse).toBe(true);
+    expect(p.heard).toBe(OPERATOR_REFUSE);
+    expect(p.bestand).toBe(0);
+    expect(refused.m3Open).toBe(false);
+    expect(guestCanClaim(p)).toBe(false);
+  });
+
+  it("hall is required; guests never hear the Wink", () => {
+    expect(applyOperator(angelAtDesk(false), "a", "hear").players.get("a")?.heard).toBe(OPERATOR_NEED_HALL);
+    const w = emptyWorld();
+    w.players.set("g", { ...spawnGuest("g"), x: OPERATOR_DESK.x, y: OPERATOR_DESK.y, locked: true });
+    const after = applyOperator(w, "g", "take");
+    expect(after.players.get("g")?.heard).toBe(OPERATOR_SPECTATOR);
+    expect(after.players.get("g")?.wink).toBe("");
+    expect(after.m3Open).toBe(false);
     expect(guestCanClaim(after.players.get("g")!)).toBe(false);
   });
 });

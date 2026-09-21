@@ -34,6 +34,9 @@ export type Beats = {
   hall: boolean;
   freeze: boolean;
   market: boolean;
+  yield: boolean;
+  cold: boolean;
+  refuse: boolean;
 };
 
 export type WeatherHeard = {
@@ -64,7 +67,10 @@ export type Poi = {
     | "house-hall"
     | "safety-annex"
     | "safety-frozen"
-    | "clearing-listed";
+    | "clearing-listed"
+    | "operator-desk"
+    | "m3-shut"
+    | "m3-open";
 };
 
 export type Passing = {
@@ -186,6 +192,49 @@ export const STALL_PLAQUE: Sign = {
   y: CLEARING_STALL.y,
 };
 
+export const OPERATOR_DESK = { id: "operator-desk", x: 1260, y: 360 };
+export const PRIVATE_YIELD = 90;
+export const OPERATOR_OFFER =
+  "Vesper Hale, Concentrator. A private node. Take it and the Third Movement opens the ugly way. Refuse and you stay mortal.";
+export const WINK_OPERATOR =
+  "She is not a boss. She is a person who already priced your hour. The yield is honest. The door it buys is not.";
+export const OPERATOR_TAKE =
+  "You took the private yield. Cold is a current, not a costume. Movement III is funded. The number does not strike harder.";
+export const OPERATOR_REFUSE =
+  "You refused. Readiness is slower. The door stays shut until the work is mortal.";
+export const OPERATOR_SPECTATOR = "A woman at a desk. She is not speaking to you.";
+export const OPERATOR_NEED_HALL = "Vesper Hale will not quote a private node to someone who has not read who owns the public ones.";
+
+export const OPERATOR_PLAQUE: Sign = {
+  id: OPERATOR_DESK.id,
+  title: "Vesper Hale — Concentrator",
+  text: "Private yield. Human. Not a demon. Take or refuse.",
+  x: OPERATOR_DESK.x,
+  y: OPERATOR_DESK.y,
+};
+
+export const M3_DOOR = { id: "m3-door", x: 1260, y: 120 };
+
+export function operatorPoi(): Poi {
+  return {
+    id: OPERATOR_DESK.id,
+    name: "Vesper Hale",
+    x: OPERATOR_DESK.x,
+    y: OPERATOR_DESK.y,
+    kind: "operator-desk",
+  };
+}
+
+export function m3Poi(open: boolean): Poi {
+  return {
+    id: M3_DOOR.id,
+    name: open ? "Movement III" : "Movement III (shut)",
+    x: M3_DOOR.x,
+    y: M3_DOOR.y,
+    kind: open ? "m3-open" : "m3-shut",
+  };
+}
+
 export function stallPoi(): Poi {
   return {
     id: CLEARING_STALL.id,
@@ -233,6 +282,9 @@ export function emptyBeats(): Beats {
     hall: false,
     freeze: false,
     market: false,
+    yield: false,
+    cold: false,
+    refuse: false,
   };
 }
 
@@ -252,7 +304,7 @@ export function naveClerks(): Clerk[] {
 }
 
 export function naveSigns(): Sign[] {
-  return [...NAVE_SIGNS.map((s) => ({ ...s })), { ...ANNEX_PLAQUE }, { ...STALL_PLAQUE }];
+  return [...NAVE_SIGNS.map((s) => ({ ...s })), { ...ANNEX_PLAQUE }, { ...STALL_PLAQUE }, { ...OPERATOR_PLAQUE }];
 }
 
 export function navePois(): Poi[] {
@@ -261,6 +313,8 @@ export function navePois(): Poi[] {
     { id: CARE_DOOR.id, name: "The Care (shut)", x: CARE_DOOR.x, y: CARE_DOOR.y, kind: "care-shut" },
     annexPoi(false),
     stallPoi(),
+    operatorPoi(),
+    m3Poi(false),
   ];
 }
 

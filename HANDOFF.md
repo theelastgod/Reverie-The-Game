@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 13** — Concentrated operator: named human offers a private yield. Refuse = Readiness; take = Cold. No mint.
+**Next stage: 14** — Movement III stub: Strait / Foundry / Cable organs. The Clearing you touched in I is wreckage. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -66,8 +66,13 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Buying a copy spends Bestand, wounds aura, and does **not** open the Clearing.
 - Guests see lights. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 13 (do this next)
-Boss-not-boss: a concentrated operator (human, named) offers a private yield. Refusing is Readiness; taking is Cold and funds Movement III doors another way. No mint. No Base.
+## Stage 13 (landed)
+- Vesper Hale, Concentrator. Human. Private yield desk.
+- Hall-read Angels hear the offer Wink. E take = Cold, +90 Bestand, Movement III funded. Q refuse = Readiness, door stays shut.
+- Guests get spectator copy. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 14 (do this next)
+Movement III stub: districts as organs (Strait / Foundry / Cable). The Clearing from Movement I returns as wreckage. Nara will not speak until it is buried. No mint.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
