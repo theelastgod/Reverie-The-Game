@@ -81,6 +81,10 @@ import {
   passingResult,
   ruinSight,
   visibleFailed,
+  houseFor,
+  houseName,
+  earthTax,
+  divinitiesKeep,
   gestellTax,
   hallCopy,
   auraSeed,
@@ -953,10 +957,72 @@ describe("Angel link stub", () => {
     expect(winkeVisible(p.guest)).toBe(true);
     expect(guestCanClaim(p)).toBe(false);
     expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
+    expect(p.house).toBe("mortals");
+    expect(houseFor(TEST_SERIAL)).toBe("mortals");
+    expect(houseName(p.house)).toBe("House of Mortals");
+    expect(p.heard).toContain("House of Mortals");
     expect(p.heard).not.toMatch(/\$REVERIE|APY|yield/i);
     expect(linked.history).toEqual([{ ...HISTORY_7777 }]);
     expect(visibleHistory(true, null, linked.history)).toEqual([]);
     expect(visibleHistory(false, TEST_SERIAL, linked.history)).toHaveLength(1);
+  });
+});
+
+describe("Fourfold houses", () => {
+  it("houses change perception and gather, never damage", () => {
+    expect(houseFor(TEST_SERIAL)).toBe("mortals");
+    expect(houseName("earth")).toBe("House of Earth");
+    expect(houseName("sky")).toBe("House of Sky");
+    expect(houseName("divinities")).toBe("House of Divinities");
+    expect(earthTax(8, "earth")).toBe(6);
+    expect(earthTax(8, "sky")).toBe(8);
+    expect(divinitiesKeep("divinities")).toBe(2);
+    expect(divinitiesKeep("mortals")).toBe(1);
+
+    const earth = { ...spawnGuest("e"), house: "earth" as const, guest: false };
+    const sky = { ...spawnGuest("s"), house: "sky" as const, guest: false };
+    const mortals = { ...spawnGuest("m"), house: "mortals" as const, guest: false };
+    const divinities = { ...spawnGuest("d"), house: "divinities" as const, guest: false };
+    expect(damageFor(earth)).toBe(damageFor(spawnGuest("g")));
+    expect(damageFor(sky)).toBe(damageFor(divinities));
+    expect(damageFor(mortals)).toBe(damageFor(earth));
+    expect(guestCanClaim(earth)).toBe(false);
+  });
+
+  it("Earth skims less tax; Divinities keep extra Winke; Mortals see the failed hour", () => {
+    const w = emptyWorld();
+    const node = w.nodes[0];
+    w.players.set("e", {
+      ...spawnGuest("e"),
+      guest: false,
+      house: "earth",
+      beats: { ...emptyBeats(), hall: true },
+      x: node.x,
+      y: node.y,
+    });
+    const tax = gestellTax(w.gestell);
+    const after = applyUse(w, "e", node.id, "extract");
+    expect(after.players.get("e")?.bestand).toBe(40 - earthTax(tax, "earth"));
+    expect(after.players.get("e")?.bestand).toBeGreaterThan(40 - tax);
+    expect(damageFor(after.players.get("e")!)).toBe(damageFor(spawnGuest("g")));
+
+    const keepW = emptyWorld();
+    const n = keepW.nodes[0];
+    keepW.players.set("d", {
+      ...spawnGuest("d"),
+      guest: false,
+      house: "divinities",
+      x: n.x,
+      y: n.y,
+    });
+    const kept = applyUse(keepW, "d", n.id, "keep");
+    expect(kept.players.get("d")?.winke).toBe(2);
+
+    expect(visibleFailed(false, 1, [{ ...FAILED_PASSING }], "mortals")).toHaveLength(1);
+    expect(visibleFailed(false, 1, [{ ...FAILED_PASSING }], "sky")).toEqual([]);
+    expect(visibleFailed(true, null, [{ ...FAILED_PASSING }], "")).toEqual([]);
+    expect(ruinSight(false, 2, "mortals")).toBe(true);
+    expect(guestCanClaim(kept.players.get("d")!)).toBe(false);
   });
 });
 

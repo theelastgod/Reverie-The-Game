@@ -120,6 +120,11 @@ import {
   liveNpcs,
   passingCopy,
   passingResult,
+  House,
+  houseFor,
+  houseName,
+  earthTax,
+  divinitiesKeep,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -165,6 +170,7 @@ export type Player = {
   current: "" | "cold" | "readiness";
   cultWink: boolean;
   fakeWinke: number;
+  house: House;
 };
 
 export type WorldState = {
@@ -214,6 +220,7 @@ export function spawnGuest(id: string): Player {
     current: "",
     cultWink: false,
     fakeWinke: 0,
+    house: "",
   };
 }
 
@@ -321,6 +328,9 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
             inCare: hit.inCare,
             inM3: hit.inM3,
             current: hit.current,
+            cultWink: hit.cultWink,
+            fakeWinke: hit.fakeWinke,
+            house: hit.house,
           });
         } else {
           players.set(hit.id, { ...hit, hp });
@@ -374,6 +384,9 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         inCare: b.inCare,
         inM3: b.inM3,
         current: b.current,
+        cultWink: b.cultWink,
+        fakeWinke: b.fakeWinke,
+        house: b.house,
       });
     } else {
       players.set(id, { ...b, hp });
@@ -422,12 +435,12 @@ export function applyUse(
   const players = new Map(w.players);
   if (choice === "extract") {
     nodes[idx] = { ...node, depleted: true, kept: false };
-    const tax = p.beats.hall ? gestellTax(w.gestell) : 0;
+    const tax = p.beats.hall ? earthTax(gestellTax(w.gestell), p.house) : 0;
     players.set(playerId, { ...p, bestand: p.bestand + Math.max(0, 40 - tax) });
     return { ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) };
   }
   nodes[idx] = { ...node, depleted: true, kept: true };
-  players.set(playerId, { ...p, winke: p.winke + 1, readiness: p.readiness + 1 });
+  players.set(playerId, { ...p, winke: p.winke + divinitiesKeep(p.house), readiness: p.readiness + 1 });
   return { ...w, nodes, players, gestell: Math.max(0, w.gestell - 3) };
 }
 
@@ -525,7 +538,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
     players.set(playerId, {
       ...p,
       beats: { ...p.beats, nara: true, burial: true },
-      readiness: p.readiness + 1,
+      readiness: p.readiness + (p.house === "earth" ? 2 : 1),
       heard: lineFor("nara", { ...p.beats, nara: true, burial: true }),
     });
     return { ...w, players, rites };
@@ -552,7 +565,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   if (wreck) {
     players.set(playerId, {
       ...p,
-      readiness: p.readiness + 1,
+      readiness: p.readiness + (p.house === "earth" ? 2 : 1),
       heard: "Nara Vale would call this someone. You put them in the ground.",
     });
     return { ...w, players, wreckage: w.wreckage.filter((r) => r.id !== wreck.id) };
@@ -806,7 +819,7 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
 export function applyWatch(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
-  const mark = visibleFailed(p.guest, p.serial, w.failed).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
+  const mark = visibleFailed(p.guest, p.serial, w.failed, p.house).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
   if (!mark) {
     if (w.failed.some((m) => nearPoint(p.x, p.y, m.x, m.y, 56))) {
       const players = new Map(w.players);
@@ -913,9 +926,10 @@ export function applyLink(w: WorldState, playerId: string, serial: number, sig: 
     ...p,
     guest: false,
     serial,
+    house: houseFor(serial),
     aura: Math.max(p.aura, auraSeed(serial)),
     locked: false,
-    heard: `Angel ${formatSerial(serial)} linked. Aura seeded. Claims stay disarmed.`,
+    heard: `Angel ${formatSerial(serial)} linked. ${houseName(houseFor(serial))} is perception, not a stick. Claims stay disarmed.`,
   });
   const mark = serialHistory(serial);
   const history = mark && !w.history.some((m) => m.id === mark.id) ? [...w.history, mark] : w.history;

@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import {
   CARE_DOOR,
   formatSerial,
+  houseName,
   GOING_UNDER,
   HOUSE_HALL,
   SAFETY_ANNEX,
@@ -204,7 +205,7 @@ export class NaveScene extends Phaser.Scene {
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     const garden = rites.find((r) => r.kind === "garden" && !r.done && nearPoint(me.x, me.y, r.x, r.y, 56));
-    const failed = visibleFailed(me.guest, me.serial, this.net.snap?.failed ?? []).find((h) =>
+    const failed = visibleFailed(me.guest, me.serial, this.net.snap?.failed ?? [], me.house).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     if (failed) {
@@ -440,7 +441,7 @@ export class NaveScene extends Phaser.Scene {
       }
     }
     const failSeen = new Set<string>();
-    for (const f of visibleFailed(me.guest, me.serial, snap.failed ?? [])) {
+    for (const f of visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house)) {
       failSeen.add(f.id);
       let img = this.failMarks.get(f.id);
       if (!img) {
@@ -476,7 +477,7 @@ export class NaveScene extends Phaser.Scene {
     const histNear = visibleHistory(me.guest, me.serial, snap.history ?? []).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
-    const failNear = visibleFailed(me.guest, me.serial, snap.failed ?? []).find((h) =>
+    const failNear = visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     const ring = nearPoint(me.x, me.y, CLEARING_RING.x, CLEARING_RING.y, 64);
@@ -597,20 +598,21 @@ export class NaveScene extends Phaser.Scene {
         ? me.locked
           ? `Guest · locked · aura 0`
           : `Guest · aura 0 · hp ${me.hp}`
-        : `Angel ${formatSerial(me.serial)} · aura ${me.aura} · hp ${me.hp}`;
+        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · aura ${me.aura} · hp ${me.hp}`;
     }
     const stats = hud("stat-chip");
     if (stats) {
       const winke = winkeVisible(me.guest) ? `Winke ${me.winke}` : "Winke —";
       const taxBit = me.inCare ? ` · tax ${snap.tax}` : "";
       const freezeBit = snap.frozen ? " · freeze" : "";
+      const omenBit = me.house === "sky" && !snap.passing.outcome ? ` · omen ${snap.passing.ready}` : "";
       const passBit = snap.passing.outcome
         ? ` · Passing ${snap.passing.outcome}`
         : snap.passing.starved
           ? " · Passing starved"
           : snap.clearingOpen
             ? " · Clearing held"
-            : "";
+            : omenBit;
       stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}`;
     }
     const lock = hud("lock-panel");

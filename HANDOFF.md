@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 18** — House halls as perception (Earth/Sky/Mortals/Divinities). Cosmetic + gather/ritual, never raw damage. No mint.
+**Next stage: 19** — Messenger kit stub: Herald *Announce* (safe-node ping). Perception verb, never DPS. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -91,8 +91,13 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Passing: Appearance / Absence / Hijack / Failed. Gestell 100 without a Clearing fails. Solo cannot force Appearance at Gestell ≥91. Two dwellers can. Freeze or Cold hijacks.
 - Guests cannot prepare the ground. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 18 (do this next)
-House halls as perception (Earth/Sky/Mortals/Divinities). Cosmetic + gather/ritual bonuses, never raw weapon damage. Mock house on #7777. No mint. No Base.
+## Stage 18 (landed)
+- Mock #7777 links House of Mortals. Earth/Sky/Mortals/Divinities are perception + gather/ritual.
+- Earth skims less hall tax. Divinities keep extra Winke. Mortals see failed Passings. Sky HUD omens Passing ready.
+- `damageFor` identical across houses. Claims stay disarmed.
+
+## Stage 19 (do this next)
+Messenger kit stub: Herald *Announce* — ping a safe (kept) node. Perception verb, never DPS. Mock type on a test serial. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

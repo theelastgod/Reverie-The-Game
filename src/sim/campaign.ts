@@ -521,6 +521,35 @@ export function formatSerial(serial: number | null): string {
   return `#${String(serial).padStart(4, "0")}`;
 }
 
+export type House = "earth" | "sky" | "mortals" | "divinities" | "";
+
+export const HOUSES: Exclude<House, "">[] = ["earth", "sky", "mortals", "divinities"];
+
+export const HOUSE_NAME: Record<Exclude<House, "">, string> = {
+  earth: "House of Earth",
+  sky: "House of Sky",
+  mortals: "House of Mortals",
+  divinities: "House of Divinities",
+};
+
+export function houseFor(serial: number): Exclude<House, ""> {
+  if (serial === TEST_SERIAL) return "mortals";
+  return HOUSES[(Math.max(1, serial) - 1) % HOUSES.length];
+}
+
+export function houseName(house: House): string {
+  return house ? HOUSE_NAME[house] : "Unsealed";
+}
+
+export function earthTax(tax: number, house: House): number {
+  if (house !== "earth") return tax;
+  return Math.max(0, tax - 2);
+}
+
+export function divinitiesKeep(house: House): number {
+  return house === "divinities" ? 2 : 1;
+}
+
 export function auraSeed(serial: number): number {
   return 8 + (serial % 13);
 }
@@ -579,16 +608,17 @@ export const WATCH_FAILED =
   "You watched the failed hour. You did not loot it. Readiness is slower than salvage.";
 export const FAILED_SPECTATOR = "Asphalt. You do not see a season.";
 
-export function ruinSight(guest: boolean, serial: number | null): boolean {
-  return !guest && serial === TEST_SERIAL;
+export function ruinSight(guest: boolean, serial: number | null, house: House = ""): boolean {
+  return !guest && (serial === TEST_SERIAL || house === "mortals");
 }
 
 export function visibleFailed(
   guest: boolean,
   serial: number | null,
   marks: FailedPassing[],
+  house: House = "",
 ): FailedPassing[] {
-  return ruinSight(guest, serial) ? marks : [];
+  return ruinSight(guest, serial, house) ? marks : [];
 }
 
 export const GESTELL_HOT = 91;
