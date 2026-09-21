@@ -125,6 +125,13 @@ import {
   houseName,
   earthTax,
   divinitiesKeep,
+  Messenger,
+  messengerFor,
+  messengerName,
+  ANNOUNCE_COPY,
+  ANNOUNCE_NEED,
+  ANNOUNCE_SPECTATOR,
+  WINK_ANNOUNCE,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -171,6 +178,7 @@ export type Player = {
   cultWink: boolean;
   fakeWinke: number;
   house: House;
+  messenger: Messenger;
 };
 
 export type WorldState = {
@@ -192,6 +200,7 @@ export type WorldState = {
   m3Open: boolean;
   forgedSold: boolean;
   ioneGone: boolean;
+  announced: string | null;
   gestell: number;
   now: number;
 };
@@ -221,6 +230,7 @@ export function spawnGuest(id: string): Player {
     cultWink: false,
     fakeWinke: 0,
     house: "",
+    messenger: "",
   };
 }
 
@@ -275,6 +285,7 @@ export function emptyWorld(): WorldState {
     m3Open: false,
     forgedSold: false,
     ioneGone: false,
+    announced: null,
     gestell: 12,
     now: 0,
   };
@@ -331,6 +342,7 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
             cultWink: hit.cultWink,
             fakeWinke: hit.fakeWinke,
             house: hit.house,
+            messenger: hit.messenger,
           });
         } else {
           players.set(hit.id, { ...hit, hp });
@@ -387,6 +399,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         cultWink: b.cultWink,
         fakeWinke: b.fakeWinke,
         house: b.house,
+        messenger: b.messenger,
       });
     } else {
       players.set(id, { ...b, hp });
@@ -927,9 +940,10 @@ export function applyLink(w: WorldState, playerId: string, serial: number, sig: 
     guest: false,
     serial,
     house: houseFor(serial),
+    messenger: messengerFor(serial),
     aura: Math.max(p.aura, auraSeed(serial)),
     locked: false,
-    heard: `Angel ${formatSerial(serial)} linked. ${houseName(houseFor(serial))} is perception, not a stick. Claims stay disarmed.`,
+    heard: `Angel ${formatSerial(serial)} linked. ${houseName(houseFor(serial))}. ${messengerName(messengerFor(serial))} kit. Perception, not a stick. Claims stay disarmed.`,
   });
   const mark = serialHistory(serial);
   const history = mark && !w.history.some((m) => m.id === mark.id) ? [...w.history, mark] : w.history;
@@ -960,7 +974,31 @@ export function snapshot(w: WorldState) {
     m3Open: w.m3Open,
     forgedSold: w.forgedSold,
     ioneGone: w.ioneGone,
+    announced: w.announced,
   };
+}
+
+export function applyAnnounce(w: WorldState, playerId: string, nodeId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const node = w.nodes.find((n) => n.id === nodeId);
+  if (!node || !nearNode(p.x, p.y, node)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: ANNOUNCE_SPECTATOR, wink: visibleWink(true, WINK_ANNOUNCE) });
+    return { ...w, players };
+  }
+  if (p.messenger !== "herald" || !node.kept) {
+    players.set(playerId, { ...p, heard: ANNOUNCE_NEED });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    heard: ANNOUNCE_COPY,
+    wink: visibleWink(false, WINK_ANNOUNCE),
+    readiness: p.readiness + (w.announced === node.id ? 0 : 1),
+  });
+  return { ...w, players, announced: node.id };
 }
 
 export function applyLastWord(w: WorldState, playerId: string): WorldState {

@@ -85,6 +85,12 @@ import {
   houseName,
   earthTax,
   divinitiesKeep,
+  messengerFor,
+  messengerName,
+  ANNOUNCE_COPY,
+  ANNOUNCE_NEED,
+  ANNOUNCE_SPECTATOR,
+  WINK_ANNOUNCE,
   gestellTax,
   hallCopy,
   auraSeed,
@@ -111,6 +117,7 @@ import {
   applyLastWord,
   applyClearing,
   applyPassing,
+  applyAnnounce,
   applyMarket,
   applyOperator,
   applyRead,
@@ -958,9 +965,13 @@ describe("Angel link stub", () => {
     expect(guestCanClaim(p)).toBe(false);
     expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
     expect(p.house).toBe("mortals");
+    expect(p.messenger).toBe("herald");
     expect(houseFor(TEST_SERIAL)).toBe("mortals");
+    expect(messengerFor(TEST_SERIAL)).toBe("herald");
     expect(houseName(p.house)).toBe("House of Mortals");
+    expect(messengerName(p.messenger)).toBe("Herald");
     expect(p.heard).toContain("House of Mortals");
+    expect(p.heard).toContain("Herald");
     expect(p.heard).not.toMatch(/\$REVERIE|APY|yield/i);
     expect(linked.history).toEqual([{ ...HISTORY_7777 }]);
     expect(visibleHistory(true, null, linked.history)).toEqual([]);
@@ -1023,6 +1034,57 @@ describe("Fourfold houses", () => {
     expect(visibleFailed(true, null, [{ ...FAILED_PASSING }], "")).toEqual([]);
     expect(ruinSight(false, 2, "mortals")).toBe(true);
     expect(guestCanClaim(kept.players.get("d")!)).toBe(false);
+  });
+});
+
+describe("Herald Announce", () => {
+  it("pings a kept node and never buys damage", () => {
+    const w = emptyWorld();
+    const node = w.nodes[0];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      messenger: "herald",
+      house: "mortals",
+      x: node.x,
+      y: node.y,
+    });
+    const kept = applyUse(w, "a", node.id, "keep");
+    expect(kept.nodes[0].kept).toBe(true);
+    const ping = applyAnnounce(kept, "a", node.id);
+    const p = ping.players.get("a")!;
+    expect(ping.announced).toBe(node.id);
+    expect(p.heard).toBe(ANNOUNCE_COPY);
+    expect(p.wink).toBe(WINK_ANNOUNCE);
+    expect(snapshot(ping).announced).toBe(node.id);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const raw = emptyWorld();
+    raw.players.set("a", { ...spawnGuest("a"), guest: false, messenger: "herald", x: node.x, y: node.y });
+    expect(applyAnnounce(raw, "a", node.id).announced).toBeNull();
+    expect(applyAnnounce(raw, "a", node.id).players.get("a")?.heard).toBe(ANNOUNCE_NEED);
+
+    const cyber = emptyWorld();
+    cyber.nodes[0] = { ...node, depleted: true, kept: true };
+    cyber.players.set("c", {
+      ...spawnGuest("c"),
+      guest: false,
+      messenger: "cybernetic",
+      x: node.x,
+      y: node.y,
+    });
+    expect(applyAnnounce(cyber, "c", node.id).announced).toBeNull();
+    expect(applyAnnounce(cyber, "c", node.id).players.get("c")?.heard).toBe(ANNOUNCE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.nodes[0] = { ...node, depleted: true, kept: true };
+    gWorld.players.set("g", { ...spawnGuest("g"), x: node.x, y: node.y });
+    const guest = applyAnnounce(gWorld, "g", node.id);
+    expect(guest.announced).toBeNull();
+    expect(guest.players.get("g")?.heard).toBe(ANNOUNCE_SPECTATOR);
+    expect(guest.players.get("g")?.wink).toBe("");
   });
 });
 

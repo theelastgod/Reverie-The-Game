@@ -7,6 +7,7 @@ import {
   applyWatch,
   applyForge,
   applyClearing,
+  applyAnnounce,
   applyOperator,
   applyRead,
   applyStrike,
@@ -119,6 +120,9 @@ export class ReverieWorld {
     } else if (data.t === "clearing") {
       const choice = data.choice === "extract" || data.choice === "pass" || data.choice === "keep" ? data.choice : "keep";
       this.w = applyClearing(this.w, id, choice);
+      this.broadcast();
+    } else if (data.t === "announce" && data.nodeId) {
+      this.w = applyAnnounce(this.w, id, data.nodeId);
       this.broadcast();
     }
   }

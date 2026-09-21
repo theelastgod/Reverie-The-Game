@@ -550,6 +550,40 @@ export function divinitiesKeep(house: House): number {
   return house === "divinities" ? 2 : 1;
 }
 
+export type Messenger =
+  | ""
+  | "herald"
+  | "witness"
+  | "ruin-angel"
+  | "dweller"
+  | "cybernetic"
+  | "iridescent";
+
+export const MESSENGER_NAME: Record<Exclude<Messenger, "">, string> = {
+  herald: "Herald",
+  witness: "Witness",
+  "ruin-angel": "Ruin-angel",
+  dweller: "Dweller",
+  cybernetic: "Cybernetic",
+  iridescent: "Iridescent",
+};
+
+export function messengerFor(serial: number): Exclude<Messenger, ""> {
+  if (serial === TEST_SERIAL) return "herald";
+  const keys = Object.keys(MESSENGER_NAME) as Exclude<Messenger, "">[];
+  return keys[(Math.max(1, serial) - 1) % keys.length];
+}
+
+export function messengerName(m: Messenger): string {
+  return m ? MESSENGER_NAME[m] : "Unsealed";
+}
+
+export const ANNOUNCE_COPY =
+  "You announced a kept node. Allies can see the safe. You did not strike harder.";
+export const ANNOUNCE_NEED = "Only a Herald can name a safe node, and only one that was kept.";
+export const ANNOUNCE_SPECTATOR = "A light. You do not know if it is safe.";
+export const WINK_ANNOUNCE = "A safe node is a hint, not a weapon. The token does not make it hit.";
+
 export function auraSeed(serial: number): number {
   return 8 + (serial % 13);
 }

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 19** — Messenger kit stub: Herald *Announce* (safe-node ping). Perception verb, never DPS. No mint.
+**Next stage: 20** — Flagged PvP spoils in Wet Grid (seconds-long fights). Unbanked + exhibition only. No token DPS. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -96,8 +96,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Earth skims less hall tax. Divinities keep extra Winke. Mortals see failed Passings. Sky HUD omens Passing ready.
 - `damageFor` identical across houses. Claims stay disarmed.
 
-## Stage 19 (do this next)
-Messenger kit stub: Herald *Announce* — ping a safe (kept) node. Perception verb, never DPS. Mock type on a test serial. No mint. No Base.
+## Stage 19 (landed)
+- Mock #7777 is a Herald. F on a kept node pings it (`announced`). Sky-blue mark. Not a strike.
+- Non-Heralds and guests cannot announce. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 20 (do this next)
+Flagged PvP spoils in Wet Grid. Fights last seconds. Spoils: unbanked Bestand + exhibition only. Cult/banked never drop. No `$REVERIE` DPS. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

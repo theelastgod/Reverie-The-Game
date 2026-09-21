@@ -25,6 +25,7 @@ export type Snap = {
   m3Open: boolean;
   forgedSold: boolean;
   ioneGone: boolean;
+  announced: string | null;
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };
@@ -110,6 +111,10 @@ export class WorldSocket {
 
   clearing(choice: "keep" | "extract" | "pass") {
     this.send({ t: "clearing", choice });
+  }
+
+  announce(nodeId: string) {
+    this.send({ t: "announce", nodeId });
   }
 
   private send(msg: unknown) {

@@ -3,6 +3,7 @@ import {
   CARE_DOOR,
   formatSerial,
   houseName,
+  messengerName,
   GOING_UNDER,
   HOUSE_HALL,
   SAFETY_ANNEX,
@@ -220,6 +221,13 @@ export class NaveScene extends Phaser.Scene {
       this.net.clearing(me.beats.clearing ? "pass" : "keep");
       return;
     }
+    const kept = (this.net.snap?.nodes ?? []).find(
+      (n) => n.kept && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
+    );
+    if (kept && me.messenger === "herald") {
+      this.net.announce(kept.id);
+      return;
+    }
     if (nearPoint(me.x, me.y, M3_DOOR.x, M3_DOOR.y, 56)) {
       this.net.m3();
       return;
@@ -250,7 +258,8 @@ export class NaveScene extends Phaser.Scene {
         this.add.image(n.x, n.y, "prop-crt").setDepth(4);
         this.nodeMarks.set(n.id, g);
       }
-      g.setFillStyle(n.kept ? 0xc9a56a : n.depleted ? 0x3a3a3a : 0x88a0c8, 0.9);
+      const announced = this.net.snap?.announced === n.id;
+      g.setFillStyle(announced ? 0x7eb6ff : n.kept ? 0xc9a56a : n.depleted ? 0x3a3a3a : 0x88a0c8, 0.9);
     }
   }
 
@@ -484,6 +493,9 @@ export class NaveScene extends Phaser.Scene {
     const nearNode = snap.nodes.find(
       (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
+    const keptNear = snap.nodes.find(
+      (n) => n.kept && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
+    );
 
     if (me.locked) {
       this.prompt = care ? me.heard || "You see a door. You do not see what it is for." : me.heard || "A guest cannot prepare the ground.";
@@ -579,6 +591,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `F read ${sign.title}: ${sign.text}`;
     } else if (clerkNear) {
       this.prompt = `${clerkNear.name} is working the yield. They will strike if you stay. Click to interrupt.`;
+    } else if (keptNear && me.messenger === "herald") {
+      this.prompt = "F — Herald Announce. Ping the kept node. This is not a strike.";
     } else if (nearNode) {
       this.prompt = "E extract Bestand · Q keep (Winke). A guest cannot cash out.";
     } else if (me.heard) {
@@ -598,7 +612,7 @@ export class NaveScene extends Phaser.Scene {
         ? me.locked
           ? `Guest · locked · aura 0`
           : `Guest · aura 0 · hp ${me.hp}`
-        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · aura ${me.aura} · hp ${me.hp}`;
+        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}`;
     }
     const stats = hud("stat-chip");
     if (stats) {
