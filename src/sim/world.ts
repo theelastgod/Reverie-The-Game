@@ -171,6 +171,12 @@ import {
   PASSING_NEED,
   clearingPoi,
   liveNpcs,
+  NARA_AFTER_GARDEN,
+  NARA_MARK,
+  NARA_MARK_LATER,
+  WINK_SEXTON,
+  SEXTON_SPECTATOR,
+  sextonPoi,
   ORD_ERRAND,
   ORD_ERRAND_WAIT,
   ORD_CABLE_LATER,
@@ -266,6 +272,7 @@ export type Player = {
   lastCareX: number;
   lastCareY: number;
   damaged: number;
+  cultMark: boolean;
 };
 
 export type WorldState = {
@@ -288,6 +295,7 @@ export type WorldState = {
   forgedSold: boolean;
   ioneGone: boolean;
   ordAtCable: boolean;
+  naraAtStrait: boolean;
   announced: string | null;
   war: HouseWar;
   gestell: number;
@@ -330,6 +338,7 @@ export function spawnGuest(id: string): Player {
     lastCareX: 0,
     lastCareY: 0,
     damaged: 0,
+    cultMark: false,
   };
 }
 
@@ -354,6 +363,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     inM3: p.inM3,
     current: p.current,
     cultWink: p.cultWink,
+    cultMark: p.cultMark,
     house: p.house,
     messenger: p.messenger,
     flagged: p.flagged,
@@ -426,6 +436,7 @@ export function emptyWorld(): WorldState {
     forgedSold: false,
     ioneGone: false,
     ordAtCable: false,
+    naraAtStrait: false,
     announced: null,
     war: emptyWar(),
     gestell: 12,
@@ -680,13 +691,46 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
-  const npc = liveNpcs(w.ioneGone, w.ordAtCable).find((n) => n.id === npcId) ?? npcById(npcId);
+  const npc = liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait).find((n) => n.id === npcId) ?? npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
   const players = new Map(w.players);
   const gardenOpen = w.rites.some((r) => r.kind === "garden" && !r.done);
   if (id === "nara" && gardenOpen && (p.beats.under || w.m3Open)) {
     players.set(playerId, { ...p, heard: NARA_SILENCE });
+    return { ...w, players };
+  }
+  if (id === "nara" && p.beats.garden && !p.guest && !p.locked) {
+    if (p.beats.sexton) {
+      players.set(playerId, { ...p, heard: NARA_MARK_LATER, wink: visibleWink(false, WINK_SEXTON) });
+      return { ...w, players };
+    }
+    if (p.beats.sextonAsk) {
+      players.set(playerId, {
+        ...p,
+        beats: { ...p.beats, sexton: true, nara: true },
+        cultMark: true,
+        cultWink: true,
+        heard: NARA_MARK,
+        wink: visibleWink(false, WINK_SEXTON),
+        readiness: p.readiness + 1,
+      });
+      return {
+        ...w,
+        players,
+        naraAtStrait: true,
+        pois: w.pois.map((poi) => (poi.id === WRECK_GARDEN.id ? sextonPoi() : poi)),
+      };
+    }
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, sextonAsk: true, nara: true },
+      heard: NARA_AFTER_GARDEN,
+    });
+    return { ...w, players };
+  }
+  if (id === "nara" && (p.guest || p.locked) && p.beats.garden) {
+    players.set(playerId, { ...p, heard: SEXTON_SPECTATOR });
     return { ...w, players };
   }
   if (id === "ione") return applyLastWord(w, playerId);
@@ -1377,7 +1421,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait),
     signs: w.signs,
     pois: w.pois,
     weatherNamed: w.weatherNamed,

@@ -42,6 +42,10 @@ import {
   WRECK_GARDEN,
   NARA_SILENCE,
   NARA_AFTER_GARDEN,
+  NARA_MARK,
+  NARA_MARK_LATER,
+  WINK_SEXTON,
+  liveNpcs,
   GARDEN_BURY,
   M3_ENTER,
   M3_SPECTATOR,
@@ -104,7 +108,6 @@ import {
   CABLE_QUIET_PLAQUE,
   ERRAND_EXTRACT,
   WINK_ERRAND,
-  liveNpcs,
   WAR_WIN,
   WAR_TITHE,
   TITHE_COST,
@@ -662,6 +665,20 @@ describe("Movement III organs", () => {
     expect(after.players.get("a")?.heard).toBe(NARA_AFTER_GARDEN);
     expect(guestCanClaim(p)).toBe(false);
     expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+
+    const marked = applyTalk(after, "a", "nara");
+    const m = marked.players.get("a")!;
+    expect(m.heard).toBe(NARA_MARK);
+    expect(m.cultMark).toBe(true);
+    expect(m.cultWink).toBe(true);
+    expect(m.wink).toBe(WINK_SEXTON);
+    expect(marked.naraAtStrait).toBe(true);
+    expect(marked.pois.find((poi) => poi.id === WRECK_GARDEN.id)?.kind).toBe("sexton-mark");
+    const naraMoved = liveNpcs(false, false, true).find((n) => n.id === "nara")!;
+    expect(naraMoved.role).toBe("At the Strait");
+    marked.players.set("a", { ...m, x: naraMoved.x, y: naraMoved.y });
+    expect(applyTalk(marked, "a", "nara").players.get("a")?.heard).toBe(NARA_MARK_LATER);
+    expect(guestCanClaim(m)).toBe(false);
   });
 
   it("Cold-funded door opens Strait / Foundry / Cable; guests cannot enter", () => {

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 32** — More authored side quests (24 named). Next: Quill or Nara hour that changes standing. No mint.
+**Next stage: 33** — Named side quest (cult/standing). Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -152,8 +152,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Ord’s Cable errand: after the map, keep a node. The Cable plaque becomes quiet. Ord walks there.
 - Extracting instead leaves the Cable humming. Guests cannot take the errand. `damageFor` unchanged.
 
-## Stage 32 (do this next)
-Another named side quest that changes standing or a cult object. Fetch-only forbidden. No mint. No Base.
+## Stage 32 (landed)
+- After the garden burial, talk to Nara twice: sexton mark (cult). Garden POI becomes Sexton mark. Nara walks to the Strait.
+- Guests cannot take the mark. `damageFor` unchanged.
+
+## Stage 33 (do this next)
+Another named side quest (Quill hour or House standing). Fetch-only forbidden. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

@@ -52,6 +52,8 @@ export type Beats = {
   passing: boolean;
   errand: boolean;
   cableQuiet: boolean;
+  sextonAsk: boolean;
+  sexton: boolean;
 };
 
 export type WeatherHeard = {
@@ -96,7 +98,8 @@ export type Poi = {
     | "clearing-held"
     | "wet-grid"
     | "claims-desk"
-    | "shrine-upkeep";
+    | "shrine-upkeep"
+    | "sexton-mark";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -258,6 +261,23 @@ export const NARA_SILENCE =
   "Nara Vale looks at the garden that used to be a hole. She will not speak until it is in the ground.";
 export const NARA_AFTER_GARDEN =
   "You put it in the earth. I will walk to the Strait. I will not forgive the factory.";
+export const NARA_MARK =
+  "Take the sexton mark. Cult. It does not list. I walk to the Strait. The garden is a standing now.";
+export const NARA_MARK_LATER =
+  "The mark is in your hand. I am at the Strait. I still will not forgive the factory.";
+export const WINK_SEXTON =
+  "A cult object is a standing, not a fetch. Nara Vale left the garden. The hole is a mark.";
+export const SEXTON_SPECTATOR = "Nara Vale is burying something that is not for you.";
+
+export function sextonPoi(): Poi {
+  return {
+    id: WRECK_GARDEN.id,
+    name: "Sexton mark",
+    x: WRECK_GARDEN.x,
+    y: WRECK_GARDEN.y,
+    kind: "sexton-mark",
+  };
+}
 export const GARDEN_BURY =
   "The Clearing from the first hour is wreckage now. You put it in the ground. Nara Vale will speak.";
 export const WINK_GARDEN =
@@ -570,6 +590,8 @@ export function emptyBeats(): Beats {
     passing: false,
     errand: false,
     cableQuiet: false,
+    sextonAsk: false,
+    sexton: false,
   };
 }
 
@@ -963,10 +985,17 @@ export function passingCopy(outcome: Exclude<PassingOutcome, "">): string {
   return PASSING_FAIL;
 }
 
-export function liveNpcs(ioneGone: boolean, ordAtCable = false): Npc[] {
-  const base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
-  if (!ordAtCable) return base;
-  return base.map((n) =>
-    n.id === "ord" ? { ...n, x: ORGAN_CABLE.x, y: ORGAN_CABLE.y + 48, role: "At the Cable" } : n,
-  );
+export function liveNpcs(ioneGone: boolean, ordAtCable = false, naraAtStrait = false): Npc[] {
+  let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
+  if (ordAtCable) {
+    base = base.map((n) =>
+      n.id === "ord" ? { ...n, x: ORGAN_CABLE.x, y: ORGAN_CABLE.y + 48, role: "At the Cable" } : n,
+    );
+  }
+  if (naraAtStrait) {
+    base = base.map((n) =>
+      n.id === "nara" ? { ...n, x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y + 48, role: "At the Strait" } : n,
+    );
+  }
+  return base;
 }

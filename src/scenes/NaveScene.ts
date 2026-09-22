@@ -426,6 +426,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0xffffff
                       : poi.kind === "wet-grid"
                           ? 0x7eb6ff
+                      : poi.kind === "sexton-mark"
+                        ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
                         ? 0x7eb6ff
                       : poi.kind.startsWith("organ-")
@@ -654,6 +656,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Movement III is shut. The private yield funds this door the Cold way.";
     } else if (gardenNear && !gardenNear.done && !me.guest) {
       this.prompt = "F bury the Clearing that Movement I over-extracted. Nara Vale will not speak until you do.";
+    } else if (npcNear?.id === "nara" && me.beats.sexton) {
+      this.prompt = me.heard || "The sexton mark is cult. Nara Vale is at the Strait.";
+    } else if (npcNear?.id === "nara" && me.beats.sextonAsk) {
+      this.prompt = "F — take the sexton mark. Cult object. Nara walks to the Strait.";
     } else if (npcNear?.id === "ord" && me.beats.cableQuiet) {
       this.prompt = me.heard || "Ord walked to the Cable. The organ is quieter.";
     } else if (npcNear?.id === "ord" && me.beats.errand) {
