@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 76** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 77** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -329,7 +329,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Party reacts to a Wink they cannot see. Talk after Nara, Quill, and Ord: "You're looking at something I'm not." Plaque/POI The party cannot see. Not a fetch.
 - Guests cannot share a Wink. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 76 (do this next)
+## Stage 76 (landed)
+- Ruin-angel kit: F at a grave names the storm at your back. Wreckage vision without burning readiness. Plaque/POI The storm at your back. Not a stick.
+- Other kits and guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 77 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

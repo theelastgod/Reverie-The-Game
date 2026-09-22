@@ -97,6 +97,7 @@ export type Beats = {
   credits: boolean;
   season: boolean;
   winkBlind: boolean;
+  ruinBack: boolean;
 };
 
 export type WeatherHeard = {
@@ -176,6 +177,7 @@ export type Poi = {
     | "yield-empty"
     | "ione-gone"
     | "blitz-trace"
+    | "storm-back"
     | "process-read"
     | "clearing-seed"
     | "nara-gone"
@@ -1341,6 +1343,7 @@ export function emptyBeats(): Beats {
     credits: false,
     season: false,
     winkBlind: false,
+    ruinBack: false,
   };
 }
 
@@ -1602,6 +1605,25 @@ export function lastWrecks(wreckage: { id: string; x: number; y: number; fromNam
 
 export function blitzPoi(x: number, y: number): Poi {
   return { id: "blitz-trace", name: "Blitz trace", x, y, kind: "blitz-trace" };
+}
+
+export const RUIN_BACK =
+  "The storm is at your back. Every grave is a season. You did not strike harder. This was not a fetch.";
+export const WINK_RUIN_BACK = "Ruin-angel kit. Wreckage vision. Readiness holds. Combat is not.";
+export const RUIN_BACK_NEED = "Only a Ruin-angel names the storm, and only at a grave.";
+export const RUIN_BACK_HELD = "The storm already holds. Graves stay seasons. Combat is not.";
+export const RUIN_BACK_SPECTATOR = "A grave. You do not see the weather behind it.";
+
+export const RUIN_BACK_PLAQUE: Sign = {
+  id: "storm-back",
+  title: "The storm at your back",
+  text: "Wreckage is a season. The number does not strike.",
+  x: 200,
+  y: 480,
+};
+
+export function ruinBackPoi(x: number, y: number): Poi {
+  return { id: "storm-back", name: "The storm at your back", x, y, kind: "storm-back" };
 }
 
 export const EXTRACT_GESTELL = 6;

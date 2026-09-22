@@ -14,6 +14,7 @@ import {
   applyClearing,
   applyAnnounce,
   applyBlitz,
+  applyRuinBack,
   applyCyber,
   applyDwell,
   applyOperator,
@@ -134,6 +135,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "blitz") {
       this.w = applyBlitz(this.w, id);
+      this.broadcast();
+    } else if (data.t === "ruinBack") {
+      this.w = applyRuinBack(this.w, id);
       this.broadcast();
     } else if (data.t === "cyber" && data.nodeId) {
       this.w = applyCyber(this.w, id, data.nodeId);

@@ -62,6 +62,7 @@ export type Snap = {
   clearingFailed?: boolean;
   stormHeld?: boolean;
   blitzHeld?: boolean;
+  ruinBackHeld?: boolean;
   blitzMarks?: { id: string; x: number; y: number; fromName: string }[];
   cyberHeld?: boolean;
   glamourHeld?: boolean;
@@ -184,6 +185,10 @@ export class WorldSocket {
 
   blitz() {
     this.send({ t: "blitz" });
+  }
+
+  ruinBack() {
+    this.send({ t: "ruinBack" });
   }
 
   cyber(nodeId: string) {

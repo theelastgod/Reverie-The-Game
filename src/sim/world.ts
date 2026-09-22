@@ -463,6 +463,13 @@ import {
   BLITZ_SPECTATOR,
   lastWrecks,
   blitzPoi,
+  RUIN_BACK,
+  WINK_RUIN_BACK,
+  RUIN_BACK_NEED,
+  RUIN_BACK_HELD,
+  RUIN_BACK_SPECTATOR,
+  RUIN_BACK_PLAQUE,
+  ruinBackPoi,
   CYBER_COPY,
   WINK_CYBER,
   CYBER_NEED,
@@ -575,6 +582,7 @@ export type Player = {
   cultMark: boolean;
   stipend: number;
   storm: boolean;
+  ruinBack: boolean;
   restraint: boolean;
   surface: boolean;
 };
@@ -636,6 +644,7 @@ export type WorldState = {
   clearingFailed: boolean;
   stormHeld: boolean;
   blitzHeld: boolean;
+  ruinBackHeld: boolean;
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
   glamourHeld: boolean;
@@ -690,6 +699,7 @@ export function spawnGuest(id: string): Player {
     cultMark: false,
     stipend: 0,
     storm: false,
+    ruinBack: false,
     restraint: false,
     surface: false,
   };
@@ -732,6 +742,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     fakeWinke: 0,
     stipend: p.stipend,
     storm: p.storm,
+    ruinBack: p.ruinBack,
     restraint: p.restraint,
     surface: p.surface,
     x,
@@ -830,6 +841,7 @@ export function emptyWorld(): WorldState {
     clearingFailed: false,
     stormHeld: false,
     blitzHeld: false,
+    ruinBackHeld: false,
     blitzMarks: [],
     cyberHeld: false,
     glamourHeld: false,
@@ -1557,7 +1569,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
     });
     return { ...w, players, wreckage: w.wreckage.filter((r) => r.id !== wreck.id) };
   }
-  const mark = visibleHistory(p.guest, p.serial, w.history, p.storm).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
+  const mark = visibleHistory(p.guest, p.serial, w.history, p.storm || p.ruinBack).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
   if (!mark) return w;
   players.set(playerId, {
     ...p,
@@ -2453,7 +2465,7 @@ export function applyStraitRefuse(w: WorldState, playerId: string): WorldState {
 export function applyWatch(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
-  const mark = visibleFailed(p.guest, p.serial, w.failed, p.house, p.storm).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
+  const mark = visibleFailed(p.guest, p.serial, w.failed, p.house, p.storm || p.ruinBack).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
   if (!mark) {
     if (w.failed.some((m) => nearPoint(p.x, p.y, m.x, m.y, 56))) {
       const players = new Map(w.players);
@@ -2940,6 +2952,7 @@ export function snapshot(w: WorldState) {
     clearingFailed: w.clearingFailed,
     stormHeld: w.stormHeld,
     blitzHeld: w.blitzHeld,
+    ruinBackHeld: w.ruinBackHeld,
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,
@@ -3130,6 +3143,42 @@ export function applyBlitz(w: WorldState, playerId: string): WorldState {
     ? w.pois.map((poi) => (poi.id === "blitz-trace" ? blitzPoi(grave.x, grave.y) : poi))
     : [...w.pois, blitzPoi(grave.x, grave.y)];
   return { ...w, players, blitzHeld: true, blitzMarks: marks, pois };
+}
+
+export function applyRuinBack(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const grave = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
+  const players = new Map(w.players);
+  if (!grave) return w;
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: RUIN_BACK_SPECTATOR, wink: visibleWink(true, WINK_RUIN_BACK) });
+    return { ...w, players };
+  }
+  if (p.messenger !== "ruin-angel") {
+    players.set(playerId, { ...p, heard: RUIN_BACK_NEED });
+    return { ...w, players };
+  }
+  if (w.ruinBackHeld && p.beats.ruinBack) {
+    players.set(playerId, { ...p, heard: RUIN_BACK_HELD, wink: visibleWink(false, WINK_RUIN_BACK), ruinBack: true });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, ruinBack: true },
+    ruinBack: true,
+    heard: RUIN_BACK,
+    wink: visibleWink(false, WINK_RUIN_BACK),
+    readiness: p.readiness + 1,
+  });
+  const plaque = { ...RUIN_BACK_PLAQUE, x: grave.x, y: grave.y };
+  const pois = w.pois.some((poi) => poi.id === "storm-back")
+    ? w.pois.map((poi) => (poi.id === "storm-back" ? ruinBackPoi(grave.x, grave.y) : poi))
+    : [...w.pois, ruinBackPoi(grave.x, grave.y)];
+  const signs = w.signs.some((s) => s.id === "storm-back")
+    ? w.signs.map((s) => (s.id === "storm-back" ? plaque : s))
+    : [...w.signs, plaque];
+  return { ...w, players, ruinBackHeld: true, pois, signs };
 }
 
 export function applyCyber(w: WorldState, playerId: string, nodeId: string): WorldState {

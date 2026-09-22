@@ -251,6 +251,12 @@ import {
   BLITZ_SPECTATOR,
   BLITZ_COUNT,
   lastWrecks,
+  RUIN_BACK,
+  WINK_RUIN_BACK,
+  RUIN_BACK_NEED,
+  RUIN_BACK_HELD,
+  RUIN_BACK_SPECTATOR,
+  RUIN_BACK_PLAQUE,
   CYBER_COPY,
   WINK_CYBER,
   CYBER_NEED,
@@ -457,6 +463,7 @@ import {
   applyStorm,
   applyAnnounce,
   applyBlitz,
+  applyRuinBack,
   applyCyber,
   applyGlamour,
   applyDwell,
@@ -2480,6 +2487,59 @@ describe("Witness Blitz", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: graves[8].x, y: graves[8].y, locked: true });
     expect(applyBlitz(gWorld, "g").players.get("g")?.heard).toBe(BLITZ_SPECTATOR);
     expect(gWorld.blitzHeld).toBe(false);
+  });
+});
+
+describe("Ruin-angel storm at your back", () => {
+  it("names the storm at a grave; wreckage vision without burning readiness; other kits cannot", () => {
+    expect(messengerFor(3)).toBe("ruin-angel");
+    const w = emptyWorld();
+    w.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    w.history = [{ id: "h-sky", serial: 9, x: 10, y: 10, line: "A foreign hour." }];
+    w.failed = [{ ...FAILED_PASSING }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 3,
+      messenger: "ruin-angel",
+      readiness: 4,
+      x: 200,
+      y: 480,
+    });
+    const named = applyRuinBack(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(RUIN_BACK);
+    expect(p.wink).toBe(WINK_RUIN_BACK);
+    expect(p.ruinBack).toBe(true);
+    expect(p.beats.ruinBack).toBe(true);
+    expect(p.readiness).toBe(5);
+    expect(named.ruinBackHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "storm-back")?.x).toBe(200);
+    expect(named.signs.find((s) => s.id === "storm-back")?.title).toBe(RUIN_BACK_PLAQUE.title);
+    expect(visibleHistory(false, 3, named.history, p.ruinBack)).toHaveLength(1);
+    expect(visibleFailed(false, 3, named.failed, "sky", p.ruinBack)).toHaveLength(1);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyRuinBack(named, "a").players.get("a")?.heard).toBe(RUIN_BACK_HELD);
+
+    const herald = emptyWorld();
+    herald.wreckage = w.wreckage;
+    herald.players.set("h", {
+      ...spawnGuest("h"),
+      guest: false,
+      messenger: "herald",
+      x: 200,
+      y: 480,
+    });
+    expect(applyRuinBack(herald, "h").players.get("h")?.heard).toBe(RUIN_BACK_NEED);
+    expect(applyRuinBack(herald, "h").ruinBackHeld).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.wreckage = w.wreckage;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
+    expect(applyRuinBack(gWorld, "g").players.get("g")?.heard).toBe(RUIN_BACK_SPECTATOR);
+    expect(gWorld.ruinBackHeld).toBe(false);
   });
 });
 

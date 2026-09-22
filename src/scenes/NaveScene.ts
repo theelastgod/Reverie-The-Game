@@ -274,11 +274,15 @@ export class NaveScene extends Phaser.Scene {
       this.net.blitz();
       return;
     }
-    const hist = visibleHistory(me.guest, me.serial, this.net.snap?.history ?? [], me.storm).find((h) =>
+    if (wreck && me.messenger === "ruin-angel" && !me.beats.ruinBack) {
+      this.net.ruinBack();
+      return;
+    }
+    const hist = visibleHistory(me.guest, me.serial, this.net.snap?.history ?? [], me.storm || me.ruinBack).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     const garden = rites.find((r) => r.kind === "garden" && !r.done && nearPoint(me.x, me.y, r.x, r.y, 56));
-    const failed = visibleFailed(me.guest, me.serial, this.net.snap?.failed ?? [], me.house, me.storm).find((h) =>
+    const failed = visibleFailed(me.guest, me.serial, this.net.snap?.failed ?? [], me.house, me.storm || me.ruinBack).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     if (failed) {
@@ -459,6 +463,8 @@ export class NaveScene extends Phaser.Scene {
                     ? 0x3a3a3a
                     : poi.kind === "blitz-trace"
                       ? 0x7eb6ff
+                    : poi.kind === "storm-back"
+                      ? 0x7eb6ff
                     : poi.kind === "process-read"
                       ? 0x7eb6ff
                     : poi.kind === "clearing-seed"
@@ -623,7 +629,7 @@ export class NaveScene extends Phaser.Scene {
       }
     }
     const histSeen = new Set<string>();
-    for (const h of visibleHistory(me.guest, me.serial, snap.history ?? [], me.storm)) {
+    for (const h of visibleHistory(me.guest, me.serial, snap.history ?? [], me.storm || me.ruinBack)) {
       histSeen.add(h.id);
       let img = this.histMarks.get(h.id);
       if (!img) {
@@ -638,7 +644,7 @@ export class NaveScene extends Phaser.Scene {
       }
     }
     const failSeen = new Set<string>();
-    for (const f of visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house, me.storm)) {
+    for (const f of visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house, me.storm || me.ruinBack)) {
       failSeen.add(f.id);
       let img = this.failMarks.get(f.id);
       if (!img) {
@@ -673,10 +679,10 @@ export class NaveScene extends Phaser.Scene {
     const strait = nearPoint(me.x, me.y, ORGAN_STRAIT.x, ORGAN_STRAIT.y, 56);
     const foundry = nearPoint(me.x, me.y, ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y, 56);
     const cable = nearPoint(me.x, me.y, ORGAN_CABLE.x, ORGAN_CABLE.y, 56);
-    const histNear = visibleHistory(me.guest, me.serial, snap.history ?? [], me.storm).find((h) =>
+    const histNear = visibleHistory(me.guest, me.serial, snap.history ?? [], me.storm || me.ruinBack).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
-    const failNear = visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house, me.storm).find((h) =>
+    const failNear = visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house, me.storm || me.ruinBack).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     const ring = nearPoint(me.x, me.y, CLEARING_RING.x, CLEARING_RING.y, 64);
@@ -970,6 +976,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — Witness Blitz. Trace the last eight graves. Not a stick.";
     } else if (wreckNear && (me.beats.blitz || snap.blitzHeld) && me.messenger === "witness") {
       this.prompt = me.heard || "The traces hold. Eight graves. Combat is not.";
+    } else if (wreckNear && me.messenger === "ruin-angel" && !me.guest && !me.beats.ruinBack) {
+      this.prompt = "F — name the storm at your back. Every grave is a season. Not a stick.";
+    } else if (wreckNear && (me.beats.ruinBack || snap.ruinBackHeld) && me.messenger === "ruin-angel") {
+      this.prompt = me.heard || "The storm holds. Graves stay seasons. Combat is not.";
     } else if (funeralNear && !me.locked) {
       this.prompt = `F funeral. ${FUNERAL_COST} Bestand on Nara Vale's street.`;
     } else if (failNear) {
