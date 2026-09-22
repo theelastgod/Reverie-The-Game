@@ -299,6 +299,13 @@ export class NaveScene extends Phaser.Scene {
       this.net.announce(kept.id);
       return;
     }
+    const live = (this.net.snap?.nodes ?? []).find(
+      (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
+    );
+    if (live && me.messenger === "cybernetic" && !me.beats.cyber) {
+      this.net.cyber(live.id);
+      return;
+    }
     if (nearPoint(me.x, me.y, M3_DOOR.x, M3_DOOR.y, 56)) {
       this.net.m3();
       return;
@@ -444,6 +451,8 @@ export class NaveScene extends Phaser.Scene {
                   : poi.kind === "m3-shut"
                     ? 0x3a3a3a
                     : poi.kind === "blitz-trace"
+                      ? 0x7eb6ff
+                    : poi.kind === "process-read"
                       ? 0x7eb6ff
                     : poi.kind === "wreckage-garden"
                       ? 0x7a1028
@@ -950,6 +959,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Ruin duel. The grave is the ring. Spectators gain a little aura. Not a bigger stick.";
     } else if (keptNear && me.messenger === "herald") {
       this.prompt = "F — Herald Announce. Ping the kept node. This is not a strike.";
+    } else if (nearNode && me.messenger === "cybernetic" && !me.guest && !me.beats.cyber) {
+      this.prompt = "F — read the process. Extract drinks Gestell. Keep thins it. Not a stick.";
+    } else if (nearNode && (me.beats.cyber || snap.cyberHeld) && me.messenger === "cybernetic") {
+      this.prompt = me.heard || "The process holds. Extract still drinks. Combat is not.";
     } else if (nearNode) {
       this.prompt = "E extract Bestand · Q keep (Winke). A guest cannot cash out.";
     } else if (me.heard) {

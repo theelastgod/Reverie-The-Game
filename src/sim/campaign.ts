@@ -86,6 +86,7 @@ export type Beats = {
   hijacked: boolean;
   storm: boolean;
   blitz: boolean;
+  cyber: boolean;
 };
 
 export type WeatherHeard = {
@@ -161,7 +162,8 @@ export type Poi = {
     | "desk-empty"
     | "yield-empty"
     | "ione-gone"
-    | "blitz-trace";
+    | "blitz-trace"
+    | "process-read";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1308,6 +1310,7 @@ export function emptyBeats(): Beats {
     hijacked: false,
     storm: false,
     blitz: false,
+    cyber: false,
   };
 }
 
@@ -1569,6 +1572,27 @@ export function lastWrecks(wreckage: { id: string; x: number; y: number; fromNam
 
 export function blitzPoi(x: number, y: number): Poi {
   return { id: "blitz-trace", name: "Blitz trace", x, y, kind: "blitz-trace" };
+}
+
+export const EXTRACT_GESTELL = 6;
+export const KEEP_GESTELL = 3;
+export const CYBER_COPY =
+  "You read the process. Extract drinks six Gestell. Keep thins three. Combat is not. This was not a fetch.";
+export const WINK_CYBER = "Cybernetic kit. A read, not a stick. The token does not strike.";
+export const CYBER_NEED = "Only a cybernetic angel reads a live node as process.";
+export const CYBER_HELD = "The process already holds. Extract still drinks. Combat is not.";
+export const CYBER_SPECTATOR = "A node. You do not see the process.";
+
+export const CYBER_PLAQUE: Sign = {
+  id: "process-read",
+  title: "The process — read",
+  text: "Extract drinks Gestell. Keep thins it. The number does not strike.",
+  x: 120,
+  y: 180,
+};
+
+export function cyberPoi(x: number, y: number): Poi {
+  return { id: "process-read", name: "The process — read", x, y, kind: "process-read" };
 }
 
 export function auraSeed(serial: number): number {

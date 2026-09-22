@@ -440,6 +440,13 @@ import {
   BLITZ_SPECTATOR,
   lastWrecks,
   blitzPoi,
+  CYBER_COPY,
+  WINK_CYBER,
+  CYBER_NEED,
+  CYBER_HELD,
+  CYBER_SPECTATOR,
+  CYBER_PLAQUE,
+  cyberPoi,
   BlitzMark,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
@@ -561,6 +568,7 @@ export type WorldState = {
   stormHeld: boolean;
   blitzHeld: boolean;
   blitzMarks: BlitzMark[];
+  cyberHeld: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -743,6 +751,7 @@ export function emptyWorld(): WorldState {
     stormHeld: false,
     blitzHeld: false,
     blitzMarks: [],
+    cyberHeld: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -2678,6 +2687,7 @@ export function snapshot(w: WorldState) {
     stormHeld: w.stormHeld,
     blitzHeld: w.blitzHeld,
     blitzMarks: w.blitzMarks,
+    cyberHeld: w.cyberHeld,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2860,6 +2870,41 @@ export function applyBlitz(w: WorldState, playerId: string): WorldState {
     ? w.pois.map((poi) => (poi.id === "blitz-trace" ? blitzPoi(grave.x, grave.y) : poi))
     : [...w.pois, blitzPoi(grave.x, grave.y)];
   return { ...w, players, blitzHeld: true, blitzMarks: marks, pois };
+}
+
+export function applyCyber(w: WorldState, playerId: string, nodeId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const node = w.nodes.find((n) => n.id === nodeId);
+  if (!node || node.depleted || !nearNode(p.x, p.y, node)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CYBER_SPECTATOR, wink: visibleWink(true, WINK_CYBER) });
+    return { ...w, players };
+  }
+  if (p.messenger !== "cybernetic") {
+    players.set(playerId, { ...p, heard: CYBER_NEED });
+    return { ...w, players };
+  }
+  if (w.cyberHeld && p.beats.cyber) {
+    players.set(playerId, { ...p, heard: CYBER_HELD, wink: visibleWink(false, WINK_CYBER) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, cyber: true },
+    heard: CYBER_COPY,
+    wink: visibleWink(false, WINK_CYBER),
+    readiness: p.readiness + 1,
+  });
+  const plaque = { ...CYBER_PLAQUE, x: node.x, y: node.y };
+  const pois = w.pois.some((poi) => poi.id === "process-read")
+    ? w.pois.map((poi) => (poi.id === "process-read" ? cyberPoi(node.x, node.y) : poi))
+    : [...w.pois, cyberPoi(node.x, node.y)];
+  const signs = w.signs.some((s) => s.id === "process-read")
+    ? w.signs.map((s) => (s.id === "process-read" ? plaque : s))
+    : [...w.signs, plaque];
+  return { ...w, players, cyberHeld: true, pois, signs };
 }
 
 export function applyLastWord(w: WorldState, playerId: string): WorldState {

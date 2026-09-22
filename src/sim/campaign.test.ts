@@ -220,6 +220,12 @@ import {
   BLITZ_SPECTATOR,
   BLITZ_COUNT,
   lastWrecks,
+  CYBER_COPY,
+  WINK_CYBER,
+  CYBER_NEED,
+  CYBER_HELD,
+  CYBER_SPECTATOR,
+  CYBER_PLAQUE,
   ORD_ERRAND,
   ORD_CABLE_LATER,
   CABLE_QUIET_COPY,
@@ -396,6 +402,7 @@ import {
   applyStorm,
   applyAnnounce,
   applyBlitz,
+  applyCyber,
   applyTithe,
   applyClockOut,
   applyYieldEmpty,
@@ -2217,6 +2224,50 @@ describe("Witness Blitz", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: graves[8].x, y: graves[8].y, locked: true });
     expect(applyBlitz(gWorld, "g").players.get("g")?.heard).toBe(BLITZ_SPECTATOR);
     expect(gWorld.blitzHeld).toBe(false);
+  });
+});
+
+describe("Cybernetic process read", () => {
+  it("reads a live node as process; other kits and guests cannot", () => {
+    expect(messengerFor(5)).toBe("cybernetic");
+    const w = emptyWorld();
+    const node = w.nodes[0];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 5,
+      messenger: "cybernetic",
+      x: node.x,
+      y: node.y,
+    });
+    const read = applyCyber(w, "a", node.id);
+    const p = read.players.get("a")!;
+    expect(p.heard).toBe(CYBER_COPY);
+    expect(p.wink).toBe(WINK_CYBER);
+    expect(p.beats.cyber).toBe(true);
+    expect(read.cyberHeld).toBe(true);
+    expect(read.pois.find((poi) => poi.kind === "process-read")?.x).toBe(node.x);
+    expect(read.signs.find((s) => s.id === "process-read")?.title).toBe(CYBER_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCyber(read, "a", node.id).players.get("a")?.heard).toBe(CYBER_HELD);
+
+    const herald = emptyWorld();
+    herald.players.set("h", {
+      ...spawnGuest("h"),
+      guest: false,
+      messenger: "herald",
+      x: node.x,
+      y: node.y,
+    });
+    expect(applyCyber(herald, "h", node.id).players.get("h")?.heard).toBe(CYBER_NEED);
+    expect(applyCyber(herald, "h", node.id).cyberHeld).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: node.x, y: node.y, locked: true });
+    expect(applyCyber(gWorld, "g", node.id).players.get("g")?.heard).toBe(CYBER_SPECTATOR);
+    expect(gWorld.cyberHeld).toBe(false);
   });
 });
 
