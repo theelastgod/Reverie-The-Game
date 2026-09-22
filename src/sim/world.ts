@@ -359,6 +359,13 @@ import {
   BRACKET_PEOPLE_SPECTATOR,
   BRACKET_PEOPLE_PLAQUE,
   bracketPeoplePoi,
+  LOG_PEOPLE_COPY,
+  WINK_LOG_PEOPLE,
+  LOG_PEOPLE_NEED,
+  LOG_PEOPLE_HELD,
+  LOG_PEOPLE_SPECTATOR,
+  LOG_PEOPLE_PLAQUE,
+  logPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1062,6 +1069,7 @@ export type WorldState = {
   stillPeopleHeld: boolean;
   seasonPeopleHeld: boolean;
   bracketPeopleHeld: boolean;
+  logPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1333,6 +1341,7 @@ export function emptyWorld(): WorldState {
     stillPeopleHeld: false,
     seasonPeopleHeld: false,
     bracketPeopleHeld: false,
+    logPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2470,9 +2479,11 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.annexPeopleHeld && !w.arenaPeopleHeld && !p.guest && !p.locked) return applyArenaPeople(w, playerId);
     return applyArena(w, playerId);
   }
-  if (sign.id === SCREENING.id || sign.id === "screening-people") {
+  if (sign.id === SCREENING.id || sign.id === "screening-people" || sign.id === "log-people") {
     if (w.m3PeopleHeld && !w.screeningPeopleHeld) return applyScreeningPeople(w, playerId);
     if (sign.id === "screening-people") return applyScreeningPeople(w, playerId);
+    if (w.bracketPeopleHeld && !w.logPeopleHeld) return applyLogPeople(w, playerId);
+    if (sign.id === "log-people") return applyLogPeople(w, playerId);
     return applyScreening(w, playerId);
   }
   if (sign.id === STILL.id || sign.id === "still-people") {
@@ -3768,6 +3779,37 @@ export function applyBracketPeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, bracketPeopleHeld: true, pois, signs };
 }
 
+export function applyLogPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SCREENING.x, SCREENING.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: LOG_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_LOG_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.bracketPeopleHeld) {
+    players.set(playerId, { ...p, heard: LOG_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.logPeopleHeld && p.beats.logPeople) {
+    players.set(playerId, { ...p, heard: LOG_PEOPLE_HELD, wink: visibleWink(false, WINK_LOG_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, logPeople: true },
+    heard: LOG_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_LOG_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "log-people")
+    ? w.pois.map((poi) => (poi.id === "log-people" ? logPeoplePoi() : poi))
+    : [...w.pois, logPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "log-people")
+    ? w.signs.map((s) => (s.id === "log-people" ? { ...LOG_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...LOG_PEOPLE_PLAQUE }];
+  return { ...w, players, logPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -4953,6 +4995,7 @@ export function snapshot(w: WorldState) {
     stillPeopleHeld: w.stillPeopleHeld,
     seasonPeopleHeld: w.seasonPeopleHeld,
     bracketPeopleHeld: w.bracketPeopleHeld,
+    logPeopleHeld: w.logPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

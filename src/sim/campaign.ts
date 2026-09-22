@@ -146,6 +146,7 @@ export type Beats = {
   stillPeople: boolean;
   seasonPeople: boolean;
   bracketPeople: boolean;
+  logPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -280,6 +281,7 @@ export type Poi = {
     | "still-people"
     | "season-people"
     | "bracket-people"
+    | "log-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1092,6 +1094,31 @@ export function bracketPeoplePoi(): Poi {
     x: 720,
     y: 520,
     kind: "bracket-people",
+  };
+}
+
+export const LOG_PEOPLE_COPY =
+  "The history log is a house of people, not a uniqueness of process. The log still holds. Combat is not. This was not a fetch.";
+export const WINK_LOG_PEOPLE = "People, not a ledger stick. The token does not strike.";
+export const LOG_PEOPLE_NEED = "The bracket as people first. A log of people is not a fetch.";
+export const LOG_PEOPLE_HELD = "The log already holds as people. Uniqueness still a log.";
+export const LOG_PEOPLE_SPECTATOR = "A screen. You do not get a house of people.";
+
+export const LOG_PEOPLE_PLAQUE: Sign = {
+  id: "log-people",
+  title: "The log — people",
+  text: "A house of people. Uniqueness still a log. The number does not strike.",
+  x: SCREENING.x,
+  y: SCREENING.y,
+};
+
+export function logPeoplePoi(): Poi {
+  return {
+    id: "log-people",
+    name: "The log — people",
+    x: SCREENING.x,
+    y: SCREENING.y,
+    kind: "log-people",
   };
 }
 
@@ -2583,6 +2610,7 @@ export function emptyBeats(): Beats {
     stillPeople: false,
     seasonPeople: false,
     bracketPeople: false,
+    logPeople: false,
   };
 }
 

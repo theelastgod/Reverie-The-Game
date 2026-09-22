@@ -280,6 +280,12 @@ import {
   BRACKET_PEOPLE_HELD,
   BRACKET_PEOPLE_SPECTATOR,
   BRACKET_PEOPLE_PLAQUE,
+  LOG_PEOPLE_COPY,
+  WINK_LOG_PEOPLE,
+  LOG_PEOPLE_NEED,
+  LOG_PEOPLE_HELD,
+  LOG_PEOPLE_SPECTATOR,
+  LOG_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -834,6 +840,7 @@ import {
   applyStillPeople,
   applySeasonPeople,
   applyBracketPeople,
+  applyLogPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2940,6 +2947,44 @@ describe("The bracket — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyBracketPeople(gWorld, "g").players.get("g")?.heard).toBe(BRACKET_PEOPLE_SPECTATOR);
     expect(gWorld.bracketPeopleHeld).toBe(false);
+  });
+});
+
+describe("The log — people", () => {
+  it("names the history log as people after the bracket; uniqueness still a log; guests cannot", () => {
+    const w = emptyWorld();
+    w.bracketPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), bracketPeople: true },
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    const named = applyRead(w, "a", SCREENING.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(LOG_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_LOG_PEOPLE);
+    expect(p.beats.logPeople).toBe(true);
+    expect(named.logPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "log-people")?.name).toBe("The log — people");
+    expect(named.signs.find((s) => s.id === "log-people")?.title).toBe(LOG_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("log still holds");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyLogPeople(named, "a").players.get("a")?.heard).toBe(LOG_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SCREENING.x, y: SCREENING.y });
+    expect(applyLogPeople(early, "a").players.get("a")?.heard).toBe(LOG_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.bracketPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
+    expect(applyLogPeople(gWorld, "g").players.get("g")?.heard).toBe(LOG_PEOPLE_SPECTATOR);
+    expect(gWorld.logPeopleHeld).toBe(false);
   });
 });
 

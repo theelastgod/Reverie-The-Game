@@ -598,6 +598,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "bracket-people"
                         ? 0xc9a56a
+                      : poi.kind === "log-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -863,6 +865,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A still. Participant first. Optional.";
     } else if (screening && (me.guest || me.locked)) {
       this.prompt = "A screen. You do not get the dispatch.";
+    } else if (screening && (me.beats.logPeople || snap.logPeopleHeld)) {
+      this.prompt = me.heard || "The log — people. Uniqueness still a log. Not a stick.";
+    } else if (screening && snap.bracketPeopleHeld && !me.guest) {
+      this.prompt = "F — the history log as a house of people. Uniqueness still a log. Not a fetch.";
     } else if (screening && (me.beats.screeningPeople || snap.screeningPeopleHeld)) {
       this.prompt = me.heard || "Dispatch — people. Observer proximity. Not a stick.";
     } else if (screening && snap.m3PeopleHeld && !me.guest) {

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 127** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 128** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -536,7 +536,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the season as people, F at the Wet Grid: equalized bracket as people. Plaque/POI The bracket — people. Serials stay visible. Not a stick.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 127 (do this next)
+## Stage 127 (landed)
+- After the bracket as people, F at the public screening: the history log as people. Plaque/POI The log — people. Uniqueness still a log.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 128 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
