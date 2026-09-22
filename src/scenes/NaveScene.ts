@@ -90,9 +90,16 @@ export class NaveScene extends Phaser.Scene {
         const edge = x === 0 || y === 0 || x === COLS - 1 || y === ROWS - 1;
         const aisle = x === 9 || x === 18;
         const wall = edge || (aisle && y > 3 && y < ROWS - 3 && y % 4 !== 0);
-        this.add.image(x * TILE + TILE / 2, y * TILE + TILE / 2, wall ? "tile-wall" : "tile-nave");
+        const cx = x * TILE + TILE / 2;
+        const cy = y * TILE + TILE / 2;
+        let key = wall ? "tile-wall" : "tile-nave";
+        if (!wall && inWetGrid(cx, cy)) key = "tile-wet";
+        else if (!wall && cy < 168) key = "tile-organ";
+        else if (!wall && nearPoint(cx, cy, CLEARING_RING.x, CLEARING_RING.y, 120)) key = "tile-clearing";
+        this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
       }
     }
+    this.add.image(CLEARING_RING.x, CLEARING_RING.y, "clearing-ring").setDisplaySize(220, 124).setAlpha(0.55).setDepth(2);
 
     this.add
       .text(TILE * 2, TILE * 2.2, "NAVE OF TUBES", {
@@ -365,8 +372,8 @@ export class NaveScene extends Phaser.Scene {
     for (const n of nodes) {
       let g = this.nodeMarks.get(n.id);
       if (!g) {
-        g = this.add.circle(n.x, n.y, 16, 0x88a0c8, 0.85).setDepth(3);
-        this.add.image(n.x, n.y, "prop-crt").setDepth(4);
+        g = this.add.circle(n.x, n.y, 16, 0x88a0c8, 0.35).setDepth(3);
+        this.add.image(n.x, n.y, "prop-crt").setDisplaySize(36, 36).setDepth(4);
         this.nodeMarks.set(n.id, g);
       }
       const announced = this.net.snap?.announced === n.id;
@@ -586,6 +593,8 @@ export class NaveScene extends Phaser.Scene {
                       : poi.kind === "credits-people"
                         ? 0xc9a56a
                       : poi.kind === "still-people"
+                        ? 0xc9a56a
+                      : poi.kind === "season-people"
                         ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
@@ -893,6 +902,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.seasonPeople || snap.seasonPeopleHeld)) {
+      this.prompt = me.heard || "The season — people. Flag still opts in. Not a stick.";
+    } else if (wet && snap.stillPeopleHeld && !me.guest) {
+      this.prompt = "F — the residual season as a house of people. Flag still opts in. Not a fetch.";
     } else if (wet && (me.beats.wetPeople || snap.wetPeopleHeld)) {
       this.prompt = me.heard || "Wet Grid — people. Flag still opts in. Not a stick.";
     } else if (wet && snap.clearingPeopleHeld && !me.guest) {

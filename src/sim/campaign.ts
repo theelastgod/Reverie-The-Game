@@ -144,6 +144,7 @@ export type Beats = {
   navePeople: boolean;
   creditsPeople: boolean;
   stillPeople: boolean;
+  seasonPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -276,6 +277,7 @@ export type Poi = {
     | "nave-people"
     | "credits-people"
     | "still-people"
+    | "season-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1038,6 +1040,31 @@ export function stillPeoplePoi(): Poi {
     x: STILL.x,
     y: STILL.y,
     kind: "still-people",
+  };
+}
+
+export const SEASON_PEOPLE_COPY =
+  "The residual season is a house of people, not a flag of process. Flag still opts in. Combat is not. This was not a fetch.";
+export const WINK_SEASON_PEOPLE = "People, not a season stick. The token does not strike.";
+export const SEASON_PEOPLE_NEED = "The still as people first. A season of people is not a fetch.";
+export const SEASON_PEOPLE_HELD = "The season already holds as people. Flag still opts in.";
+export const SEASON_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SEASON_PEOPLE_PLAQUE: Sign = {
+  id: "season-people",
+  title: "The season — people",
+  text: "A house of people. Flag still opts in. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function seasonPeoplePoi(): Poi {
+  return {
+    id: "season-people",
+    name: "The season — people",
+    x: 720,
+    y: 520,
+    kind: "season-people",
   };
 }
 
@@ -2527,6 +2554,7 @@ export function emptyBeats(): Beats {
     navePeople: false,
     creditsPeople: false,
     stillPeople: false,
+    seasonPeople: false,
   };
 }
 

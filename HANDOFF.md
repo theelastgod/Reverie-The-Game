@@ -2,14 +2,15 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 124** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 126** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
 - Brief site: https://reverie-the-game.wendellphillips.workers.dev
+- Play: https://reverie-the-game.wendellphillips.workers.dev/play/
 - Prompt: https://reverie-the-game.wendellphillips.workers.dev/prompt.html
 - Local client: `npm run dev` → http://127.0.0.1:5175
-- Deploy site: `npx wrangler deploy` (Worker `reverie-the-game`, assets from `site/`)
+- Deploy: `npm run deploy` (Vite `/play` + Worker `reverie-the-game`)
 - Durable builder: scheduled every 30m (do not create a second one)
 
 ## Done
@@ -522,8 +523,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After Credits as people, F at the production still: a house of people, not a frame of process. Plaque/POI The still — people. Optional Wink still optional.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 124 (do this next)
-Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 authored hours are in; more hours still allowed.
+## Stage 124 (landed)
+- After the still as people, F at the Wet Grid: residual season as people, not a flag of process. Plaque/POI The season — people. Flag still opts in.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 125 (do this next)
+Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

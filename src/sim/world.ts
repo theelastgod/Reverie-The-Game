@@ -345,6 +345,13 @@ import {
   STILL_PEOPLE_SPECTATOR,
   STILL_PEOPLE_PLAQUE,
   stillPeoplePoi,
+  SEASON_PEOPLE_COPY,
+  WINK_SEASON_PEOPLE,
+  SEASON_PEOPLE_NEED,
+  SEASON_PEOPLE_HELD,
+  SEASON_PEOPLE_SPECTATOR,
+  SEASON_PEOPLE_PLAQUE,
+  seasonPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1046,6 +1053,7 @@ export type WorldState = {
   navePeopleHeld: boolean;
   creditsPeopleHeld: boolean;
   stillPeopleHeld: boolean;
+  seasonPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1315,6 +1323,7 @@ export function emptyWorld(): WorldState {
     navePeopleHeld: false,
     creditsPeopleHeld: false,
     stillPeopleHeld: false,
+    seasonPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2480,9 +2489,11 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return applyMarket(w, playerId);
   }
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
+  if (sign.id === "season-people") return applySeasonPeople(w, playerId);
   if (sign.id === WET_GRID.id) {
     if (p.beats.unflagAsk && !p.beats.unflag && !p.guest && !p.locked) return applyUnflag(w, playerId);
     if (w.clearingPeopleHeld && !w.wetPeopleHeld) return applyWetPeople(w, playerId);
+    if (w.stillPeopleHeld && !w.seasonPeopleHeld) return applySeasonPeople(w, playerId);
     if (w.creditsHeld && !w.seasonHeld && !w.wetCult && !p.guest && !p.locked) return applySeason(w, playerId);
     if (w.seasonHeld && !w.bracketHeld && !w.wetCult && !p.guest && !p.locked) return applyBracket(w, playerId);
     return applyFlag(w, playerId);
@@ -3684,6 +3695,37 @@ export function applyStillPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, stillPeopleHeld: true, pois, signs };
 }
 
+export function applySeasonPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: SEASON_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_SEASON_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.stillPeopleHeld) {
+    players.set(playerId, { ...p, heard: SEASON_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.seasonPeopleHeld && p.beats.seasonPeople) {
+    players.set(playerId, { ...p, heard: SEASON_PEOPLE_HELD, wink: visibleWink(false, WINK_SEASON_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, seasonPeople: true },
+    heard: SEASON_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_SEASON_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "season-people")
+    ? w.pois.map((poi) => (poi.id === "season-people" ? seasonPeoplePoi() : poi))
+    : [...w.pois, seasonPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "season-people")
+    ? w.signs.map((s) => (s.id === "season-people" ? { ...SEASON_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...SEASON_PEOPLE_PLAQUE }];
+  return { ...w, players, seasonPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -4867,6 +4909,7 @@ export function snapshot(w: WorldState) {
     navePeopleHeld: w.navePeopleHeld,
     creditsPeopleHeld: w.creditsPeopleHeld,
     stillPeopleHeld: w.stillPeopleHeld,
+    seasonPeopleHeld: w.seasonPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

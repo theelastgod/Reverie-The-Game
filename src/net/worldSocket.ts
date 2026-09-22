@@ -113,6 +113,7 @@ export type Snap = {
   navePeopleHeld?: boolean;
   creditsPeopleHeld?: boolean;
   stillPeopleHeld?: boolean;
+  seasonPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

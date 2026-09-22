@@ -268,6 +268,12 @@ import {
   STILL_PEOPLE_HELD,
   STILL_PEOPLE_SPECTATOR,
   STILL_PEOPLE_PLAQUE,
+  SEASON_PEOPLE_COPY,
+  WINK_SEASON_PEOPLE,
+  SEASON_PEOPLE_NEED,
+  SEASON_PEOPLE_HELD,
+  SEASON_PEOPLE_SPECTATOR,
+  SEASON_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -820,6 +826,7 @@ import {
   applyNavePeople,
   applyCreditsPeople,
   applyStillPeople,
+  applySeasonPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2850,6 +2857,44 @@ describe("The still — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: STILL.x, y: STILL.y, locked: true });
     expect(applyStillPeople(gWorld, "g").players.get("g")?.heard).toBe(STILL_PEOPLE_SPECTATOR);
     expect(gWorld.stillPeopleHeld).toBe(false);
+  });
+});
+
+describe("The season — people", () => {
+  it("names the residual season as people after the still; flag still opts in; guests cannot", () => {
+    const w = emptyWorld();
+    w.stillPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), stillPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SEASON_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SEASON_PEOPLE);
+    expect(p.beats.seasonPeople).toBe(true);
+    expect(named.seasonPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "season-people")?.name).toBe("The season — people");
+    expect(named.signs.find((s) => s.id === "season-people")?.title).toBe(SEASON_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Flag still opts in");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySeasonPeople(named, "a").players.get("a")?.heard).toBe(SEASON_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySeasonPeople(early, "a").players.get("a")?.heard).toBe(SEASON_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.stillPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySeasonPeople(gWorld, "g").players.get("g")?.heard).toBe(SEASON_PEOPLE_SPECTATOR);
+    expect(gWorld.seasonPeopleHeld).toBe(false);
   });
 });
 
