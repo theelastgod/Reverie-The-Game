@@ -11,6 +11,12 @@ import {
 } from "./world";
 
 describe("world", () => {
+  it("empty world plaques and pois all have ids", () => {
+    const w = emptyWorld();
+    expect(w.pois.every((p) => !!p?.id)).toBe(true);
+    expect(w.signs.every((s) => !!s?.id)).toBe(true);
+  });
+
   it("guest starts with aura 0 and cannot claim", () => {
     const g = spawnGuest("g1");
     expect(g.aura).toBe(0);

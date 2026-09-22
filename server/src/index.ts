@@ -42,11 +42,13 @@ type Env = {
 const idle: Intent = { up: false, down: false, left: false, right: false };
 
 export class ReverieWorld {
-  private w: WorldState = emptyWorld();
+  private w: WorldState;
   private sessions = new Map<WebSocket, string>();
   private ticking = false;
 
-  constructor(private readonly ctx: DurableObjectState, _env: Env) {}
+  constructor(private readonly ctx: DurableObjectState, _env: Env) {
+    this.w = emptyWorld();
+  }
 
   async fetch(req: Request): Promise<Response> {
     if (req.headers.get("Upgrade") !== "websocket") {

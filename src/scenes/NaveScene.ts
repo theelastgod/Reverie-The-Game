@@ -515,6 +515,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0x7eb6ff
                       : poi.kind === "wet-grid-cult"
                           ? 0xc9a56a
+                      : poi.kind === "wet-people"
+                          ? 0xc9a56a
                       : poi.kind === "yield-empty"
                         ? 0x5a5a5a
                       : poi.kind === "ione-gone"
@@ -836,6 +838,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.wetPeople || snap.wetPeopleHeld)) {
+      this.prompt = me.heard || "Wet Grid — people. Flag still opts in. Not a stick.";
+    } else if (wet && snap.clearingPeopleHeld && !me.guest) {
+      this.prompt = "F — the Wet Grid as a street of people. Flag still opts in. Not a fetch.";
     } else if (wet && (snap.wetCult || me.beats.unflag)) {
       this.prompt = me.heard || "The street is cult. Spoils do not live here.";
     } else if (wet && me.beats.unflagAsk) {

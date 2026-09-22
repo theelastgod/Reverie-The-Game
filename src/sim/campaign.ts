@@ -126,6 +126,7 @@ export type Beats = {
   deskPeople: boolean;
   hallPeople: boolean;
   clearingPeople: boolean;
+  wetPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -240,6 +241,7 @@ export type Poi = {
     | "desk-people"
     | "hall-people"
     | "clearing-people"
+    | "wet-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1726,6 +1728,31 @@ export const WET_PLAQUE: Sign = {
   y: WET_GRID.y,
 };
 
+export const WET_PEOPLE_COPY =
+  "The Wet Grid is a street of people, not a spoils process. Flag still opts in. Combat is not. This was not a fetch.";
+export const WINK_WET_PEOPLE = "People, not a flag stick. The token does not strike.";
+export const WET_PEOPLE_NEED = "The Clearing as people first. A street of people is not a fetch.";
+export const WET_PEOPLE_HELD = "The street already holds as people. Flag still opts in.";
+export const WET_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const WET_PEOPLE_PLAQUE: Sign = {
+  id: WET_GRID.id,
+  title: "Wet Grid — people",
+  text: "A street of people. Flag still opts in. The number does not strike.",
+  x: WET_GRID.x,
+  y: WET_GRID.y,
+};
+
+export function wetPeoplePoi(): Poi {
+  return {
+    id: WET_GRID.id,
+    name: "Wet Grid — people",
+    x: WET_GRID.x,
+    y: WET_GRID.y,
+    kind: "wet-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2007,6 +2034,7 @@ export function emptyBeats(): Beats {
     deskPeople: false,
     hallPeople: false,
     clearingPeople: false,
+    wetPeople: false,
   };
 }
 
@@ -2038,7 +2066,7 @@ export function naveSigns(): Sign[] {
     { ...SCREENING_PLAQUE },
     { ...CLAIMS_PLAQUE },
     { ...SHRINE_PLAQUE },
-  ];
+  ].filter((s): s is Sign => !!s?.id);
 }
 
 export function navePois(): Poi[] {
@@ -2056,7 +2084,7 @@ export function navePois(): Poi[] {
     screeningPoi(),
     claimsPoi(),
     shrinePoi(),
-  ];
+  ].filter((p): p is Poi => !!p?.id);
 }
 
 export function openCarePoi(): Poi {

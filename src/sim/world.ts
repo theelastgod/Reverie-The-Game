@@ -227,6 +227,13 @@ import {
   CLEARING_PEOPLE_SPECTATOR,
   CLEARING_PEOPLE_PLAQUE,
   clearingPeoplePoi,
+  WET_PEOPLE_COPY,
+  WINK_WET_PEOPLE,
+  WET_PEOPLE_NEED,
+  WET_PEOPLE_HELD,
+  WET_PEOPLE_SPECTATOR,
+  WET_PEOPLE_PLAQUE,
+  wetPeoplePoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -900,6 +907,7 @@ export type WorldState = {
   deskPeopleHeld: boolean;
   hallPeopleHeld: boolean;
   clearingPeopleHeld: boolean;
+  wetPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1151,6 +1159,7 @@ export function emptyWorld(): WorldState {
     deskPeopleHeld: false,
     hallPeopleHeld: false,
     clearingPeopleHeld: false,
+    wetPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2295,6 +2304,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
   if (sign.id === WET_GRID.id) {
     if (p.beats.unflagAsk && !p.beats.unflag && !p.guest && !p.locked) return applyUnflag(w, playerId);
+    if (w.clearingPeopleHeld && !w.wetPeopleHeld) return applyWetPeople(w, playerId);
     if (w.creditsHeld && !w.seasonHeld && !w.wetCult && !p.guest && !p.locked) return applySeason(w, playerId);
     if (w.seasonHeld && !w.bracketHeld && !w.wetCult && !p.guest && !p.locked) return applyBracket(w, playerId);
     return applyFlag(w, playerId);
@@ -2911,6 +2921,37 @@ export function applyClearingPeople(w: WorldState, playerId: string): WorldState
     signs: w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...CLEARING_PEOPLE_PLAQUE } : s)).concat(
       w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...CLEARING_PEOPLE_PLAQUE }],
     ),
+  };
+}
+
+export function applyWetPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: WET_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_WET_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.clearingPeopleHeld) {
+    players.set(playerId, { ...p, heard: WET_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.wetPeopleHeld && p.beats.wetPeople) {
+    players.set(playerId, { ...p, heard: WET_PEOPLE_HELD, wink: visibleWink(false, WINK_WET_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, wetPeople: true },
+    heard: WET_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_WET_PEOPLE),
+  });
+  return {
+    ...w,
+    players,
+    wetPeopleHeld: true,
+    pois: w.pois.map((poi) => (poi.id === WET_GRID.id ? wetPeoplePoi() : poi)),
+    signs: w.signs.map((s) => (s.id === WET_GRID.id ? { ...WET_PEOPLE_PLAQUE } : s)),
   };
 }
 
@@ -4075,6 +4116,7 @@ export function snapshot(w: WorldState) {
     deskPeopleHeld: w.deskPeopleHeld,
     hallPeopleHeld: w.hallPeopleHeld,
     clearingPeopleHeld: w.clearingPeopleHeld,
+    wetPeopleHeld: w.wetPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

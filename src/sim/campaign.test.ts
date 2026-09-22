@@ -162,6 +162,12 @@ import {
   CLEARING_PEOPLE_HELD,
   CLEARING_PEOPLE_SPECTATOR,
   CLEARING_PEOPLE_PLAQUE,
+  WET_PEOPLE_COPY,
+  WINK_WET_PEOPLE,
+  WET_PEOPLE_NEED,
+  WET_PEOPLE_HELD,
+  WET_PEOPLE_SPECTATOR,
+  WET_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -692,6 +698,7 @@ import {
   applyDeskPeople,
   applyHallPeople,
   applyClearingPeople,
+  applyWetPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2022,6 +2029,43 @@ describe("The Clearing — people", () => {
     expect(applyClearing(gWorld, "g", "keep").players.get("g")?.heard).toBe(CLEARING_SPECTATOR);
     expect(applyClearingPeople(gWorld, "g").players.get("g")?.heard).toBe(CLEARING_PEOPLE_SPECTATOR);
     expect(gWorld.clearingPeopleHeld).toBe(false);
+  });
+});
+
+describe("Wet Grid — people", () => {
+  it("names the street as people after the Clearing; flag still opts in; guests cannot", () => {
+    const w = emptyWorld();
+    w.clearingPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), clearingPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(WET_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_WET_PEOPLE);
+    expect(p.beats.wetPeople).toBe(true);
+    expect(named.wetPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === WET_GRID.id)?.kind).toBe("wet-people");
+    expect(named.signs.find((s) => s.id === WET_GRID.id)?.title).toBe(WET_PEOPLE_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyWetPeople(named, "a").players.get("a")?.heard).toBe(WET_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyWetPeople(early, "a").players.get("a")?.heard).toBe(WET_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.clearingPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyWetPeople(gWorld, "g").players.get("g")?.heard).toBe(WET_PEOPLE_SPECTATOR);
+    expect(gWorld.wetPeopleHeld).toBe(false);
   });
 });
 
