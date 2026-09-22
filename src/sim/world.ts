@@ -581,6 +581,13 @@ import {
   BANK_PEOPLE_SPECTATOR,
   BANK_PEOPLE_PLAQUE,
   bankPeoplePoi,
+  STORMPRESS_PEOPLE_COPY,
+  WINK_STORMPRESS_PEOPLE,
+  STORMPRESS_PEOPLE_NEED,
+  STORMPRESS_PEOPLE_HELD,
+  STORMPRESS_PEOPLE_SPECTATOR,
+  STORMPRESS_PEOPLE_PLAQUE,
+  stormPressPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1324,6 +1331,7 @@ export type WorldState = {
   filePeopleHeld: boolean;
   takePeopleHeld: boolean;
   bankPeopleHeld: boolean;
+  stormPressPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1627,6 +1635,7 @@ export function emptyWorld(): WorldState {
     filePeopleHeld: false,
     takePeopleHeld: false,
     bankPeopleHeld: false,
+    stormPressPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2843,7 +2852,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id) {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people") {
+    if (w.bankPeopleHeld && !w.stormPressPeopleHeld) return applyStormPressPeople(w, playerId);
+    if (sign.id === "stormpress-people") return applyStormPressPeople(w, playerId);
     if (p.beats.unflagAsk && !p.beats.unflag && !p.guest && !p.locked) return applyUnflag(w, playerId);
     if (w.clearingPeopleHeld && !w.wetPeopleHeld) return applyWetPeople(w, playerId);
     if (w.stillPeopleHeld && !w.seasonPeopleHeld) return applySeasonPeople(w, playerId);
@@ -5174,6 +5185,37 @@ export function applyBankPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, bankPeopleHeld: true, pois, signs };
 }
 
+export function applyStormPressPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: STORMPRESS_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_STORMPRESS_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.bankPeopleHeld) {
+    players.set(playerId, { ...p, heard: STORMPRESS_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.stormPressPeopleHeld && p.beats.stormPressPeople) {
+    players.set(playerId, { ...p, heard: STORMPRESS_PEOPLE_HELD, wink: visibleWink(false, WINK_STORMPRESS_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, stormPressPeople: true },
+    heard: STORMPRESS_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_STORMPRESS_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "stormpress-people")
+    ? w.pois.map((poi) => (poi.id === "stormpress-people" ? stormPressPeoplePoi() : poi))
+    : [...w.pois, stormPressPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "stormpress-people")
+    ? w.signs.map((s) => (s.id === "stormpress-people" ? { ...STORMPRESS_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...STORMPRESS_PEOPLE_PLAQUE }];
+  return { ...w, players, stormPressPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6394,6 +6436,7 @@ export function snapshot(w: WorldState) {
     filePeopleHeld: w.filePeopleHeld,
     takePeopleHeld: w.takePeopleHeld,
     bankPeopleHeld: w.bankPeopleHeld,
+    stormPressPeopleHeld: w.stormPressPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

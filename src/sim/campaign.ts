@@ -178,6 +178,7 @@ export type Beats = {
   filePeople: boolean;
   takePeople: boolean;
   bankPeople: boolean;
+  stormPressPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -344,6 +345,7 @@ export type Poi = {
     | "file-people"
     | "take-people"
     | "bank-people"
+    | "stormpress-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2820,6 +2822,31 @@ export function bankPeoplePoi(): Poi {
   };
 }
 
+export const STORMPRESS_PEOPLE_COPY =
+  "Storm-press is a house of people, not a skim of process. Geared graves still crack. Fallen graves still do not. Combat is not. This was not a fetch.";
+export const WINK_STORMPRESS_PEOPLE = "People, not a progress stick. The token does not strike.";
+export const STORMPRESS_PEOPLE_NEED = "The vault as people first. A storm-press of people is not a fetch.";
+export const STORMPRESS_PEOPLE_HELD = "Storm-press already holds as people. Geared graves still crack. Fallen graves still do not.";
+export const STORMPRESS_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const STORMPRESS_PEOPLE_PLAQUE: Sign = {
+  id: "stormpress-people",
+  title: "Storm-press — people",
+  text: "A house of people. Geared graves still crack. Fallen graves still do not. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function stormPressPeoplePoi(): Poi {
+  return {
+    id: "stormpress-people",
+    name: "Storm-press — people",
+    x: 720,
+    y: 520,
+    kind: "stormpress-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3485,6 +3512,7 @@ export function emptyBeats(): Beats {
     filePeople: false,
     takePeople: false,
     bankPeople: false,
+    stormPressPeople: false,
   };
 }
 

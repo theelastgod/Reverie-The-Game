@@ -478,6 +478,12 @@ import {
   BANK_PEOPLE_HELD,
   BANK_PEOPLE_SPECTATOR,
   BANK_PEOPLE_PLAQUE,
+  STORMPRESS_PEOPLE_COPY,
+  WINK_STORMPRESS_PEOPLE,
+  STORMPRESS_PEOPLE_NEED,
+  STORMPRESS_PEOPLE_HELD,
+  STORMPRESS_PEOPLE_SPECTATOR,
+  STORMPRESS_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1064,6 +1070,7 @@ import {
   applyFilePeople,
   applyTakePeople,
   applyBankPeople,
+  applyStormPressPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4558,6 +4565,44 @@ describe("Bank — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
     expect(applyBankPeople(gWorld, "g").players.get("g")?.heard).toBe(BANK_PEOPLE_SPECTATOR);
     expect(gWorld.bankPeopleHeld).toBe(false);
+  });
+});
+
+describe("Storm-press — people", () => {
+  it("names storm-press as people after the vault; geared graves still crack; guests cannot", () => {
+    const w = emptyWorld();
+    w.bankPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), bankPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(STORMPRESS_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_STORMPRESS_PEOPLE);
+    expect(p.beats.stormPressPeople).toBe(true);
+    expect(named.stormPressPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "stormpress-people")?.name).toBe("Storm-press — people");
+    expect(named.signs.find((s) => s.id === "stormpress-people")?.title).toBe(STORMPRESS_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Geared graves still crack");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyStormPressPeople(named, "a").players.get("a")?.heard).toBe(STORMPRESS_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyStormPressPeople(early, "a").players.get("a")?.heard).toBe(STORMPRESS_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.bankPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyStormPressPeople(gWorld, "g").players.get("g")?.heard).toBe(STORMPRESS_PEOPLE_SPECTATOR);
+    expect(gWorld.stormPressPeopleHeld).toBe(false);
   });
 });
 

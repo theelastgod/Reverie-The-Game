@@ -1042,6 +1042,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.stormPressPeople || snap.stormPressPeopleHeld)) {
+      this.prompt = me.heard || "Storm-press — people. Geared graves still crack. Fallen graves still do not. Not a stick.";
+    } else if (wet && snap.bankPeopleHeld && !me.guest) {
+      this.prompt = "F — storm-press as a house of people. Geared graves still crack. Fallen graves still do not. Not a fetch.";
     } else if (wet && (me.beats.flagPeople || snap.flagPeopleHeld)) {
       this.prompt = me.heard || "Flag — people. Flag still opts in. Guests are not loot. Not a stick.";
     } else if (wet && snap.bountyPeopleHeld && !me.guest) {
