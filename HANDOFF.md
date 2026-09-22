@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 81** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 82** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -349,8 +349,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After credits, Participant Angels enter the Founder room. Plaque/POI Founder room. Clearing watches, Passing rites, credits. Proximity, not a stick.
 - Observer/Participant without credits cannot. Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 81 (do this next)
-Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed. Film rooms Observer → Participant → Founder are in.
+## Stage 81 (landed)
+- House bounty: after tithe, F at the hall cashes twelve Bestand. Gestell drinks two. Aura thins. One omen, one purse. Plaque/POI House bounty. Not a stick.
+- Guests cannot. Wrong House cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 82 (do this next)
+Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

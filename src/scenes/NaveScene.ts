@@ -523,6 +523,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7eb6ff
                       : poi.kind === "house-standing"
                         ? 0xc9a56a
+                      : poi.kind === "house-bounty"
+                        ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
                         ? 0x7eb6ff
                       : poi.kind === "organ-cable-dark"
@@ -762,6 +764,8 @@ export class NaveScene extends Phaser.Scene {
           ? me.heard || "The fourfold holds. A gathering, not a stick."
           : four
             ? "F — gather the fourfold in the hall. Earth, Sky, Mortals, Divinities. Not a fetch."
+        : me.beats.hall && snap.war?.winner && snap.war.tithePaid && !snap.bountyHeld && me.house === snap.war.winner
+          ? "F — collect House bounty. Tithe pool. Gestell drinks. Not a stick."
         : me.beats.hall && snap.war?.winner && !snap.war.tithePaid && me.house === snap.war.winner
           ? `F — pay House tithe (${TITHE_COST} Bestand). Omen holds after upkeep. Not a stick.`
           : me.beats.hall && me.beats.garden && me.house === "mortals" && !snap.hallLamp

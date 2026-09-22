@@ -449,6 +449,15 @@ import {
   TITHE_WRONG,
   TITHE_NONE,
   TITHE_HELD,
+  BOUNTY_PAY,
+  BOUNTY_COPY,
+  WINK_BOUNTY,
+  BOUNTY_NEED,
+  BOUNTY_HELD,
+  BOUNTY_SPECTATOR,
+  BOUNTY_WRONG,
+  BOUNTY_PLAQUE,
+  bountyPoi,
   WINK_WAR,
   Messenger,
   messengerFor,
@@ -681,6 +690,7 @@ export type WorldState = {
   screeningHeld: boolean;
   participantHeld: boolean;
   founderHeld: boolean;
+  bountyHeld: boolean;
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
   glamourHeld: boolean;
@@ -884,6 +894,7 @@ export function emptyWorld(): WorldState {
     screeningHeld: false,
     participantHeld: false,
     founderHeld: false,
+    bountyHeld: false,
     blitzMarks: [],
     cyberHeld: false,
     glamourHeld: false,
@@ -1495,6 +1506,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (!p.inCare || p.guest || p.locked) return w;
     if (p.beats.hall && fourfoldReady(w.standing) && !w.fourfoldHeld) return applyFourfold(w, playerId);
     if (p.beats.hall && w.fourfoldHeld) return applyFourfold(w, playerId);
+    if (p.beats.hall && w.war.winner && w.war.tithePaid && !w.bountyHeld) return applyBounty(w, playerId);
     if (p.beats.hall && w.war.winner) return applyTithe(w, playerId);
     if (p.beats.hall) return applyStanding(w, playerId);
     const tax = gestellTax(w.gestell);
@@ -3006,6 +3018,7 @@ export function snapshot(w: WorldState) {
     screeningHeld: w.screeningHeld,
     participantHeld: w.participantHeld,
     founderHeld: w.founderHeld,
+    bountyHeld: w.bountyHeld,
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,
@@ -3141,6 +3154,49 @@ export function applyTithe(w: WorldState, playerId: string): WorldState {
     lastCareY: HOUSE_HALL.y,
   });
   return { ...w, players, war: { ...w.war, tithePaid: true } };
+}
+
+export function applyBounty(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: BOUNTY_SPECTATOR, wink: visibleWink(true, WINK_BOUNTY) });
+    return { ...w, players };
+  }
+  if (!w.war.winner) {
+    players.set(playerId, { ...p, heard: TITHE_NONE });
+    return { ...w, players };
+  }
+  if (p.house !== w.war.winner) {
+    players.set(playerId, { ...p, heard: BOUNTY_WRONG, wink: visibleWink(false, WINK_WAR) });
+    return { ...w, players };
+  }
+  if (!w.war.tithePaid) {
+    players.set(playerId, { ...p, heard: BOUNTY_NEED, wink: visibleWink(false, WINK_WAR) });
+    return { ...w, players };
+  }
+  if (w.bountyHeld || p.beats.bounty) {
+    players.set(playerId, { ...p, heard: BOUNTY_HELD, wink: visibleWink(false, WINK_BOUNTY) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, bounty: true },
+    bestand: p.bestand + BOUNTY_PAY,
+    aura: Math.max(0, p.aura - 1),
+    heard: BOUNTY_COPY,
+    wink: visibleWink(false, WINK_BOUNTY),
+    lastCareX: HOUSE_HALL.x,
+    lastCareY: HOUSE_HALL.y,
+  });
+  const pois = w.pois.some((poi) => poi.id === HOUSE_HALL.id)
+    ? w.pois.map((poi) => (poi.id === HOUSE_HALL.id ? bountyPoi() : poi))
+    : [...w.pois, bountyPoi()];
+  const signs = w.signs.some((s) => s.id === HOUSE_HALL.id)
+    ? w.signs.map((s) => (s.id === HOUSE_HALL.id ? { ...BOUNTY_PLAQUE } : s))
+    : [...w.signs, { ...BOUNTY_PLAQUE }];
+  return { ...w, players, bountyHeld: true, gestell: Math.min(100, w.gestell + 2), pois, signs };
 }
 
 export function applyAnnounce(w: WorldState, playerId: string, nodeId: string): WorldState {

@@ -323,6 +323,14 @@ import {
   TITHE_WRONG,
   TITHE_NONE,
   TITHE_HELD,
+  BOUNTY_PAY,
+  BOUNTY_COPY,
+  WINK_BOUNTY,
+  BOUNTY_NEED,
+  BOUNTY_HELD,
+  BOUNTY_SPECTATOR,
+  BOUNTY_WRONG,
+  BOUNTY_PLAQUE,
   WAR_OMEN_KEEP,
   WAR_OMEN_EXTRACT,
   WINK_WAR,
@@ -496,6 +504,7 @@ import {
   applyGlamour,
   applyDwell,
   applyTithe,
+  applyBounty,
   applyClockOut,
   applyYieldEmpty,
   applyAnnexHome,
@@ -2383,6 +2392,74 @@ describe("House war on the Clearing", () => {
     expect(g.players.get("g")?.heard).toBe(TITHE_SPECTATOR);
     expect(g.war.tithePaid).toBe(false);
     expect(g.players.get("g")?.bestand).toBe(20);
+  });
+
+  it("House bounty pays from the tithe pool once; Gestell drinks; guests cannot", () => {
+    const w = emptyWorld();
+    w.war = { ...emptyWar(), winner: "mortals", titheCut: WAR_TITHE, omen: WAR_OMEN_KEEP, tithePaid: true };
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      house: "mortals",
+      beats: { ...emptyBeats(), hall: true, care: true },
+      inCare: true,
+      bestand: 10,
+      aura: 8,
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    const paid = applyBounty(w, "a");
+    const p = paid.players.get("a")!;
+    expect(p.heard).toBe(BOUNTY_COPY);
+    expect(p.wink).toBe(WINK_BOUNTY);
+    expect(p.beats.bounty).toBe(true);
+    expect(p.bestand).toBe(10 + BOUNTY_PAY);
+    expect(p.aura).toBe(7);
+    expect(paid.bountyHeld).toBe(true);
+    expect(paid.gestell).toBe(w.gestell + 2);
+    expect(paid.pois.find((poi) => poi.kind === "house-bounty")?.id).toBe(HOUSE_HALL.id);
+    expect(paid.signs.find((s) => s.id === HOUSE_HALL.id)?.title).toBe(BOUNTY_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBounty(paid, "a").players.get("a")?.heard).toBe(BOUNTY_HELD);
+    expect(applyBounty(paid, "a").players.get("a")?.bestand).toBe(10 + BOUNTY_PAY);
+    const viaRead = emptyWorld();
+    viaRead.war = { ...emptyWar(), winner: "mortals", titheCut: WAR_TITHE, omen: WAR_OMEN_KEEP, tithePaid: true };
+    viaRead.signs = [...viaRead.signs, { id: HOUSE_HALL.id, title: "House of Mortals", text: "Hall", x: HOUSE_HALL.x, y: HOUSE_HALL.y }];
+    viaRead.players.set("a", { ...w.players.get("a")! });
+    expect(applyRead(viaRead, "a", HOUSE_HALL.id).bountyHeld).toBe(true);
+
+    const early = emptyWorld();
+    early.war = { ...emptyWar(), winner: "mortals", titheCut: WAR_TITHE };
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      house: "mortals",
+      beats: { ...emptyBeats(), hall: true },
+      inCare: true,
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    expect(applyBounty(early, "a").players.get("a")?.heard).toBe(BOUNTY_NEED);
+
+    const wrong = emptyWorld();
+    wrong.war = { ...emptyWar(), winner: "sky", tithePaid: true };
+    wrong.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      house: "mortals",
+      inCare: true,
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    expect(applyBounty(wrong, "a").players.get("a")?.heard).toBe(BOUNTY_WRONG);
+
+    const gWorld = emptyWorld();
+    gWorld.war = { ...emptyWar(), winner: "mortals", tithePaid: true };
+    gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
+    expect(applyBounty(gWorld, "g").players.get("g")?.heard).toBe(BOUNTY_SPECTATOR);
+    expect(gWorld.bountyHeld).toBe(false);
   });
 
   it("holding the ring ticks a keep win without extra damage", () => {

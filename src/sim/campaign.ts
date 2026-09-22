@@ -102,6 +102,7 @@ export type Beats = {
   screening: boolean;
   participant: boolean;
   founder: boolean;
+  bounty: boolean;
 };
 
 export type WeatherHeard = {
@@ -172,6 +173,7 @@ export type Poi = {
     | "stall-dark"
     | "stall-glamour"
     | "house-standing"
+    | "house-bounty"
     | "fourfold-held"
     | "last-god-absent"
     | "last-god-buried"
@@ -1486,6 +1488,7 @@ export function emptyBeats(): Beats {
     screening: false,
     participant: false,
     founder: false,
+    bounty: false,
   };
 }
 
@@ -1647,6 +1650,32 @@ export const TITHE_SPECTATOR = "A House ledger. Guests do not tithe.";
 export const TITHE_WRONG = "This omen is not yours to keep.";
 export const TITHE_NONE = "No omen yet. Win the hole first.";
 export const TITHE_HELD = "The tithe is current. The omen already holds.";
+export const BOUNTY_PAY = 12;
+export const BOUNTY_COPY =
+  "House bounty. Twelve Bestand from the tithe pool. Gestell drinks two. Aura thins. Combat is not. This was not a fetch.";
+export const WINK_BOUNTY = "A bounty is upkeep's other face, not a stick. The token does not strike.";
+export const BOUNTY_NEED = "Pay the tithe first. Bounty is after upkeep.";
+export const BOUNTY_HELD = "The bounty already paid. One omen, one purse.";
+export const BOUNTY_SPECTATOR = "A House ledger. Guests do not collect.";
+export const BOUNTY_WRONG = "This omen is not yours to cash.";
+
+export const BOUNTY_PLAQUE: Sign = {
+  id: HOUSE_HALL.id,
+  title: "House bounty",
+  text: "Tithe pool. Twelve Bestand. Gestell drinks. The number does not strike.",
+  x: HOUSE_HALL.x,
+  y: HOUSE_HALL.y,
+};
+
+export function bountyPoi(): Poi {
+  return {
+    id: HOUSE_HALL.id,
+    name: "House bounty",
+    x: HOUSE_HALL.x,
+    y: HOUSE_HALL.y,
+    kind: "house-bounty",
+  };
+}
 export const WAR_OMEN_KEEP =
   "House omen: the hole holds. Tithe eases after upkeep. The number does not strike.";
 export const WAR_OMEN_EXTRACT =
