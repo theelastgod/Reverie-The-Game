@@ -255,6 +255,13 @@ import {
   SKY_HELD,
   SKY_SPECTATOR,
   SKY_PLAQUE,
+  EARTH_STANDING,
+  WINK_EARTH,
+  EARTH_WRONG,
+  EARTH_NEED,
+  EARTH_HELD,
+  EARTH_SPECTATOR,
+  EARTH_PLAQUE,
   REPAIR_COST,
   REPAIR_COPY,
   REPAIR_NEED,
@@ -290,6 +297,7 @@ import {
   applyStraitRefuse,
   applyCableDark,
   applySkyStanding,
+  applyEarthStanding,
   applyUnlight,
   applyStanding,
   applyMarket,
@@ -2056,6 +2064,69 @@ describe("House of Sky standing on the dark Cable", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_CABLE.x, y: ORGAN_CABLE.y, locked: true });
     expect(applySkyStanding(gWorld, "g").players.get("g")?.heard).toBe(SKY_SPECTATOR);
     expect(gWorld.skyStanding).toBe(false);
+  });
+});
+
+describe("House of Earth standing on the dark Foundry", () => {
+  it("Earth Angel names the dark heat; other Houses and guests cannot", () => {
+    const w = emptyWorld();
+    w.m3Open = true;
+    w.foundryDark = true;
+    w.pois = [
+      ...w.pois,
+      { id: ORGAN_FOUNDRY.id, name: "The Foundry — dark", x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y, kind: "organ-foundry-dark" },
+    ];
+    w.signs = [...w.signs, { id: ORGAN_FOUNDRY.id, title: "The Foundry — dark", text: "Off.", x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 1,
+      house: "earth",
+      beats: { ...emptyBeats(), foundryDark: true, hall: true, m3: true },
+      x: ORGAN_FOUNDRY.x,
+      y: ORGAN_FOUNDRY.y,
+    });
+    const named = applyRead(w, "a", ORGAN_FOUNDRY.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(EARTH_STANDING);
+    expect(p.wink).toBe(WINK_EARTH);
+    expect(p.beats.earthStanding).toBe(true);
+    expect(named.earthStanding).toBe(true);
+    expect(named.standing.earth).toBe(1);
+    expect(named.pois.find((poi) => poi.id === ORGAN_FOUNDRY.id)?.kind).toBe("organ-foundry-earth");
+    expect(named.signs.find((s) => s.id === ORGAN_FOUNDRY.id)?.title).toBe(EARTH_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyEarthStanding(named, "a").players.get("a")?.heard).toBe(EARTH_HELD);
+
+    const sky = emptyWorld();
+    sky.foundryDark = true;
+    sky.players.set("s", {
+      ...spawnGuest("s"),
+      guest: false,
+      house: "sky",
+      beats: { ...emptyBeats(), foundryDark: true },
+      x: ORGAN_FOUNDRY.x,
+      y: ORGAN_FOUNDRY.y,
+    });
+    expect(applyEarthStanding(sky, "s").players.get("s")?.heard).toBe(EARTH_WRONG);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      house: "earth",
+      x: ORGAN_FOUNDRY.x,
+      y: ORGAN_FOUNDRY.y,
+    });
+    expect(applyEarthStanding(early, "a").players.get("a")?.heard).toBe(EARTH_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.foundryDark = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y, locked: true });
+    expect(applyEarthStanding(gWorld, "g").players.get("g")?.heard).toBe(EARTH_SPECTATOR);
+    expect(gWorld.earthStanding).toBe(false);
   });
 });
 

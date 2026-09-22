@@ -429,6 +429,8 @@ export class NaveScene extends Phaser.Scene {
                 ? 0xc9a56a
                 : poi.kind === "operator-vacant"
                   ? 0x5a5a5a
+                : poi.kind === "organ-foundry-earth"
+                  ? 0xc9a56a
                 : poi.kind === "organ-foundry-dark"
                   ? 0x3a3a3a
                 : poi.kind === "m3-open"
@@ -737,6 +739,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — Ord has an errand. Keep a node. Change an organ.";
     } else if (npcNear?.id === "vesper") {
       this.prompt = me.heard || "Vesper Hale walked. The furnace is off.";
+    } else if (foundry && (snap.earthStanding || me.beats.earthStanding) && !me.guest) {
+      this.prompt = me.heard || "House of Earth named the dark heat. Standing. Not a stick.";
+    } else if (foundry && (snap.foundryDark || me.beats.foundryDark) && me.house === "earth" && !me.guest) {
+      this.prompt = "F — name the dark Foundry for House of Earth. Standing. Not a fetch.";
     } else if (foundry && (snap.foundryDark || me.beats.foundryDark) && !me.guest) {
       this.prompt = me.heard || "The Foundry is dark. Vesper Hale is here. Heat is not a nation.";
     } else if (foundry && me.beats.foundryAsk && !me.guest) {

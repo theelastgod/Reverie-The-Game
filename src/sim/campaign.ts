@@ -70,6 +70,7 @@ export type Beats = {
   yieldEmpty: boolean;
   cableDark: boolean;
   skyStanding: boolean;
+  earthStanding: boolean;
 };
 
 export type WeatherHeard = {
@@ -112,6 +113,7 @@ export type Poi = {
     | "organ-strait-buried"
     | "organ-foundry"
     | "organ-foundry-dark"
+    | "organ-foundry-earth"
     | "organ-cable"
     | "organ-cable-quiet"
     | "organ-cable-dark"
@@ -517,6 +519,32 @@ export const SKY_PLAQUE: Sign = {
   x: ORGAN_CABLE.x,
   y: ORGAN_CABLE.y,
 };
+
+export const EARTH_STANDING =
+  "House of Earth names the dark Foundry. Standing. Ground, not a stick. This was not a fetch.";
+export const WINK_EARTH = "Standing is ore that will not strike. The token does not hit.";
+export const EARTH_NEED = "Unlight the Foundry first. Earth standing is not a fetch.";
+export const EARTH_WRONG = "This furnace keeps Earth standing. Your House is elsewhere.";
+export const EARTH_HELD = "Earth already holds the dark heat. Standing does not strike.";
+export const EARTH_SPECTATOR = "A ground you cannot name.";
+
+export const EARTH_PLAQUE: Sign = {
+  id: ORGAN_FOUNDRY.id,
+  title: "The Foundry — Earth standing",
+  text: "House of Earth named the dark heat. Ground. The number does not strike.",
+  x: ORGAN_FOUNDRY.x,
+  y: ORGAN_FOUNDRY.y,
+};
+
+export function earthStandingPoi(): Poi {
+  return {
+    id: ORGAN_FOUNDRY.id,
+    name: "The Foundry — Earth standing",
+    x: ORGAN_FOUNDRY.x,
+    y: ORGAN_FOUNDRY.y,
+    kind: "organ-foundry-earth",
+  };
+}
 
 export function skyStandingPoi(): Poi {
   return {
@@ -953,6 +981,7 @@ export function emptyBeats(): Beats {
     yieldEmpty: false,
     cableDark: false,
     skyStanding: false,
+    earthStanding: false,
   };
 }
 
