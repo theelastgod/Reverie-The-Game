@@ -63,6 +63,8 @@ export type Beats = {
   annexHome: boolean;
   straitRefuse: boolean;
   ordWitness: boolean;
+  unflagAsk: boolean;
+  unflag: boolean;
 };
 
 export type WeatherHeard = {
@@ -111,6 +113,7 @@ export type Poi = {
     | "clearing-ring"
     | "clearing-held"
     | "wet-grid"
+    | "wet-grid-cult"
     | "claims-desk"
     | "shrine-upkeep"
     | "sexton-mark"
@@ -637,6 +640,31 @@ export const WET_PLAQUE: Sign = {
   y: WET_GRID.y,
 };
 
+export const QUILL_UNFLAG_ASK =
+  "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
+export const QUILL_UNFLAG_WAIT =
+  "The Wet Grid is still a ring. Unflag the plaque. I will not carry the street for you.";
+export const UNFLAG_COPY =
+  "You unflagged the Wet Grid. Spoils stop. Quill keeps the street. This was not a fetch.";
+export const WINK_UNFLAG =
+  "A side hour. You ended a spoils ring. Cult does not drop. The token does not strike.";
+export const UNFLAG_NEED = "Hang the prayer first. I will not unflag a street that still lists copies.";
+export const UNFLAG_LATER = "The street is cult. Spoils do not live here. I am keeping the kerb.";
+export const UNFLAG_SPECTATOR = "Quill is taking the flags down. Not for you.";
+export const FLAG_CULT = "The Wet Grid is cult now. You cannot flag a shrine street.";
+
+export const UNFLAG_PLAQUE: Sign = {
+  id: WET_GRID.id,
+  title: "Wet Grid — unflagged",
+  text: "Cult street. Spoils do not live here. Guests are not loot. They never were.",
+  x: WET_GRID.x,
+  y: WET_GRID.y,
+};
+
+export function wetCultPoi(): Poi {
+  return { id: WET_GRID.id, name: "Wet Grid — unflagged", x: WET_GRID.x, y: WET_GRID.y, kind: "wet-grid-cult" };
+}
+
 export function forgePoi(): Poi {
   return {
     id: FORGE_TRAY.id,
@@ -809,6 +837,8 @@ export function emptyBeats(): Beats {
     annexHome: false,
     straitRefuse: false,
     ordWitness: false,
+    unflagAsk: false,
+    unflag: false,
   };
 }
 
@@ -1211,6 +1241,7 @@ export function liveNpcs(
   quillAtGrid = false,
   vesperAtFoundry = false,
   ordAtStrait = false,
+  wetCult = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1231,7 +1262,14 @@ export function liveNpcs(
   }
   if (quillAtGrid) {
     base = base.map((n) =>
-      n.id === "quill" ? { ...n, x: WET_GRID.x + 48, y: WET_GRID.y, role: "On the wet street" } : n,
+      n.id === "quill"
+        ? {
+            ...n,
+            x: WET_GRID.x + 48,
+            y: WET_GRID.y,
+            role: wetCult ? "Keeping the street" : "On the wet street",
+          }
+        : n,
     );
   }
   if (vesperAtFoundry) base = [...base, { ...VESPER }];

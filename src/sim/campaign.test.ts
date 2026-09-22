@@ -79,8 +79,16 @@ import {
   QUILL_HANG_ASK,
   QUILL_HANG,
   QUILL_HANG_WAIT,
-  QUILL_HANG_LATER,
   QUILL_HANG_NEED,
+  QUILL_UNFLAG_ASK,
+  QUILL_UNFLAG_WAIT,
+  UNFLAG_COPY,
+  WINK_UNFLAG,
+  UNFLAG_NEED,
+  UNFLAG_LATER,
+  UNFLAG_SPECTATOR,
+  FLAG_CULT,
+  UNFLAG_PLAQUE,
   QUILL_HANG_SPECTATOR,
   WINK_HANG,
   STALL_DARK_COPY,
@@ -240,6 +248,7 @@ import {
   applyForge,
   applyHang,
   applyFlag,
+  applyUnflag,
   applyDesk,
   applyShrine,
   applyRestore,
@@ -1039,7 +1048,7 @@ describe("Quill darkens the stall", () => {
     expect(moved.role).toBe("On the wet street");
     expect(moved.x).toBe(WET_GRID.x + 48);
     hung.players.set("a", { ...p, x: moved.x, y: moved.y });
-    expect(applyTalk(hung, "a", "quill").players.get("a")?.heard).toBe(QUILL_HANG_LATER);
+    expect(applyTalk(hung, "a", "quill").players.get("a")?.heard).toBe(QUILL_UNFLAG_ASK);
 
     hung.players.set("a", { ...p, x: CLEARING_STALL.x, y: CLEARING_STALL.y, bestand: 80 });
     const buy = applyMarket(hung, "a");
@@ -1902,6 +1911,79 @@ describe("The Strait is refused", () => {
     const g = applyStraitRefuse(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(STRAIT_SPECTATOR);
     expect(g.straitRefused).toBe(false);
+  });
+});
+
+describe("Quill unflags the Wet Grid", () => {
+  it("after hanging cult, unflag ends spoils; guests cannot", () => {
+    const quill = NAVE_NPCS.find((n) => n.id === "quill")!;
+    const w = emptyWorld();
+    w.stallDark = true;
+    w.quillAtGrid = true;
+    w.pois = w.pois.map((poi) => (poi.id === WET_GRID.id ? { ...poi } : poi));
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), hang: true, hangAsk: true, spot: true, market: true, hall: true },
+      cultWink: true,
+      flagged: true,
+      x: quill.x,
+      y: quill.y,
+    });
+    const atStreet = liveNpcs(false, false, false, true).find((n) => n.id === "quill")!;
+    w.players.set("a", { ...w.players.get("a")!, x: atStreet.x, y: atStreet.y });
+    const asked = applyTalk(w, "a", "quill");
+    expect(asked.players.get("a")?.heard).toBe(QUILL_UNFLAG_ASK);
+    expect(asked.players.get("a")?.beats.unflagAsk).toBe(true);
+    expect(applyTalk(asked, "a", "quill").players.get("a")?.heard).toBe(QUILL_UNFLAG_WAIT);
+
+    asked.players.set("a", { ...asked.players.get("a")!, x: WET_GRID.x, y: WET_GRID.y });
+    const done = applyRead(asked, "a", WET_GRID.id);
+    const p = done.players.get("a")!;
+    expect(p.heard).toBe(UNFLAG_COPY);
+    expect(p.wink).toBe(WINK_UNFLAG);
+    expect(p.beats.unflag).toBe(true);
+    expect(p.flagged).toBe(false);
+    expect(done.wetCult).toBe(true);
+    expect(done.pois.find((poi) => poi.id === WET_GRID.id)?.kind).toBe("wet-grid-cult");
+    expect(done.signs.find((s) => s.id === WET_GRID.id)?.title).toBe(UNFLAG_PLAQUE.title);
+    expect(liveNpcs(false, false, false, true, false, false, true).find((n) => n.id === "quill")?.role).toBe(
+      "Keeping the street",
+    );
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFlag(done, "a").players.get("a")?.heard).toBe(FLAG_CULT);
+    expect(applyFlag(done, "a").players.get("a")?.flagged).toBe(false);
+
+    done.players.set("a", { ...p, x: atStreet.x, y: atStreet.y });
+    expect(applyTalk(done, "a", "quill").players.get("a")?.heard).toBe(UNFLAG_LATER);
+
+    const need = emptyWorld();
+    need.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), unflagAsk: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    expect(applyUnflag(need, "a").players.get("a")?.heard).toBe(UNFLAG_NEED);
+    expect(applyUnflag(need, "a").wetCult).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.quillAtGrid = true;
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+      locked: true,
+      beats: { ...emptyBeats(), unflagAsk: true, hang: true },
+    });
+    const g = applyUnflag(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(UNFLAG_SPECTATOR);
+    expect(g.wetCult).toBe(false);
   });
 });
 

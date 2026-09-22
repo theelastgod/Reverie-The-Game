@@ -441,6 +441,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0xffffff
                       : poi.kind === "wet-grid"
                           ? 0x7eb6ff
+                      : poi.kind === "wet-grid-cult"
+                          ? 0xc9a56a
                       : poi.kind === "desk-empty"
                         ? 0x5a5a5a
                       : poi.kind === "sexton-mark"
@@ -600,6 +602,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "F / Q file a claim (not a yield). E TAKE is disarmed. No Base.";
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (snap.wetCult || me.beats.unflag)) {
+      this.prompt = me.heard || "The street is cult. Spoils do not live here.";
+    } else if (wet && me.beats.unflagAsk) {
+      this.prompt = "F — unflag the Wet Grid. Quill keeps the street. Not a fetch.";
     } else if (wet && me.flagged) {
       this.prompt = me.heard || "Flagged. Click strike. Spoils: unbanked and copies. Cult stays. Guests are not loot.";
     } else if (wet) {
@@ -643,8 +649,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Quill is selling something. You do not yet have the eyes for the price.";
     } else if (forge && (me.guest || me.locked)) {
       this.prompt = "Quill is doing something with paper. You cannot tell which sheet is the prayer.";
+    } else if (npcNear?.id === "quill" && (me.beats.unflag || snap.wetCult)) {
+      this.prompt = me.heard || "The street is cult. Quill is keeping the kerb.";
+    } else if (npcNear?.id === "quill" && me.beats.unflagAsk) {
+      this.prompt = "The Wet Grid is still a ring. Unflag the plaque.";
     } else if (npcNear?.id === "quill" && me.beats.hang) {
-      this.prompt = me.heard || "The stall is a shrine. Quill is on the wet street.";
+      this.prompt = "F — Quill will keep the street if you unflag it. Spoils can end.";
     } else if (npcNear?.id === "quill" && me.beats.hangAsk) {
       this.prompt = "The stall is still lit. Hang the sheet on the listing.";
     } else if ((forge || npcNear?.id === "quill") && me.beats.spot && !me.beats.hangAsk) {

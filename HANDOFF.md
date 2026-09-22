@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 40** — Named side quest. Keep writing until 24 authored hours. No mint.
+**Next stage: 41** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -185,7 +185,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the Strait is refused, F at Ord: he walks to the canal. Schedule change. Not a fetch.
 - Guests cannot take him. `damageFor` unchanged.
 
-## Stage 40 (do this next)
+## Stage 40 (landed)
+- After hanging the cult sheet, talk to Quill on the wet street then F at the Wet Grid: unflag. Spoils stop. POI/plaque become cult street. Quill keeps the kerb.
+- Flagging refuses after. Hang required. Guests cannot unflag. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 41 (do this next)
 Named side quest. Fetch-only forbidden. No mint. No Base.
 
 ## Rules

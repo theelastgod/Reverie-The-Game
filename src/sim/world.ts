@@ -57,10 +57,19 @@ import {
   QUILL_HANG_ASK,
   QUILL_HANG,
   QUILL_HANG_WAIT,
-  QUILL_HANG_LATER,
   QUILL_HANG_NEED,
   QUILL_HANG_SPECTATOR,
   WINK_HANG,
+  QUILL_UNFLAG_ASK,
+  QUILL_UNFLAG_WAIT,
+  UNFLAG_COPY,
+  WINK_UNFLAG,
+  UNFLAG_NEED,
+  UNFLAG_LATER,
+  UNFLAG_SPECTATOR,
+  FLAG_CULT,
+  UNFLAG_PLAQUE,
+  wetCultPoi,
   STALL_DARK_COPY,
   STALL_DARK_PLAQUE,
   stallDarkPoi,
@@ -357,6 +366,7 @@ export type WorldState = {
   naraAtStrait: boolean;
   stallDark: boolean;
   quillAtGrid: boolean;
+  wetCult: boolean;
   vesperAtFoundry: boolean;
   foundryDark: boolean;
   annexHome: boolean;
@@ -507,6 +517,7 @@ export function emptyWorld(): WorldState {
     naraAtStrait: false,
     stallDark: false,
     quillAtGrid: false,
+    wetCult: false,
     vesperAtFoundry: false,
     foundryDark: false,
     annexHome: false,
@@ -769,7 +780,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -828,7 +839,20 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   }
   if (id === "quill" && p.beats.market && !p.guest && !p.locked) {
     if (p.beats.hang) {
-      players.set(playerId, { ...p, heard: QUILL_HANG_LATER, wink: visibleWink(false, WINK_HANG) });
+      if (p.beats.unflag || w.wetCult) {
+        players.set(playerId, { ...p, heard: UNFLAG_LATER, wink: visibleWink(false, WINK_UNFLAG) });
+        return { ...w, players };
+      }
+      if (p.beats.unflagAsk) {
+        players.set(playerId, { ...p, heard: QUILL_UNFLAG_WAIT, wink: visibleWink(false, WINK_UNFLAG) });
+        return { ...w, players };
+      }
+      players.set(playerId, {
+        ...p,
+        beats: { ...p.beats, unflagAsk: true },
+        heard: QUILL_UNFLAG_ASK,
+        wink: visibleWink(false, WINK_UNFLAG),
+      });
       return { ...w, players };
     }
     if (p.beats.spot && p.cultWink) {
@@ -941,7 +965,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return applyMarket(w, playerId);
   }
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
-  if (sign.id === WET_GRID.id) return applyFlag(w, playerId);
+  if (sign.id === WET_GRID.id) {
+    if (p.beats.unflagAsk && !p.beats.unflag && !p.guest && !p.locked) return applyUnflag(w, playerId);
+    return applyFlag(w, playerId);
+  }
   if (sign.id === CLAIMS_DESK.id) return applyDesk(w, playerId, "file");
   if (sign.id === SHRINE.id) return applyShrine(w, playerId);
   if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
@@ -1624,12 +1651,53 @@ export function applyFlag(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: FLAG_SPECTATOR, flagged: false });
     return { ...w, players };
   }
+  if (w.wetCult || p.beats.unflag) {
+    players.set(playerId, { ...p, flagged: false, heard: FLAG_CULT, wink: visibleWink(false, WINK_UNFLAG) });
+    return { ...w, players };
+  }
   players.set(playerId, {
     ...p,
     flagged: true,
     heard: FLAG_COPY,
   });
   return { ...w, players };
+}
+
+export function applyUnflag(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: UNFLAG_SPECTATOR, wink: visibleWink(true, WINK_UNFLAG) });
+    return { ...w, players };
+  }
+  if (w.wetCult || p.beats.unflag) {
+    players.set(playerId, { ...p, flagged: false, heard: UNFLAG_LATER, wink: visibleWink(false, WINK_UNFLAG) });
+    return { ...w, players };
+  }
+  if (!p.beats.hang || !p.cultWink) {
+    players.set(playerId, { ...p, heard: UNFLAG_NEED });
+    return { ...w, players };
+  }
+  if (!p.beats.unflagAsk) {
+    players.set(playerId, { ...p, heard: QUILL_UNFLAG_WAIT, wink: visibleWink(false, WINK_UNFLAG) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, unflag: true },
+    flagged: false,
+    heard: UNFLAG_COPY,
+    wink: visibleWink(false, WINK_UNFLAG),
+    readiness: p.readiness + 1,
+  });
+  return {
+    ...w,
+    players,
+    wetCult: true,
+    pois: w.pois.map((poi) => (poi.id === WET_GRID.id ? wetCultPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === WET_GRID.id ? { ...UNFLAG_PLAQUE } : s)),
+  };
 }
 
 export function applyForge(
@@ -1790,8 +1858,9 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult),
     stallDark: w.stallDark,
+    wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
     foundryDark: w.foundryDark,
     annexHome: w.annexHome,
