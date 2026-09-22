@@ -152,6 +152,7 @@ export type Snap = {
   spoilsPeopleHeld?: boolean;
   unflagPeopleHeld?: boolean;
   secondsPeopleHeld?: boolean;
+  streetPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

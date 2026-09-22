@@ -614,6 +614,14 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "fallen-people"
                         ? 0xc9a56a
+                      : poi.kind === "spoils-people"
+                        ? 0xc9a56a
+                      : poi.kind === "unflag-people"
+                        ? 0xc9a56a
+                      : poi.kind === "seconds-people"
+                        ? 0xc9a56a
+                      : poi.kind === "street-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1046,6 +1054,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.streetPeople || snap.streetPeopleHeld)) {
+      this.prompt = me.heard || "Street — people. Flag still opts in. Guests are not loot. Seconds still last. Not a stick.";
+    } else if (wet && snap.secondsPeopleHeld && !me.guest) {
+      this.prompt = "F — the flagged street as a house of people. Flag still opts in. Guests are not loot. Not a fetch.";
     } else if (wet && (me.beats.secondsPeople || snap.secondsPeopleHeld)) {
       this.prompt = me.heard || "Seconds — people. Flagged street still lasts seconds. Not a stick.";
     } else if (wet && snap.unflagPeopleHeld && !me.guest) {

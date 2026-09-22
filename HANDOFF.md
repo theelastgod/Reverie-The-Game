@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 166** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 167** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -704,7 +704,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After unflag as people, F at the Wet Grid: seconds as people. Plaque/POI **Seconds — people**. Flagged street still lasts seconds.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 166 (do this next)
+## Stage 166 (landed)
+- After seconds as people, F at the Wet Grid: the flagged street as people. Plaque/POI **Street — people**. Flag still opts in. Guests are not loot. Seconds still last.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 167 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

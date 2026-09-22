@@ -183,6 +183,7 @@ export type Beats = {
   spoilsPeople: boolean;
   unflagPeople: boolean;
   secondsPeople: boolean;
+  streetPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -354,6 +355,7 @@ export type Poi = {
     | "spoils-people"
     | "unflag-people"
     | "seconds-people"
+    | "street-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2955,6 +2957,31 @@ export function secondsPeoplePoi(): Poi {
   };
 }
 
+export const STREET_PEOPLE_COPY =
+  "The flagged street is a house of people, not a timer of process. Flag still opts in. Guests are not loot. Seconds still last. Combat is not. This was not a fetch.";
+export const WINK_STREET_PEOPLE = "People, not a street stick. The token does not strike.";
+export const STREET_PEOPLE_NEED = "Seconds as people first. A flagged street of people is not a fetch.";
+export const STREET_PEOPLE_HELD = "The flagged street already holds as people. Flag still opts in. Guests are not loot.";
+export const STREET_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const STREET_PEOPLE_PLAQUE: Sign = {
+  id: "street-people",
+  title: "Street — people",
+  text: "A house of people. Flag still opts in. Guests are not loot. Seconds still last. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function streetPeoplePoi(): Poi {
+  return {
+    id: "street-people",
+    name: "Street — people",
+    x: 720,
+    y: 520,
+    kind: "street-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3625,6 +3652,7 @@ export function emptyBeats(): Beats {
     spoilsPeople: false,
     unflagPeople: false,
     secondsPeople: false,
+    streetPeople: false,
   };
 }
 

@@ -616,6 +616,13 @@ import {
   SECONDS_PEOPLE_SPECTATOR,
   SECONDS_PEOPLE_PLAQUE,
   secondsPeoplePoi,
+  STREET_PEOPLE_COPY,
+  WINK_STREET_PEOPLE,
+  STREET_PEOPLE_NEED,
+  STREET_PEOPLE_HELD,
+  STREET_PEOPLE_SPECTATOR,
+  STREET_PEOPLE_PLAQUE,
+  streetPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1364,6 +1371,7 @@ export type WorldState = {
   spoilsPeopleHeld: boolean;
   unflagPeopleHeld: boolean;
   secondsPeopleHeld: boolean;
+  streetPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1672,6 +1680,7 @@ export function emptyWorld(): WorldState {
     spoilsPeopleHeld: false,
     unflagPeopleHeld: false,
     secondsPeopleHeld: false,
+    streetPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2888,7 +2897,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people") {
+    if (w.secondsPeopleHeld && !w.streetPeopleHeld) return applyStreetPeople(w, playerId);
+    if (sign.id === "street-people") return applyStreetPeople(w, playerId);
     if (w.unflagPeopleHeld && !w.secondsPeopleHeld) return applySecondsPeople(w, playerId);
     if (sign.id === "seconds-people") return applySecondsPeople(w, playerId);
     if (w.spoilsPeopleHeld && !w.unflagPeopleHeld) return applyUnflagPeople(w, playerId);
@@ -5384,6 +5395,37 @@ export function applySecondsPeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, secondsPeopleHeld: true, pois, signs };
 }
 
+export function applyStreetPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: STREET_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_STREET_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.secondsPeopleHeld) {
+    players.set(playerId, { ...p, heard: STREET_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.streetPeopleHeld && p.beats.streetPeople) {
+    players.set(playerId, { ...p, heard: STREET_PEOPLE_HELD, wink: visibleWink(false, WINK_STREET_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, streetPeople: true },
+    heard: STREET_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_STREET_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "street-people")
+    ? w.pois.map((poi) => (poi.id === "street-people" ? streetPeoplePoi() : poi))
+    : [...w.pois, streetPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "street-people")
+    ? w.signs.map((s) => (s.id === "street-people" ? { ...STREET_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...STREET_PEOPLE_PLAQUE }];
+  return { ...w, players, streetPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6609,6 +6651,7 @@ export function snapshot(w: WorldState) {
     spoilsPeopleHeld: w.spoilsPeopleHeld,
     unflagPeopleHeld: w.unflagPeopleHeld,
     secondsPeopleHeld: w.secondsPeopleHeld,
+    streetPeopleHeld: w.streetPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
