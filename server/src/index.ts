@@ -8,6 +8,7 @@ import {
   applyForge,
   applyDesk,
   applyRestore,
+  applyInsure,
   applyClearing,
   applyAnnounce,
   applyOperator,
@@ -131,6 +132,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "restore") {
       this.w = applyRestore(this.w, id);
+      this.broadcast();
+    } else if (data.t === "insure") {
+      this.w = applyInsure(this.w, id);
       this.broadcast();
     }
   }

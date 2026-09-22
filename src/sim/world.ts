@@ -131,6 +131,12 @@ import {
   RESTORE_NEED,
   RESTORE_FULL,
   RESTORE_SPECTATOR,
+  INSURANCE_COST,
+  INSURANCE_COPY,
+  INSURANCE_NEED,
+  INSURANCE_HELD,
+  INSURANCE_USED,
+  INSURANCE_SPECTATOR,
   WINK_SINK,
   Claim,
   FLAG_COPY,
@@ -188,6 +194,8 @@ export const STRIKE_RANGE = 52;
 export const STRIKE_DAMAGE = 22;
 export const STRIKE_COOLDOWN = 0.45;
 export const MAX_HP = 100;
+export const NAVE_SPAWN_X = 48 * 4;
+export const NAVE_SPAWN_Y = 48 * 10;
 
 export type Intent = { up: boolean; down: boolean; left: boolean; right: boolean };
 
@@ -231,6 +239,9 @@ export type Player = {
   spectated: number;
   claims: Claim[];
   exhibitT: number;
+  insured: boolean;
+  lastCareX: number;
+  lastCareY: number;
 };
 
 export type WorldState = {
@@ -261,8 +272,8 @@ export type WorldState = {
 export function spawnGuest(id: string): Player {
   return {
     id,
-    x: 48 * 4,
-    y: 48 * 10,
+    x: NAVE_SPAWN_X,
+    y: NAVE_SPAWN_Y,
     guest: true,
     aura: 0,
     bestand: 0,
@@ -290,6 +301,49 @@ export function spawnGuest(id: string): Player {
     spectated: 0,
     claims: [],
     exhibitT: 0,
+    insured: false,
+    lastCareX: 0,
+    lastCareY: 0,
+  };
+}
+
+function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
+  const paper = p.insured && !p.guest && !p.locked;
+  const x = paper ? p.lastCareX || SHRINE.x : NAVE_SPAWN_X;
+  const y = paper ? p.lastCareY || SHRINE.y : NAVE_SPAWN_Y;
+  return {
+    ...spawnGuest(p.id),
+    bestand: p.bestand,
+    winke: p.winke,
+    aura: Math.max(0, p.aura - 8),
+    guest: p.guest,
+    beats: { ...p.beats },
+    weather: { ...p.weather },
+    namedWeather: p.namedWeather,
+    locked: p.locked,
+    heard: paper ? INSURANCE_USED : p.heard,
+    serial: p.serial,
+    wink: p.wink,
+    inCare: p.inCare,
+    inM3: p.inM3,
+    current: p.current,
+    cultWink: p.cultWink,
+    fakeWinke: p.fakeWinke,
+    house: p.house,
+    messenger: p.messenger,
+    flagged: p.flagged,
+    banked: p.banked,
+    lastKillId: p.lastKillId,
+    claims: p.claims,
+    exhibitT: p.exhibitT,
+    spectated: p.spectated,
+    lastCareX: p.lastCareX,
+    lastCareY: p.lastCareY,
+    insured: false,
+    x,
+    y,
+    ...patch,
+    ...(paper ? { heard: INSURANCE_USED, insured: false, x, y } : {}),
   };
 }
 
@@ -418,27 +472,7 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
             ...wreckage,
             { id: `w-${hit.id}-${w.now}`, x: hit.x, y: hit.y, fromId: hit.id, fromName: "Guest", until: w.now + 45 },
           ];
-          players.set(hit.id, {
-            ...spawnGuest(hit.id),
-            bestand: hit.bestand,
-            winke: hit.winke,
-            aura: Math.max(0, hit.aura - 8),
-            guest: hit.guest,
-            beats: { ...hit.beats },
-            weather: { ...hit.weather },
-            namedWeather: hit.namedWeather,
-            locked: hit.locked,
-            heard: `${c.name} did their job.`,
-            serial: hit.serial,
-            wink: hit.wink,
-            inCare: hit.inCare,
-            inM3: hit.inM3,
-            current: hit.current,
-            cultWink: hit.cultWink,
-            fakeWinke: hit.fakeWinke,
-            house: hit.house,
-            messenger: hit.messenger,
-          });
+          players.set(hit.id, continueAfterDeath(hit, { heard: `${c.name} did their job.` }));
         } else {
           players.set(hit.id, { ...hit, hp });
         }
@@ -498,33 +532,14 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       });
       fallen.add(id);
       if (ruinDuel && grave) duelGraves.push(grave);
-      players.set(id, {
-        ...spawnGuest(id),
-        bestand: b.bestand - drop,
-        winke: b.winke,
-        aura: Math.max(0, b.aura - 8),
-        guest: b.guest,
-        beats: { ...b.beats },
-        weather: { ...b.weather },
-        namedWeather: b.namedWeather,
-        locked: b.locked,
-        heard: b.heard,
-        serial: b.serial,
-        wink: b.wink,
-        inCare: b.inCare,
-        inM3: b.inM3,
-        current: b.current,
-        cultWink: b.cultWink,
-        fakeWinke: b.fakeWinke - fakeDrop,
-        house: b.house,
-        messenger: b.messenger,
-        flagged: b.flagged,
-        banked: b.banked,
-        lastKillId: b.lastKillId,
-        claims: b.claims,
-        exhibitT: b.exhibitT,
-        spectated: b.spectated,
-      });
+      players.set(
+        id,
+        continueAfterDeath({
+          ...b,
+          bestand: b.bestand - drop,
+          fakeWinke: b.fakeWinke - fakeDrop,
+        }),
+      );
       if (camp) gestell = Math.min(100, gestell + 4);
     } else {
       players.set(id, { ...b, hp });
@@ -664,6 +679,8 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
       heard: hallCopy(tax),
       wink: visibleWink(false, WINK_HALL),
       readiness: p.readiness + (p.beats.hall ? 0 : 1),
+      lastCareX: HOUSE_HALL.x,
+      lastCareY: HOUSE_HALL.y,
     });
     return { ...w, players };
   }
@@ -747,16 +764,18 @@ export function applyShrine(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
   const players = new Map(w.players);
+  const atShrine = { lastCareX: SHRINE.x, lastCareY: SHRINE.y };
   if (p.guest || p.locked) {
-    players.set(playerId, { ...p, heard: SHRINE_SPECTATOR, wink: visibleWink(true, WINK_SINK) });
+    players.set(playerId, { ...p, ...atShrine, heard: SHRINE_SPECTATOR, wink: visibleWink(true, WINK_SINK) });
     return { ...w, players };
   }
   if (p.bestand < SHRINE_COST) {
-    players.set(playerId, { ...p, heard: SHRINE_NEED });
+    players.set(playerId, { ...p, ...atShrine, heard: SHRINE_NEED });
     return { ...w, players };
   }
   players.set(playerId, {
     ...p,
+    ...atShrine,
     bestand: p.bestand - SHRINE_COST,
     readiness: p.readiness + 1,
     heard: SHRINE_COPY,
@@ -769,25 +788,55 @@ export function applyRestore(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
   const players = new Map(w.players);
+  const atShrine = { lastCareX: SHRINE.x, lastCareY: SHRINE.y };
   if (p.guest || p.locked) {
-    players.set(playerId, { ...p, heard: RESTORE_SPECTATOR, wink: visibleWink(true, p.wink, 0) });
+    players.set(playerId, { ...p, ...atShrine, heard: RESTORE_SPECTATOR, wink: visibleWink(true, p.wink, 0) });
     return { ...w, players };
   }
   if (p.aura >= AURA_DIM + RESTORE_GAIN) {
-    players.set(playerId, { ...p, heard: RESTORE_FULL });
+    players.set(playerId, { ...p, ...atShrine, heard: RESTORE_FULL });
     return { ...w, players };
   }
   if (p.bestand < RESTORE_COST) {
-    players.set(playerId, { ...p, heard: RESTORE_NEED, wink: visibleWink(false, p.wink, p.aura) });
+    players.set(playerId, { ...p, ...atShrine, heard: RESTORE_NEED, wink: visibleWink(false, p.wink, p.aura) });
     return { ...w, players };
   }
   const aura = p.aura + RESTORE_GAIN;
   players.set(playerId, {
     ...p,
+    ...atShrine,
     bestand: p.bestand - RESTORE_COST,
     aura,
     heard: RESTORE_COPY,
     wink: visibleWink(false, p.wink || WINK_SINK, aura),
+  });
+  return { ...w, players };
+}
+
+export function applyInsure(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  const atShrine = { lastCareX: SHRINE.x, lastCareY: SHRINE.y };
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, ...atShrine, heard: INSURANCE_SPECTATOR, wink: visibleWink(true, WINK_SINK) });
+    return { ...w, players };
+  }
+  if (p.insured) {
+    players.set(playerId, { ...p, ...atShrine, heard: INSURANCE_HELD });
+    return { ...w, players };
+  }
+  if (p.bestand < INSURANCE_COST) {
+    players.set(playerId, { ...p, ...atShrine, heard: INSURANCE_NEED });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    ...atShrine,
+    bestand: p.bestand - INSURANCE_COST,
+    insured: true,
+    heard: INSURANCE_COPY,
+    wink: visibleWink(false, WINK_SINK),
   });
   return { ...w, players };
 }
@@ -867,6 +916,8 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
     readiness: p.readiness + (first ? 1 : 0),
     x: first ? HOUSE_HALL.x - 48 : p.x,
     y: first ? HOUSE_HALL.y : p.y,
+    lastCareX: HOUSE_HALL.x,
+    lastCareY: HOUSE_HALL.y,
   });
   return { ...w, players };
 }

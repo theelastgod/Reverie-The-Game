@@ -147,6 +147,12 @@ import {
   RESTORE_NEED,
   RESTORE_FULL,
   RESTORE_SPECTATOR,
+  INSURANCE_COST,
+  INSURANCE_COPY,
+  INSURANCE_NEED,
+  INSURANCE_HELD,
+  INSURANCE_USED,
+  INSURANCE_SPECTATOR,
   WINK_SINK,
   SHRINE,
 } from "./campaign";
@@ -163,6 +169,7 @@ import {
   applyDesk,
   applyShrine,
   applyRestore,
+  applyInsure,
   applyLastWord,
   applyClearing,
   applyPassing,
@@ -179,6 +186,8 @@ import {
   guestCanClaim,
   spawnGuest,
   tickWorld,
+  NAVE_SPAWN_X,
+  NAVE_SPAWN_Y,
 } from "./world";
 
 function placeNear(id: string, x: number, y: number, extra: Partial<ReturnType<typeof spawnGuest>> = {}) {
@@ -1328,6 +1337,89 @@ describe("Bestand sinks", () => {
     expect(g.players.get("g")?.heard).toBe(RESTORE_SPECTATOR);
     expect(g.players.get("g")?.aura).toBe(0);
     expect(guestCanClaim(g.players.get("g")!)).toBe(false);
+  });
+
+  it("insurance paper sinks Bestand and walks death to the shrine, never damage", () => {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      x: SHRINE.x,
+      y: SHRINE.y,
+      bestand: 10,
+    });
+    const poor = applyInsure(w, "a");
+    expect(poor.players.get("a")?.heard).toBe(INSURANCE_NEED);
+    expect(poor.players.get("a")?.insured).toBe(false);
+
+    w.players.set("a", { ...poor.players.get("a")!, bestand: 40 });
+    const paid = applyInsure(w, "a");
+    const p = paid.players.get("a")!;
+    expect(p.bestand).toBe(40 - INSURANCE_COST);
+    expect(p.insured).toBe(true);
+    expect(p.heard).toBe(INSURANCE_COPY);
+    expect(p.lastCareX).toBe(SHRINE.x);
+    expect(p.lastCareY).toBe(SHRINE.y);
+    expect(p.wink).toBe(WINK_SINK);
+    expect(INSURANCE_COST).toBe(18);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const twice = applyInsure({ ...paid, players: new Map([["a", { ...p, bestand: 40 }]]) }, "a");
+    expect(twice.players.get("a")?.heard).toBe(INSURANCE_HELD);
+    expect(twice.players.get("a")?.bestand).toBe(40);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, bestand: 40 });
+    const g = applyInsure(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(INSURANCE_SPECTATOR);
+    expect(g.players.get("g")?.insured).toBe(false);
+    expect(g.players.get("g")?.bestand).toBe(40);
+
+    const fight = emptyWorld();
+    fight.players.set("k", { ...spawnGuest("k"), guest: false, x: 200, y: 480 });
+    fight.players.set("v", {
+      ...spawnGuest("v"),
+      guest: false,
+      serial: TEST_SERIAL,
+      x: 220,
+      y: 480,
+      hp: 20,
+      aura: 12,
+      bestand: 30,
+      insured: true,
+      lastCareX: SHRINE.x,
+      lastCareY: SHRINE.y,
+    });
+    const dead = applyStrike(fight, "k");
+    const v = dead.players.get("v")!;
+    expect(v.hp).toBe(100);
+    expect(v.x).toBe(SHRINE.x);
+    expect(v.y).toBe(SHRINE.y);
+    expect(v.insured).toBe(false);
+    expect(v.aura).toBe(4);
+    expect(v.heard).toBe(INSURANCE_USED);
+    expect(damageFor(v)).toBe(damageFor(dead.players.get("k")!));
+
+    const bare = emptyWorld();
+    bare.players.set("k", { ...spawnGuest("k"), guest: false, x: 200, y: 480 });
+    bare.players.set("v", {
+      ...spawnGuest("v"),
+      guest: false,
+      x: 220,
+      y: 480,
+      hp: 20,
+      aura: 12,
+      insured: false,
+    });
+    const walked = applyStrike(bare, "k");
+    const raw = walked.players.get("v")!;
+    expect(raw.x).toBe(NAVE_SPAWN_X);
+    expect(raw.y).toBe(NAVE_SPAWN_Y);
+    expect(raw.hp).toBe(100);
+    expect(raw.aura).toBe(4);
+    expect(raw.heard).not.toBe(INSURANCE_USED);
   });
 });
 

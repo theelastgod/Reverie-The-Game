@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 27** — Insurance paper sink (Bestand, not a P2W revive). No mint.
+**Next stage: 28** — Safety freeze fee (Bestand sink, katechon paper). No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -130,8 +130,14 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Shrine E restores aura (15 Bestand, +8 aura). Aura below 5 darkens Winke.
 - Guests cannot restore. Spend does not change `damageFor`. Claims stay disarmed.
 
-## Stage 27 (do this next)
-Insurance paper: Bestand sink, respawn convenience, not a pay-to-win revive. No mint. No Base.
+## Stage 27 (landed)
+- Shrine Q buys insurance paper (18 Bestand). Guests cannot.
+- Death without paper respawns at the Nave start. Paper walks you to the last Care shrine or House hall.
+- Paper is consumed. Same HP, same aura wound, same `damageFor`. Not a P2W revive.
+- Claims stay disarmed. No mint. No Base.
+
+## Stage 28 (do this next)
+Safety freeze fee: Bestand sink to sign the katechon paper. Guests cannot. `damageFor` unchanged. No mint.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

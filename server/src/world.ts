@@ -1,8 +1,10 @@
 export {
   applyBury,
   applyGoingUnder,
+  applyInsure,
   applyLink,
   applyRead,
+  applyRestore,
   applyStrike,
   applyTalk,
   applyUse,

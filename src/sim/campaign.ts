@@ -335,6 +335,14 @@ export const RESTORE_COPY =
 export const RESTORE_NEED = "Fifteen Bestand to restore aura. Low aura darkens Winke.";
 export const RESTORE_FULL = "Your aura already holds. The spend would not strike anyway.";
 export const RESTORE_SPECTATOR = "A light you cannot buy. Guests have no aura to restore.";
+export const INSURANCE_COST = 18;
+export const INSURANCE_COPY =
+  "You bought the paper. Eighteen Bestand. Death walks you to the last shrine. Combat is not.";
+export const INSURANCE_NEED = "Eighteen Bestand for insurance paper. It is a walk, not a stick.";
+export const INSURANCE_HELD = "You already hold the paper. One death, one walk.";
+export const INSURANCE_USED =
+  "The paper spent itself. You woke at the shrine. Not a bigger strike.";
+export const INSURANCE_SPECTATOR = "Paper for a walk back. Guests do not buy the road.";
 export const WINK_SINK = "Every earner has a hole. Bestand goes into the ground. The token does not strike.";
 
 export const SHRINE = { id: "shrine-upkeep", x: 640, y: 200 };
@@ -346,7 +354,7 @@ export function shrinePoi(): Poi {
 export const SHRINE_PLAQUE: Sign = {
   id: SHRINE.id,
   title: "Shrine",
-  text: "Eight Bestand to keep. Grief is not a costume. Combat is not.",
+  text: "Keep. Restore. Insurance paper walks you back. Not a revive stick.",
   x: SHRINE.x,
   y: SHRINE.y,
 };

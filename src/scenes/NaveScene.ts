@@ -27,6 +27,7 @@ import {
   SHRINE_COST,
   AURA_DIM,
   RESTORE_COST,
+  INSURANCE_COST,
   inWetGrid,
   IONE,
   movementReady,
@@ -191,6 +192,7 @@ export class NaveScene extends Phaser.Scene {
     }
     if (nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56)) {
       if (choice === "extract") this.net.restore();
+      else this.net.insure();
       return;
     }
     if (nearPoint(me.x, me.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) {
@@ -621,7 +623,9 @@ export class NaveScene extends Phaser.Scene {
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
     } else if (shrine) {
-      this.prompt = `F keep (${SHRINE_COST}). E restore aura (${RESTORE_COST}). Low aura darkens Winke. Not a stick.`;
+      this.prompt = me.insured
+        ? `F keep (${SHRINE_COST}). E restore (${RESTORE_COST}). Paper held — death walks you here. Not a stick.`
+        : `F keep (${SHRINE_COST}). E restore aura (${RESTORE_COST}). Q insurance (${INSURANCE_COST}). A walk, not a revive.`;
     } else if (funeralNear && !me.locked) {
       this.prompt = `F funeral. ${FUNERAL_COST} Bestand on Nara Vale's street.`;
     } else if (failNear) {
@@ -661,7 +665,7 @@ export class NaveScene extends Phaser.Scene {
         ? me.locked
           ? `Guest · locked · aura 0`
           : `Guest · aura 0 · hp ${me.hp}`
-        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.flagged ? " · flagged" : ""}`;
+        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
     }
     const stats = hud("stat-chip");
     if (stats) {
