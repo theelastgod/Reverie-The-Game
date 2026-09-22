@@ -506,6 +506,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "screening-founder"
                         ? 0xc9a56a
+                      : poi.kind === "screening-log"
+                        ? 0xc9a56a
                       : poi.kind === "ord-gone"
                         ? 0x7a1028
                       : poi.kind === "quill-gone"
@@ -718,6 +720,10 @@ export class NaveScene extends Phaser.Scene {
 
     if (screening && (me.guest || me.locked)) {
       this.prompt = "A screen. You do not get the dispatch.";
+    } else if (screening && (me.beats.log || snap.logHeld)) {
+      this.prompt = me.heard || "History log. Passings. Buried. Looted. Houses. Not a stick.";
+    } else if (screening && (me.beats.founder || snap.founderHeld) && me.messenger === "ruin-angel") {
+      this.prompt = "F — read the history log. Uniqueness as a log. Not a stick.";
     } else if (screening && (me.beats.founder || snap.founderHeld)) {
       this.prompt = me.heard || "Founder room. Clearing watches. Passing rites. Credits. Not a stick.";
     } else if (screening && (me.beats.participant || snap.participantHeld) && (snap.creditsHeld || me.beats.credits || snap.appearWorld)) {

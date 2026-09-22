@@ -529,6 +529,15 @@ import {
   FOUNDER_HELD,
   FOUNDER_SPECTATOR,
   FOUNDER_PLAQUE,
+  HistoryLog,
+  emptyLog,
+  logCopy,
+  WINK_LOG,
+  LOG_NEED,
+  LOG_HELD,
+  LOG_SPECTATOR,
+  LOG_PLAQUE,
+  logPoi,
   founderPoi,
   screeningPoi,
   CYBER_COPY,
@@ -647,6 +656,7 @@ export type Player = {
   restraint: boolean;
   surface: boolean;
   filmRoom: FilmRoom;
+  historyLog: HistoryLog;
 };
 
 export type WorldState = {
@@ -711,6 +721,7 @@ export type WorldState = {
   screeningHeld: boolean;
   participantHeld: boolean;
   founderHeld: boolean;
+  logHeld: boolean;
   bountyHeld: boolean;
   stormPressHeld: boolean;
   winkSeedHeld: boolean;
@@ -772,6 +783,24 @@ export function spawnGuest(id: string): Player {
     restraint: false,
     surface: false,
     filmRoom: "",
+    historyLog: emptyLog(),
+  };
+}
+
+function bumpLog(
+  p: Player,
+  patch: { passings?: number; buried?: number; looted?: number; house?: House },
+): Player {
+  const houses = [...p.historyLog.houses];
+  if (patch.house && !houses.includes(patch.house)) houses.push(patch.house);
+  return {
+    ...p,
+    historyLog: {
+      passings: p.historyLog.passings + (patch.passings ?? 0),
+      buried: p.historyLog.buried + (patch.buried ?? 0),
+      looted: p.historyLog.looted + (patch.looted ?? 0),
+      houses,
+    },
   };
 }
 
@@ -816,6 +845,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     restraint: p.restraint,
     surface: p.surface,
     filmRoom: p.filmRoom,
+    historyLog: { ...p.historyLog, houses: [...p.historyLog.houses] },
     x,
     y,
     ...patch,
@@ -917,6 +947,7 @@ export function emptyWorld(): WorldState {
     screeningHeld: false,
     participantHeld: false,
     founderHeld: false,
+    logHeld: false,
     bountyHeld: false,
     stormPressHeld: false,
     winkSeedHeld: false,
@@ -1095,7 +1126,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       const fakeDrop = (flaggedFight || ruinDuel) && b.fakeWinke > 0 ? 1 : 0;
       const camp = (flaggedFight || ruinDuel) && a.lastKillId === id;
       const killer = players.get(attackerId)!;
-      players.set(attackerId, {
+      players.set(attackerId, bumpLog({
         ...killer,
         bestand: killer.bestand + drop,
         fakeWinke: killer.fakeWinke + fakeDrop,
@@ -1118,7 +1149,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
           : ruinDuel
             ? visibleWink(false, WINK_DUEL)
             : killer.wink,
-      });
+      }, drop > 0 ? { looted: 1 } : {}));
       if (stormSkim) {
         stormMark = { x: b.x, y: b.y };
       }
@@ -1706,7 +1737,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
       players.set(playerId, { ...p, heard: FUNERAL_NEED });
       return { ...w, players };
     }
-    players.set(playerId, {
+    players.set(playerId, bumpLog({
       ...p,
       beats: { ...p.beats, funeral: true },
       bestand: spent.bestand,
@@ -1714,19 +1745,19 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
       readiness: p.readiness + (p.house === "earth" ? 2 : 1),
       heard: vaultHeard(FUNERAL_COPY, spent.fromVault),
       wink: visibleWink(p.guest, WINK_SINK),
-    });
+    }, { buried: 1 }));
     return { ...w, players, wreckage: w.wreckage.filter((r) => r.id !== wreck.id) };
   }
   const mark = visibleHistory(p.guest, p.serial, w.history, p.storm || p.ruinBack).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
   if (!mark) return w;
   if (palindromeSerial(p.serial) && !p.beats.winkSeed) return applyWinkSeed(w, playerId, mark);
-  players.set(playerId, {
+  players.set(playerId, bumpLog({
     ...p,
     readiness: p.readiness + 1,
     winke: p.winke + 1,
     heard: mark.line,
     wink: visibleWink(false, WINK_HISTORY),
-  });
+  }, { buried: 1 }));
   return { ...w, players, history: w.history.filter((m) => m.id !== mark.id) };
 }
 
@@ -3142,6 +3173,7 @@ export function snapshot(w: WorldState) {
     screeningHeld: w.screeningHeld,
     participantHeld: w.participantHeld,
     founderHeld: w.founderHeld,
+    logHeld: w.logHeld,
     bountyHeld: w.bountyHeld,
     stormPressHeld: w.stormPressHeld,
     winkSeedHeld: w.winkSeedHeld,
@@ -3270,7 +3302,7 @@ export function applyTithe(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: TITHE_NEED });
     return { ...w, players };
   }
-  players.set(playerId, {
+  players.set(playerId, bumpLog({
     ...p,
     bestand: spent.bestand,
     banked: spent.banked,
@@ -3278,7 +3310,7 @@ export function applyTithe(w: WorldState, playerId: string): WorldState {
     wink: visibleWink(false, WINK_WAR),
     lastCareX: HOUSE_HALL.x,
     lastCareY: HOUSE_HALL.y,
-  });
+  }, { house: p.house }));
   return { ...w, players, war: { ...w.war, tithePaid: true } };
 }
 
@@ -3527,6 +3559,7 @@ export function applyFounder(w: WorldState, playerId: string): WorldState {
     return { ...w, players };
   }
   if (w.founderHeld && p.beats.founder) {
+    if (p.messenger === "ruin-angel") return applyLog(w, playerId);
     players.set(playerId, { ...p, heard: FOUNDER_HELD, wink: visibleWink(false, WINK_FOUNDER) });
     return { ...w, players };
   }
@@ -3543,6 +3576,37 @@ export function applyFounder(w: WorldState, playerId: string): WorldState {
     founderHeld: true,
     pois: w.pois.map((poi) => (poi.id === SCREENING.id ? founderPoi() : poi)),
     signs: w.signs.map((s) => (s.id === SCREENING.id ? { ...FOUNDER_PLAQUE } : s)),
+  };
+}
+
+export function applyLog(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SCREENING.x, SCREENING.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: LOG_SPECTATOR, wink: visibleWink(true, WINK_LOG) });
+    return { ...w, players };
+  }
+  if (p.messenger !== "ruin-angel" || !w.founderHeld || !p.beats.founder) {
+    players.set(playerId, { ...p, heard: LOG_NEED });
+    return { ...w, players };
+  }
+  if (w.logHeld && p.beats.log) {
+    players.set(playerId, { ...p, heard: LOG_HELD, wink: visibleWink(false, WINK_LOG) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, log: true },
+    heard: logCopy(p.historyLog),
+    wink: visibleWink(false, WINK_LOG),
+  });
+  return {
+    ...w,
+    players,
+    logHeld: true,
+    pois: w.pois.map((poi) => (poi.id === SCREENING.id ? logPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === SCREENING.id ? { ...LOG_PLAQUE } : s)),
   };
 }
 
@@ -3897,7 +3961,7 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
   const hijacked = outcome === "hijack";
   const emptyParty = outcome === "absence" && !willing;
   const by = hijacked ? hijackByOf(w.frozen, w.passing.starved, p.current === "cold") : w.hijackBy;
-  players.set(playerId, {
+  players.set(playerId, bumpLog({
     ...p,
     beats: {
       ...p.beats,
@@ -3920,7 +3984,7 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
     ),
     readiness: p.readiness + (outcome === "appearance" && !p.beats.passing ? 2 : 0),
     stipend: outcome === "appearance" ? p.stipend + STIPEND : p.stipend,
-  });
+  }, { passings: 1 }));
   const absent = outcome === "absence";
   const plaque = hijacked && by ? hijackPlaque(by) : null;
   const mark = hijacked && p.serial != null ? hijackMark(p.serial) : null;

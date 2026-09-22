@@ -67,6 +67,7 @@ export type Snap = {
   screeningHeld?: boolean;
   participantHeld?: boolean;
   founderHeld?: boolean;
+  logHeld?: boolean;
   bountyHeld?: boolean;
   stormPressHeld?: boolean;
   winkSeedHeld?: boolean;

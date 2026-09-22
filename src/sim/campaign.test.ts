@@ -28,6 +28,13 @@ import {
   FOUNDER_HELD,
   FOUNDER_SPECTATOR,
   FOUNDER_PLAQUE,
+  logCopy,
+  emptyLog,
+  WINK_LOG,
+  LOG_NEED,
+  LOG_HELD,
+  LOG_SPECTATOR,
+  LOG_PLAQUE,
   CLERK_HP,
   GOING_UNDER,
   FREEZE_COPY,
@@ -518,6 +525,7 @@ import {
   applyScreening,
   applyParticipant,
   applyFounder,
+  applyLog,
   applyCyber,
   applyGlamour,
   applyDwell,
@@ -2959,6 +2967,62 @@ describe("Public screening", () => {
     });
     expect(applyFounder(gWorld, "g").players.get("g")?.heard).toBe(FOUNDER_SPECTATOR);
     expect(gWorld.founderHeld).toBe(false);
+  });
+});
+
+describe("Ruin-angel history log", () => {
+  it("writes Passings/burials/loot/Houses and reads them in Founder room; other kits cannot", () => {
+    const log = { passings: 1, buried: 2, looted: 1, houses: ["earth" as const] };
+    expect(logCopy(log)).toContain("Passings 1");
+    expect(logCopy(emptyLog())).toContain("Houses none");
+    const w = emptyWorld();
+    w.founderHeld = true;
+    w.participantHeld = true;
+    w.creditsHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 3,
+      messenger: "ruin-angel",
+      beats: { ...emptyBeats(), founder: true, participant: true, credits: true },
+      filmRoom: "founder",
+      historyLog: log,
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    const read = applyLog(w, "a");
+    const p = read.players.get("a")!;
+    expect(p.heard).toBe(logCopy(log));
+    expect(p.wink).toBe(WINK_LOG);
+    expect(p.beats.log).toBe(true);
+    expect(read.logHeld).toBe(true);
+    expect(read.pois.find((poi) => poi.id === SCREENING.id)?.kind).toBe("screening-log");
+    expect(read.signs.find((s) => s.id === SCREENING.id)?.title).toBe(LOG_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyLog(read, "a").players.get("a")?.heard).toBe(LOG_HELD);
+
+    const herald = emptyWorld();
+    herald.founderHeld = true;
+    herald.participantHeld = true;
+    herald.creditsHeld = true;
+    herald.players.set("h", {
+      ...spawnGuest("h"),
+      guest: false,
+      messenger: "herald",
+      beats: { ...emptyBeats(), founder: true, participant: true, credits: true },
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    expect(applyLog(herald, "h").players.get("h")?.heard).toBe(LOG_NEED);
+    expect(applyFounder(herald, "h").players.get("h")?.heard).toBe(FOUNDER_HELD);
+
+    const gWorld = emptyWorld();
+    gWorld.founderHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
+    expect(applyLog(gWorld, "g").players.get("g")?.heard).toBe(LOG_SPECTATOR);
+    expect(gWorld.logHeld).toBe(false);
   });
 });
 

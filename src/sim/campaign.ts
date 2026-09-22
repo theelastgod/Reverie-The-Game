@@ -105,6 +105,7 @@ export type Beats = {
   bounty: boolean;
   stormPress: boolean;
   winkSeed: boolean;
+  log: boolean;
 };
 
 export type WeatherHeard = {
@@ -199,6 +200,7 @@ export type Poi = {
     | "screening"
     | "screening-participant"
     | "screening-founder"
+    | "screening-log"
     | "storm-progress"
     | "wink-seed";
 };
@@ -339,6 +341,45 @@ export function founderPoi(): Poi {
     x: SCREENING.x,
     y: SCREENING.y,
     kind: "screening-founder",
+  };
+}
+
+export type HistoryLog = {
+  passings: number;
+  buried: number;
+  looted: number;
+  houses: Exclude<House, "">[];
+};
+
+export function emptyLog(): HistoryLog {
+  return { passings: 0, buried: 0, looted: 0, houses: [] };
+}
+
+export function logCopy(log: HistoryLog): string {
+  const houses = log.houses.length ? log.houses.join(", ") : "none";
+  return `Passings ${log.passings}. Buried ${log.buried}. Looted ${log.looted}. Houses ${houses}. A log, not a stick. This was not a fetch.`;
+}
+
+export const WINK_LOG = "Ruin-angel kit. History is uniqueness. Combat is not.";
+export const LOG_NEED = "Only a Ruin-angel reads the log, and only in the Founder room.";
+export const LOG_HELD = "The log already holds. The city does not remember for you.";
+export const LOG_SPECTATOR = "A screen of names. You do not get the log.";
+
+export const LOG_PLAQUE: Sign = {
+  id: SCREENING.id,
+  title: "History log",
+  text: "Passings. Buried. Looted. Houses. A log, not a stick. The number does not strike.",
+  x: SCREENING.x,
+  y: SCREENING.y,
+};
+
+export function logPoi(): Poi {
+  return {
+    id: SCREENING.id,
+    name: "History log",
+    x: SCREENING.x,
+    y: SCREENING.y,
+    kind: "screening-log",
   };
 }
 export const TEST_SERIAL = 7777;
@@ -1562,6 +1603,7 @@ export function emptyBeats(): Beats {
     bounty: false,
     stormPress: false,
     winkSeed: false,
+    log: false,
   };
 }
 
