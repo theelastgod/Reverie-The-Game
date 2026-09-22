@@ -634,6 +634,12 @@ import {
   BANKED_PEOPLE_HELD,
   BANKED_PEOPLE_SPECTATOR,
   BANKED_PEOPLE_PLAQUE,
+  UNBANKED_PEOPLE_COPY,
+  WINK_UNBANKED_PEOPLE,
+  UNBANKED_PEOPLE_NEED,
+  UNBANKED_PEOPLE_HELD,
+  UNBANKED_PEOPLE_SPECTATOR,
+  UNBANKED_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1247,6 +1253,7 @@ import {
   applyCultPeople,
   applyCopyPeople,
   applyBankedPeople,
+  applyUnbankedPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5761,6 +5768,46 @@ describe("Banked — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyBankedPeople(gWorld, "g").players.get("g")?.heard).toBe(BANKED_PEOPLE_SPECTATOR);
     expect(gWorld.bankedPeopleHeld).toBe(false);
+  });
+});
+
+describe("Unbanked — people", () => {
+  it("names unbanked as people after banked; unbanked still drops; guests are not loot; guests cannot", () => {
+    const w = emptyWorld();
+    w.bankedPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), bankedPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(UNBANKED_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_UNBANKED_PEOPLE);
+    expect(p.beats.unbankedPeople).toBe(true);
+    expect(named.unbankedPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "unbanked-people")?.name).toBe("Unbanked — people");
+    expect(named.signs.find((s) => s.id === "unbanked-people")?.title).toBe(UNBANKED_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Unbanked still drops");
+    expect(p.heard).toContain("Guests are not loot");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyUnbankedPeople(named, "a").players.get("a")?.heard).toBe(UNBANKED_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyUnbankedPeople(early, "a").players.get("a")?.heard).toBe(UNBANKED_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.bankedPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyUnbankedPeople(gWorld, "g").players.get("g")?.heard).toBe(UNBANKED_PEOPLE_SPECTATOR);
+    expect(gWorld.unbankedPeopleHeld).toBe(false);
   });
 });
 

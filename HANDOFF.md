@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 187** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 188** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -788,7 +788,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After copies as people, F at the Wet Grid: banked as people. Plaque/POI **Banked — people**. Banked still does not drop. TAKE stays disarmed.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 187 (do this next)
+## Stage 187 (landed)
+- After banked as people, F at the Wet Grid: unbanked as people. Plaque/POI **Unbanked — people**. Unbanked still drops. Guests are not loot.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 188 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

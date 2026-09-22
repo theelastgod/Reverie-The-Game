@@ -662,6 +662,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "banked-people"
                         ? 0xc9a56a
+                      : poi.kind === "unbanked-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1110,6 +1112,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.unbankedPeople || snap.unbankedPeopleHeld)) {
+      this.prompt = me.heard || "Unbanked — people. Unbanked still drops. Guests are not loot. Not a stick.";
+    } else if (wet && snap.bankedPeopleHeld && !me.guest) {
+      this.prompt = "F — unbanked as a house of people. Unbanked still drops. Guests are not loot. Not a fetch.";
     } else if (wet && (me.beats.bankedPeople || snap.bankedPeopleHeld)) {
       this.prompt = me.heard || "Banked — people. Banked still does not drop. TAKE stays disarmed. Not a stick.";
     } else if (wet && snap.copyPeopleHeld && !me.guest) {

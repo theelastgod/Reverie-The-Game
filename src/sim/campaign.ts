@@ -204,6 +204,7 @@ export type Beats = {
   cultPeople: boolean;
   copyPeople: boolean;
   bankedPeople: boolean;
+  unbankedPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -396,6 +397,7 @@ export type Poi = {
     | "cult-people"
     | "copy-people"
     | "banked-people"
+    | "unbanked-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3522,6 +3524,31 @@ export function bankedPeoplePoi(): Poi {
   };
 }
 
+export const UNBANKED_PEOPLE_COPY =
+  "Unbanked is a house of people, not a loot of process. Unbanked still drops. Guests are not loot. Combat is not. This was not a fetch.";
+export const WINK_UNBANKED_PEOPLE = "People, not an unbanked stick. The token does not strike.";
+export const UNBANKED_PEOPLE_NEED = "Banked as people first. Unbanked of people is not a fetch.";
+export const UNBANKED_PEOPLE_HELD = "Unbanked already holds as people. Unbanked still drops. Guests are not loot.";
+export const UNBANKED_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const UNBANKED_PEOPLE_PLAQUE: Sign = {
+  id: "unbanked-people",
+  title: "Unbanked — people",
+  text: "A house of people. Unbanked still drops. Guests are not loot. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function unbankedPeoplePoi(): Poi {
+  return {
+    id: "unbanked-people",
+    name: "Unbanked — people",
+    x: 720,
+    y: 520,
+    kind: "unbanked-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4213,6 +4240,7 @@ export function emptyBeats(): Beats {
     cultPeople: false,
     copyPeople: false,
     bankedPeople: false,
+    unbankedPeople: false,
   };
 }
 
