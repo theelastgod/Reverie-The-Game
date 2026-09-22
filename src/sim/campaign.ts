@@ -127,6 +127,7 @@ export type Beats = {
   hallPeople: boolean;
   clearingPeople: boolean;
   wetPeople: boolean;
+  stallPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -242,6 +243,7 @@ export type Poi = {
     | "hall-people"
     | "clearing-people"
     | "wet-people"
+    | "stall-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1753,6 +1755,31 @@ export function wetPeoplePoi(): Poi {
   };
 }
 
+export const STALL_PEOPLE_COPY =
+  "The stall is a house of people, not a listing process. Listing still costs. Copies still decay. Cult does not list. This was not a fetch.";
+export const WINK_STALL_PEOPLE = "People, not a print stick. The token does not strike.";
+export const STALL_PEOPLE_NEED = "The Wet Grid as people first. A stall of people is not a fetch.";
+export const STALL_PEOPLE_HELD = "The stall already holds as people. Listing still costs.";
+export const STALL_PEOPLE_SPECTATOR = "A stall of lights. You do not get a house of people.";
+
+export const STALL_PEOPLE_PLAQUE: Sign = {
+  id: CLEARING_STALL.id,
+  title: "The stall — people",
+  text: "A house of people. Listing still costs. Cult does not. The number does not strike.",
+  x: CLEARING_STALL.x,
+  y: CLEARING_STALL.y,
+};
+
+export function stallPeoplePoi(): Poi {
+  return {
+    id: CLEARING_STALL.id,
+    name: "The stall — people",
+    x: CLEARING_STALL.x,
+    y: CLEARING_STALL.y,
+    kind: "stall-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2035,6 +2062,7 @@ export function emptyBeats(): Beats {
     hallPeople: false,
     clearingPeople: false,
     wetPeople: false,
+    stallPeople: false,
   };
 }
 

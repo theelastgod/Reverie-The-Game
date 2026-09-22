@@ -96,6 +96,7 @@ export type Snap = {
   hallPeopleHeld?: boolean;
   clearingPeopleHeld?: boolean;
   wetPeopleHeld?: boolean;
+  stallPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

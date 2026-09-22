@@ -168,6 +168,12 @@ import {
   WET_PEOPLE_HELD,
   WET_PEOPLE_SPECTATOR,
   WET_PEOPLE_PLAQUE,
+  STALL_PEOPLE_COPY,
+  WINK_STALL_PEOPLE,
+  STALL_PEOPLE_NEED,
+  STALL_PEOPLE_HELD,
+  STALL_PEOPLE_SPECTATOR,
+  STALL_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -699,6 +705,7 @@ import {
   applyHallPeople,
   applyClearingPeople,
   applyWetPeople,
+  applyStallPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2066,6 +2073,44 @@ describe("Wet Grid — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyWetPeople(gWorld, "g").players.get("g")?.heard).toBe(WET_PEOPLE_SPECTATOR);
     expect(gWorld.wetPeopleHeld).toBe(false);
+  });
+});
+
+describe("The stall — people", () => {
+  it("names the stall as people after the Wet Grid; listing still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.wetPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), wetPeople: true },
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    const named = applyRead(w, "a", CLEARING_STALL.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(STALL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_STALL_PEOPLE);
+    expect(p.beats.stallPeople).toBe(true);
+    expect(named.stallPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === CLEARING_STALL.id)?.kind).toBe("stall-people");
+    expect(named.signs.find((s) => s.id === CLEARING_STALL.id)?.title).toBe(STALL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Listing still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyStallPeople(named, "a").players.get("a")?.heard).toBe(STALL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLEARING_STALL.x, y: CLEARING_STALL.y });
+    expect(applyStallPeople(early, "a").players.get("a")?.heard).toBe(STALL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.wetPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
+    expect(applyStallPeople(gWorld, "g").players.get("g")?.heard).toBe(STALL_PEOPLE_SPECTATOR);
+    expect(gWorld.stallPeopleHeld).toBe(false);
   });
 });
 

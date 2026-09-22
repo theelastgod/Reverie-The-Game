@@ -555,6 +555,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "clearing-people"
                         ? 0xc9a56a
+                      : poi.kind === "stall-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -899,6 +901,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Safety Annex. The desk will not take a name that has not read the hall.";
     } else if (stall && (me.guest || me.locked)) {
       this.prompt = "A stall of lights. You cannot afford a sky you cannot see.";
+    } else if (stall && (me.beats.stallPeople || snap.stallPeopleHeld)) {
+      this.prompt = me.heard || "The stall — people. Listing still costs. Cult does not list.";
+    } else if (stall && snap.wetPeopleHeld && !me.guest) {
+      this.prompt = "F — the stall as a house of people. Listing still costs. Not a fetch.";
     } else if (stall && (snap.stallDark || me.beats.hang)) {
       this.prompt = me.heard || "The stall is dark. Cult hangs. Copies do not travel.";
     } else if (stall && me.beats.hangAsk && me.cultWink) {
