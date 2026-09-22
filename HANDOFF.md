@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 86** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 87** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -369,7 +369,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - History writeback: Passings, burials, loot, Houses. Ruin-angel F in Founder room reads the log. Plaque/POI History log. Uniqueness as a log, not a stick.
 - Other kits and guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 86 (do this next)
+## Stage 86 (landed)
+- Wink-personalized production still: optional F after Participant. Same screening hour, school-specific Wink. Plaque/POI Production still. Not a stick.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 87 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

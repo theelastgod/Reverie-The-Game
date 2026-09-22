@@ -28,6 +28,14 @@ import {
   FOUNDER_HELD,
   FOUNDER_SPECTATOR,
   FOUNDER_PLAQUE,
+  STILL,
+  STILL_COPY,
+  STILL_NEED,
+  STILL_HELD,
+  STILL_SPECTATOR,
+  STILL_PLAQUE,
+  winkSchoolFor,
+  schoolWink,
   logCopy,
   emptyLog,
   WINK_LOG,
@@ -525,6 +533,7 @@ import {
   applyScreening,
   applyParticipant,
   applyFounder,
+  applyStill,
   applyLog,
   applyCyber,
   applyGlamour,
@@ -2909,6 +2918,72 @@ describe("Public screening", () => {
     });
     expect(applyParticipant(gWorld, "g").players.get("g")?.heard).toBe(PARTICIPANT_SPECTATOR);
     expect(gWorld.participantHeld).toBe(false);
+  });
+
+  it("optional production still personalizes the screening Wink; guests cannot", () => {
+    expect(winkSchoolFor(TEST_SERIAL)).toBe("hint");
+    expect(winkSchoolFor(2)).toBe("wreckage");
+    expect(schoolWink("hint")).not.toBe(schoolWink("wreckage"));
+    const w = emptyWorld();
+    w.screeningHeld = true;
+    w.participantHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      winkSchool: "hint",
+      beats: { ...emptyBeats(), screening: true, under: true, participant: true },
+      x: STILL.x,
+      y: STILL.y,
+    });
+    const still = applyStill(w, "a");
+    const p = still.players.get("a")!;
+    expect(p.heard).toBe(STILL_COPY);
+    expect(p.wink).toBe(schoolWink("hint"));
+    expect(p.beats.still).toBe(true);
+    expect(still.stillHeld).toBe(true);
+    expect(still.pois.find((poi) => poi.id === STILL.id)?.name).toBe("Still — hint");
+    expect(still.signs.find((s) => s.id === STILL.id)?.title).toBe(STILL_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyStill(still, "a").players.get("a")?.heard).toBe(STILL_HELD);
+
+    const other = emptyWorld();
+    other.screeningHeld = true;
+    other.participantHeld = true;
+    other.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: 2,
+      winkSchool: "wreckage",
+      beats: { ...emptyBeats(), screening: true, under: true, participant: true },
+      x: STILL.x,
+      y: STILL.y,
+    });
+    expect(applyStill(other, "b").players.get("b")?.wink).toBe(schoolWink("wreckage"));
+    expect(applyStill(other, "b").pois.find((poi) => poi.id === STILL.id)?.name).toBe("Still — wreckage");
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: STILL.x,
+      y: STILL.y,
+    });
+    expect(applyStill(early, "a").players.get("a")?.heard).toBe(STILL_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.participantHeld = true;
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: STILL.x,
+      y: STILL.y,
+      locked: true,
+      beats: { ...emptyBeats(), participant: true },
+    });
+    expect(applyStill(gWorld, "g").players.get("g")?.heard).toBe(STILL_SPECTATOR);
+    expect(gWorld.stillHeld).toBe(false);
   });
 
   it("credits plus Participant enter Founder room; guests cannot; combat is not", () => {

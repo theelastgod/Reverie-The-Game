@@ -516,6 +516,16 @@ import {
   SCREENING_SPECTATOR,
   SCREENING_OPEN_PLAQUE,
   FilmRoom,
+  WinkSchool,
+  winkSchoolFor,
+  schoolWink,
+  STILL,
+  STILL_COPY,
+  STILL_NEED,
+  STILL_HELD,
+  STILL_SPECTATOR,
+  STILL_PLAQUE,
+  stillPoi,
   PARTICIPANT_COPY,
   WINK_PARTICIPANT,
   PARTICIPANT_NEED,
@@ -656,6 +666,7 @@ export type Player = {
   restraint: boolean;
   surface: boolean;
   filmRoom: FilmRoom;
+  winkSchool: WinkSchool;
   historyLog: HistoryLog;
 };
 
@@ -722,6 +733,7 @@ export type WorldState = {
   participantHeld: boolean;
   founderHeld: boolean;
   logHeld: boolean;
+  stillHeld: boolean;
   bountyHeld: boolean;
   stormPressHeld: boolean;
   winkSeedHeld: boolean;
@@ -766,6 +778,7 @@ export function spawnGuest(id: string): Player {
     fakeWinke: 0,
     house: "",
     messenger: "",
+    winkSchool: "",
     flagged: false,
     banked: 0,
     lastKillId: "",
@@ -845,6 +858,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     restraint: p.restraint,
     surface: p.surface,
     filmRoom: p.filmRoom,
+    winkSchool: p.winkSchool,
     historyLog: { ...p.historyLog, houses: [...p.historyLog.houses] },
     x,
     y,
@@ -948,6 +962,7 @@ export function emptyWorld(): WorldState {
     participantHeld: false,
     founderHeld: false,
     logHeld: false,
+    stillHeld: false,
     bountyHeld: false,
     stormPressHeld: false,
     winkSeedHeld: false,
@@ -1646,6 +1661,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === IONE.id) return applyIoneMark(w, playerId);
   if (sign.id === GUEST_ARENA.id) return applyArena(w, playerId);
   if (sign.id === SCREENING.id) return applyScreening(w, playerId);
+  if (sign.id === STILL.id) return applyStill(w, playerId);
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) {
     if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
@@ -3113,6 +3129,7 @@ export function applyLink(w: WorldState, playerId: string, serial: number, sig: 
     serial,
     house: houseFor(serial),
     messenger: messengerFor(serial),
+    winkSchool: winkSchoolFor(serial),
     aura: Math.max(p.aura, auraSeed(serial)),
     locked: false,
     heard: `Angel ${formatSerial(serial)} linked. ${houseName(houseFor(serial))}. ${messengerName(messengerFor(serial))} kit. Perception, not a stick. Claims stay disarmed.`,
@@ -3174,6 +3191,7 @@ export function snapshot(w: WorldState) {
     participantHeld: w.participantHeld,
     founderHeld: w.founderHeld,
     logHeld: w.logHeld,
+    stillHeld: w.stillHeld,
     bountyHeld: w.bountyHeld,
     stormPressHeld: w.stormPressHeld,
     winkSeedHeld: w.winkSeedHeld,
@@ -3533,13 +3551,48 @@ export function applyParticipant(w: WorldState, playerId: string): WorldState {
     heard: PARTICIPANT_COPY,
     wink: visibleWink(false, WINK_PARTICIPANT),
   });
+  const pois = w.pois.map((poi) => (poi.id === SCREENING.id ? participantPoi() : poi));
+  const signs = w.signs.map((s) => (s.id === SCREENING.id ? { ...PARTICIPANT_PLAQUE } : s));
   return {
     ...w,
     players,
     participantHeld: true,
-    pois: w.pois.map((poi) => (poi.id === SCREENING.id ? participantPoi() : poi)),
-    signs: w.signs.map((s) => (s.id === SCREENING.id ? { ...PARTICIPANT_PLAQUE } : s)),
+    pois: pois.some((poi) => poi.id === STILL.id) ? pois : [...pois, stillPoi()],
+    signs: signs.some((s) => s.id === STILL.id) ? signs : [...signs, { ...STILL_PLAQUE }],
   };
+}
+
+export function applyStill(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, STILL.x, STILL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: STILL_SPECTATOR, wink: visibleWink(true, schoolWink(p.winkSchool)) });
+    return { ...w, players };
+  }
+  if (!w.participantHeld || !p.beats.participant) {
+    players.set(playerId, { ...p, heard: STILL_NEED });
+    return { ...w, players };
+  }
+  if (w.stillHeld && p.beats.still) {
+    players.set(playerId, { ...p, heard: STILL_HELD, wink: visibleWink(false, schoolWink(p.winkSchool)) });
+    return { ...w, players };
+  }
+  const school = p.winkSchool || (p.serial != null ? winkSchoolFor(p.serial) : "hint");
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, still: true },
+    winkSchool: school,
+    heard: STILL_COPY,
+    wink: visibleWink(false, schoolWink(school)),
+  });
+  const pois = w.pois.some((poi) => poi.id === STILL.id)
+    ? w.pois.map((poi) => (poi.id === STILL.id ? stillPoi(school) : poi))
+    : [...w.pois, stillPoi(school)];
+  const signs = w.signs.some((s) => s.id === STILL.id)
+    ? w.signs.map((s) => (s.id === STILL.id ? { ...STILL_PLAQUE } : s))
+    : [...w.signs, { ...STILL_PLAQUE }];
+  return { ...w, players, stillHeld: true, pois, signs };
 }
 
 export function applyFounder(w: WorldState, playerId: string): WorldState {

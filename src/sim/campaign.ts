@@ -106,6 +106,7 @@ export type Beats = {
   stormPress: boolean;
   winkSeed: boolean;
   log: boolean;
+  still: boolean;
 };
 
 export type WeatherHeard = {
@@ -202,7 +203,8 @@ export type Poi = {
     | "screening-founder"
     | "screening-log"
     | "storm-progress"
-    | "wink-seed";
+    | "wink-seed"
+    | "production-still";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -342,6 +344,61 @@ export function founderPoi(): Poi {
     y: SCREENING.y,
     kind: "screening-founder",
   };
+}
+
+export type WinkSchool = "" | "hint" | "wreckage" | "omen" | "dwelling" | "process" | "surface";
+
+export const WINK_SCHOOLS: Exclude<WinkSchool, "">[] = [
+  "hint",
+  "wreckage",
+  "omen",
+  "dwelling",
+  "process",
+  "surface",
+];
+
+export function winkSchoolFor(serial: number): Exclude<WinkSchool, ""> {
+  return WINK_SCHOOLS[(Math.max(1, serial) - 1) % WINK_SCHOOLS.length];
+}
+
+export function schoolWink(school: WinkSchool): string {
+  if (school === "wreckage") return "A wreckage still. Same hour. Combat is not.";
+  if (school === "omen") return "An omen still. Same hour. Combat is not.";
+  if (school === "dwelling") return "A dwelling still. Same hour. Combat is not.";
+  if (school === "process") return "A process still. Same hour. Combat is not.";
+  if (school === "surface") return "A surface still. Same hour. Combat is not.";
+  return "A hint still. Same hour. Combat is not.";
+}
+
+export const STILL = { id: "production-still", x: SCREENING.x + 56, y: SCREENING.y };
+export const STILL_COPY =
+  "Production still. Same hour, your Wink. You did not strike harder. This was not a fetch.";
+export const STILL_NEED = "Participant first. A still is optional. Observer is not enough.";
+export const STILL_HELD = "The still already holds. Same hour. Combat is not.";
+export const STILL_SPECTATOR = "A still. You do not get this Wink.";
+
+export const STILL_PLAQUE: Sign = {
+  id: STILL.id,
+  title: "Production still",
+  text: "Optional. Same screening. Your Wink. The number does not strike.",
+  x: STILL.x,
+  y: STILL.y,
+};
+
+export function stillPoi(school: WinkSchool = "hint"): Poi {
+  const name =
+    school === "wreckage"
+      ? "Still — wreckage"
+      : school === "omen"
+        ? "Still — omen"
+        : school === "dwelling"
+          ? "Still — dwelling"
+          : school === "process"
+            ? "Still — process"
+            : school === "surface"
+              ? "Still — surface"
+              : "Still — hint";
+  return { id: STILL.id, name, x: STILL.x, y: STILL.y, kind: "production-still" };
 }
 
 export type HistoryLog = {
@@ -1604,6 +1661,7 @@ export function emptyBeats(): Beats {
     stormPress: false,
     winkSeed: false,
     log: false,
+    still: false,
   };
 }
 

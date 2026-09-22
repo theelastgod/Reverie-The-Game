@@ -7,6 +7,7 @@ import {
   GOING_UNDER,
   GUEST_ARENA,
   SCREENING,
+  STILL,
   HOUSE_HALL,
   SAFETY_ANNEX,
   FREEZE_COST,
@@ -508,6 +509,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "screening-log"
                         ? 0xc9a56a
+                      : poi.kind === "production-still"
+                        ? 0xc9a56a
                       : poi.kind === "ord-gone"
                         ? 0x7a1028
                       : poi.kind === "quill-gone"
@@ -690,6 +693,7 @@ export class NaveScene extends Phaser.Scene {
     const wet = inWetGrid(me.x, me.y);
     const arena = nearPoint(me.x, me.y, GUEST_ARENA.x, GUEST_ARENA.y, 56);
     const screening = nearPoint(me.x, me.y, SCREENING.x, SCREENING.y, 56);
+    const still = nearPoint(me.x, me.y, STILL.x, STILL.y, 56);
     const deskClaim = nearPoint(me.x, me.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56);
     const forge =
       nearPoint(me.x, me.y, FORGE_TRAY.x, FORGE_TRAY.y, 64) ||
@@ -718,7 +722,15 @@ export class NaveScene extends Phaser.Scene {
     const shrine = nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56);
     const ioneGoneNear = !!(snap.ioneGone && nearPoint(me.x, me.y, IONE.x, IONE.y, 56));
 
-    if (screening && (me.guest || me.locked)) {
+    if (still && (me.guest || me.locked)) {
+      this.prompt = "A still. You do not get this Wink.";
+    } else if (still && (snap.stillHeld || me.beats.still)) {
+      this.prompt = me.heard || "Production still. Same hour. Your Wink. Combat is not.";
+    } else if (still && (me.beats.participant || snap.participantHeld)) {
+      this.prompt = "F — optional production still. Same hour, your Wink. Not a stick.";
+    } else if (still) {
+      this.prompt = "A still. Participant first. Optional.";
+    } else if (screening && (me.guest || me.locked)) {
       this.prompt = "A screen. You do not get the dispatch.";
     } else if (screening && (me.beats.log || snap.logHeld)) {
       this.prompt = me.heard || "History log. Passings. Buried. Looted. Houses. Not a stick.";
@@ -1086,7 +1098,7 @@ export class NaveScene extends Phaser.Scene {
         ? me.locked
           ? `Guest · locked · aura 0`
           : `Guest · aura 0 · hp ${me.hp}`
-        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.filmRoom ? ` · ${me.filmRoom}` : ""}${me.storm ? " · storm" : ""}${me.surface ? " · surface" : ""}${me.beats.dwell ? " · seed" : ""}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
+        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.filmRoom ? ` · ${me.filmRoom}` : ""}${me.winkSchool ? ` · ${me.winkSchool}` : ""}${me.storm ? " · storm" : ""}${me.surface ? " · surface" : ""}${me.beats.dwell ? " · seed" : ""}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
     }
     const stats = hud("stat-chip");
     if (stats) {
