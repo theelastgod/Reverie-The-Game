@@ -5,6 +5,7 @@ import {
   houseName,
   messengerName,
   GOING_UNDER,
+  GUEST_ARENA,
   HOUSE_HALL,
   SAFETY_ANNEX,
   FREEZE_COST,
@@ -256,7 +257,7 @@ export class NaveScene extends Phaser.Scene {
       this.net.talk(npc.id);
       return;
     }
-    const clerk = this.net.snap?.clerks.find((c) => nearPoint(me.x, me.y, c.x, c.y, 70));
+    const clerk = this.net.snap?.clerks.find((c) => !c.dummy && nearPoint(me.x, me.y, c.x, c.y, 70));
     if (clerk) {
       this.net.clockOut();
       return;
@@ -491,6 +492,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7a1028
                       : poi.kind === "party-blind"
                         ? 0x7eb6ff
+                      : poi.kind === "guest-arena"
+                        ? 0xe8e8e8
                       : poi.kind === "ord-gone"
                         ? 0x7a1028
                       : poi.kind === "quill-gone"
@@ -669,6 +672,7 @@ export class NaveScene extends Phaser.Scene {
     const annex = nearPoint(me.x, me.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
     const stall = nearPoint(me.x, me.y, CLEARING_STALL.x, CLEARING_STALL.y, 56);
     const wet = inWetGrid(me.x, me.y);
+    const arena = nearPoint(me.x, me.y, GUEST_ARENA.x, GUEST_ARENA.y, 56);
     const deskClaim = nearPoint(me.x, me.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56);
     const forge =
       nearPoint(me.x, me.y, FORGE_TRAY.x, FORGE_TRAY.y, 64) ||
@@ -697,7 +701,11 @@ export class NaveScene extends Phaser.Scene {
     const shrine = nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56);
     const ioneGoneNear = !!(snap.ioneGone && nearPoint(me.x, me.y, IONE.x, IONE.y, 56));
 
-    if (deskClaim && (me.guest || me.locked)) {
+    if (arena && (snap.arenaHeld || me.beats.arena)) {
+      this.prompt = me.heard || "Guest arena. Click strike the dummy. Practice. No spoils.";
+    } else if (arena) {
+      this.prompt = "F — open the guest arena. Practice. No spoils. Guests are not loot.";
+    } else if (deskClaim && (me.guest || me.locked)) {
       this.prompt = "A period on a ledger. Guests cannot claim.";
     } else if (deskClaim) {
       this.prompt = me.heard

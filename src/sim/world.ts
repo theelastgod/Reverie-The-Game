@@ -4,6 +4,7 @@ import {
   Clerk,
   CLERK_AGGRO,
   CLERK_DAMAGE,
+  CLERK_HP,
   CLERK_TELEGRAPH,
   emptyBeats,
   emptyWeather,
@@ -470,6 +471,14 @@ import {
   RUIN_BACK_SPECTATOR,
   RUIN_BACK_PLAQUE,
   ruinBackPoi,
+  GUEST_ARENA,
+  ARENA_COPY,
+  WINK_ARENA,
+  ARENA_HELD,
+  ARENA_HIT,
+  ARENA_OPEN_PLAQUE,
+  arenaPoi,
+  arenaDummy,
   CYBER_COPY,
   WINK_CYBER,
   CYBER_NEED,
@@ -645,6 +654,7 @@ export type WorldState = {
   stormHeld: boolean;
   blitzHeld: boolean;
   ruinBackHeld: boolean;
+  arenaHeld: boolean;
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
   glamourHeld: boolean;
@@ -842,6 +852,7 @@ export function emptyWorld(): WorldState {
     stormHeld: false,
     blitzHeld: false,
     ruinBackHeld: false,
+    arenaHeld: false,
     blitzMarks: [],
     cyberHeld: false,
     glamourHeld: false,
@@ -1050,6 +1061,11 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
     }
     const hp = c.hp - dmg;
     if (hp <= 0) {
+      if (c.dummy) {
+        clerks.push({ ...c, hp: CLERK_HP, telegraph: 0 });
+        players.set(attackerId, { ...players.get(attackerId)!, heard: ARENA_HIT });
+        continue;
+      }
       wreckage = [
         ...wreckage,
         { id: `w-${c.id}-${w.now}`, x: c.x, y: c.y, fromId: c.id, fromName: c.name, until: w.now + 45 },
@@ -1467,6 +1483,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return applyYieldEmpty(w, playerId);
   }
   if (sign.id === IONE.id) return applyIoneMark(w, playerId);
+  if (sign.id === GUEST_ARENA.id) return applyArena(w, playerId);
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) {
     if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
@@ -2953,6 +2970,7 @@ export function snapshot(w: WorldState) {
     stormHeld: w.stormHeld,
     blitzHeld: w.blitzHeld,
     ruinBackHeld: w.ruinBackHeld,
+    arenaHeld: w.arenaHeld,
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,
@@ -3179,6 +3197,30 @@ export function applyRuinBack(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === "storm-back" ? plaque : s))
     : [...w.signs, plaque];
   return { ...w, players, ruinBackHeld: true, pois, signs };
+}
+
+export function applyArena(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, GUEST_ARENA.x, GUEST_ARENA.y, 56)) return w;
+  const players = new Map(w.players);
+  if (w.arenaHeld && p.beats.arena) {
+    players.set(playerId, { ...p, heard: ARENA_HELD, wink: visibleWink(p.guest, WINK_ARENA) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, arena: true },
+    heard: ARENA_COPY,
+    wink: visibleWink(p.guest, WINK_ARENA),
+  });
+  const dummy = w.clerks.some((c) => c.dummy) ? w.clerks : [...w.clerks, arenaDummy()];
+  const pois = w.pois.some((poi) => poi.id === GUEST_ARENA.id)
+    ? w.pois.map((poi) => (poi.id === GUEST_ARENA.id ? arenaPoi(true) : poi))
+    : [...w.pois, arenaPoi(true)];
+  const signs = w.signs.some((s) => s.id === GUEST_ARENA.id)
+    ? w.signs.map((s) => (s.id === GUEST_ARENA.id ? { ...ARENA_OPEN_PLAQUE } : s))
+    : [...w.signs, { ...ARENA_OPEN_PLAQUE }];
+  return { ...w, players, arenaHeld: true, clerks: dummy, pois, signs };
 }
 
 export function applyCyber(w: WorldState, playerId: string, nodeId: string): WorldState {

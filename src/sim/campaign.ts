@@ -98,6 +98,7 @@ export type Beats = {
   season: boolean;
   winkBlind: boolean;
   ruinBack: boolean;
+  arena: boolean;
 };
 
 export type WeatherHeard = {
@@ -113,6 +114,7 @@ export type Clerk = {
   y: number;
   hp: number;
   telegraph: number;
+  dummy?: boolean;
 };
 
 export type Poi = {
@@ -185,7 +187,8 @@ export type Poi = {
     | "quill-gone"
     | "vesper-gone"
     | "wet-grid-season"
-    | "party-blind";
+    | "party-blind"
+    | "guest-arena";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -197,6 +200,50 @@ export type Passing = {
 };
 
 export const GUEST_LOCK = "A guest cannot prepare the ground.";
+export const GUEST_ARENA = { id: "guest-arena", x: 360, y: 600 };
+export const ARENA_COPY =
+  "Practice. No spoils. Guests are not loot. The dummy is a job, not a grave. Combat is not. This was not a fetch.";
+export const WINK_ARENA = "A guest arena. Presence, not a stick. The token does not strike.";
+export const ARENA_HELD = "The dummy already holds. Practice. No spoils.";
+export const ARENA_HIT = "The dummy falls. Practice. No spoils. Guests are not loot.";
+
+export const ARENA_PLAQUE: Sign = {
+  id: GUEST_ARENA.id,
+  title: "Guest arena",
+  text: "Practice. No spoils. Guests are not loot. The number does not strike.",
+  x: GUEST_ARENA.x,
+  y: GUEST_ARENA.y,
+};
+
+export const ARENA_OPEN_PLAQUE: Sign = {
+  id: GUEST_ARENA.id,
+  title: "Guest arena — practice",
+  text: "The dummy holds. No spoils. The number does not strike.",
+  x: GUEST_ARENA.x,
+  y: GUEST_ARENA.y,
+};
+
+export function arenaPoi(open = false): Poi {
+  return {
+    id: GUEST_ARENA.id,
+    name: open ? "Guest arena — practice" : "Guest arena",
+    x: GUEST_ARENA.x,
+    y: GUEST_ARENA.y,
+    kind: "guest-arena",
+  };
+}
+
+export function arenaDummy(): Clerk {
+  return {
+    id: "dummy-practice",
+    name: "Practice dummy",
+    x: GUEST_ARENA.x,
+    y: GUEST_ARENA.y + 40,
+    hp: CLERK_HP,
+    telegraph: 0,
+    dummy: true,
+  };
+}
 export const TEST_SERIAL = 7777;
 export const MOCK_SIG = "mock";
 
@@ -1344,6 +1391,7 @@ export function emptyBeats(): Beats {
     season: false,
     winkBlind: false,
     ruinBack: false,
+    arena: false,
   };
 }
 
@@ -1371,6 +1419,7 @@ export function naveSigns(): Sign[] {
     { ...FORGE_PLAQUE },
     { ...CLEARING_PLAQUE },
     { ...WET_PLAQUE },
+    { ...ARENA_PLAQUE },
     { ...CLAIMS_PLAQUE },
     { ...SHRINE_PLAQUE },
   ];
@@ -1387,6 +1436,7 @@ export function navePois(): Poi[] {
     m3Poi(false),
     clearingPoi(false),
     wetGridPoi(),
+    arenaPoi(),
     claimsPoi(),
     shrinePoi(),
   ];

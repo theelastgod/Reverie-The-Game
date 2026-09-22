@@ -63,6 +63,7 @@ export type Snap = {
   stormHeld?: boolean;
   blitzHeld?: boolean;
   ruinBackHeld?: boolean;
+  arenaHeld?: boolean;
   blitzMarks?: { id: string; x: number; y: number; fromName: string }[];
   cyberHeld?: boolean;
   glamourHeld?: boolean;

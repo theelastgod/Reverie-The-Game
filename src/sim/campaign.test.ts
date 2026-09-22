@@ -5,6 +5,12 @@ import {
   CLEARING_PRICE,
   CLEARING_STALL,
   GUEST_LOCK,
+  GUEST_ARENA,
+  ARENA_COPY,
+  ARENA_HELD,
+  ARENA_HIT,
+  ARENA_OPEN_PLAQUE,
+  CLERK_HP,
   GOING_UNDER,
   FREEZE_COPY,
   FREEZE_COST,
@@ -464,6 +470,7 @@ import {
   applyAnnounce,
   applyBlitz,
   applyRuinBack,
+  applyArena,
   applyCyber,
   applyGlamour,
   applyDwell,
@@ -2540,6 +2547,54 @@ describe("Ruin-angel storm at your back", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
     expect(applyRuinBack(gWorld, "g").players.get("g")?.heard).toBe(RUIN_BACK_SPECTATOR);
     expect(gWorld.ruinBackHeld).toBe(false);
+  });
+});
+
+describe("Guest arena", () => {
+  it("opens a practice dummy with no spoils; guests can; Gestell does not drink", () => {
+    const w = emptyWorld();
+    w.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y });
+    const opened = applyArena(w, "g");
+    const p = opened.players.get("g")!;
+    expect(p.heard).toBe(ARENA_COPY);
+    expect(p.beats.arena).toBe(true);
+    expect(opened.arenaHeld).toBe(true);
+    expect(opened.clerks.some((c) => c.dummy && c.id === "dummy-practice")).toBe(true);
+    expect(opened.pois.find((poi) => poi.id === GUEST_ARENA.id)?.name).toBe("Guest arena — practice");
+    expect(opened.signs.find((s) => s.id === GUEST_ARENA.id)?.title).toBe(ARENA_OPEN_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("x")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyArena(opened, "g").players.get("g")?.heard).toBe(ARENA_HELD);
+    expect(applyRead(w, "g", GUEST_ARENA.id).arenaHeld).toBe(true);
+
+    const dummy = opened.clerks.find((c) => c.dummy)!;
+    opened.players.set("g", { ...opened.players.get("g")!, x: dummy.x, y: dummy.y, strikeCd: 0 });
+    const first = applyStrike(opened, "g");
+    expect(first.wreckage).toHaveLength(0);
+    expect(first.gestell).toBe(opened.gestell);
+    first.players.set("g", { ...first.players.get("g")!, strikeCd: 0 });
+    const second = applyStrike(first, "g");
+    expect(second.players.get("g")?.heard).toBe(ARENA_HIT);
+    expect(second.wreckage).toHaveLength(0);
+    expect(second.gestell).toBe(opened.gestell);
+    expect(second.clerks.find((c) => c.dummy)?.hp).toBe(CLERK_HP);
+    expect(guestCanClaim(second.players.get("g")!)).toBe(false);
+
+    const locked = emptyWorld();
+    locked.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
+    expect(applyArena(locked, "g").arenaHeld).toBe(true);
+
+    const angel = emptyWorld();
+    angel.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: GUEST_ARENA.x,
+      y: GUEST_ARENA.y,
+    });
+    const aOpen = applyArena(angel, "a");
+    expect(aOpen.arenaHeld).toBe(true);
+    expect(damageFor(aOpen.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
   });
 });
 

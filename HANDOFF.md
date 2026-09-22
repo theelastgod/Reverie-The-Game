@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 77** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 78** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -333,7 +333,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Ruin-angel kit: F at a grave names the storm at your back. Wreckage vision without burning readiness. Plaque/POI The storm at your back. Not a stick.
 - Other kits and guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 77 (do this next)
+## Stage 77 (landed)
+- Guest arena: F opens a practice dummy. Strike it: no spoils, no wreckage, no Gestell. Plaque/POI Guest arena — practice. Guests can.
+- Angels practice the same. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 78 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
