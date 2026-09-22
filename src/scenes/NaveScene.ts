@@ -489,6 +489,8 @@ export class NaveScene extends Phaser.Scene {
                             ? 0x7eb6ff
                             : poi.kind === "clearing-absence"
                               ? 0x7a1028
+                            : poi.kind === "clearing-hijack"
+                              ? 0x7a1028
                             : poi.kind === "clearing-ring"
                               ? 0xc9a56a
             : poi.kind === "care-shut"
@@ -727,6 +729,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = snap.war.omen || me.heard;
     } else if (ring && (snap.naraAtClearing || snap.passing.outcome === "absence")) {
       this.prompt = me.heard || "The Clearing — absence. Nara Vale stays. The hour went by.";
+    } else if (ring && (snap.hijacked || snap.passing.outcome === "hijack")) {
+      this.prompt =
+        me.heard ||
+        (snap.hijackBy === "cold"
+          ? "The Clearing — Cold. A concentrator claimed the hour. You are marked."
+          : "The Clearing — Safety. The freeze ate the rite. You are marked.");
     } else if (ring && snap.passing.outcome) {
       this.prompt = me.heard || "The hour already went by.";
     } else if (ring && me.beats.clearing && snap.clearingOpen) {
@@ -785,6 +793,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The sexton mark is cult. Nara Vale is at the Strait.";
     } else if (npcNear?.id === "nara" && me.beats.sextonAsk) {
       this.prompt = "F — take the sexton mark. Cult object. Nara walks to the Strait.";
+    } else if (npcNear?.id === "ord" && (snap.ordAtHijack || me.beats.hijacked) && snap.hijackBy === "safety") {
+      this.prompt = me.heard || "Ord claimed the rite for Safety. You are marked. Not a stick.";
     } else if (npcNear?.id === "ord" && (me.beats.ordLast || snap.ordAtCare)) {
       this.prompt = me.heard || "Ord will not number the last god. He stands at the Care.";
     } else if (npcNear?.id === "ord" && (snap.lastGodNamed || me.beats.lastGod) && !me.guest) {
@@ -799,6 +809,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Keep a CRT node (Q). Do not extract. Ord will walk to the Cable.";
     } else if (npcNear?.id === "ord" && me.beats.map) {
       this.prompt = "F — Ord has an errand. Keep a node. Change an organ.";
+    } else if (npcNear?.id === "vesper" && (snap.vesperAtHijack || (me.beats.hijacked && snap.hijackBy === "cold"))) {
+      this.prompt = me.heard || "Vesper Hale claimed the yield. The hour is Cold. You are marked.";
     } else if (npcNear?.id === "vesper" && (me.beats.vesperNoGod || snap.vesperNoGod)) {
       this.prompt = me.heard || "Vesper Hale will not sell the last god. Yield is not a hint.";
     } else if (npcNear?.id === "vesper" && (snap.lastGodNamed || me.beats.lastGod) && !me.guest) {
@@ -976,6 +988,10 @@ export class NaveScene extends Phaser.Scene {
         : ring
           ? snap.naraAtClearing || snap.passing.outcome === "absence"
             ? "The Clearing — absence"
+            : snap.hijacked || snap.passing.outcome === "hijack"
+              ? snap.hijackBy === "cold"
+                ? "The Clearing — Cold"
+                : "The Clearing — Safety"
             : snap.clearingOpen
             ? "The Clearing · held"
             : "The Clearing"

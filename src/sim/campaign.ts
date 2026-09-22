@@ -83,6 +83,7 @@ export type Beats = {
   vesperNoGod: boolean;
   absenceHour: boolean;
   naraStay: boolean;
+  hijacked: boolean;
 };
 
 export type WeatherHeard = {
@@ -137,6 +138,7 @@ export type Poi = {
     | "clearing-ring"
     | "clearing-held"
     | "clearing-absence"
+    | "clearing-hijack"
     | "wet-grid"
     | "wet-grid-cult"
     | "claims-desk"
@@ -1265,6 +1267,7 @@ export function emptyBeats(): Beats {
     vesperNoGod: false,
     absenceHour: false,
     naraStay: false,
+    hijacked: false,
   };
 }
 
@@ -1669,6 +1672,48 @@ export function absencePoi(): Poi {
 }
 export const PASSING_HIJACK =
   "Safety or Cold claimed the rite. The world continues. You are marked. No mint.";
+export const WINK_HIJACK =
+  "A mark, not a stick. The hour was claimed. The token does not strike.";
+export const HIJACK_MARK_LINE =
+  "Safety or Cold claimed this hour. You are marked. The world continues.";
+export const HIJACK_SPECTATOR = "The hole was claimed. You do not carry the mark.";
+
+export function hijackByOf(frozen: boolean, starved: boolean, cold: boolean): "safety" | "cold" {
+  return frozen || starved ? "safety" : "cold";
+}
+
+export function hijackPlaque(by: "safety" | "cold"): Sign {
+  return {
+    id: CLEARING_RING.id,
+    title: by === "cold" ? "The Clearing — Cold" : "The Clearing — Safety",
+    text:
+      by === "cold"
+        ? "A concentrator claimed the hour. The world continues. You are marked. Combat is not."
+        : "Safety claimed the hour. The freeze ate the rite. You are marked. Combat is not.",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+  };
+}
+
+export function hijackPoi(by: "safety" | "cold"): Poi {
+  return {
+    id: CLEARING_RING.id,
+    name: by === "cold" ? "The Clearing — Cold" : "The Clearing — Safety",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+    kind: "clearing-hijack",
+  };
+}
+
+export function hijackMark(serial: number): HistoryMark {
+  return {
+    id: `hijack-${serial}`,
+    serial,
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y + 24,
+    line: HIJACK_MARK_LINE,
+  };
+}
 export const PASSING_FAIL = "Gestell is maxed. Without a Clearing the hour does not open.";
 export const PASSING_NEED = "The Clearing is not held. Keep the hole first.";
 
@@ -1729,6 +1774,8 @@ export function liveNpcs(
   quillNoPrint = false,
   vesperNoGod = false,
   naraAtClearing = false,
+  ordAtHijack = false,
+  vesperAtHijack = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1789,6 +1836,21 @@ export function liveNpcs(
     base = base.map((n) =>
       n.id === "nara"
         ? { ...n, x: CLEARING_RING.x + 40, y: CLEARING_RING.y + 36, role: "Stays" }
+        : n,
+    );
+  }
+  if (ordAtHijack) {
+    base = base.map((n) =>
+      n.id === "ord"
+        ? { ...n, x: CLEARING_RING.x - 48, y: CLEARING_RING.y + 36, role: "Claimed the rite" }
+        : n,
+    );
+  }
+  if (vesperAtHijack) {
+    if (!base.some((n) => n.id === "vesper")) base = [...base, { ...VESPER }];
+    base = base.map((n) =>
+      n.id === "vesper"
+        ? { ...n, x: CLEARING_RING.x + 8, y: CLEARING_RING.y - 40, role: "Claimed the yield" }
         : n,
     );
   }

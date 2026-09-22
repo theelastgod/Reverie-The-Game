@@ -171,6 +171,9 @@ import {
   WINK_PASS_ABSENCE,
   ABSENCE_PLAQUE,
   PASSING_HIJACK,
+  WINK_HIJACK,
+  HIJACK_MARK_LINE,
+  hijackPlaque,
   PASSING_FAIL,
   PASSING_NEED,
   dwellNeed,
@@ -1701,8 +1704,22 @@ describe("Movement IV Clearing and Passing", () => {
     frozen.frozen = true;
     frozen.passing = { ready: 0, starved: true, outcome: "" };
     const hijack = applyPassing(frozen, "a");
-    expect(hijack.players.get("a")?.heard).toBe(PASSING_HIJACK);
+    const hp = hijack.players.get("a")!;
+    expect(hp.heard).toBe(PASSING_HIJACK);
+    expect(hp.wink).toBe(WINK_HIJACK);
+    expect(hp.beats.hijacked).toBe(true);
     expect(hijack.passing.outcome).toBe("hijack");
+    expect(hijack.hijacked).toBe(true);
+    expect(hijack.hijackBy).toBe("safety");
+    expect(hijack.ordAtHijack).toBe(true);
+    expect(hijack.pois.find((poi) => poi.id === CLEARING_RING.id)?.kind).toBe("clearing-hijack");
+    expect(hijack.signs.find((s) => s.id === CLEARING_RING.id)?.title).toBe(hijackPlaque("safety").title);
+    expect(visibleHistory(false, TEST_SERIAL, hijack.history).some((h) => h.line === HIJACK_MARK_LINE)).toBe(true);
+    expect(visibleHistory(true, null, hijack.history)).toEqual([]);
+    const ord = liveNpcs(false, false, false, false, false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "ord")!;
+    expect(ord.role).toBe("Claimed the rite");
+    expect(hp.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(hp)).toBe(damageFor(spawnGuest("g")));
 
     const cold = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
       beats: { ...emptyBeats(), garden: true, lastWord: true, clearing: true },
@@ -1712,6 +1729,11 @@ describe("Movement IV Clearing and Passing", () => {
     cold.gestell = 80;
     const coldHijack = applyPassing(cold, "a");
     expect(coldHijack.passing.outcome).toBe("hijack");
+    expect(coldHijack.hijackBy).toBe("cold");
+    expect(coldHijack.vesperAtHijack).toBe(true);
+    expect(coldHijack.signs.find((s) => s.id === CLEARING_RING.id)?.title).toBe(hijackPlaque("cold").title);
+    const vesper = liveNpcs(false, false, false, false, false, false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "vesper")!;
+    expect(vesper.role).toBe("Claimed the yield");
     expect(guestCanClaim(coldHijack.players.get("a")!)).toBe(false);
   });
 

@@ -273,6 +273,11 @@ import {
   WINK_PASS_ABSENCE,
   ABSENCE_PLAQUE,
   absencePoi,
+  WINK_HIJACK,
+  hijackByOf,
+  hijackPlaque,
+  hijackPoi,
+  hijackMark,
   clearingPoi,
   liveNpcs,
   NARA_AFTER_GARDEN,
@@ -507,6 +512,10 @@ export type WorldState = {
   deskVaulted: boolean;
   appearSlow: boolean;
   naraAtClearing: boolean;
+  hijacked: boolean;
+  hijackBy: "" | "safety" | "cold";
+  ordAtHijack: boolean;
+  vesperAtHijack: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -674,6 +683,10 @@ export function emptyWorld(): WorldState {
     deskVaulted: false,
     appearSlow: false,
     naraAtClearing: false,
+    hijacked: false,
+    hijackBy: "",
+    ordAtHijack: false,
+    vesperAtHijack: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -944,7 +957,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -2518,7 +2531,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2543,6 +2556,10 @@ export function snapshot(w: WorldState) {
     deskVaulted: w.deskVaulted,
     appearSlow: w.appearSlow,
     naraAtClearing: w.naraAtClearing,
+    hijacked: w.hijacked,
+    hijackBy: w.hijackBy,
+    ordAtHijack: w.ordAtHijack,
+    vesperAtHijack: w.vesperAtHijack,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2830,14 +2847,26 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
     dwellers,
     cold: p.current === "cold",
   });
+  const hijacked = outcome === "hijack";
+  const by = hijacked ? hijackByOf(w.frozen, w.passing.starved, p.current === "cold") : w.hijackBy;
   players.set(playerId, {
     ...p,
-    beats: { ...p.beats, passing: true, absenceHour: outcome === "absence" ? true : p.beats.absenceHour },
+    beats: {
+      ...p.beats,
+      passing: true,
+      absenceHour: outcome === "absence" ? true : p.beats.absenceHour,
+      hijacked: hijacked ? true : p.beats.hijacked,
+    },
     heard: passingCopy(outcome),
-    wink: visibleWink(false, outcome === "absence" ? WINK_PASS_ABSENCE : WINK_TURN),
+    wink: visibleWink(
+      false,
+      outcome === "absence" ? WINK_PASS_ABSENCE : hijacked ? WINK_HIJACK : WINK_TURN,
+    ),
     readiness: p.readiness + (outcome === "appearance" && !p.beats.passing ? 2 : 0),
   });
   const absent = outcome === "absence";
+  const plaque = hijacked && by ? hijackPlaque(by) : null;
+  const mark = hijacked && p.serial != null ? hijackMark(p.serial) : null;
   return {
     ...w,
     players,
@@ -2848,13 +2877,25 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
     },
     appearSlow: outcome === "appearance" ? true : w.appearSlow,
     naraAtClearing: absent ? true : w.naraAtClearing,
+    hijacked: hijacked ? true : w.hijacked,
+    hijackBy: hijacked && by ? by : w.hijackBy,
+    ordAtHijack: hijacked && by === "safety" ? true : w.ordAtHijack,
+    vesperAtHijack: hijacked && by === "cold" ? true : w.vesperAtHijack,
+    history:
+      mark && !w.history.some((h) => h.id === mark.id) ? [...w.history, mark] : w.history,
     pois: absent
       ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? absencePoi() : poi))
-      : w.pois,
+      : hijacked && by
+        ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? hijackPoi(by) : poi))
+        : w.pois,
     signs: absent
       ? w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...ABSENCE_PLAQUE } : s)).concat(
           w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...ABSENCE_PLAQUE }],
         )
-      : w.signs,
+      : plaque
+        ? w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...plaque } : s)).concat(
+            w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...plaque }],
+          )
+        : w.signs,
   };
 }

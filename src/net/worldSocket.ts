@@ -51,6 +51,10 @@ export type Snap = {
   deskVaulted?: boolean;
   appearSlow?: boolean;
   naraAtClearing?: boolean;
+  hijacked?: boolean;
+  hijackBy?: "" | "safety" | "cold";
+  ordAtHijack?: boolean;
+  vesperAtHijack?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 
