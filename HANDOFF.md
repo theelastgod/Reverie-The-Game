@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 33** — Named side quest (cult/standing). Keep writing until 24 authored hours. No mint.
+**Next stage: 34** — Named side quest (House standing). Fetch-only forbidden. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -156,8 +156,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the garden burial, talk to Nara twice: sexton mark (cult). Garden POI becomes Sexton mark. Nara walks to the Strait.
 - Guests cannot take the mark. `damageFor` unchanged.
 
-## Stage 33 (do this next)
-Another named side quest (Quill hour or House standing). Fetch-only forbidden. No mint. No Base.
+## Stage 33 (landed)
+- After spotting the cult sheet, talk to Quill then F at the stall: hang it. Stall POI goes dark (unlisted). Quill walks the Wet Grid.
+- Selling a print cannot darken the stall. Guests cannot hang. `damageFor` unchanged.
+
+## Stage 34 (do this next)
+Named side quest that changes House standing. Fetch-only forbidden. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

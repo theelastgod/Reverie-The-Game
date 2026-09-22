@@ -27,6 +27,7 @@ export type Snap = {
   ioneGone: boolean;
   announced: string | null;
   war: HouseWar;
+  stallDark?: boolean;
 };
 
 export type Hello = { t: "hello"; id: string; guest: boolean; you: Player };

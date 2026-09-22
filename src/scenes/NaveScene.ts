@@ -412,6 +412,8 @@ export class NaveScene extends Phaser.Scene {
                 ? 0xe8e8e8
               : poi.kind === "clearing-listed"
                 ? 0x7eb6ff
+              : poi.kind === "stall-dark"
+                ? 0xc9a56a
             : poi.kind === "care-open"
               ? 0x7eb6ff
               : poi.kind === "operator-desk"
@@ -604,6 +606,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Safety Annex. The desk will not take a name that has not read the hall.";
     } else if (stall && (me.guest || me.locked)) {
       this.prompt = "A stall of lights. You cannot afford a sky you cannot see.";
+    } else if (stall && (snap.stallDark || me.beats.hang)) {
+      this.prompt = me.heard || "The stall is dark. Cult hangs. Copies do not travel.";
+    } else if (stall && me.beats.hangAsk && me.cultWink) {
+      this.prompt = "F — hang the cult sheet. The stall goes dark. Quill walks the Wet Grid.";
     } else if (stall && me.beats.market) {
       this.prompt = me.damaged
         ? `F buy a copy (${CLEARING_PRICE}). Q repair a cracked print (${REPAIR_COST}). Cult does not crack.`
@@ -614,6 +620,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Quill is selling something. You do not yet have the eyes for the price.";
     } else if (forge && (me.guest || me.locked)) {
       this.prompt = "Quill is doing something with paper. You cannot tell which sheet is the prayer.";
+    } else if (npcNear?.id === "quill" && me.beats.hang) {
+      this.prompt = me.heard || "The stall is a shrine. Quill is on the wet street.";
+    } else if (npcNear?.id === "quill" && me.beats.hangAsk) {
+      this.prompt = "The stall is still lit. Hang the sheet on the listing.";
+    } else if ((forge || npcNear?.id === "quill") && me.beats.spot && !me.beats.hangAsk) {
+      this.prompt = "F — Quill will hang the prayer if you keep it. The stall can go dark.";
     } else if (forge && me.beats.spot) {
       this.prompt = me.heard || "You kept the eye. The cult hint does not list.";
     } else if (forge && me.beats.sold) {

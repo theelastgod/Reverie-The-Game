@@ -54,6 +54,8 @@ export type Beats = {
   cableQuiet: boolean;
   sextonAsk: boolean;
   sexton: boolean;
+  hangAsk: boolean;
+  hang: boolean;
 };
 
 export type WeatherHeard = {
@@ -99,7 +101,8 @@ export type Poi = {
     | "wet-grid"
     | "claims-desk"
     | "shrine-upkeep"
-    | "sexton-mark";
+    | "sexton-mark"
+    | "stall-dark";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -227,6 +230,36 @@ export const STALL_PLAQUE: Sign = {
   x: CLEARING_STALL.x,
   y: CLEARING_STALL.y,
 };
+
+export const QUILL_HANG_ASK =
+  "Hang the prayer on the wood. The stall goes dark. Copies stop listing. I will be on the wet street.";
+export const QUILL_HANG =
+  "You hung the cult sheet. The lights die. Quill walks the Wet Grid. This was not a fetch.";
+export const QUILL_HANG_WAIT = "The stall is still lit. Hang the sheet on the listing. I will not carry it for you.";
+export const QUILL_HANG_LATER =
+  "The stall is a shrine now. I am on the wet street. Copies do not hang here.";
+export const QUILL_HANG_NEED = "You sold the prayer. I cannot darken a stall with a print.";
+export const QUILL_HANG_SPECTATOR = "Quill is taking the lights down. Not for you.";
+export const WINK_HANG = "A stall can be a shrine. You ended a listing. Aura does not list.";
+export const STALL_DARK_COPY = "The stall is dark. Cult hangs. Copies do not travel.";
+
+export const STALL_DARK_PLAQUE: Sign = {
+  id: CLEARING_STALL.id,
+  title: "Clearing — unlisted",
+  text: "Cult hangs. Forty Bestand does not. The hole is not stock.",
+  x: CLEARING_STALL.x,
+  y: CLEARING_STALL.y,
+};
+
+export function stallDarkPoi(): Poi {
+  return {
+    id: CLEARING_STALL.id,
+    name: "Stall — dark",
+    x: CLEARING_STALL.x,
+    y: CLEARING_STALL.y,
+    kind: "stall-dark",
+  };
+}
 
 export const OPERATOR_DESK = { id: "operator-desk", x: 1260, y: 360 };
 export const PRIVATE_YIELD = 90;
@@ -592,6 +625,8 @@ export function emptyBeats(): Beats {
     cableQuiet: false,
     sextonAsk: false,
     sexton: false,
+    hangAsk: false,
+    hang: false,
   };
 }
 
@@ -985,7 +1020,12 @@ export function passingCopy(outcome: Exclude<PassingOutcome, "">): string {
   return PASSING_FAIL;
 }
 
-export function liveNpcs(ioneGone: boolean, ordAtCable = false, naraAtStrait = false): Npc[] {
+export function liveNpcs(
+  ioneGone: boolean,
+  ordAtCable = false,
+  naraAtStrait = false,
+  quillAtGrid = false,
+): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
     base = base.map((n) =>
@@ -995,6 +1035,11 @@ export function liveNpcs(ioneGone: boolean, ordAtCable = false, naraAtStrait = f
   if (naraAtStrait) {
     base = base.map((n) =>
       n.id === "nara" ? { ...n, x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y + 48, role: "At the Strait" } : n,
+    );
+  }
+  if (quillAtGrid) {
+    base = base.map((n) =>
+      n.id === "quill" ? { ...n, x: WET_GRID.x + 48, y: WET_GRID.y, role: "On the wet street" } : n,
     );
   }
   return base;

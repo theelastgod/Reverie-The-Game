@@ -54,6 +54,16 @@ import {
   MARKET_LISTING,
   MARKET_NEED_HALL,
   MARKET_SPECTATOR,
+  QUILL_HANG_ASK,
+  QUILL_HANG,
+  QUILL_HANG_WAIT,
+  QUILL_HANG_LATER,
+  QUILL_HANG_NEED,
+  QUILL_HANG_SPECTATOR,
+  WINK_HANG,
+  STALL_DARK_COPY,
+  STALL_DARK_PLAQUE,
+  stallDarkPoi,
   WINK_CARE,
   WINK_FREEZE,
   WINK_HALL,
@@ -296,6 +306,8 @@ export type WorldState = {
   ioneGone: boolean;
   ordAtCable: boolean;
   naraAtStrait: boolean;
+  stallDark: boolean;
+  quillAtGrid: boolean;
   announced: string | null;
   war: HouseWar;
   gestell: number;
@@ -437,6 +449,8 @@ export function emptyWorld(): WorldState {
     ioneGone: false,
     ordAtCable: false,
     naraAtStrait: false,
+    stallDark: false,
+    quillAtGrid: false,
     announced: null,
     war: emptyWar(),
     gestell: 12,
@@ -691,7 +705,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
-  const npc = liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait).find((n) => n.id === npcId) ?? npcById(npcId);
+  const npc = liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid).find((n) => n.id === npcId) ?? npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
   const players = new Map(w.players);
@@ -735,7 +749,32 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   }
   if (id === "ione") return applyLastWord(w, playerId);
   if (id === "quill" && p.beats.market && !p.guest && !p.locked) {
+    if (p.beats.hang) {
+      players.set(playerId, { ...p, heard: QUILL_HANG_LATER, wink: visibleWink(false, WINK_HANG) });
+      return { ...w, players };
+    }
+    if (p.beats.spot && p.cultWink) {
+      if (p.beats.hangAsk) {
+        players.set(playerId, { ...p, heard: QUILL_HANG_WAIT, wink: visibleWink(false, WINK_HANG) });
+        return { ...w, players };
+      }
+      players.set(playerId, {
+        ...p,
+        beats: { ...p.beats, hangAsk: true },
+        heard: QUILL_HANG_ASK,
+        wink: visibleWink(false, WINK_HANG),
+      });
+      return { ...w, players };
+    }
+    if (p.beats.sold) {
+      players.set(playerId, { ...p, heard: QUILL_HANG_NEED, wink: visibleWink(false, WINK_FORGE) });
+      return { ...w, players };
+    }
     return applyForge(w, playerId, "hear");
+  }
+  if (id === "quill" && (p.guest || p.locked) && p.beats.spot) {
+    players.set(playerId, { ...p, heard: QUILL_HANG_SPECTATOR });
+    return { ...w, players };
   }
   if (id === "ord" && w.m3Open && !p.guest && !p.locked) {
     if (p.beats.cableQuiet) {
@@ -800,7 +839,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return { ...w, players };
   }
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
-  if (sign.id === CLEARING_STALL.id) return applyMarket(w, playerId);
+  if (sign.id === CLEARING_STALL.id) {
+    if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
+    return applyMarket(w, playerId);
+  }
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
   if (sign.id === WET_GRID.id) return applyFlag(w, playerId);
   if (sign.id === CLAIMS_DESK.id) return applyDesk(w, playerId, "file");
@@ -1065,10 +1107,52 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
   return { ...w, players };
 }
 
+export function applyHang(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: QUILL_HANG_SPECTATOR, wink: visibleWink(true, WINK_HANG) });
+    return { ...w, players };
+  }
+  if (w.stallDark || p.beats.hang) {
+    players.set(playerId, { ...p, heard: STALL_DARK_COPY, wink: visibleWink(false, WINK_HANG) });
+    return { ...w, players };
+  }
+  if (!p.cultWink) {
+    players.set(playerId, { ...p, heard: QUILL_HANG_NEED });
+    return { ...w, players };
+  }
+  if (!p.beats.hangAsk) {
+    players.set(playerId, { ...p, heard: QUILL_HANG_WAIT });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, hang: true },
+    cultWink: true,
+    heard: QUILL_HANG,
+    wink: visibleWink(false, WINK_HANG),
+    readiness: p.readiness + 1,
+  });
+  return {
+    ...w,
+    players,
+    stallDark: true,
+    quillAtGrid: true,
+    pois: w.pois.map((poi) => (poi.id === CLEARING_STALL.id ? stallDarkPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === CLEARING_STALL.id ? { ...STALL_DARK_PLAQUE } : s)),
+  };
+}
+
 export function applyMarket(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
   const players = new Map(w.players);
+  if (w.stallDark) {
+    players.set(playerId, { ...p, heard: STALL_DARK_COPY, wink: visibleWink(p.guest, WINK_HANG) });
+    return { ...w, players };
+  }
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, heard: MARKET_SPECTATOR, wink: visibleWink(true, WINK_MARKET) });
     return { ...w, players };
@@ -1421,7 +1505,8 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid),
+    stallDark: w.stallDark,
     signs: w.signs,
     pois: w.pois,
     weatherNamed: w.weatherNamed,

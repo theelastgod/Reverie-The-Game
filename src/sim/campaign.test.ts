@@ -69,6 +69,15 @@ import {
   FORGE_SPOT,
   FORGE_SPECTATOR,
   WINK_FORGE,
+  QUILL_HANG_ASK,
+  QUILL_HANG,
+  QUILL_HANG_WAIT,
+  QUILL_HANG_LATER,
+  QUILL_HANG_NEED,
+  QUILL_HANG_SPECTATOR,
+  WINK_HANG,
+  STALL_DARK_COPY,
+  STALL_DARK_PLAQUE,
   FAILED_SPECTATOR,
   CLEARING_RING,
   CLEARING_PREPARE,
@@ -190,6 +199,7 @@ import {
   applyM3,
   applyWatch,
   applyForge,
+  applyHang,
   applyFlag,
   applyDesk,
   applyShrine,
@@ -886,6 +896,73 @@ describe("forged Winke", () => {
     expect(EXHIBIT_DECAY).toBe(20);
     expect(damageFor(sold.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
     expect(guestCanClaim(sold.players.get("a")!)).toBe(false);
+  });
+});
+
+describe("Quill darkens the stall", () => {
+  it("hanging the cult sheet unlists the stall and moves Quill; selling cannot", () => {
+    const quill = NAVE_NPCS.find((n) => n.id === "quill")!;
+    const heard = applyForge(
+      (() => {
+        const w = emptyWorld();
+        w.players.set("a", {
+          ...spawnGuest("a"),
+          guest: false,
+          serial: TEST_SERIAL,
+          aura: auraSeed(TEST_SERIAL),
+          beats: { ...emptyBeats(), market: true, hall: true, quill: true },
+          x: FORGE_TRAY.x,
+          y: FORGE_TRAY.y,
+        });
+        return w;
+      })(),
+      "a",
+      "hear",
+    );
+    const spotted = applyForge(heard, "a", "spot");
+    spotted.players.set("a", { ...spotted.players.get("a")!, x: quill.x, y: quill.y });
+    const asked = applyTalk(spotted, "a", "quill");
+    expect(asked.players.get("a")?.heard).toBe(QUILL_HANG_ASK);
+    expect(asked.players.get("a")?.beats.hangAsk).toBe(true);
+    expect(asked.quillAtGrid).toBe(false);
+    expect(applyTalk(asked, "a", "quill").players.get("a")?.heard).toBe(QUILL_HANG_WAIT);
+
+    asked.players.set("a", { ...asked.players.get("a")!, x: CLEARING_STALL.x, y: CLEARING_STALL.y, bestand: 80 });
+    const hung = applyHang(asked, "a");
+    const p = hung.players.get("a")!;
+    expect(p.heard).toBe(QUILL_HANG);
+    expect(p.beats.hang).toBe(true);
+    expect(p.cultWink).toBe(true);
+    expect(p.wink).toBe(WINK_HANG);
+    expect(hung.stallDark).toBe(true);
+    expect(hung.quillAtGrid).toBe(true);
+    expect(hung.pois.find((poi) => poi.id === CLEARING_STALL.id)?.kind).toBe("stall-dark");
+    expect(hung.signs.find((s) => s.id === CLEARING_STALL.id)?.title).toBe(STALL_DARK_PLAQUE.title);
+    const moved = liveNpcs(false, false, false, true).find((n) => n.id === "quill")!;
+    expect(moved.role).toBe("On the wet street");
+    expect(moved.x).toBe(WET_GRID.x + 48);
+    hung.players.set("a", { ...p, x: moved.x, y: moved.y });
+    expect(applyTalk(hung, "a", "quill").players.get("a")?.heard).toBe(QUILL_HANG_LATER);
+
+    hung.players.set("a", { ...p, x: CLEARING_STALL.x, y: CLEARING_STALL.y, bestand: 80 });
+    const buy = applyMarket(hung, "a");
+    expect(buy.players.get("a")?.heard).toBe(STALL_DARK_COPY);
+    expect(buy.players.get("a")?.bestand).toBe(80);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const soldW = applyForge(heard, "a", "sell");
+    soldW.players.set("a", { ...soldW.players.get("a")!, x: quill.x, y: quill.y });
+    const refused = applyTalk(soldW, "a", "quill");
+    expect(refused.players.get("a")?.heard).toBe(QUILL_HANG_NEED);
+    expect(refused.stallDark).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true, beats: { ...emptyBeats(), hangAsk: true } });
+    const g = applyHang(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(QUILL_HANG_SPECTATOR);
+    expect(g.stallDark).toBe(false);
+    expect(guestCanClaim(g.players.get("g")!)).toBe(false);
   });
 });
 
