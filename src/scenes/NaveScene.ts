@@ -271,6 +271,13 @@ export class NaveScene extends Phaser.Scene {
       this.net.read(sign.id);
       return;
     }
+    const mate = (this.net.snap?.players ?? []).find(
+      (o) => o.id !== me.id && !o.guest && nearPoint(me.x, me.y, o.x, o.y, 56),
+    );
+    if (mate && this.net.snap?.weatherNamed && !me.guest && !me.beats.party) {
+      this.net.party();
+      return;
+    }
     if (me.locked) return;
     const rites = this.net.snap?.rites ?? [];
     const burial = rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
@@ -510,6 +517,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7a1028
                       : poi.kind === "vesper-person"
                         ? 0x7eb6ff
+                      : poi.kind === "party-walk"
+                        ? 0x7eb6ff
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -737,7 +746,14 @@ export class NaveScene extends Phaser.Scene {
     const shrine = nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56);
     const ioneGoneNear = !!(snap.ioneGone && nearPoint(me.x, me.y, IONE.x, IONE.y, 56));
 
-    if (still && (me.guest || me.locked)) {
+    const mateNear = snap.players.find(
+      (o) => o.id !== me.id && !o.guest && nearPoint(me.x, me.y, o.x, o.y, 56),
+    );
+    if (mateNear && (me.beats.party || snap.partyHeld)) {
+      this.prompt = me.heard || "You walk the hour together. A party, not a stick.";
+    } else if (mateNear && snap.weatherNamed && !me.guest) {
+      this.prompt = "F — ask them to walk the hour. A party, not a stick.";
+    } else if (still && (me.guest || me.locked)) {
       this.prompt = "A still. You do not get this Wink.";
     } else if (still && (snap.stillHeld || me.beats.still)) {
       this.prompt = me.heard || "Production still. Same hour. Your Wink. Combat is not.";
@@ -1168,7 +1184,8 @@ export class NaveScene extends Phaser.Scene {
       const quillBit = snap.quillGone ? " · Quill gone" : "";
       const vesperBit = snap.vesperGone ? " · Vesper gone" : "";
       const seasonBit = snap.bracketHeld ? " · equal bracket" : snap.seasonHeld ? " · season" : "";
-      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}${naraBit}${ordBit}${quillBit}${vesperBit}${seasonBit}`;
+      const partyBit = me.partyOf ? " · party" : "";
+      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}${naraBit}${ordBit}${quillBit}${vesperBit}${seasonBit}${partyBit}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;

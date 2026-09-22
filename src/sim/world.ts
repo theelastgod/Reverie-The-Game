@@ -153,6 +153,13 @@ import {
   ADDRESSED_SPECTATOR,
   ADDRESSED_PLAQUE,
   addressedPoi,
+  PARTY_COPY,
+  WINK_PARTY_WALK,
+  PARTY_NEED,
+  PARTY_HELD,
+  PARTY_SPECTATOR,
+  PARTY_WALK_PLAQUE,
+  partyPoi,
   STORM_GEAR,
   STORM_SKIM,
   STORM_PRESS,
@@ -718,6 +725,7 @@ export type Player = {
   filmRoom: FilmRoom;
   winkSchool: WinkSchool;
   historyLog: HistoryLog;
+  partyOf: string;
 };
 
 export type WorldState = {
@@ -798,6 +806,7 @@ export type WorldState = {
   ordPersonHeld: boolean;
   hitStopHeld: boolean;
   addressedHeld: boolean;
+  partyHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -854,6 +863,7 @@ export function spawnGuest(id: string): Player {
     surface: false,
     filmRoom: "",
     historyLog: emptyLog(),
+    partyOf: "",
   };
 }
 
@@ -917,6 +927,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     filmRoom: p.filmRoom,
     winkSchool: p.winkSchool,
     historyLog: { ...p.historyLog, houses: [...p.historyLog.houses] },
+    partyOf: p.partyOf,
     x,
     y,
     ...patch,
@@ -1034,6 +1045,7 @@ export function emptyWorld(): WorldState {
     ordPersonHeld: false,
     hitStopHeld: false,
     addressedHeld: false,
+    partyHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -1382,6 +1394,55 @@ export function applyAddressed(w: WorldState, playerId: string): WorldState {
   const pois = w.pois.some((poi) => poi.id === "addressed") ? w.pois : [...w.pois, addressedPoi()];
   const signs = w.signs.map((s) => (s.id === "safety-plaque" ? { ...ADDRESSED_PLAQUE } : s));
   return { ...w, players, addressedHeld: true, pois, signs };
+}
+
+export function applyParty(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const other = [...w.players.values()].find(
+    (o) => o.id !== playerId && o.hp > 0 && !o.guest && !o.locked && nearPoint(p.x, p.y, o.x, o.y, 56),
+  );
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: PARTY_SPECTATOR, wink: visibleWink(true, WINK_PARTY_WALK) });
+    return { ...w, players };
+  }
+  if (!w.weatherNamed) {
+    players.set(playerId, { ...p, heard: PARTY_NEED });
+    return { ...w, players };
+  }
+  if (!other) {
+    players.set(playerId, { ...p, heard: PARTY_NEED });
+    return { ...w, players };
+  }
+  if (w.partyHeld && p.beats.party && p.partyOf === other.id) {
+    players.set(playerId, { ...p, heard: PARTY_HELD, wink: visibleWink(false, WINK_PARTY_WALK) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, party: true },
+    partyOf: other.id,
+    heard: PARTY_COPY,
+    wink: visibleWink(false, WINK_PARTY_WALK),
+  });
+  players.set(other.id, {
+    ...other,
+    beats: { ...other.beats, party: true },
+    partyOf: playerId,
+    heard: PARTY_COPY,
+    wink: visibleWink(false, WINK_PARTY_WALK),
+  });
+  const mx = Math.round((p.x + other.x) / 2);
+  const my = Math.round((p.y + other.y) / 2);
+  const plaque = { ...PARTY_WALK_PLAQUE, x: mx, y: my };
+  const pois = w.pois.some((poi) => poi.id === "party-walk")
+    ? w.pois.map((poi) => (poi.id === "party-walk" ? partyPoi(mx, my) : poi))
+    : [...w.pois, partyPoi(mx, my)];
+  const signs = w.signs.some((s) => s.id === "party-walk")
+    ? w.signs.map((s) => (s.id === "party-walk" ? plaque : s))
+    : [...w.signs, plaque];
+  return { ...w, players, partyHeld: true, pois, signs };
 }
 
 export function applyNaraPerson(w: WorldState, playerId: string): WorldState {
@@ -3508,6 +3569,7 @@ export function snapshot(w: WorldState) {
     ordPersonHeld: w.ordPersonHeld,
     hitStopHeld: w.hitStopHeld,
     addressedHeld: w.addressedHeld,
+    partyHeld: w.partyHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

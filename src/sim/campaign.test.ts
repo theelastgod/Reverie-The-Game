@@ -99,6 +99,12 @@ import {
   ADDRESSED_HELD,
   ADDRESSED_SPECTATOR,
   ADDRESSED_PLAQUE,
+  PARTY_COPY,
+  WINK_PARTY_WALK,
+  PARTY_NEED,
+  PARTY_HELD,
+  PARTY_SPECTATOR,
+  PARTY_WALK_PLAQUE,
   DODGE_WHIFF,
   STORM_GEAR,
   STORM_SKIM,
@@ -604,6 +610,7 @@ import {
   snapshot,
   applyStrike,
   applyAddressed,
+  applyParty,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1406,6 +1413,59 @@ describe("High aura address", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: 192, y: 400, locked: true, aura: 17 });
     expect(applyAddressed(gWorld, "g").players.get("g")?.heard).toBe(ADDRESSED_SPECTATOR);
     expect(gWorld.addressedHeld).toBe(false);
+  });
+});
+
+describe("Party walk", () => {
+  it("named weather plus a nearby Angel walks the hour; guests cannot", () => {
+    const w = emptyWorld();
+    w.weatherNamed = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      x: 200,
+      y: 480,
+    });
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: 2,
+      x: 220,
+      y: 480,
+    });
+    const walked = applyParty(w, "a");
+    const a = walked.players.get("a")!;
+    const b = walked.players.get("b")!;
+    expect(a.heard).toBe(PARTY_COPY);
+    expect(a.wink).toBe(WINK_PARTY_WALK);
+    expect(a.beats.party).toBe(true);
+    expect(a.partyOf).toBe("b");
+    expect(b.partyOf).toBe("a");
+    expect(walked.partyHeld).toBe(true);
+    expect(walked.pois.find((poi) => poi.kind === "party-walk")?.id).toBe("party-walk");
+    expect(walked.signs.find((s) => s.id === "party-walk")?.title).toBe(PARTY_WALK_PLAQUE.title);
+    expect(a.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(a)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(a)).toBe(false);
+    expect(applyParty(walked, "a").players.get("a")?.heard).toBe(PARTY_HELD);
+
+    const alone = emptyWorld();
+    alone.weatherNamed = true;
+    alone.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    expect(applyParty(alone, "a").players.get("a")?.heard).toBe(PARTY_NEED);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    early.players.set("b", { ...spawnGuest("b"), guest: false, x: 220, y: 480 });
+    expect(applyParty(early, "a").players.get("a")?.heard).toBe(PARTY_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.weatherNamed = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
+    gWorld.players.set("b", { ...spawnGuest("b"), guest: false, x: 220, y: 480 });
+    expect(applyParty(gWorld, "g").players.get("g")?.heard).toBe(PARTY_SPECTATOR);
+    expect(gWorld.partyHeld).toBe(false);
   });
 });
 
