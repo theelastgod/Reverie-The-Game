@@ -38,6 +38,11 @@ import {
   NARA_GOD_SPECTATOR,
   WINK_NARA_GOD,
   LAST_GOD_BURIED_PLAQUE,
+  QUILL_NOPRINT,
+  WINK_NOPRINT,
+  QUILL_NOPRINT_LATER,
+  QUILL_NOPRINT_SPECTATOR,
+  NOPRINT_PLAQUE,
   ORD_LAST,
   WINK_ORD_LAST,
   ORD_LAST_LATER,
@@ -785,6 +790,51 @@ describe("Ord will not number the last god", () => {
     const g = applyTalk(gWorld, "g", "ord");
     expect(g.players.get("g")?.heard).toBe(ORD_LAST_SPECTATOR);
     expect(g.ordAtCare).toBe(false);
+  });
+});
+
+describe("Quill will not print the last god", () => {
+  it("after absence is named, talk to Quill unlistes it; guests cannot", () => {
+    const quill = NAVE_NPCS.find((n) => n.id === "quill")!;
+    const w = emptyWorld();
+    w.lastGodNamed = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), market: true, hall: true, lastGod: true, quill: true },
+      x: quill.x,
+      y: quill.y,
+    });
+    const said = applyTalk(w, "a", "quill");
+    const p = said.players.get("a")!;
+    expect(p.heard).toBe(QUILL_NOPRINT);
+    expect(p.wink).toBe(WINK_NOPRINT);
+    expect(p.beats.quillNoPrint).toBe(true);
+    expect(said.quillNoPrint).toBe(true);
+    expect(said.pois.find((poi) => poi.id === CLEARING_STALL.id)?.kind).toBe("last-god-unlisted");
+    expect(said.signs.find((s) => s.id === CLEARING_STALL.id)?.title).toBe(NOPRINT_PLAQUE.title);
+    expect(liveNpcs(false, false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "quill")?.role).toBe(
+      "Will not print it",
+    );
+    expect(applyTalk(said, "a", "quill").players.get("a")?.heard).toBe(QUILL_NOPRINT_LATER);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.lastGodNamed = true;
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: quill.x,
+      y: quill.y,
+      locked: true,
+      beats: { ...emptyBeats(), market: true, spot: true },
+    });
+    const g = applyTalk(gWorld, "g", "quill");
+    expect(g.players.get("g")?.heard).toBe(QUILL_NOPRINT_SPECTATOR);
+    expect(g.quillNoPrint).toBe(false);
   });
 });
 

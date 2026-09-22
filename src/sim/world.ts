@@ -265,6 +265,12 @@ import {
   WINK_NARA_GOD,
   LAST_GOD_BURIED_PLAQUE,
   lastGodBuriedPoi,
+  QUILL_NOPRINT,
+  WINK_NOPRINT,
+  QUILL_NOPRINT_LATER,
+  QUILL_NOPRINT_SPECTATOR,
+  NOPRINT_PLAQUE,
+  noprintPoi,
   WINK_CANAL,
   CANAL_SPECTATOR,
   CANAL_NEED,
@@ -466,6 +472,7 @@ export type WorldState = {
   ordAtCare: boolean;
   naraAtCare: boolean;
   lastGodBuried: boolean;
+  quillNoPrint: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -627,6 +634,7 @@ export function emptyWorld(): WorldState {
     ordAtCare: false,
     naraAtCare: false,
     lastGodBuried: false,
+    quillNoPrint: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -883,7 +891,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -1005,6 +1013,26 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
     return { ...w, players };
   }
   if (id === "quill" && p.beats.market && !p.guest && !p.locked) {
+    if (w.lastGodNamed || p.beats.lastGod) {
+      if (p.beats.quillNoPrint || w.quillNoPrint) {
+        players.set(playerId, { ...p, heard: QUILL_NOPRINT_LATER, wink: visibleWink(false, WINK_NOPRINT) });
+        return { ...w, players };
+      }
+      players.set(playerId, {
+        ...p,
+        beats: { ...p.beats, quillNoPrint: true },
+        heard: QUILL_NOPRINT,
+        wink: visibleWink(false, WINK_NOPRINT),
+        readiness: p.readiness + 1,
+      });
+      return {
+        ...w,
+        players,
+        quillNoPrint: true,
+        pois: w.pois.map((poi) => (poi.id === CLEARING_STALL.id ? noprintPoi() : poi)),
+        signs: w.signs.map((s) => (s.id === CLEARING_STALL.id ? { ...NOPRINT_PLAQUE } : s)),
+      };
+    }
     if (p.beats.hang) {
       if (p.beats.unflag || w.wetCult) {
         players.set(playerId, { ...p, heard: UNFLAG_LATER, wink: visibleWink(false, WINK_UNFLAG) });
@@ -1041,8 +1069,8 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
     }
     return applyForge(w, playerId, "hear");
   }
-  if (id === "quill" && (p.guest || p.locked) && p.beats.spot) {
-    players.set(playerId, { ...p, heard: QUILL_HANG_SPECTATOR });
+  if (id === "quill" && (p.guest || p.locked) && (p.beats.spot || w.lastGodNamed)) {
+    players.set(playerId, { ...p, heard: w.lastGodNamed ? QUILL_NOPRINT_SPECTATOR : QUILL_HANG_SPECTATOR });
     return { ...w, players };
   }
   if (id === "ord" && w.lastGodNamed && !p.guest && !p.locked) return applyOrdLast(w, playerId);
@@ -2314,7 +2342,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2333,6 +2361,7 @@ export function snapshot(w: WorldState) {
     ordAtCare: w.ordAtCare,
     naraAtCare: w.naraAtCare,
     lastGodBuried: w.lastGodBuried,
+    quillNoPrint: w.quillNoPrint,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,

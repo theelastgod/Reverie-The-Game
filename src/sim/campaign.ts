@@ -78,6 +78,7 @@ export type Beats = {
   ordLast: boolean;
   naraGodAsk: boolean;
   naraGod: boolean;
+  quillNoPrint: boolean;
 };
 
 export type WeatherHeard = {
@@ -140,6 +141,7 @@ export type Poi = {
     | "fourfold-held"
     | "last-god-absent"
     | "last-god-buried"
+    | "last-god-unlisted"
     | "desk-empty"
     | "yield-empty"
     | "ione-gone";
@@ -418,6 +420,30 @@ export const QUILL_HANG_LATER =
   "The stall is a shrine now. I am on the wet street. Copies do not hang here.";
 export const QUILL_HANG_NEED = "You sold the prayer. I cannot darken a stall with a print.";
 export const QUILL_HANG_SPECTATOR = "Quill is taking the lights down. Not for you.";
+export const QUILL_NOPRINT =
+  "I will not print the last god. Copies travel. Absence does not. The stall stays a shrine. This was not a fetch.";
+export const WINK_NOPRINT = "Exhibition cannot hold a god. Cult does not list. Combat is not.";
+export const QUILL_NOPRINT_LATER = "I am not printing it. The kerb is cult. Copies stop here.";
+export const QUILL_NOPRINT_NEED = "Name the last god as absence first. I will not refuse a listing that still pretends a body.";
+export const QUILL_NOPRINT_SPECTATOR = "Quill is taking a sheet off the press. Not for you.";
+
+export const NOPRINT_PLAQUE: Sign = {
+  id: CLEARING_STALL.id,
+  title: "The last god does not list",
+  text: "Absence is not stock. Copies stop here. The number does not strike.",
+  x: CLEARING_STALL.x,
+  y: CLEARING_STALL.y,
+};
+
+export function noprintPoi(): Poi {
+  return {
+    id: CLEARING_STALL.id,
+    name: "The last god does not list",
+    x: CLEARING_STALL.x,
+    y: CLEARING_STALL.y,
+    kind: "last-god-unlisted",
+  };
+}
 export const WINK_HANG = "A stall can be a shrine. You ended a listing. Aura does not list.";
 export const STALL_DARK_COPY = "The stall is dark. Cult hangs. Copies do not travel.";
 
@@ -1139,6 +1165,7 @@ export function emptyBeats(): Beats {
     ordLast: false,
     naraGodAsk: false,
     naraGod: false,
+    quillNoPrint: false,
   };
 }
 
@@ -1562,6 +1589,7 @@ export function liveNpcs(
   straitBuried = false,
   ordAtCare = false,
   naraAtCare = false,
+  quillNoPrint = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1594,10 +1622,12 @@ export function liveNpcs(
             ...n,
             x: WET_GRID.x + 48,
             y: WET_GRID.y,
-            role: wetCult ? "Keeping the street" : "On the wet street",
+            role: quillNoPrint ? "Will not print it" : wetCult ? "Keeping the street" : "On the wet street",
           }
         : n,
     );
+  } else if (quillNoPrint) {
+    base = base.map((n) => (n.id === "quill" ? { ...n, role: "Will not print it" } : n));
   }
   if (vesperAtFoundry) base = [...base, { ...VESPER }];
   if (ordAtCare) {

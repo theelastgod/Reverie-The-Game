@@ -459,6 +459,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "last-god-buried"
                         ? 0x7a1028
+                      : poi.kind === "last-god-unlisted"
+                        ? 0xc9a56a
                       : poi.kind === "house-standing"
                         ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
@@ -680,6 +682,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Quill is selling something. You do not yet have the eyes for the price.";
     } else if (forge && (me.guest || me.locked)) {
       this.prompt = "Quill is doing something with paper. You cannot tell which sheet is the prayer.";
+    } else if (npcNear?.id === "quill" && (me.beats.quillNoPrint || snap.quillNoPrint)) {
+      this.prompt = me.heard || "Quill will not print the last god. Copies stop here.";
+    } else if (npcNear?.id === "quill" && (snap.lastGodNamed || me.beats.lastGod) && me.beats.market && !me.guest) {
+      this.prompt = "F — Quill will not print the last god. Absence does not list. Not a fetch.";
     } else if (npcNear?.id === "quill" && (me.beats.unflag || snap.wetCult)) {
       this.prompt = me.heard || "The street is cult. Quill is keeping the kerb.";
     } else if (npcNear?.id === "quill" && me.beats.unflagAsk) {

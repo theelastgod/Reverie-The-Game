@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 52** — Named side quest. Keep writing until 24 authored hours. No mint.
+**Next stage: 53** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -233,7 +233,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the last god is named as absence, talk to Nara twice: she buries it as earth. Care plaque/POI The last god — buried. Cult. She walks to the Care.
 - Guests cannot bury a god. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 52 (do this next)
+## Stage 52 (landed)
+- After the last god is named as absence, talk to Quill: she will not print it. Stall plaque/POI The last god does not list. Role: Will not print it.
+- Guests cannot unlist a god. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 53 (do this next)
 Named side quest. Fetch-only forbidden. No mint. No Base.
 
 ## Rules
