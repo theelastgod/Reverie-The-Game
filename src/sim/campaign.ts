@@ -141,6 +141,7 @@ export type Beats = {
   gardenPeople: boolean;
   burialPeople: boolean;
   weatherPeople: boolean;
+  navePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -270,6 +271,7 @@ export type Poi = {
     | "garden-people"
     | "burial-people"
     | "weather-people"
+    | "nave-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -957,6 +959,31 @@ export function weatherPeoplePoi(): Poi {
     x: 192,
     y: 340,
     kind: "weather-people",
+  };
+}
+
+export const NAVE_PEOPLE_COPY =
+  "The Nave holds as people, not a tube of process. Extract still costs. Combat is not. This was not a fetch.";
+export const WINK_NAVE_PEOPLE = "People, not a corridor. The token does not strike.";
+export const NAVE_PEOPLE_NEED = "The weather as people first. A nave of people is not a fetch.";
+export const NAVE_PEOPLE_HELD = "The Nave already holds as people. Extract still costs.";
+export const NAVE_PEOPLE_SPECTATOR = "A tube. You do not get a house of people.";
+
+export const NAVE_PEOPLE_PLAQUE: Sign = {
+  id: "nave-people",
+  title: "The Nave — people",
+  text: "A house of people. Extract still costs. The number does not strike.",
+  x: 192,
+  y: 340,
+};
+
+export function navePeoplePoi(): Poi {
+  return {
+    id: "nave-people",
+    name: "The Nave — people",
+    x: 192,
+    y: 340,
+    kind: "nave-people",
   };
 }
 
@@ -2443,6 +2470,7 @@ export function emptyBeats(): Beats {
     gardenPeople: false,
     burialPeople: false,
     weatherPeople: false,
+    navePeople: false,
   };
 }
 

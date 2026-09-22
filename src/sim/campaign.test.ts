@@ -250,6 +250,12 @@ import {
   BURIAL_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_COPY,
   WINK_WEATHER_PEOPLE,
+  NAVE_PEOPLE_COPY,
+  WINK_NAVE_PEOPLE,
+  NAVE_PEOPLE_NEED,
+  NAVE_PEOPLE_HELD,
+  NAVE_PEOPLE_SPECTATOR,
+  NAVE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -799,6 +805,7 @@ import {
   applyGardenPeople,
   applyBurialPeople,
   applyWeatherPeople,
+  applyNavePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2714,6 +2721,45 @@ describe("Weather — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: 192, y: 340, locked: true });
     expect(applyWeatherPeople(gWorld, "g").players.get("g")?.heard).toBe(WEATHER_PEOPLE_SPECTATOR);
     expect(gWorld.weatherPeopleHeld).toBe(false);
+  });
+});
+
+describe("The Nave — people", () => {
+  it("gathers the Nave as people after the weather; extract still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.weatherPeopleHeld = true;
+    w.signs = [...w.signs, { id: "weather", title: "Weather — people", text: "People.", x: 192, y: 340 }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), weatherPeople: true },
+      x: 192,
+      y: 340,
+    });
+    const named = applyRead(w, "a", "weather");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(NAVE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_NAVE_PEOPLE);
+    expect(p.beats.navePeople).toBe(true);
+    expect(named.navePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "nave-people")?.name).toBe("The Nave — people");
+    expect(named.signs.find((s) => s.id === "nave-people")?.title).toBe(NAVE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Extract still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyNavePeople(named, "a").players.get("a")?.heard).toBe(NAVE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: 192, y: 340 });
+    expect(applyNavePeople(early, "a").players.get("a")?.heard).toBe(NAVE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.weatherPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 192, y: 340, locked: true });
+    expect(applyNavePeople(gWorld, "g").players.get("g")?.heard).toBe(NAVE_PEOPLE_SPECTATOR);
+    expect(gWorld.navePeopleHeld).toBe(false);
   });
 });
 

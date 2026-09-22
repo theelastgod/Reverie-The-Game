@@ -324,6 +324,13 @@ import {
   WEATHER_PEOPLE_SPECTATOR,
   WEATHER_PEOPLE_PLAQUE,
   weatherPeoplePoi,
+  NAVE_PEOPLE_COPY,
+  WINK_NAVE_PEOPLE,
+  NAVE_PEOPLE_NEED,
+  NAVE_PEOPLE_HELD,
+  NAVE_PEOPLE_SPECTATOR,
+  NAVE_PEOPLE_PLAQUE,
+  navePeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1022,6 +1029,7 @@ export type WorldState = {
   gardenPeopleHeld: boolean;
   burialPeopleHeld: boolean;
   weatherPeopleHeld: boolean;
+  navePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1288,6 +1296,7 @@ export function emptyWorld(): WorldState {
     gardenPeopleHeld: false,
     burialPeopleHeld: false,
     weatherPeopleHeld: false,
+    navePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2384,7 +2393,11 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   const p = w.players.get(playerId);
   const sign = w.signs.find((s) => s.id === signId);
   if (!p || p.hp <= 0 || !sign || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
-  if (sign.id === "weather") return applyWeatherPeople(w, playerId);
+  if (sign.id === "weather" || sign.id === "nave-people") {
+    if (w.weatherPeopleHeld && !w.navePeopleHeld) return applyNavePeople(w, playerId);
+    if (sign.id === "nave-people") return applyNavePeople(w, playerId);
+    return applyWeatherPeople(w, playerId);
+  }
   if (sign.id === CARE_DOOR.id) return applyCare(w, playerId);
   if (sign.id === "organs-people") return applyOrgansPeople(w, playerId);
   if (sign.id === HOUSE_HALL.id) {
@@ -3554,6 +3567,37 @@ export function applyWeatherPeople(w: WorldState, playerId: string): WorldState 
     pois: w.pois.map((poi) => (poi.id === "weather" ? weatherPeoplePoi() : poi)),
     signs: w.signs.map((s) => (s.id === "weather" ? { ...WEATHER_PEOPLE_PLAQUE } : s)),
   };
+}
+
+export function applyNavePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, 192, 340, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: NAVE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_NAVE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.weatherPeopleHeld) {
+    players.set(playerId, { ...p, heard: NAVE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.navePeopleHeld && p.beats.navePeople) {
+    players.set(playerId, { ...p, heard: NAVE_PEOPLE_HELD, wink: visibleWink(false, WINK_NAVE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, navePeople: true },
+    heard: NAVE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_NAVE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "nave-people")
+    ? w.pois.map((poi) => (poi.id === "nave-people" ? navePeoplePoi() : poi))
+    : [...w.pois, navePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "nave-people")
+    ? w.signs.map((s) => (s.id === "nave-people" ? { ...NAVE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...NAVE_PEOPLE_PLAQUE }];
+  return { ...w, players, navePeopleHeld: true, pois, signs };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -4736,6 +4780,7 @@ export function snapshot(w: WorldState) {
     gardenPeopleHeld: w.gardenPeopleHeld,
     burialPeopleHeld: w.burialPeopleHeld,
     weatherPeopleHeld: w.weatherPeopleHeld,
+    navePeopleHeld: w.navePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

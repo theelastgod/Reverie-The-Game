@@ -581,6 +581,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "burial-people"
                         ? 0xc9a56a
+                      : poi.kind === "nave-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -814,7 +816,11 @@ export class NaveScene extends Phaser.Scene {
     const mateNear = snap.players.find(
       (o) => o.id !== me.id && !o.guest && nearPoint(me.x, me.y, o.x, o.y, 56),
     );
-    if (weatherPlaque && (me.beats.weatherPeople || snap.weatherPeopleHeld)) {
+    if (weatherPlaque && (me.beats.navePeople || snap.navePeopleHeld)) {
+      this.prompt = me.heard || "The Nave — people. Extract still costs. Not a stick.";
+    } else if (weatherPlaque && snap.weatherPeopleHeld && !me.guest) {
+      this.prompt = "F — gather the Nave as people. Extract still costs. Not a fetch.";
+    } else if (weatherPlaque && (me.beats.weatherPeople || snap.weatherPeopleHeld)) {
       this.prompt = me.heard || "Weather — people. Speak with the living to name it. Not a stick.";
     } else if (weatherPlaque && snap.burialPeopleHeld && !me.guest) {
       this.prompt = "F — the weather as a house of people. Speak with the living to name it. Not a fetch.";
