@@ -592,6 +592,24 @@ import {
   VISIBLE_PEOPLE_HELD,
   VISIBLE_PEOPLE_SPECTATOR,
   VISIBLE_PEOPLE_PLAQUE,
+  AURA_PEOPLE_COPY,
+  WINK_AURA_PEOPLE,
+  AURA_PEOPLE_NEED,
+  AURA_PEOPLE_HELD,
+  AURA_PEOPLE_SPECTATOR,
+  AURA_PEOPLE_PLAQUE,
+  PRESENCE_PEOPLE_COPY,
+  WINK_PRESENCE_PEOPLE,
+  PRESENCE_PEOPLE_NEED,
+  PRESENCE_PEOPLE_HELD,
+  PRESENCE_PEOPLE_SPECTATOR,
+  PRESENCE_PEOPLE_PLAQUE,
+  WINK_PEOPLE_COPY,
+  WINK_WINK_PEOPLE,
+  WINK_PEOPLE_NEED,
+  WINK_PEOPLE_HELD,
+  WINK_PEOPLE_SPECTATOR,
+  WINK_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1198,6 +1216,9 @@ import {
   applyTokenPeople,
   applyFairPeople,
   applyVisiblePeople,
+  applyAuraPeople,
+  applyPresencePeople,
+  applyWinkPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5432,6 +5453,126 @@ describe("Visible — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyVisiblePeople(gWorld, "g").players.get("g")?.heard).toBe(VISIBLE_PEOPLE_SPECTATOR);
     expect(gWorld.visiblePeopleHeld).toBe(false);
+  });
+});
+
+describe("Aura — people", () => {
+  it("names aura as people after visibility; aura is not damage; guests cannot", () => {
+    const w = emptyWorld();
+    w.visiblePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), visiblePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(AURA_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_AURA_PEOPLE);
+    expect(p.beats.auraPeople).toBe(true);
+    expect(named.auraPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "aura-people")?.name).toBe("Aura — people");
+    expect(named.signs.find((s) => s.id === "aura-people")?.title).toBe(AURA_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Aura is not damage");
+    expect(p.heard).toContain("Aura still withers");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222, aura: 99 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyAuraPeople(named, "a").players.get("a")?.heard).toBe(AURA_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyAuraPeople(early, "a").players.get("a")?.heard).toBe(AURA_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.visiblePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyAuraPeople(gWorld, "g").players.get("g")?.heard).toBe(AURA_PEOPLE_SPECTATOR);
+    expect(gWorld.auraPeopleHeld).toBe(false);
+  });
+});
+
+describe("Presence — people", () => {
+  it("names presence as people after aura; presence is not damage; guests cannot", () => {
+    const w = emptyWorld();
+    w.auraPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), auraPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PRESENCE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PRESENCE_PEOPLE);
+    expect(p.beats.presencePeople).toBe(true);
+    expect(named.presencePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "presence-people")?.name).toBe("Presence — people");
+    expect(named.signs.find((s) => s.id === "presence-people")?.title).toBe(PRESENCE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Presence is not damage");
+    expect(p.heard).toContain("Presence still addresses");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPresencePeople(named, "a").players.get("a")?.heard).toBe(PRESENCE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyPresencePeople(early, "a").players.get("a")?.heard).toBe(PRESENCE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.auraPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyPresencePeople(gWorld, "g").players.get("g")?.heard).toBe(PRESENCE_PEOPLE_SPECTATOR);
+    expect(gWorld.presencePeopleHeld).toBe(false);
+  });
+});
+
+describe("Wink — people", () => {
+  it("names Winke as people after presence; Winke never withdraw; TAKE stays disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.presencePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), presencePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(WINK_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_WINK_PEOPLE);
+    expect(p.beats.winkPeople).toBe(true);
+    expect(named.winkPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "wink-people")?.name).toBe("Wink — people");
+    expect(named.signs.find((s) => s.id === "wink-people")?.title).toBe(WINK_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Winke never withdraw");
+    expect(p.heard).toContain("TAKE stays disarmed");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyWinkPeople(named, "a").players.get("a")?.heard).toBe(WINK_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyWinkPeople(early, "a").players.get("a")?.heard).toBe(WINK_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.presencePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyWinkPeople(gWorld, "g").players.get("g")?.heard).toBe(WINK_PEOPLE_SPECTATOR);
+    expect(gWorld.winkPeopleHeld).toBe(false);
   });
 });
 

@@ -197,6 +197,9 @@ export type Beats = {
   tokenPeople: boolean;
   fairPeople: boolean;
   visiblePeople: boolean;
+  auraPeople: boolean;
+  presencePeople: boolean;
+  winkPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -382,6 +385,9 @@ export type Poi = {
     | "token-people"
     | "fair-people"
     | "visible-people"
+    | "aura-people"
+    | "presence-people"
+    | "wink-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3333,6 +3339,81 @@ export function visiblePeoplePoi(): Poi {
   };
 }
 
+export const AURA_PEOPLE_COPY =
+  "Aura is a house of people, not a combat stick. Aura still withers. Aura is not damage. Combat is not. This was not a fetch.";
+export const WINK_AURA_PEOPLE = "People, not an aura stick. The token does not strike.";
+export const AURA_PEOPLE_NEED = "Visibility as people first. Aura of people is not a fetch.";
+export const AURA_PEOPLE_HELD = "Aura already holds as people. Aura still withers. Aura is not damage.";
+export const AURA_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const AURA_PEOPLE_PLAQUE: Sign = {
+  id: "aura-people",
+  title: "Aura — people",
+  text: "A house of people. Aura still withers. Aura is not damage. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function auraPeoplePoi(): Poi {
+  return {
+    id: "aura-people",
+    name: "Aura — people",
+    x: 720,
+    y: 520,
+    kind: "aura-people",
+  };
+}
+
+export const PRESENCE_PEOPLE_COPY =
+  "Presence is a house of people, not a stick of process. Presence still addresses. Presence is not damage. Combat is not. This was not a fetch.";
+export const WINK_PRESENCE_PEOPLE = "People, not a presence stick. The token does not strike.";
+export const PRESENCE_PEOPLE_NEED = "Aura as people first. Presence of people is not a fetch.";
+export const PRESENCE_PEOPLE_HELD = "Presence already holds as people. Presence still addresses. Presence is not damage.";
+export const PRESENCE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const PRESENCE_PEOPLE_PLAQUE: Sign = {
+  id: "presence-people",
+  title: "Presence — people",
+  text: "A house of people. Presence still addresses. Presence is not damage. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function presencePeoplePoi(): Poi {
+  return {
+    id: "presence-people",
+    name: "Presence — people",
+    x: 720,
+    y: 520,
+    kind: "presence-people",
+  };
+}
+
+export const WINK_PEOPLE_COPY =
+  "Winke are a house of people, not a withdraw of process. Winke never withdraw. TAKE stays disarmed. Combat is not. This was not a fetch.";
+export const WINK_WINK_PEOPLE = "People, not a wink stick. The token does not strike.";
+export const WINK_PEOPLE_NEED = "Presence as people first. Winke of people are not a fetch.";
+export const WINK_PEOPLE_HELD = "Winke already hold as people. Winke never withdraw. TAKE stays disarmed.";
+export const WINK_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const WINK_PEOPLE_PLAQUE: Sign = {
+  id: "wink-people",
+  title: "Wink — people",
+  text: "A house of people. Winke never withdraw. TAKE stays disarmed. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function winkPeoplePoi(): Poi {
+  return {
+    id: "wink-people",
+    name: "Wink — people",
+    x: 720,
+    y: 520,
+    kind: "wink-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4017,6 +4098,9 @@ export function emptyBeats(): Beats {
     tokenPeople: false,
     fairPeople: false,
     visiblePeople: false,
+    auraPeople: false,
+    presencePeople: false,
+    winkPeople: false,
   };
 }
 

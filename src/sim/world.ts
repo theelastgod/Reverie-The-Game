@@ -714,6 +714,27 @@ import {
   VISIBLE_PEOPLE_SPECTATOR,
   VISIBLE_PEOPLE_PLAQUE,
   visiblePeoplePoi,
+  AURA_PEOPLE_COPY,
+  WINK_AURA_PEOPLE,
+  AURA_PEOPLE_NEED,
+  AURA_PEOPLE_HELD,
+  AURA_PEOPLE_SPECTATOR,
+  AURA_PEOPLE_PLAQUE,
+  auraPeoplePoi,
+  PRESENCE_PEOPLE_COPY,
+  WINK_PRESENCE_PEOPLE,
+  PRESENCE_PEOPLE_NEED,
+  PRESENCE_PEOPLE_HELD,
+  PRESENCE_PEOPLE_SPECTATOR,
+  PRESENCE_PEOPLE_PLAQUE,
+  presencePeoplePoi,
+  WINK_PEOPLE_COPY,
+  WINK_WINK_PEOPLE,
+  WINK_PEOPLE_NEED,
+  WINK_PEOPLE_HELD,
+  WINK_PEOPLE_SPECTATOR,
+  WINK_PEOPLE_PLAQUE,
+  winkPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1476,6 +1497,9 @@ export type WorldState = {
   tokenPeopleHeld: boolean;
   fairPeopleHeld: boolean;
   visiblePeopleHeld: boolean;
+  auraPeopleHeld: boolean;
+  presencePeopleHeld: boolean;
+  winkPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1798,6 +1822,9 @@ export function emptyWorld(): WorldState {
     tokenPeopleHeld: false,
     fairPeopleHeld: false,
     visiblePeopleHeld: false,
+    auraPeopleHeld: false,
+    presencePeopleHeld: false,
+    winkPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3022,7 +3049,13 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people" || sign.id === "aura-people" || sign.id === "presence-people" || sign.id === "wink-people") {
+    if (w.presencePeopleHeld && !w.winkPeopleHeld) return applyWinkPeople(w, playerId);
+    if (sign.id === "wink-people") return applyWinkPeople(w, playerId);
+    if (w.auraPeopleHeld && !w.presencePeopleHeld) return applyPresencePeople(w, playerId);
+    if (sign.id === "presence-people") return applyPresencePeople(w, playerId);
+    if (w.visiblePeopleHeld && !w.auraPeopleHeld) return applyAuraPeople(w, playerId);
+    if (sign.id === "aura-people") return applyAuraPeople(w, playerId);
     if (w.fairPeopleHeld && !w.visiblePeopleHeld) return applyVisiblePeople(w, playerId);
     if (sign.id === "visible-people") return applyVisiblePeople(w, playerId);
     if (w.tokenPeopleHeld && !w.fairPeopleHeld) return applyFairPeople(w, playerId);
@@ -5972,6 +6005,99 @@ export function applyVisiblePeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, visiblePeopleHeld: true, pois, signs };
 }
 
+export function applyAuraPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: AURA_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_AURA_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.visiblePeopleHeld) {
+    players.set(playerId, { ...p, heard: AURA_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.auraPeopleHeld && p.beats.auraPeople) {
+    players.set(playerId, { ...p, heard: AURA_PEOPLE_HELD, wink: visibleWink(false, WINK_AURA_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, auraPeople: true },
+    heard: AURA_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_AURA_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "aura-people")
+    ? w.pois.map((poi) => (poi.id === "aura-people" ? auraPeoplePoi() : poi))
+    : [...w.pois, auraPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "aura-people")
+    ? w.signs.map((s) => (s.id === "aura-people" ? { ...AURA_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...AURA_PEOPLE_PLAQUE }];
+  return { ...w, players, auraPeopleHeld: true, pois, signs };
+}
+
+export function applyPresencePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: PRESENCE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_PRESENCE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.auraPeopleHeld) {
+    players.set(playerId, { ...p, heard: PRESENCE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.presencePeopleHeld && p.beats.presencePeople) {
+    players.set(playerId, { ...p, heard: PRESENCE_PEOPLE_HELD, wink: visibleWink(false, WINK_PRESENCE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, presencePeople: true },
+    heard: PRESENCE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_PRESENCE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "presence-people")
+    ? w.pois.map((poi) => (poi.id === "presence-people" ? presencePeoplePoi() : poi))
+    : [...w.pois, presencePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "presence-people")
+    ? w.signs.map((s) => (s.id === "presence-people" ? { ...PRESENCE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...PRESENCE_PEOPLE_PLAQUE }];
+  return { ...w, players, presencePeopleHeld: true, pois, signs };
+}
+
+export function applyWinkPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: WINK_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_WINK_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.presencePeopleHeld) {
+    players.set(playerId, { ...p, heard: WINK_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.winkPeopleHeld && p.beats.winkPeople) {
+    players.set(playerId, { ...p, heard: WINK_PEOPLE_HELD, wink: visibleWink(false, WINK_WINK_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, winkPeople: true },
+    heard: WINK_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_WINK_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "wink-people")
+    ? w.pois.map((poi) => (poi.id === "wink-people" ? winkPeoplePoi() : poi))
+    : [...w.pois, winkPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "wink-people")
+    ? w.signs.map((s) => (s.id === "wink-people" ? { ...WINK_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...WINK_PEOPLE_PLAQUE }];
+  return { ...w, players, winkPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -7211,6 +7337,9 @@ export function snapshot(w: WorldState) {
     tokenPeopleHeld: w.tokenPeopleHeld,
     fairPeopleHeld: w.fairPeopleHeld,
     visiblePeopleHeld: w.visiblePeopleHeld,
+    auraPeopleHeld: w.auraPeopleHeld,
+    presencePeopleHeld: w.presencePeopleHeld,
+    winkPeopleHeld: w.winkPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

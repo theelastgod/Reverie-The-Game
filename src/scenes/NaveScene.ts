@@ -648,6 +648,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "visible-people"
                         ? 0xc9a56a
+                      : poi.kind === "aura-people"
+                        ? 0xc9a56a
+                      : poi.kind === "presence-people"
+                        ? 0xc9a56a
+                      : poi.kind === "wink-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1096,6 +1102,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.winkPeople || snap.winkPeopleHeld)) {
+      this.prompt = me.heard || "Wink — people. Winke never withdraw. TAKE stays disarmed. Not a stick.";
+    } else if (wet && snap.presencePeopleHeld && !me.guest) {
+      this.prompt = "F — Winke as a house of people. Winke never withdraw. TAKE stays disarmed. Not a fetch.";
+    } else if (wet && (me.beats.presencePeople || snap.presencePeopleHeld)) {
+      this.prompt = me.heard || "Presence — people. Presence still addresses. Presence is not damage. Not a stick.";
+    } else if (wet && snap.auraPeopleHeld && !me.guest) {
+      this.prompt = "F — presence as a house of people. Presence still addresses. Presence is not damage. Not a fetch.";
+    } else if (wet && (me.beats.auraPeople || snap.auraPeopleHeld)) {
+      this.prompt = me.heard || "Aura — people. Aura still withers. Aura is not damage. Not a stick.";
+    } else if (wet && snap.visiblePeopleHeld && !me.guest) {
+      this.prompt = "F — aura as a house of people. Aura still withers. Aura is not damage. Not a fetch.";
     } else if (wet && (me.beats.visiblePeople || snap.visiblePeopleHeld)) {
       this.prompt = me.heard || "Visible — people. Serials stay visible. Serials do not buy damage. Not a stick.";
     } else if (wet && snap.fairPeopleHeld && !me.guest) {

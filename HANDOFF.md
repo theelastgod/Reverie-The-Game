@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 180** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 183** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -760,7 +760,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the published band as people, F at the Wet Grid: visibility as people. Plaque/POI **Visible — people**. Serials stay visible. Serials do not buy damage.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 180 (do this next)
+## Stage 180 (landed)
+- After visibility as people, F at the Wet Grid: aura as people. Plaque/POI **Aura — people**. Aura still withers. Aura is not damage.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 181 (landed)
+- After aura as people, F at the Wet Grid: presence as people. Plaque/POI **Presence — people**. Presence still addresses. Presence is not damage.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 182 (landed)
+- After presence as people, F at the Wet Grid: Winke as people. Plaque/POI **Wink — people**. Winke never withdraw. TAKE stays disarmed.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 183 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
