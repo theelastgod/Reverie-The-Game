@@ -32,6 +32,12 @@ import {
   LAST_GOD_HELD,
   LAST_GOD_SPECTATOR,
   LAST_GOD_PLAQUE,
+  RESTRAINT_COPY,
+  WINK_RESTRAINT,
+  RESTRAINT_NEED,
+  RESTRAINT_HELD,
+  RESTRAINT_SPECTATOR,
+  RESTRAINT_PLAQUE,
   NARA_GOD_ASK,
   NARA_GOD,
   NARA_GOD_LATER,
@@ -325,6 +331,7 @@ import {
   applyUnflag,
   applyDesk,
   applyShrine,
+  applyRestraint,
   applyRestore,
   applyInsure,
   applyRepair,
@@ -892,6 +899,52 @@ describe("Nara buries the last god", () => {
     expect(g.players.get("g")?.heard).toBe(NARA_GOD_SPECTATOR);
     expect(g.lastGodBuried).toBe(false);
     expect(g.naraAtCare).toBe(false);
+  });
+});
+
+describe("holding-back at the shrine", () => {
+  it("names holding-back after the last god; guests cannot; keep still costs", () => {
+    const w = emptyWorld();
+    w.lastGodNamed = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 20,
+      beats: { ...emptyBeats(), lastGod: true, fourfold: true },
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const named = applyRead(w, "a", SHRINE.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(RESTRAINT_COPY);
+    expect(p.wink).toBe(WINK_RESTRAINT);
+    expect(p.beats.restraint).toBe(true);
+    expect(p.bestand).toBe(20);
+    expect(named.restraintHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === SHRINE.id)?.kind).toBe("shrine-restraint");
+    expect(named.signs.find((s) => s.id === SHRINE.id)?.title).toBe(RESTRAINT_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyRestraint(named, "a").players.get("a")?.heard).toBe(RESTRAINT_HELD);
+    const kept = applyShrine(named, "a");
+    expect(kept.players.get("a")?.bestand).toBe(20 - 8);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    expect(applyRestraint(early, "a").players.get("a")?.heard).toBe(RESTRAINT_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.lastGodNamed = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
+    expect(applyRestraint(gWorld, "g").players.get("g")?.heard).toBe(RESTRAINT_SPECTATOR);
+    expect(gWorld.restraintHeld).toBe(false);
   });
 });
 

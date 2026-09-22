@@ -79,6 +79,7 @@ export type Beats = {
   naraGodAsk: boolean;
   naraGod: boolean;
   quillNoPrint: boolean;
+  restraint: boolean;
 };
 
 export type WeatherHeard = {
@@ -142,6 +143,7 @@ export type Poi = {
     | "last-god-absent"
     | "last-god-buried"
     | "last-god-unlisted"
+    | "shrine-restraint"
     | "desk-empty"
     | "yield-empty"
     | "ione-gone";
@@ -883,6 +885,32 @@ export const SHRINE_PLAQUE: Sign = {
   y: SHRINE.y,
 };
 
+export const RESTRAINT_COPY =
+  "You named holding-back at the shrine. The last god is not a spend. A stance, not a stick. This was not a fetch.";
+export const WINK_RESTRAINT =
+  "Holding-back is how the hour stays world. Restore still costs. Combat is not.";
+export const RESTRAINT_NEED = "Name the last god as absence first. Holding-back is not a fetch at an empty door.";
+export const RESTRAINT_HELD = "The shrine already holds the name. Upkeep still costs. Combat is not.";
+export const RESTRAINT_SPECTATOR = "A shrine you cannot name.";
+
+export const RESTRAINT_PLAQUE: Sign = {
+  id: SHRINE.id,
+  title: "Holding-back",
+  text: "The last god is not a spend. Keep still costs. The number does not strike.",
+  x: SHRINE.x,
+  y: SHRINE.y,
+};
+
+export function restraintPoi(): Poi {
+  return {
+    id: SHRINE.id,
+    name: "Holding-back",
+    x: SHRINE.x,
+    y: SHRINE.y,
+    kind: "shrine-restraint",
+  };
+}
+
 export type Claim = {
   id: string;
   amount: number;
@@ -1166,6 +1194,7 @@ export function emptyBeats(): Beats {
     naraGodAsk: false,
     naraGod: false,
     quillNoPrint: false,
+    restraint: false,
   };
 }
 

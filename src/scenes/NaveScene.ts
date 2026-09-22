@@ -461,6 +461,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7a1028
                       : poi.kind === "last-god-unlisted"
                         ? 0xc9a56a
+                      : poi.kind === "shrine-restraint"
+                        ? 0xc9a56a
                       : poi.kind === "house-standing"
                         ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
@@ -833,6 +835,11 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
+    } else if (shrine && (snap.lastGodNamed || me.beats.lastGod) && !me.beats.restraint && !snap.restraintHeld) {
+      this.prompt = "F — name holding-back at the shrine. The last god is not a spend. Not a fetch.";
+    } else if (shrine && (me.beats.restraint || snap.restraintHeld) && !me.insured) {
+      this.prompt = me.heard
+        || `Holding-back. F keep (${SHRINE_COST}). E restore (${RESTORE_COST}). Q insurance (${INSURANCE_COST}). Not a stick.`;
     } else if (shrine) {
       this.prompt = me.insured
         ? `F keep (${SHRINE_COST}). E restore (${RESTORE_COST}). Paper held — death walks you here. Not a stick.`

@@ -46,6 +46,7 @@ export type Snap = {
   naraAtCare?: boolean;
   lastGodBuried?: boolean;
   quillNoPrint?: boolean;
+  restraintHeld?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

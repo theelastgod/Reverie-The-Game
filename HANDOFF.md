@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 53** — Named side quest. Keep writing until 24 authored hours. No mint.
+**Next stage: 54** — Named side quest. Last of 24 authored hours, then keep polishing. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -237,8 +237,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the last god is named as absence, talk to Quill: she will not print it. Stall plaque/POI The last god does not list. Role: Will not print it.
 - Guests cannot unlist a god. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 53 (do this next)
-Named side quest. Fetch-only forbidden. No mint. No Base.
+## Stage 53 (landed)
+- After the last god is named as absence, F at the shrine names holding-back. Plaque/POI Holding-back. Not a spend. Keep still costs.
+- Guests cannot name it. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 54 (do this next)
+Named side quest. Fetch-only forbidden. No mint. No Base. Twenty-fourth authored hour.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

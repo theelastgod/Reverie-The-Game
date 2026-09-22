@@ -117,6 +117,13 @@ import {
   ORD_LAST_SPECTATOR,
   LAST_GOD_ORD_PLAQUE,
   lastGodOrdPoi,
+  RESTRAINT_COPY,
+  WINK_RESTRAINT,
+  RESTRAINT_NEED,
+  RESTRAINT_HELD,
+  RESTRAINT_SPECTATOR,
+  RESTRAINT_PLAQUE,
+  restraintPoi,
   houseHallPoi,
   openCarePoi,
   serialHistory,
@@ -473,6 +480,7 @@ export type WorldState = {
   naraAtCare: boolean;
   lastGodBuried: boolean;
   quillNoPrint: boolean;
+  restraintHeld: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -635,6 +643,7 @@ export function emptyWorld(): WorldState {
     naraAtCare: false,
     lastGodBuried: false,
     quillNoPrint: false,
+    restraintHeld: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -1177,7 +1186,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return applyFlag(w, playerId);
   }
   if (sign.id === CLAIMS_DESK.id) return applyDesk(w, playerId, "file");
-  if (sign.id === SHRINE.id) return applyShrine(w, playerId);
+  if (sign.id === SHRINE.id) {
+    if (w.lastGodNamed && !w.restraintHeld) return applyRestraint(w, playerId);
+    return applyShrine(w, playerId);
+  }
   if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
   if (sign.id === OPERATOR_DESK.id) return applyOperator(w, playerId, "hear");
   if (sign.id === ORGAN_STRAIT.id || sign.id === ORGAN_FOUNDRY.id || sign.id === ORGAN_CABLE.id) {
@@ -1246,6 +1258,40 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
     wink: visibleWink(false, WINK_HISTORY),
   });
   return { ...w, players, history: w.history.filter((m) => m.id !== mark.id) };
+}
+
+export function applyRestraint(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: RESTRAINT_SPECTATOR, wink: visibleWink(true, WINK_RESTRAINT) });
+    return { ...w, players };
+  }
+  if (!w.lastGodNamed) {
+    players.set(playerId, { ...p, heard: RESTRAINT_NEED });
+    return { ...w, players };
+  }
+  if (w.restraintHeld && p.beats.restraint) {
+    players.set(playerId, { ...p, heard: RESTRAINT_HELD, wink: visibleWink(false, WINK_RESTRAINT) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, restraint: true },
+    heard: RESTRAINT_COPY,
+    wink: visibleWink(false, WINK_RESTRAINT),
+    readiness: p.readiness + 1,
+    lastCareX: SHRINE.x,
+    lastCareY: SHRINE.y,
+  });
+  return {
+    ...w,
+    players,
+    restraintHeld: true,
+    pois: w.pois.map((poi) => (poi.id === SHRINE.id ? restraintPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === SHRINE.id ? { ...RESTRAINT_PLAQUE } : s)),
+  };
 }
 
 export function applyShrine(w: WorldState, playerId: string): WorldState {
@@ -2362,6 +2408,7 @@ export function snapshot(w: WorldState) {
     naraAtCare: w.naraAtCare,
     lastGodBuried: w.lastGodBuried,
     quillNoPrint: w.quillNoPrint,
+    restraintHeld: w.restraintHeld,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
