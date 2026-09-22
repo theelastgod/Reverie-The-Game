@@ -497,6 +497,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7a1028
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
+                      : poi.kind === "nara-person"
+                        ? 0x7a1028
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -924,6 +926,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Movement III is shut. The private yield funds this door the Cold way.";
     } else if (gardenNear && !gardenNear.done && !me.guest) {
       this.prompt = "F bury the Clearing that Movement I over-extracted. Nara Vale will not speak until you do.";
+    } else if (npcNear?.id === "nara" && (me.beats.naraPerson || snap.naraPersonHeld)) {
+      this.prompt = me.heard || "Nara Vale stays. A person, not a function.";
+    } else if (npcNear?.id === "nara" && me.beats.funeral && !me.guest) {
+      this.prompt = "F — Nara Vale can stay as a person. Not a fetch.";
     } else if (npcNear?.id === "nara" && (snap.naraAtClearing || me.beats.absenceHour)) {
       this.prompt = me.heard || "Nara Vale stays. The hour went by. Absence is honest.";
     } else if (npcNear?.id === "nara" && (me.beats.naraGod || snap.lastGodBuried || snap.naraAtCare)) {

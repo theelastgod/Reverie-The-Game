@@ -343,6 +343,12 @@ import {
   WINK_NARA_LEAVE,
   NARA_LEAVE_GESTELL,
   NARA_GONE_PLAQUE,
+  NARA_PERSON,
+  WINK_NARA_PERSON,
+  NARA_PERSON_HELD,
+  NARA_PERSON_NEED,
+  NARA_PERSON_SPECTATOR,
+  NARA_PERSON_PLAQUE,
   ORD_LEAVE_GESTELL,
   ORD_LEAVE,
   WINK_ORD_LEAVE,
@@ -567,6 +573,7 @@ import {
   snapshot,
   applyStrike,
   applyTalk,
+  applyNaraPerson,
   applyUse,
   damageFor,
   emptyWorld,
@@ -3396,6 +3403,48 @@ describe("Nara leaves the party", () => {
     const guest = applyUse(gWorld, "g", node.id, "extract");
     expect(guest.naraGone).toBe(false);
     expect(guest.gestell).toBeGreaterThanOrEqual(NARA_LEAVE_GESTELL);
+  });
+});
+
+describe("Nara stays as a person", () => {
+  it("after a funeral she stays as a person, not a function; guests cannot", () => {
+    const nara = NAVE_NPCS.find((n) => n.id === "nara")!;
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), funeral: true },
+      x: nara.x,
+      y: nara.y,
+    });
+    const stayed = applyTalk(w, "a", "nara");
+    const p = stayed.players.get("a")!;
+    expect(p.heard).toBe(NARA_PERSON);
+    expect(p.wink).toBe(WINK_NARA_PERSON);
+    expect(p.beats.naraPerson).toBe(true);
+    expect(stayed.naraPersonHeld).toBe(true);
+    expect(stayed.pois.find((poi) => poi.kind === "nara-person")?.id).toBe("nara-person");
+    expect(stayed.signs.find((s) => s.id === "nara-person")?.title).toBe(NARA_PERSON_PLAQUE.title);
+    expect(liveNpcs(false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "nara")?.role).toBe("Stays");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTalk(stayed, "a", "nara").players.get("a")?.heard).toBe(NARA_PERSON_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: nara.x,
+      y: nara.y,
+    });
+    expect(applyNaraPerson(early, "a").players.get("a")?.heard).toBe(NARA_PERSON_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: nara.x, y: nara.y, locked: true, beats: { ...emptyBeats(), funeral: true } });
+    expect(applyTalk(gWorld, "g", "nara").players.get("g")?.heard).toBe(NARA_PERSON_SPECTATOR);
+    expect(gWorld.naraPersonHeld).toBe(false);
   });
 });
 

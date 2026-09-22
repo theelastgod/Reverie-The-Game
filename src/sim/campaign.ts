@@ -108,6 +108,7 @@ export type Beats = {
   log: boolean;
   still: boolean;
   bracket: boolean;
+  naraPerson: boolean;
 };
 
 export type WeatherHeard = {
@@ -206,7 +207,8 @@ export type Poi = {
     | "screening-log"
     | "storm-progress"
     | "wink-seed"
-    | "production-still";
+    | "production-still"
+    | "nara-person";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1665,6 +1667,7 @@ export function emptyBeats(): Beats {
     log: false,
     still: false,
     bracket: false,
+    naraPerson: false,
   };
 }
 
@@ -2060,6 +2063,25 @@ export const NARA_GONE_PLAQUE: Sign = {
 
 export function naraGonePoi(x = 240, y = 720): Poi {
   return { id: "nara-gone", name: "Nara Vale — gone", x, y, kind: "nara-gone" };
+}
+
+export const NARA_PERSON =
+  "Nara Vale stays. Not as sexton of a process. As a person who buried someone with you. Combat is not. This was not a fetch.";
+export const WINK_NARA_PERSON = "A person, not a function. Gestell does not get this hour.";
+export const NARA_PERSON_HELD = "She already stays. The kerb is a person, not a desk.";
+export const NARA_PERSON_NEED = "Bury someone with her first. A person is not a fetch.";
+export const NARA_PERSON_SPECTATOR = "A sexton. You do not get this hour.";
+
+export const NARA_PERSON_PLAQUE: Sign = {
+  id: "nara-person",
+  title: "Nara Vale — stays",
+  text: "A person who buried someone. Not a function. The number does not strike.",
+  x: 240,
+  y: 720,
+};
+
+export function naraPersonPoi(x = 240, y = 720): Poi {
+  return { id: "nara-person", name: "Nara Vale — stays", x, y, kind: "nara-person" };
 }
 
 export const ORD_LEAVE_GESTELL = 100;
@@ -2590,6 +2612,7 @@ export function liveNpcs(
   ordGone = false,
   quillGone = false,
   vesperGone = false,
+  naraPersonHeld = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -2668,7 +2691,10 @@ export function liveNpcs(
         : n,
     );
   }
-  if (naraGone) base = base.filter((n) => n.id !== "nara");
+  if (naraGone && !naraPersonHeld) base = base.filter((n) => n.id !== "nara");
+  if (naraPersonHeld) {
+    base = base.map((n) => (n.id === "nara" ? { ...n, role: "Stays" } : n));
+  }
   if (ordGone) base = base.filter((n) => n.id !== "ord");
   if (quillGone) base = base.filter((n) => n.id !== "quill");
   if (vesperGone) base = base.filter((n) => n.id !== "vesper");
