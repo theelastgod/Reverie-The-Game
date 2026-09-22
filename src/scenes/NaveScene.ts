@@ -106,6 +106,7 @@ export class NaveScene extends Phaser.Scene {
         else if (!wall && nearPoint(cx, cy, FORGE_TRAY.x, FORGE_TRAY.y, 80)) key = "tile-forge";
         else if (!wall && nearPoint(cx, cy, M3_DOOR.x, M3_DOOR.y, 80)) key = "tile-m3";
         else if (!wall && nearPoint(cx, cy, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 80)) key = "tile-annex";
+        else if (!wall && nearPoint(cx, cy, SCREENING.x, SCREENING.y, 80)) key = "tile-screening";
         this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
       }
     }
@@ -985,7 +986,11 @@ export class NaveScene extends Phaser.Scene {
         snap.standing.mortals >= 1 &&
         snap.standing.divinities >= 1;
       this.prompt =
-        me.beats.bountyPeople || snap.bountyPeopleHeld
+        me.beats.tithePeople || snap.tithePeopleHeld
+          ? me.heard || "Tithe — people. Six Bestand. Omen holds after upkeep. Not a stick."
+        : snap.keepPeopleHeld && !me.beats.tithePeople
+          ? "F — the tithe as a house of people. Six Bestand. Omen holds after upkeep. Not a fetch."
+        : me.beats.bountyPeople || snap.bountyPeopleHeld
           ? me.heard || "The bounty — people. One omen, one purse. Not a stick."
         : snap.stormPeopleHeld && !me.beats.bountyPeople
           ? "F — the bounty as a house of people. One omen, one purse. Not a fetch."

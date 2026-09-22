@@ -361,6 +361,12 @@ import {
   KEEP_PEOPLE_HELD,
   KEEP_PEOPLE_SPECTATOR,
   KEEP_PEOPLE_PLAQUE,
+  TITHE_PEOPLE_COPY,
+  WINK_TITHE_PEOPLE,
+  TITHE_PEOPLE_NEED,
+  TITHE_PEOPLE_HELD,
+  TITHE_PEOPLE_SPECTATOR,
+  TITHE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -928,6 +934,7 @@ import {
   applyFuneralPeople,
   applyRestorePeople,
   applyKeepPeople,
+  applyTithePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3613,6 +3620,54 @@ describe("Keep — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
     expect(applyKeepPeople(gWorld, "g").players.get("g")?.heard).toBe(KEEP_PEOPLE_SPECTATOR);
     expect(gWorld.keepPeopleHeld).toBe(false);
+  });
+});
+
+describe("Tithe — people", () => {
+  it("names the tithe as people after keep; six Bestand still; guests cannot", () => {
+    const w = emptyWorld();
+    w.keepPeopleHeld = true;
+    w.war = { ...emptyWar(), winner: "mortals", titheCut: WAR_TITHE, omen: WAR_OMEN_KEEP };
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      house: "mortals",
+      bestand: 20,
+      inCare: true,
+      beats: { ...emptyBeats(), keepPeople: true, hall: true },
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    const named = applyTithe(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(TITHE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_TITHE_PEOPLE);
+    expect(p.beats.tithePeople).toBe(true);
+    expect(p.bestand).toBe(20);
+    expect(named.war.tithePaid).toBe(false);
+    expect(named.tithePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "tithe-people")?.name).toBe("Tithe — people");
+    expect(named.signs.find((s) => s.id === "tithe-people")?.title).toBe(TITHE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Six Bestand");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTithePeople(named, "a").players.get("a")?.heard).toBe(TITHE_PEOPLE_HELD);
+
+    const paid = applyTithe(named, "a");
+    expect(paid.war.tithePaid).toBe(true);
+    expect(paid.players.get("a")?.bestand).toBe(20 - TITHE_COST);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: HOUSE_HALL.x, y: HOUSE_HALL.y });
+    expect(applyTithePeople(early, "a").players.get("a")?.heard).toBe(TITHE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.keepPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
+    expect(applyTithePeople(gWorld, "g").players.get("g")?.heard).toBe(TITHE_PEOPLE_SPECTATOR);
+    expect(gWorld.tithePeopleHeld).toBe(false);
   });
 });
 

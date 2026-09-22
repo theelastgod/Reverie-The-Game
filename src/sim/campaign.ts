@@ -159,6 +159,7 @@ export type Beats = {
   funeralPeople: boolean;
   restorePeople: boolean;
   keepPeople: boolean;
+  tithePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -306,6 +307,7 @@ export type Poi = {
     | "funeral-people"
     | "restore-people"
     | "keep-people"
+    | "tithe-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2329,6 +2331,31 @@ export function keepPeoplePoi(): Poi {
     kind: "keep-people",
   };
 }
+
+export const TITHE_PEOPLE_COPY =
+  "The tithe is a house of people, not an omen of process. Six Bestand still. Omen holds after upkeep. Combat is not. This was not a fetch.";
+export const WINK_TITHE_PEOPLE = "People, not a tithe stick. The token does not strike.";
+export const TITHE_PEOPLE_NEED = "Keep as people first. A tithe of people is not a fetch.";
+export const TITHE_PEOPLE_HELD = "The tithe already holds as people. Six Bestand still. Omen holds after upkeep.";
+export const TITHE_PEOPLE_SPECTATOR = "A hall. You do not get a house of people.";
+
+export const TITHE_PEOPLE_PLAQUE: Sign = {
+  id: "tithe-people",
+  title: "Tithe — people",
+  text: "A house of people. Six Bestand. Omen holds after upkeep. The number does not strike.",
+  x: HOUSE_HALL.x,
+  y: HOUSE_HALL.y,
+};
+
+export function tithePeoplePoi(): Poi {
+  return {
+    id: "tithe-people",
+    name: "Tithe — people",
+    x: HOUSE_HALL.x,
+    y: HOUSE_HALL.y,
+    kind: "tithe-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2950,6 +2977,7 @@ export function emptyBeats(): Beats {
     funeralPeople: false,
     restorePeople: false,
     keepPeople: false,
+    tithePeople: false,
   };
 }
 

@@ -453,6 +453,13 @@ import {
   KEEP_PEOPLE_SPECTATOR,
   KEEP_PEOPLE_PLAQUE,
   keepPeoplePoi,
+  TITHE_PEOPLE_COPY,
+  WINK_TITHE_PEOPLE,
+  TITHE_PEOPLE_NEED,
+  TITHE_PEOPLE_HELD,
+  TITHE_PEOPLE_SPECTATOR,
+  TITHE_PEOPLE_PLAQUE,
+  tithePeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1169,6 +1176,7 @@ export type WorldState = {
   funeralPeopleHeld: boolean;
   restorePeopleHeld: boolean;
   keepPeopleHeld: boolean;
+  tithePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1453,6 +1461,7 @@ export function emptyWorld(): WorldState {
     funeralPeopleHeld: false,
     restorePeopleHeld: false,
     keepPeopleHeld: false,
+    tithePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2566,8 +2575,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === CARE_DOOR.id) return applyCare(w, playerId);
   if (sign.id === "organs-people") return applyOrgansPeople(w, playerId);
   if (sign.id === "bounty-people") return applyBountyPeople(w, playerId);
+  if (sign.id === "tithe-people") return applyTithePeople(w, playerId);
   if (sign.id === HOUSE_HALL.id) {
     if (!p.inCare || p.guest || p.locked) return w;
+    if (w.keepPeopleHeld && !w.tithePeopleHeld) return applyTithePeople(w, playerId);
     if (p.beats.hall && w.stormPeopleHeld && !w.bountyPeopleHeld) return applyBountyPeople(w, playerId);
     if (p.beats.hall && w.deskPeopleHeld && !w.hallPeopleHeld) return applyHallPeople(w, playerId);
     if (p.beats.hall && organsPeopleReady(w) && !w.organsPeopleHeld) return applyOrgansPeople(w, playerId);
@@ -4356,6 +4367,37 @@ export function applyKeepPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, keepPeopleHeld: true, pois, signs };
 }
 
+export function applyTithePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: TITHE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_TITHE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.keepPeopleHeld) {
+    players.set(playerId, { ...p, heard: TITHE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.tithePeopleHeld && p.beats.tithePeople) {
+    players.set(playerId, { ...p, heard: TITHE_PEOPLE_HELD, wink: visibleWink(false, WINK_TITHE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, tithePeople: true },
+    heard: TITHE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_TITHE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "tithe-people")
+    ? w.pois.map((poi) => (poi.id === "tithe-people" ? tithePeoplePoi() : poi))
+    : [...w.pois, tithePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "tithe-people")
+    ? w.signs.map((s) => (s.id === "tithe-people" ? { ...TITHE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...TITHE_PEOPLE_PLAQUE }];
+  return { ...w, players, tithePeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5554,6 +5596,7 @@ export function snapshot(w: WorldState) {
     funeralPeopleHeld: w.funeralPeopleHeld,
     restorePeopleHeld: w.restorePeopleHeld,
     keepPeopleHeld: w.keepPeopleHeld,
+    tithePeopleHeld: w.tithePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
@@ -5654,6 +5697,7 @@ export function applyStanding(w: WorldState, playerId: string): WorldState {
 export function applyTithe(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) return w;
+  if (w.keepPeopleHeld && !w.tithePeopleHeld) return applyTithePeople(w, playerId);
   const players = new Map(w.players);
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, heard: TITHE_SPECTATOR, wink: visibleWink(true, WINK_WAR) });

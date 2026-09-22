@@ -128,6 +128,7 @@ export type Snap = {
   funeralPeopleHeld?: boolean;
   restorePeopleHeld?: boolean;
   keepPeopleHeld?: boolean;
+  tithePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
