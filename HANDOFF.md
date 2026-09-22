@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 28** — Safety freeze fee (Bestand sink, katechon paper). No mint.
+**Next stage: 29** — House tithe sink (upkeep for omen, never a damage buff). No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -136,8 +136,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Paper is consumed. Same HP, same aura wound, same `damageFor`. Not a P2W revive.
 - Claims stay disarmed. No mint. No Base.
 
-## Stage 28 (do this next)
-Safety freeze fee: Bestand sink to sign the katechon paper. Guests cannot. `damageFor` unchanged. No mint.
+## Stage 28 (landed)
+- Signing the Safety freeze costs 10 Bestand. Poor signatures refuse. Guests cannot sign.
+- Freeze still starves the Passing and blocks extract. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 29 (do this next)
+House tithe sink: Bestand upkeep for the omen, never a damage buff. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

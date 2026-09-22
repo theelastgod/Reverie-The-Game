@@ -7,6 +7,8 @@ import {
   GUEST_LOCK,
   GOING_UNDER,
   FREEZE_COPY,
+  FREEZE_COST,
+  FREEZE_NEED,
   FREEZE_EXTRACT,
   FREEZE_NEED_HALL,
   FREEZE_SPECTATOR,
@@ -419,6 +421,7 @@ describe("Safety Annex freeze", () => {
       aura: auraSeed(TEST_SERIAL),
       beats: { ...emptyBeats(), hall, care: true, under: true, nara: true, quill: true, ord: true, burial: true },
       inCare: false,
+      bestand: 20,
       x: SAFETY_ANNEX.x,
       y: SAFETY_ANNEX.y,
     });
@@ -438,6 +441,8 @@ describe("Safety Annex freeze", () => {
     const p = after.players.get("a")!;
     expect(p.beats.freeze).toBe(true);
     expect(p.heard).toBe(FREEZE_COPY);
+    expect(p.bestand).toBe(20 - FREEZE_COST);
+    expect(FREEZE_COST).toBe(10);
     expect(p.wink).toBe(WINK_FREEZE);
     expect(after.frozen).toBe(true);
     expect(after.passing.starved).toBe(true);
@@ -450,9 +455,17 @@ describe("Safety Annex freeze", () => {
     const node = after.nodes[0];
     after.players.set("a", { ...p, x: node.x, y: node.y });
     const blocked = applyUse(after, "a", node.id, "extract");
-    expect(blocked.players.get("a")?.bestand).toBe(0);
+    expect(blocked.players.get("a")?.bestand).toBe(20 - FREEZE_COST);
     expect(blocked.nodes[0].depleted).toBe(false);
     expect(blocked.players.get("a")?.heard).toBe(FREEZE_EXTRACT);
+
+    const poor = angelAtAnnex(true);
+    poor.players.set("a", { ...poor.players.get("a")!, bestand: 4 });
+    const unpaid = applyFreeze(poor, "a");
+    expect(unpaid.frozen).toBe(false);
+    expect(unpaid.players.get("a")?.heard).toBe(FREEZE_NEED);
+    expect(unpaid.players.get("a")?.bestand).toBe(4);
+    expect(unpaid.players.get("a")?.beats.freeze).toBe(false);
   });
 
   it("without the hall the Annex refuses the signature", () => {

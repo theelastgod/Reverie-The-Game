@@ -7,6 +7,7 @@ import {
   GOING_UNDER,
   HOUSE_HALL,
   SAFETY_ANNEX,
+  FREEZE_COST,
   CLEARING_STALL,
   CLEARING_PRICE,
   M3_DOOR,
@@ -551,7 +552,7 @@ export class NaveScene extends Phaser.Scene {
     } else if (annex && snap.frozen) {
       this.prompt = me.heard || "The freeze holds. The Passing stays hungry.";
     } else if (annex && me.beats.hall) {
-      this.prompt = "F — sign the freeze. The district holds. The Passing will starve.";
+      this.prompt = `F — sign the freeze (${FREEZE_COST} Bestand). The district holds. The Passing will starve.`;
     } else if (annex) {
       this.prompt = "Safety Annex. The desk will not take a name that has not read the hall.";
     } else if (stall && (me.guest || me.locked)) {

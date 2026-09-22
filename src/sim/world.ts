@@ -41,7 +41,9 @@ import {
   CARE_SPECTATOR,
   emptyPassing,
   FREEZE_COPY,
+  FREEZE_COST,
   FREEZE_EXTRACT,
+  FREEZE_NEED,
   FREEZE_NEED_HALL,
   FREEZE_SPECTATOR,
   HOUSE_HALL,
@@ -974,8 +976,13 @@ export function applyFreeze(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: FREEZE_COPY, wink: visibleWink(false, WINK_FREEZE) });
     return { ...w, players };
   }
+  if (p.bestand < FREEZE_COST) {
+    players.set(playerId, { ...p, heard: FREEZE_NEED });
+    return { ...w, players };
+  }
   players.set(playerId, {
     ...p,
+    bestand: p.bestand - FREEZE_COST,
     beats: { ...p.beats, freeze: true },
     heard: FREEZE_COPY,
     wink: visibleWink(false, WINK_FREEZE),

@@ -179,8 +179,10 @@ export const HALL_PLAQUE: Sign = {
 
 export const SAFETY_ANNEX = { id: "safety-annex", x: 320, y: 320 };
 export const PASSING_READY = 8;
+export const FREEZE_COST = 10;
 export const FREEZE_COPY =
-  "You signed the freeze. The district holds. The Passing will go hungry. Peace is a kind of weather.";
+  "You signed the freeze. Ten Bestand. The district holds. The Passing will go hungry. Peace is a kind of weather.";
+export const FREEZE_NEED = "Ten Bestand to sign the freeze. Peace is not free. Combat is not.";
 export const WINK_FREEZE = "You bought time. You spent a god. The hour does not forgive the signature.";
 export const FREEZE_SPECTATOR = "A desk. Paper. You are not the one who signs.";
 export const FREEZE_NEED_HALL = "The Annex will not take a name that has not read the hall.";
@@ -189,7 +191,7 @@ export const FREEZE_EXTRACT = "The freeze holds the nodes. Extraction is postpon
 export const ANNEX_PLAQUE: Sign = {
   id: SAFETY_ANNEX.id,
   title: "Safety Annex",
-  text: "Sign here. The district holds. The hour does not.",
+  text: "Ten Bestand. Sign here. The district holds. The hour does not.",
   x: SAFETY_ANNEX.x,
   y: SAFETY_ANNEX.y,
 };
