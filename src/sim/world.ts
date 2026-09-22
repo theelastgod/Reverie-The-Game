@@ -254,6 +254,13 @@ import {
   STRAIT_PEOPLE_HELD,
   STRAIT_PEOPLE_SPECTATOR,
   STRAIT_PEOPLE_PLAQUE,
+  CABLE_PEOPLE_COPY,
+  WINK_CABLE_PEOPLE,
+  CABLE_PEOPLE_NEED,
+  CABLE_PEOPLE_HELD,
+  CABLE_PEOPLE_SPECTATOR,
+  CABLE_PEOPLE_PLAQUE,
+  cablePeoplePoi,
   straitPeoplePoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
@@ -932,6 +939,7 @@ export type WorldState = {
   stallPeopleHeld: boolean;
   foundryPeopleHeld: boolean;
   straitPeopleHeld: boolean;
+  cablePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1187,6 +1195,7 @@ export function emptyWorld(): WorldState {
     stallPeopleHeld: false,
     foundryPeopleHeld: false,
     straitPeopleHeld: false,
+    cablePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3086,6 +3095,41 @@ export function applyStraitPeople(w: WorldState, playerId: string): WorldState {
   };
 }
 
+export function applyCablePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, ORGAN_CABLE.x, ORGAN_CABLE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CABLE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_CABLE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.straitPeopleHeld) {
+    players.set(playerId, { ...p, heard: CABLE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.cablePeopleHeld && p.beats.cablePeople) {
+    players.set(playerId, { ...p, heard: CABLE_PEOPLE_HELD, wink: visibleWink(false, WINK_CABLE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, cablePeople: true, cable: true },
+    heard: CABLE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_CABLE_PEOPLE),
+  });
+  return {
+    ...w,
+    players,
+    cablePeopleHeld: true,
+    pois: w.pois.map((poi) => (poi.id === ORGAN_CABLE.id ? cablePeoplePoi() : poi)).concat(
+      w.pois.some((poi) => poi.id === ORGAN_CABLE.id) ? [] : [cablePeoplePoi()],
+    ),
+    signs: w.signs.map((s) => (s.id === ORGAN_CABLE.id ? { ...CABLE_PEOPLE_PLAQUE } : s)).concat(
+      w.signs.some((s) => s.id === ORGAN_CABLE.id) ? [] : [{ ...CABLE_PEOPLE_PLAQUE }],
+    ),
+  };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -3443,6 +3487,7 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     if (p.beats.foundryAsk && !p.guest && !p.locked) return applyUnlight(w, playerId);
   }
   if (sign.id === ORGAN_CABLE.id) {
+    if (w.straitPeopleHeld && !w.cablePeopleHeld) return applyCablePeople(w, playerId);
     if (w.cableDark || p.beats.cableDark) {
       if (!p.guest && !p.locked && p.house === "sky") return applySkyStanding(w, playerId);
       players.set(playerId, { ...p, heard: CABLE_DARK_LATER, wink: visibleWink(p.guest, WINK_CABLE_DARK) });
@@ -4253,6 +4298,7 @@ export function snapshot(w: WorldState) {
     stallPeopleHeld: w.stallPeopleHeld,
     foundryPeopleHeld: w.foundryPeopleHeld,
     straitPeopleHeld: w.straitPeopleHeld,
+    cablePeopleHeld: w.cablePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

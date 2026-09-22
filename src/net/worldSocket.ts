@@ -99,6 +99,7 @@ export type Snap = {
   stallPeopleHeld?: boolean;
   foundryPeopleHeld?: boolean;
   straitPeopleHeld?: boolean;
+  cablePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

@@ -561,6 +561,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "strait-people"
                         ? 0xc9a56a
+                      : poi.kind === "cable-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1117,6 +1119,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The Strait is refused. The water is not paying.";
     } else if (strait && snap.foundryDark && !me.guest) {
       this.prompt = "F — refuse the Strait. The furnace is dark. Stop the water. Not a fetch.";
+    } else if (cable && (me.beats.cablePeople || snap.cablePeopleHeld)) {
+      this.prompt = me.heard || "The Cable — people. Quiet still works. Not a stick.";
+    } else if (cable && snap.straitPeopleHeld && !me.guest) {
+      this.prompt = "F — the Cable as a house of people. Quiet still works. Not a fetch.";
     } else if (cable && (snap.skyStanding || me.beats.skyStanding) && !me.guest) {
       this.prompt = me.heard || "House of Sky named the dark line. Standing. Not a stick.";
     } else if (cable && (snap.cableDark || me.beats.cableDark) && me.house === "sky" && !me.guest) {

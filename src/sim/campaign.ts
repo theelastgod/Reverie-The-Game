@@ -130,6 +130,7 @@ export type Beats = {
   stallPeople: boolean;
   foundryPeople: boolean;
   straitPeople: boolean;
+  cablePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -248,6 +249,7 @@ export type Poi = {
     | "stall-people"
     | "foundry-people"
     | "strait-people"
+    | "cable-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1834,6 +1836,31 @@ export function straitPeoplePoi(): Poi {
   };
 }
 
+export const CABLE_PEOPLE_COPY =
+  "The Cable is a house of people, not a line of process. Quiet still works. Combat is not. This was not a fetch.";
+export const WINK_CABLE_PEOPLE = "People, not a number. The token does not strike.";
+export const CABLE_PEOPLE_NEED = "The Strait as people first. A cable of people is not a fetch.";
+export const CABLE_PEOPLE_HELD = "The Cable already holds as people. Quiet still works.";
+export const CABLE_PEOPLE_SPECTATOR = "A line. You do not get a house of people.";
+
+export const CABLE_PEOPLE_PLAQUE: Sign = {
+  id: ORGAN_CABLE.id,
+  title: "The Cable — people",
+  text: "A house of people. Quiet still works. The number does not strike.",
+  x: ORGAN_CABLE.x,
+  y: ORGAN_CABLE.y,
+};
+
+export function cablePeoplePoi(): Poi {
+  return {
+    id: ORGAN_CABLE.id,
+    name: "The Cable — people",
+    x: ORGAN_CABLE.x,
+    y: ORGAN_CABLE.y,
+    kind: "cable-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2119,6 +2146,7 @@ export function emptyBeats(): Beats {
     stallPeople: false,
     foundryPeople: false,
     straitPeople: false,
+    cablePeople: false,
   };
 }
 

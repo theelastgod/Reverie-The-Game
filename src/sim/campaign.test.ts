@@ -186,6 +186,12 @@ import {
   STRAIT_PEOPLE_HELD,
   STRAIT_PEOPLE_SPECTATOR,
   STRAIT_PEOPLE_PLAQUE,
+  CABLE_PEOPLE_COPY,
+  WINK_CABLE_PEOPLE,
+  CABLE_PEOPLE_NEED,
+  CABLE_PEOPLE_HELD,
+  CABLE_PEOPLE_SPECTATOR,
+  CABLE_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -720,6 +726,7 @@ import {
   applyStallPeople,
   applyFoundryPeople,
   applyStraitPeople,
+  applyCablePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2201,6 +2208,44 @@ describe("The Strait — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y, locked: true });
     expect(applyStraitPeople(gWorld, "g").players.get("g")?.heard).toBe(STRAIT_PEOPLE_SPECTATOR);
     expect(gWorld.straitPeopleHeld).toBe(false);
+  });
+});
+
+describe("The Cable — people", () => {
+  it("names the Cable as people after the Strait; quiet still works; guests cannot", () => {
+    const w = emptyWorld();
+    w.straitPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), straitPeople: true },
+      x: ORGAN_CABLE.x,
+      y: ORGAN_CABLE.y,
+    });
+    const named = applyCablePeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CABLE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CABLE_PEOPLE);
+    expect(p.beats.cablePeople).toBe(true);
+    expect(named.cablePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === ORGAN_CABLE.id)?.kind).toBe("cable-people");
+    expect(named.signs.find((s) => s.id === ORGAN_CABLE.id)?.title).toBe(CABLE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Quiet still works");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCablePeople(named, "a").players.get("a")?.heard).toBe(CABLE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: ORGAN_CABLE.x, y: ORGAN_CABLE.y });
+    expect(applyCablePeople(early, "a").players.get("a")?.heard).toBe(CABLE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.straitPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_CABLE.x, y: ORGAN_CABLE.y, locked: true });
+    expect(applyCablePeople(gWorld, "g").players.get("g")?.heard).toBe(CABLE_PEOPLE_SPECTATOR);
+    expect(gWorld.cablePeopleHeld).toBe(false);
   });
 });
 
