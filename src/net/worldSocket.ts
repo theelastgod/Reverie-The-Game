@@ -38,6 +38,7 @@ export type Snap = {
   cableDark?: boolean;
   skyStanding?: boolean;
   earthStanding?: boolean;
+  divStanding?: boolean;
   hallLamp?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };

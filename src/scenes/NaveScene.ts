@@ -463,6 +463,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x5a5a5a
                       : poi.kind === "organ-strait-buried"
                         ? 0xc9a56a
+                      : poi.kind === "organ-strait-divinities"
+                        ? 0x7eb6ff
                       : poi.kind.startsWith("organ-")
                         ? 0xc9a56a
                         : poi.kind === "forge-tray"
@@ -747,6 +749,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The Foundry is dark. Vesper Hale is here. Heat is not a nation.";
     } else if (foundry && me.beats.foundryAsk && !me.guest) {
       this.prompt = "F — unlight the Foundry. Vesper walks. This is not a fetch.";
+    } else if (strait && (snap.divStanding || me.beats.divStanding) && !me.guest) {
+      this.prompt = me.heard || "House of Divinities named the buried water. Standing. Not a stick.";
+    } else if (strait && (snap.straitBuried || me.beats.canalBury) && me.house === "divinities" && !me.guest) {
+      this.prompt = "F — name the buried Strait for House of Divinities. Standing. Not a fetch.";
+    } else if (strait && (snap.straitBuried || me.beats.canalBury) && !me.guest) {
+      this.prompt = me.heard || "The canal is in the earth. Nara Vale is burying it.";
     } else if (strait && (snap.straitRefused || me.beats.straitRefuse) && !me.guest) {
       this.prompt = me.heard || "The Strait is refused. The water is not paying.";
     } else if (strait && snap.foundryDark && !me.guest) {
@@ -864,15 +872,19 @@ export class NaveScene extends Phaser.Scene {
     if (zone) {
       zone.textContent = me.inM3
         ? strait
-          ? snap.straitBuried
-            ? "The Strait — buried"
-            : snap.straitRefused
-              ? "The Strait — refused"
-              : "The Strait"
+          ? snap.divStanding
+            ? "The Strait — Divinities standing"
+            : snap.straitBuried
+              ? "The Strait — buried"
+              : snap.straitRefused
+                ? "The Strait — refused"
+                : "The Strait"
           : foundry
-            ? snap.foundryDark
-              ? "The Foundry — dark"
-              : "The Foundry"
+            ? snap.earthStanding
+              ? "The Foundry — Earth standing"
+              : snap.foundryDark
+                ? "The Foundry — dark"
+                : "The Foundry"
             : cable
               ? snap.skyStanding
                 ? "The Cable — Sky standing"

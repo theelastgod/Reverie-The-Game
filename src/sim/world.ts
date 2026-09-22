@@ -263,6 +263,14 @@ import {
   EARTH_SPECTATOR,
   EARTH_PLAQUE,
   earthStandingPoi,
+  DIV_STANDING,
+  WINK_DIV,
+  DIV_NEED,
+  DIV_WRONG,
+  DIV_HELD,
+  DIV_SPECTATOR,
+  DIV_PLAQUE,
+  divStandingPoi,
   ERRAND_EXTRACT,
   ERRAND_SPECTATOR,
   cableQuietPoi,
@@ -415,6 +423,7 @@ export type WorldState = {
   cableDark: boolean;
   skyStanding: boolean;
   earthStanding: boolean;
+  divStanding: boolean;
   hallLamp: boolean;
   standing: HouseScores;
   announced: string | null;
@@ -570,6 +579,7 @@ export function emptyWorld(): WorldState {
     cableDark: false,
     skyStanding: false,
     earthStanding: false,
+    divStanding: false,
     hallLamp: false,
     standing: emptyScores(),
     announced: null,
@@ -1525,6 +1535,7 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
   }
   if (sign.id === ORGAN_STRAIT.id) {
     if (w.straitBuried || p.beats.canalBury) {
+      if (!p.guest && !p.locked && p.house === "divinities") return applyDivStanding(w, playerId);
       players.set(playerId, { ...p, heard: NARA_CANAL_LATER, wink: visibleWink(p.guest, WINK_CANAL) });
       return { ...w, players };
     }
@@ -1563,6 +1574,43 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     readiness: p.readiness + (p.beats[key] ? 0 : 1),
   });
   return { ...w, players };
+}
+
+export function applyDivStanding(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, ORGAN_STRAIT.x, ORGAN_STRAIT.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: DIV_SPECTATOR, wink: visibleWink(true, WINK_DIV) });
+    return { ...w, players };
+  }
+  if (!w.straitBuried && !p.beats.canalBury) {
+    players.set(playerId, { ...p, heard: DIV_NEED });
+    return { ...w, players };
+  }
+  if (p.house !== "divinities") {
+    players.set(playerId, { ...p, heard: DIV_WRONG, wink: visibleWink(false, WINK_DIV) });
+    return { ...w, players };
+  }
+  if (w.divStanding || p.beats.divStanding) {
+    players.set(playerId, { ...p, heard: DIV_HELD, wink: visibleWink(false, WINK_DIV) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, divStanding: true },
+    heard: DIV_STANDING,
+    wink: visibleWink(false, WINK_DIV),
+    readiness: p.readiness + 1,
+  });
+  return {
+    ...w,
+    players,
+    divStanding: true,
+    standing: { ...w.standing, divinities: w.standing.divinities + 1 },
+    pois: w.pois.map((poi) => (poi.id === ORGAN_STRAIT.id ? divStandingPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === ORGAN_STRAIT.id ? { ...DIV_PLAQUE } : s)),
+  };
 }
 
 export function applyEarthStanding(w: WorldState, playerId: string): WorldState {
@@ -2109,6 +2157,7 @@ export function snapshot(w: WorldState) {
     cableDark: w.cableDark,
     skyStanding: w.skyStanding,
     earthStanding: w.earthStanding,
+    divStanding: w.divStanding,
     hallLamp: w.hallLamp,
     standing: w.standing,
     signs: w.signs,

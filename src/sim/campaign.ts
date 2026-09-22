@@ -71,6 +71,7 @@ export type Beats = {
   cableDark: boolean;
   skyStanding: boolean;
   earthStanding: boolean;
+  divStanding: boolean;
 };
 
 export type WeatherHeard = {
@@ -111,6 +112,7 @@ export type Poi = {
     | "organ-strait"
     | "organ-strait-refused"
     | "organ-strait-buried"
+    | "organ-strait-divinities"
     | "organ-foundry"
     | "organ-foundry-dark"
     | "organ-foundry-earth"
@@ -535,6 +537,32 @@ export const EARTH_PLAQUE: Sign = {
   x: ORGAN_FOUNDRY.x,
   y: ORGAN_FOUNDRY.y,
 };
+
+export const DIV_STANDING =
+  "House of Divinities names the buried Strait. Standing. A Wink, not a stick. This was not a fetch.";
+export const WINK_DIV = "Standing is a hint in the earth. The token does not strike.";
+export const DIV_NEED = "Bury the canal first. Divinities standing is not a fetch.";
+export const DIV_WRONG = "This grave keeps Divinities standing. Your House is elsewhere.";
+export const DIV_HELD = "Divinities already hold the buried water. Standing does not strike.";
+export const DIV_SPECTATOR = "A Wink you cannot name.";
+
+export const DIV_PLAQUE: Sign = {
+  id: ORGAN_STRAIT.id,
+  title: "The Strait — Divinities standing",
+  text: "House of Divinities named the buried water. A hint. The number does not strike.",
+  x: ORGAN_STRAIT.x,
+  y: ORGAN_STRAIT.y,
+};
+
+export function divStandingPoi(): Poi {
+  return {
+    id: ORGAN_STRAIT.id,
+    name: "The Strait — Divinities standing",
+    x: ORGAN_STRAIT.x,
+    y: ORGAN_STRAIT.y,
+    kind: "organ-strait-divinities",
+  };
+}
 
 export function earthStandingPoi(): Poi {
   return {
@@ -982,6 +1010,7 @@ export function emptyBeats(): Beats {
     cableDark: false,
     skyStanding: false,
     earthStanding: false,
+    divStanding: false,
   };
 }
 

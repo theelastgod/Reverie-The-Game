@@ -262,6 +262,13 @@ import {
   EARTH_HELD,
   EARTH_SPECTATOR,
   EARTH_PLAQUE,
+  DIV_STANDING,
+  WINK_DIV,
+  DIV_NEED,
+  DIV_WRONG,
+  DIV_HELD,
+  DIV_SPECTATOR,
+  DIV_PLAQUE,
   REPAIR_COST,
   REPAIR_COPY,
   REPAIR_NEED,
@@ -298,6 +305,7 @@ import {
   applyCableDark,
   applySkyStanding,
   applyEarthStanding,
+  applyDivStanding,
   applyUnlight,
   applyStanding,
   applyMarket,
@@ -2064,6 +2072,79 @@ describe("House of Sky standing on the dark Cable", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_CABLE.x, y: ORGAN_CABLE.y, locked: true });
     expect(applySkyStanding(gWorld, "g").players.get("g")?.heard).toBe(SKY_SPECTATOR);
     expect(gWorld.skyStanding).toBe(false);
+  });
+});
+
+describe("House of Divinities standing on the buried Strait", () => {
+  it("Divinities Angel names the buried water; other Houses and guests cannot", () => {
+    const w = emptyWorld();
+    w.m3Open = true;
+    w.straitBuried = true;
+    w.pois = [
+      ...w.pois,
+      {
+        id: ORGAN_STRAIT.id,
+        name: "The Strait — buried",
+        x: ORGAN_STRAIT.x,
+        y: ORGAN_STRAIT.y,
+        kind: "organ-strait-buried",
+      },
+    ];
+    w.signs = [
+      ...w.signs,
+      { id: ORGAN_STRAIT.id, title: "The Strait — buried", text: "Grave.", x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y },
+    ];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 4,
+      house: "divinities",
+      beats: { ...emptyBeats(), canalBury: true, hall: true, m3: true },
+      x: ORGAN_STRAIT.x,
+      y: ORGAN_STRAIT.y,
+    });
+    const named = applyRead(w, "a", ORGAN_STRAIT.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(DIV_STANDING);
+    expect(p.wink).toBe(WINK_DIV);
+    expect(p.beats.divStanding).toBe(true);
+    expect(named.divStanding).toBe(true);
+    expect(named.standing.divinities).toBe(1);
+    expect(named.pois.find((poi) => poi.id === ORGAN_STRAIT.id)?.kind).toBe("organ-strait-divinities");
+    expect(named.signs.find((s) => s.id === ORGAN_STRAIT.id)?.title).toBe(DIV_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyDivStanding(named, "a").players.get("a")?.heard).toBe(DIV_HELD);
+
+    const earth = emptyWorld();
+    earth.straitBuried = true;
+    earth.players.set("e", {
+      ...spawnGuest("e"),
+      guest: false,
+      house: "earth",
+      beats: { ...emptyBeats(), canalBury: true },
+      x: ORGAN_STRAIT.x,
+      y: ORGAN_STRAIT.y,
+    });
+    expect(applyDivStanding(earth, "e").players.get("e")?.heard).toBe(DIV_WRONG);
+    expect(applyDivStanding(earth, "e").standing.divinities).toBe(0);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      house: "divinities",
+      x: ORGAN_STRAIT.x,
+      y: ORGAN_STRAIT.y,
+    });
+    expect(applyDivStanding(early, "a").players.get("a")?.heard).toBe(DIV_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.straitBuried = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y, locked: true });
+    expect(applyDivStanding(gWorld, "g").players.get("g")?.heard).toBe(DIV_SPECTATOR);
+    expect(gWorld.divStanding).toBe(false);
   });
 });
 
