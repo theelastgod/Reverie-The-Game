@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 176** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 178** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -744,7 +744,15 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the number as people, F at the Wet Grid: skill as people. Plaque/POI **Skill — people**. Skill still wins. Traits do not buy the fight.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 176 (do this next)
+## Stage 176 (landed)
+- After skill as people, F at the Wet Grid: traits as people. Plaque/POI **Trait — people**. Traits do not buy damage. Serials stay visible.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 177 (landed)
+- After traits as people, F at the Wet Grid: the token as people. Plaque/POI **Token — people**. The token never buys combat. TAKE stays disarmed.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 178 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

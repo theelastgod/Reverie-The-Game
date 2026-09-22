@@ -686,6 +686,20 @@ import {
   SKILL_PEOPLE_SPECTATOR,
   SKILL_PEOPLE_PLAQUE,
   skillPeoplePoi,
+  TRAIT_PEOPLE_COPY,
+  WINK_TRAIT_PEOPLE,
+  TRAIT_PEOPLE_NEED,
+  TRAIT_PEOPLE_HELD,
+  TRAIT_PEOPLE_SPECTATOR,
+  TRAIT_PEOPLE_PLAQUE,
+  traitPeoplePoi,
+  TOKEN_PEOPLE_COPY,
+  WINK_TOKEN_PEOPLE,
+  TOKEN_PEOPLE_NEED,
+  TOKEN_PEOPLE_HELD,
+  TOKEN_PEOPLE_SPECTATOR,
+  TOKEN_PEOPLE_PLAQUE,
+  tokenPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1444,6 +1458,8 @@ export type WorldState = {
   bandPeopleHeld: boolean;
   numberPeopleHeld: boolean;
   skillPeopleHeld: boolean;
+  traitPeopleHeld: boolean;
+  tokenPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1762,6 +1778,8 @@ export function emptyWorld(): WorldState {
     bandPeopleHeld: false,
     numberPeopleHeld: false,
     skillPeopleHeld: false,
+    traitPeopleHeld: false,
+    tokenPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2986,7 +3004,11 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people") {
+    if (w.traitPeopleHeld && !w.tokenPeopleHeld) return applyTokenPeople(w, playerId);
+    if (sign.id === "token-people") return applyTokenPeople(w, playerId);
+    if (w.skillPeopleHeld && !w.traitPeopleHeld) return applyTraitPeople(w, playerId);
+    if (sign.id === "trait-people") return applyTraitPeople(w, playerId);
     if (w.numberPeopleHeld && !w.skillPeopleHeld) return applySkillPeople(w, playerId);
     if (sign.id === "skill-people") return applySkillPeople(w, playerId);
     if (w.bandPeopleHeld && !w.numberPeopleHeld) return applyNumberPeople(w, playerId);
@@ -5804,6 +5826,68 @@ export function applySkillPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, skillPeopleHeld: true, pois, signs };
 }
 
+export function applyTraitPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: TRAIT_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_TRAIT_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.skillPeopleHeld) {
+    players.set(playerId, { ...p, heard: TRAIT_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.traitPeopleHeld && p.beats.traitPeople) {
+    players.set(playerId, { ...p, heard: TRAIT_PEOPLE_HELD, wink: visibleWink(false, WINK_TRAIT_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, traitPeople: true },
+    heard: TRAIT_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_TRAIT_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "trait-people")
+    ? w.pois.map((poi) => (poi.id === "trait-people" ? traitPeoplePoi() : poi))
+    : [...w.pois, traitPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "trait-people")
+    ? w.signs.map((s) => (s.id === "trait-people" ? { ...TRAIT_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...TRAIT_PEOPLE_PLAQUE }];
+  return { ...w, players, traitPeopleHeld: true, pois, signs };
+}
+
+export function applyTokenPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: TOKEN_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_TOKEN_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.traitPeopleHeld) {
+    players.set(playerId, { ...p, heard: TOKEN_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.tokenPeopleHeld && p.beats.tokenPeople) {
+    players.set(playerId, { ...p, heard: TOKEN_PEOPLE_HELD, wink: visibleWink(false, WINK_TOKEN_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, tokenPeople: true },
+    heard: TOKEN_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_TOKEN_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "token-people")
+    ? w.pois.map((poi) => (poi.id === "token-people" ? tokenPeoplePoi() : poi))
+    : [...w.pois, tokenPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "token-people")
+    ? w.signs.map((s) => (s.id === "token-people" ? { ...TOKEN_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...TOKEN_PEOPLE_PLAQUE }];
+  return { ...w, players, tokenPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -7039,6 +7123,8 @@ export function snapshot(w: WorldState) {
     bandPeopleHeld: w.bandPeopleHeld,
     numberPeopleHeld: w.numberPeopleHeld,
     skillPeopleHeld: w.skillPeopleHeld,
+    traitPeopleHeld: w.traitPeopleHeld,
+    tokenPeopleHeld: w.tokenPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

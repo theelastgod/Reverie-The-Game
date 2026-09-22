@@ -568,6 +568,18 @@ import {
   SKILL_PEOPLE_HELD,
   SKILL_PEOPLE_SPECTATOR,
   SKILL_PEOPLE_PLAQUE,
+  TRAIT_PEOPLE_COPY,
+  WINK_TRAIT_PEOPLE,
+  TRAIT_PEOPLE_NEED,
+  TRAIT_PEOPLE_HELD,
+  TRAIT_PEOPLE_SPECTATOR,
+  TRAIT_PEOPLE_PLAQUE,
+  TOKEN_PEOPLE_COPY,
+  WINK_TOKEN_PEOPLE,
+  TOKEN_PEOPLE_NEED,
+  TOKEN_PEOPLE_HELD,
+  TOKEN_PEOPLE_SPECTATOR,
+  TOKEN_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1170,6 +1182,8 @@ import {
   applyBandPeople,
   applyNumberPeople,
   applySkillPeople,
+  applyTraitPeople,
+  applyTokenPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5245,6 +5259,86 @@ describe("Skill — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applySkillPeople(gWorld, "g").players.get("g")?.heard).toBe(SKILL_PEOPLE_SPECTATOR);
     expect(gWorld.skillPeopleHeld).toBe(false);
+  });
+});
+
+describe("Trait — people", () => {
+  it("names traits as people after skill; traits do not buy damage; serials stay visible; guests cannot", () => {
+    const w = emptyWorld();
+    w.skillPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), skillPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(TRAIT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_TRAIT_PEOPLE);
+    expect(p.beats.traitPeople).toBe(true);
+    expect(named.traitPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "trait-people")?.name).toBe("Trait — people");
+    expect(named.signs.find((s) => s.id === "trait-people")?.title).toBe(TRAIT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Traits do not buy damage");
+    expect(p.heard).toContain("Serials stay visible");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTraitPeople(named, "a").players.get("a")?.heard).toBe(TRAIT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyTraitPeople(early, "a").players.get("a")?.heard).toBe(TRAIT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.skillPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyTraitPeople(gWorld, "g").players.get("g")?.heard).toBe(TRAIT_PEOPLE_SPECTATOR);
+    expect(gWorld.traitPeopleHeld).toBe(false);
+  });
+});
+
+describe("Token — people", () => {
+  it("names the token as people after traits; token never buys combat; TAKE stays disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.traitPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), traitPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(TOKEN_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_TOKEN_PEOPLE);
+    expect(p.beats.tokenPeople).toBe(true);
+    expect(named.tokenPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "token-people")?.name).toBe("Token — people");
+    expect(named.signs.find((s) => s.id === "token-people")?.title).toBe(TOKEN_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("never buys combat");
+    expect(p.heard).toContain("TAKE stays disarmed");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTokenPeople(named, "a").players.get("a")?.heard).toBe(TOKEN_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyTokenPeople(early, "a").players.get("a")?.heard).toBe(TOKEN_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.traitPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyTokenPeople(gWorld, "g").players.get("g")?.heard).toBe(TOKEN_PEOPLE_SPECTATOR);
+    expect(gWorld.tokenPeopleHeld).toBe(false);
   });
 });
 

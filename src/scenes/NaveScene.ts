@@ -640,6 +640,10 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "skill-people"
                         ? 0xc9a56a
+                      : poi.kind === "trait-people"
+                        ? 0xc9a56a
+                      : poi.kind === "token-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1088,6 +1092,14 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.tokenPeople || snap.tokenPeopleHeld)) {
+      this.prompt = me.heard || "Token — people. The token never buys combat. TAKE stays disarmed. Not a stick.";
+    } else if (wet && snap.traitPeopleHeld && !me.guest) {
+      this.prompt = "F — the token as a house of people. The token never buys combat. TAKE stays disarmed. Not a fetch.";
+    } else if (wet && (me.beats.traitPeople || snap.traitPeopleHeld)) {
+      this.prompt = me.heard || "Trait — people. Traits do not buy damage. Serials stay visible. Not a stick.";
+    } else if (wet && snap.skillPeopleHeld && !me.guest) {
+      this.prompt = "F — traits as a house of people. Traits do not buy damage. Serials stay visible. Not a fetch.";
     } else if (wet && (me.beats.skillPeople || snap.skillPeopleHeld)) {
       this.prompt = me.heard || "Skill — people. Skill still wins. Traits do not buy the fight. Not a stick.";
     } else if (wet && snap.numberPeopleHeld && !me.guest) {

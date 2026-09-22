@@ -193,6 +193,8 @@ export type Beats = {
   bandPeople: boolean;
   numberPeople: boolean;
   skillPeople: boolean;
+  traitPeople: boolean;
+  tokenPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -374,6 +376,8 @@ export type Poi = {
     | "band-people"
     | "number-people"
     | "skill-people"
+    | "trait-people"
+    | "token-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3225,6 +3229,56 @@ export function skillPeoplePoi(): Poi {
   };
 }
 
+export const TRAIT_PEOPLE_COPY =
+  "Traits are a house of people, not a bigger stick. Traits do not buy damage. Serials stay visible. Combat is not. This was not a fetch.";
+export const WINK_TRAIT_PEOPLE = "People, not a trait stick. The token does not strike.";
+export const TRAIT_PEOPLE_NEED = "Skill as people first. Traits of people are not a fetch.";
+export const TRAIT_PEOPLE_HELD = "Traits already hold as people. Traits do not buy damage. Serials stay visible.";
+export const TRAIT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const TRAIT_PEOPLE_PLAQUE: Sign = {
+  id: "trait-people",
+  title: "Trait — people",
+  text: "A house of people. Traits do not buy damage. Serials stay visible. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function traitPeoplePoi(): Poi {
+  return {
+    id: "trait-people",
+    name: "Trait — people",
+    x: 720,
+    y: 520,
+    kind: "trait-people",
+  };
+}
+
+export const TOKEN_PEOPLE_COPY =
+  "The token is a house of people, not a combat stick. The token never buys combat. TAKE stays disarmed. Combat is not. This was not a fetch.";
+export const WINK_TOKEN_PEOPLE = "People, not a token stick. The token does not strike.";
+export const TOKEN_PEOPLE_NEED = "Traits as people first. A token of people is not a fetch.";
+export const TOKEN_PEOPLE_HELD = "The token already holds as people. The token never buys combat. TAKE stays disarmed.";
+export const TOKEN_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const TOKEN_PEOPLE_PLAQUE: Sign = {
+  id: "token-people",
+  title: "Token — people",
+  text: "A house of people. The token never buys combat. TAKE stays disarmed. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function tokenPeoplePoi(): Poi {
+  return {
+    id: "token-people",
+    name: "Token — people",
+    x: 720,
+    y: 520,
+    kind: "token-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3905,6 +3959,8 @@ export function emptyBeats(): Beats {
     bandPeople: false,
     numberPeople: false,
     skillPeople: false,
+    traitPeople: false,
+    tokenPeople: false,
   };
 }
 
