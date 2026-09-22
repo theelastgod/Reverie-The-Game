@@ -544,6 +544,12 @@ import {
   GEARED_PEOPLE_HELD,
   GEARED_PEOPLE_SPECTATOR,
   GEARED_PEOPLE_PLAQUE,
+  SERIAL_PEOPLE_COPY,
+  WINK_SERIAL_PEOPLE,
+  SERIAL_PEOPLE_NEED,
+  SERIAL_PEOPLE_HELD,
+  SERIAL_PEOPLE_SPECTATOR,
+  SERIAL_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1142,6 +1148,7 @@ import {
   applyPracticePeople,
   applyDummyPeople,
   applyGearedPeople,
+  applySerialPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5061,6 +5068,44 @@ describe("Geared — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyGearedPeople(gWorld, "g").players.get("g")?.heard).toBe(GEARED_PEOPLE_SPECTATOR);
     expect(gWorld.gearedPeopleHeld).toBe(false);
+  });
+});
+
+describe("Serial — people", () => {
+  it("names serials as people after geared graves; serials do not buy damage; guests cannot", () => {
+    const w = emptyWorld();
+    w.gearedPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), gearedPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SERIAL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SERIAL_PEOPLE);
+    expect(p.beats.serialPeople).toBe(true);
+    expect(named.serialPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "serial-people")?.name).toBe("Serial — people");
+    expect(named.signs.find((s) => s.id === "serial-people")?.title).toBe(SERIAL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Serials do not buy damage");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySerialPeople(named, "a").players.get("a")?.heard).toBe(SERIAL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySerialPeople(early, "a").players.get("a")?.heard).toBe(SERIAL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.gearedPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySerialPeople(gWorld, "g").players.get("g")?.heard).toBe(SERIAL_PEOPLE_SPECTATOR);
+    expect(gWorld.serialPeopleHeld).toBe(false);
   });
 });
 

@@ -1078,6 +1078,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.serialPeople || snap.serialPeopleHeld)) {
+      this.prompt = me.heard || "Serial — people. Serials stay visible. Serials do not buy damage. Not a stick.";
+    } else if (wet && snap.gearedPeopleHeld && !me.guest) {
+      this.prompt = "F — serials as a house of people. Serials stay visible. Serials do not buy damage. Not a fetch.";
     } else if (wet && (me.beats.gearedPeople || snap.gearedPeopleHeld)) {
       this.prompt = me.heard || "Geared — people. Geared graves still crack. Fallen graves still do not. Not a stick.";
     } else if (wet && snap.dummyPeopleHeld && !me.guest) {

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 172** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 173** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -728,7 +728,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the dummy as people, F at the Wet Grid: geared graves as people. Plaque/POI **Geared — people**. Geared graves still crack. Fallen graves still do not.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 172 (do this next)
+## Stage 172 (landed)
+- After geared graves as people, F at the Wet Grid: serials as people. Plaque/POI **Serial — people**. Serials stay visible. Serials do not buy damage.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 173 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

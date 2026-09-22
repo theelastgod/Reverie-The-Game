@@ -189,6 +189,7 @@ export type Beats = {
   practicePeople: boolean;
   dummyPeople: boolean;
   gearedPeople: boolean;
+  serialPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -366,6 +367,7 @@ export type Poi = {
     | "practice-people"
     | "dummy-people"
     | "geared-people"
+    | "serial-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3117,6 +3119,31 @@ export function gearedPeoplePoi(): Poi {
   };
 }
 
+export const SERIAL_PEOPLE_COPY =
+  "Serials are a house of people, not a bigger stick. Serials stay visible. Serials do not buy damage. Combat is not. This was not a fetch.";
+export const WINK_SERIAL_PEOPLE = "People, not a serial stick. The token does not strike.";
+export const SERIAL_PEOPLE_NEED = "Geared graves as people first. Serials of people are not a fetch.";
+export const SERIAL_PEOPLE_HELD = "Serials already hold as people. Serials stay visible. Serials do not buy damage.";
+export const SERIAL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SERIAL_PEOPLE_PLAQUE: Sign = {
+  id: "serial-people",
+  title: "Serial — people",
+  text: "A house of people. Serials stay visible. Serials do not buy damage. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function serialPeoplePoi(): Poi {
+  return {
+    id: "serial-people",
+    name: "Serial — people",
+    x: 720,
+    y: 520,
+    kind: "serial-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3793,6 +3820,7 @@ export function emptyBeats(): Beats {
     practicePeople: false,
     dummyPeople: false,
     gearedPeople: false,
+    serialPeople: false,
   };
 }
 
