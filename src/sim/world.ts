@@ -179,6 +179,14 @@ import {
   CLOCK_SPECTATOR,
   WINK_CLOCK,
   deskEmptyPoi,
+  ANNEX_HOME,
+  ANNEX_NEED,
+  ANNEX_GONE,
+  ANNEX_SPECTATOR,
+  WINK_ANNEX,
+  ANNEX_HOME_PLAQUE,
+  annexHomePoi,
+  annexRoutePoi,
   inWetGrid,
   CLEARING_RING,
   CLEARING_PREPARE,
@@ -340,6 +348,7 @@ export type WorldState = {
   quillAtGrid: boolean;
   vesperAtFoundry: boolean;
   foundryDark: boolean;
+  annexHome: boolean;
   hallLamp: boolean;
   standing: HouseScores;
   announced: string | null;
@@ -487,6 +496,7 @@ export function emptyWorld(): WorldState {
     quillAtGrid: false,
     vesperAtFoundry: false,
     foundryDark: false,
+    annexHome: false,
     hallLamp: false,
     standing: emptyScores(),
     announced: null,
@@ -1609,12 +1619,16 @@ export function applyClockOut(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
   const clerk = w.clerks.find((c) => nearPoint(p.x, p.y, c.x, c.y, 70));
+  if (clerk?.id === "clerk-annex" || (!clerk && (w.annexHome || p.beats.annexHome))) {
+    return applyAnnexHome(w, playerId);
+  }
   const players = new Map(w.players);
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, heard: CLOCK_SPECTATOR });
     return { ...w, players };
   }
   if (!clerk) return w;
+  if (clerk.id !== "clerk-desk-three") return w;
   if (!w.weatherNamed) {
     players.set(playerId, { ...p, heard: CLOCK_NEED });
     return { ...w, players };
@@ -1635,6 +1649,42 @@ export function applyClockOut(w: WorldState, playerId: string): WorldState {
     ? w.pois
     : [...w.pois, deskEmptyPoi(clerk)];
   return { ...w, players, clerks: left, pois };
+}
+
+export function applyAnnexHome(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const clerk = w.clerks.find((c) => c.id === "clerk-annex");
+  const atRunner = clerk ? nearPoint(p.x, p.y, clerk.x, clerk.y, 70) : false;
+  const atRoute = w.pois.some((poi) => poi.kind === "annex-route" && nearPoint(p.x, p.y, poi.x, poi.y, 70));
+  const atAnnex = nearPoint(p.x, p.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
+  const players = new Map(w.players);
+  if (!atRunner && !atRoute && !atAnnex) return w;
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: ANNEX_SPECTATOR, wink: visibleWink(true, WINK_ANNEX) });
+    return { ...w, players };
+  }
+  if (w.annexHome || !clerk) {
+    players.set(playerId, { ...p, heard: ANNEX_GONE, wink: visibleWink(false, WINK_ANNEX) });
+    return { ...w, players };
+  }
+  if (!w.frozen) {
+    players.set(playerId, { ...p, heard: ANNEX_NEED });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, annexHome: true },
+    heard: ANNEX_HOME,
+    wink: visibleWink(false, WINK_ANNEX),
+    readiness: p.readiness + 1,
+  });
+  const left = w.clerks.filter((c) => c.id !== clerk.id);
+  const pois = w.pois
+    .map((poi) => (poi.id === SAFETY_ANNEX.id ? annexHomePoi() : poi))
+    .concat(w.pois.some((poi) => poi.id === `empty-${clerk.id}`) ? [] : [annexRoutePoi(clerk)]);
+  const signs = w.signs.map((s) => (s.id === SAFETY_ANNEX.id ? { ...ANNEX_HOME_PLAQUE } : s));
+  return { ...w, players, clerks: left, pois, signs, annexHome: true };
 }
 
 export function applyLink(w: WorldState, playerId: string, serial: number, sig: string): WorldState {
@@ -1671,6 +1721,7 @@ export function snapshot(w: WorldState) {
     stallDark: w.stallDark,
     vesperAtFoundry: w.vesperAtFoundry,
     foundryDark: w.foundryDark,
+    annexHome: w.annexHome,
     hallLamp: w.hallLamp,
     standing: w.standing,
     signs: w.signs,

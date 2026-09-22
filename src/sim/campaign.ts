@@ -60,6 +60,7 @@ export type Beats = {
   clockOut: boolean;
   foundryAsk: boolean;
   foundryDark: boolean;
+  annexHome: boolean;
 };
 
 export type WeatherHeard = {
@@ -90,6 +91,8 @@ export type Poi = {
     | "house-hall"
     | "safety-annex"
     | "safety-frozen"
+    | "safety-annex-home"
+    | "annex-route"
     | "clearing-listed"
     | "operator-desk"
     | "m3-shut"
@@ -696,6 +699,35 @@ export const CLOCK_GONE = "Desk Three already left. The empty desk is the POI.";
 export const CLOCK_SPECTATOR = "A clerk doing a job. Not for you to send home.";
 export const WINK_CLOCK =
   "A schedule changed. The Gestell still wants a desk. Naming the weather made a person walk.";
+export const ANNEX_HOME =
+  "Annex Runner is in. The street is empty. The freeze still holds. A person stopped running.";
+export const ANNEX_NEED = "They will not come in until the freeze is signed.";
+export const ANNEX_GONE = "The runner is already in. The route is empty. The freeze holds.";
+export const ANNEX_SPECTATOR = "Someone running papers. Not for you to send inside.";
+export const WINK_ANNEX =
+  "A schedule changed. Paper stays signed. The runner went inside. Fetch would have left them on the kerb.";
+
+export const ANNEX_HOME_PLAQUE: Sign = {
+  id: SAFETY_ANNEX.id,
+  title: "Safety Annex — runner in",
+  text: "The runner is in. The freeze holds. No more paper on the street.",
+  x: SAFETY_ANNEX.x,
+  y: SAFETY_ANNEX.y,
+};
+
+export function annexHomePoi(): Poi {
+  return {
+    id: SAFETY_ANNEX.id,
+    name: "Safety Annex — runner in",
+    x: SAFETY_ANNEX.x,
+    y: SAFETY_ANNEX.y,
+    kind: "safety-annex-home",
+  };
+}
+
+export function annexRoutePoi(c: { id: string; x: number; y: number }): Poi {
+  return { id: `empty-${c.id}`, name: "Annex route — empty", x: c.x, y: c.y, kind: "annex-route" };
+}
 
 export function deskEmptyPoi(c: { id: string; x: number; y: number; name: string }): Poi {
   return { id: `empty-${c.id}`, name: `${c.name} — empty`, x: c.x, y: c.y, kind: "desk-empty" };
@@ -738,6 +770,7 @@ export function emptyBeats(): Beats {
     clockOut: false,
     foundryAsk: false,
     foundryDark: false,
+    annexHome: false,
   };
 }
 

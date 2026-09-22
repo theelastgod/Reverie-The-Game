@@ -413,6 +413,10 @@ export class NaveScene extends Phaser.Scene {
             ? 0xc9a56a
             : poi.kind === "safety-frozen"
               ? 0x7eb6ff
+              : poi.kind === "safety-annex-home"
+                ? 0xc9a56a
+              : poi.kind === "annex-route"
+                ? 0x5a5a5a
               : poi.kind === "safety-annex"
                 ? 0xe8e8e8
               : poi.kind === "clearing-listed"
@@ -613,6 +617,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "You see a hall. You do not see who owns the nodes.";
     } else if (annex && (me.guest || me.locked)) {
       this.prompt = "A desk. Paper. You are not the one who signs.";
+    } else if (annex && (snap.annexHome || me.beats.annexHome)) {
+      this.prompt = me.heard || "The runner is in. The freeze holds. No more paper on the street.";
     } else if (annex && snap.frozen) {
       this.prompt = me.heard || "The freeze holds. The Passing stays hungry.";
     } else if (annex && me.beats.hall) {
@@ -741,6 +747,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A Wink you cannot spend yet. Speak with Nara Vale, Quill, and Ord. Bury the plot.";
     } else if (sign) {
       this.prompt = `F read ${sign.title}: ${sign.text}`;
+    } else if (clerkNear?.id === "clerk-annex" && snap.frozen && !me.guest) {
+      this.prompt = "F — send Annex Runner in. The freeze holds. They stop running. Not a fetch.";
+    } else if (clerkNear?.id === "clerk-annex") {
+      this.prompt = me.guest
+        ? "Someone running papers. Not for you to send inside."
+        : "Annex Runner will not come in until the freeze is signed. They will strike if you stay.";
     } else if (clerkNear && snap.weatherNamed && !me.guest) {
       this.prompt = `F — send ${clerkNear.name} home. The weather has a name. The desk will empty.`;
     } else if (clerkNear) {

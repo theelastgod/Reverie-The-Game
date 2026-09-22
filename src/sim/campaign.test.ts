@@ -194,6 +194,12 @@ import {
   CLOCK_NEED,
   CLOCK_SPECTATOR,
   WINK_CLOCK,
+  ANNEX_HOME,
+  ANNEX_NEED,
+  ANNEX_GONE,
+  ANNEX_SPECTATOR,
+  WINK_ANNEX,
+  ANNEX_HOME_PLAQUE,
   VESPER,
   VESPER_NEED_FOUNDRY,
   VESPER_UNLIGHT_ASK,
@@ -235,6 +241,7 @@ import {
   applyAnnounce,
   applyTithe,
   applyClockOut,
+  applyAnnexHome,
   applyUnlight,
   applyStanding,
   applyMarket,
@@ -1826,6 +1833,54 @@ describe("Desk Three clocks out", () => {
     const g = applyClockOut(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(CLOCK_SPECTATOR);
     expect(g.clerks).toHaveLength(2);
+  });
+});
+
+describe("Annex Runner comes in", () => {
+  it("freeze lets an Angel send the runner inside; weather-named clock-out does not steal them", () => {
+    const w = emptyWorld();
+    const runner = w.clerks.find((c) => c.id === "clerk-annex")!;
+    w.weatherNamed = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      x: runner.x,
+      y: runner.y,
+    });
+    const weather = applyClockOut(w, "a");
+    expect(weather.players.get("a")?.heard).toBe(ANNEX_NEED);
+    expect(weather.clerks.find((c) => c.id === "clerk-annex")).toBeDefined();
+    expect(weather.annexHome).toBe(false);
+
+    w.frozen = true;
+    const gone = applyClockOut(w, "a");
+    const p = gone.players.get("a")!;
+    expect(p.heard).toBe(ANNEX_HOME);
+    expect(p.wink).toBe(WINK_ANNEX);
+    expect(p.beats.annexHome).toBe(true);
+    expect(gone.annexHome).toBe(true);
+    expect(gone.frozen).toBe(true);
+    expect(gone.clerks.find((c) => c.id === "clerk-annex")).toBeUndefined();
+    expect(gone.clerks.find((c) => c.id === "clerk-desk-three")).toBeDefined();
+    expect(gone.pois.find((poi) => poi.kind === "annex-route")?.name).toBe("Annex route — empty");
+    expect(gone.pois.find((poi) => poi.id === SAFETY_ANNEX.id)?.kind).toBe("safety-annex-home");
+    expect(gone.signs.find((s) => s.id === SAFETY_ANNEX.id)?.title).toBe(ANNEX_HOME_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|fetch quest|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    gone.players.set("a", { ...p, x: SAFETY_ANNEX.x, y: SAFETY_ANNEX.y });
+    expect(applyAnnexHome(gone, "a").players.get("a")?.heard).toBe(ANNEX_GONE);
+
+    const gWorld = emptyWorld();
+    gWorld.frozen = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: runner.x, y: runner.y, locked: true });
+    const g = applyClockOut(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(ANNEX_SPECTATOR);
+    expect(g.clerks.find((c) => c.id === "clerk-annex")).toBeDefined();
+    expect(g.annexHome).toBe(false);
   });
 });
 

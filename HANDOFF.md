@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 37** — Named side quest (Annex Runner or remaining organs). Keep writing until 24 authored hours. No mint.
+**Next stage: 38** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -173,8 +173,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - F at the Foundry: plaque/POI go dark, concentrator desk vacant, Vesper walks to the organ. Not a fetch.
 - Refuse never bought the heat. Guests cannot unlight. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 37 (do this next)
-Named side quest (Annex Runner). Fetch-only forbidden. No mint. No Base.
+## Stage 37 (landed)
+- After the freeze is signed, F at Annex Runner: they come in. Street route empty. Annex plaque becomes runner-in. Freeze still holds.
+- Weather-named clock-out is Desk Three only. Guests cannot send the runner inside. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 38 (do this next)
+Named side quest. Fetch-only forbidden. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
