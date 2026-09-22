@@ -462,6 +462,13 @@ import {
   DWELL_SPECTATOR,
   DWELL_PLAQUE,
   dwellPoi,
+  NARA_LEAVE,
+  WINK_NARA_LEAVE,
+  NARA_LEAVE_HELD,
+  NARA_LEAVE_SPECTATOR,
+  NARA_LEAVE_GESTELL,
+  NARA_GONE_PLAQUE,
+  naraGonePoi,
   BlitzMark,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
@@ -587,6 +594,7 @@ export type WorldState = {
   cyberHeld: boolean;
   glamourHeld: boolean;
   dwellHeld: boolean;
+  naraGone: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -774,6 +782,7 @@ export function emptyWorld(): WorldState {
     cyberHeld: false,
     glamourHeld: false,
     dwellHeld: false,
+    naraGone: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -972,6 +981,22 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
   return { ...w, players, wreckage, clerks, gestell };
 }
 
+function withNaraLeave(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.guest || p.locked || w.naraGone || p.beats.funeral) return w;
+  if (w.gestell < NARA_LEAVE_GESTELL) return w;
+  const players = new Map(w.players);
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, naraGone: true },
+    heard: NARA_LEAVE,
+    wink: visibleWink(false, WINK_NARA_LEAVE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "nara-gone") ? w.pois : [...w.pois, naraGonePoi()];
+  const signs = w.signs.some((s) => s.id === "nara-gone") ? w.signs : [...w.signs, { ...NARA_GONE_PLAQUE }];
+  return { ...w, players, naraGone: true, pois, signs };
+}
+
 export function applyUse(
   w: WorldState,
   playerId: string,
@@ -1001,7 +1026,7 @@ export function applyUse(
       bestand: p.bestand + Math.max(0, pay - tax),
       heard: p.restraint ? RESTRAINT_YIELD : heard,
     });
-    return { ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) };
+    return withNaraLeave({ ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) }, playerId);
   }
   nodes[idx] = { ...node, depleted: true, kept: true };
   if (p.beats.errand && !p.beats.cableQuiet && !p.guest && !w.cableDark) {
@@ -1053,7 +1078,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -1361,6 +1386,15 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.restraintHeld && !p.restraint) return applyRestraintStance(w, playerId);
     return applyShrine(w, playerId);
   }
+  if (sign.id === "nara-gone") {
+    const players = new Map(w.players);
+    if (p.guest || p.locked) {
+      players.set(playerId, { ...p, heard: NARA_LEAVE_SPECTATOR, wink: visibleWink(true, WINK_NARA_LEAVE) });
+      return { ...w, players };
+    }
+    players.set(playerId, { ...p, heard: NARA_LEAVE_HELD, wink: visibleWink(false, WINK_NARA_LEAVE) });
+    return { ...w, players };
+  }
   if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
   if (sign.id === OPERATOR_DESK.id) {
     if (w.lastGodNamed) return applyVesperNoGod(w, playerId);
@@ -1416,6 +1450,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
     }
     players.set(playerId, {
       ...p,
+      beats: { ...p.beats, funeral: true },
       bestand: spent.bestand,
       banked: spent.banked,
       readiness: p.readiness + (p.house === "earth" ? 2 : 1),
@@ -2678,7 +2713,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2715,6 +2750,7 @@ export function snapshot(w: WorldState) {
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,
     dwellHeld: w.dwellHeld,
+    naraGone: w.naraGone,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,

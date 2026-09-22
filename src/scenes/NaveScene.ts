@@ -477,6 +477,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x5a5a5a
                       : poi.kind === "ione-gone"
                         ? 0x7a1028
+                      : poi.kind === "nara-gone"
+                        ? 0x7a1028
                       : poi.kind === "desk-empty"
                         ? 0x5a5a5a
                       : poi.kind === "sexton-mark"
@@ -1023,7 +1025,8 @@ export class NaveScene extends Phaser.Scene {
             ? " · Clearing held"
             : omenBit;
       const stanceBit = me.storm ? " · Storm" : me.restraint ? " · Restraint" : "";
-      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}`;
+      const naraBit = snap.naraGone ? " · sexton gone" : "";
+      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}${naraBit}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;

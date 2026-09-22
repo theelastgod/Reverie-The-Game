@@ -89,6 +89,8 @@ export type Beats = {
   cyber: boolean;
   glamour: boolean;
   dwell: boolean;
+  funeral: boolean;
+  naraGone: boolean;
 };
 
 export type WeatherHeard = {
@@ -167,7 +169,8 @@ export type Poi = {
     | "ione-gone"
     | "blitz-trace"
     | "process-read"
-    | "clearing-seed";
+    | "clearing-seed"
+    | "nara-gone";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1317,6 +1320,8 @@ export function emptyBeats(): Beats {
     cyber: false,
     glamour: false,
     dwell: false,
+    funeral: false,
+    naraGone: false,
   };
 }
 
@@ -1644,6 +1649,25 @@ export const DWELL_PLAQUE: Sign = {
 
 export function dwellPoi(x: number, y: number): Poi {
   return { id: "clearing-seed", name: "The keep — seed", x, y, kind: "clearing-seed" };
+}
+
+export const NARA_LEAVE_GESTELL = 71;
+export const NARA_LEAVE =
+  "Nara Vale left. You fed the weather and did not bury anyone. The sexton will not stand with you. This was not a fetch.";
+export const WINK_NARA_LEAVE = "Conscience walks. Gestell does not. Combat is not.";
+export const NARA_LEAVE_HELD = "Nara Vale is gone. You kept the process and lost the sexton.";
+export const NARA_LEAVE_SPECTATOR = "An empty kerb. You do not know who left.";
+
+export const NARA_GONE_PLAQUE: Sign = {
+  id: "nara-gone",
+  title: "Nara Vale — gone",
+  text: "She will not stand with a city that will not bury. The number does not strike.",
+  x: 240,
+  y: 720,
+};
+
+export function naraGonePoi(x = 240, y = 720): Poi {
+  return { id: "nara-gone", name: "Nara Vale — gone", x, y, kind: "nara-gone" };
 }
 
 export function auraSeed(serial: number): number {
@@ -1988,6 +2012,7 @@ export function liveNpcs(
   naraAtClearing = false,
   ordAtHijack = false,
   vesperAtHijack = false,
+  naraGone = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -2066,5 +2091,6 @@ export function liveNpcs(
         : n,
     );
   }
+  if (naraGone) base = base.filter((n) => n.id !== "nara");
   return base;
 }

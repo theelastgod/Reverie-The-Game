@@ -63,6 +63,7 @@ export type Snap = {
   cyberHeld?: boolean;
   glamourHeld?: boolean;
   dwellHeld?: boolean;
+  naraGone?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

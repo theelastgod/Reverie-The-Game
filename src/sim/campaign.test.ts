@@ -239,6 +239,10 @@ import {
   DWELL_HELD,
   DWELL_SPECTATOR,
   DWELL_PLAQUE,
+  NARA_LEAVE,
+  WINK_NARA_LEAVE,
+  NARA_LEAVE_GESTELL,
+  NARA_GONE_PLAQUE,
   ORD_ERRAND,
   ORD_CABLE_LATER,
   CABLE_QUIET_COPY,
@@ -2430,6 +2434,57 @@ describe("Dweller Keep seed", () => {
   });
 });
 
+describe("Nara leaves the party", () => {
+  it("extract past fat Gestell without a funeral walks her off; a funeral keeps her", () => {
+    expect(NARA_LEAVE_GESTELL).toBe(71);
+    const w = emptyWorld();
+    const node = w.nodes[0];
+    w.gestell = 70;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      x: node.x,
+      y: node.y,
+    });
+    const left = applyUse(w, "a", node.id, "extract");
+    const p = left.players.get("a")!;
+    expect(left.gestell).toBeGreaterThanOrEqual(NARA_LEAVE_GESTELL);
+    expect(left.naraGone).toBe(true);
+    expect(p.beats.naraGone).toBe(true);
+    expect(p.heard).toBe(NARA_LEAVE);
+    expect(p.wink).toBe(WINK_NARA_LEAVE);
+    expect(left.pois.find((poi) => poi.kind === "nara-gone")?.id).toBe("nara-gone");
+    expect(left.signs.find((s) => s.id === "nara-gone")?.title).toBe(NARA_GONE_PLAQUE.title);
+    expect(liveNpcs(false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true).some((n) => n.id === "nara")).toBe(false);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(snapshot(left).naraGone).toBe(true);
+
+    const kept = emptyWorld();
+    kept.gestell = 70;
+    kept.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), funeral: true },
+      x: node.x,
+      y: node.y,
+    });
+    const stayed = applyUse(kept, "a", node.id, "extract");
+    expect(stayed.naraGone).toBe(false);
+    expect(stayed.players.get("a")?.heard).not.toBe(NARA_LEAVE);
+    expect(liveNpcs(false).some((n) => n.id === "nara")).toBe(true);
+
+    const gWorld = emptyWorld();
+    gWorld.gestell = 70;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: node.x, y: node.y });
+    const guest = applyUse(gWorld, "g", node.id, "extract");
+    expect(guest.naraGone).toBe(false);
+    expect(guest.gestell).toBeGreaterThanOrEqual(NARA_LEAVE_GESTELL);
+  });
+});
+
 describe("Desk vault", () => {
   it("banks unbanked so spoils cannot take it; guests cannot; TAKE stays disarmed", () => {
     const w = emptyWorld();
@@ -2679,6 +2734,7 @@ describe("Bestand sinks", () => {
     expect(paid.wreckage).toHaveLength(0);
     expect(paid.players.get("a")?.bestand).toBe(40 - FUNERAL_COST);
     expect(paid.players.get("a")?.heard).toBe(FUNERAL_COPY);
+    expect(paid.players.get("a")?.beats.funeral).toBe(true);
     expect(paid.players.get("a")?.wink).toBe(WINK_SINK);
     expect(FUNERAL_COST).toBe(12);
     expect(damageFor(paid.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
