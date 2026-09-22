@@ -110,6 +110,7 @@ export type Beats = {
   bracket: boolean;
   naraPerson: boolean;
   quillPerson: boolean;
+  ordPerson: boolean;
 };
 
 export type WeatherHeard = {
@@ -210,7 +211,8 @@ export type Poi = {
     | "wink-seed"
     | "production-still"
     | "nara-person"
-    | "quill-person";
+    | "quill-person"
+    | "ord-person";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1671,6 +1673,7 @@ export function emptyBeats(): Beats {
     bracket: false,
     naraPerson: false,
     quillPerson: false,
+    ordPerson: false,
   };
 }
 
@@ -2104,6 +2107,25 @@ export const QUILL_PERSON_PLAQUE: Sign = {
 
 export function quillPersonPoi(x = 768, y = 520): Poi {
   return { id: "quill-person", name: "Quill — stays", x, y, kind: "quill-person" };
+}
+
+export const ORD_PERSON =
+  "Ord stays. Not as a number. As a person who signed a freeze with you. Honesty can wait a night. Combat is not. This was not a fetch.";
+export const WINK_ORD_PERSON = "A person, not a ledger. Gestell does not get this hour.";
+export const ORD_PERSON_HELD = "He already stays. The desk is a person, not a count.";
+export const ORD_PERSON_NEED = "Sign a freeze first. A person is not a number.";
+export const ORD_PERSON_SPECTATOR = "Ex-Safety. You do not get this hour.";
+
+export const ORD_PERSON_PLAQUE: Sign = {
+  id: "ord-person",
+  title: "Ord — stays",
+  text: "A person who signed a freeze. Not a number. The number does not strike.",
+  x: 400,
+  y: 260,
+};
+
+export function ordPersonPoi(x = 400, y = 260): Poi {
+  return { id: "ord-person", name: "Ord — stays", x, y, kind: "ord-person" };
 }
 
 export const ORD_LEAVE_GESTELL = 100;
@@ -2636,6 +2658,7 @@ export function liveNpcs(
   vesperGone = false,
   naraPersonHeld = false,
   quillPersonHeld = false,
+  ordPersonHeld = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -2718,7 +2741,10 @@ export function liveNpcs(
   if (naraPersonHeld) {
     base = base.map((n) => (n.id === "nara" ? { ...n, role: "Stays" } : n));
   }
-  if (ordGone) base = base.filter((n) => n.id !== "ord");
+  if (ordGone && !ordPersonHeld) base = base.filter((n) => n.id !== "ord");
+  if (ordPersonHeld) {
+    base = base.map((n) => (n.id === "ord" ? { ...n, role: "Stays" } : n));
+  }
   if (quillGone && !quillPersonHeld) base = base.filter((n) => n.id !== "quill");
   if (quillPersonHeld) {
     base = base.map((n) => (n.id === "quill" ? { ...n, role: "Stays" } : n));

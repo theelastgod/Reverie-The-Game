@@ -355,6 +355,12 @@ import {
   QUILL_PERSON_NEED,
   QUILL_PERSON_SPECTATOR,
   QUILL_PERSON_PLAQUE,
+  ORD_PERSON,
+  WINK_ORD_PERSON,
+  ORD_PERSON_HELD,
+  ORD_PERSON_NEED,
+  ORD_PERSON_SPECTATOR,
+  ORD_PERSON_PLAQUE,
   ORD_LEAVE_GESTELL,
   ORD_LEAVE,
   WINK_ORD_LEAVE,
@@ -581,6 +587,7 @@ import {
   applyTalk,
   applyNaraPerson,
   applyQuillPerson,
+  applyOrdPerson,
   applyUse,
   damageFor,
   emptyWorld,
@@ -3497,6 +3504,50 @@ describe("Quill stays as a person", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: quill.x, y: quill.y, locked: true, beats: { ...emptyBeats(), unflag: true } });
     expect(applyTalk(gWorld, "g", "quill").players.get("g")?.heard).toBe(QUILL_PERSON_SPECTATOR);
     expect(gWorld.quillPersonHeld).toBe(false);
+  });
+});
+
+describe("Ord stays as a person", () => {
+  it("after a freeze he stays as a person, not a number; guests cannot", () => {
+    const ord = NAVE_NPCS.find((n) => n.id === "ord")!;
+    const w = emptyWorld();
+    w.frozen = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), freeze: true },
+      x: ord.x,
+      y: ord.y,
+    });
+    const stayed = applyTalk(w, "a", "ord");
+    const p = stayed.players.get("a")!;
+    expect(p.heard).toBe(ORD_PERSON);
+    expect(p.wink).toBe(WINK_ORD_PERSON);
+    expect(p.beats.ordPerson).toBe(true);
+    expect(stayed.ordPersonHeld).toBe(true);
+    expect(stayed.pois.find((poi) => poi.kind === "ord-person")?.id).toBe("ord-person");
+    expect(stayed.signs.find((s) => s.id === "ord-person")?.title).toBe(ORD_PERSON_PLAQUE.title);
+    expect(liveNpcs(false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "ord")?.role).toBe("Stays");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTalk(stayed, "a", "ord").players.get("a")?.heard).toBe(ORD_PERSON_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: ord.x,
+      y: ord.y,
+    });
+    expect(applyOrdPerson(early, "a").players.get("a")?.heard).toBe(ORD_PERSON_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.frozen = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ord.x, y: ord.y, locked: true, beats: { ...emptyBeats(), freeze: true } });
+    expect(applyTalk(gWorld, "g", "ord").players.get("g")?.heard).toBe(ORD_PERSON_SPECTATOR);
+    expect(gWorld.ordPersonHeld).toBe(false);
   });
 });
 

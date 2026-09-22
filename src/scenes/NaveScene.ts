@@ -501,6 +501,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "quill-person"
                         ? 0x7a1028
+                      : poi.kind === "ord-person"
+                        ? 0x7eb6ff
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -952,6 +954,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The sexton mark is cult. Nara Vale is at the Strait.";
     } else if (npcNear?.id === "nara" && me.beats.sextonAsk) {
       this.prompt = "F — take the sexton mark. Cult object. Nara walks to the Strait.";
+    } else if (npcNear?.id === "ord" && (me.beats.ordPerson || snap.ordPersonHeld)) {
+      this.prompt = me.heard || "Ord stays. A person, not a number.";
+    } else if (npcNear?.id === "ord" && (me.beats.freeze || snap.frozen) && !me.guest && !snap.m3Open) {
+      this.prompt = "F — Ord can stay as a person. Not a fetch.";
     } else if (npcNear?.id === "ord" && (snap.ordAtHijack || me.beats.hijacked) && snap.hijackBy === "safety") {
       this.prompt = me.heard || "Ord claimed the rite for Safety. You are marked. Not a stick.";
     } else if (npcNear?.id === "ord" && (me.beats.ordLast || snap.ordAtCare)) {
