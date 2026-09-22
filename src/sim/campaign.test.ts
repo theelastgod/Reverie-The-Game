@@ -117,6 +117,12 @@ import {
   WINK_CARE,
   WINK_FREEZE,
   WINK_HISTORY,
+  WINK_SEED_COPY,
+  WINK_SEED,
+  WINK_SEED_NEED,
+  WINK_SEED_HELD,
+  WINK_SEED_PLAQUE,
+  palindromeSerial,
   WINK_HALL,
   WINK_MARKET,
   MARKET_BUY,
@@ -4773,7 +4779,10 @@ describe("serial history wreckage", () => {
     expect(visibleHistory(false, 1, linked.history)).toEqual([]);
     const angel = linked.players.get("a")!;
     linked.players.set("a", { ...angel, x: HISTORY_7777.x, y: HISTORY_7777.y });
-    const buried = applyBury(linked, "a");
+    const seeded = applyBury(linked, "a");
+    expect(seeded.players.get("a")?.heard).toBe(WINK_SEED_COPY);
+    expect(seeded.history).toHaveLength(1);
+    const buried = applyBury(seeded, "a");
     const p = buried.players.get("a")!;
     expect(p.heard).toBe(HISTORY_7777.line);
     expect(p.wink).toBe(WINK_HISTORY);
@@ -4792,6 +4801,51 @@ describe("serial history wreckage", () => {
     expect(after.players.get("g")?.wink).toBe("");
     expect(visibleHistory(true, null, after.history)).toEqual([]);
     expect(guestCanClaim(after.players.get("g")!)).toBe(false);
+  });
+});
+
+describe("Palindrome Wink seed", () => {
+  it("palindrome serials seed a Wink at the prior hour; other serials bury; not a stick", () => {
+    expect(palindromeSerial(7777)).toBe(true);
+    expect(palindromeSerial(1111)).toBe(true);
+    expect(palindromeSerial(707)).toBe(true);
+    expect(palindromeSerial(1234)).toBe(false);
+    const w = emptyWorld();
+    w.history = [{ ...HISTORY_7777 }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      x: HISTORY_7777.x,
+      y: HISTORY_7777.y,
+    });
+    const seeded = applyBury(w, "a");
+    const p = seeded.players.get("a")!;
+    expect(p.heard).toBe(WINK_SEED_COPY);
+    expect(p.wink).toBe(WINK_SEED);
+    expect(p.beats.winkSeed).toBe(true);
+    expect(seeded.winkSeedHeld).toBe(true);
+    expect(seeded.history).toHaveLength(1);
+    expect(seeded.pois.find((poi) => poi.kind === "wink-seed")?.x).toBe(HISTORY_7777.x);
+    expect(seeded.signs.find((s) => s.id === "wink-seed")?.title).toBe(WINK_SEED_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBury(seeded, "a").players.get("a")?.heard).toBe(HISTORY_7777.line);
+
+    const other = emptyWorld();
+    other.history = [{ ...HISTORY_7777, serial: 1234 }];
+    other.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 1234,
+      x: HISTORY_7777.x,
+      y: HISTORY_7777.y,
+    });
+    const buried = applyBury(other, "a");
+    expect(buried.players.get("a")?.heard).toBe(HISTORY_7777.line);
+    expect(buried.winkSeedHeld).toBe(false);
+    expect(buried.history).toEqual([]);
   });
 });
 

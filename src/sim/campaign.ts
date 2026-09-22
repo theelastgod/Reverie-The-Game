@@ -104,6 +104,7 @@ export type Beats = {
   founder: boolean;
   bounty: boolean;
   stormPress: boolean;
+  winkSeed: boolean;
 };
 
 export type WeatherHeard = {
@@ -198,7 +199,8 @@ export type Poi = {
     | "screening"
     | "screening-participant"
     | "screening-founder"
-    | "storm-progress";
+    | "storm-progress"
+    | "wink-seed";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1193,6 +1195,33 @@ export function stormProgressPoi(x: number, y: number): Poi {
   return { id: "storm-progress", name: "Storm — progress", x, y, kind: "storm-progress" };
 }
 
+export function palindromeSerial(n: number | null): boolean {
+  if (n == null || n <= 0) return false;
+  const s = String(n);
+  if (s === [...s].reverse().join("")) return true;
+  const pad = s.padStart(4, "0");
+  return pad === [...pad].reverse().join("");
+}
+
+export const WINK_SEED_COPY =
+  "A palindrome is a Wink seed. Serial remembers. You did not strike harder. This was not a fetch.";
+export const WINK_SEED = "A seed, not a stick. Palindrome presence. Combat is not.";
+export const WINK_SEED_NEED = "Only a palindrome serial seeds a Wink here.";
+export const WINK_SEED_HELD = "The seed already holds. The serial still remembers.";
+export const WINK_SEED_SPECTATOR = "A prior hour. You do not seed it.";
+
+export const WINK_SEED_PLAQUE: Sign = {
+  id: "wink-seed",
+  title: "Wink seed",
+  text: "Palindrome. Not a stick. The number does not strike.",
+  x: 760,
+  y: 640,
+};
+
+export function winkSeedPoi(x: number, y: number): Poi {
+  return { id: "wink-seed", name: "Wink seed", x, y, kind: "wink-seed" };
+}
+
 export function stormProgress(p: { guest: boolean; locked?: boolean; bestand: number; fakeWinke: number }): boolean {
   return !p.guest && !p.locked && (p.bestand >= STORM_GEAR || p.fakeWinke > 0);
 }
@@ -1532,6 +1561,7 @@ export function emptyBeats(): Beats {
     founder: false,
     bounty: false,
     stormPress: false,
+    winkSeed: false,
   };
 }
 

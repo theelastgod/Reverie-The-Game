@@ -149,6 +149,14 @@ import {
   stormProgressPoi,
   stormProgress,
   alreadyFallen,
+  palindromeSerial,
+  WINK_SEED_COPY,
+  WINK_SEED,
+  WINK_SEED_NEED,
+  WINK_SEED_HELD,
+  WINK_SEED_SPECTATOR,
+  WINK_SEED_PLAQUE,
+  winkSeedPoi,
   STANCE_PLAQUE,
   stancePoi,
   VESPER_NOGOD,
@@ -705,6 +713,7 @@ export type WorldState = {
   founderHeld: boolean;
   bountyHeld: boolean;
   stormPressHeld: boolean;
+  winkSeedHeld: boolean;
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
   glamourHeld: boolean;
@@ -910,6 +919,7 @@ export function emptyWorld(): WorldState {
     founderHeld: false,
     bountyHeld: false,
     stormPressHeld: false,
+    winkSeedHeld: false,
     blitzMarks: [],
     cyberHeld: false,
     glamourHeld: false,
@@ -1709,6 +1719,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   }
   const mark = visibleHistory(p.guest, p.serial, w.history, p.storm || p.ruinBack).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
   if (!mark) return w;
+  if (palindromeSerial(p.serial) && !p.beats.winkSeed) return applyWinkSeed(w, playerId, mark);
   players.set(playerId, {
     ...p,
     readiness: p.readiness + 1,
@@ -1717,6 +1728,42 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
     wink: visibleWink(false, WINK_HISTORY),
   });
   return { ...w, players, history: w.history.filter((m) => m.id !== mark.id) };
+}
+
+export function applyWinkSeed(
+  w: WorldState,
+  playerId: string,
+  mark: { id: string; x: number; y: number },
+): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: WINK_SEED_SPECTATOR, wink: visibleWink(true, WINK_SEED) });
+    return { ...w, players };
+  }
+  if (!palindromeSerial(p.serial)) {
+    players.set(playerId, { ...p, heard: WINK_SEED_NEED });
+    return { ...w, players };
+  }
+  if (w.winkSeedHeld && p.beats.winkSeed) {
+    players.set(playerId, { ...p, heard: WINK_SEED_HELD, wink: visibleWink(false, WINK_SEED) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, winkSeed: true },
+    heard: WINK_SEED_COPY,
+    wink: visibleWink(false, WINK_SEED),
+  });
+  const plaque = { ...WINK_SEED_PLAQUE, x: mark.x, y: mark.y };
+  const pois = w.pois.some((poi) => poi.id === "wink-seed")
+    ? w.pois.map((poi) => (poi.id === "wink-seed" ? winkSeedPoi(mark.x, mark.y) : poi))
+    : [...w.pois, winkSeedPoi(mark.x, mark.y)];
+  const signs = w.signs.some((s) => s.id === "wink-seed")
+    ? w.signs.map((s) => (s.id === "wink-seed" ? plaque : s))
+    : [...w.signs, plaque];
+  return { ...w, players, winkSeedHeld: true, pois, signs };
 }
 
 export function applyRestraint(w: WorldState, playerId: string): WorldState {
@@ -3097,6 +3144,7 @@ export function snapshot(w: WorldState) {
     founderHeld: w.founderHeld,
     bountyHeld: w.bountyHeld,
     stormPressHeld: w.stormPressHeld,
+    winkSeedHeld: w.winkSeedHeld,
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,

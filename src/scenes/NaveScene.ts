@@ -42,6 +42,7 @@ import {
   TEST_SERIAL,
   visibleFailed,
   visibleHistory,
+  palindromeSerial,
   winkeVisible,
   type Sign,
 } from "../sim/campaign";
@@ -469,6 +470,8 @@ export class NaveScene extends Phaser.Scene {
                       ? 0x7a1028
                     : poi.kind === "storm-progress"
                       ? 0x7eb6ff
+                    : poi.kind === "wink-seed"
+                      ? 0xc9a56a
                     : poi.kind === "process-read"
                       ? 0x7eb6ff
                     : poi.kind === "clearing-seed"
@@ -1022,6 +1025,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.beats.failed
         ? me.heard || "Last season’s Passing failed. You already watched."
         : "F — watch the failed Passing. Ruin-sight only. Do not loot it.";
+    } else if (histNear && !me.guest && palindromeSerial(me.serial) && !me.beats.winkSeed) {
+      this.prompt = "F — seed a palindrome Wink. Not a stick.";
     } else if (histNear) {
       this.prompt = "F — bury a prior hour. Only your serial can see this wreckage.";
     } else if (under && movementReady(me.beats)) {
