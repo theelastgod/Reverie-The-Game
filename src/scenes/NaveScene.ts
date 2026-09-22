@@ -543,6 +543,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "care-people"
                         ? 0xc9a56a
+                      : poi.kind === "shrine-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1110,6 +1112,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
+    } else if (shrine && (me.beats.shrinePeople || snap.shrinePeopleHeld)) {
+      this.prompt = me.heard || `The shrine — people. F keep (${SHRINE_COST}). Restore still costs. Not a stick.`;
+    } else if (shrine && snap.carePeopleHeld && !me.guest) {
+      this.prompt = "F — the shrine as a house of people. Keep still costs. Not a fetch.";
     } else if (shrine && me.stipend > 0) {
       this.prompt = me.heard || `F spend Passing stipend on the shrine (${me.stipend} left). Cult upkeep. Not a stick.`;
     } else if (shrine && (snap.lastGodNamed || me.beats.lastGod) && !me.beats.restraint && !snap.restraintHeld) {

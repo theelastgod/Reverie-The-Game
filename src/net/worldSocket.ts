@@ -90,6 +90,7 @@ export type Snap = {
   truceHeld?: boolean;
   handoffHeld?: boolean;
   carePeopleHeld?: boolean;
+  shrinePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

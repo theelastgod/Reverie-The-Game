@@ -132,6 +132,12 @@ import {
   CARE_PEOPLE_HELD,
   CARE_PEOPLE_SPECTATOR,
   CARE_PEOPLE_PLAQUE,
+  SHRINE_PEOPLE_COPY,
+  WINK_SHRINE_PEOPLE,
+  SHRINE_PEOPLE_NEED,
+  SHRINE_PEOPLE_HELD,
+  SHRINE_PEOPLE_SPECTATOR,
+  SHRINE_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -657,6 +663,7 @@ import {
   applyTruce,
   applyHandoff,
   applyCarePeople,
+  applyShrinePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1787,6 +1794,47 @@ describe("The Care — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), locked: true, x: CARE_DOOR.x, y: CARE_DOOR.y });
     expect(applyCarePeople(gWorld, "g").players.get("g")?.heard).toBe(CARE_PEOPLE_SPECTATOR);
     expect(gWorld.carePeopleHeld).toBe(false);
+  });
+});
+
+describe("The shrine — people", () => {
+  it("names the shrine as a house of people after the Care; keep still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.carePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 20,
+      beats: { ...emptyBeats(), carePeople: true },
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const named = applyRead(w, "a", SHRINE.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SHRINE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SHRINE_PEOPLE);
+    expect(p.beats.shrinePeople).toBe(true);
+    expect(p.bestand).toBe(20);
+    expect(named.shrinePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === SHRINE.id)?.kind).toBe("shrine-people");
+    expect(named.signs.find((s) => s.id === SHRINE.id)?.title).toBe(SHRINE_PEOPLE_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyShrinePeople(named, "a").players.get("a")?.heard).toBe(SHRINE_PEOPLE_HELD);
+    const kept = applyShrine(named, "a");
+    expect(kept.players.get("a")?.bestand).toBe(12);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SHRINE.x, y: SHRINE.y });
+    expect(applyShrinePeople(early, "a").players.get("a")?.heard).toBe(SHRINE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.carePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
+    expect(applyShrinePeople(gWorld, "g").players.get("g")?.heard).toBe(SHRINE_PEOPLE_SPECTATOR);
+    expect(gWorld.shrinePeopleHeld).toBe(false);
   });
 });
 

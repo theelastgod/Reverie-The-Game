@@ -192,6 +192,13 @@ import {
   CARE_PEOPLE_SPECTATOR,
   CARE_PEOPLE_PLAQUE,
   carePeoplePoi,
+  SHRINE_PEOPLE_COPY,
+  WINK_SHRINE_PEOPLE,
+  SHRINE_PEOPLE_NEED,
+  SHRINE_PEOPLE_HELD,
+  SHRINE_PEOPLE_SPECTATOR,
+  SHRINE_PEOPLE_PLAQUE,
+  shrinePeoplePoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -860,6 +867,7 @@ export type WorldState = {
   truceHeld: boolean;
   handoffHeld: boolean;
   carePeopleHeld: boolean;
+  shrinePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1106,6 +1114,7 @@ export function emptyWorld(): WorldState {
     truceHeld: false,
     handoffHeld: false,
     carePeopleHeld: false,
+    shrinePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2254,6 +2263,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === SHRINE.id) {
     if (w.lastGodNamed && !w.restraintHeld) return applyRestraint(w, playerId);
     if (w.restraintHeld && !p.restraint) return applyRestraintStance(w, playerId);
+    if (w.carePeopleHeld && !w.shrinePeopleHeld) return applyShrinePeople(w, playerId);
     return applyShrine(w, playerId);
   }
   if (sign.id === "nara-gone") {
@@ -2698,6 +2708,39 @@ export function applyCarePeople(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === "care-people" ? { ...CARE_PEOPLE_PLAQUE } : s))
     : [...w.signs, { ...CARE_PEOPLE_PLAQUE }];
   return { ...w, players, carePeopleHeld: true, pois, signs };
+}
+
+export function applyShrinePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: SHRINE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_SHRINE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.carePeopleHeld) {
+    players.set(playerId, { ...p, heard: SHRINE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.shrinePeopleHeld && p.beats.shrinePeople) {
+    players.set(playerId, { ...p, heard: SHRINE_PEOPLE_HELD, wink: visibleWink(false, WINK_SHRINE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, shrinePeople: true },
+    heard: SHRINE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_SHRINE_PEOPLE),
+    lastCareX: SHRINE.x,
+    lastCareY: SHRINE.y,
+  });
+  return {
+    ...w,
+    players,
+    shrinePeopleHeld: true,
+    pois: w.pois.map((poi) => (poi.id === SHRINE.id ? shrinePeoplePoi() : poi)),
+    signs: w.signs.map((s) => (s.id === SHRINE.id ? { ...SHRINE_PEOPLE_PLAQUE } : s)),
+  };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -3856,6 +3899,7 @@ export function snapshot(w: WorldState) {
     truceHeld: w.truceHeld,
     handoffHeld: w.handoffHeld,
     carePeopleHeld: w.carePeopleHeld,
+    shrinePeopleHeld: w.shrinePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

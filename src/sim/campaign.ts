@@ -121,6 +121,7 @@ export type Beats = {
   truce: boolean;
   handoff: boolean;
   carePeople: boolean;
+  shrinePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -230,6 +231,7 @@ export type Poi = {
     | "truce"
     | "stall-handoff"
     | "care-people"
+    | "shrine-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1469,6 +1471,31 @@ export function carePeoplePoi(): Poi {
   };
 }
 
+export const SHRINE_PEOPLE_COPY =
+  "The shrine is a house of people. Keep still costs. Restore still costs. Combat is not. This was not a fetch.";
+export const WINK_SHRINE_PEOPLE = "People, not a stick. The gold does not strike.";
+export const SHRINE_PEOPLE_NEED = "The Care as people first. A shrine of people is not a fetch.";
+export const SHRINE_PEOPLE_HELD = "The shrine already holds as people. Keep still costs.";
+export const SHRINE_PEOPLE_SPECTATOR = "A shrine. You do not get a house of people.";
+
+export const SHRINE_PEOPLE_PLAQUE: Sign = {
+  id: SHRINE.id,
+  title: "The shrine — people",
+  text: "A house of people. Keep still costs. The number does not strike.",
+  x: SHRINE.x,
+  y: SHRINE.y,
+};
+
+export function shrinePeoplePoi(): Poi {
+  return {
+    id: SHRINE.id,
+    name: "The shrine — people",
+    x: SHRINE.x,
+    y: SHRINE.y,
+    kind: "shrine-people",
+  };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1873,6 +1900,7 @@ export function emptyBeats(): Beats {
     truce: false,
     handoff: false,
     carePeople: false,
+    shrinePeople: false,
   };
 }
 
