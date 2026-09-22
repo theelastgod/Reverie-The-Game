@@ -433,6 +433,14 @@ import {
   ANNOUNCE_NEED,
   ANNOUNCE_SPECTATOR,
   WINK_ANNOUNCE,
+  BLITZ_COPY,
+  WINK_BLITZ,
+  BLITZ_NEED,
+  BLITZ_HELD,
+  BLITZ_SPECTATOR,
+  lastWrecks,
+  blitzPoi,
+  BlitzMark,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
 
@@ -551,6 +559,8 @@ export type WorldState = {
   vesperAtHijack: boolean;
   clearingFailed: boolean;
   stormHeld: boolean;
+  blitzHeld: boolean;
+  blitzMarks: BlitzMark[];
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -731,6 +741,8 @@ export function emptyWorld(): WorldState {
     vesperAtHijack: false,
     clearingFailed: false,
     stormHeld: false,
+    blitzHeld: false,
+    blitzMarks: [],
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -2664,6 +2676,8 @@ export function snapshot(w: WorldState) {
     vesperAtHijack: w.vesperAtHijack,
     clearingFailed: w.clearingFailed,
     stormHeld: w.stormHeld,
+    blitzHeld: w.blitzHeld,
+    blitzMarks: w.blitzMarks,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2814,6 +2828,38 @@ export function applyAnnounce(w: WorldState, playerId: string, nodeId: string): 
     readiness: p.readiness + (w.announced === node.id ? 0 : 1),
   });
   return { ...w, players, announced: node.id };
+}
+
+export function applyBlitz(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const grave = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
+  const players = new Map(w.players);
+  if (!grave) return w;
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: BLITZ_SPECTATOR, wink: visibleWink(true, WINK_BLITZ) });
+    return { ...w, players };
+  }
+  if (p.messenger !== "witness") {
+    players.set(playerId, { ...p, heard: BLITZ_NEED });
+    return { ...w, players };
+  }
+  if (w.blitzHeld || p.beats.blitz) {
+    players.set(playerId, { ...p, heard: BLITZ_HELD, wink: visibleWink(false, WINK_BLITZ) });
+    return { ...w, players };
+  }
+  const marks = lastWrecks(w.wreckage);
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, blitz: true },
+    heard: BLITZ_COPY,
+    wink: visibleWink(false, WINK_BLITZ),
+    readiness: p.readiness + 1,
+  });
+  const pois = w.pois.some((poi) => poi.id === "blitz-trace")
+    ? w.pois.map((poi) => (poi.id === "blitz-trace" ? blitzPoi(grave.x, grave.y) : poi))
+    : [...w.pois, blitzPoi(grave.x, grave.y)];
+  return { ...w, players, blitzHeld: true, blitzMarks: marks, pois };
 }
 
 export function applyLastWord(w: WorldState, playerId: string): WorldState {

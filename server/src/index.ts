@@ -13,6 +13,7 @@ import {
   applyClockOut,
   applyClearing,
   applyAnnounce,
+  applyBlitz,
   applyOperator,
   applyRead,
   applyStrike,
@@ -128,6 +129,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "announce" && data.nodeId) {
       this.w = applyAnnounce(this.w, id, data.nodeId);
+      this.broadcast();
+    } else if (data.t === "blitz") {
+      this.w = applyBlitz(this.w, id);
       this.broadcast();
     } else if (data.t === "desk") {
       this.w = applyDesk(this.w, id, data.choice === "take" ? "take" : data.choice === "bank" ? "bank" : "file");

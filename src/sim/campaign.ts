@@ -85,6 +85,7 @@ export type Beats = {
   naraStay: boolean;
   hijacked: boolean;
   storm: boolean;
+  blitz: boolean;
 };
 
 export type WeatherHeard = {
@@ -159,7 +160,8 @@ export type Poi = {
     | "shrine-stance"
     | "desk-empty"
     | "yield-empty"
-    | "ione-gone";
+    | "ione-gone"
+    | "blitz-trace";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1305,6 +1307,7 @@ export function emptyBeats(): Beats {
     naraStay: false,
     hijacked: false,
     storm: false,
+    blitz: false,
   };
 }
 
@@ -1550,6 +1553,23 @@ export const ANNOUNCE_COPY =
 export const ANNOUNCE_NEED = "Only a Herald can name a safe node, and only one that was kept.";
 export const ANNOUNCE_SPECTATOR = "A light. You do not know if it is safe.";
 export const WINK_ANNOUNCE = "A safe node is a hint, not a weapon. The token does not make it hit.";
+export const BLITZ_COUNT = 8;
+export const BLITZ_COPY =
+  "A lightning trace. You see the last eight graves. You did not strike harder. This was not a fetch.";
+export const WINK_BLITZ = "Witness kit. A trace, not a stick. Combat is not.";
+export const BLITZ_NEED = "Only a Witness traces wreckage, and only at a grave.";
+export const BLITZ_HELD = "The traces already hold. Eight graves. Combat is not.";
+export const BLITZ_SPECTATOR = "A flash. You do not see the graves.";
+
+export type BlitzMark = { id: string; x: number; y: number; fromName: string };
+
+export function lastWrecks(wreckage: { id: string; x: number; y: number; fromName: string }[], n = BLITZ_COUNT): BlitzMark[] {
+  return wreckage.slice(-n).map((r) => ({ id: r.id, x: r.x, y: r.y, fromName: r.fromName }));
+}
+
+export function blitzPoi(x: number, y: number): Poi {
+  return { id: "blitz-trace", name: "Blitz trace", x, y, kind: "blitz-trace" };
+}
 
 export function auraSeed(serial: number): number {
   return 8 + (serial % 13);

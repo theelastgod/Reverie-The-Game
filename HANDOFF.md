@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 64** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 65** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -281,7 +281,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After holding-back is named, F at the shrine takes Restraint. Yield thins (30). Keep pays an extra Wink. Plaque/POI Restraint. Storm burns the stance.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 64 (do this next)
+## Stage 64 (landed)
+- Witness kit: F at a grave traces the last eight wreckages. POI Blitz trace. Not a stick.
+- Other kits and guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 65 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

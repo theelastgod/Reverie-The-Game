@@ -213,6 +213,13 @@ import {
   ANNOUNCE_NEED,
   ANNOUNCE_SPECTATOR,
   WINK_ANNOUNCE,
+  BLITZ_COPY,
+  WINK_BLITZ,
+  BLITZ_NEED,
+  BLITZ_HELD,
+  BLITZ_SPECTATOR,
+  BLITZ_COUNT,
+  lastWrecks,
   ORD_ERRAND,
   ORD_CABLE_LATER,
   CABLE_QUIET_COPY,
@@ -388,6 +395,7 @@ import {
   applyPassing,
   applyStorm,
   applyAnnounce,
+  applyBlitz,
   applyTithe,
   applyClockOut,
   applyYieldEmpty,
@@ -2154,6 +2162,61 @@ describe("Wet Grid flagged PvP", () => {
     expect(camp.players.get("a")?.aura).toBeLessThan(auraSeed(TEST_SERIAL));
     expect(camp.gestell).toBeGreaterThan(duel.gestell);
     expect(guestCanClaim(camp.players.get("a")!)).toBe(false);
+  });
+});
+
+describe("Witness Blitz", () => {
+  it("traces the last eight graves at a wreck; other kits and guests cannot", () => {
+    const graves = Array.from({ length: 9 }, (_, i) => ({
+      id: `w-${i}`,
+      x: 200 + i * 80,
+      y: 480,
+      fromId: `p${i}`,
+      fromName: `Angel ${i}`,
+      until: 99,
+    }));
+    expect(lastWrecks(graves)).toHaveLength(BLITZ_COUNT);
+    expect(lastWrecks(graves)[0]?.id).toBe("w-1");
+    const w = emptyWorld();
+    w.wreckage = graves;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 2,
+      messenger: "witness",
+      x: graves[8].x,
+      y: graves[8].y,
+    });
+    const traced = applyBlitz(w, "a");
+    const p = traced.players.get("a")!;
+    expect(p.heard).toBe(BLITZ_COPY);
+    expect(p.wink).toBe(WINK_BLITZ);
+    expect(p.beats.blitz).toBe(true);
+    expect(traced.blitzHeld).toBe(true);
+    expect(traced.blitzMarks).toHaveLength(BLITZ_COUNT);
+    expect(traced.pois.find((poi) => poi.kind === "blitz-trace")?.x).toBe(graves[8].x);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBlitz(traced, "a").players.get("a")?.heard).toBe(BLITZ_HELD);
+
+    const herald = emptyWorld();
+    herald.wreckage = graves;
+    herald.players.set("h", {
+      ...spawnGuest("h"),
+      guest: false,
+      messenger: "herald",
+      x: graves[8].x,
+      y: graves[8].y,
+    });
+    expect(applyBlitz(herald, "h").players.get("h")?.heard).toBe(BLITZ_NEED);
+    expect(applyBlitz(herald, "h").blitzHeld).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.wreckage = graves;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: graves[8].x, y: graves[8].y, locked: true });
+    expect(applyBlitz(gWorld, "g").players.get("g")?.heard).toBe(BLITZ_SPECTATOR);
+    expect(gWorld.blitzHeld).toBe(false);
   });
 });
 

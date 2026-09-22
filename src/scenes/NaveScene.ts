@@ -269,6 +269,10 @@ export class NaveScene extends Phaser.Scene {
     const rites = this.net.snap?.rites ?? [];
     const burial = rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
     const wreck = this.net.snap?.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 56));
+    if (wreck && me.messenger === "witness" && !me.beats.blitz) {
+      this.net.blitz();
+      return;
+    }
     const hist = visibleHistory(me.guest, me.serial, this.net.snap?.history ?? [], me.storm).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
@@ -439,6 +443,8 @@ export class NaveScene extends Phaser.Scene {
                   ? 0xff2d6b
                   : poi.kind === "m3-shut"
                     ? 0x3a3a3a
+                    : poi.kind === "blitz-trace"
+                      ? 0x7eb6ff
                     : poi.kind === "wreckage-garden"
                       ? 0x7a1028
                       : poi.kind === "claims-desk"
@@ -560,6 +566,16 @@ export class NaveScene extends Phaser.Scene {
       if (!m) {
         m = this.add.circle(r.x, r.y, 10, 0xff2d6b, 0.7).setDepth(6);
         this.wreckMarks.set(r.id, m);
+      }
+    }
+    if (me.messenger === "witness" || me.beats.blitz) {
+      for (const r of snap.blitzMarks ?? []) {
+        wreckSeen.add(`blitz-${r.id}`);
+        let m = this.wreckMarks.get(`blitz-${r.id}`);
+        if (!m) {
+          m = this.add.circle(r.x, r.y, 7, 0x7eb6ff, 0.55).setDepth(6);
+          this.wreckMarks.set(`blitz-${r.id}`, m);
+        }
       }
     }
     for (const [id, m] of this.wreckMarks) {
@@ -898,6 +914,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.insured
         ? `F keep (${SHRINE_COST}). E restore (${RESTORE_COST}). Paper held — death walks you here. Not a stick.${vault}`
         : `F keep (${SHRINE_COST}). E restore aura (${RESTORE_COST}). Q insurance (${INSURANCE_COST}). A walk, not a revive.${vault}`;
+    } else if (wreckNear && me.messenger === "witness" && !me.guest && !me.beats.blitz) {
+      this.prompt = "F — Witness Blitz. Trace the last eight graves. Not a stick.";
+    } else if (wreckNear && (me.beats.blitz || snap.blitzHeld) && me.messenger === "witness") {
+      this.prompt = me.heard || "The traces hold. Eight graves. Combat is not.";
     } else if (funeralNear && !me.locked) {
       this.prompt = `F funeral. ${FUNERAL_COST} Bestand on Nara Vale's street.`;
     } else if (failNear) {

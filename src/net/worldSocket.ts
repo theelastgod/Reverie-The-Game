@@ -58,6 +58,8 @@ export type Snap = {
   vesperAtHijack?: boolean;
   clearingFailed?: boolean;
   stormHeld?: boolean;
+  blitzHeld?: boolean;
+  blitzMarks?: { id: string; x: number; y: number; fromName: string }[];
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 
@@ -168,6 +170,10 @@ export class WorldSocket {
 
   announce(nodeId: string) {
     this.send({ t: "announce", nodeId });
+  }
+
+  blitz() {
+    this.send({ t: "blitz" });
   }
 
   private send(msg: unknown) {
