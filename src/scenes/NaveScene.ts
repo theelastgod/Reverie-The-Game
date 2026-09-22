@@ -457,6 +457,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "last-god-absent"
                         ? 0xc9a56a
+                      : poi.kind === "last-god-buried"
+                        ? 0x7a1028
                       : poi.kind === "house-standing"
                         ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
@@ -742,6 +744,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Movement III is shut. The private yield funds this door the Cold way.";
     } else if (gardenNear && !gardenNear.done && !me.guest) {
       this.prompt = "F bury the Clearing that Movement I over-extracted. Nara Vale will not speak until you do.";
+    } else if (npcNear?.id === "nara" && (me.beats.naraGod || snap.lastGodBuried || snap.naraAtCare)) {
+      this.prompt = me.heard || "The last god is in the earth. Nara Vale is at the Care.";
+    } else if (npcNear?.id === "nara" && me.beats.naraGodAsk) {
+      this.prompt = "F — bury the last god as earth with Nara. Cult. She walks to the Care.";
+    } else if (npcNear?.id === "nara" && me.beats.sexton && (snap.lastGodNamed || me.beats.lastGod)) {
+      this.prompt = "F — Nara will bury the last god as earth. Absence can be a grave.";
     } else if (npcNear?.id === "nara" && (me.beats.canalBury || snap.straitBuried)) {
       this.prompt = me.heard || "The canal is in the earth. Nara Vale is burying it.";
     } else if (npcNear?.id === "nara" && me.beats.canalAsk) {
@@ -800,7 +808,9 @@ export class NaveScene extends Phaser.Scene {
         : "F read the organ. Extract here lights a factory there. No country names.";
     } else if (care && snap.careOpen && !me.guest && me.beats.under) {
       this.prompt =
-        me.beats.lastGod || snap.lastGodNamed
+        snap.lastGodBuried || me.beats.naraGod
+          ? me.heard || "The last god is in the earth. Nara Vale is at the Care."
+          : me.beats.lastGod || snap.lastGodNamed
           ? me.heard || "The last god is not here. Absence is a standing. Not a stick."
           : snap.fourfoldHeld
             ? "F — name the last god as absence. The Care is not a room with a body. Not a fetch."

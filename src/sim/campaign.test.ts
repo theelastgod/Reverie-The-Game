@@ -32,6 +32,12 @@ import {
   LAST_GOD_HELD,
   LAST_GOD_SPECTATOR,
   LAST_GOD_PLAQUE,
+  NARA_GOD_ASK,
+  NARA_GOD,
+  NARA_GOD_LATER,
+  NARA_GOD_SPECTATOR,
+  WINK_NARA_GOD,
+  LAST_GOD_BURIED_PLAQUE,
   ORD_LAST,
   WINK_ORD_LAST,
   ORD_LAST_LATER,
@@ -779,6 +785,63 @@ describe("Ord will not number the last god", () => {
     const g = applyTalk(gWorld, "g", "ord");
     expect(g.players.get("g")?.heard).toBe(ORD_LAST_SPECTATOR);
     expect(g.ordAtCare).toBe(false);
+  });
+});
+
+describe("Nara buries the last god", () => {
+  it("sexton plus named absence lets an Angel bury it; guests cannot", () => {
+    const nara = NAVE_NPCS.find((n) => n.id === "nara")!;
+    const w = emptyWorld();
+    w.lastGodNamed = true;
+    w.careOpen = true;
+    w.pois = w.pois.map((poi) =>
+      poi.id === CARE_DOOR.id ? { ...poi, name: "The last god — not here", kind: "last-god-absent" } : poi,
+    );
+    w.signs = [...w.signs, { ...LAST_GOD_PLAQUE }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), garden: true, sexton: true, sextonAsk: true, lastGod: true, nara: true },
+      cultWink: true,
+      x: nara.x,
+      y: nara.y,
+    });
+    const asked = applyTalk(w, "a", "nara");
+    expect(asked.players.get("a")?.heard).toBe(NARA_GOD_ASK);
+    expect(asked.players.get("a")?.beats.naraGodAsk).toBe(true);
+    const buried = applyTalk(asked, "a", "nara");
+    const p = buried.players.get("a")!;
+    expect(p.heard).toBe(NARA_GOD);
+    expect(p.wink).toBe(WINK_NARA_GOD);
+    expect(p.beats.naraGod).toBe(true);
+    expect(buried.lastGodBuried).toBe(true);
+    expect(buried.naraAtCare).toBe(true);
+    expect(buried.pois.find((poi) => poi.id === CARE_DOOR.id)?.kind).toBe("last-god-buried");
+    expect(buried.signs.find((s) => s.id === CARE_DOOR.id)?.title).toBe(LAST_GOD_BURIED_PLAQUE.title);
+    const moved = liveNpcs(false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "nara")!;
+    expect(moved.role).toBe("Burying absence");
+    expect(moved.x).toBe(CARE_DOOR.x + 40);
+    buried.players.set("a", { ...p, x: moved.x, y: moved.y });
+    expect(applyTalk(buried, "a", "nara").players.get("a")?.heard).toBe(NARA_GOD_LATER);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.lastGodNamed = true;
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: nara.x,
+      y: nara.y,
+      locked: true,
+      beats: { ...emptyBeats(), garden: true, sexton: true },
+    });
+    const g = applyTalk(gWorld, "g", "nara");
+    expect(g.players.get("g")?.heard).toBe(NARA_GOD_SPECTATOR);
+    expect(g.lastGodBuried).toBe(false);
+    expect(g.naraAtCare).toBe(false);
   });
 });
 

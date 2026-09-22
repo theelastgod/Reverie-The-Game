@@ -257,6 +257,14 @@ import {
   NARA_CANAL,
   NARA_CANAL_WAIT,
   NARA_CANAL_LATER,
+  NARA_GOD_ASK,
+  NARA_GOD,
+  NARA_GOD_LATER,
+  NARA_GOD_NEED,
+  NARA_GOD_SPECTATOR,
+  WINK_NARA_GOD,
+  LAST_GOD_BURIED_PLAQUE,
+  lastGodBuriedPoi,
   WINK_CANAL,
   CANAL_SPECTATOR,
   CANAL_NEED,
@@ -456,6 +464,8 @@ export type WorldState = {
   fourfoldHeld: boolean;
   lastGodNamed: boolean;
   ordAtCare: boolean;
+  naraAtCare: boolean;
+  lastGodBuried: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -615,6 +625,8 @@ export function emptyWorld(): WorldState {
     fourfoldHeld: false,
     lastGodNamed: false,
     ordAtCare: false,
+    naraAtCare: false,
+    lastGodBuried: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -871,7 +883,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -883,6 +895,39 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   }
   if (id === "nara" && p.beats.garden && !p.guest && !p.locked) {
     if (p.beats.sexton) {
+      if (w.lastGodNamed || p.beats.lastGod) {
+        if (p.beats.naraGod || w.lastGodBuried) {
+          players.set(playerId, { ...p, heard: NARA_GOD_LATER, wink: visibleWink(false, WINK_NARA_GOD) });
+          return { ...w, players };
+        }
+        if (p.beats.naraGodAsk) {
+          players.set(playerId, {
+            ...p,
+            beats: { ...p.beats, naraGod: true, nara: true },
+            cultWink: true,
+            heard: NARA_GOD,
+            wink: visibleWink(false, WINK_NARA_GOD),
+            readiness: p.readiness + 1,
+          });
+          return {
+            ...w,
+            players,
+            naraAtCare: true,
+            lastGodBuried: true,
+            pois: w.pois.map((poi) => (poi.id === CARE_DOOR.id ? lastGodBuriedPoi() : poi)),
+            signs: w.signs.some((s) => s.id === CARE_DOOR.id)
+              ? w.signs.map((s) => (s.id === CARE_DOOR.id ? { ...LAST_GOD_BURIED_PLAQUE } : s))
+              : [...w.signs, { ...LAST_GOD_BURIED_PLAQUE }],
+          };
+        }
+        players.set(playerId, {
+          ...p,
+          beats: { ...p.beats, naraGodAsk: true, nara: true },
+          heard: NARA_GOD_ASK,
+          wink: visibleWink(false, WINK_NARA_GOD),
+        });
+        return { ...w, players };
+      }
       if (p.beats.canalBury || w.straitBuried) {
         players.set(playerId, { ...p, heard: NARA_CANAL_LATER, wink: visibleWink(false, WINK_CANAL) });
         return { ...w, players };
@@ -941,8 +986,8 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
     });
     return { ...w, players };
   }
-  if (id === "nara" && (p.guest || p.locked) && p.beats.garden) {
-    players.set(playerId, { ...p, heard: SEXTON_SPECTATOR });
+  if (id === "nara" && (p.guest || p.locked) && (p.beats.garden || w.lastGodNamed)) {
+    players.set(playerId, { ...p, heard: w.lastGodNamed ? NARA_GOD_SPECTATOR : SEXTON_SPECTATOR });
     return { ...w, players };
   }
   if (id === "ione") return applyLastWord(w, playerId);
@@ -1376,6 +1421,15 @@ export function applyLastGod(w: WorldState, playerId: string): WorldState {
   }
   if (!w.fourfoldHeld || !w.careOpen) {
     players.set(playerId, { ...p, heard: LAST_GOD_NEED });
+    return { ...w, players };
+  }
+  if (w.lastGodBuried) {
+    players.set(playerId, {
+      ...p,
+      heard: NARA_GOD_LATER,
+      wink: visibleWink(false, WINK_NARA_GOD),
+      inCare: true,
+    });
     return { ...w, players };
   }
   if (w.lastGodNamed && p.beats.lastGod) {
@@ -2260,7 +2314,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2277,6 +2331,8 @@ export function snapshot(w: WorldState) {
     fourfoldHeld: w.fourfoldHeld,
     lastGodNamed: w.lastGodNamed,
     ordAtCare: w.ordAtCare,
+    naraAtCare: w.naraAtCare,
+    lastGodBuried: w.lastGodBuried,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,

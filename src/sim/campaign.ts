@@ -76,6 +76,8 @@ export type Beats = {
   fourfold: boolean;
   lastGod: boolean;
   ordLast: boolean;
+  naraGodAsk: boolean;
+  naraGod: boolean;
 };
 
 export type WeatherHeard = {
@@ -137,6 +139,7 @@ export type Poi = {
     | "house-standing"
     | "fourfold-held"
     | "last-god-absent"
+    | "last-god-buried"
     | "desk-empty"
     | "yield-empty"
     | "ione-gone";
@@ -320,6 +323,34 @@ export function lastGodOrdPoi(): Poi {
     x: CARE_DOOR.x,
     y: CARE_DOOR.y,
     kind: "last-god-absent",
+  };
+}
+
+export const NARA_GOD_ASK =
+  "Absence is a body I can put in the ground. I walk to the Care. Fetch would have left it unburied.";
+export const NARA_GOD =
+  "You buried the last god as earth. Cult. Nara Vale is at the Care. This was not a fetch.";
+export const NARA_GOD_LATER = "It is in the earth. I will not forgive a factory. I will not number a god.";
+export const NARA_GOD_NEED = "Name the last god as absence first. I will not bury a room that still pretends a body.";
+export const NARA_GOD_SPECTATOR = "Nara Vale is burying something that is not for you.";
+export const WINK_NARA_GOD =
+  "A side hour. The last god went into the ground. Cult standing. Combat is not.";
+
+export const LAST_GOD_BURIED_PLAQUE: Sign = {
+  id: CARE_DOOR.id,
+  title: "The last god — buried",
+  text: "Nara Vale put absence in the earth. Cult. The number does not strike.",
+  x: CARE_DOOR.x,
+  y: CARE_DOOR.y,
+};
+
+export function lastGodBuriedPoi(): Poi {
+  return {
+    id: CARE_DOOR.id,
+    name: "The last god — buried",
+    x: CARE_DOOR.x,
+    y: CARE_DOOR.y,
+    kind: "last-god-buried",
   };
 }
 
@@ -1106,6 +1137,8 @@ export function emptyBeats(): Beats {
     fourfold: false,
     lastGod: false,
     ordLast: false,
+    naraGodAsk: false,
+    naraGod: false,
   };
 }
 
@@ -1528,6 +1561,7 @@ export function liveNpcs(
   wetCult = false,
   straitBuried = false,
   ordAtCare = false,
+  naraAtCare = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1570,6 +1604,13 @@ export function liveNpcs(
     base = base.map((n) =>
       n.id === "ord"
         ? { ...n, x: CARE_DOOR.x - 48, y: CARE_DOOR.y + 40, role: "Will not number it" }
+        : n,
+    );
+  }
+  if (naraAtCare) {
+    base = base.map((n) =>
+      n.id === "nara"
+        ? { ...n, x: CARE_DOOR.x + 40, y: CARE_DOOR.y + 40, role: "Burying absence" }
         : n,
     );
   }

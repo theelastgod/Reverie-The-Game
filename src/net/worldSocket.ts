@@ -43,6 +43,8 @@ export type Snap = {
   fourfoldHeld?: boolean;
   lastGodNamed?: boolean;
   ordAtCare?: boolean;
+  naraAtCare?: boolean;
+  lastGodBuried?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 
