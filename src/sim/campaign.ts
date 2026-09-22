@@ -96,6 +96,7 @@ export type Beats = {
   vesperGone: boolean;
   credits: boolean;
   season: boolean;
+  winkBlind: boolean;
 };
 
 export type WeatherHeard = {
@@ -181,7 +182,8 @@ export type Poi = {
     | "ord-gone"
     | "quill-gone"
     | "vesper-gone"
-    | "wet-grid-season";
+    | "wet-grid-season"
+    | "party-blind";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1338,6 +1340,7 @@ export function emptyBeats(): Beats {
     vesperGone: false,
     credits: false,
     season: false,
+    winkBlind: false,
   };
 }
 
@@ -1943,6 +1946,25 @@ export function seasonPoi(): Poi {
 
 export function wetGridDefaultFlag(args: { wetCult: boolean; seasonHeld: boolean; gestell: number }): boolean {
   return !args.wetCult && (args.seasonHeld || args.gestell >= GESTELL_HOT);
+}
+
+export const PARTY_BLIND =
+  "You're looking at something I'm not. I cannot spend your Wink. This was not a fetch.";
+export const WINK_PARTY_BLIND = "A Wink is private. Combat is not. The token does not show it.";
+export const PARTY_BLIND_HELD = "They still cannot see it. The Wink stays yours.";
+export const PARTY_BLIND_SPECTATOR = "They are looking at you. You do not see a Wink.";
+export const PARTY_BLIND_NEED = "Speak with Nara, Quill, and Ord first. Then a Wink they cannot share.";
+
+export const PARTY_BLIND_PLAQUE: Sign = {
+  id: "party-blind",
+  title: "The party cannot see",
+  text: "A Wink is not a lecture. They cannot spend it. The number does not strike.",
+  x: 240,
+  y: 720,
+};
+
+export function partyBlindPoi(x: number, y: number): Poi {
+  return { id: "party-blind", name: "The party cannot see", x, y, kind: "party-blind" };
 }
 export const AURA_DECAY = 1;
 export const APPEAR_SLOW = 0.25;

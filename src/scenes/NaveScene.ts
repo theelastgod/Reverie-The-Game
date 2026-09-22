@@ -483,6 +483,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7a1028
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
+                      : poi.kind === "party-blind"
+                        ? 0x7eb6ff
                       : poi.kind === "ord-gone"
                         ? 0x7a1028
                       : poi.kind === "quill-gone"
@@ -940,6 +942,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "You see a door. You do not see what it is for.";
     } else if (me.heard && (npcNear || burial || under)) {
       this.prompt = me.heard;
+    } else if (npcNear && me.wink && !me.guest && me.beats.nara && me.beats.quill && me.beats.ord && !snap.winkBlindHeld && (npcNear.id === "nara" || npcNear.id === "quill" || npcNear.id === "ord")) {
+      this.prompt = `F — ${npcNear.name} cannot see the Wink. "You're looking at something I'm not."`;
     } else if (npcNear) {
       this.prompt = `F speak with ${npcNear.name} · ${npcNear.role}`;
     } else if (burial) {

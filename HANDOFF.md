@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 75** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 76** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -325,7 +325,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After credits, F at the Wet Grid names the residual season. Plaque/POI The season — residual. Flagged by default. Gestell 91+ also flags the street. Cult refuses. Not a stick.
 - Guests cannot open a season. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 75 (do this next)
+## Stage 75 (landed)
+- Party reacts to a Wink they cannot see. Talk after Nara, Quill, and Ord: "You're looking at something I'm not." Plaque/POI The party cannot see. Not a fetch.
+- Guests cannot share a Wink. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 76 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

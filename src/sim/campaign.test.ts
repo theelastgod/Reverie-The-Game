@@ -197,6 +197,12 @@ import {
   SEASON_CULT,
   SEASON_PLAQUE,
   wetGridDefaultFlag,
+  PARTY_BLIND,
+  WINK_PARTY_BLIND,
+  PARTY_BLIND_HELD,
+  PARTY_BLIND_NEED,
+  PARTY_BLIND_SPECTATOR,
+  PARTY_BLIND_PLAQUE,
   AURA_DECAY,
   APPEAR_SLOW,
   auraTowardSeed,
@@ -447,6 +453,7 @@ import {
   applyPassing,
   applyCredits,
   applySeason,
+  applyPartyBlind,
   applyStorm,
   applyAnnounce,
   applyBlitz,
@@ -2121,6 +2128,56 @@ describe("Movement IV Clearing and Passing", () => {
     expect(applySeason(gWorld, "g").players.get("g")?.heard).toBe(SEASON_SPECTATOR);
     expect(applySeason(gWorld, "g").seasonHeld).toBe(false);
     expect(tickWorld(gWorld, 0.05).players.get("g")?.flagged).toBe(false);
+  });
+
+  it("party reacts to a Wink they cannot see; guests cannot", () => {
+    const nara = NAVE_NPCS.find((n) => n.id === "nara")!;
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      wink: WINK_CREDITS,
+      beats: { ...emptyBeats(), nara: true, quill: true, ord: true },
+      x: nara.x,
+      y: nara.y,
+    });
+    const seen = applyTalk(w, "a", "nara");
+    const p = seen.players.get("a")!;
+    expect(p.heard).toBe(PARTY_BLIND);
+    expect(p.wink).toBe(WINK_PARTY_BLIND);
+    expect(p.beats.winkBlind).toBe(true);
+    expect(seen.winkBlindHeld).toBe(true);
+    expect(seen.pois.find((poi) => poi.kind === "party-blind")?.x).toBe(nara.x);
+    expect(seen.signs.find((s) => s.id === "party-blind")?.title).toBe(PARTY_BLIND_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTalk(seen, "a", "nara").players.get("a")?.heard).toBe(PARTY_BLIND_HELD);
+    expect(applyPartyBlind(w, "a", nara).winkBlindHeld).toBe(true);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      wink: WINK_CREDITS,
+      beats: { ...emptyBeats(), nara: true },
+      x: nara.x,
+      y: nara.y,
+    });
+    expect(applyTalk(early, "a", "nara").players.get("a")?.heard).toBe(PARTY_BLIND_NEED);
+    expect(applyTalk(early, "a", "nara").winkBlindHeld).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      wink: WINK_CREDITS,
+      locked: true,
+      x: nara.x,
+      y: nara.y,
+    });
+    expect(applyTalk(gWorld, "g", "nara").players.get("g")?.heard).toBe(PARTY_BLIND_SPECTATOR);
+    expect(gWorld.winkBlindHeld).toBe(false);
   });
 
   it("low Gestell Appearance leftover guest lock still holds", () => {

@@ -53,6 +53,7 @@ export type Snap = {
   appearWorld?: boolean;
   creditsHeld?: boolean;
   seasonHeld?: boolean;
+  winkBlindHeld?: boolean;
   naraAtClearing?: boolean;
   hijacked?: boolean;
   hijackBy?: "" | "safety" | "cold";

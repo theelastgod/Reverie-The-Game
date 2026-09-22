@@ -300,6 +300,13 @@ import {
   SEASON_PLAQUE,
   seasonPoi,
   wetGridDefaultFlag,
+  PARTY_BLIND,
+  WINK_PARTY_BLIND,
+  PARTY_BLIND_HELD,
+  PARTY_BLIND_SPECTATOR,
+  PARTY_BLIND_NEED,
+  PARTY_BLIND_PLAQUE,
+  partyBlindPoi,
   creditsPoi,
   WINK_PASS_FAIL,
   FAIL_PLAQUE,
@@ -620,6 +627,7 @@ export type WorldState = {
   appearWorld: boolean;
   creditsHeld: boolean;
   seasonHeld: boolean;
+  winkBlindHeld: boolean;
   naraAtClearing: boolean;
   hijacked: boolean;
   hijackBy: "" | "safety" | "cold";
@@ -813,6 +821,7 @@ export function emptyWorld(): WorldState {
     appearWorld: false,
     creditsHeld: false,
     seasonHeld: false,
+    winkBlindHeld: false,
     naraAtClearing: false,
     hijacked: false,
     hijackBy: "",
@@ -1404,6 +1413,9 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   if (id === "ord" && (p.guest || p.locked) && w.m3Open) {
     players.set(playerId, { ...p, heard: ERRAND_SPECTATOR });
     return { ...w, players };
+  }
+  if ((id === "nara" || id === "quill" || id === "ord") && p.wink) {
+    return applyPartyBlind(w, playerId, npc);
   }
   const heard = lineFor(id, p.beats);
   const beats = { ...p.beats, [id]: true };
@@ -2613,6 +2625,39 @@ export function applySeason(w: WorldState, playerId: string): WorldState {
   return { ...w, players, seasonHeld: true, pois, signs };
 }
 
+export function applyPartyBlind(w: WorldState, playerId: string, npc: { x: number; y: number }): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: PARTY_BLIND_SPECTATOR, wink: visibleWink(true, WINK_PARTY_BLIND) });
+    return { ...w, players };
+  }
+  if (!p.beats.nara || !p.beats.quill || !p.beats.ord) {
+    players.set(playerId, { ...p, heard: PARTY_BLIND_NEED });
+    return { ...w, players };
+  }
+  if (!p.wink) return w;
+  if (w.winkBlindHeld || p.beats.winkBlind) {
+    players.set(playerId, { ...p, heard: PARTY_BLIND_HELD, wink: visibleWink(false, WINK_PARTY_BLIND) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, winkBlind: true },
+    heard: PARTY_BLIND,
+    wink: visibleWink(false, WINK_PARTY_BLIND),
+  });
+  const plaque = { ...PARTY_BLIND_PLAQUE, x: npc.x, y: npc.y };
+  const pois = w.pois.some((poi) => poi.id === "party-blind")
+    ? w.pois.map((poi) => (poi.id === "party-blind" ? partyBlindPoi(npc.x, npc.y) : poi))
+    : [...w.pois, partyBlindPoi(npc.x, npc.y)];
+  const signs = w.signs.some((s) => s.id === "party-blind")
+    ? w.signs.map((s) => (s.id === "party-blind" ? plaque : s))
+    : [...w.signs, plaque];
+  return { ...w, players, winkBlindHeld: true, pois, signs };
+}
+
 export function applyUnflag(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
@@ -2886,6 +2931,7 @@ export function snapshot(w: WorldState) {
     appearWorld: w.appearWorld,
     creditsHeld: w.creditsHeld,
     seasonHeld: w.seasonHeld,
+    winkBlindHeld: w.winkBlindHeld,
     naraAtClearing: w.naraAtClearing,
     hijacked: w.hijacked,
     hijackBy: w.hijackBy,
