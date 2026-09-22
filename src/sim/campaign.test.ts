@@ -162,6 +162,10 @@ import {
   IONE_GONE_PLAQUE,
   WINK_TURN,
   PASSING_APPEAR,
+  STIPEND,
+  WINK_STIPEND,
+  STIPEND_SINK,
+  APPEAR_PLAQUE,
   AURA_DECAY,
   APPEAR_SLOW,
   auraTowardSeed,
@@ -1746,6 +1750,18 @@ describe("Movement IV Clearing and Passing", () => {
     expect(after.players.get("a")?.heard).toBe(PASSING_APPEAR);
     expect(after.passing.outcome).toBe("appearance");
     expect(after.appearSlow).toBe(true);
+    expect(after.appearWorld).toBe(true);
+    expect(after.players.get("a")?.stipend).toBe(STIPEND);
+    expect(after.players.get("a")?.wink).toBe(WINK_STIPEND);
+    expect(after.pois.find((poi) => poi.id === CLEARING_RING.id)?.kind).toBe("clearing-appear");
+    expect(after.signs.find((s) => s.id === CLEARING_RING.id)?.title).toBe(APPEAR_PLAQUE.title);
+    after.players.set("a", { ...after.players.get("a")!, x: SHRINE.x, y: SHRINE.y, bestand: 40 });
+    const sunk = applyShrine(after, "a");
+    expect(sunk.players.get("a")?.heard).toBe(STIPEND_SINK);
+    expect(sunk.players.get("a")?.stipend).toBe(STIPEND - 1);
+    expect(sunk.players.get("a")?.bestand).toBe(40);
+    expect(sunk.gestell).toBeLessThan(after.gestell);
+    expect(damageFor(sunk.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
     expect(GESTELL_HOT).toBe(91);
     expect(PASSING_FAIL).toContain("Clearing");
 

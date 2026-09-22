@@ -487,6 +487,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0xe8d5a3
                           : poi.kind === "clearing-held"
                             ? 0x7eb6ff
+                            : poi.kind === "clearing-appear"
+                              ? 0xc9a56a
                             : poi.kind === "clearing-absence"
                               ? 0x7a1028
                             : poi.kind === "clearing-hijack"
@@ -727,6 +729,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A ring in the asphalt. You cannot prepare the ground.";
     } else if (ring && snap.war?.winner) {
       this.prompt = snap.war.omen || me.heard;
+    } else if (ring && (snap.appearWorld || snap.passing.outcome === "appearance")) {
+      this.prompt = me.heard || "The Clearing — world. A stipend for the shrine. Cult upkeep. Not a stick.";
     } else if (ring && (snap.naraAtClearing || snap.passing.outcome === "absence")) {
       this.prompt = me.heard || "The Clearing — absence. Nara Vale stays. The hour went by.";
     } else if (ring && (snap.hijacked || snap.passing.outcome === "hijack")) {
@@ -868,6 +872,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
+    } else if (shrine && me.stipend > 0) {
+      this.prompt = me.heard || `F spend Passing stipend on the shrine (${me.stipend} left). Cult upkeep. Not a stick.`;
     } else if (shrine && (snap.lastGodNamed || me.beats.lastGod) && !me.beats.restraint && !snap.restraintHeld) {
       this.prompt = "F — name holding-back at the shrine. The last god is not a spend. Not a fetch.";
     } else if (shrine && (me.beats.restraint || snap.restraintHeld) && !me.insured) {
@@ -950,7 +956,7 @@ export class NaveScene extends Phaser.Scene {
           : snap.clearingOpen
             ? " · Clearing held"
             : omenBit;
-      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}`;
+      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;
@@ -986,7 +992,9 @@ export class NaveScene extends Phaser.Scene {
                     : "The Cable"
               : "Movement III"
         : ring
-          ? snap.naraAtClearing || snap.passing.outcome === "absence"
+          ? snap.appearWorld || snap.passing.outcome === "appearance"
+            ? "The Clearing — world"
+            : snap.naraAtClearing || snap.passing.outcome === "absence"
             ? "The Clearing — absence"
             : snap.hijacked || snap.passing.outcome === "hijack"
               ? snap.hijackBy === "cold"

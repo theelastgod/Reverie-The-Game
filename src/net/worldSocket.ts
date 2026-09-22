@@ -50,6 +50,7 @@ export type Snap = {
   vesperNoGod?: boolean;
   deskVaulted?: boolean;
   appearSlow?: boolean;
+  appearWorld?: boolean;
   naraAtClearing?: boolean;
   hijacked?: boolean;
   hijackBy?: "" | "safety" | "cold";

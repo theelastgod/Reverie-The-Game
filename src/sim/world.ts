@@ -268,6 +268,11 @@ import {
   LAST_WORD_GONE,
   WINK_TURN,
   PASSING_NEED,
+  STIPEND,
+  WINK_STIPEND,
+  STIPEND_SINK,
+  APPEAR_PLAQUE,
+  appearPoi,
   NARA_STAYS,
   NARA_STAYS_LATER,
   WINK_PASS_ABSENCE,
@@ -464,6 +469,7 @@ export type Player = {
   lastCareY: number;
   damaged: number;
   cultMark: boolean;
+  stipend: number;
 };
 
 export type WorldState = {
@@ -511,6 +517,7 @@ export type WorldState = {
   vesperNoGod: boolean;
   deskVaulted: boolean;
   appearSlow: boolean;
+  appearWorld: boolean;
   naraAtClearing: boolean;
   hijacked: boolean;
   hijackBy: "" | "safety" | "cold";
@@ -560,6 +567,7 @@ export function spawnGuest(id: string): Player {
     lastCareY: 0,
     damaged: 0,
     cultMark: false,
+    stipend: 0,
   };
 }
 
@@ -598,6 +606,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     insured: false,
     damaged: p.damaged + p.fakeWinke,
     fakeWinke: 0,
+    stipend: p.stipend,
     x,
     y,
     ...patch,
@@ -682,6 +691,7 @@ export function emptyWorld(): WorldState {
     vesperNoGod: false,
     deskVaulted: false,
     appearSlow: false,
+    appearWorld: false,
     naraAtClearing: false,
     hijacked: false,
     hijackBy: "",
@@ -1378,6 +1388,17 @@ export function applyShrine(w: WorldState, playerId: string): WorldState {
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, ...atShrine, heard: SHRINE_SPECTATOR, wink: visibleWink(true, WINK_SINK) });
     return { ...w, players };
+  }
+  if (p.stipend > 0) {
+    players.set(playerId, {
+      ...p,
+      ...atShrine,
+      stipend: p.stipend - 1,
+      readiness: p.readiness + 1,
+      heard: STIPEND_SINK,
+      wink: visibleWink(false, WINK_STIPEND),
+    });
+    return { ...w, players, gestell: Math.max(0, w.gestell - 2) };
   }
   const spent = spendBestand(p, SHRINE_COST);
   if (!spent) {
@@ -2555,6 +2576,7 @@ export function snapshot(w: WorldState) {
     vesperNoGod: w.vesperNoGod,
     deskVaulted: w.deskVaulted,
     appearSlow: w.appearSlow,
+    appearWorld: w.appearWorld,
     naraAtClearing: w.naraAtClearing,
     hijacked: w.hijacked,
     hijackBy: w.hijackBy,
@@ -2860,9 +2882,16 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
     heard: passingCopy(outcome),
     wink: visibleWink(
       false,
-      outcome === "absence" ? WINK_PASS_ABSENCE : hijacked ? WINK_HIJACK : WINK_TURN,
+      outcome === "appearance"
+        ? WINK_STIPEND
+        : outcome === "absence"
+          ? WINK_PASS_ABSENCE
+          : hijacked
+            ? WINK_HIJACK
+            : WINK_TURN,
     ),
     readiness: p.readiness + (outcome === "appearance" && !p.beats.passing ? 2 : 0),
+    stipend: outcome === "appearance" ? p.stipend + STIPEND : p.stipend,
   });
   const absent = outcome === "absence";
   const plaque = hijacked && by ? hijackPlaque(by) : null;
@@ -2876,6 +2905,7 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
       outcome,
     },
     appearSlow: outcome === "appearance" ? true : w.appearSlow,
+    appearWorld: outcome === "appearance" ? true : w.appearWorld,
     naraAtClearing: absent ? true : w.naraAtClearing,
     hijacked: hijacked ? true : w.hijacked,
     hijackBy: hijacked && by ? by : w.hijackBy,
@@ -2885,6 +2915,8 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
       mark && !w.history.some((h) => h.id === mark.id) ? [...w.history, mark] : w.history,
     pois: absent
       ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? absencePoi() : poi))
+      : outcome === "appearance"
+        ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? appearPoi() : poi))
       : hijacked && by
         ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? hijackPoi(by) : poi))
         : w.pois,
@@ -2892,6 +2924,10 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
       ? w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...ABSENCE_PLAQUE } : s)).concat(
           w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...ABSENCE_PLAQUE }],
         )
+      : outcome === "appearance"
+        ? w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...APPEAR_PLAQUE } : s)).concat(
+            w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...APPEAR_PLAQUE }],
+          )
       : plaque
         ? w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...plaque } : s)).concat(
             w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...plaque }],

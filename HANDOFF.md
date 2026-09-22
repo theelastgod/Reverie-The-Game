@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 60** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 61** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -265,7 +265,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Passing Hijack claims the Clearing. Safety freeze: Ord walks, plaque The Clearing — Safety. Cold: Vesper walks, plaque The Clearing — Cold. Serial history mark. Guests cannot see it.
 - `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 60 (do this next)
+## Stage 60 (landed)
+- Passing Appearance pays a cult-upkeep stipend. Clearing plaque/POI The Clearing — world. F at the shrine spends stipend, not Bestand.
+- Absence/hijack pay none. Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 61 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

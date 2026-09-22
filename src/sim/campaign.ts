@@ -137,6 +137,7 @@ export type Poi = {
     | "forge-tray"
     | "clearing-ring"
     | "clearing-held"
+    | "clearing-appear"
     | "clearing-absence"
     | "clearing-hijack"
     | "wet-grid"
@@ -1629,7 +1630,31 @@ export const CLEARING_SPECTATOR = "A ring in the asphalt. You cannot prepare the
 export const CLEARING_CONTEST =
   "You extracted the Clearing. Cold is a current. The hole closes. The hour does not open.";
 export const PASSING_APPEAR =
-  "A trace, not a face. The city is briefly world again. No mint. The token does not buy the hour.";
+  "A trace, not a face. The city is briefly world again. A stipend for the shrine. Cult upkeep. No mint. The token does not buy the hour.";
+export const STIPEND = 2;
+export const WINK_STIPEND =
+  "Appearance pays a shrine, not a stick. Cult upkeep. Combat is not.";
+export const STIPEND_SINK =
+  "You spent the Passing stipend on the shrine. Cult upkeep. Bestand stayed. This was not a fetch.";
+export const STIPEND_HELD = "The stipend is already in the shrine. Keep still costs Bestand.";
+
+export const APPEAR_PLAQUE: Sign = {
+  id: CLEARING_RING.id,
+  title: "The Clearing — world",
+  text: "A trace. The city is briefly world. Stipend for the shrine. The number does not strike.",
+  x: CLEARING_RING.x,
+  y: CLEARING_RING.y,
+};
+
+export function appearPoi(): Poi {
+  return {
+    id: CLEARING_RING.id,
+    name: "The Clearing — world",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+    kind: "clearing-appear",
+  };
+}
 export const AURA_DECAY = 1;
 export const APPEAR_SLOW = 0.25;
 
