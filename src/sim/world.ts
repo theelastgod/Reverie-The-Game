@@ -124,6 +124,13 @@ import {
   RESTRAINT_SPECTATOR,
   RESTRAINT_PLAQUE,
   restraintPoi,
+  VESPER_NOGOD,
+  WINK_NOGOD,
+  VESPER_NOGOD_LATER,
+  VESPER_NOGOD_NEED,
+  VESPER_NOGOD_SPECTATOR,
+  NOGOD_PLAQUE,
+  noGodPoi,
   houseHallPoi,
   openCarePoi,
   serialHistory,
@@ -323,6 +330,7 @@ import {
   ERRAND_EXTRACT,
   ERRAND_SPECTATOR,
   cableQuietPoi,
+  VESPER,
   VESPER_NEED_FOUNDRY,
   VESPER_UNLIGHT_ASK,
   VESPER_UNLIGHT_WAIT,
@@ -481,6 +489,7 @@ export type WorldState = {
   lastGodBuried: boolean;
   quillNoPrint: boolean;
   restraintHeld: boolean;
+  vesperNoGod: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -644,6 +653,7 @@ export function emptyWorld(): WorldState {
     lastGodBuried: false,
     quillNoPrint: false,
     restraintHeld: false,
+    vesperNoGod: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -900,7 +910,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -1009,6 +1019,7 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   }
   if (id === "ione") return applyLastWord(w, playerId);
   if (id === "vesper") {
+    if (w.lastGodNamed) return applyVesperNoGod(w, playerId);
     if (!w.vesperAtFoundry) return w;
     if (p.guest || p.locked) {
       players.set(playerId, { ...p, heard: FOUNDRY_SPECTATOR, wink: visibleWink(true, WINK_FOUNDRY_DARK) });
@@ -1191,7 +1202,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return applyShrine(w, playerId);
   }
   if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
-  if (sign.id === OPERATOR_DESK.id) return applyOperator(w, playerId, "hear");
+  if (sign.id === OPERATOR_DESK.id) {
+    if (w.lastGodNamed) return applyVesperNoGod(w, playerId);
+    return applyOperator(w, playerId, "hear");
+  }
   if (sign.id === ORGAN_STRAIT.id || sign.id === ORGAN_FOUNDRY.id || sign.id === ORGAN_CABLE.id) {
     return applyOrgan(w, playerId, sign);
   }
@@ -1677,6 +1691,41 @@ export function applyFreeze(w: WorldState, playerId: string): WorldState {
     frozen: true,
     passing: starvedPassing(),
     pois: w.pois.map((poi) => (poi.id === SAFETY_ANNEX.id ? annexPoi(true) : poi)),
+  };
+}
+
+export function applyVesperNoGod(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const atDesk = nearPoint(p.x, p.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56);
+  const atVesper = nearPoint(p.x, p.y, VESPER.x, VESPER.y);
+  if (!atDesk && !atVesper) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: VESPER_NOGOD_SPECTATOR, wink: visibleWink(true, WINK_NOGOD) });
+    return { ...w, players };
+  }
+  if (!w.lastGodNamed) {
+    players.set(playerId, { ...p, heard: VESPER_NOGOD_NEED });
+    return { ...w, players };
+  }
+  if (w.vesperNoGod && p.beats.vesperNoGod) {
+    players.set(playerId, { ...p, heard: VESPER_NOGOD_LATER, wink: visibleWink(false, WINK_NOGOD) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, vesperNoGod: true },
+    heard: VESPER_NOGOD,
+    wink: visibleWink(false, WINK_NOGOD),
+    readiness: p.readiness + 1,
+  });
+  return {
+    ...w,
+    players,
+    vesperNoGod: true,
+    pois: w.pois.map((poi) => (poi.id === OPERATOR_DESK.id ? noGodPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === OPERATOR_DESK.id ? { ...NOGOD_PLAQUE } : s)),
   };
 }
 
@@ -2388,7 +2437,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2409,6 +2458,7 @@ export function snapshot(w: WorldState) {
     lastGodBuried: w.lastGodBuried,
     quillNoPrint: w.quillNoPrint,
     restraintHeld: w.restraintHeld,
+    vesperNoGod: w.vesperNoGod,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,

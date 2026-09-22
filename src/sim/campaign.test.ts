@@ -38,6 +38,12 @@ import {
   RESTRAINT_HELD,
   RESTRAINT_SPECTATOR,
   RESTRAINT_PLAQUE,
+  VESPER_NOGOD,
+  WINK_NOGOD,
+  VESPER_NOGOD_LATER,
+  VESPER_NOGOD_NEED,
+  VESPER_NOGOD_SPECTATOR,
+  NOGOD_PLAQUE,
   NARA_GOD_ASK,
   NARA_GOD,
   NARA_GOD_LATER,
@@ -356,6 +362,7 @@ import {
   applyOrdLast,
   applyMarket,
   applyOperator,
+  applyVesperNoGod,
   applyRead,
   snapshot,
   applyStrike,
@@ -945,6 +952,51 @@ describe("holding-back at the shrine", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
     expect(applyRestraint(gWorld, "g").players.get("g")?.heard).toBe(RESTRAINT_SPECTATOR);
     expect(gWorld.restraintHeld).toBe(false);
+  });
+});
+
+describe("Vesper will not sell the last god", () => {
+  it("closes the yield desk after absence is named; guests cannot", () => {
+    const w = emptyWorld();
+    w.lastGodNamed = true;
+    w.vesperAtFoundry = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), lastGod: true, yield: true, cold: true },
+      x: OPERATOR_DESK.x,
+      y: OPERATOR_DESK.y,
+    });
+    const closed = applyRead(w, "a", OPERATOR_DESK.id);
+    const p = closed.players.get("a")!;
+    expect(p.heard).toBe(VESPER_NOGOD);
+    expect(p.wink).toBe(WINK_NOGOD);
+    expect(p.beats.vesperNoGod).toBe(true);
+    expect(closed.vesperNoGod).toBe(true);
+    expect(closed.pois.find((poi) => poi.id === OPERATOR_DESK.id)?.kind).toBe("operator-no-god");
+    expect(closed.signs.find((s) => s.id === OPERATOR_DESK.id)?.title).toBe(NOGOD_PLAQUE.title);
+    const vesper = liveNpcs(false, false, false, false, true, false, false, false, false, false, false, true).find((n) => n.id === "vesper")!;
+    expect(vesper.role).toBe("Will not sell it");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyVesperNoGod(closed, "a").players.get("a")?.heard).toBe(VESPER_NOGOD_LATER);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: OPERATOR_DESK.x,
+      y: OPERATOR_DESK.y,
+    });
+    expect(applyVesperNoGod(early, "a").players.get("a")?.heard).toBe(VESPER_NOGOD_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.lastGodNamed = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: OPERATOR_DESK.x, y: OPERATOR_DESK.y, locked: true });
+    expect(applyVesperNoGod(gWorld, "g").players.get("g")?.heard).toBe(VESPER_NOGOD_SPECTATOR);
+    expect(gWorld.vesperNoGod).toBe(false);
   });
 });
 

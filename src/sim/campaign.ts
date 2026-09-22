@@ -80,6 +80,7 @@ export type Beats = {
   naraGod: boolean;
   quillNoPrint: boolean;
   restraint: boolean;
+  vesperNoGod: boolean;
 };
 
 export type WeatherHeard = {
@@ -129,6 +130,7 @@ export type Poi = {
     | "organ-cable-dark"
     | "organ-cable-sky"
     | "operator-vacant"
+    | "operator-no-god"
     | "forge-tray"
     | "clearing-ring"
     | "clearing-held"
@@ -627,6 +629,31 @@ export function operatorVacantPoi(): Poi {
     x: OPERATOR_DESK.x,
     y: OPERATOR_DESK.y,
     kind: "operator-vacant",
+  };
+}
+
+export const VESPER_NOGOD =
+  "Vesper Hale will not sell the last god. The desk lists no private node for absence. Yield is not a hint. This was not a fetch.";
+export const WINK_NOGOD = "A side hour. A concentrator refused a god. Combat is not.";
+export const VESPER_NOGOD_LATER = "I will not quote a body that is not here. The desk stays empty of gods.";
+export const VESPER_NOGOD_NEED = "Name the last god as absence first. I will not refuse a listing that still pretends a body.";
+export const VESPER_NOGOD_SPECTATOR = "A woman closing a book. Not for you.";
+
+export const NOGOD_PLAQUE: Sign = {
+  id: OPERATOR_DESK.id,
+  title: "No god for sale",
+  text: "Private yield does not list absence. The Concentrator will not quote a hint.",
+  x: OPERATOR_DESK.x,
+  y: OPERATOR_DESK.y,
+};
+
+export function noGodPoi(): Poi {
+  return {
+    id: OPERATOR_DESK.id,
+    name: "No god for sale",
+    x: OPERATOR_DESK.x,
+    y: OPERATOR_DESK.y,
+    kind: "operator-no-god",
   };
 }
 
@@ -1195,6 +1222,7 @@ export function emptyBeats(): Beats {
     naraGod: false,
     quillNoPrint: false,
     restraint: false,
+    vesperNoGod: false,
   };
 }
 
@@ -1619,6 +1647,7 @@ export function liveNpcs(
   ordAtCare = false,
   naraAtCare = false,
   quillNoPrint = false,
+  vesperNoGod = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1658,7 +1687,9 @@ export function liveNpcs(
   } else if (quillNoPrint) {
     base = base.map((n) => (n.id === "quill" ? { ...n, role: "Will not print it" } : n));
   }
-  if (vesperAtFoundry) base = [...base, { ...VESPER }];
+  if (vesperAtFoundry) {
+    base = [...base, { ...VESPER, role: vesperNoGod ? "Will not sell it" : VESPER.role }];
+  }
   if (ordAtCare) {
     base = base.map((n) =>
       n.id === "ord"

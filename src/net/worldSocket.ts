@@ -47,6 +47,7 @@ export type Snap = {
   lastGodBuried?: boolean;
   quillNoPrint?: boolean;
   restraintHeld?: boolean;
+  vesperNoGod?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

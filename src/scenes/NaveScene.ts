@@ -429,6 +429,8 @@ export class NaveScene extends Phaser.Scene {
                 ? 0xc9a56a
                 : poi.kind === "operator-vacant"
                   ? 0x5a5a5a
+                : poi.kind === "operator-no-god"
+                  ? 0xc9a56a
                 : poi.kind === "organ-foundry-earth"
                   ? 0xc9a56a
                 : poi.kind === "organ-foundry-dark"
@@ -728,6 +730,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Nara Vale will not stand in a hole you left as wreckage.";
     } else if (desk && (me.guest || me.locked)) {
       this.prompt = "A woman at a desk. She is not speaking to you.";
+    } else if (desk && (me.beats.vesperNoGod || snap.vesperNoGod)) {
+      this.prompt = me.heard || "No god for sale. Private yield does not list absence.";
+    } else if (desk && (snap.lastGodNamed || me.beats.lastGod) && !me.guest) {
+      this.prompt = "F — Vesper will not sell the last god. The desk lists no absence. Not a fetch.";
     } else if (desk && (snap.vesperAtFoundry || snap.foundryDark || me.beats.foundryDark)) {
       this.prompt = me.heard || "The desk is empty. Vesper Hale is at the Foundry.";
     } else if (desk && me.beats.foundryAsk) {
@@ -782,6 +788,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Keep a CRT node (Q). Do not extract. Ord will walk to the Cable.";
     } else if (npcNear?.id === "ord" && me.beats.map) {
       this.prompt = "F — Ord has an errand. Keep a node. Change an organ.";
+    } else if (npcNear?.id === "vesper" && (me.beats.vesperNoGod || snap.vesperNoGod)) {
+      this.prompt = me.heard || "Vesper Hale will not sell the last god. Yield is not a hint.";
+    } else if (npcNear?.id === "vesper" && (snap.lastGodNamed || me.beats.lastGod) && !me.guest) {
+      this.prompt = "F — Vesper will not sell the last god. The desk lists no absence. Not a fetch.";
     } else if (npcNear?.id === "vesper") {
       this.prompt = me.heard || "Vesper Hale walked. The furnace is off.";
     } else if (foundry && (snap.earthStanding || me.beats.earthStanding) && !me.guest) {

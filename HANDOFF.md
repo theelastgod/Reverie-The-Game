@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 54** — Named side quest. Last of 24 authored hours, then keep polishing. No mint.
+**Next stage: 55** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -241,8 +241,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the last god is named as absence, F at the shrine names holding-back. Plaque/POI Holding-back. Not a spend. Keep still costs.
 - Guests cannot name it. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 54 (do this next)
-Named side quest. Fetch-only forbidden. No mint. No Base. Twenty-fourth authored hour.
+## Stage 54 (landed)
+- After the last god is named as absence, F at Vesper / the concentrator desk: she will not sell it. Plaque/POI No god for sale. Role: Will not sell it.
+- Guests cannot unlist a god from yield. `damageFor` unchanged. Claims stay disarmed. Twenty-fourth authored hour.
+
+## Stage 55 (do this next)
+Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
