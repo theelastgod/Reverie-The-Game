@@ -64,6 +64,7 @@ export type Snap = {
   glamourHeld?: boolean;
   dwellHeld?: boolean;
   naraGone?: boolean;
+  ordGone?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

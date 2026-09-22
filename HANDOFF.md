@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 69** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 70** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -301,7 +301,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Nara Vale leaves if extract feeds Gestell past 71 without a funeral. Plaque/POI Nara Vale — gone. Schedule change. Not a fetch.
 - A paid funeral keeps her. Guests cannot walk her off. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 69 (do this next)
+## Stage 69 (landed)
+- Ord leaves if extract maxes Gestell at 100 without a freeze. Plaque/POI Ord — gone. Schedule change. Not a fetch.
+- A freeze keeps him. Guests cannot walk him off. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 70 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

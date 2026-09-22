@@ -243,6 +243,10 @@ import {
   WINK_NARA_LEAVE,
   NARA_LEAVE_GESTELL,
   NARA_GONE_PLAQUE,
+  ORD_LEAVE_GESTELL,
+  ORD_LEAVE,
+  WINK_ORD_LEAVE,
+  ORD_GONE_PLAQUE,
   ORD_ERRAND,
   ORD_CABLE_LATER,
   CABLE_QUIET_COPY,
@@ -2482,6 +2486,68 @@ describe("Nara leaves the party", () => {
     const guest = applyUse(gWorld, "g", node.id, "extract");
     expect(guest.naraGone).toBe(false);
     expect(guest.gestell).toBeGreaterThanOrEqual(NARA_LEAVE_GESTELL);
+  });
+});
+
+describe("Ord leaves the party", () => {
+  it("extract at max Gestell without a freeze walks him off; a freeze keeps him", () => {
+    expect(ORD_LEAVE_GESTELL).toBe(100);
+    const w = emptyWorld();
+    const node = w.nodes[0];
+    w.gestell = 96;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      x: node.x,
+      y: node.y,
+    });
+    const left = applyUse(w, "a", node.id, "extract");
+    const p = left.players.get("a")!;
+    expect(left.gestell).toBe(100);
+    expect(left.ordGone).toBe(true);
+    expect(p.beats.ordGone).toBe(true);
+    expect(p.heard).toBe(ORD_LEAVE);
+    expect(p.wink).toBe(WINK_ORD_LEAVE);
+    expect(left.pois.find((poi) => poi.kind === "ord-gone")?.id).toBe("ord-gone");
+    expect(left.signs.find((s) => s.id === "ord-gone")?.title).toBe(ORD_GONE_PLAQUE.title);
+    expect(liveNpcs(false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true).some((n) => n.id === "ord")).toBe(false);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(snapshot(left).ordGone).toBe(true);
+
+    const frozen = emptyWorld();
+    frozen.gestell = 96;
+    frozen.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), freeze: true },
+      x: node.x,
+      y: node.y,
+    });
+    const stayed = applyUse(frozen, "a", node.id, "extract");
+    expect(stayed.ordGone).toBe(false);
+    expect(stayed.players.get("a")?.heard).not.toBe(ORD_LEAVE);
+    expect(liveNpcs(false).some((n) => n.id === "ord")).toBe(true);
+
+    const held = emptyWorld();
+    held.gestell = 96;
+    held.frozen = true;
+    held.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: node.x,
+      y: node.y,
+    });
+    expect(applyUse(held, "a", node.id, "extract").ordGone).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.gestell = 96;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: node.x, y: node.y });
+    const guest = applyUse(gWorld, "g", node.id, "extract");
+    expect(guest.ordGone).toBe(false);
+    expect(guest.gestell).toBe(100);
   });
 });
 

@@ -469,6 +469,11 @@ import {
   NARA_LEAVE_GESTELL,
   NARA_GONE_PLAQUE,
   naraGonePoi,
+  ORD_LEAVE_GESTELL,
+  ORD_LEAVE,
+  WINK_ORD_LEAVE,
+  ORD_GONE_PLAQUE,
+  ordGonePoi,
   BlitzMark,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
@@ -595,6 +600,7 @@ export type WorldState = {
   glamourHeld: boolean;
   dwellHeld: boolean;
   naraGone: boolean;
+  ordGone: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -783,6 +789,7 @@ export function emptyWorld(): WorldState {
     glamourHeld: false,
     dwellHeld: false,
     naraGone: false,
+    ordGone: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -997,6 +1004,22 @@ function withNaraLeave(w: WorldState, playerId: string): WorldState {
   return { ...w, players, naraGone: true, pois, signs };
 }
 
+function withOrdLeave(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.guest || p.locked || w.ordGone || p.beats.freeze || w.frozen) return w;
+  if (w.gestell < ORD_LEAVE_GESTELL) return w;
+  const players = new Map(w.players);
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, ordGone: true },
+    heard: ORD_LEAVE,
+    wink: visibleWink(false, WINK_ORD_LEAVE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "ord-gone") ? w.pois : [...w.pois, ordGonePoi()];
+  const signs = w.signs.some((s) => s.id === "ord-gone") ? w.signs : [...w.signs, { ...ORD_GONE_PLAQUE }];
+  return { ...w, players, ordGone: true, pois, signs };
+}
+
 export function applyUse(
   w: WorldState,
   playerId: string,
@@ -1026,7 +1049,7 @@ export function applyUse(
       bestand: p.bestand + Math.max(0, pay - tax),
       heard: p.restraint ? RESTRAINT_YIELD : heard,
     });
-    return withNaraLeave({ ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) }, playerId);
+    return withOrdLeave(withNaraLeave({ ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) }, playerId), playerId);
   }
   nodes[idx] = { ...node, depleted: true, kept: true };
   if (p.beats.errand && !p.beats.cableQuiet && !p.guest && !w.cableDark) {
@@ -1078,7 +1101,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -2713,7 +2736,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2751,6 +2774,7 @@ export function snapshot(w: WorldState) {
     glamourHeld: w.glamourHeld,
     dwellHeld: w.dwellHeld,
     naraGone: w.naraGone,
+    ordGone: w.ordGone,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,

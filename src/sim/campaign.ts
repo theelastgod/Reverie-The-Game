@@ -91,6 +91,7 @@ export type Beats = {
   dwell: boolean;
   funeral: boolean;
   naraGone: boolean;
+  ordGone: boolean;
 };
 
 export type WeatherHeard = {
@@ -170,7 +171,8 @@ export type Poi = {
     | "blitz-trace"
     | "process-read"
     | "clearing-seed"
-    | "nara-gone";
+    | "nara-gone"
+    | "ord-gone";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1322,6 +1324,7 @@ export function emptyBeats(): Beats {
     dwell: false,
     funeral: false,
     naraGone: false,
+    ordGone: false,
   };
 }
 
@@ -1670,6 +1673,25 @@ export function naraGonePoi(x = 240, y = 720): Poi {
   return { id: "nara-gone", name: "Nara Vale — gone", x, y, kind: "nara-gone" };
 }
 
+export const ORD_LEAVE_GESTELL = 100;
+export const ORD_LEAVE =
+  "Ord left. You maxed the weather and never signed a freeze. Ex-Safety will not number a god that ate the district. This was not a fetch.";
+export const WINK_ORD_LEAVE = "The ledger walked. Gestell kept the desk. Combat is not.";
+export const ORD_LEAVE_HELD = "Ord is gone. You kept the process and lost the number.";
+export const ORD_LEAVE_SPECTATOR = "An empty desk. You do not know who left.";
+
+export const ORD_GONE_PLAQUE: Sign = {
+  id: "ord-gone",
+  title: "Ord — gone",
+  text: "He will not number a city that will not freeze. The number does not strike.",
+  x: 400,
+  y: 260,
+};
+
+export function ordGonePoi(x = 400, y = 260): Poi {
+  return { id: "ord-gone", name: "Ord — gone", x, y, kind: "ord-gone" };
+}
+
 export function auraSeed(serial: number): number {
   return 8 + (serial % 13);
 }
@@ -2013,6 +2035,7 @@ export function liveNpcs(
   ordAtHijack = false,
   vesperAtHijack = false,
   naraGone = false,
+  ordGone = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -2092,5 +2115,6 @@ export function liveNpcs(
     );
   }
   if (naraGone) base = base.filter((n) => n.id !== "nara");
+  if (ordGone) base = base.filter((n) => n.id !== "ord");
   return base;
 }
