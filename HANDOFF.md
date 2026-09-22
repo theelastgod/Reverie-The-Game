@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 62** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 63** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -273,7 +273,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Failed Passing writes the hole. Plaque/POI The Clearing — failed. Gestell drinks. No stipend. Ruin-sight mark planted.
 - Guests cannot fail a hole they cannot keep. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 62 (do this next)
+## Stage 62 (landed)
+- After a failed Passing, F at the hole takes Storm. Wreckage vision (history + failed seasons). Readiness burns. Plaque/POI The Clearing — storm. Not a stick.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 63 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

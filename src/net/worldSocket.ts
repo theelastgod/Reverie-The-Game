@@ -57,6 +57,7 @@ export type Snap = {
   ordAtHijack?: boolean;
   vesperAtHijack?: boolean;
   clearingFailed?: boolean;
+  stormHeld?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

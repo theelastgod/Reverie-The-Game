@@ -276,6 +276,14 @@ import {
   WINK_PASS_FAIL,
   FAIL_PLAQUE,
   FAIL_LATER,
+  STORM_COPY,
+  WINK_STORM,
+  STORM_NEED,
+  STORM_HELD,
+  STORM_SPECTATOR,
+  STORM_BURN,
+  STORM_PLAQUE,
+  stormPoi,
   failPoi,
   NARA_STAYS,
   NARA_STAYS_LATER,
@@ -474,6 +482,7 @@ export type Player = {
   damaged: number;
   cultMark: boolean;
   stipend: number;
+  storm: boolean;
 };
 
 export type WorldState = {
@@ -528,6 +537,7 @@ export type WorldState = {
   ordAtHijack: boolean;
   vesperAtHijack: boolean;
   clearingFailed: boolean;
+  stormHeld: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -573,6 +583,7 @@ export function spawnGuest(id: string): Player {
     damaged: 0,
     cultMark: false,
     stipend: 0,
+    storm: false,
   };
 }
 
@@ -612,6 +623,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     damaged: p.damaged + p.fakeWinke,
     fakeWinke: 0,
     stipend: p.stipend,
+    storm: p.storm,
     x,
     y,
     ...patch,
@@ -703,6 +715,7 @@ export function emptyWorld(): WorldState {
     ordAtHijack: false,
     vesperAtHijack: false,
     clearingFailed: false,
+    stormHeld: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -1340,7 +1353,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
     });
     return { ...w, players, wreckage: w.wreckage.filter((r) => r.id !== wreck.id) };
   }
-  const mark = visibleHistory(p.guest, p.serial, w.history).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
+  const mark = visibleHistory(p.guest, p.serial, w.history, p.storm).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
   if (!mark) return w;
   players.set(playerId, {
     ...p,
@@ -2196,7 +2209,7 @@ export function applyStraitRefuse(w: WorldState, playerId: string): WorldState {
 export function applyWatch(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
-  const mark = visibleFailed(p.guest, p.serial, w.failed, p.house).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
+  const mark = visibleFailed(p.guest, p.serial, w.failed, p.house, p.storm).find((m) => nearPoint(p.x, p.y, m.x, m.y, 56));
   if (!mark) {
     if (w.failed.some((m) => nearPoint(p.x, p.y, m.x, m.y, 56))) {
       const players = new Map(w.players);
@@ -2589,6 +2602,7 @@ export function snapshot(w: WorldState) {
     ordAtHijack: w.ordAtHijack,
     vesperAtHijack: w.vesperAtHijack,
     clearingFailed: w.clearingFailed,
+    stormHeld: w.stormHeld,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2848,6 +2862,41 @@ export function applyClearing(
   };
 }
 
+export function applyStorm(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: STORM_SPECTATOR, wink: visibleWink(true, WINK_STORM) });
+    return { ...w, players };
+  }
+  if (!w.clearingFailed && w.passing.outcome !== "failed") {
+    players.set(playerId, { ...p, heard: STORM_NEED });
+    return { ...w, players };
+  }
+  if (w.stormHeld || p.beats.storm || p.storm) {
+    players.set(playerId, { ...p, heard: STORM_HELD, wink: visibleWink(false, WINK_STORM), storm: true });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, storm: true },
+    storm: true,
+    readiness: Math.max(0, p.readiness - STORM_BURN),
+    heard: STORM_COPY,
+    wink: visibleWink(false, WINK_STORM),
+  });
+  return {
+    ...w,
+    players,
+    stormHeld: true,
+    pois: w.pois.map((poi) => (poi.id === CLEARING_RING.id ? stormPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...STORM_PLAQUE } : s)).concat(
+      w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...STORM_PLAQUE }],
+    ),
+  };
+}
+
 export function applyPassing(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) return w;
@@ -2862,10 +2911,7 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
       players.set(playerId, { ...p, heard: PASSING_NEED, wink: visibleWink(false, WINK_TURN) });
       return { ...w, players };
     }
-    if (w.clearingFailed && p.beats.passing) {
-      players.set(playerId, { ...p, heard: FAIL_LATER, wink: visibleWink(false, WINK_PASS_FAIL) });
-      return { ...w, players };
-    }
+    if (w.clearingFailed && p.beats.passing) return applyStorm(w, playerId);
     players.set(playerId, {
       ...p,
       beats: { ...p.beats, passing: true },

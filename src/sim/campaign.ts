@@ -84,6 +84,7 @@ export type Beats = {
   absenceHour: boolean;
   naraStay: boolean;
   hijacked: boolean;
+  storm: boolean;
 };
 
 export type WeatherHeard = {
@@ -141,6 +142,7 @@ export type Poi = {
     | "clearing-absence"
     | "clearing-hijack"
     | "clearing-failed"
+    | "clearing-storm"
     | "wet-grid"
     | "wet-grid-cult"
     | "claims-desk"
@@ -1270,6 +1272,7 @@ export function emptyBeats(): Beats {
     absenceHour: false,
     naraStay: false,
     hijacked: false,
+    storm: false,
   };
 }
 
@@ -1552,8 +1555,15 @@ export function serialHistory(serial: number): HistoryMark | null {
   return serial === TEST_SERIAL ? { ...HISTORY_7777 } : null;
 }
 
-export function visibleHistory(guest: boolean, serial: number | null, marks: HistoryMark[]): HistoryMark[] {
-  if (guest || serial == null || serial <= 0) return [];
+export function visibleHistory(
+  guest: boolean,
+  serial: number | null,
+  marks: HistoryMark[],
+  storm = false,
+): HistoryMark[] {
+  if (guest) return [];
+  if (storm) return marks;
+  if (serial == null || serial <= 0) return [];
   return marks.filter((m) => m.serial === serial);
 }
 
@@ -1579,8 +1589,8 @@ export const WATCH_FAILED =
   "You watched the failed hour. You did not loot it. Readiness is slower than salvage.";
 export const FAILED_SPECTATOR = "Asphalt. You do not see a season.";
 
-export function ruinSight(guest: boolean, serial: number | null, house: House = ""): boolean {
-  return !guest && (serial === TEST_SERIAL || house === "mortals");
+export function ruinSight(guest: boolean, serial: number | null, house: House = "", storm = false): boolean {
+  return !guest && (storm || serial === TEST_SERIAL || house === "mortals");
 }
 
 export function visibleFailed(
@@ -1588,8 +1598,9 @@ export function visibleFailed(
   serial: number | null,
   marks: FailedPassing[],
   house: House = "",
+  storm = false,
 ): FailedPassing[] {
-  return ruinSight(guest, serial, house) ? marks : [];
+  return ruinSight(guest, serial, house, storm) ? marks : [];
 }
 
 export const GESTELL_HOT = 91;
@@ -1760,6 +1771,33 @@ export function failPoi(): Poi {
     x: CLEARING_RING.x,
     y: CLEARING_RING.y,
     kind: "clearing-failed",
+  };
+}
+
+export const STORM_COPY =
+  "You took Storm. The failed hole is wreckage vision. Readiness burns. You do not strike harder. This was not a fetch.";
+export const WINK_STORM =
+  "Angel of History faces the wreckage. Storm is a stance, not a stick. Combat is not.";
+export const STORM_NEED = "The Clearing must fail first. Storm is not a fetch at a live hole.";
+export const STORM_HELD = "Storm already holds. The wreckage is still a face. Combat is not.";
+export const STORM_SPECTATOR = "A failed hole. You do not take the storm.";
+export const STORM_BURN = 3;
+
+export const STORM_PLAQUE: Sign = {
+  id: CLEARING_RING.id,
+  title: "The Clearing — storm",
+  text: "Wreckage vision. Readiness burns. The number does not strike.",
+  x: CLEARING_RING.x,
+  y: CLEARING_RING.y,
+};
+
+export function stormPoi(): Poi {
+  return {
+    id: CLEARING_RING.id,
+    name: "The Clearing — storm",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+    kind: "clearing-storm",
   };
 }
 export const PASSING_NEED = "The Clearing is not held. Keep the hole first.";

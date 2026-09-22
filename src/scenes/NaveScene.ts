@@ -269,11 +269,11 @@ export class NaveScene extends Phaser.Scene {
     const rites = this.net.snap?.rites ?? [];
     const burial = rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
     const wreck = this.net.snap?.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 56));
-    const hist = visibleHistory(me.guest, me.serial, this.net.snap?.history ?? []).find((h) =>
+    const hist = visibleHistory(me.guest, me.serial, this.net.snap?.history ?? [], me.storm).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     const garden = rites.find((r) => r.kind === "garden" && !r.done && nearPoint(me.x, me.y, r.x, r.y, 56));
-    const failed = visibleFailed(me.guest, me.serial, this.net.snap?.failed ?? [], me.house).find((h) =>
+    const failed = visibleFailed(me.guest, me.serial, this.net.snap?.failed ?? [], me.house, me.storm).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     if (failed) {
@@ -493,6 +493,8 @@ export class NaveScene extends Phaser.Scene {
                               ? 0x7a1028
                             : poi.kind === "clearing-hijack"
                               ? 0x7a1028
+                            : poi.kind === "clearing-storm"
+                              ? 0x7a1028
                             : poi.kind === "clearing-failed"
                               ? 0x3a3a3a
                             : poi.kind === "clearing-ring"
@@ -565,7 +567,7 @@ export class NaveScene extends Phaser.Scene {
       }
     }
     const histSeen = new Set<string>();
-    for (const h of visibleHistory(me.guest, me.serial, snap.history ?? [])) {
+    for (const h of visibleHistory(me.guest, me.serial, snap.history ?? [], me.storm)) {
       histSeen.add(h.id);
       let img = this.histMarks.get(h.id);
       if (!img) {
@@ -580,7 +582,7 @@ export class NaveScene extends Phaser.Scene {
       }
     }
     const failSeen = new Set<string>();
-    for (const f of visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house)) {
+    for (const f of visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house, me.storm)) {
       failSeen.add(f.id);
       let img = this.failMarks.get(f.id);
       if (!img) {
@@ -615,10 +617,10 @@ export class NaveScene extends Phaser.Scene {
     const strait = nearPoint(me.x, me.y, ORGAN_STRAIT.x, ORGAN_STRAIT.y, 56);
     const foundry = nearPoint(me.x, me.y, ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y, 56);
     const cable = nearPoint(me.x, me.y, ORGAN_CABLE.x, ORGAN_CABLE.y, 56);
-    const histNear = visibleHistory(me.guest, me.serial, snap.history ?? []).find((h) =>
+    const histNear = visibleHistory(me.guest, me.serial, snap.history ?? [], me.storm).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
-    const failNear = visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house).find((h) =>
+    const failNear = visibleFailed(me.guest, me.serial, snap.failed ?? [], me.house, me.storm).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
     const ring = nearPoint(me.x, me.y, CLEARING_RING.x, CLEARING_RING.y, 64);
@@ -735,8 +737,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The Clearing — world. A stipend for the shrine. Cult upkeep. Not a stick.";
     } else if (ring && (snap.naraAtClearing || snap.passing.outcome === "absence")) {
       this.prompt = me.heard || "The Clearing — absence. Nara Vale stays. The hour went by.";
+    } else if (ring && (snap.stormHeld || me.storm || me.beats.storm)) {
+      this.prompt = me.heard || "The Clearing — storm. Wreckage vision. Readiness burns. Not a stick.";
     } else if (ring && (snap.clearingFailed || snap.passing.outcome === "failed")) {
-      this.prompt = me.heard || "The Clearing — failed. Gestell kept the weather. No stipend.";
+      this.prompt = me.heard || "F — take Storm at the failed hole. Wreckage vision. Not a stick.";
     } else if (ring && (snap.hijacked || snap.passing.outcome === "hijack")) {
       this.prompt =
         me.heard ||
@@ -939,7 +943,7 @@ export class NaveScene extends Phaser.Scene {
         ? me.locked
           ? `Guest · locked · aura 0`
           : `Guest · aura 0 · hp ${me.hp}`
-        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
+        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.storm ? " · storm" : ""}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
     }
     const stats = hud("stat-chip");
     if (stats) {
@@ -1004,6 +1008,8 @@ export class NaveScene extends Phaser.Scene {
               ? snap.hijackBy === "cold"
                 ? "The Clearing — Cold"
                 : "The Clearing — Safety"
+            : snap.stormHeld
+              ? "The Clearing — storm"
             : snap.clearingFailed || snap.passing.outcome === "failed"
               ? "The Clearing — failed"
             : snap.clearingOpen

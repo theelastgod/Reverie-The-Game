@@ -182,6 +182,12 @@ import {
   FAIL_PLAQUE,
   WINK_PASS_FAIL,
   FAIL_LATER,
+  STORM_COPY,
+  WINK_STORM,
+  STORM_HELD,
+  STORM_NEED,
+  STORM_SPECTATOR,
+  STORM_PLAQUE,
   PASSING_NEED,
   dwellNeed,
   passingResult,
@@ -369,6 +375,7 @@ import {
   applyIoneMark,
   applyClearing,
   applyPassing,
+  applyStorm,
   applyAnnounce,
   applyTithe,
   applyClockOut,
@@ -1676,7 +1683,22 @@ describe("Movement IV Clearing and Passing", () => {
     expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
     expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
     expect(guestCanClaim(p)).toBe(false);
-    expect(applyPassing(failed, "a").players.get("a")?.heard).toBe(FAIL_LATER);
+    const stormed = applyPassing(failed, "a");
+    expect(stormed.players.get("a")?.heard).toBe(STORM_COPY);
+    expect(stormed.players.get("a")?.wink).toBe(WINK_STORM);
+    expect(stormed.players.get("a")?.storm).toBe(true);
+    expect(stormed.players.get("a")?.beats.storm).toBe(true);
+    expect(stormed.players.get("a")?.readiness).toBe(Math.max(0, p.readiness - 3));
+    expect(stormed.stormHeld).toBe(true);
+    expect(stormed.pois.find((poi) => poi.id === CLEARING_RING.id)?.kind).toBe("clearing-storm");
+    expect(stormed.signs.find((s) => s.id === CLEARING_RING.id)?.title).toBe(STORM_PLAQUE.title);
+    const foreign = { id: "h-x", x: 10, y: 10, serial: 2, line: "other" };
+    expect(visibleHistory(false, 1, [foreign], false)).toEqual([]);
+    expect(visibleHistory(false, 1, [foreign], true)).toEqual([foreign]);
+    expect(visibleFailed(false, 1, stormed.failed, "sky", true)).toHaveLength(stormed.failed.length);
+    expect(visibleFailed(false, 1, stormed.failed, "sky", false)).toEqual([]);
+    expect(damageFor(stormed.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(applyStorm(stormed, "a").players.get("a")?.heard).toBe(STORM_HELD);
 
     const gWorld = emptyWorld();
     gWorld.clearingOpen = false;
@@ -1690,6 +1712,10 @@ describe("Movement IV Clearing and Passing", () => {
     const g = applyPassing(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(CLEARING_SPECTATOR);
     expect(g.clearingFailed).toBe(false);
+    expect(applyStorm(gWorld, "g").players.get("g")?.heard).toBe(STORM_SPECTATOR);
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLEARING_RING.x, y: CLEARING_RING.y });
+    expect(applyStorm(early, "a").players.get("a")?.heard).toBe(STORM_NEED);
   });
 
   it("solo cannot force Appearance when Gestell is maxed even with a held Clearing", () => {
