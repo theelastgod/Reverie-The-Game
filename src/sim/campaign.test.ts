@@ -538,6 +538,12 @@ import {
   DUMMY_PEOPLE_HELD,
   DUMMY_PEOPLE_SPECTATOR,
   DUMMY_PEOPLE_PLAQUE,
+  GEARED_PEOPLE_COPY,
+  WINK_GEARED_PEOPLE,
+  GEARED_PEOPLE_NEED,
+  GEARED_PEOPLE_HELD,
+  GEARED_PEOPLE_SPECTATOR,
+  GEARED_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1135,6 +1141,7 @@ import {
   applyKitPeople,
   applyPracticePeople,
   applyDummyPeople,
+  applyGearedPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5016,6 +5023,44 @@ describe("Dummy — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
     expect(applyDummyPeople(gWorld, "g").players.get("g")?.heard).toBe(DUMMY_PEOPLE_SPECTATOR);
     expect(gWorld.dummyPeopleHeld).toBe(false);
+  });
+});
+
+describe("Geared — people", () => {
+  it("names geared graves as people after the dummy; geared still crack; guests cannot", () => {
+    const w = emptyWorld();
+    w.dummyPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), dummyPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(GEARED_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_GEARED_PEOPLE);
+    expect(p.beats.gearedPeople).toBe(true);
+    expect(named.gearedPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "geared-people")?.name).toBe("Geared — people");
+    expect(named.signs.find((s) => s.id === "geared-people")?.title).toBe(GEARED_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Geared graves still crack");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyGearedPeople(named, "a").players.get("a")?.heard).toBe(GEARED_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyGearedPeople(early, "a").players.get("a")?.heard).toBe(GEARED_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.dummyPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyGearedPeople(gWorld, "g").players.get("g")?.heard).toBe(GEARED_PEOPLE_SPECTATOR);
+    expect(gWorld.gearedPeopleHeld).toBe(false);
   });
 });
 

@@ -188,6 +188,7 @@ export type Beats = {
   kitPeople: boolean;
   practicePeople: boolean;
   dummyPeople: boolean;
+  gearedPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -364,6 +365,7 @@ export type Poi = {
     | "kit-people"
     | "practice-people"
     | "dummy-people"
+    | "geared-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3090,6 +3092,31 @@ export function dummyPeoplePoi(): Poi {
   };
 }
 
+export const GEARED_PEOPLE_COPY =
+  "Geared graves are a house of people, not loot of process. Geared graves still crack. Fallen graves still do not. Combat is not. This was not a fetch.";
+export const WINK_GEARED_PEOPLE = "People, not a gear stick. The token does not strike.";
+export const GEARED_PEOPLE_NEED = "The dummy as people first. Geared graves of people are not a fetch.";
+export const GEARED_PEOPLE_HELD = "Geared graves already hold as people. Geared graves still crack. Fallen graves still do not.";
+export const GEARED_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const GEARED_PEOPLE_PLAQUE: Sign = {
+  id: "geared-people",
+  title: "Geared — people",
+  text: "A house of people. Geared graves still crack. Fallen graves still do not. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function gearedPeoplePoi(): Poi {
+  return {
+    id: "geared-people",
+    name: "Geared — people",
+    x: 720,
+    y: 520,
+    kind: "geared-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3765,6 +3792,7 @@ export function emptyBeats(): Beats {
     kitPeople: false,
     practicePeople: false,
     dummyPeople: false,
+    gearedPeople: false,
   };
 }
 
