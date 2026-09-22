@@ -10,6 +10,7 @@ import {
   emptyWeather,
   GUEST_LOCK,
   GOING_UNDER,
+  BURIAL_PLOT,
   SHRINE,
   lineFor,
   movementReady,
@@ -309,6 +310,13 @@ import {
   GARDEN_PEOPLE_SPECTATOR,
   GARDEN_PEOPLE_PLAQUE,
   gardenPeoplePoi,
+  BURIAL_PEOPLE_COPY,
+  WINK_BURIAL_PEOPLE,
+  BURIAL_PEOPLE_NEED,
+  BURIAL_PEOPLE_HELD,
+  BURIAL_PEOPLE_SPECTATOR,
+  BURIAL_PEOPLE_PLAQUE,
+  burialPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1005,6 +1013,7 @@ export type WorldState = {
   arenaPeopleHeld: boolean;
   underPeopleHeld: boolean;
   gardenPeopleHeld: boolean;
+  burialPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1269,6 +1278,7 @@ export function emptyWorld(): WorldState {
     arenaPeopleHeld: false,
     underPeopleHeld: false,
     gardenPeopleHeld: false,
+    burialPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2482,6 +2492,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   const players = new Map(w.players);
   const plot = w.rites.find((r) => r.kind === "burial" && !r.done);
   if (plot && nearPoint(p.x, p.y, plot.x, plot.y)) {
+    if (!p.guest && w.gardenPeopleHeld && !w.burialPeopleHeld) return applyBurialPeople(w, playerId);
     const rites = w.rites.map((r) => (r.id === plot.id ? { ...r, done: true } : r));
     players.set(playerId, {
       ...p,
@@ -3471,6 +3482,37 @@ export function applyGardenPeople(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === WRECK_GARDEN.id ? { ...GARDEN_PEOPLE_PLAQUE } : s))
     : [...w.signs, { ...GARDEN_PEOPLE_PLAQUE }];
   return { ...w, players, gardenPeopleHeld: true, pois, signs };
+}
+
+export function applyBurialPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, BURIAL_PLOT.x, BURIAL_PLOT.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: BURIAL_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_BURIAL_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.gardenPeopleHeld) {
+    players.set(playerId, { ...p, heard: BURIAL_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.burialPeopleHeld && p.beats.burialPeople) {
+    players.set(playerId, { ...p, heard: BURIAL_PEOPLE_HELD, wink: visibleWink(false, WINK_BURIAL_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, burialPeople: true },
+    heard: BURIAL_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_BURIAL_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === BURIAL_PLOT.id)
+    ? w.pois.map((poi) => (poi.id === BURIAL_PLOT.id ? burialPeoplePoi() : poi))
+    : [...w.pois, burialPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === BURIAL_PLOT.id)
+    ? w.signs.map((s) => (s.id === BURIAL_PLOT.id ? { ...BURIAL_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...BURIAL_PEOPLE_PLAQUE }];
+  return { ...w, players, burialPeopleHeld: true, pois, signs };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -4651,6 +4693,7 @@ export function snapshot(w: WorldState) {
     arenaPeopleHeld: w.arenaPeopleHeld,
     underPeopleHeld: w.underPeopleHeld,
     gardenPeopleHeld: w.gardenPeopleHeld,
+    burialPeopleHeld: w.burialPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

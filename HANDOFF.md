@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 119** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 120** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -502,7 +502,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After going-under as people, F at the wreckage garden: a house of people, not a hole of process. Plaque/POI Garden — people. Bury still works.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 119 (do this next)
+## Stage 119 (landed)
+- After the garden as people, F at the unnamed burial plot: a house of people, not a burial of process. Plaque/POI The plot — people. Bury still works.
+- Guests cannot name it. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 120 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

@@ -139,6 +139,7 @@ export type Beats = {
   arenaPeople: boolean;
   underPeople: boolean;
   gardenPeople: boolean;
+  burialPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -266,6 +267,7 @@ export type Poi = {
     | "arena-people"
     | "under-people"
     | "garden-people"
+    | "burial-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -895,6 +897,31 @@ export function gardenPeoplePoi(): Poi {
     x: WRECK_GARDEN.x,
     y: WRECK_GARDEN.y,
     kind: "garden-people",
+  };
+}
+
+export const BURIAL_PEOPLE_COPY =
+  "The unnamed plot is a house of people, not a burial of process. Bury still works. Combat is not. This was not a fetch.";
+export const WINK_BURIAL_PEOPLE = "People, not a plot stick. The token does not strike.";
+export const BURIAL_PEOPLE_NEED = "The garden as people first. A plot of people is not a fetch.";
+export const BURIAL_PEOPLE_HELD = "The plot already holds as people. Bury still works.";
+export const BURIAL_PEOPLE_SPECTATOR = "A plot. You do not get a house of people.";
+
+export const BURIAL_PEOPLE_PLAQUE: Sign = {
+  id: BURIAL_PLOT.id,
+  title: "The plot — people",
+  text: "A house of people. Bury still works. The number does not strike.",
+  x: BURIAL_PLOT.x,
+  y: BURIAL_PLOT.y,
+};
+
+export function burialPeoplePoi(): Poi {
+  return {
+    id: BURIAL_PLOT.id,
+    name: "The plot — people",
+    x: BURIAL_PLOT.x,
+    y: BURIAL_PLOT.y,
+    kind: "burial-people",
   };
 }
 
@@ -2379,6 +2406,7 @@ export function emptyBeats(): Beats {
     arenaPeople: false,
     underPeople: false,
     gardenPeople: false,
+    burialPeople: false,
   };
 }
 

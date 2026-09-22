@@ -577,6 +577,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "garden-people"
                         ? 0xc9a56a
+                      : poi.kind === "burial-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1202,6 +1204,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `F — ${npcNear.name} cannot see the Wink. "You're looking at something I'm not."`;
     } else if (npcNear) {
       this.prompt = `F speak with ${npcNear.name} · ${npcNear.role}`;
+    } else if (burial && (me.beats.burialPeople || snap.burialPeopleHeld)) {
+      this.prompt = me.heard || "The plot — people. Bury still works. Not a stick.";
+    } else if (burial && snap.gardenPeopleHeld && !me.guest) {
+      this.prompt = "F — the unnamed plot as a house of people. Bury still works. Not a fetch.";
     } else if (burial) {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
     } else if (shrine && (me.guest || me.locked)) {

@@ -241,6 +241,13 @@ import {
   GARDEN_PEOPLE_HELD,
   GARDEN_PEOPLE_SPECTATOR,
   GARDEN_PEOPLE_PLAQUE,
+  BURIAL_PLOT,
+  BURIAL_PEOPLE_COPY,
+  WINK_BURIAL_PEOPLE,
+  BURIAL_PEOPLE_NEED,
+  BURIAL_PEOPLE_HELD,
+  BURIAL_PEOPLE_SPECTATOR,
+  BURIAL_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -784,6 +791,7 @@ import {
   applyArenaPeople,
   applyUnderPeople,
   applyGardenPeople,
+  applyBurialPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2620,6 +2628,47 @@ describe("Garden — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WRECK_GARDEN.x, y: WRECK_GARDEN.y, locked: true });
     expect(applyGardenPeople(gWorld, "g").players.get("g")?.heard).toBe(GARDEN_PEOPLE_SPECTATOR);
     expect(gWorld.gardenPeopleHeld).toBe(false);
+  });
+});
+
+describe("The plot — people", () => {
+  it("names the unnamed plot as people after the garden; bury still works; guests cannot", () => {
+    const w = emptyWorld();
+    w.gardenPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), gardenPeople: true },
+      x: BURIAL_PLOT.x,
+      y: BURIAL_PLOT.y,
+    });
+    const named = applyBury(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BURIAL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BURIAL_PEOPLE);
+    expect(p.beats.burialPeople).toBe(true);
+    expect(p.beats.burial).toBe(false);
+    expect(named.burialPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "burial-people")?.name).toBe("The plot — people");
+    expect(named.signs.find((s) => s.id === BURIAL_PLOT.id)?.title).toBe(BURIAL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Bury still works");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBurialPeople(named, "a").players.get("a")?.heard).toBe(BURIAL_PEOPLE_HELD);
+    const buried = applyBury(named, "a");
+    expect(buried.players.get("a")?.beats.burial).toBe(true);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: BURIAL_PLOT.x, y: BURIAL_PLOT.y });
+    expect(applyBurialPeople(early, "a").players.get("a")?.heard).toBe(BURIAL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.gardenPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: BURIAL_PLOT.x, y: BURIAL_PLOT.y, locked: true });
+    expect(applyBurialPeople(gWorld, "g").players.get("g")?.heard).toBe(BURIAL_PEOPLE_SPECTATOR);
+    expect(gWorld.burialPeopleHeld).toBe(false);
   });
 });
 
