@@ -75,6 +75,7 @@ export type Beats = {
   ioneMark: boolean;
   fourfold: boolean;
   lastGod: boolean;
+  ordLast: boolean;
 };
 
 export type WeatherHeard = {
@@ -290,6 +291,32 @@ export function lastGodPoi(): Poi {
   return {
     id: CARE_DOOR.id,
     name: "The last god — not here",
+    x: CARE_DOOR.x,
+    y: CARE_DOOR.y,
+    kind: "last-god-absent",
+  };
+}
+
+export const ORD_LAST =
+  "Ord will not number the last god. He leaves the desk for the Care. The process has no line for absence. This was not a fetch.";
+export const WINK_ORD_LAST =
+  "A side hour. A clerk refused a god. The ledger stays empty. Combat is not.";
+export const ORD_LAST_LATER = "I am at the door. I will not put a number on what is not here.";
+export const ORD_LAST_NEED = "Name the last god as absence first. I will not walk to a room that still pretends a body.";
+export const ORD_LAST_SPECTATOR = "Ord is leaving a desk. Not for you.";
+
+export const LAST_GOD_ORD_PLAQUE: Sign = {
+  id: CARE_DOOR.id,
+  title: "The last god — not numbered",
+  text: "Ord will not write it. Absence is a standing. The number does not strike.",
+  x: CARE_DOOR.x,
+  y: CARE_DOOR.y,
+};
+
+export function lastGodOrdPoi(): Poi {
+  return {
+    id: CARE_DOOR.id,
+    name: "The last god — not numbered",
     x: CARE_DOOR.x,
     y: CARE_DOOR.y,
     kind: "last-god-absent",
@@ -1078,6 +1105,7 @@ export function emptyBeats(): Beats {
     ioneMark: false,
     fourfold: false,
     lastGod: false,
+    ordLast: false,
   };
 }
 
@@ -1499,6 +1527,7 @@ export function liveNpcs(
   ordAtStrait = false,
   wetCult = false,
   straitBuried = false,
+  ordAtCare = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1537,5 +1566,12 @@ export function liveNpcs(
     );
   }
   if (vesperAtFoundry) base = [...base, { ...VESPER }];
+  if (ordAtCare) {
+    base = base.map((n) =>
+      n.id === "ord"
+        ? { ...n, x: CARE_DOOR.x - 48, y: CARE_DOOR.y + 40, role: "Will not number it" }
+        : n,
+    );
+  }
   return base;
 }

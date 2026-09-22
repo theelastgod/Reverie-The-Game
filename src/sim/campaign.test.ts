@@ -32,6 +32,12 @@ import {
   LAST_GOD_HELD,
   LAST_GOD_SPECTATOR,
   LAST_GOD_PLAQUE,
+  ORD_LAST,
+  WINK_ORD_LAST,
+  ORD_LAST_LATER,
+  ORD_LAST_NEED,
+  ORD_LAST_SPECTATOR,
+  LAST_GOD_ORD_PLAQUE,
   WINK_STANDING,
   HISTORY_7777,
   HOUSE_HALL,
@@ -329,6 +335,7 @@ import {
   applyStanding,
   applyFourfold,
   applyLastGod,
+  applyOrdLast,
   applyMarket,
   applyOperator,
   applyRead,
@@ -719,6 +726,59 @@ describe("the last god is not here", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CARE_DOOR.x, y: CARE_DOOR.y, locked: true });
     expect(applyLastGod(gWorld, "g").players.get("g")?.heard).toBe(LAST_GOD_SPECTATOR);
     expect(gWorld.lastGodNamed).toBe(false);
+  });
+});
+
+describe("Ord will not number the last god", () => {
+  it("walks to the Care after absence is named; guests cannot take him", () => {
+    const ord = NAVE_NPCS.find((n) => n.id === "ord")!;
+    const w = emptyWorld();
+    w.lastGodNamed = true;
+    w.careOpen = true;
+    w.pois = w.pois.map((poi) =>
+      poi.id === CARE_DOOR.id ? { ...poi, name: "The last god — not here", kind: "last-god-absent" } : poi,
+    );
+    w.signs = [...w.signs, { ...LAST_GOD_PLAQUE }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), lastGod: true, fourfold: true, under: true, care: true },
+      x: ord.x,
+      y: ord.y,
+    });
+    const walked = applyTalk(w, "a", "ord");
+    const p = walked.players.get("a")!;
+    expect(p.heard).toBe(ORD_LAST);
+    expect(p.wink).toBe(WINK_ORD_LAST);
+    expect(p.beats.ordLast).toBe(true);
+    expect(walked.ordAtCare).toBe(true);
+    expect(walked.pois.find((poi) => poi.id === CARE_DOOR.id)?.name).toBe(LAST_GOD_ORD_PLAQUE.title);
+    expect(walked.signs.find((s) => s.id === CARE_DOOR.id)?.title).toBe(LAST_GOD_ORD_PLAQUE.title);
+    const moved = liveNpcs(false, false, false, false, false, false, false, false, true).find((n) => n.id === "ord")!;
+    expect(moved.role).toBe("Will not number it");
+    expect(moved.x).toBe(CARE_DOOR.x - 48);
+    walked.players.set("a", { ...p, x: moved.x, y: moved.y });
+    expect(applyTalk(walked, "a", "ord").players.get("a")?.heard).toBe(ORD_LAST_LATER);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: ord.x,
+      y: ord.y,
+    });
+    expect(applyOrdLast(early, "a").players.get("a")?.heard).toBe(ORD_LAST_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.lastGodNamed = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ord.x, y: ord.y, locked: true });
+    const g = applyTalk(gWorld, "g", "ord");
+    expect(g.players.get("g")?.heard).toBe(ORD_LAST_SPECTATOR);
+    expect(g.ordAtCare).toBe(false);
   });
 });
 

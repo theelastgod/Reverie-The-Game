@@ -42,6 +42,7 @@ export type Snap = {
   hallLamp?: boolean;
   fourfoldHeld?: boolean;
   lastGodNamed?: boolean;
+  ordAtCare?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

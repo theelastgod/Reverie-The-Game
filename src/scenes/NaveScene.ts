@@ -752,6 +752,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The sexton mark is cult. Nara Vale is at the Strait.";
     } else if (npcNear?.id === "nara" && me.beats.sextonAsk) {
       this.prompt = "F — take the sexton mark. Cult object. Nara walks to the Strait.";
+    } else if (npcNear?.id === "ord" && (me.beats.ordLast || snap.ordAtCare)) {
+      this.prompt = me.heard || "Ord will not number the last god. He stands at the Care.";
+    } else if (npcNear?.id === "ord" && (snap.lastGodNamed || me.beats.lastGod) && !me.guest) {
+      this.prompt = "F — Ord will not number the last god. He walks to the Care. Not a fetch.";
     } else if (npcNear?.id === "ord" && me.beats.ordWitness) {
       this.prompt = me.heard || "Ord stands at the refused Strait. The number is quieter.";
     } else if (npcNear?.id === "ord" && (me.beats.straitRefuse || snap.straitRefused)) {

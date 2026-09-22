@@ -110,6 +110,13 @@ import {
   LAST_GOD_SPECTATOR,
   LAST_GOD_PLAQUE,
   lastGodPoi,
+  ORD_LAST,
+  WINK_ORD_LAST,
+  ORD_LAST_LATER,
+  ORD_LAST_NEED,
+  ORD_LAST_SPECTATOR,
+  LAST_GOD_ORD_PLAQUE,
+  lastGodOrdPoi,
   houseHallPoi,
   openCarePoi,
   serialHistory,
@@ -448,6 +455,7 @@ export type WorldState = {
   hallLamp: boolean;
   fourfoldHeld: boolean;
   lastGodNamed: boolean;
+  ordAtCare: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -606,6 +614,7 @@ export function emptyWorld(): WorldState {
     hallLamp: false,
     fourfoldHeld: false,
     lastGodNamed: false,
+    ordAtCare: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -862,7 +871,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -989,6 +998,11 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   }
   if (id === "quill" && (p.guest || p.locked) && p.beats.spot) {
     players.set(playerId, { ...p, heard: QUILL_HANG_SPECTATOR });
+    return { ...w, players };
+  }
+  if (id === "ord" && w.lastGodNamed && !p.guest && !p.locked) return applyOrdLast(w, playerId);
+  if (id === "ord" && (p.guest || p.locked) && w.lastGodNamed) {
+    players.set(playerId, { ...p, heard: ORD_LAST_SPECTATOR });
     return { ...w, players };
   }
   if (id === "ord" && !p.guest && !p.locked && (p.beats.straitRefuse || w.straitRefused)) {
@@ -1391,6 +1405,36 @@ export function applyLastGod(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === CARE_DOOR.id ? { ...LAST_GOD_PLAQUE } : s))
     : [...w.signs, { ...LAST_GOD_PLAQUE }];
   return { ...w, players, lastGodNamed: true, pois, signs };
+}
+
+export function applyOrdLast(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: ORD_LAST_SPECTATOR, wink: visibleWink(true, WINK_ORD_LAST) });
+    return { ...w, players };
+  }
+  if (!w.lastGodNamed) {
+    players.set(playerId, { ...p, heard: ORD_LAST_NEED });
+    return { ...w, players };
+  }
+  if (w.ordAtCare && p.beats.ordLast) {
+    players.set(playerId, { ...p, heard: ORD_LAST_LATER, wink: visibleWink(false, WINK_ORD_LAST) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, ordLast: true, ord: true },
+    heard: ORD_LAST,
+    wink: visibleWink(false, WINK_ORD_LAST),
+    readiness: p.readiness + 1,
+  });
+  const pois = w.pois.map((poi) => (poi.id === CARE_DOOR.id ? lastGodOrdPoi() : poi));
+  const signs = w.signs.some((s) => s.id === CARE_DOOR.id)
+    ? w.signs.map((s) => (s.id === CARE_DOOR.id ? { ...LAST_GOD_ORD_PLAQUE } : s))
+    : [...w.signs, { ...LAST_GOD_ORD_PLAQUE }];
+  return { ...w, players, ordAtCare: true, pois, signs };
 }
 
 export function applyHang(w: WorldState, playerId: string): WorldState {
@@ -2216,7 +2260,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2232,6 +2276,7 @@ export function snapshot(w: WorldState) {
     hallLamp: w.hallLamp,
     fourfoldHeld: w.fourfoldHeld,
     lastGodNamed: w.lastGodNamed,
+    ordAtCare: w.ordAtCare,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
