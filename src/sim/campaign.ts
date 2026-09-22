@@ -185,6 +185,7 @@ export type Beats = {
   secondsPeople: boolean;
   streetPeople: boolean;
   griefPeople: boolean;
+  kitPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -358,6 +359,7 @@ export type Poi = {
     | "seconds-people"
     | "street-people"
     | "grief-people"
+    | "kit-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3009,6 +3011,31 @@ export function griefPeoplePoi(): Poi {
   };
 }
 
+export const KIT_PEOPLE_COPY =
+  "The kit is a house of people, not a bigger stick. Same number. Serials do not buy damage. Combat is not. This was not a fetch.";
+export const WINK_KIT_PEOPLE = "People, not a kit stick. The token does not strike.";
+export const KIT_PEOPLE_NEED = "Grief as people first. A kit of people is not a fetch.";
+export const KIT_PEOPLE_HELD = "The kit already holds as people. Same number. Serials do not buy damage.";
+export const KIT_PEOPLE_SPECTATOR = "An arena. You do not get a house of people.";
+
+export const KIT_PEOPLE_PLAQUE: Sign = {
+  id: "kit-people",
+  title: "Kit — people",
+  text: "A house of people. Same number. Serials do not buy damage. The number does not strike.",
+  x: GUEST_ARENA.x,
+  y: GUEST_ARENA.y,
+};
+
+export function kitPeoplePoi(): Poi {
+  return {
+    id: "kit-people",
+    name: "Kit — people",
+    x: GUEST_ARENA.x,
+    y: GUEST_ARENA.y,
+    kind: "kit-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3681,6 +3708,7 @@ export function emptyBeats(): Beats {
     secondsPeople: false,
     streetPeople: false,
     griefPeople: false,
+    kitPeople: false,
   };
 }
 
