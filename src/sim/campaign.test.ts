@@ -349,6 +349,12 @@ import {
   NARA_PERSON_NEED,
   NARA_PERSON_SPECTATOR,
   NARA_PERSON_PLAQUE,
+  QUILL_PERSON,
+  WINK_QUILL_PERSON,
+  QUILL_PERSON_HELD,
+  QUILL_PERSON_NEED,
+  QUILL_PERSON_SPECTATOR,
+  QUILL_PERSON_PLAQUE,
   ORD_LEAVE_GESTELL,
   ORD_LEAVE,
   WINK_ORD_LEAVE,
@@ -574,6 +580,7 @@ import {
   applyStrike,
   applyTalk,
   applyNaraPerson,
+  applyQuillPerson,
   applyUse,
   damageFor,
   emptyWorld,
@@ -3448,6 +3455,51 @@ describe("Nara stays as a person", () => {
   });
 });
 
+describe("Quill stays as a person", () => {
+  it("after unflag she stays as a person, not a listing; guests cannot", () => {
+    const quill = NAVE_NPCS.find((n) => n.id === "quill")!;
+    const w = emptyWorld();
+    w.wetCult = true;
+    w.quillAtGrid = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), unflag: true, hang: true, market: true },
+      x: WET_GRID.x + 48,
+      y: WET_GRID.y,
+    });
+    const stayed = applyTalk(w, "a", "quill");
+    const p = stayed.players.get("a")!;
+    expect(p.heard).toBe(QUILL_PERSON);
+    expect(p.wink).toBe(WINK_QUILL_PERSON);
+    expect(p.beats.quillPerson).toBe(true);
+    expect(stayed.quillPersonHeld).toBe(true);
+    expect(stayed.pois.find((poi) => poi.kind === "quill-person")?.id).toBe("quill-person");
+    expect(stayed.signs.find((s) => s.id === "quill-person")?.title).toBe(QUILL_PERSON_PLAQUE.title);
+    expect(liveNpcs(false, false, false, true, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "quill")?.role).toBe("Stays");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTalk(stayed, "a", "quill").players.get("a")?.heard).toBe(QUILL_PERSON_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: quill.x,
+      y: quill.y,
+    });
+    expect(applyQuillPerson(early, "a").players.get("a")?.heard).toBe(QUILL_PERSON_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.wetCult = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: quill.x, y: quill.y, locked: true, beats: { ...emptyBeats(), unflag: true } });
+    expect(applyTalk(gWorld, "g", "quill").players.get("g")?.heard).toBe(QUILL_PERSON_SPECTATOR);
+    expect(gWorld.quillPersonHeld).toBe(false);
+  });
+});
+
 describe("Ord leaves the party", () => {
   it("extract at max Gestell without a freeze walks him off; a freeze keeps him", () => {
     expect(ORD_LEAVE_GESTELL).toBe(100);
@@ -4605,7 +4657,7 @@ describe("Quill unflags the Wet Grid", () => {
     expect(applyFlag(done, "a").players.get("a")?.flagged).toBe(false);
 
     done.players.set("a", { ...p, x: atStreet.x, y: atStreet.y });
-    expect(applyTalk(done, "a", "quill").players.get("a")?.heard).toBe(UNFLAG_LATER);
+    expect(applyTalk(done, "a", "quill").players.get("a")?.heard).toBe(QUILL_PERSON);
 
     const need = emptyWorld();
     need.players.set("a", {

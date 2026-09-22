@@ -498,6 +498,8 @@ export class NaveScene extends Phaser.Scene {
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
+                        ? 0xc9a56a
+                      : poi.kind === "quill-person"
                         ? 0x7a1028
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
@@ -838,8 +840,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "Quill will not print the last god. Copies stop here.";
     } else if (npcNear?.id === "quill" && (snap.lastGodNamed || me.beats.lastGod) && me.beats.market && !me.guest) {
       this.prompt = "F — Quill will not print the last god. Absence does not list. Not a fetch.";
-    } else if (npcNear?.id === "quill" && (me.beats.unflag || snap.wetCult)) {
-      this.prompt = me.heard || "The street is cult. Quill is keeping the kerb.";
+    } else if (npcNear?.id === "quill" && (me.beats.quillPerson || snap.quillPersonHeld)) {
+      this.prompt = me.heard || "Quill stays. A person, not a listing.";
+    } else if (npcNear?.id === "quill" && (me.beats.unflag || snap.wetCult) && !me.guest) {
+      this.prompt = "F — Quill can stay as a person. Not a fetch.";
     } else if (npcNear?.id === "quill" && me.beats.unflagAsk) {
       this.prompt = "The Wet Grid is still a ring. Unflag the plaque.";
     } else if (npcNear?.id === "quill" && me.beats.hang) {
