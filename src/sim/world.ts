@@ -174,6 +174,17 @@ import {
   TRUCE_SPECTATOR,
   TRUCE_PLAQUE,
   trucePoi,
+  HANDOFF_COPY,
+  WINK_HANDOFF,
+  HANDOFF_AGAIN,
+  HANDOFF_NEED,
+  HANDOFF_NONE,
+  HANDOFF_FEE,
+  HANDOFF_SPECTATOR,
+  HANDOFF_CULT,
+  HANDOFF_DARK,
+  HANDOFF_PLAQUE,
+  handoffPoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -840,6 +851,7 @@ export type WorldState = {
   partedHeld: boolean;
   heavyHeld: boolean;
   truceHeld: boolean;
+  handoffHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1084,6 +1096,7 @@ export function emptyWorld(): WorldState {
     partedHeld: false,
     heavyHeld: false,
     truceHeld: false,
+    handoffHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -1606,6 +1619,65 @@ export function applyTruce(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === "truce" ? plaque : s))
     : [...w.signs, plaque];
   return { ...w, players, truceHeld: true, pois, signs };
+}
+
+export function applyHandoff(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  const other = [...w.players.values()].find(
+    (o) => o.id !== playerId && o.hp > 0 && !o.guest && !o.locked && nearPoint(p.x, p.y, o.x, o.y, 56),
+  );
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: HANDOFF_SPECTATOR, wink: visibleWink(true, WINK_HANDOFF) });
+    return { ...w, players };
+  }
+  if (w.stallDark) {
+    players.set(playerId, { ...p, heard: HANDOFF_DARK, wink: visibleWink(false, WINK_HANDOFF) });
+    return { ...w, players };
+  }
+  if (p.cultWink) {
+    players.set(playerId, { ...p, heard: HANDOFF_CULT, wink: visibleWink(false, WINK_HANDOFF) });
+    return { ...w, players };
+  }
+  if (!other) {
+    players.set(playerId, { ...p, heard: HANDOFF_NEED });
+    return { ...w, players };
+  }
+  if (p.fakeWinke <= 0) {
+    players.set(playerId, { ...p, heard: HANDOFF_NONE });
+    return { ...w, players };
+  }
+  const spent = spendBestand(p, LISTING_FEE);
+  if (!spent) {
+    players.set(playerId, { ...p, heard: HANDOFF_FEE });
+    return { ...w, players };
+  }
+  const first = !w.handoffHeld;
+  players.set(playerId, {
+    ...p,
+    fakeWinke: p.fakeWinke - 1,
+    bestand: spent.bestand,
+    banked: spent.banked,
+    aura: Math.max(0, p.aura - 1),
+    beats: { ...p.beats, handoff: true },
+    heard: vaultHeard(first ? HANDOFF_COPY : HANDOFF_AGAIN, spent.fromVault),
+    wink: visibleWink(false, WINK_HANDOFF),
+  });
+  players.set(other.id, {
+    ...other,
+    fakeWinke: other.fakeWinke + 1,
+    exhibitT: 0,
+    heard: HANDOFF_COPY,
+    wink: visibleWink(false, WINK_HANDOFF),
+  });
+  const pois = w.pois.some((poi) => poi.id === "stall-handoff")
+    ? w.pois.map((poi) => (poi.id === "stall-handoff" ? handoffPoi() : poi))
+    : [...w.pois, handoffPoi()];
+  const signs = w.signs.some((s) => s.id === "stall-handoff")
+    ? w.signs.map((s) => (s.id === "stall-handoff" ? { ...HANDOFF_PLAQUE } : s))
+    : [...w.signs, { ...HANDOFF_PLAQUE }];
+  return { ...w, players, handoffHeld: true, pois, signs };
 }
 
 export function applyNaraPerson(w: WorldState, playerId: string): WorldState {
@@ -2156,6 +2228,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (p.messenger === "iridescent" && !p.guest && !p.locked && !w.glamourHeld && !p.beats.glamour) {
       return applyGlamour(w, playerId);
     }
+    const mate = [...w.players.values()].find(
+      (o) => o.id !== playerId && o.hp > 0 && !o.guest && !o.locked && nearPoint(p.x, p.y, o.x, o.y, 56),
+    );
+    if (mate && p.fakeWinke > 0 && !p.guest && !p.locked) return applyHandoff(w, playerId);
     return applyMarket(w, playerId);
   }
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
@@ -3736,6 +3812,7 @@ export function snapshot(w: WorldState) {
     partedHeld: w.partedHeld,
     heavyHeld: w.heavyHeld,
     truceHeld: w.truceHeld,
+    handoffHeld: w.handoffHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -119,6 +119,7 @@ export type Beats = {
   parted: boolean;
   heavy: boolean;
   truce: boolean;
+  handoff: boolean;
 };
 
 export type WeatherHeard = {
@@ -226,6 +227,7 @@ export type Poi = {
     | "party-parted"
     | "heavy"
     | "truce"
+    | "stall-handoff"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1409,6 +1411,36 @@ export function trucePoi(x: number, y: number): Poi {
   return { id: "truce", name: "Truce", x, y, kind: "truce" };
 }
 
+export const HANDOFF_COPY =
+  "You passed a print. Listing fee five. Exhibition travels. Cult stayed in the hand. This was not a fetch.";
+export const WINK_HANDOFF = "A copy changes hands. Not a stick. The token does not buy the hour.";
+export const HANDOFF_AGAIN =
+  "Another print changed hands. Listing fee five. Exhibition still decays. Cult does not pass.";
+export const HANDOFF_NEED = "Stand at the stall with a print and another Angel. Cult does not pass.";
+export const HANDOFF_NONE = "You have no print to pass. Exhibition only.";
+export const HANDOFF_FEE = "The listing fee is five. The pocket is short.";
+export const HANDOFF_SPECTATOR = "Paper moves. You do not get a print.";
+export const HANDOFF_CULT = "Cult objects do not pass. The buried hint stays in the hand.";
+export const HANDOFF_DARK = "The stall is unlisted. Copies do not pass here.";
+
+export const HANDOFF_PLAQUE: Sign = {
+  id: "stall-handoff",
+  title: "The stall — handoff",
+  text: "A print changes hands. Fee five. Cult does not. The number does not strike.",
+  x: CLEARING_STALL.x,
+  y: CLEARING_STALL.y,
+};
+
+export function handoffPoi(): Poi {
+  return {
+    id: "stall-handoff",
+    name: "The stall — handoff",
+    x: CLEARING_STALL.x,
+    y: CLEARING_STALL.y,
+    kind: "stall-handoff",
+  };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1811,6 +1843,7 @@ export function emptyBeats(): Beats {
     parted: false,
     heavy: false,
     truce: false,
+    handoff: false,
   };
 }
 

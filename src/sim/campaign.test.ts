@@ -116,6 +116,16 @@ import {
   TRUCE_HELD,
   TRUCE_SPECTATOR,
   TRUCE_PLAQUE,
+  HANDOFF_COPY,
+  WINK_HANDOFF,
+  HANDOFF_AGAIN,
+  HANDOFF_NEED,
+  HANDOFF_NONE,
+  HANDOFF_FEE,
+  HANDOFF_SPECTATOR,
+  HANDOFF_CULT,
+  HANDOFF_DARK,
+  HANDOFF_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -639,6 +649,7 @@ import {
   applyPart,
   applyHeavy,
   applyTruce,
+  applyHandoff,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1606,6 +1617,125 @@ describe("Truce", () => {
     expect(applyTruce(gWorld, "g").players.get("g")?.heard).toBe(TRUCE_SPECTATOR);
     expect(gWorld.truceHeld).toBe(false);
     expect(gWorld.players.get("b")?.flagged).toBe(true);
+  });
+});
+
+describe("Exhibition handoff", () => {
+  it("passes a print at the stall for a listing fee; cult and guests cannot", () => {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      fakeWinke: 1,
+      bestand: 12,
+      aura: 20,
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: 2,
+      fakeWinke: 0,
+      x: CLEARING_STALL.x + 8,
+      y: CLEARING_STALL.y,
+    });
+    const passed = applyHandoff(w, "a");
+    const a = passed.players.get("a")!;
+    const b = passed.players.get("b")!;
+    expect(a.heard).toBe(HANDOFF_COPY);
+    expect(a.wink).toBe(WINK_HANDOFF);
+    expect(a.beats.handoff).toBe(true);
+    expect(a.fakeWinke).toBe(0);
+    expect(a.bestand).toBe(12 - LISTING_FEE);
+    expect(a.aura).toBe(19);
+    expect(b.fakeWinke).toBe(1);
+    expect(passed.handoffHeld).toBe(true);
+    expect(passed.pois.find((poi) => poi.kind === "stall-handoff")?.name).toBe("The stall — handoff");
+    expect(passed.signs.find((s) => s.id === "stall-handoff")?.title).toBe(HANDOFF_PLAQUE.title);
+    expect(a.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(a)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(a)).toBe(false);
+
+    passed.players.set("a", { ...passed.players.get("a")!, fakeWinke: 1, bestand: 10 });
+    const again = applyHandoff(passed, "a");
+    expect(again.players.get("a")?.heard).toBe(HANDOFF_AGAIN);
+    expect(again.players.get("b")?.fakeWinke).toBe(2);
+
+    const broke = emptyWorld();
+    broke.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      fakeWinke: 1,
+      bestand: 0,
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    broke.players.set("b", { ...spawnGuest("b"), guest: false, x: CLEARING_STALL.x + 8, y: CLEARING_STALL.y });
+    expect(applyHandoff(broke, "a").players.get("a")?.heard).toBe(HANDOFF_FEE);
+
+    const none = emptyWorld();
+    none.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      fakeWinke: 0,
+      bestand: 20,
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    none.players.set("b", { ...spawnGuest("b"), guest: false, x: CLEARING_STALL.x + 8, y: CLEARING_STALL.y });
+    expect(applyHandoff(none, "a").players.get("a")?.heard).toBe(HANDOFF_NONE);
+
+    const alone = emptyWorld();
+    alone.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      fakeWinke: 1,
+      bestand: 20,
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    expect(applyHandoff(alone, "a").players.get("a")?.heard).toBe(HANDOFF_NEED);
+
+    const cult = emptyWorld();
+    cult.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      cultWink: true,
+      fakeWinke: 1,
+      bestand: 20,
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    cult.players.set("b", { ...spawnGuest("b"), guest: false, x: CLEARING_STALL.x + 8, y: CLEARING_STALL.y });
+    expect(applyHandoff(cult, "a").players.get("a")?.heard).toBe(HANDOFF_CULT);
+    expect(cult.players.get("a")?.fakeWinke).toBe(1);
+
+    const dark = emptyWorld();
+    dark.stallDark = true;
+    dark.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      fakeWinke: 1,
+      bestand: 20,
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    dark.players.set("b", { ...spawnGuest("b"), guest: false, x: CLEARING_STALL.x + 8, y: CLEARING_STALL.y });
+    expect(applyHandoff(dark, "a").players.get("a")?.heard).toBe(HANDOFF_DARK);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      fakeWinke: 1,
+      locked: true,
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    gWorld.players.set("b", { ...spawnGuest("b"), guest: false, x: CLEARING_STALL.x + 8, y: CLEARING_STALL.y });
+    expect(applyHandoff(gWorld, "g").players.get("g")?.heard).toBe(HANDOFF_SPECTATOR);
+    expect(gWorld.handoffHeld).toBe(false);
   });
 });
 

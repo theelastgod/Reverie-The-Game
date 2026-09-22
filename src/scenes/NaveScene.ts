@@ -539,6 +539,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7eb6ff
                       : poi.kind === "truce"
                         ? 0x7eb6ff
+                      : poi.kind === "stall-handoff"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -877,6 +879,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — hang the cult sheet. The stall goes dark. Quill walks the Wet Grid.";
     } else if (stall && me.messenger === "iridescent" && !me.guest && !me.beats.glamour && !snap.glamourHeld) {
       this.prompt = "F — Iridescent Glamour. Aura as surface. Copies travel. Cult does not. Not a stick.";
+    } else if (stall && mateNear && me.fakeWinke > 0 && !me.guest && !me.cultWink) {
+      this.prompt =
+        me.heard ||
+        `F — pass a print (${LISTING_FEE} Bestand). Exhibition travels. Cult does not. Not a fetch.`;
     } else if (stall && me.beats.market) {
       this.prompt = me.damaged
         ? `F buy a copy (${CLEARING_PRICE}). Q repair a cracked print (${REPAIR_COST}). Cult does not crack.`
