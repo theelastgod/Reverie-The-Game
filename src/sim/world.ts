@@ -247,6 +247,14 @@ import {
   CABLE_DARK_SPECTATOR,
   CABLE_DARK_PLAQUE,
   cableDarkPoi,
+  SKY_STANDING,
+  WINK_SKY,
+  SKY_NEED,
+  SKY_WRONG,
+  SKY_HELD,
+  SKY_SPECTATOR,
+  SKY_PLAQUE,
+  skyStandingPoi,
   ERRAND_EXTRACT,
   ERRAND_SPECTATOR,
   cableQuietPoi,
@@ -397,6 +405,7 @@ export type WorldState = {
   ordAtStrait: boolean;
   straitBuried: boolean;
   cableDark: boolean;
+  skyStanding: boolean;
   hallLamp: boolean;
   standing: HouseScores;
   announced: string | null;
@@ -550,6 +559,7 @@ export function emptyWorld(): WorldState {
     ordAtStrait: false,
     straitBuried: false,
     cableDark: false,
+    skyStanding: false,
     hallLamp: false,
     standing: emptyScores(),
     announced: null,
@@ -1523,6 +1533,7 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
   }
   if (sign.id === ORGAN_CABLE.id) {
     if (w.cableDark || p.beats.cableDark) {
+      if (!p.guest && !p.locked && p.house === "sky") return applySkyStanding(w, playerId);
       players.set(playerId, { ...p, heard: CABLE_DARK_LATER, wink: visibleWink(p.guest, WINK_CABLE_DARK) });
       return { ...w, players };
     }
@@ -1541,6 +1552,43 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     readiness: p.readiness + (p.beats[key] ? 0 : 1),
   });
   return { ...w, players };
+}
+
+export function applySkyStanding(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, ORGAN_CABLE.x, ORGAN_CABLE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: SKY_SPECTATOR, wink: visibleWink(true, WINK_SKY) });
+    return { ...w, players };
+  }
+  if (!w.cableDark && !p.beats.cableDark) {
+    players.set(playerId, { ...p, heard: SKY_NEED });
+    return { ...w, players };
+  }
+  if (p.house !== "sky") {
+    players.set(playerId, { ...p, heard: SKY_WRONG, wink: visibleWink(false, WINK_SKY) });
+    return { ...w, players };
+  }
+  if (w.skyStanding || p.beats.skyStanding) {
+    players.set(playerId, { ...p, heard: SKY_HELD, wink: visibleWink(false, WINK_SKY) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, skyStanding: true },
+    heard: SKY_STANDING,
+    wink: visibleWink(false, WINK_SKY),
+    readiness: p.readiness + 1,
+  });
+  return {
+    ...w,
+    players,
+    skyStanding: true,
+    standing: { ...w.standing, sky: w.standing.sky + 1 },
+    pois: w.pois.map((poi) => (poi.id === ORGAN_CABLE.id ? skyStandingPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === ORGAN_CABLE.id ? { ...SKY_PLAQUE } : s)),
+  };
 }
 
 export function applyCableDark(w: WorldState, playerId: string): WorldState {
@@ -2011,6 +2059,7 @@ export function snapshot(w: WorldState) {
     ordAtStrait: w.ordAtStrait,
     straitBuried: w.straitBuried,
     cableDark: w.cableDark,
+    skyStanding: w.skyStanding,
     hallLamp: w.hallLamp,
     standing: w.standing,
     signs: w.signs,

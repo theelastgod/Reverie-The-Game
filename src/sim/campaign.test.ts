@@ -248,6 +248,13 @@ import {
   CABLE_DARK_LATER,
   CABLE_DARK_SPECTATOR,
   CABLE_DARK_PLAQUE,
+  SKY_STANDING,
+  WINK_SKY,
+  SKY_NEED,
+  SKY_WRONG,
+  SKY_HELD,
+  SKY_SPECTATOR,
+  SKY_PLAQUE,
   REPAIR_COST,
   REPAIR_COPY,
   REPAIR_NEED,
@@ -282,6 +289,7 @@ import {
   applyAnnexHome,
   applyStraitRefuse,
   applyCableDark,
+  applySkyStanding,
   applyUnlight,
   applyStanding,
   applyMarket,
@@ -1984,6 +1992,70 @@ describe("The Strait is refused", () => {
     const g = applyStraitRefuse(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(STRAIT_SPECTATOR);
     expect(g.straitRefused).toBe(false);
+  });
+});
+
+describe("House of Sky standing on the dark Cable", () => {
+  it("Sky Angel names the dark line; other Houses and guests cannot", () => {
+    const w = emptyWorld();
+    w.m3Open = true;
+    w.cableDark = true;
+    w.pois = [
+      ...w.pois,
+      { id: ORGAN_CABLE.id, name: "The Cable — dark", x: ORGAN_CABLE.x, y: ORGAN_CABLE.y, kind: "organ-cable-dark" },
+    ];
+    w.signs = [...w.signs, { id: ORGAN_CABLE.id, title: "The Cable — dark", text: "Cut.", x: ORGAN_CABLE.x, y: ORGAN_CABLE.y }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 2,
+      house: "sky",
+      beats: { ...emptyBeats(), cableDark: true, hall: true, m3: true },
+      x: ORGAN_CABLE.x,
+      y: ORGAN_CABLE.y,
+    });
+    const named = applyRead(w, "a", ORGAN_CABLE.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SKY_STANDING);
+    expect(p.wink).toBe(WINK_SKY);
+    expect(p.beats.skyStanding).toBe(true);
+    expect(named.skyStanding).toBe(true);
+    expect(named.standing.sky).toBe(1);
+    expect(named.pois.find((poi) => poi.id === ORGAN_CABLE.id)?.kind).toBe("organ-cable-sky");
+    expect(named.signs.find((s) => s.id === ORGAN_CABLE.id)?.title).toBe(SKY_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySkyStanding(named, "a").players.get("a")?.heard).toBe(SKY_HELD);
+
+    const mortals = emptyWorld();
+    mortals.cableDark = true;
+    mortals.players.set("m", {
+      ...spawnGuest("m"),
+      guest: false,
+      house: "mortals",
+      beats: { ...emptyBeats(), cableDark: true },
+      x: ORGAN_CABLE.x,
+      y: ORGAN_CABLE.y,
+    });
+    expect(applySkyStanding(mortals, "m").players.get("m")?.heard).toBe(SKY_WRONG);
+    expect(applySkyStanding(mortals, "m").standing.sky).toBe(0);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      house: "sky",
+      x: ORGAN_CABLE.x,
+      y: ORGAN_CABLE.y,
+    });
+    expect(applySkyStanding(early, "a").players.get("a")?.heard).toBe(SKY_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.cableDark = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_CABLE.x, y: ORGAN_CABLE.y, locked: true });
+    expect(applySkyStanding(gWorld, "g").players.get("g")?.heard).toBe(SKY_SPECTATOR);
+    expect(gWorld.skyStanding).toBe(false);
   });
 });
 

@@ -69,6 +69,7 @@ export type Beats = {
   canalBury: boolean;
   yieldEmpty: boolean;
   cableDark: boolean;
+  skyStanding: boolean;
 };
 
 export type WeatherHeard = {
@@ -114,6 +115,7 @@ export type Poi = {
     | "organ-cable"
     | "organ-cable-quiet"
     | "organ-cable-dark"
+    | "organ-cable-sky"
     | "operator-vacant"
     | "forge-tray"
     | "clearing-ring"
@@ -497,6 +499,32 @@ export function cableDarkPoi(): Poi {
     x: ORGAN_CABLE.x,
     y: ORGAN_CABLE.y,
     kind: "organ-cable-dark",
+  };
+}
+
+export const SKY_STANDING =
+  "House of Sky names the dark Cable. Standing. Hours, not a stick. This was not a fetch.";
+export const WINK_SKY = "Standing is a name on a dead line. The token does not strike.";
+export const SKY_NEED = "Cut the Cable first. Sky standing is not a fetch.";
+export const SKY_WRONG = "This organ keeps Sky standing. Your House is elsewhere.";
+export const SKY_HELD = "Sky already holds the dark line. Standing does not strike.";
+export const SKY_SPECTATOR = "A sky you cannot name.";
+
+export const SKY_PLAQUE: Sign = {
+  id: ORGAN_CABLE.id,
+  title: "The Cable — Sky standing",
+  text: "House of Sky named the dark line. Hours. The number does not strike.",
+  x: ORGAN_CABLE.x,
+  y: ORGAN_CABLE.y,
+};
+
+export function skyStandingPoi(): Poi {
+  return {
+    id: ORGAN_CABLE.id,
+    name: "The Cable — Sky standing",
+    x: ORGAN_CABLE.x,
+    y: ORGAN_CABLE.y,
+    kind: "organ-cable-sky",
   };
 }
 
@@ -924,6 +952,7 @@ export function emptyBeats(): Beats {
     canalBury: false,
     yieldEmpty: false,
     cableDark: false,
+    skyStanding: false,
   };
 }
 
