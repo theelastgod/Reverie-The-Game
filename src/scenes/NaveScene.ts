@@ -857,9 +857,14 @@ export class NaveScene extends Phaser.Scene {
     } else if (me.partyOf && !me.guest) {
       this.prompt = "F — part the hour. The walk ends. Not a stick.";
     } else if (mateNear && me.flagged && mateNear.flagged && !me.guest) {
-      this.prompt = me.beats.truce || snap.truceHeld
-        ? me.heard || "Truce. Both unflag. Spoils stay. Seconds, not a stick."
-        : "F — truce. Both unflag. Spoils stay. Not a stick.";
+      this.prompt =
+        me.beats.trucePeople || snap.trucePeopleHeld
+          ? me.heard || "Truce — people. Both unflag. Spoils stay. Seconds, not a stick."
+        : snap.flagPeopleHeld
+          ? "F — the truce as a house of people. Both unflag. Spoils stay. Not a fetch."
+        : me.beats.truce || snap.truceHeld
+          ? me.heard || "Truce. Both unflag. Spoils stay. Seconds, not a stick."
+          : "F — truce. Both unflag. Spoils stay. Not a stick.";
     } else if (mateNear && (me.beats.party || snap.partyHeld) && !me.partyOf) {
       this.prompt = me.heard || "You walk the hour together. A party, not a stick.";
     } else if (mateNear && snap.weatherNamed && !me.guest) {

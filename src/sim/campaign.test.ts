@@ -316,6 +316,13 @@ import {
   FLAG_PEOPLE_HELD,
   FLAG_PEOPLE_SPECTATOR,
   FLAG_PEOPLE_PLAQUE,
+  TRUCE_PEOPLE_COPY,
+  WINK_TRUCE_PEOPLE,
+  TRUCE_PEOPLE_NEED,
+  TRUCE_PEOPLE_MATE,
+  TRUCE_PEOPLE_HELD,
+  TRUCE_PEOPLE_SPECTATOR,
+  TRUCE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -876,6 +883,7 @@ import {
   applyStormPeople,
   applyBountyPeople,
   applyFlagPeople,
+  applyTrucePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3216,6 +3224,66 @@ describe("Flag — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyFlagPeople(gWorld, "g").players.get("g")?.heard).toBe(FLAG_PEOPLE_SPECTATOR);
     expect(gWorld.flagPeopleHeld).toBe(false);
+  });
+});
+
+describe("Truce — people", () => {
+  it("names the truce as people after the flag; both stay flagged until the truce; guests cannot", () => {
+    const w = emptyWorld();
+    w.flagPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      flagged: true,
+      beats: { ...emptyBeats(), flagPeople: true },
+      x: 720,
+      y: 520,
+    });
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: 2,
+      flagged: true,
+      x: 736,
+      y: 520,
+    });
+    const named = applyTruce(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(TRUCE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_TRUCE_PEOPLE);
+    expect(p.beats.trucePeople).toBe(true);
+    expect(p.flagged).toBe(true);
+    expect(named.players.get("b")?.flagged).toBe(true);
+    expect(named.trucePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "truce-people")?.name).toBe("Truce — people");
+    expect(named.signs.find((s) => s.id === "truce-people")?.title).toBe(TRUCE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Both unflag");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTrucePeople(named, "a").players.get("a")?.heard).toBe(TRUCE_PEOPLE_HELD);
+
+    const truced = applyTruce(named, "a");
+    expect(truced.players.get("a")?.flagged).toBe(false);
+    expect(truced.players.get("b")?.flagged).toBe(false);
+    expect(truced.players.get("a")?.heard).toBe(TRUCE_COPY);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 720, y: 520 });
+    early.players.set("b", { ...spawnGuest("b"), guest: false, flagged: true, x: 736, y: 520 });
+    expect(applyTrucePeople(early, "a").players.get("a")?.heard).toBe(TRUCE_PEOPLE_NEED);
+
+    const nomate = emptyWorld();
+    nomate.flagPeopleHeld = true;
+    nomate.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 720, y: 520 });
+    expect(applyTrucePeople(nomate, "a").players.get("a")?.heard).toBe(TRUCE_PEOPLE_MATE);
+
+    const gWorld = emptyWorld();
+    gWorld.flagPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 720, y: 520, locked: true, flagged: true });
+    expect(applyTrucePeople(gWorld, "g").players.get("g")?.heard).toBe(TRUCE_PEOPLE_SPECTATOR);
+    expect(gWorld.trucePeopleHeld).toBe(false);
   });
 });
 

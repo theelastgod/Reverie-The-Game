@@ -401,6 +401,14 @@ import {
   FLAG_PEOPLE_SPECTATOR,
   FLAG_PEOPLE_PLAQUE,
   flagPeoplePoi,
+  TRUCE_PEOPLE_COPY,
+  WINK_TRUCE_PEOPLE,
+  TRUCE_PEOPLE_NEED,
+  TRUCE_PEOPLE_MATE,
+  TRUCE_PEOPLE_HELD,
+  TRUCE_PEOPLE_SPECTATOR,
+  TRUCE_PEOPLE_PLAQUE,
+  trucePeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1110,6 +1118,7 @@ export type WorldState = {
   stormPeopleHeld: boolean;
   bountyPeopleHeld: boolean;
   flagPeopleHeld: boolean;
+  trucePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1387,6 +1396,7 @@ export function emptyWorld(): WorldState {
     stormPeopleHeld: false,
     bountyPeopleHeld: false,
     flagPeopleHeld: false,
+    trucePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -1872,6 +1882,7 @@ export function applyHeavy(w: WorldState, playerId: string): WorldState {
 export function applyTruce(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
+  if (w.flagPeopleHeld && !w.trucePeopleHeld) return applyTrucePeople(w, playerId);
   const other = [...w.players.values()].find(
     (o) => o.id !== playerId && o.hp > 0 && !o.guest && !o.locked && o.flagged && nearPoint(p.x, p.y, o.x, o.y, 56),
   );
@@ -2570,6 +2581,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === "season-people") return applySeasonPeople(w, playerId);
   if (sign.id === "bracket-people") return applyBracketPeople(w, playerId);
   if (sign.id === "flag-people") return applyFlagPeople(w, playerId);
+  if (sign.id === "truce-people") {
+    if (w.trucePeopleHeld) return applyTruce(w, playerId);
+    return applyTrucePeople(w, playerId);
+  }
   if (sign.id === WET_GRID.id) {
     if (p.beats.unflagAsk && !p.beats.unflag && !p.guest && !p.locked) return applyUnflag(w, playerId);
     if (w.clearingPeopleHeld && !w.wetPeopleHeld) return applyWetPeople(w, playerId);
@@ -4025,6 +4040,52 @@ export function applyFlagPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, flagPeopleHeld: true, pois, signs };
 }
 
+export function applyTrucePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const other = [...w.players.values()].find(
+    (o) => o.id !== playerId && o.hp > 0 && !o.guest && !o.locked && o.flagged && nearPoint(p.x, p.y, o.x, o.y, 56),
+  );
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: TRUCE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_TRUCE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.flagPeopleHeld) {
+    players.set(playerId, { ...p, heard: TRUCE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.trucePeopleHeld && p.beats.trucePeople) {
+    players.set(playerId, { ...p, heard: TRUCE_PEOPLE_HELD, wink: visibleWink(false, WINK_TRUCE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!p.flagged || !other) {
+    players.set(playerId, { ...p, heard: TRUCE_PEOPLE_MATE });
+    return { ...w, players };
+  }
+  const mx = Math.round((p.x + other.x) / 2);
+  const my = Math.round((p.y + other.y) / 2);
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, trucePeople: true },
+    heard: TRUCE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_TRUCE_PEOPLE),
+  });
+  players.set(other.id, {
+    ...other,
+    beats: { ...other.beats, trucePeople: true },
+    heard: TRUCE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_TRUCE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "truce-people")
+    ? w.pois.map((poi) => (poi.id === "truce-people" ? trucePeoplePoi(mx, my) : poi))
+    : [...w.pois, trucePeoplePoi(mx, my)];
+  const signs = w.signs.some((s) => s.id === "truce-people")
+    ? w.signs.map((s) => (s.id === "truce-people" ? { ...TRUCE_PEOPLE_PLAQUE, x: mx, y: my } : s))
+    : [...w.signs, { ...TRUCE_PEOPLE_PLAQUE, x: mx, y: my }];
+  return { ...w, players, trucePeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5216,6 +5277,7 @@ export function snapshot(w: WorldState) {
     stormPeopleHeld: w.stormPeopleHeld,
     bountyPeopleHeld: w.bountyPeopleHeld,
     flagPeopleHeld: w.flagPeopleHeld,
+    trucePeopleHeld: w.trucePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

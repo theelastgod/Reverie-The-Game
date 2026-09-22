@@ -152,6 +152,7 @@ export type Beats = {
   stormPeople: boolean;
   bountyPeople: boolean;
   flagPeople: boolean;
+  trucePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -292,6 +293,7 @@ export type Poi = {
     | "storm-people"
     | "bounty-people"
     | "flag-people"
+    | "truce-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2137,6 +2139,32 @@ export function flagPeoplePoi(): Poi {
     kind: "flag-people",
   };
 }
+
+export const TRUCE_PEOPLE_COPY =
+  "The truce is a house of people, not a flag of process. Both unflag. Spoils stay. Seconds, not a stick. Combat is not. This was not a fetch.";
+export const WINK_TRUCE_PEOPLE = "People, not a truce stick. The token does not strike.";
+export const TRUCE_PEOPLE_NEED = "The flag as people first. A truce of people is not a fetch.";
+export const TRUCE_PEOPLE_MATE = "Stand with a flagged Angel. Guests are not a fight.";
+export const TRUCE_PEOPLE_HELD = "The truce already holds as people. Both unflag. Spoils stay.";
+export const TRUCE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const TRUCE_PEOPLE_PLAQUE: Sign = {
+  id: "truce-people",
+  title: "Truce — people",
+  text: "A house of people. Both unflag. Spoils stay. The number does not strike.",
+  x: WET_GRID.x,
+  y: WET_GRID.y,
+};
+
+export function trucePeoplePoi(x = WET_GRID.x, y = WET_GRID.y): Poi {
+  return {
+    id: "truce-people",
+    name: "Truce — people",
+    x,
+    y,
+    kind: "truce-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2751,6 +2779,7 @@ export function emptyBeats(): Beats {
     stormPeople: false,
     bountyPeople: false,
     flagPeople: false,
+    trucePeople: false,
   };
 }
 
