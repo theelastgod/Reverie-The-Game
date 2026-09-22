@@ -112,6 +112,7 @@ export type Snap = {
   weatherPeopleHeld?: boolean;
   navePeopleHeld?: boolean;
   creditsPeopleHeld?: boolean;
+  stillPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

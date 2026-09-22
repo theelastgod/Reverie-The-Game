@@ -585,6 +585,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "credits-people"
                         ? 0xc9a56a
+                      : poi.kind === "still-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -838,6 +840,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — ask them to walk the hour. A party, not a stick.";
     } else if (still && (me.guest || me.locked)) {
       this.prompt = "A still. You do not get this Wink.";
+    } else if (still && (me.beats.stillPeople || snap.stillPeopleHeld)) {
+      this.prompt = me.heard || "The still — people. Optional Wink still optional. Not a stick.";
+    } else if (still && snap.creditsPeopleHeld && !me.guest) {
+      this.prompt = "F — the still as a house of people. Optional Wink still optional. Not a fetch.";
     } else if (still && (snap.stillHeld || me.beats.still)) {
       this.prompt = me.heard || "Production still. Same hour. Your Wink. Combat is not.";
     } else if (still && (me.beats.participant || snap.participantHeld)) {

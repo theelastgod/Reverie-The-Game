@@ -143,6 +143,7 @@ export type Beats = {
   weatherPeople: boolean;
   navePeople: boolean;
   creditsPeople: boolean;
+  stillPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -274,6 +275,7 @@ export type Poi = {
     | "weather-people"
     | "nave-people"
     | "credits-people"
+    | "still-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1011,6 +1013,31 @@ export function creditsPeoplePoi(): Poi {
     x: 720,
     y: 580,
     kind: "credits-people",
+  };
+}
+
+export const STILL_PEOPLE_COPY =
+  "The still is a house of people, not a frame of process. Optional Wink still optional. Combat is not. This was not a fetch.";
+export const WINK_STILL_PEOPLE = "People, not a still stick. The token does not strike.";
+export const STILL_PEOPLE_NEED = "Credits as people first. A still of people is not a fetch.";
+export const STILL_PEOPLE_HELD = "The still already holds as people. Optional Wink still optional.";
+export const STILL_PEOPLE_SPECTATOR = "A still. You do not get a house of people.";
+
+export const STILL_PEOPLE_PLAQUE: Sign = {
+  id: "still-people",
+  title: "The still — people",
+  text: "A house of people. Optional Wink still optional. The number does not strike.",
+  x: STILL.x,
+  y: STILL.y,
+};
+
+export function stillPeoplePoi(): Poi {
+  return {
+    id: "still-people",
+    name: "The still — people",
+    x: STILL.x,
+    y: STILL.y,
+    kind: "still-people",
   };
 }
 
@@ -2499,6 +2526,7 @@ export function emptyBeats(): Beats {
     weatherPeople: false,
     navePeople: false,
     creditsPeople: false,
+    stillPeople: false,
   };
 }
 
