@@ -181,6 +181,7 @@ export type Beats = {
   stormPressPeople: boolean;
   fallenPeople: boolean;
   spoilsPeople: boolean;
+  unflagPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -350,6 +351,7 @@ export type Poi = {
     | "stormpress-people"
     | "fallen-people"
     | "spoils-people"
+    | "unflag-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2901,6 +2903,31 @@ export function spoilsPeoplePoi(): Poi {
   };
 }
 
+export const UNFLAG_PEOPLE_COPY =
+  "Unflag is a house of people, not a stick of process. Unflag still opts out. Cult still hangs. Combat is not. This was not a fetch.";
+export const WINK_UNFLAG_PEOPLE = "People, not an unflag stick. The token does not strike.";
+export const UNFLAG_PEOPLE_NEED = "Spoils as people first. An unflag of people is not a fetch.";
+export const UNFLAG_PEOPLE_HELD = "Unflag already holds as people. Unflag still opts out. Cult still hangs.";
+export const UNFLAG_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const UNFLAG_PEOPLE_PLAQUE: Sign = {
+  id: "unflag-people",
+  title: "Unflag — people",
+  text: "A house of people. Unflag still opts out. Cult still hangs. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function unflagPeoplePoi(): Poi {
+  return {
+    id: "unflag-people",
+    name: "Unflag — people",
+    x: 720,
+    y: 520,
+    kind: "unflag-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3569,6 +3596,7 @@ export function emptyBeats(): Beats {
     stormPressPeople: false,
     fallenPeople: false,
     spoilsPeople: false,
+    unflagPeople: false,
   };
 }
 

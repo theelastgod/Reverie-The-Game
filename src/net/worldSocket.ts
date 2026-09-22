@@ -150,6 +150,7 @@ export type Snap = {
   stormPressPeopleHeld?: boolean;
   fallenPeopleHeld?: boolean;
   spoilsPeopleHeld?: boolean;
+  unflagPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

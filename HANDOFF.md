@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 164** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 165** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -696,7 +696,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After fallen graves as people, F at the Wet Grid: spoils as people. Plaque/POI **Spoils — people**. Unbanked still drops. Guests are not loot.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 164 (do this next)
+## Stage 164 (landed)
+- After spoils as people, F at the Wet Grid: unflag as people. Plaque/POI **Unflag — people**. Unflag still opts out. Cult still hangs.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 165 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

@@ -496,6 +496,12 @@ import {
   SPOILS_PEOPLE_HELD,
   SPOILS_PEOPLE_SPECTATOR,
   SPOILS_PEOPLE_PLAQUE,
+  UNFLAG_PEOPLE_COPY,
+  WINK_UNFLAG_PEOPLE,
+  UNFLAG_PEOPLE_NEED,
+  UNFLAG_PEOPLE_HELD,
+  UNFLAG_PEOPLE_SPECTATOR,
+  UNFLAG_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1085,6 +1091,7 @@ import {
   applyStormPressPeople,
   applyFallenPeople,
   applySpoilsPeople,
+  applyUnflagPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4693,6 +4700,44 @@ describe("Spoils — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applySpoilsPeople(gWorld, "g").players.get("g")?.heard).toBe(SPOILS_PEOPLE_SPECTATOR);
     expect(gWorld.spoilsPeopleHeld).toBe(false);
+  });
+});
+
+describe("Unflag — people", () => {
+  it("names unflag as people after spoils; unflag still opts out; guests cannot", () => {
+    const w = emptyWorld();
+    w.spoilsPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), spoilsPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(UNFLAG_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_UNFLAG_PEOPLE);
+    expect(p.beats.unflagPeople).toBe(true);
+    expect(named.unflagPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "unflag-people")?.name).toBe("Unflag — people");
+    expect(named.signs.find((s) => s.id === "unflag-people")?.title).toBe(UNFLAG_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Unflag still opts out");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyUnflagPeople(named, "a").players.get("a")?.heard).toBe(UNFLAG_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyUnflagPeople(early, "a").players.get("a")?.heard).toBe(UNFLAG_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.spoilsPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyUnflagPeople(gWorld, "g").players.get("g")?.heard).toBe(UNFLAG_PEOPLE_SPECTATOR);
+    expect(gWorld.unflagPeopleHeld).toBe(false);
   });
 });
 
