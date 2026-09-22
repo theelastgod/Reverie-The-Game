@@ -91,6 +91,14 @@ import {
   HIT_STOP_COPY,
   WINK_HIT_STOP,
   HIT_STOP_PLAQUE,
+  AURA_ADDRESS,
+  ADDRESSED_COPY,
+  WINK_ADDRESSED,
+  ADDRESSED_NEED,
+  ADDRESSED_WEATHER,
+  ADDRESSED_HELD,
+  ADDRESSED_SPECTATOR,
+  ADDRESSED_PLAQUE,
   DODGE_WHIFF,
   STORM_GEAR,
   STORM_SKIM,
@@ -595,6 +603,7 @@ import {
   applyRead,
   snapshot,
   applyStrike,
+  applyAddressed,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1341,6 +1350,62 @@ describe("Hit-stop", () => {
     expect(guestHit.hitStopHeld).toBe(true);
     expect(guestHit.players.get("g")?.heard).toBe(HIT_STOP_COPY);
     expect(guestCanClaim(guestHit.players.get("g")!)).toBe(false);
+  });
+});
+
+describe("High aura address", () => {
+  it("named weather plus high aura: the city addresses you; low aura and guests cannot", () => {
+    expect(AURA_ADDRESS).toBe(12);
+    const w = emptyWorld();
+    w.weatherNamed = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: 17,
+      x: 192,
+      y: 400,
+    });
+    const named = applyAddressed(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(ADDRESSED_COPY);
+    expect(p.wink).toBe(WINK_ADDRESSED);
+    expect(p.beats.addressed).toBe(true);
+    expect(named.addressedHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "addressed")?.id).toBe("addressed");
+    expect(named.signs.find((s) => s.id === "safety-plaque")?.title).toBe(ADDRESSED_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyAddressed(named, "a").players.get("a")?.heard).toBe(ADDRESSED_HELD);
+    expect(applyRead(w, "a", "safety-plaque").addressedHeld).toBe(true);
+
+    const thin = emptyWorld();
+    thin.weatherNamed = true;
+    thin.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      aura: 4,
+      x: 192,
+      y: 400,
+    });
+    expect(applyAddressed(thin, "a").players.get("a")?.heard).toBe(ADDRESSED_NEED);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      aura: 17,
+      x: 192,
+      y: 400,
+    });
+    expect(applyAddressed(early, "a").players.get("a")?.heard).toBe(ADDRESSED_WEATHER);
+
+    const gWorld = emptyWorld();
+    gWorld.weatherNamed = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 192, y: 400, locked: true, aura: 17 });
+    expect(applyAddressed(gWorld, "g").players.get("g")?.heard).toBe(ADDRESSED_SPECTATOR);
+    expect(gWorld.addressedHeld).toBe(false);
   });
 });
 

@@ -44,6 +44,7 @@ import {
   visibleFailed,
   visibleHistory,
   palindromeSerial,
+  AURA_ADDRESS,
   winkeVisible,
   type Sign,
 } from "../sim/campaign";
@@ -473,6 +474,8 @@ export class NaveScene extends Phaser.Scene {
                       ? 0x7eb6ff
                     : poi.kind === "hit-stop"
                       ? 0x7eb6ff
+                    : poi.kind === "addressed"
+                      ? 0xc9a56a
                     : poi.kind === "wink-seed"
                       ? 0xc9a56a
                     : poi.kind === "process-read"
@@ -1085,6 +1088,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.beats.yieldEmpty
         ? me.heard || "The yield is unmanned. The weather still has a name."
         : "F — name the unmanned yield. Both desks are empty. Not a fetch.";
+    } else if (sign?.id === "safety-plaque" && snap.addressedHeld) {
+      this.prompt = me.heard || "They address you. Presence, not a listing.";
+    } else if (sign?.id === "safety-plaque" && snap.weatherNamed && !me.guest && me.aura >= AURA_ADDRESS) {
+      this.prompt = "F — they can address you. High aura. Not a stick.";
     } else if (sign) {
       this.prompt = `F read ${sign.title}: ${sign.text}`;
     } else if (clerkNear?.id === "clerk-annex" && snap.frozen && !me.guest) {

@@ -113,6 +113,7 @@ export type Beats = {
   ordPerson: boolean;
   vesperPerson: boolean;
   hitStop: boolean;
+  addressed: boolean;
 };
 
 export type WeatherHeard = {
@@ -216,7 +217,8 @@ export type Poi = {
     | "quill-person"
     | "ord-person"
     | "vesper-person"
-    | "hit-stop";
+    | "hit-stop"
+    | "addressed";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1301,6 +1303,27 @@ export function hitStopPoi(x: number, y: number): Poi {
   return { id: "hit-stop", name: "Hit-stop", x, y, kind: "hit-stop" };
 }
 
+export const AURA_ADDRESS = 12;
+export const ADDRESSED_COPY =
+  "They address you. Presence, not a listing. You did not strike harder. This was not a fetch.";
+export const WINK_ADDRESSED = "High aura. They know you. Combat is not.";
+export const ADDRESSED_NEED = "Presence first. Low aura is efficient. Sacred content stays dark.";
+export const ADDRESSED_WEATHER = "Name the weather first. Then the city can address you.";
+export const ADDRESSED_HELD = "They already address you. Presence holds.";
+export const ADDRESSED_SPECTATOR = "A plaque. You are not addressed.";
+
+export const ADDRESSED_PLAQUE: Sign = {
+  id: "safety-plaque",
+  title: "Addressed",
+  text: "They know you. Presence, not a stick. The number does not strike.",
+  x: 192,
+  y: 400,
+};
+
+export function addressedPoi(): Poi {
+  return { id: "addressed", name: "Addressed", x: 192, y: 340, kind: "addressed" };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1697,6 +1720,7 @@ export function emptyBeats(): Beats {
     ordPerson: false,
     vesperPerson: false,
     hitStop: false,
+    addressed: false,
   };
 }
 

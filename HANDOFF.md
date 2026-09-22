@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 93** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 94** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -397,7 +397,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Hit-stop: a connecting strike holds the hit. Dodge does not. Plaque/POI Hit-stop. Guests can feel it. Not a bigger stick.
 - `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 93 (do this next)
+## Stage 93 (landed)
+- High aura: after named weather, F at Safety addresses you. Plaque/POI Addressed. Low aura stays dark. Not a stick.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 94 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

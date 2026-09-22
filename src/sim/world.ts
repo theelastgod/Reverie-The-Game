@@ -144,6 +144,15 @@ import {
   WINK_HIT_STOP,
   HIT_STOP_PLAQUE,
   hitStopPoi,
+  AURA_ADDRESS,
+  ADDRESSED_COPY,
+  WINK_ADDRESSED,
+  ADDRESSED_NEED,
+  ADDRESSED_WEATHER,
+  ADDRESSED_HELD,
+  ADDRESSED_SPECTATOR,
+  ADDRESSED_PLAQUE,
+  addressedPoi,
   STORM_GEAR,
   STORM_SKIM,
   STORM_PRESS,
@@ -788,6 +797,7 @@ export type WorldState = {
   quillPersonHeld: boolean;
   ordPersonHeld: boolean;
   hitStopHeld: boolean;
+  addressedHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1023,6 +1033,7 @@ export function emptyWorld(): WorldState {
     quillPersonHeld: false,
     ordPersonHeld: false,
     hitStopHeld: false,
+    addressedHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -1340,6 +1351,37 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
     ? stopSigns.map((s) => (s.id === "storm-progress" ? plaque : s))
     : [...stopSigns, plaque];
   return { ...w, players, wreckage, clerks, gestell, stormPressHeld: true, hitStopHeld: true, pois, signs };
+}
+
+export function applyAddressed(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, 192, 400, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: ADDRESSED_SPECTATOR, wink: visibleWink(true, WINK_ADDRESSED) });
+    return { ...w, players };
+  }
+  if (!w.weatherNamed) {
+    players.set(playerId, { ...p, heard: ADDRESSED_WEATHER });
+    return { ...w, players };
+  }
+  if (p.aura < AURA_ADDRESS) {
+    players.set(playerId, { ...p, heard: ADDRESSED_NEED });
+    return { ...w, players };
+  }
+  if (w.addressedHeld && p.beats.addressed) {
+    players.set(playerId, { ...p, heard: ADDRESSED_HELD, wink: visibleWink(false, WINK_ADDRESSED) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, addressed: true },
+    heard: ADDRESSED_COPY,
+    wink: visibleWink(false, WINK_ADDRESSED),
+  });
+  const pois = w.pois.some((poi) => poi.id === "addressed") ? w.pois : [...w.pois, addressedPoi()];
+  const signs = w.signs.map((s) => (s.id === "safety-plaque" ? { ...ADDRESSED_PLAQUE } : s));
+  return { ...w, players, addressedHeld: true, pois, signs };
 }
 
 export function applyNaraPerson(w: WorldState, playerId: string): WorldState {
@@ -1879,6 +1921,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === "safety-plaque" && (p.beats.clockOut || !w.clerks.some((c) => c.id === "clerk-desk-three")) && w.annexHome) {
     return applyYieldEmpty(w, playerId);
   }
+  if (sign.id === "safety-plaque" && w.weatherNamed) return applyAddressed(w, playerId);
   if (sign.id === IONE.id) return applyIoneMark(w, playerId);
   if (sign.id === GUEST_ARENA.id) return applyArena(w, playerId);
   if (sign.id === SCREENING.id) return applyScreening(w, playerId);
@@ -3464,6 +3507,7 @@ export function snapshot(w: WorldState) {
     quillPersonHeld: w.quillPersonHeld,
     ordPersonHeld: w.ordPersonHeld,
     hitStopHeld: w.hitStopHeld,
+    addressedHeld: w.addressedHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
