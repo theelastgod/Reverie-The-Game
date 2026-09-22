@@ -164,6 +164,7 @@ export type Beats = {
   repairPeople: boolean;
   listingPeople: boolean;
   marketPeople: boolean;
+  hangPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -316,6 +317,7 @@ export type Poi = {
     | "repair-people"
     | "listing-people"
     | "market-people"
+    | "hang-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2464,6 +2466,31 @@ export function marketPeoplePoi(): Poi {
     kind: "market-people",
   };
 }
+
+export const HANG_PEOPLE_COPY =
+  "The hang is a house of people, not a listing of process. Cult still hangs. The stall still goes dark. Combat is not. This was not a fetch.";
+export const WINK_HANG_PEOPLE = "People, not a sheet stick. The token does not strike.";
+export const HANG_PEOPLE_NEED = "The market as people first. A hang of people is not a fetch.";
+export const HANG_PEOPLE_HELD = "The hang already holds as people. Cult still hangs. The stall still goes dark.";
+export const HANG_PEOPLE_SPECTATOR = "A stall. You do not get a house of people.";
+
+export const HANG_PEOPLE_PLAQUE: Sign = {
+  id: "hang-people",
+  title: "Hang — people",
+  text: "A house of people. Cult still hangs. The stall still goes dark. The number does not strike.",
+  x: CLEARING_STALL.x,
+  y: CLEARING_STALL.y,
+};
+
+export function hangPeoplePoi(): Poi {
+  return {
+    id: "hang-people",
+    name: "Hang — people",
+    x: CLEARING_STALL.x,
+    y: CLEARING_STALL.y,
+    kind: "hang-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3090,6 +3117,7 @@ export function emptyBeats(): Beats {
     repairPeople: false,
     listingPeople: false,
     marketPeople: false,
+    hangPeople: false,
   };
 }
 

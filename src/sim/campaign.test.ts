@@ -391,6 +391,12 @@ import {
   MARKET_PEOPLE_HELD,
   MARKET_PEOPLE_SPECTATOR,
   MARKET_PEOPLE_PLAQUE,
+  HANG_PEOPLE_COPY,
+  WINK_HANG_PEOPLE,
+  HANG_PEOPLE_NEED,
+  HANG_PEOPLE_HELD,
+  HANG_PEOPLE_SPECTATOR,
+  HANG_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -963,6 +969,7 @@ import {
   applyRepairPeople,
   applyListingPeople,
   applyMarketPeople,
+  applyHangPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3871,6 +3878,50 @@ describe("Market — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
     expect(applyMarketPeople(gWorld, "g").players.get("g")?.heard).toBe(MARKET_PEOPLE_SPECTATOR);
     expect(gWorld.marketPeopleHeld).toBe(false);
+  });
+});
+
+describe("Hang — people", () => {
+  it("names the hang as people after the market; cult still hangs; guests cannot", () => {
+    const w = emptyWorld();
+    w.marketPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      cultWink: true,
+      beats: { ...emptyBeats(), marketPeople: true, hangAsk: true },
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    const named = applyHang(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HANG_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HANG_PEOPLE);
+    expect(p.beats.hangPeople).toBe(true);
+    expect(named.stallDark).toBe(false);
+    expect(named.hangPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "hang-people")?.name).toBe("Hang — people");
+    expect(named.signs.find((s) => s.id === "hang-people")?.title).toBe(HANG_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Cult still hangs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHangPeople(named, "a").players.get("a")?.heard).toBe(HANG_PEOPLE_HELD);
+
+    const hung = applyHang(named, "a");
+    expect(hung.stallDark).toBe(true);
+    expect(hung.players.get("a")?.beats.hang).toBe(true);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLEARING_STALL.x, y: CLEARING_STALL.y });
+    expect(applyHangPeople(early, "a").players.get("a")?.heard).toBe(HANG_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.marketPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
+    expect(applyHangPeople(gWorld, "g").players.get("g")?.heard).toBe(HANG_PEOPLE_SPECTATOR);
+    expect(gWorld.hangPeopleHeld).toBe(false);
   });
 });
 

@@ -488,6 +488,13 @@ import {
   MARKET_PEOPLE_SPECTATOR,
   MARKET_PEOPLE_PLAQUE,
   marketPeoplePoi,
+  HANG_PEOPLE_COPY,
+  WINK_HANG_PEOPLE,
+  HANG_PEOPLE_NEED,
+  HANG_PEOPLE_HELD,
+  HANG_PEOPLE_SPECTATOR,
+  HANG_PEOPLE_PLAQUE,
+  hangPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1209,6 +1216,7 @@ export type WorldState = {
   repairPeopleHeld: boolean;
   listingPeopleHeld: boolean;
   marketPeopleHeld: boolean;
+  hangPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1498,6 +1506,7 @@ export function emptyWorld(): WorldState {
     repairPeopleHeld: false,
     listingPeopleHeld: false,
     marketPeopleHeld: false,
+    hangPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2671,11 +2680,13 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (sign.id === "annex-people") return applyAnnexPeople(w, playerId);
     return applyFreeze(w, playerId);
   }
-  if (sign.id === CLEARING_STALL.id || sign.id === "repair-people" || sign.id === "market-people") {
+  if (sign.id === CLEARING_STALL.id || sign.id === "repair-people" || sign.id === "market-people" || sign.id === "hang-people") {
     if (w.freezePeopleHeld && !w.repairPeopleHeld) return applyRepairPeople(w, playerId);
     if (sign.id === "repair-people") return applyRepairPeople(w, playerId);
     if (w.listingPeopleHeld && !w.marketPeopleHeld) return applyMarketPeople(w, playerId);
     if (sign.id === "market-people") return applyMarketPeople(w, playerId);
+    if (w.marketPeopleHeld && !w.hangPeopleHeld) return applyHangPeople(w, playerId);
+    if (sign.id === "hang-people") return applyHangPeople(w, playerId);
     if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
     if (p.messenger === "iridescent" && !p.guest && !p.locked && !w.glamourHeld && !p.beats.glamour) {
       return applyGlamour(w, playerId);
@@ -4569,6 +4580,37 @@ export function applyMarketPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, marketPeopleHeld: true, pois, signs };
 }
 
+export function applyHangPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: HANG_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_HANG_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.marketPeopleHeld) {
+    players.set(playerId, { ...p, heard: HANG_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.hangPeopleHeld && p.beats.hangPeople) {
+    players.set(playerId, { ...p, heard: HANG_PEOPLE_HELD, wink: visibleWink(false, WINK_HANG_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, hangPeople: true },
+    heard: HANG_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_HANG_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "hang-people")
+    ? w.pois.map((poi) => (poi.id === "hang-people" ? hangPeoplePoi() : poi))
+    : [...w.pois, hangPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "hang-people")
+    ? w.signs.map((s) => (s.id === "hang-people" ? { ...HANG_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...HANG_PEOPLE_PLAQUE }];
+  return { ...w, players, hangPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -4652,6 +4694,7 @@ export function applyOrdLast(w: WorldState, playerId: string): WorldState {
 export function applyHang(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  if (w.marketPeopleHeld && !w.hangPeopleHeld) return applyHangPeople(w, playerId);
   const players = new Map(w.players);
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, heard: QUILL_HANG_SPECTATOR, wink: visibleWink(true, WINK_HANG) });
@@ -5774,6 +5817,7 @@ export function snapshot(w: WorldState) {
     repairPeopleHeld: w.repairPeopleHeld,
     listingPeopleHeld: w.listingPeopleHeld,
     marketPeopleHeld: w.marketPeopleHeld,
+    hangPeopleHeld: w.hangPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
