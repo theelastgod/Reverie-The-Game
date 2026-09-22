@@ -134,6 +134,7 @@ export type Beats = {
   organsPeople: boolean;
   vesperPeople: boolean;
   m3People: boolean;
+  screeningPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -256,6 +257,7 @@ export type Poi = {
     | "organs-people"
     | "vesper-people"
     | "m3-people"
+    | "screening-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1950,6 +1952,31 @@ export function m3PeoplePoi(): Poi {
   };
 }
 
+export const SCREENING_PEOPLE_COPY =
+  "The screening is a house of people, not a dispatch of process. Observer proximity still holds. Combat is not. This was not a fetch.";
+export const WINK_SCREENING_PEOPLE = "People, not a reel. The token does not strike.";
+export const SCREENING_PEOPLE_NEED = "M3 as people first. A screening of people is not a fetch.";
+export const SCREENING_PEOPLE_HELD = "The screening already holds as people. Dispatch still observer.";
+export const SCREENING_PEOPLE_SPECTATOR = "A screen. You do not get a house of people.";
+
+export const SCREENING_PEOPLE_PLAQUE: Sign = {
+  id: "screening-people",
+  title: "Dispatch — people",
+  text: "A house of people. Observer proximity. The number does not strike.",
+  x: SCREENING.x,
+  y: SCREENING.y,
+};
+
+export function screeningPeoplePoi(): Poi {
+  return {
+    id: "screening-people",
+    name: "Dispatch — people",
+    x: SCREENING.x,
+    y: SCREENING.y,
+    kind: "screening-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2239,6 +2266,7 @@ export function emptyBeats(): Beats {
     organsPeople: false,
     vesperPeople: false,
     m3People: false,
+    screeningPeople: false,
   };
 }
 

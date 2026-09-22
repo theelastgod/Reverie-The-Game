@@ -569,6 +569,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "m3-people"
                         ? 0xc9a56a
+                      : poi.kind === "screening-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -819,6 +821,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A still. Participant first. Optional.";
     } else if (screening && (me.guest || me.locked)) {
       this.prompt = "A screen. You do not get the dispatch.";
+    } else if (screening && (me.beats.screeningPeople || snap.screeningPeopleHeld)) {
+      this.prompt = me.heard || "Dispatch — people. Observer proximity. Not a stick.";
+    } else if (screening && snap.m3PeopleHeld && !me.guest) {
+      this.prompt = "F — the screening as a house of people. Dispatch still observer. Not a fetch.";
     } else if (screening && (me.beats.log || snap.logHeld)) {
       this.prompt = me.heard || "History log. Passings. Buried. Looted. Houses. Not a stick.";
     } else if (screening && (me.beats.founder || snap.founderHeld) && me.messenger === "ruin-angel") {

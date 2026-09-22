@@ -211,6 +211,12 @@ import {
   M3_PEOPLE_HELD,
   M3_PEOPLE_SPECTATOR,
   M3_PEOPLE_PLAQUE,
+  SCREENING_PEOPLE_COPY,
+  WINK_SCREENING_PEOPLE,
+  SCREENING_PEOPLE_NEED,
+  SCREENING_PEOPLE_HELD,
+  SCREENING_PEOPLE_SPECTATOR,
+  SCREENING_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -749,6 +755,7 @@ import {
   applyOrgansPeople,
   applyVesperPeople,
   applyM3People,
+  applyScreeningPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2395,6 +2402,44 @@ describe("M3 — people", () => {
     expect(applyM3(gWorld, "g").players.get("g")?.heard).toBe(M3_SPECTATOR);
     expect(applyM3People(gWorld, "g").players.get("g")?.heard).toBe(M3_PEOPLE_SPECTATOR);
     expect(gWorld.m3PeopleHeld).toBe(false);
+  });
+});
+
+describe("Dispatch — people", () => {
+  it("names the screening as people after M3; observer proximity still holds; guests cannot", () => {
+    const w = emptyWorld();
+    w.m3PeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), m3People: true },
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    const named = applyRead(w, "a", SCREENING.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SCREENING_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SCREENING_PEOPLE);
+    expect(p.beats.screeningPeople).toBe(true);
+    expect(named.screeningPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "screening-people")?.name).toBe("Dispatch — people");
+    expect(named.signs.find((s) => s.id === "screening-people")?.title).toBe(SCREENING_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Observer proximity");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyScreeningPeople(named, "a").players.get("a")?.heard).toBe(SCREENING_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SCREENING.x, y: SCREENING.y });
+    expect(applyScreeningPeople(early, "a").players.get("a")?.heard).toBe(SCREENING_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.m3PeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
+    expect(applyScreeningPeople(gWorld, "g").players.get("g")?.heard).toBe(SCREENING_PEOPLE_SPECTATOR);
+    expect(gWorld.screeningPeopleHeld).toBe(false);
   });
 });
 
