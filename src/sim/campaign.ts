@@ -147,6 +147,7 @@ export type Beats = {
   seasonPeople: boolean;
   bracketPeople: boolean;
   logPeople: boolean;
+  founderPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -282,6 +283,7 @@ export type Poi = {
     | "season-people"
     | "bracket-people"
     | "log-people"
+    | "founder-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1119,6 +1121,31 @@ export function logPeoplePoi(): Poi {
     x: SCREENING.x,
     y: SCREENING.y,
     kind: "log-people",
+  };
+}
+
+export const FOUNDER_PEOPLE_COPY =
+  "Founder is a house of people, not a room of process. Proximity still holds. Combat is not. This was not a fetch.";
+export const WINK_FOUNDER_PEOPLE = "People, not a founder stick. The token does not strike.";
+export const FOUNDER_PEOPLE_NEED = "The log as people first. A founder of people is not a fetch.";
+export const FOUNDER_PEOPLE_HELD = "Founder already holds as people. Proximity still holds.";
+export const FOUNDER_PEOPLE_SPECTATOR = "A darker screen. You do not get a house of people.";
+
+export const FOUNDER_PEOPLE_PLAQUE: Sign = {
+  id: "founder-people",
+  title: "Founder — people",
+  text: "A house of people. Proximity still holds. The number does not strike.",
+  x: SCREENING.x,
+  y: SCREENING.y,
+};
+
+export function founderPeoplePoi(): Poi {
+  return {
+    id: "founder-people",
+    name: "Founder — people",
+    x: SCREENING.x,
+    y: SCREENING.y,
+    kind: "founder-people",
   };
 }
 
@@ -2611,6 +2638,7 @@ export function emptyBeats(): Beats {
     seasonPeople: false,
     bracketPeople: false,
     logPeople: false,
+    founderPeople: false,
   };
 }
 

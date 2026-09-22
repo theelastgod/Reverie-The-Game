@@ -286,6 +286,12 @@ import {
   LOG_PEOPLE_HELD,
   LOG_PEOPLE_SPECTATOR,
   LOG_PEOPLE_PLAQUE,
+  FOUNDER_PEOPLE_COPY,
+  WINK_FOUNDER_PEOPLE,
+  FOUNDER_PEOPLE_NEED,
+  FOUNDER_PEOPLE_HELD,
+  FOUNDER_PEOPLE_SPECTATOR,
+  FOUNDER_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -841,6 +847,7 @@ import {
   applySeasonPeople,
   applyBracketPeople,
   applyLogPeople,
+  applyFounderPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2985,6 +2992,44 @@ describe("The log — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
     expect(applyLogPeople(gWorld, "g").players.get("g")?.heard).toBe(LOG_PEOPLE_SPECTATOR);
     expect(gWorld.logPeopleHeld).toBe(false);
+  });
+});
+
+describe("Founder — people", () => {
+  it("names Founder as people after the log; proximity still holds; guests cannot", () => {
+    const w = emptyWorld();
+    w.logPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), logPeople: true },
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    const named = applyFounderPeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FOUNDER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FOUNDER_PEOPLE);
+    expect(p.beats.founderPeople).toBe(true);
+    expect(named.founderPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "founder-people")?.name).toBe("Founder — people");
+    expect(named.signs.find((s) => s.id === "founder-people")?.title).toBe(FOUNDER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Proximity still holds");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFounderPeople(named, "a").players.get("a")?.heard).toBe(FOUNDER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SCREENING.x, y: SCREENING.y });
+    expect(applyFounderPeople(early, "a").players.get("a")?.heard).toBe(FOUNDER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.logPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
+    expect(applyFounderPeople(gWorld, "g").players.get("g")?.heard).toBe(FOUNDER_PEOPLE_SPECTATOR);
+    expect(gWorld.founderPeopleHeld).toBe(false);
   });
 });
 

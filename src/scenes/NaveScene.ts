@@ -96,6 +96,8 @@ export class NaveScene extends Phaser.Scene {
         if (!wall && inWetGrid(cx, cy)) key = "tile-wet";
         else if (!wall && cy < 168) key = "tile-organ";
         else if (!wall && nearPoint(cx, cy, CLEARING_RING.x, CLEARING_RING.y, 120)) key = "tile-clearing";
+        else if (!wall && nearPoint(cx, cy, CARE_DOOR.x, CARE_DOOR.y, 96)) key = "tile-care";
+        else if (!wall && nearPoint(cx, cy, SHRINE.x, SHRINE.y, 80)) key = "tile-shrine";
         this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
       }
     }
@@ -865,6 +867,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A still. Participant first. Optional.";
     } else if (screening && (me.guest || me.locked)) {
       this.prompt = "A screen. You do not get the dispatch.";
+    } else if (screening && (me.beats.founderPeople || snap.founderPeopleHeld)) {
+      this.prompt = me.heard || "Founder — people. Proximity still holds. Not a stick.";
+    } else if (screening && snap.logPeopleHeld && !me.guest) {
+      this.prompt = "F — Founder as a house of people. Proximity still holds. Not a fetch.";
     } else if (screening && (me.beats.logPeople || snap.logPeopleHeld)) {
       this.prompt = me.heard || "The log — people. Uniqueness still a log. Not a stick.";
     } else if (screening && snap.bracketPeopleHeld && !me.guest) {
