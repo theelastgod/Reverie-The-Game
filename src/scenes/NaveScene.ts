@@ -656,6 +656,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "bestand-people"
                         ? 0xc9a56a
+                      : poi.kind === "cult-people"
+                        ? 0xc9a56a
+                      : poi.kind === "copy-people"
+                        ? 0xc9a56a
+                      : poi.kind === "banked-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1104,6 +1110,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.bankedPeople || snap.bankedPeopleHeld)) {
+      this.prompt = me.heard || "Banked — people. Banked still does not drop. TAKE stays disarmed. Not a stick.";
+    } else if (wet && snap.copyPeopleHeld && !me.guest) {
+      this.prompt = "F — banked as a house of people. Banked still does not drop. TAKE stays disarmed. Not a fetch.";
+    } else if (wet && (me.beats.copyPeople || snap.copyPeopleHeld)) {
+      this.prompt = me.heard || "Copy — people. Copies still decay. Listing still costs. Cult does not list. Not a stick.";
+    } else if (wet && snap.cultPeopleHeld && !me.guest) {
+      this.prompt = "F — copies as a house of people. Copies still decay. Listing still costs. Not a fetch.";
+    } else if (wet && (me.beats.cultPeople || snap.cultPeopleHeld)) {
+      this.prompt = me.heard || "Cult — people. Cult still does not drop. Cult does not list. Not a stick.";
+    } else if (wet && snap.bestandPeopleHeld && !me.guest) {
+      this.prompt = "F — cult as a house of people. Cult still does not drop. Cult does not list. Not a fetch.";
     } else if (wet && (me.beats.bestandPeople || snap.bestandPeopleHeld)) {
       this.prompt = me.heard || "Bestand — people. Bestand still spends. The token never buys combat. TAKE stays disarmed. Not a stick.";
     } else if (wet && snap.winkPeopleHeld && !me.guest) {

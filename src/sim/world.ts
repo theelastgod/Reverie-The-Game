@@ -742,6 +742,27 @@ import {
   BESTAND_PEOPLE_SPECTATOR,
   BESTAND_PEOPLE_PLAQUE,
   bestandPeoplePoi,
+  CULT_PEOPLE_COPY,
+  WINK_CULT_PEOPLE,
+  CULT_PEOPLE_NEED,
+  CULT_PEOPLE_HELD,
+  CULT_PEOPLE_SPECTATOR,
+  CULT_PEOPLE_PLAQUE,
+  cultPeoplePoi,
+  COPY_PEOPLE_COPY,
+  WINK_COPY_PEOPLE,
+  COPY_PEOPLE_NEED,
+  COPY_PEOPLE_HELD,
+  COPY_PEOPLE_SPECTATOR,
+  COPY_PEOPLE_PLAQUE,
+  copyPeoplePoi,
+  BANKED_PEOPLE_COPY,
+  WINK_BANKED_PEOPLE,
+  BANKED_PEOPLE_NEED,
+  BANKED_PEOPLE_HELD,
+  BANKED_PEOPLE_SPECTATOR,
+  BANKED_PEOPLE_PLAQUE,
+  bankedPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1508,6 +1529,9 @@ export type WorldState = {
   presencePeopleHeld: boolean;
   winkPeopleHeld: boolean;
   bestandPeopleHeld: boolean;
+  cultPeopleHeld: boolean;
+  copyPeopleHeld: boolean;
+  bankedPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1834,6 +1858,9 @@ export function emptyWorld(): WorldState {
     presencePeopleHeld: false,
     winkPeopleHeld: false,
     bestandPeopleHeld: false,
+    cultPeopleHeld: false,
+    copyPeopleHeld: false,
+    bankedPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3058,7 +3085,13 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people" || sign.id === "aura-people" || sign.id === "presence-people" || sign.id === "wink-people" || sign.id === "bestand-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people" || sign.id === "aura-people" || sign.id === "presence-people" || sign.id === "wink-people" || sign.id === "bestand-people" || sign.id === "cult-people" || sign.id === "copy-people" || sign.id === "banked-people") {
+    if (w.copyPeopleHeld && !w.bankedPeopleHeld) return applyBankedPeople(w, playerId);
+    if (sign.id === "banked-people") return applyBankedPeople(w, playerId);
+    if (w.cultPeopleHeld && !w.copyPeopleHeld) return applyCopyPeople(w, playerId);
+    if (sign.id === "copy-people") return applyCopyPeople(w, playerId);
+    if (w.bestandPeopleHeld && !w.cultPeopleHeld) return applyCultPeople(w, playerId);
+    if (sign.id === "cult-people") return applyCultPeople(w, playerId);
     if (w.winkPeopleHeld && !w.bestandPeopleHeld) return applyBestandPeople(w, playerId);
     if (sign.id === "bestand-people") return applyBestandPeople(w, playerId);
     if (w.presencePeopleHeld && !w.winkPeopleHeld) return applyWinkPeople(w, playerId);
@@ -6140,6 +6173,99 @@ export function applyBestandPeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, bestandPeopleHeld: true, pois, signs };
 }
 
+export function applyCultPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CULT_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_CULT_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.bestandPeopleHeld) {
+    players.set(playerId, { ...p, heard: CULT_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.cultPeopleHeld && p.beats.cultPeople) {
+    players.set(playerId, { ...p, heard: CULT_PEOPLE_HELD, wink: visibleWink(false, WINK_CULT_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, cultPeople: true },
+    heard: CULT_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_CULT_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "cult-people")
+    ? w.pois.map((poi) => (poi.id === "cult-people" ? cultPeoplePoi() : poi))
+    : [...w.pois, cultPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "cult-people")
+    ? w.signs.map((s) => (s.id === "cult-people" ? { ...CULT_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...CULT_PEOPLE_PLAQUE }];
+  return { ...w, players, cultPeopleHeld: true, pois, signs };
+}
+
+export function applyCopyPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: COPY_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_COPY_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.cultPeopleHeld) {
+    players.set(playerId, { ...p, heard: COPY_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.copyPeopleHeld && p.beats.copyPeople) {
+    players.set(playerId, { ...p, heard: COPY_PEOPLE_HELD, wink: visibleWink(false, WINK_COPY_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, copyPeople: true },
+    heard: COPY_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_COPY_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "copy-people")
+    ? w.pois.map((poi) => (poi.id === "copy-people" ? copyPeoplePoi() : poi))
+    : [...w.pois, copyPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "copy-people")
+    ? w.signs.map((s) => (s.id === "copy-people" ? { ...COPY_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...COPY_PEOPLE_PLAQUE }];
+  return { ...w, players, copyPeopleHeld: true, pois, signs };
+}
+
+export function applyBankedPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: BANKED_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_BANKED_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.copyPeopleHeld) {
+    players.set(playerId, { ...p, heard: BANKED_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.bankedPeopleHeld && p.beats.bankedPeople) {
+    players.set(playerId, { ...p, heard: BANKED_PEOPLE_HELD, wink: visibleWink(false, WINK_BANKED_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, bankedPeople: true },
+    heard: BANKED_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_BANKED_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "banked-people")
+    ? w.pois.map((poi) => (poi.id === "banked-people" ? bankedPeoplePoi() : poi))
+    : [...w.pois, bankedPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "banked-people")
+    ? w.signs.map((s) => (s.id === "banked-people" ? { ...BANKED_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...BANKED_PEOPLE_PLAQUE }];
+  return { ...w, players, bankedPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -7383,6 +7509,9 @@ export function snapshot(w: WorldState) {
     presencePeopleHeld: w.presencePeopleHeld,
     winkPeopleHeld: w.winkPeopleHeld,
     bestandPeopleHeld: w.bestandPeopleHeld,
+    cultPeopleHeld: w.cultPeopleHeld,
+    copyPeopleHeld: w.copyPeopleHeld,
+    bankedPeopleHeld: w.bankedPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

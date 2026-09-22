@@ -170,6 +170,9 @@ export type Snap = {
   presencePeopleHeld?: boolean;
   winkPeopleHeld?: boolean;
   bestandPeopleHeld?: boolean;
+  cultPeopleHeld?: boolean;
+  copyPeopleHeld?: boolean;
+  bankedPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

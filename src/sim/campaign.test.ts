@@ -616,6 +616,24 @@ import {
   BESTAND_PEOPLE_HELD,
   BESTAND_PEOPLE_SPECTATOR,
   BESTAND_PEOPLE_PLAQUE,
+  CULT_PEOPLE_COPY,
+  WINK_CULT_PEOPLE,
+  CULT_PEOPLE_NEED,
+  CULT_PEOPLE_HELD,
+  CULT_PEOPLE_SPECTATOR,
+  CULT_PEOPLE_PLAQUE,
+  COPY_PEOPLE_COPY,
+  WINK_COPY_PEOPLE,
+  COPY_PEOPLE_NEED,
+  COPY_PEOPLE_HELD,
+  COPY_PEOPLE_SPECTATOR,
+  COPY_PEOPLE_PLAQUE,
+  BANKED_PEOPLE_COPY,
+  WINK_BANKED_PEOPLE,
+  BANKED_PEOPLE_NEED,
+  BANKED_PEOPLE_HELD,
+  BANKED_PEOPLE_SPECTATOR,
+  BANKED_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1226,6 +1244,9 @@ import {
   applyPresencePeople,
   applyWinkPeople,
   applyBestandPeople,
+  applyCultPeople,
+  applyCopyPeople,
+  applyBankedPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5620,6 +5641,126 @@ describe("Bestand — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyBestandPeople(gWorld, "g").players.get("g")?.heard).toBe(BESTAND_PEOPLE_SPECTATOR);
     expect(gWorld.bestandPeopleHeld).toBe(false);
+  });
+});
+
+describe("Cult — people", () => {
+  it("names cult as people after Bestand; cult does not drop or list; guests cannot", () => {
+    const w = emptyWorld();
+    w.bestandPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), bestandPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CULT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CULT_PEOPLE);
+    expect(p.beats.cultPeople).toBe(true);
+    expect(named.cultPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "cult-people")?.name).toBe("Cult — people");
+    expect(named.signs.find((s) => s.id === "cult-people")?.title).toBe(CULT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Cult still does not drop");
+    expect(p.heard).toContain("Cult does not list");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCultPeople(named, "a").players.get("a")?.heard).toBe(CULT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyCultPeople(early, "a").players.get("a")?.heard).toBe(CULT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.bestandPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyCultPeople(gWorld, "g").players.get("g")?.heard).toBe(CULT_PEOPLE_SPECTATOR);
+    expect(gWorld.cultPeopleHeld).toBe(false);
+  });
+});
+
+describe("Copy — people", () => {
+  it("names copies as people after cult; copies still decay; listing still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.cultPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), cultPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(COPY_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_COPY_PEOPLE);
+    expect(p.beats.copyPeople).toBe(true);
+    expect(named.copyPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "copy-people")?.name).toBe("Copy — people");
+    expect(named.signs.find((s) => s.id === "copy-people")?.title).toBe(COPY_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Copies still decay");
+    expect(p.heard).toContain("Listing still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCopyPeople(named, "a").players.get("a")?.heard).toBe(COPY_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyCopyPeople(early, "a").players.get("a")?.heard).toBe(COPY_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.cultPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyCopyPeople(gWorld, "g").players.get("g")?.heard).toBe(COPY_PEOPLE_SPECTATOR);
+    expect(gWorld.copyPeopleHeld).toBe(false);
+  });
+});
+
+describe("Banked — people", () => {
+  it("names banked as people after copies; banked still does not drop; TAKE stays disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.copyPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), copyPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BANKED_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BANKED_PEOPLE);
+    expect(p.beats.bankedPeople).toBe(true);
+    expect(named.bankedPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "banked-people")?.name).toBe("Banked — people");
+    expect(named.signs.find((s) => s.id === "banked-people")?.title).toBe(BANKED_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Banked still does not drop");
+    expect(p.heard).toContain("TAKE stays disarmed");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBankedPeople(named, "a").players.get("a")?.heard).toBe(BANKED_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyBankedPeople(early, "a").players.get("a")?.heard).toBe(BANKED_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.copyPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyBankedPeople(gWorld, "g").players.get("g")?.heard).toBe(BANKED_PEOPLE_SPECTATOR);
+    expect(gWorld.bankedPeopleHeld).toBe(false);
   });
 });
 

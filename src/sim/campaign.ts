@@ -201,6 +201,9 @@ export type Beats = {
   presencePeople: boolean;
   winkPeople: boolean;
   bestandPeople: boolean;
+  cultPeople: boolean;
+  copyPeople: boolean;
+  bankedPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -390,6 +393,9 @@ export type Poi = {
     | "presence-people"
     | "wink-people"
     | "bestand-people"
+    | "cult-people"
+    | "copy-people"
+    | "banked-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3441,6 +3447,81 @@ export function bestandPeoplePoi(): Poi {
   };
 }
 
+export const CULT_PEOPLE_COPY =
+  "Cult is a house of people, not a listing of process. Cult still does not drop. Cult does not list. Combat is not. This was not a fetch.";
+export const WINK_CULT_PEOPLE = "People, not a cult stick. The token does not strike.";
+export const CULT_PEOPLE_NEED = "Bestand as people first. Cult of people is not a fetch.";
+export const CULT_PEOPLE_HELD = "Cult already holds as people. Cult still does not drop. Cult does not list.";
+export const CULT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const CULT_PEOPLE_PLAQUE: Sign = {
+  id: "cult-people",
+  title: "Cult — people",
+  text: "A house of people. Cult still does not drop. Cult does not list. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function cultPeoplePoi(): Poi {
+  return {
+    id: "cult-people",
+    name: "Cult — people",
+    x: 720,
+    y: 520,
+    kind: "cult-people",
+  };
+}
+
+export const COPY_PEOPLE_COPY =
+  "Copies are a house of people, not a faucet of process. Copies still decay. Listing still costs. Cult does not list. Combat is not. This was not a fetch.";
+export const WINK_COPY_PEOPLE = "People, not a copy stick. The token does not strike.";
+export const COPY_PEOPLE_NEED = "Cult as people first. Copies of people are not a fetch.";
+export const COPY_PEOPLE_HELD = "Copies already hold as people. Copies still decay. Listing still costs.";
+export const COPY_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const COPY_PEOPLE_PLAQUE: Sign = {
+  id: "copy-people",
+  title: "Copy — people",
+  text: "A house of people. Copies still decay. Listing still costs. Cult does not list. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function copyPeoplePoi(): Poi {
+  return {
+    id: "copy-people",
+    name: "Copy — people",
+    x: 720,
+    y: 520,
+    kind: "copy-people",
+  };
+}
+
+export const BANKED_PEOPLE_COPY =
+  "Banked is a house of people, not a drop of process. Banked still does not drop. TAKE stays disarmed. Combat is not. This was not a fetch.";
+export const WINK_BANKED_PEOPLE = "People, not a banked stick. The token does not strike.";
+export const BANKED_PEOPLE_NEED = "Copies as people first. Banked of people is not a fetch.";
+export const BANKED_PEOPLE_HELD = "Banked already holds as people. Banked still does not drop. TAKE stays disarmed.";
+export const BANKED_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const BANKED_PEOPLE_PLAQUE: Sign = {
+  id: "banked-people",
+  title: "Banked — people",
+  text: "A house of people. Banked still does not drop. TAKE stays disarmed. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function bankedPeoplePoi(): Poi {
+  return {
+    id: "banked-people",
+    name: "Banked — people",
+    x: 720,
+    y: 520,
+    kind: "banked-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4129,6 +4210,9 @@ export function emptyBeats(): Beats {
     presencePeople: false,
     winkPeople: false,
     bestandPeople: false,
+    cultPeople: false,
+    copyPeople: false,
+    bankedPeople: false,
   };
 }
 
