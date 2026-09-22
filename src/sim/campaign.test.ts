@@ -562,6 +562,12 @@ import {
   NUMBER_PEOPLE_HELD,
   NUMBER_PEOPLE_SPECTATOR,
   NUMBER_PEOPLE_PLAQUE,
+  SKILL_PEOPLE_COPY,
+  WINK_SKILL_PEOPLE,
+  SKILL_PEOPLE_NEED,
+  SKILL_PEOPLE_HELD,
+  SKILL_PEOPLE_SPECTATOR,
+  SKILL_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1163,6 +1169,7 @@ import {
   applySerialPeople,
   applyBandPeople,
   applyNumberPeople,
+  applySkillPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5198,6 +5205,46 @@ describe("Number — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyNumberPeople(gWorld, "g").players.get("g")?.heard).toBe(NUMBER_PEOPLE_SPECTATOR);
     expect(gWorld.numberPeopleHeld).toBe(false);
+  });
+});
+
+describe("Skill — people", () => {
+  it("names skill as people after the number; skill still wins; traits do not buy the fight; guests cannot", () => {
+    const w = emptyWorld();
+    w.numberPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), numberPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SKILL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SKILL_PEOPLE);
+    expect(p.beats.skillPeople).toBe(true);
+    expect(named.skillPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "skill-people")?.name).toBe("Skill — people");
+    expect(named.signs.find((s) => s.id === "skill-people")?.title).toBe(SKILL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Skill still wins");
+    expect(p.heard).toContain("Traits do not buy the fight");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySkillPeople(named, "a").players.get("a")?.heard).toBe(SKILL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySkillPeople(early, "a").players.get("a")?.heard).toBe(SKILL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.numberPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySkillPeople(gWorld, "g").players.get("g")?.heard).toBe(SKILL_PEOPLE_SPECTATOR);
+    expect(gWorld.skillPeopleHeld).toBe(false);
   });
 });
 

@@ -638,6 +638,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "number-people"
                         ? 0xc9a56a
+                      : poi.kind === "skill-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1086,6 +1088,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.skillPeople || snap.skillPeopleHeld)) {
+      this.prompt = me.heard || "Skill — people. Skill still wins. Traits do not buy the fight. Not a stick.";
+    } else if (wet && snap.numberPeopleHeld && !me.guest) {
+      this.prompt = "F — skill as a house of people. Skill still wins. Traits do not buy the fight. Not a fetch.";
     } else if (wet && (me.beats.numberPeople || snap.numberPeopleHeld)) {
       this.prompt = me.heard || "Number — people. Same skill, different serials: same number. Not a stick.";
     } else if (wet && snap.bandPeopleHeld && !me.guest) {

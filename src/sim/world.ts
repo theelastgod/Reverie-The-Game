@@ -679,6 +679,13 @@ import {
   NUMBER_PEOPLE_SPECTATOR,
   NUMBER_PEOPLE_PLAQUE,
   numberPeoplePoi,
+  SKILL_PEOPLE_COPY,
+  WINK_SKILL_PEOPLE,
+  SKILL_PEOPLE_NEED,
+  SKILL_PEOPLE_HELD,
+  SKILL_PEOPLE_SPECTATOR,
+  SKILL_PEOPLE_PLAQUE,
+  skillPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1436,6 +1443,7 @@ export type WorldState = {
   serialPeopleHeld: boolean;
   bandPeopleHeld: boolean;
   numberPeopleHeld: boolean;
+  skillPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1753,6 +1761,7 @@ export function emptyWorld(): WorldState {
     serialPeopleHeld: false,
     bandPeopleHeld: false,
     numberPeopleHeld: false,
+    skillPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2977,7 +2986,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people") {
+    if (w.numberPeopleHeld && !w.skillPeopleHeld) return applySkillPeople(w, playerId);
+    if (sign.id === "skill-people") return applySkillPeople(w, playerId);
     if (w.bandPeopleHeld && !w.numberPeopleHeld) return applyNumberPeople(w, playerId);
     if (sign.id === "number-people") return applyNumberPeople(w, playerId);
     if (w.serialPeopleHeld && !w.bandPeopleHeld) return applyBandPeople(w, playerId);
@@ -5762,6 +5773,37 @@ export function applyNumberPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, numberPeopleHeld: true, pois, signs };
 }
 
+export function applySkillPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: SKILL_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_SKILL_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.numberPeopleHeld) {
+    players.set(playerId, { ...p, heard: SKILL_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.skillPeopleHeld && p.beats.skillPeople) {
+    players.set(playerId, { ...p, heard: SKILL_PEOPLE_HELD, wink: visibleWink(false, WINK_SKILL_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, skillPeople: true },
+    heard: SKILL_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_SKILL_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "skill-people")
+    ? w.pois.map((poi) => (poi.id === "skill-people" ? skillPeoplePoi() : poi))
+    : [...w.pois, skillPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "skill-people")
+    ? w.signs.map((s) => (s.id === "skill-people" ? { ...SKILL_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...SKILL_PEOPLE_PLAQUE }];
+  return { ...w, players, skillPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6996,6 +7038,7 @@ export function snapshot(w: WorldState) {
     serialPeopleHeld: w.serialPeopleHeld,
     bandPeopleHeld: w.bandPeopleHeld,
     numberPeopleHeld: w.numberPeopleHeld,
+    skillPeopleHeld: w.skillPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

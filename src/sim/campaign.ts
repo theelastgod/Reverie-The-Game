@@ -192,6 +192,7 @@ export type Beats = {
   serialPeople: boolean;
   bandPeople: boolean;
   numberPeople: boolean;
+  skillPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -372,6 +373,7 @@ export type Poi = {
     | "serial-people"
     | "band-people"
     | "number-people"
+    | "skill-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3198,6 +3200,31 @@ export function numberPeoplePoi(): Poi {
   };
 }
 
+export const SKILL_PEOPLE_COPY =
+  "Skill is a house of people, not a trait of process. Skill still wins. Traits do not buy the fight. Combat is not. This was not a fetch.";
+export const WINK_SKILL_PEOPLE = "People, not a skill stick. The token does not strike.";
+export const SKILL_PEOPLE_NEED = "The number as people first. Skill of people is not a fetch.";
+export const SKILL_PEOPLE_HELD = "Skill already holds as people. Skill still wins. Traits do not buy the fight.";
+export const SKILL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SKILL_PEOPLE_PLAQUE: Sign = {
+  id: "skill-people",
+  title: "Skill — people",
+  text: "A house of people. Skill still wins. Traits do not buy the fight. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function skillPeoplePoi(): Poi {
+  return {
+    id: "skill-people",
+    name: "Skill — people",
+    x: 720,
+    y: 520,
+    kind: "skill-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3877,6 +3904,7 @@ export function emptyBeats(): Beats {
     serialPeople: false,
     bandPeople: false,
     numberPeople: false,
+    skillPeople: false,
   };
 }
 
