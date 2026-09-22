@@ -346,6 +346,12 @@ export const INSURANCE_USED =
   "The paper spent itself. You woke at the shrine. Not a bigger strike.";
 export const INSURANCE_SPECTATOR = "Paper for a walk back. Guests do not buy the road.";
 export const WINK_SINK = "Every earner has a hole. Bestand goes into the ground. The token does not strike.";
+export const REPAIR_COST = 7;
+export const REPAIR_COPY =
+  "You paid Quill. Seven Bestand. The print holds again. Cult objects were never cracked.";
+export const REPAIR_NEED = "Seven Bestand to repair a print. Cult does not crack.";
+export const REPAIR_NONE = "Nothing cracked. Exhibition decays; cult does not.";
+export const REPAIR_SPECTATOR = "Quill is mending paper. Guests do not repair.";
 
 export const SHRINE = { id: "shrine-upkeep", x: 640, y: 200 };
 

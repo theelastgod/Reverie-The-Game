@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 30** — Repair sink (Bestand, exhibition kit, never cult). No mint.
+**Next stage: 31** — Authored side quest that changes a POI (not a fetch). No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -144,8 +144,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Winning House omen tax-cut arms only after hall tithe (6 Bestand). Unpaid omen is flavor, not a skim.
 - Wrong House, guests, and empty wars refuse. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 30 (do this next)
-Repair sink: Bestand repairs exhibition kit after wreckage. Cult objects do not repair. No mint. No Base.
+## Stage 30 (landed)
+- Death cracks remaining exhibition prints (`damaged`). Cult stays whole.
+- Quill Q repairs one print for 7 Bestand. Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 31 (do this next)
+Named side quest that changes a POI, NPC schedule, cult object, or House standing. Fetch-only is forbidden. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

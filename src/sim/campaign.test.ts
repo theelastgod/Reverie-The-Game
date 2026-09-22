@@ -163,6 +163,11 @@ import {
   INSURANCE_USED,
   INSURANCE_SPECTATOR,
   WINK_SINK,
+  REPAIR_COST,
+  REPAIR_COPY,
+  REPAIR_NEED,
+  REPAIR_NONE,
+  REPAIR_SPECTATOR,
   SHRINE,
 } from "./campaign";
 import {
@@ -179,6 +184,7 @@ import {
   applyShrine,
   applyRestore,
   applyInsure,
+  applyRepair,
   applyLastWord,
   applyClearing,
   applyPassing,
@@ -1162,7 +1168,8 @@ describe("Wet Grid flagged PvP", () => {
     expect(a.heard).toBe(SPOILS_COPY);
     expect(b.banked).toBe(80);
     expect(b.cultWink).toBe(true);
-    expect(b.fakeWinke).toBe(1);
+    expect(b.fakeWinke).toBe(0);
+    expect(b.damaged).toBe(1);
     expect(b.bestand).toBe(70);
     expect(damageFor(a)).toBe(damageFor(spawnGuest("g")));
     expect(guestCanClaim(a)).toBe(false);
@@ -1491,6 +1498,61 @@ describe("Bestand sinks", () => {
     expect(raw.hp).toBe(100);
     expect(raw.aura).toBe(4);
     expect(raw.heard).not.toBe(INSURANCE_USED);
+  });
+
+  it("death cracks remaining prints; Quill repairs them for Bestand, never cult", () => {
+    const fight = emptyWorld();
+    fight.players.set("k", { ...spawnGuest("k"), guest: false, x: 200, y: 480 });
+    fight.players.set("v", {
+      ...spawnGuest("v"),
+      guest: false,
+      x: 220,
+      y: 480,
+      hp: 20,
+      fakeWinke: 2,
+      cultWink: true,
+      bestand: 30,
+    });
+    const dead = applyStrike(fight, "k");
+    const v = dead.players.get("v")!;
+    expect(v.fakeWinke).toBe(0);
+    expect(v.damaged).toBe(2);
+    expect(v.cultWink).toBe(true);
+
+    const stall = emptyWorld();
+    stall.players.set("a", {
+      ...v,
+      id: "a",
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+      bestand: 4,
+    });
+    const poor = applyRepair(stall, "a");
+    expect(poor.players.get("a")?.heard).toBe(REPAIR_NEED);
+    expect(poor.players.get("a")?.damaged).toBe(2);
+
+    stall.players.set("a", { ...stall.players.get("a")!, bestand: 20 });
+    const paid = applyRepair(stall, "a");
+    const p = paid.players.get("a")!;
+    expect(p.bestand).toBe(20 - REPAIR_COST);
+    expect(p.damaged).toBe(1);
+    expect(p.fakeWinke).toBe(1);
+    expect(p.cultWink).toBe(true);
+    expect(p.heard).toBe(REPAIR_COPY);
+    expect(REPAIR_COST).toBe(7);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const none = applyRepair({ ...paid, players: new Map([["a", { ...p, damaged: 0, fakeWinke: 1, bestand: 20 }]]) }, "a");
+    expect(none.players.get("a")?.heard).toBe(REPAIR_NONE);
+    expect(none.players.get("a")?.bestand).toBe(20);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, damaged: 2, bestand: 20 });
+    const g = applyRepair(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(REPAIR_SPECTATOR);
+    expect(g.players.get("g")?.damaged).toBe(2);
+    expect(g.players.get("g")?.bestand).toBe(20);
   });
 });
 

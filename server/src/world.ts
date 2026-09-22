@@ -2,6 +2,7 @@ export {
   applyBury,
   applyGoingUnder,
   applyInsure,
+  applyRepair,
   applyLink,
   applyRead,
   applyRestore,

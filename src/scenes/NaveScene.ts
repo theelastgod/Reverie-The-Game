@@ -30,6 +30,7 @@ import {
   AURA_DIM,
   RESTORE_COST,
   INSURANCE_COST,
+  REPAIR_COST,
   inWetGrid,
   IONE,
   movementReady,
@@ -195,6 +196,10 @@ export class NaveScene extends Phaser.Scene {
     if (nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56)) {
       if (choice === "extract") this.net.restore();
       else this.net.insure();
+      return;
+    }
+    if (nearPoint(me.x, me.y, CLEARING_STALL.x, CLEARING_STALL.y, 56) && choice === "keep") {
+      this.net.repair();
       return;
     }
     if (nearPoint(me.x, me.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) {
@@ -562,7 +567,9 @@ export class NaveScene extends Phaser.Scene {
     } else if (stall && (me.guest || me.locked)) {
       this.prompt = "A stall of lights. You cannot afford a sky you cannot see.";
     } else if (stall && me.beats.market) {
-      this.prompt = `F — buy the copy. ${CLEARING_PRICE} Bestand. The Clearing stays closed.`;
+      this.prompt = me.damaged
+        ? `F buy a copy (${CLEARING_PRICE}). Q repair a cracked print (${REPAIR_COST}). Cult does not crack.`
+        : `F — buy the copy. ${CLEARING_PRICE} Bestand. The Clearing stays closed.`;
     } else if (stall && me.beats.hall) {
       this.prompt = "F — Quill listed a Clearing. It looks like freedom.";
     } else if (stall) {
@@ -689,7 +696,7 @@ export class NaveScene extends Phaser.Scene {
           : snap.clearingOpen
             ? " · Clearing held"
             : omenBit;
-      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}`;
+      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;

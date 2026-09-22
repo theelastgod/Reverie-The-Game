@@ -140,6 +140,11 @@ import {
   INSURANCE_USED,
   INSURANCE_SPECTATOR,
   WINK_SINK,
+  REPAIR_COST,
+  REPAIR_COPY,
+  REPAIR_NEED,
+  REPAIR_NONE,
+  REPAIR_SPECTATOR,
   Claim,
   FLAG_COPY,
   FLAG_SPECTATOR,
@@ -251,6 +256,7 @@ export type Player = {
   insured: boolean;
   lastCareX: number;
   lastCareY: number;
+  damaged: number;
 };
 
 export type WorldState = {
@@ -313,6 +319,7 @@ export function spawnGuest(id: string): Player {
     insured: false,
     lastCareX: 0,
     lastCareY: 0,
+    damaged: 0,
   };
 }
 
@@ -337,7 +344,6 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     inM3: p.inM3,
     current: p.current,
     cultWink: p.cultWink,
-    fakeWinke: p.fakeWinke,
     house: p.house,
     messenger: p.messenger,
     flagged: p.flagged,
@@ -349,6 +355,8 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     lastCareX: p.lastCareX,
     lastCareY: p.lastCareY,
     insured: false,
+    damaged: p.damaged + p.fakeWinke,
+    fakeWinke: 0,
     x,
     y,
     ...patch,
@@ -846,6 +854,34 @@ export function applyInsure(w: WorldState, playerId: string): WorldState {
     bestand: p.bestand - INSURANCE_COST,
     insured: true,
     heard: INSURANCE_COPY,
+    wink: visibleWink(false, WINK_SINK),
+  });
+  return { ...w, players };
+}
+
+export function applyRepair(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: REPAIR_SPECTATOR, wink: visibleWink(true, WINK_SINK) });
+    return { ...w, players };
+  }
+  if (p.damaged <= 0) {
+    players.set(playerId, { ...p, heard: REPAIR_NONE });
+    return { ...w, players };
+  }
+  if (p.bestand < REPAIR_COST) {
+    players.set(playerId, { ...p, heard: REPAIR_NEED });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    bestand: p.bestand - REPAIR_COST,
+    damaged: p.damaged - 1,
+    fakeWinke: p.fakeWinke + 1,
+    exhibitT: 0,
+    heard: REPAIR_COPY,
     wink: visibleWink(false, WINK_SINK),
   });
   return { ...w, players };

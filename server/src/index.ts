@@ -9,6 +9,7 @@ import {
   applyDesk,
   applyRestore,
   applyInsure,
+  applyRepair,
   applyClearing,
   applyAnnounce,
   applyOperator,
@@ -135,6 +136,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "insure") {
       this.w = applyInsure(this.w, id);
+      this.broadcast();
+    } else if (data.t === "repair") {
+      this.w = applyRepair(this.w, id);
       this.broadcast();
     }
   }

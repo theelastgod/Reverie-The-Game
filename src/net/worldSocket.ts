@@ -106,6 +106,10 @@ export class WorldSocket {
     this.send({ t: "insure" });
   }
 
+  repair() {
+    this.send({ t: "repair" });
+  }
+
   operator(choice: "hear" | "take" | "refuse") {
     this.send({ t: "operator", choice });
   }
