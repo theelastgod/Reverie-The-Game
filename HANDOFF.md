@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 47** — Named side quest. Keep writing until 24 authored hours. No mint.
+**Next stage: 48** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -213,7 +213,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the Strait is buried, a Divinities Angel F at the canal: House of Divinities standing +1. Plaque/POI The Strait — Divinities standing. A Wink, not a stick.
 - Other Houses, live canal, and guests refuse. `damageFor` unchanged. Claims stay disarmed. Fourfold standing is complete.
 
-## Stage 47 (do this next)
+## Stage 47 (landed)
+- After Ione Kade's last word, her place becomes a POI/plaque: Ione Kade — gone. F stands in the hole. Absence is a standing. Not a fetch.
+- Guests cannot mark it. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 48 (do this next)
 Named side quest. Fetch-only forbidden. No mint. No Base.
 
 ## Rules

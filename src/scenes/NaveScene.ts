@@ -447,6 +447,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0xc9a56a
                       : poi.kind === "yield-empty"
                         ? 0x5a5a5a
+                      : poi.kind === "ione-gone"
+                        ? 0x7a1028
                       : poi.kind === "desk-empty"
                         ? 0x5a5a5a
                       : poi.kind === "sexton-mark"
@@ -607,6 +609,7 @@ export class NaveScene extends Phaser.Scene {
     const wreckNear = snap.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 72));
     const funeralNear = snap.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 56));
     const shrine = nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56);
+    const ioneGoneNear = !!(snap.ioneGone && nearPoint(me.x, me.y, IONE.x, IONE.y, 56));
 
     if (deskClaim && (me.guest || me.locked)) {
       this.prompt = "A period on a ledger. Guests cannot claim.";
@@ -679,6 +682,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `Q keep the eye (cult). E sell a copy (+${FORGE_PAY - LISTING_FEE} after listing fee). Cult does not list.`;
     } else if (forge && me.beats.market) {
       this.prompt = "F — Quill will teach the difference, or sell you the print.";
+    } else if (ioneGoneNear && (me.guest || me.locked)) {
+      this.prompt = "An empty place. You do not get a last word.";
+    } else if (ioneGoneNear && me.beats.ioneMark) {
+      this.prompt = me.heard || "The hole holds. Ione Kade is gone.";
+    } else if (ioneGoneNear) {
+      this.prompt = "F — stand in the hole Ione left. Absence is a standing. Not a fetch.";
     } else if (ring && (me.guest || me.locked)) {
       this.prompt = "A ring in the asphalt. You cannot prepare the ground.";
     } else if (ring && snap.war?.winner) {

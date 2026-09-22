@@ -113,6 +113,11 @@ import {
   IONE_SPECTATOR,
   LAST_WORD,
   LAST_WORD_GONE,
+  IONE_MARK,
+  IONE_MARK_LATER,
+  IONE_MARK_SPECTATOR,
+  WINK_ABSENCE,
+  IONE_GONE_PLAQUE,
   WINK_TURN,
   PASSING_APPEAR,
   PASSING_ABSENCE,
@@ -294,6 +299,7 @@ import {
   applyInsure,
   applyRepair,
   applyLastWord,
+  applyIoneMark,
   applyClearing,
   applyPassing,
   applyAnnounce,
@@ -1152,7 +1158,15 @@ describe("Movement IV Clearing and Passing", () => {
     expect(p.wink).toBe(WINK_TURN);
     expect(after.ioneGone).toBe(true);
     expect(snapshot(after).npcs.find((n) => n.id === "ione")).toBeUndefined();
+    expect(after.pois.find((poi) => poi.id === IONE.id)?.kind).toBe("ione-gone");
+    expect(after.signs.find((s) => s.id === IONE.id)?.title).toBe(IONE_GONE_PLAQUE.title);
     expect(applyLastWord(after, "a").players.get("a")?.heard).toBe(LAST_WORD_GONE);
+    const marked = applyRead(after, "a", IONE.id);
+    expect(marked.players.get("a")?.heard).toBe(IONE_MARK);
+    expect(marked.players.get("a")?.wink).toBe(WINK_ABSENCE);
+    expect(marked.players.get("a")?.beats.ioneMark).toBe(true);
+    expect(applyIoneMark(marked, "a").players.get("a")?.heard).toBe(IONE_MARK_LATER);
+    expect(damageFor(marked.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
     expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
     expect(guestCanClaim(p)).toBe(false);
 
@@ -1163,6 +1177,8 @@ describe("Movement IV Clearing and Passing", () => {
     expect(guest.players.get("g")?.heard).toBe(IONE_SPECTATOR);
     expect(guest.players.get("g")?.wink).toBe("");
     expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
+    gWorld.ioneGone = true;
+    expect(applyIoneMark(gWorld, "g").players.get("g")?.heard).toBe(IONE_MARK_SPECTATOR);
   });
 
   it("Clearing needs garden and last word; keeping does not mint", () => {

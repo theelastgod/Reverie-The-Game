@@ -72,6 +72,7 @@ export type Beats = {
   skyStanding: boolean;
   earthStanding: boolean;
   divStanding: boolean;
+  ioneMark: boolean;
 };
 
 export type WeatherHeard = {
@@ -132,7 +133,8 @@ export type Poi = {
     | "stall-dark"
     | "house-standing"
     | "desk-empty"
-    | "yield-empty";
+    | "yield-empty"
+    | "ione-gone";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1011,6 +1013,7 @@ export function emptyBeats(): Beats {
     skyStanding: false,
     earthStanding: false,
     divStanding: false,
+    ioneMark: false,
   };
 }
 
@@ -1346,6 +1349,23 @@ export const LAST_WORD_GONE = "Ione Kade is not here. That was the last word.";
 export const IONE_SPECTATOR = "Someone is leaving. You do not get a last word.";
 export const WINK_TURN =
   "The hour does not arrive as a body. It is a trace, or it is not. You cannot buy it.";
+export const IONE_MARK =
+  "You stood in the hole she left. Absence is a standing. The body does not return. This was not a fetch.";
+export const WINK_ABSENCE = "A last word left a place. You did not fill it with yield. Combat is not.";
+export const IONE_MARK_LATER = "The hole holds. Ione Kade is not a story. She is gone.";
+export const IONE_MARK_SPECTATOR = "An empty place. You do not get a last word.";
+
+export const IONE_GONE_PLAQUE: Sign = {
+  id: IONE.id,
+  title: "Ione Kade — gone",
+  text: "Absence is a standing. Do not make a story of it. Do not extract it.",
+  x: IONE.x,
+  y: IONE.y,
+};
+
+export function ioneGonePoi(): Poi {
+  return { id: IONE.id, name: "Ione Kade — gone", x: IONE.x, y: IONE.y, kind: "ione-gone" };
+}
 
 export const CLEARING_PREPARE =
   "You keep the hole. The party still willing stands in it. The Passing is not yet the weather.";

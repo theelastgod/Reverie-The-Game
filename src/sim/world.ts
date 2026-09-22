@@ -213,6 +213,12 @@ import {
   CONTEST_PAY,
   IONE,
   IONE_SPECTATOR,
+  IONE_MARK,
+  IONE_MARK_LATER,
+  IONE_MARK_SPECTATOR,
+  WINK_ABSENCE,
+  IONE_GONE_PLAQUE,
+  ioneGonePoi,
   LAST_WORD,
   LAST_WORD_GONE,
   WINK_TURN,
@@ -1050,6 +1056,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === "safety-plaque" && (p.beats.clockOut || !w.clerks.some((c) => c.id === "clerk-desk-three")) && w.annexHome) {
     return applyYieldEmpty(w, playerId);
   }
+  if (sign.id === IONE.id) return applyIoneMark(w, playerId);
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) {
     if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
@@ -2294,7 +2301,32 @@ export function applyLastWord(w: WorldState, playerId: string): WorldState {
     wink: visibleWink(false, WINK_TURN),
     readiness: p.readiness + (p.beats.lastWord ? 0 : 1),
   });
-  return { ...w, players, ioneGone: true };
+  const pois = w.pois.some((poi) => poi.id === IONE.id) ? w.pois : [...w.pois, ioneGonePoi()];
+  const signs = w.signs.some((s) => s.id === IONE.id) ? w.signs : [...w.signs, { ...IONE_GONE_PLAQUE }];
+  return { ...w, players, ioneGone: true, pois, signs };
+}
+
+export function applyIoneMark(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, IONE.x, IONE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: IONE_MARK_SPECTATOR, wink: visibleWink(true, WINK_ABSENCE) });
+    return { ...w, players };
+  }
+  if (!w.ioneGone) return w;
+  if (p.beats.ioneMark) {
+    players.set(playerId, { ...p, heard: IONE_MARK_LATER, wink: visibleWink(false, WINK_ABSENCE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, ioneMark: true },
+    heard: IONE_MARK,
+    wink: visibleWink(false, WINK_ABSENCE),
+    readiness: p.readiness + 1,
+  });
+  return { ...w, players };
 }
 
 export function applyClearing(
