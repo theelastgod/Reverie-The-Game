@@ -162,6 +162,7 @@ export type Beats = {
   tithePeople: boolean;
   freezePeople: boolean;
   repairPeople: boolean;
+  listingPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -312,6 +313,7 @@ export type Poi = {
     | "tithe-people"
     | "freeze-people"
     | "repair-people"
+    | "listing-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2410,6 +2412,31 @@ export function repairPeoplePoi(): Poi {
     kind: "repair-people",
   };
 }
+
+export const LISTING_PEOPLE_COPY =
+  "Listing is a house of people, not a tray of process. The fee still sits. Combat is not. This was not a fetch.";
+export const WINK_LISTING_PEOPLE = "People, not a listing stick. The token does not strike.";
+export const LISTING_PEOPLE_NEED = "Repair as people first. A listing of people is not a fetch.";
+export const LISTING_PEOPLE_HELD = "Listing already holds as people. The fee still sits.";
+export const LISTING_PEOPLE_SPECTATOR = "A tray. You do not get a house of people.";
+
+export const LISTING_PEOPLE_PLAQUE: Sign = {
+  id: "listing-people",
+  title: "Listing — people",
+  text: "A house of people. The fee still sits. The number does not strike.",
+  x: FORGE_TRAY.x,
+  y: FORGE_TRAY.y,
+};
+
+export function listingPeoplePoi(): Poi {
+  return {
+    id: "listing-people",
+    name: "Listing — people",
+    x: FORGE_TRAY.x,
+    y: FORGE_TRAY.y,
+    kind: "listing-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3034,6 +3061,7 @@ export function emptyBeats(): Beats {
     tithePeople: false,
     freezePeople: false,
     repairPeople: false,
+    listingPeople: false,
   };
 }
 

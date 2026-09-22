@@ -105,6 +105,7 @@ export class NaveScene extends Phaser.Scene {
         else if (!wall && nearPoint(cx, cy, CLEARING_STALL.x, CLEARING_STALL.y, 80)) key = "tile-stall";
         else if (!wall && nearPoint(cx, cy, FORGE_TRAY.x, FORGE_TRAY.y, 80)) key = "tile-forge";
         else if (!wall && nearPoint(cx, cy, M3_DOOR.x, M3_DOOR.y, 80)) key = "tile-m3";
+        else if (!wall && nearPoint(cx, cy, OPERATOR_DESK.x, OPERATOR_DESK.y, 80)) key = "tile-operator";
         else if (!wall && nearPoint(cx, cy, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 80)) key = "tile-annex";
         else if (!wall && nearPoint(cx, cy, SCREENING.x, SCREENING.y, 80)) key = "tile-screening";
         this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
@@ -1069,6 +1070,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Quill is selling something. You do not yet have the eyes for the price.";
     } else if (forge && (me.guest || me.locked)) {
       this.prompt = "Quill is doing something with paper. You cannot tell which sheet is the prayer.";
+    } else if (forge && (me.beats.listingPeople || snap.listingPeopleHeld)) {
+      this.prompt = me.heard || "Listing — people. The fee still sits. Not a stick.";
+    } else if (forge && snap.repairPeopleHeld && !me.guest) {
+      this.prompt = "F — listing as a house of people. The fee still sits. Not a fetch.";
     } else if (npcNear?.id === "quill" && (me.beats.quillNoPrint || snap.quillNoPrint)) {
       this.prompt = me.heard || "Quill will not print the last god. Copies stop here.";
     } else if (npcNear?.id === "quill" && (snap.lastGodNamed || me.beats.lastGod) && me.beats.market && !me.guest) {

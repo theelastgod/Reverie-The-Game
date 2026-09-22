@@ -379,6 +379,12 @@ import {
   REPAIR_PEOPLE_HELD,
   REPAIR_PEOPLE_SPECTATOR,
   REPAIR_PEOPLE_PLAQUE,
+  LISTING_PEOPLE_COPY,
+  WINK_LISTING_PEOPLE,
+  LISTING_PEOPLE_NEED,
+  LISTING_PEOPLE_HELD,
+  LISTING_PEOPLE_SPECTATOR,
+  LISTING_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -949,6 +955,7 @@ import {
   applyTithePeople,
   applyFreezePeople,
   applyRepairPeople,
+  applyListingPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3775,6 +3782,44 @@ describe("Repair — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
     expect(applyRepairPeople(gWorld, "g").players.get("g")?.heard).toBe(REPAIR_PEOPLE_SPECTATOR);
     expect(gWorld.repairPeopleHeld).toBe(false);
+  });
+});
+
+describe("Listing — people", () => {
+  it("names listing as people after repair; the fee still sits; guests cannot", () => {
+    const w = emptyWorld();
+    w.repairPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), repairPeople: true },
+      x: FORGE_TRAY.x,
+      y: FORGE_TRAY.y,
+    });
+    const named = applyListingPeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(LISTING_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_LISTING_PEOPLE);
+    expect(p.beats.listingPeople).toBe(true);
+    expect(named.listingPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "listing-people")?.name).toBe("Listing — people");
+    expect(named.signs.find((s) => s.id === "listing-people")?.title).toBe(LISTING_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("fee still sits");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyListingPeople(named, "a").players.get("a")?.heard).toBe(LISTING_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: FORGE_TRAY.x, y: FORGE_TRAY.y });
+    expect(applyListingPeople(early, "a").players.get("a")?.heard).toBe(LISTING_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.repairPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: FORGE_TRAY.x, y: FORGE_TRAY.y, locked: true });
+    expect(applyListingPeople(gWorld, "g").players.get("g")?.heard).toBe(LISTING_PEOPLE_SPECTATOR);
+    expect(gWorld.listingPeopleHeld).toBe(false);
   });
 });
 

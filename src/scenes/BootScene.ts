@@ -75,6 +75,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("tile-stall", asset("tiles/stall.jpg"));
     this.load.image("tile-forge", asset("tiles/forge.jpg"));
     this.load.image("tile-m3", asset("tiles/m3.jpg"));
+    this.load.image("tile-operator", asset("tiles/operator.jpg"));
     this.load.image("tile-annex", asset("tiles/annex.jpg"));
     this.load.image("tile-screening", asset("tiles/screening.jpg"));
     this.load.image("prop-crt", asset("tiles/crt.jpg"));
