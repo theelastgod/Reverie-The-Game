@@ -135,6 +135,7 @@ export type Beats = {
   vesperPeople: boolean;
   m3People: boolean;
   screeningPeople: boolean;
+  annexPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -258,6 +259,7 @@ export type Poi = {
     | "vesper-people"
     | "m3-people"
     | "screening-people"
+    | "annex-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1977,6 +1979,31 @@ export function screeningPeoplePoi(): Poi {
   };
 }
 
+export const ANNEX_PEOPLE_COPY =
+  "The Annex is a house of people, not a freeze of process. The freeze still costs. Combat is not. This was not a fetch.";
+export const WINK_ANNEX_PEOPLE = "People, not katechon. The token does not strike.";
+export const ANNEX_PEOPLE_NEED = "The screening as people first. An annex of people is not a fetch.";
+export const ANNEX_PEOPLE_HELD = "The Annex already holds as people. The freeze still costs.";
+export const ANNEX_PEOPLE_SPECTATOR = "A desk. You do not get a house of people.";
+
+export const ANNEX_PEOPLE_PLAQUE: Sign = {
+  id: "annex-people",
+  title: "Annex — people",
+  text: "A house of people. The freeze still costs. The number does not strike.",
+  x: SAFETY_ANNEX.x,
+  y: SAFETY_ANNEX.y,
+};
+
+export function annexPeoplePoi(): Poi {
+  return {
+    id: "annex-people",
+    name: "Annex — people",
+    x: SAFETY_ANNEX.x,
+    y: SAFETY_ANNEX.y,
+    kind: "annex-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2267,6 +2294,7 @@ export function emptyBeats(): Beats {
     vesperPeople: false,
     m3People: false,
     screeningPeople: false,
+    annexPeople: false,
   };
 }
 

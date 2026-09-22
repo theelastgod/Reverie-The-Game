@@ -284,6 +284,13 @@ import {
   SCREENING_PEOPLE_SPECTATOR,
   SCREENING_PEOPLE_PLAQUE,
   screeningPeoplePoi,
+  ANNEX_PEOPLE_COPY,
+  WINK_ANNEX_PEOPLE,
+  ANNEX_PEOPLE_NEED,
+  ANNEX_PEOPLE_HELD,
+  ANNEX_PEOPLE_SPECTATOR,
+  ANNEX_PEOPLE_PLAQUE,
+  annexPeoplePoi,
   WINK_VESPER_PEOPLE,
   VESPER_PEOPLE_NEED,
   VESPER_PEOPLE_HELD,
@@ -973,6 +980,7 @@ export type WorldState = {
   vesperPeopleHeld: boolean;
   m3PeopleHeld: boolean;
   screeningPeopleHeld: boolean;
+  annexPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1233,6 +1241,7 @@ export function emptyWorld(): WorldState {
     vesperPeopleHeld: false,
     m3PeopleHeld: false,
     screeningPeopleHeld: false,
+    annexPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2368,7 +2377,11 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return applyScreening(w, playerId);
   }
   if (sign.id === STILL.id) return applyStill(w, playerId);
-  if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
+  if (sign.id === SAFETY_ANNEX.id || sign.id === "annex-people") {
+    if (w.screeningPeopleHeld && !w.annexPeopleHeld) return applyAnnexPeople(w, playerId);
+    if (sign.id === "annex-people") return applyAnnexPeople(w, playerId);
+    return applyFreeze(w, playerId);
+  }
   if (sign.id === CLEARING_STALL.id) {
     if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
     if (p.messenger === "iridescent" && !p.guest && !p.locked && !w.glamourHeld && !p.beats.glamour) {
@@ -3302,6 +3315,37 @@ export function applyScreeningPeople(w: WorldState, playerId: string): WorldStat
     ? w.signs.map((s) => (s.id === "screening-people" ? { ...SCREENING_PEOPLE_PLAQUE } : s))
     : [...w.signs, { ...SCREENING_PEOPLE_PLAQUE }];
   return { ...w, players, screeningPeopleHeld: true, pois, signs };
+}
+
+export function applyAnnexPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: ANNEX_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_ANNEX_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.screeningPeopleHeld) {
+    players.set(playerId, { ...p, heard: ANNEX_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.annexPeopleHeld && p.beats.annexPeople) {
+    players.set(playerId, { ...p, heard: ANNEX_PEOPLE_HELD, wink: visibleWink(false, WINK_ANNEX_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, annexPeople: true },
+    heard: ANNEX_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_ANNEX_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "annex-people")
+    ? w.pois.map((poi) => (poi.id === "annex-people" ? annexPeoplePoi() : poi))
+    : [...w.pois, annexPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "annex-people")
+    ? w.signs.map((s) => (s.id === "annex-people" ? { ...ANNEX_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...ANNEX_PEOPLE_PLAQUE }];
+  return { ...w, players, annexPeopleHeld: true, pois, signs };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -4478,6 +4522,7 @@ export function snapshot(w: WorldState) {
     vesperPeopleHeld: w.vesperPeopleHeld,
     m3PeopleHeld: w.m3PeopleHeld,
     screeningPeopleHeld: w.screeningPeopleHeld,
+    annexPeopleHeld: w.annexPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

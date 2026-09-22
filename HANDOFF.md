@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 115** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 116** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -486,7 +486,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After M3 as people, F at the public screening: a house of people, not a dispatch of process. Plaque/POI Dispatch — people. Observer proximity still holds.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 115 (do this next)
+## Stage 115 (landed)
+- After Dispatch as people, F at the Safety Annex: a house of people, not a freeze of process. Plaque/POI Annex — people. Freeze still costs.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 116 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

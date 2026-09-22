@@ -217,6 +217,12 @@ import {
   SCREENING_PEOPLE_HELD,
   SCREENING_PEOPLE_SPECTATOR,
   SCREENING_PEOPLE_PLAQUE,
+  ANNEX_PEOPLE_COPY,
+  WINK_ANNEX_PEOPLE,
+  ANNEX_PEOPLE_NEED,
+  ANNEX_PEOPLE_HELD,
+  ANNEX_PEOPLE_SPECTATOR,
+  ANNEX_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -756,6 +762,7 @@ import {
   applyVesperPeople,
   applyM3People,
   applyScreeningPeople,
+  applyAnnexPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2440,6 +2447,44 @@ describe("Dispatch — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
     expect(applyScreeningPeople(gWorld, "g").players.get("g")?.heard).toBe(SCREENING_PEOPLE_SPECTATOR);
     expect(gWorld.screeningPeopleHeld).toBe(false);
+  });
+});
+
+describe("Annex — people", () => {
+  it("names the Annex as people after the screening; freeze still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.screeningPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), screeningPeople: true },
+      x: SAFETY_ANNEX.x,
+      y: SAFETY_ANNEX.y,
+    });
+    const named = applyRead(w, "a", SAFETY_ANNEX.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(ANNEX_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_ANNEX_PEOPLE);
+    expect(p.beats.annexPeople).toBe(true);
+    expect(named.annexPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "annex-people")?.name).toBe("Annex — people");
+    expect(named.signs.find((s) => s.id === "annex-people")?.title).toBe(ANNEX_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("freeze still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyAnnexPeople(named, "a").players.get("a")?.heard).toBe(ANNEX_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SAFETY_ANNEX.x, y: SAFETY_ANNEX.y });
+    expect(applyAnnexPeople(early, "a").players.get("a")?.heard).toBe(ANNEX_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.screeningPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SAFETY_ANNEX.x, y: SAFETY_ANNEX.y, locked: true });
+    expect(applyAnnexPeople(gWorld, "g").players.get("g")?.heard).toBe(ANNEX_PEOPLE_SPECTATOR);
+    expect(gWorld.annexPeopleHeld).toBe(false);
   });
 });
 

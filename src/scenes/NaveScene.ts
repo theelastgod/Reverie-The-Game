@@ -571,6 +571,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "screening-people"
                         ? 0xc9a56a
+                      : poi.kind === "annex-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -913,6 +915,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "You see a hall. You do not see who owns the nodes.";
     } else if (annex && (me.guest || me.locked)) {
       this.prompt = "A desk. Paper. You are not the one who signs.";
+    } else if (annex && (me.beats.annexPeople || snap.annexPeopleHeld)) {
+      this.prompt = me.heard || "Annex — people. The freeze still costs. Not a stick.";
+    } else if (annex && snap.screeningPeopleHeld && !me.guest) {
+      this.prompt = "F — the Annex as a house of people. The freeze still costs. Not a fetch.";
     } else if (annex && (snap.annexHome || me.beats.annexHome)) {
       this.prompt = me.heard || "The runner is in. The freeze holds. No more paper on the street.";
     } else if (annex && snap.frozen) {
