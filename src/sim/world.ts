@@ -352,6 +352,13 @@ import {
   SEASON_PEOPLE_SPECTATOR,
   SEASON_PEOPLE_PLAQUE,
   seasonPeoplePoi,
+  BRACKET_PEOPLE_COPY,
+  WINK_BRACKET_PEOPLE,
+  BRACKET_PEOPLE_NEED,
+  BRACKET_PEOPLE_HELD,
+  BRACKET_PEOPLE_SPECTATOR,
+  BRACKET_PEOPLE_PLAQUE,
+  bracketPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1054,6 +1061,7 @@ export type WorldState = {
   creditsPeopleHeld: boolean;
   stillPeopleHeld: boolean;
   seasonPeopleHeld: boolean;
+  bracketPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1324,6 +1332,7 @@ export function emptyWorld(): WorldState {
     creditsPeopleHeld: false,
     stillPeopleHeld: false,
     seasonPeopleHeld: false,
+    bracketPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2490,10 +2499,12 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
   if (sign.id === "season-people") return applySeasonPeople(w, playerId);
+  if (sign.id === "bracket-people") return applyBracketPeople(w, playerId);
   if (sign.id === WET_GRID.id) {
     if (p.beats.unflagAsk && !p.beats.unflag && !p.guest && !p.locked) return applyUnflag(w, playerId);
     if (w.clearingPeopleHeld && !w.wetPeopleHeld) return applyWetPeople(w, playerId);
     if (w.stillPeopleHeld && !w.seasonPeopleHeld) return applySeasonPeople(w, playerId);
+    if (w.seasonPeopleHeld && !w.bracketPeopleHeld) return applyBracketPeople(w, playerId);
     if (w.creditsHeld && !w.seasonHeld && !w.wetCult && !p.guest && !p.locked) return applySeason(w, playerId);
     if (w.seasonHeld && !w.bracketHeld && !w.wetCult && !p.guest && !p.locked) return applyBracket(w, playerId);
     return applyFlag(w, playerId);
@@ -3726,6 +3737,37 @@ export function applySeasonPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, seasonPeopleHeld: true, pois, signs };
 }
 
+export function applyBracketPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: BRACKET_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_BRACKET_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.seasonPeopleHeld) {
+    players.set(playerId, { ...p, heard: BRACKET_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.bracketPeopleHeld && p.beats.bracketPeople) {
+    players.set(playerId, { ...p, heard: BRACKET_PEOPLE_HELD, wink: visibleWink(false, WINK_BRACKET_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, bracketPeople: true },
+    heard: BRACKET_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_BRACKET_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "bracket-people")
+    ? w.pois.map((poi) => (poi.id === "bracket-people" ? bracketPeoplePoi() : poi))
+    : [...w.pois, bracketPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "bracket-people")
+    ? w.signs.map((s) => (s.id === "bracket-people" ? { ...BRACKET_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...BRACKET_PEOPLE_PLAQUE }];
+  return { ...w, players, bracketPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -4910,6 +4952,7 @@ export function snapshot(w: WorldState) {
     creditsPeopleHeld: w.creditsPeopleHeld,
     stillPeopleHeld: w.stillPeopleHeld,
     seasonPeopleHeld: w.seasonPeopleHeld,
+    bracketPeopleHeld: w.bracketPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -145,6 +145,7 @@ export type Beats = {
   creditsPeople: boolean;
   stillPeople: boolean;
   seasonPeople: boolean;
+  bracketPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -278,6 +279,7 @@ export type Poi = {
     | "credits-people"
     | "still-people"
     | "season-people"
+    | "bracket-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1065,6 +1067,31 @@ export function seasonPeoplePoi(): Poi {
     x: 720,
     y: 520,
     kind: "season-people",
+  };
+}
+
+export const BRACKET_PEOPLE_COPY =
+  "The bracket is a house of people, not an equalizer of process. Serials stay visible. Combat is not. This was not a fetch.";
+export const WINK_BRACKET_PEOPLE = "People, not a hidden serial. The token does not strike.";
+export const BRACKET_PEOPLE_NEED = "The season as people first. A bracket of people is not a fetch.";
+export const BRACKET_PEOPLE_HELD = "The bracket already holds as people. Serials stay visible.";
+export const BRACKET_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const BRACKET_PEOPLE_PLAQUE: Sign = {
+  id: "bracket-people",
+  title: "The bracket — people",
+  text: "A house of people. Serials stay visible. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function bracketPeoplePoi(): Poi {
+  return {
+    id: "bracket-people",
+    name: "The bracket — people",
+    x: 720,
+    y: 520,
+    kind: "bracket-people",
   };
 }
 
@@ -2555,6 +2582,7 @@ export function emptyBeats(): Beats {
     creditsPeople: false,
     stillPeople: false,
     seasonPeople: false,
+    bracketPeople: false,
   };
 }
 

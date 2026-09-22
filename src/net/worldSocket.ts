@@ -114,6 +114,7 @@ export type Snap = {
   creditsPeopleHeld?: boolean;
   stillPeopleHeld?: boolean;
   seasonPeopleHeld?: boolean;
+  bracketPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

@@ -274,6 +274,12 @@ import {
   SEASON_PEOPLE_HELD,
   SEASON_PEOPLE_SPECTATOR,
   SEASON_PEOPLE_PLAQUE,
+  BRACKET_PEOPLE_COPY,
+  WINK_BRACKET_PEOPLE,
+  BRACKET_PEOPLE_NEED,
+  BRACKET_PEOPLE_HELD,
+  BRACKET_PEOPLE_SPECTATOR,
+  BRACKET_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -827,6 +833,7 @@ import {
   applyCreditsPeople,
   applyStillPeople,
   applySeasonPeople,
+  applyBracketPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2895,6 +2902,44 @@ describe("The season — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applySeasonPeople(gWorld, "g").players.get("g")?.heard).toBe(SEASON_PEOPLE_SPECTATOR);
     expect(gWorld.seasonPeopleHeld).toBe(false);
+  });
+});
+
+describe("The bracket — people", () => {
+  it("names the bracket as people after the season; serials stay visible; guests cannot", () => {
+    const w = emptyWorld();
+    w.seasonPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), seasonPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BRACKET_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BRACKET_PEOPLE);
+    expect(p.beats.bracketPeople).toBe(true);
+    expect(named.bracketPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "bracket-people")?.name).toBe("The bracket — people");
+    expect(named.signs.find((s) => s.id === "bracket-people")?.title).toBe(BRACKET_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Serials stay visible");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBracketPeople(named, "a").players.get("a")?.heard).toBe(BRACKET_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyBracketPeople(early, "a").players.get("a")?.heard).toBe(BRACKET_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.seasonPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyBracketPeople(gWorld, "g").players.get("g")?.heard).toBe(BRACKET_PEOPLE_SPECTATOR);
+    expect(gWorld.bracketPeopleHeld).toBe(false);
   });
 });
 

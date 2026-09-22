@@ -596,6 +596,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "season-people"
                         ? 0xc9a56a
+                      : poi.kind === "bracket-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -902,6 +904,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.bracketPeople || snap.bracketPeopleHeld)) {
+      this.prompt = me.heard || "The bracket — people. Serials stay visible. Not a stick.";
+    } else if (wet && snap.seasonPeopleHeld && !me.guest) {
+      this.prompt = "F — the bracket as a house of people. Serials stay visible. Not a fetch.";
     } else if (wet && (me.beats.seasonPeople || snap.seasonPeopleHeld)) {
       this.prompt = me.heard || "The season — people. Flag still opts in. Not a stick.";
     } else if (wet && snap.stillPeopleHeld && !me.guest) {
