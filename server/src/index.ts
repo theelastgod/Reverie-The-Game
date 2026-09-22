@@ -15,6 +15,7 @@ import {
   applyAnnounce,
   applyBlitz,
   applyCyber,
+  applyDwell,
   applyOperator,
   applyRead,
   applyStrike,
@@ -136,6 +137,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "cyber" && data.nodeId) {
       this.w = applyCyber(this.w, id, data.nodeId);
+      this.broadcast();
+    } else if (data.t === "dwell" && data.nodeId) {
+      this.w = applyDwell(this.w, id, data.nodeId);
       this.broadcast();
     } else if (data.t === "desk") {
       this.w = applyDesk(this.w, id, data.choice === "take" ? "take" : data.choice === "bank" ? "bank" : "file");

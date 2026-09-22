@@ -300,6 +300,10 @@ export class NaveScene extends Phaser.Scene {
       this.net.announce(kept.id);
       return;
     }
+    if (kept && me.messenger === "dweller" && !me.beats.dwell) {
+      this.net.dwell(kept.id);
+      return;
+    }
     const live = (this.net.snap?.nodes ?? []).find(
       (n) => !n.depleted && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
@@ -457,6 +461,8 @@ export class NaveScene extends Phaser.Scene {
                       ? 0x7eb6ff
                     : poi.kind === "process-read"
                       ? 0x7eb6ff
+                    : poi.kind === "clearing-seed"
+                      ? 0xc9a56a
                     : poi.kind === "wreckage-garden"
                       ? 0x7a1028
                       : poi.kind === "claims-desk"
@@ -968,6 +974,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Ruin duel. The grave is the ring. Spectators gain a little aura. Not a bigger stick.";
     } else if (keptNear && me.messenger === "herald") {
       this.prompt = "F — Herald Announce. Ping the kept node. This is not a strike.";
+    } else if (keptNear && me.messenger === "dweller" && !me.guest && !me.beats.dwell) {
+      this.prompt = "F — Dweller Keep. Plant a Clearing seed. Not a stick.";
+    } else if (keptNear && (me.beats.dwell || snap.dwellHeld) && me.messenger === "dweller") {
+      this.prompt = me.heard || "The seed holds. A Clearing can grow. Combat is not.";
     } else if (nearNode && me.messenger === "cybernetic" && !me.guest && !me.beats.cyber) {
       this.prompt = "F — read the process. Extract drinks Gestell. Keep thins it. Not a stick.";
     } else if (nearNode && (me.beats.cyber || snap.cyberHeld) && me.messenger === "cybernetic") {
@@ -991,7 +1001,7 @@ export class NaveScene extends Phaser.Scene {
         ? me.locked
           ? `Guest · locked · aura 0`
           : `Guest · aura 0 · hp ${me.hp}`
-        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.storm ? " · storm" : ""}${me.surface ? " · surface" : ""}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
+        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.storm ? " · storm" : ""}${me.surface ? " · surface" : ""}${me.beats.dwell ? " · seed" : ""}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
     }
     const stats = hud("stat-chip");
     if (stats) {

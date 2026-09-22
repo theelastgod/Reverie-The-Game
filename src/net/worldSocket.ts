@@ -62,6 +62,7 @@ export type Snap = {
   blitzMarks?: { id: string; x: number; y: number; fromName: string }[];
   cyberHeld?: boolean;
   glamourHeld?: boolean;
+  dwellHeld?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 
@@ -180,6 +181,10 @@ export class WorldSocket {
 
   cyber(nodeId: string) {
     this.send({ t: "cyber", nodeId });
+  }
+
+  dwell(nodeId: string) {
+    this.send({ t: "dwell", nodeId });
   }
 
   private send(msg: unknown) {

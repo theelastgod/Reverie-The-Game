@@ -455,6 +455,13 @@ import {
   GLAMOUR_DARK,
   GLAMOUR_PLAQUE,
   glamourPoi,
+  DWELL_COPY,
+  WINK_DWELL,
+  DWELL_NEED,
+  DWELL_HELD,
+  DWELL_SPECTATOR,
+  DWELL_PLAQUE,
+  dwellPoi,
   BlitzMark,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
@@ -579,6 +586,7 @@ export type WorldState = {
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
   glamourHeld: boolean;
+  dwellHeld: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -765,6 +773,7 @@ export function emptyWorld(): WorldState {
     blitzMarks: [],
     cyberHeld: false,
     glamourHeld: false,
+    dwellHeld: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -2705,6 +2714,7 @@ export function snapshot(w: WorldState) {
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,
+    dwellHeld: w.dwellHeld,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2959,6 +2969,41 @@ export function applyGlamour(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === CLEARING_STALL.id ? { ...GLAMOUR_PLAQUE } : s))
     : [...w.signs, { ...GLAMOUR_PLAQUE }];
   return { ...w, players, glamourHeld: true, pois, signs };
+}
+
+export function applyDwell(w: WorldState, playerId: string, nodeId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const node = w.nodes.find((n) => n.id === nodeId);
+  if (!node || !nearNode(p.x, p.y, node)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: DWELL_SPECTATOR, wink: visibleWink(true, WINK_DWELL) });
+    return { ...w, players };
+  }
+  if (p.messenger !== "dweller" || !node.kept) {
+    players.set(playerId, { ...p, heard: DWELL_NEED });
+    return { ...w, players };
+  }
+  if (w.dwellHeld || p.beats.dwell) {
+    players.set(playerId, { ...p, heard: DWELL_HELD, wink: visibleWink(false, WINK_DWELL) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, dwell: true },
+    heard: DWELL_COPY,
+    wink: visibleWink(false, WINK_DWELL),
+    readiness: p.readiness + 1,
+  });
+  const plaque = { ...DWELL_PLAQUE, x: node.x, y: node.y };
+  const pois = w.pois.some((poi) => poi.id === "clearing-seed")
+    ? w.pois.map((poi) => (poi.id === "clearing-seed" ? dwellPoi(node.x, node.y) : poi))
+    : [...w.pois, dwellPoi(node.x, node.y)];
+  const signs = w.signs.some((s) => s.id === "clearing-seed")
+    ? w.signs.map((s) => (s.id === "clearing-seed" ? plaque : s))
+    : [...w.signs, plaque];
+  return { ...w, players, dwellHeld: true, pois, signs };
 }
 
 export function applyLastWord(w: WorldState, playerId: string): WorldState {

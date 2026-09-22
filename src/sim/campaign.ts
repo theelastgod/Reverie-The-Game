@@ -88,6 +88,7 @@ export type Beats = {
   blitz: boolean;
   cyber: boolean;
   glamour: boolean;
+  dwell: boolean;
 };
 
 export type WeatherHeard = {
@@ -165,7 +166,8 @@ export type Poi = {
     | "yield-empty"
     | "ione-gone"
     | "blitz-trace"
-    | "process-read";
+    | "process-read"
+    | "clearing-seed";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1314,6 +1316,7 @@ export function emptyBeats(): Beats {
     blitz: false,
     cyber: false,
     glamour: false,
+    dwell: false,
   };
 }
 
@@ -1622,6 +1625,25 @@ export function glamourPoi(): Poi {
     y: CLEARING_STALL.y,
     kind: "stall-glamour",
   };
+}
+
+export const DWELL_COPY =
+  "You kept the tile as a seed. A Clearing can grow here. You did not strike harder. This was not a fetch.";
+export const WINK_DWELL = "Dweller kit. A seed, not a stick. The token does not plant God.";
+export const DWELL_NEED = "Only a Dweller plants a seed, and only on a kept tile.";
+export const DWELL_HELD = "The seed already holds. A Clearing can grow. Combat is not.";
+export const DWELL_SPECTATOR = "A kept node. You do not see a seed.";
+
+export const DWELL_PLAQUE: Sign = {
+  id: "clearing-seed",
+  title: "The keep — seed",
+  text: "A tile kept. A hole may grow. The number does not strike.",
+  x: 120,
+  y: 180,
+};
+
+export function dwellPoi(x: number, y: number): Poi {
+  return { id: "clearing-seed", name: "The keep — seed", x, y, kind: "clearing-seed" };
 }
 
 export function auraSeed(serial: number): number {

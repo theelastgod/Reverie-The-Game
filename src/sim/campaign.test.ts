@@ -233,6 +233,12 @@ import {
   GLAMOUR_SPECTATOR,
   GLAMOUR_DARK,
   GLAMOUR_PLAQUE,
+  DWELL_COPY,
+  WINK_DWELL,
+  DWELL_NEED,
+  DWELL_HELD,
+  DWELL_SPECTATOR,
+  DWELL_PLAQUE,
   ORD_ERRAND,
   ORD_CABLE_LATER,
   CABLE_QUIET_COPY,
@@ -411,6 +417,7 @@ import {
   applyBlitz,
   applyCyber,
   applyGlamour,
+  applyDwell,
   applyTithe,
   applyClockOut,
   applyYieldEmpty,
@@ -2360,6 +2367,66 @@ describe("Iridescent Glamour", () => {
     expect(hung.stallDark).toBe(true);
     expect(hung.pois.find((poi) => poi.id === CLEARING_STALL.id)?.kind).toBe("stall-dark");
     expect(damageFor(hung.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+  });
+});
+
+describe("Dweller Keep seed", () => {
+  it("plants a Clearing seed on a kept tile; other kits and guests cannot", () => {
+    expect(messengerFor(4)).toBe("dweller");
+    const w = emptyWorld();
+    const node = w.nodes[0];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 4,
+      messenger: "dweller",
+      x: node.x,
+      y: node.y,
+    });
+    const kept = applyUse(w, "a", node.id, "keep");
+    expect(kept.nodes[0].kept).toBe(true);
+    const seeded = applyDwell(kept, "a", node.id);
+    const p = seeded.players.get("a")!;
+    expect(p.heard).toBe(DWELL_COPY);
+    expect(p.wink).toBe(WINK_DWELL);
+    expect(p.beats.dwell).toBe(true);
+    expect(seeded.dwellHeld).toBe(true);
+    expect(seeded.pois.find((poi) => poi.kind === "clearing-seed")?.x).toBe(node.x);
+    expect(seeded.signs.find((s) => s.id === "clearing-seed")?.title).toBe(DWELL_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyDwell(seeded, "a", node.id).players.get("a")?.heard).toBe(DWELL_HELD);
+    expect(snapshot(seeded).dwellHeld).toBe(true);
+
+    const raw = emptyWorld();
+    raw.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      messenger: "dweller",
+      x: node.x,
+      y: node.y,
+    });
+    expect(applyDwell(raw, "a", node.id).dwellHeld).toBe(false);
+    expect(applyDwell(raw, "a", node.id).players.get("a")?.heard).toBe(DWELL_NEED);
+
+    const herald = emptyWorld();
+    herald.nodes[0] = { ...node, depleted: true, kept: true };
+    herald.players.set("h", {
+      ...spawnGuest("h"),
+      guest: false,
+      messenger: "herald",
+      x: node.x,
+      y: node.y,
+    });
+    expect(applyDwell(herald, "h", node.id).players.get("h")?.heard).toBe(DWELL_NEED);
+    expect(applyDwell(herald, "h", node.id).dwellHeld).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.nodes[0] = { ...node, depleted: true, kept: true };
+    gWorld.players.set("g", { ...spawnGuest("g"), x: node.x, y: node.y, locked: true });
+    expect(applyDwell(gWorld, "g", node.id).players.get("g")?.heard).toBe(DWELL_SPECTATOR);
+    expect(gWorld.dwellHeld).toBe(false);
   });
 });
 
