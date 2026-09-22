@@ -1,4 +1,4 @@
-export type NpcId = "nara" | "quill" | "ord" | "ione";
+export type NpcId = "nara" | "quill" | "ord" | "ione" | "vesper";
 
 export type Npc = {
   id: NpcId;
@@ -58,6 +58,8 @@ export type Beats = {
   hang: boolean;
   standing: boolean;
   clockOut: boolean;
+  foundryAsk: boolean;
+  foundryDark: boolean;
 };
 
 export type WeatherHeard = {
@@ -95,8 +97,10 @@ export type Poi = {
     | "wreckage-garden"
     | "organ-strait"
     | "organ-foundry"
+    | "organ-foundry-dark"
     | "organ-cable"
     | "organ-cable-quiet"
+    | "operator-vacant"
     | "forge-tray"
     | "clearing-ring"
     | "clearing-held"
@@ -142,7 +146,7 @@ export const NAVE_SIGNS: Sign[] = [
 export const BURIAL_PLOT: Rite = { id: "nara-plot", kind: "burial", x: 240, y: 780, done: false };
 export const GOING_UNDER: Rite = { id: "going-under", kind: "going-under", x: 696, y: 120, done: false };
 
-export const NPC_LINES: Record<Exclude<NpcId, "ione">, { first: string; later: string }> = {
+export const NPC_LINES: Record<Exclude<NpcId, "ione" | "vesper">, { first: string; later: string }> = {
   nara: {
     first:
       "I don't need you to believe. I need the body in the ground. The weather is the end of world as world, and you are walking in it.",
@@ -317,6 +321,13 @@ export const WRECK_GARDEN = { id: "wreckage-garden", x: 360, y: 700 };
 export const ORGAN_STRAIT = { id: "organ-strait", x: 240, y: 88 };
 export const ORGAN_FOUNDRY = { id: "organ-foundry", x: 520, y: 88 };
 export const ORGAN_CABLE = { id: "organ-cable", x: 800, y: 88 };
+export const VESPER: Npc = {
+  id: "vesper",
+  name: "Vesper Hale",
+  role: "At the Foundry",
+  x: ORGAN_FOUNDRY.x,
+  y: ORGAN_FOUNDRY.y + 48,
+};
 
 export const GARDEN_RITE: Rite = { id: WRECK_GARDEN.id, kind: "garden", x: WRECK_GARDEN.x, y: WRECK_GARDEN.y, done: false };
 
@@ -364,6 +375,61 @@ export const CABLE_QUIET_COPY =
 export const ERRAND_EXTRACT =
   "You extracted. The Cable still drinks. Ord will not walk.";
 export const ERRAND_SPECTATOR = "Ord is talking about a cable. Not to you.";
+
+export const VESPER_NEED_FOUNDRY =
+  "The heat you bought still drinks. Read the Foundry. Then come back. I will not unlight a plaque you have not seen.";
+export const VESPER_UNLIGHT_ASK =
+  "You bought the heat. The Foundry still drinks. Unlight it. I will walk. Fetch would have left the furnace on.";
+export const VESPER_UNLIGHT_WAIT =
+  "The Foundry is still a mouth. Unlight the plaque. I will not carry the dark for you.";
+export const FOUNDRY_DARK_COPY =
+  "You unlit the Foundry. Vesper Hale left the concentrator desk. Heat is not a nation. This was not a fetch.";
+export const WINK_FOUNDRY_DARK =
+  "A side hour. You shut an organ you paid for. Cold is honest. It is not the last word.";
+export const FOUNDRY_NEED_COLD = "You did not buy the heat. There is nothing here to unlight.";
+export const FOUNDRY_DARK_LATER =
+  "The furnace is off. The Cable still drinks. Vesper Hale is standing in the dark she sold.";
+export const FOUNDRY_SPECTATOR = "A woman walking toward heat that is already off. Not for you.";
+export const OPERATOR_VACANT =
+  "The desk is empty. Vesper Hale is at the Foundry. Yield still wants a body.";
+export const VESPER_FOUNDRY_LATER =
+  "I walked. The furnace is off. I will not quote another private node.";
+
+export const FOUNDRY_DARK_PLAQUE: Sign = {
+  id: ORGAN_FOUNDRY.id,
+  title: "The Foundry — dark",
+  text: "Someone unlit the heat they bought. The Cable still drinks. The Concentrator walked.",
+  x: ORGAN_FOUNDRY.x,
+  y: ORGAN_FOUNDRY.y,
+};
+
+export const OPERATOR_VACANT_PLAQUE: Sign = {
+  id: OPERATOR_DESK.id,
+  title: "Vesper Hale — gone",
+  text: "The concentrator desk is vacant. Private yield still wants a body. She walked to the Foundry.",
+  x: OPERATOR_DESK.x,
+  y: OPERATOR_DESK.y,
+};
+
+export function foundryDarkPoi(): Poi {
+  return {
+    id: ORGAN_FOUNDRY.id,
+    name: "The Foundry — dark",
+    x: ORGAN_FOUNDRY.x,
+    y: ORGAN_FOUNDRY.y,
+    kind: "organ-foundry-dark",
+  };
+}
+
+export function operatorVacantPoi(): Poi {
+  return {
+    id: OPERATOR_DESK.id,
+    name: "Concentrator — vacant",
+    x: OPERATOR_DESK.x,
+    y: OPERATOR_DESK.y,
+    kind: "operator-vacant",
+  };
+}
 
 export const CABLE_QUIET_PLAQUE: Sign = {
   id: ORGAN_CABLE.id,
@@ -670,6 +736,8 @@ export function emptyBeats(): Beats {
     hang: false,
     standing: false,
     clockOut: false,
+    foundryAsk: false,
+    foundryDark: false,
   };
 }
 
@@ -736,6 +804,7 @@ export function namedWeatherPoi(): Poi {
 
 export function npcById(id: string): Npc | undefined {
   if (id === IONE.id) return IONE;
+  if (id === VESPER.id) return VESPER;
   return NAVE_NPCS.find((n) => n.id === id);
 }
 
@@ -749,6 +818,7 @@ export function lineFor(id: NpcId, beats: Beats): string {
   const npc = npcById(id);
   if (!npc) return "";
   if (id === "ione") return beats.lastWord ? LAST_WORD_GONE : LAST_WORD;
+  if (id === "vesper") return beats.foundryDark ? VESPER_FOUNDRY_LATER : VESPER_UNLIGHT_ASK;
   if (id === "nara" && beats.garden) return NARA_AFTER_GARDEN;
   if (id === "ord" && beats.map) return ORD_MAP;
   const pack = NPC_LINES[id];
@@ -1068,6 +1138,7 @@ export function liveNpcs(
   ordAtCable = false,
   naraAtStrait = false,
   quillAtGrid = false,
+  vesperAtFoundry = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1085,5 +1156,6 @@ export function liveNpcs(
       n.id === "quill" ? { ...n, x: WET_GRID.x + 48, y: WET_GRID.y, role: "On the wet street" } : n,
     );
   }
+  if (vesperAtFoundry) base = [...base, { ...VESPER }];
   return base;
 }

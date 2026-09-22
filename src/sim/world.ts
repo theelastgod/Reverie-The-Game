@@ -210,6 +210,20 @@ import {
   ERRAND_EXTRACT,
   ERRAND_SPECTATOR,
   cableQuietPoi,
+  VESPER_NEED_FOUNDRY,
+  VESPER_UNLIGHT_ASK,
+  VESPER_UNLIGHT_WAIT,
+  FOUNDRY_DARK_COPY,
+  WINK_FOUNDRY_DARK,
+  FOUNDRY_NEED_COLD,
+  FOUNDRY_DARK_LATER,
+  FOUNDRY_SPECTATOR,
+  OPERATOR_VACANT,
+  VESPER_FOUNDRY_LATER,
+  FOUNDRY_DARK_PLAQUE,
+  OPERATOR_VACANT_PLAQUE,
+  foundryDarkPoi,
+  operatorVacantPoi,
   passingCopy,
   passingResult,
   House,
@@ -324,6 +338,8 @@ export type WorldState = {
   naraAtStrait: boolean;
   stallDark: boolean;
   quillAtGrid: boolean;
+  vesperAtFoundry: boolean;
+  foundryDark: boolean;
   hallLamp: boolean;
   standing: HouseScores;
   announced: string | null;
@@ -469,6 +485,8 @@ export function emptyWorld(): WorldState {
     naraAtStrait: false,
     stallDark: false,
     quillAtGrid: false,
+    vesperAtFoundry: false,
+    foundryDark: false,
     hallLamp: false,
     standing: emptyScores(),
     announced: null,
@@ -725,7 +743,9 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
-  const npc = liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid).find((n) => n.id === npcId) ?? npcById(npcId);
+  const npc =
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry).find((n) => n.id === npcId) ??
+    npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
   const players = new Map(w.players);
@@ -768,6 +788,19 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
     return { ...w, players };
   }
   if (id === "ione") return applyLastWord(w, playerId);
+  if (id === "vesper") {
+    if (!w.vesperAtFoundry) return w;
+    if (p.guest || p.locked) {
+      players.set(playerId, { ...p, heard: FOUNDRY_SPECTATOR, wink: visibleWink(true, WINK_FOUNDRY_DARK) });
+      return { ...w, players };
+    }
+    players.set(playerId, {
+      ...p,
+      heard: VESPER_FOUNDRY_LATER,
+      wink: visibleWink(false, WINK_FOUNDRY_DARK),
+    });
+    return { ...w, players };
+  }
   if (id === "quill" && p.beats.market && !p.guest && !p.locked) {
     if (p.beats.hang) {
       players.set(playerId, { ...p, heard: QUILL_HANG_LATER, wink: visibleWink(false, WINK_HANG) });
@@ -1259,7 +1292,11 @@ export function applyOperator(
     players.set(playerId, { ...p, heard: OPERATOR_NEED_HALL });
     return { ...w, players };
   }
-  if (choice === "hear" || !p.beats.yield) {
+  if (w.vesperAtFoundry || w.foundryDark || p.beats.foundryDark) {
+    players.set(playerId, { ...p, heard: OPERATOR_VACANT, wink: visibleWink(false, WINK_FOUNDRY_DARK) });
+    return { ...w, players };
+  }
+  if (!p.beats.cold && !p.beats.refuse && (choice === "hear" || !p.beats.yield)) {
     players.set(playerId, {
       ...p,
       beats: { ...p.beats, yield: true },
@@ -1270,7 +1307,25 @@ export function applyOperator(
     return { ...w, players };
   }
   if (p.beats.cold || p.beats.refuse) {
-    players.set(playerId, { ...p, heard: p.beats.cold ? OPERATOR_TAKE : OPERATOR_REFUSE });
+    if (p.beats.refuse) {
+      players.set(playerId, { ...p, heard: OPERATOR_REFUSE });
+      return { ...w, players };
+    }
+    if (p.beats.foundryAsk) {
+      players.set(playerId, { ...p, heard: VESPER_UNLIGHT_WAIT, wink: visibleWink(false, WINK_FOUNDRY_DARK) });
+      return { ...w, players };
+    }
+    if (p.beats.foundry) {
+      players.set(playerId, {
+        ...p,
+        beats: { ...p.beats, foundryAsk: true },
+        heard: VESPER_UNLIGHT_ASK,
+        wink: visibleWink(false, WINK_FOUNDRY_DARK),
+        readiness: p.readiness + 1,
+      });
+      return { ...w, players };
+    }
+    players.set(playerId, { ...p, heard: VESPER_NEED_FOUNDRY, wink: visibleWink(false, WINK_OPERATOR) });
     return { ...w, players };
   }
   if (choice === "take") {
@@ -1317,6 +1372,13 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     players.set(playerId, { ...p, heard: ORGAN_NEED_M3 });
     return { ...w, players };
   }
+  if (sign.id === ORGAN_FOUNDRY.id) {
+    if (w.foundryDark || p.beats.foundryDark) {
+      players.set(playerId, { ...p, heard: FOUNDRY_DARK_LATER, wink: visibleWink(p.guest, WINK_FOUNDRY_DARK) });
+      return { ...w, players };
+    }
+    if (p.beats.foundryAsk && !p.guest && !p.locked) return applyUnlight(w, playerId);
+  }
   const key = sign.id === ORGAN_STRAIT.id ? "strait" : sign.id === ORGAN_FOUNDRY.id ? "foundry" : "cable";
   const beats = { ...p.beats, [key]: true };
   const done = organsComplete(beats);
@@ -1328,6 +1390,53 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     readiness: p.readiness + (p.beats[key] ? 0 : 1),
   });
   return { ...w, players };
+}
+
+export function applyUnlight(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: FOUNDRY_SPECTATOR, wink: visibleWink(true, WINK_FOUNDRY_DARK) });
+    return { ...w, players };
+  }
+  if (w.foundryDark || p.beats.foundryDark) {
+    players.set(playerId, { ...p, heard: FOUNDRY_DARK_LATER, wink: visibleWink(false, WINK_FOUNDRY_DARK) });
+    return { ...w, players };
+  }
+  if (!p.beats.cold) {
+    players.set(playerId, { ...p, heard: FOUNDRY_NEED_COLD });
+    return { ...w, players };
+  }
+  if (!p.beats.foundryAsk) {
+    players.set(playerId, { ...p, heard: VESPER_NEED_FOUNDRY, wink: visibleWink(false, WINK_FOUNDRY_DARK) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, foundryDark: true, foundry: true },
+    heard: FOUNDRY_DARK_COPY,
+    wink: visibleWink(false, WINK_FOUNDRY_DARK),
+    readiness: p.readiness + 1,
+  });
+  return {
+    ...w,
+    players,
+    foundryDark: true,
+    vesperAtFoundry: true,
+    pois: w.pois
+      .map((poi) => (poi.id === ORGAN_FOUNDRY.id ? foundryDarkPoi() : poi.id === OPERATOR_DESK.id ? operatorVacantPoi() : poi))
+      .concat(w.pois.some((poi) => poi.id === OPERATOR_DESK.id) ? [] : [operatorVacantPoi()]),
+    signs: w.signs
+      .map((s) =>
+        s.id === ORGAN_FOUNDRY.id
+          ? { ...FOUNDRY_DARK_PLAQUE }
+          : s.id === OPERATOR_DESK.id
+            ? { ...OPERATOR_VACANT_PLAQUE }
+            : s,
+      )
+      .concat(w.signs.some((s) => s.id === OPERATOR_DESK.id) ? [] : [{ ...OPERATOR_VACANT_PLAQUE }]),
+  };
 }
 
 export function applyWatch(w: WorldState, playerId: string): WorldState {
@@ -1558,8 +1667,10 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry),
     stallDark: w.stallDark,
+    vesperAtFoundry: w.vesperAtFoundry,
+    foundryDark: w.foundryDark,
     hallLamp: w.hallLamp,
     standing: w.standing,
     signs: w.signs,

@@ -423,6 +423,10 @@ export class NaveScene extends Phaser.Scene {
               ? 0x7eb6ff
               : poi.kind === "operator-desk"
                 ? 0xc9a56a
+                : poi.kind === "operator-vacant"
+                  ? 0x5a5a5a
+                : poi.kind === "organ-foundry-dark"
+                  ? 0x3a3a3a
                 : poi.kind === "m3-open"
                   ? 0xff2d6b
                   : poi.kind === "m3-shut"
@@ -661,8 +665,14 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Nara Vale will not stand in a hole you left as wreckage.";
     } else if (desk && (me.guest || me.locked)) {
       this.prompt = "A woman at a desk. She is not speaking to you.";
+    } else if (desk && (snap.vesperAtFoundry || snap.foundryDark || me.beats.foundryDark)) {
+      this.prompt = me.heard || "The desk is empty. Vesper Hale is at the Foundry.";
+    } else if (desk && me.beats.foundryAsk) {
+      this.prompt = "The Foundry is still a mouth. Unlight the plaque. Vesper will walk.";
+    } else if (desk && me.beats.cold && me.beats.foundry) {
+      this.prompt = "F — Vesper will walk if you unlight the Foundry. Not a fetch.";
     } else if (desk && me.beats.cold) {
-      this.prompt = me.heard || "You took the private yield. Movement III is funded.";
+      this.prompt = me.heard || "You took the private yield. Read the Foundry. Then come back.";
     } else if (desk && me.beats.refuse) {
       this.prompt = me.heard || "You refused. The door stays shut.";
     } else if (desk && me.beats.yield) {
@@ -689,6 +699,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Keep a CRT node (Q). Do not extract. Ord will walk to the Cable.";
     } else if (npcNear?.id === "ord" && me.beats.map) {
       this.prompt = "F — Ord has an errand. Keep a node. Change an organ.";
+    } else if (npcNear?.id === "vesper") {
+      this.prompt = me.heard || "Vesper Hale walked. The furnace is off.";
+    } else if (foundry && (snap.foundryDark || me.beats.foundryDark) && !me.guest) {
+      this.prompt = me.heard || "The Foundry is dark. Vesper Hale is here. Heat is not a nation.";
+    } else if (foundry && me.beats.foundryAsk && !me.guest) {
+      this.prompt = "F — unlight the Foundry. Vesper walks. This is not a fetch.";
     } else if ((strait || foundry || cable) && snap.m3Open && !me.guest) {
       this.prompt = cable && me.beats.cableQuiet
         ? "The Cable is quiet. You changed the plaque."
@@ -786,7 +802,9 @@ export class NaveScene extends Phaser.Scene {
         ? strait
           ? "The Strait"
           : foundry
-            ? "The Foundry"
+            ? snap.foundryDark
+              ? "The Foundry — dark"
+              : "The Foundry"
             : cable
               ? "The Cable"
               : "Movement III"

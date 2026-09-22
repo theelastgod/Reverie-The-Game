@@ -45,6 +45,7 @@ export class BootScene extends Phaser.Scene {
       ["quill", 0x7eb6ff],
       ["ord", 0x5a5a5a],
       ["ione", 0x7a1028],
+      ["vesper", 0xc9a56a],
       ["clerk", 0x6a6a72],
     ];
     for (const [key, color] of npcs) {
@@ -70,6 +71,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image("failed-passing", "/assets/failed-passing.jpg");
     this.load.image("clearing-ring", "/assets/clearing-ring.jpg");
     this.load.image("ione", "/assets/ione.jpg");
+    this.load.image("vesper", "/assets/vesper.jpg");
+    this.load.image("organ-foundry-dark", "/assets/organ-foundry-dark.jpg");
     this.load.image("house-war", "/assets/house-war.jpg");
     this.load.image("shrine-upkeep", "/assets/shrine-upkeep.jpg");
   }

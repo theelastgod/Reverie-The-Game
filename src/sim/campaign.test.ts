@@ -194,6 +194,18 @@ import {
   CLOCK_NEED,
   CLOCK_SPECTATOR,
   WINK_CLOCK,
+  VESPER,
+  VESPER_NEED_FOUNDRY,
+  VESPER_UNLIGHT_ASK,
+  VESPER_UNLIGHT_WAIT,
+  FOUNDRY_DARK_COPY,
+  WINK_FOUNDRY_DARK,
+  FOUNDRY_NEED_COLD,
+  FOUNDRY_DARK_LATER,
+  FOUNDRY_SPECTATOR,
+  OPERATOR_VACANT,
+  VESPER_FOUNDRY_LATER,
+  FOUNDRY_DARK_PLAQUE,
   REPAIR_COST,
   REPAIR_COPY,
   REPAIR_NEED,
@@ -223,6 +235,7 @@ import {
   applyAnnounce,
   applyTithe,
   applyClockOut,
+  applyUnlight,
   applyStanding,
   applyMarket,
   applyOperator,
@@ -1813,6 +1826,99 @@ describe("Desk Three clocks out", () => {
     const g = applyClockOut(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(CLOCK_SPECTATOR);
     expect(g.clerks).toHaveLength(2);
+  });
+});
+
+describe("Vesper unlights the Foundry", () => {
+  it("Cold take then Foundry read lets an Angel unlight; Vesper walks; guests cannot", () => {
+    const w = emptyWorld();
+    w.m3Open = true;
+    w.pois = [
+      ...w.pois,
+      { id: ORGAN_FOUNDRY.id, name: "The Foundry", x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y, kind: "organ-foundry" },
+    ];
+    w.signs = [...w.signs, ORGAN_PLAQUES.find((s) => s.id === ORGAN_FOUNDRY.id)!];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), hall: true, yield: true, cold: true, m3: true },
+      current: "cold",
+      x: OPERATOR_DESK.x,
+      y: OPERATOR_DESK.y,
+    });
+    const early = applyOperator(w, "a", "hear");
+    expect(early.players.get("a")?.heard).toBe(VESPER_NEED_FOUNDRY);
+    expect(early.vesperAtFoundry).toBe(false);
+
+    early.players.set("a", { ...early.players.get("a")!, x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y });
+    const read = applyRead(early, "a", ORGAN_FOUNDRY.id);
+    expect(read.players.get("a")?.beats.foundry).toBe(true);
+
+    read.players.set("a", { ...read.players.get("a")!, x: OPERATOR_DESK.x, y: OPERATOR_DESK.y });
+    const asked = applyOperator(read, "a", "hear");
+    expect(asked.players.get("a")?.heard).toBe(VESPER_UNLIGHT_ASK);
+    expect(asked.players.get("a")?.beats.foundryAsk).toBe(true);
+    expect(asked.vesperAtFoundry).toBe(false);
+    expect(applyOperator(asked, "a", "hear").players.get("a")?.heard).toBe(VESPER_UNLIGHT_WAIT);
+
+    asked.players.set("a", { ...asked.players.get("a")!, x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y });
+    const dark = applyRead(asked, "a", ORGAN_FOUNDRY.id);
+    const p = dark.players.get("a")!;
+    expect(p.heard).toBe(FOUNDRY_DARK_COPY);
+    expect(p.wink).toBe(WINK_FOUNDRY_DARK);
+    expect(p.beats.foundryDark).toBe(true);
+    expect(dark.foundryDark).toBe(true);
+    expect(dark.vesperAtFoundry).toBe(true);
+    expect(dark.pois.find((poi) => poi.id === ORGAN_FOUNDRY.id)?.kind).toBe("organ-foundry-dark");
+    expect(dark.pois.find((poi) => poi.id === OPERATOR_DESK.id)?.kind).toBe("operator-vacant");
+    expect(dark.signs.find((s) => s.id === ORGAN_FOUNDRY.id)?.title).toBe(FOUNDRY_DARK_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|hormuz|hsinchu|palantir|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const moved = liveNpcs(false, false, false, false, true).find((n) => n.id === "vesper")!;
+    expect(moved.name).toBe("Vesper Hale");
+    expect(moved.role).toBe("At the Foundry");
+    expect(moved.x).toBe(VESPER.x);
+    dark.players.set("a", { ...p, x: moved.x, y: moved.y });
+    expect(applyTalk(dark, "a", "vesper").players.get("a")?.heard).toBe(VESPER_FOUNDRY_LATER);
+
+    dark.players.set("a", { ...p, x: OPERATOR_DESK.x, y: OPERATOR_DESK.y });
+    expect(applyOperator(dark, "a", "hear").players.get("a")?.heard).toBe(OPERATOR_VACANT);
+    dark.players.set("a", { ...p, x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y });
+    expect(applyRead(dark, "a", ORGAN_FOUNDRY.id).players.get("a")?.heard).toBe(FOUNDRY_DARK_LATER);
+
+    const refuseW = emptyWorld();
+    refuseW.m3Open = true;
+    refuseW.pois = [...w.pois];
+    refuseW.signs = [...w.signs];
+    refuseW.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), hall: true, yield: true, refuse: true, foundry: true, foundryAsk: true },
+      x: ORGAN_FOUNDRY.x,
+      y: ORGAN_FOUNDRY.y,
+    });
+    const refused = applyUnlight(refuseW, "a");
+    expect(refused.players.get("a")?.heard).toBe(FOUNDRY_NEED_COLD);
+    expect(refused.foundryDark).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.m3Open = true;
+    gWorld.foundryDark = false;
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: ORGAN_FOUNDRY.x,
+      y: ORGAN_FOUNDRY.y,
+      locked: true,
+      beats: { ...emptyBeats(), foundryAsk: true, cold: true },
+    });
+    const g = applyUnlight(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(FOUNDRY_SPECTATOR);
+    expect(g.vesperAtFoundry).toBe(false);
+    expect(g.foundryDark).toBe(false);
   });
 });
 

@@ -28,6 +28,8 @@ export type Snap = {
   announced: string | null;
   war: HouseWar;
   stallDark?: boolean;
+  vesperAtFoundry?: boolean;
+  foundryDark?: boolean;
   hallLamp?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
