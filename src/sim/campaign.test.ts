@@ -323,6 +323,13 @@ import {
   TRUCE_PEOPLE_HELD,
   TRUCE_PEOPLE_SPECTATOR,
   TRUCE_PEOPLE_PLAQUE,
+  HANDOFF_PEOPLE_COPY,
+  WINK_HANDOFF_PEOPLE,
+  HANDOFF_PEOPLE_NEED,
+  HANDOFF_PEOPLE_MATE,
+  HANDOFF_PEOPLE_HELD,
+  HANDOFF_PEOPLE_SPECTATOR,
+  HANDOFF_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -884,6 +891,7 @@ import {
   applyBountyPeople,
   applyFlagPeople,
   applyTrucePeople,
+  applyHandoffPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3284,6 +3292,67 @@ describe("Truce — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: 720, y: 520, locked: true, flagged: true });
     expect(applyTrucePeople(gWorld, "g").players.get("g")?.heard).toBe(TRUCE_PEOPLE_SPECTATOR);
     expect(gWorld.trucePeopleHeld).toBe(false);
+  });
+});
+
+describe("Handoff — people", () => {
+  it("names the handoff as people after the truce; listing still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.trucePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      fakeWinke: 1,
+      bestand: 12,
+      beats: { ...emptyBeats(), trucePeople: true },
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: 2,
+      x: CLEARING_STALL.x + 8,
+      y: CLEARING_STALL.y,
+    });
+    const named = applyHandoff(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HANDOFF_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HANDOFF_PEOPLE);
+    expect(p.beats.handoffPeople).toBe(true);
+    expect(p.fakeWinke).toBe(1);
+    expect(p.bestand).toBe(12);
+    expect(named.handoffPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "handoff-people")?.name).toBe("Handoff — people");
+    expect(named.signs.find((s) => s.id === "handoff-people")?.title).toBe(HANDOFF_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Listing still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHandoffPeople(named, "a").players.get("a")?.heard).toBe(HANDOFF_PEOPLE_HELD);
+
+    const passed = applyHandoff(named, "a");
+    expect(passed.players.get("a")?.fakeWinke).toBe(0);
+    expect(passed.players.get("b")?.fakeWinke).toBe(1);
+    expect(passed.players.get("a")?.bestand).toBe(12 - LISTING_FEE);
+    expect(passed.players.get("a")?.heard).toBe(HANDOFF_COPY);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, fakeWinke: 1, x: CLEARING_STALL.x, y: CLEARING_STALL.y });
+    early.players.set("b", { ...spawnGuest("b"), guest: false, x: CLEARING_STALL.x + 8, y: CLEARING_STALL.y });
+    expect(applyHandoffPeople(early, "a").players.get("a")?.heard).toBe(HANDOFF_PEOPLE_NEED);
+
+    const nomate = emptyWorld();
+    nomate.trucePeopleHeld = true;
+    nomate.players.set("a", { ...spawnGuest("a"), guest: false, fakeWinke: 1, x: CLEARING_STALL.x, y: CLEARING_STALL.y });
+    expect(applyHandoffPeople(nomate, "a").players.get("a")?.heard).toBe(HANDOFF_PEOPLE_MATE);
+
+    const gWorld = emptyWorld();
+    gWorld.trucePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
+    expect(applyHandoffPeople(gWorld, "g").players.get("g")?.heard).toBe(HANDOFF_PEOPLE_SPECTATOR);
+    expect(gWorld.handoffPeopleHeld).toBe(false);
   });
 });
 

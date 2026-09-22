@@ -122,6 +122,7 @@ export type Snap = {
   bountyPeopleHeld?: boolean;
   flagPeopleHeld?: boolean;
   trucePeopleHeld?: boolean;
+  handoffPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

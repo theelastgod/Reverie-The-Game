@@ -409,6 +409,14 @@ import {
   TRUCE_PEOPLE_SPECTATOR,
   TRUCE_PEOPLE_PLAQUE,
   trucePeoplePoi,
+  HANDOFF_PEOPLE_COPY,
+  WINK_HANDOFF_PEOPLE,
+  HANDOFF_PEOPLE_NEED,
+  HANDOFF_PEOPLE_MATE,
+  HANDOFF_PEOPLE_HELD,
+  HANDOFF_PEOPLE_SPECTATOR,
+  HANDOFF_PEOPLE_PLAQUE,
+  handoffPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1119,6 +1127,7 @@ export type WorldState = {
   bountyPeopleHeld: boolean;
   flagPeopleHeld: boolean;
   trucePeopleHeld: boolean;
+  handoffPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1397,6 +1406,7 @@ export function emptyWorld(): WorldState {
     bountyPeopleHeld: false,
     flagPeopleHeld: false,
     trucePeopleHeld: false,
+    handoffPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -1932,6 +1942,7 @@ export function applyTruce(w: WorldState, playerId: string): WorldState {
 export function applyHandoff(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  if (w.trucePeopleHeld && !w.handoffPeopleHeld) return applyHandoffPeople(w, playerId);
   const other = [...w.players.values()].find(
     (o) => o.id !== playerId && o.hp > 0 && !o.guest && !o.locked && nearPoint(p.x, p.y, o.x, o.y, 56),
   );
@@ -2584,6 +2595,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === "truce-people") {
     if (w.trucePeopleHeld) return applyTruce(w, playerId);
     return applyTrucePeople(w, playerId);
+  }
+  if (sign.id === "handoff-people") {
+    if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
+    return applyHandoffPeople(w, playerId);
   }
   if (sign.id === WET_GRID.id) {
     if (p.beats.unflagAsk && !p.beats.unflag && !p.guest && !p.locked) return applyUnflag(w, playerId);
@@ -4086,6 +4101,44 @@ export function applyTrucePeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, trucePeopleHeld: true, pois, signs };
 }
 
+export function applyHandoffPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  const other = [...w.players.values()].find(
+    (o) => o.id !== playerId && o.hp > 0 && !o.guest && !o.locked && nearPoint(p.x, p.y, o.x, o.y, 56),
+  );
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: HANDOFF_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_HANDOFF_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.trucePeopleHeld) {
+    players.set(playerId, { ...p, heard: HANDOFF_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.handoffPeopleHeld && p.beats.handoffPeople) {
+    players.set(playerId, { ...p, heard: HANDOFF_PEOPLE_HELD, wink: visibleWink(false, WINK_HANDOFF_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!other || p.fakeWinke <= 0 || p.cultWink) {
+    players.set(playerId, { ...p, heard: HANDOFF_PEOPLE_MATE });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, handoffPeople: true },
+    heard: HANDOFF_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_HANDOFF_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "handoff-people")
+    ? w.pois.map((poi) => (poi.id === "handoff-people" ? handoffPeoplePoi() : poi))
+    : [...w.pois, handoffPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "handoff-people")
+    ? w.signs.map((s) => (s.id === "handoff-people" ? { ...HANDOFF_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...HANDOFF_PEOPLE_PLAQUE }];
+  return { ...w, players, handoffPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5278,6 +5331,7 @@ export function snapshot(w: WorldState) {
     bountyPeopleHeld: w.bountyPeopleHeld,
     flagPeopleHeld: w.flagPeopleHeld,
     trucePeopleHeld: w.trucePeopleHeld,
+    handoffPeopleHeld: w.handoffPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

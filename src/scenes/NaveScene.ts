@@ -1033,8 +1033,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — Iridescent Glamour. Aura as surface. Copies travel. Cult does not. Not a stick.";
     } else if (stall && mateNear && me.fakeWinke > 0 && !me.guest && !me.cultWink) {
       this.prompt =
-        me.heard ||
-        `F — pass a print (${LISTING_FEE} Bestand). Exhibition travels. Cult does not. Not a fetch.`;
+        me.beats.handoffPeople || snap.handoffPeopleHeld
+          ? me.heard || "Handoff — people. Listing still costs. Cult does not pass. Not a stick."
+        : snap.trucePeopleHeld
+          ? "F — the handoff as a house of people. Listing still costs. Cult does not pass. Not a fetch."
+          : me.heard ||
+            `F — pass a print (${LISTING_FEE} Bestand). Exhibition travels. Cult does not. Not a fetch.`;
     } else if (stall && me.beats.market) {
       this.prompt = me.damaged
         ? `F buy a copy (${CLEARING_PRICE}). Q repair a cracked print (${REPAIR_COST}). Cult does not crack.`

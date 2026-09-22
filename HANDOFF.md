@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 134** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 135** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -568,7 +568,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the flag as people, F near a flagged Angel: the truce as people. Plaque/POI **Truce — people**. Both stay flagged until the truce. Spoils stay.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 134 (do this next)
+## Stage 134 (landed)
+- After the truce as people, F at the stall with a print and another Angel: the handoff as people. Plaque/POI **Handoff — people**. Listing still costs. Cult does not pass.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed. TAKE stays disarmed.
+
+## Stage 135 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

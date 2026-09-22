@@ -153,6 +153,7 @@ export type Beats = {
   bountyPeople: boolean;
   flagPeople: boolean;
   trucePeople: boolean;
+  handoffPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -294,6 +295,7 @@ export type Poi = {
     | "bounty-people"
     | "flag-people"
     | "truce-people"
+    | "handoff-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2165,6 +2167,32 @@ export function trucePeoplePoi(x = WET_GRID.x, y = WET_GRID.y): Poi {
     kind: "truce-people",
   };
 }
+
+export const HANDOFF_PEOPLE_COPY =
+  "The handoff is a house of people, not a listing of process. Listing still costs. Exhibition still decays. Cult does not pass. Combat is not. This was not a fetch.";
+export const WINK_HANDOFF_PEOPLE = "People, not a print stick. The token does not strike.";
+export const HANDOFF_PEOPLE_NEED = "The truce as people first. A handoff of people is not a fetch.";
+export const HANDOFF_PEOPLE_MATE = "Stand at the stall with a print and another Angel. Cult does not pass.";
+export const HANDOFF_PEOPLE_HELD = "The handoff already holds as people. Listing still costs.";
+export const HANDOFF_PEOPLE_SPECTATOR = "Paper moves. You do not get a house of people.";
+
+export const HANDOFF_PEOPLE_PLAQUE: Sign = {
+  id: "handoff-people",
+  title: "Handoff — people",
+  text: "A house of people. Listing still costs. Cult does not pass. The number does not strike.",
+  x: CLEARING_STALL.x,
+  y: CLEARING_STALL.y,
+};
+
+export function handoffPeoplePoi(): Poi {
+  return {
+    id: "handoff-people",
+    name: "Handoff — people",
+    x: CLEARING_STALL.x,
+    y: CLEARING_STALL.y,
+    kind: "handoff-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2780,6 +2808,7 @@ export function emptyBeats(): Beats {
     bountyPeople: false,
     flagPeople: false,
     trucePeople: false,
+    handoffPeople: false,
   };
 }
 
