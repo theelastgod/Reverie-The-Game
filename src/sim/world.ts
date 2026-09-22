@@ -526,6 +526,14 @@ import {
   STILL_SPECTATOR,
   STILL_PLAQUE,
   stillPoi,
+  BRACKET_COPY,
+  WINK_BRACKET,
+  BRACKET_NEED,
+  BRACKET_HELD,
+  BRACKET_SPECTATOR,
+  BRACKET_CULT,
+  BRACKET_PLAQUE,
+  bracketPoi,
   PARTICIPANT_COPY,
   WINK_PARTICIPANT,
   PARTICIPANT_NEED,
@@ -734,6 +742,7 @@ export type WorldState = {
   founderHeld: boolean;
   logHeld: boolean;
   stillHeld: boolean;
+  bracketHeld: boolean;
   bountyHeld: boolean;
   stormPressHeld: boolean;
   winkSeedHeld: boolean;
@@ -963,6 +972,7 @@ export function emptyWorld(): WorldState {
     founderHeld: false,
     logHeld: false,
     stillHeld: false,
+    bracketHeld: false,
     bountyHeld: false,
     stormPressHeld: false,
     winkSeedHeld: false,
@@ -1674,6 +1684,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === WET_GRID.id) {
     if (p.beats.unflagAsk && !p.beats.unflag && !p.guest && !p.locked) return applyUnflag(w, playerId);
     if (w.creditsHeld && !w.seasonHeld && !w.wetCult && !p.guest && !p.locked) return applySeason(w, playerId);
+    if (w.seasonHeld && !w.bracketHeld && !w.wetCult && !p.guest && !p.locked) return applyBracket(w, playerId);
     return applyFlag(w, playerId);
   }
   if (sign.id === CLAIMS_DESK.id) return applyDesk(w, playerId, "file");
@@ -2840,17 +2851,18 @@ export function applySeason(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: SEASON_CULT, wink: visibleWink(false, WINK_UNFLAG) });
     return { ...w, players };
   }
-  if (!w.creditsHeld) {
-    players.set(playerId, { ...p, heard: SEASON_NEED });
-    return { ...w, players };
-  }
   if (w.seasonHeld || p.beats.season) {
+    if (!w.bracketHeld && !p.beats.bracket) return applyBracket(w, playerId);
     players.set(playerId, {
       ...p,
       flagged: true,
       heard: SEASON_HELD,
       wink: visibleWink(false, WINK_SEASON),
     });
+    return { ...w, players };
+  }
+  if (!w.creditsHeld) {
+    players.set(playerId, { ...p, heard: SEASON_NEED });
     return { ...w, players };
   }
   players.set(playerId, {
@@ -2867,6 +2879,42 @@ export function applySeason(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === WET_GRID.id ? { ...SEASON_PLAQUE } : s))
     : [...w.signs, { ...SEASON_PLAQUE }];
   return { ...w, players, seasonHeld: true, pois, signs };
+}
+
+export function applyBracket(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: BRACKET_SPECTATOR, wink: visibleWink(true, WINK_BRACKET) });
+    return { ...w, players };
+  }
+  if (w.wetCult) {
+    players.set(playerId, { ...p, heard: BRACKET_CULT, wink: visibleWink(false, WINK_UNFLAG) });
+    return { ...w, players };
+  }
+  if (!w.seasonHeld) {
+    players.set(playerId, { ...p, heard: BRACKET_NEED });
+    return { ...w, players };
+  }
+  if (w.bracketHeld && p.beats.bracket) {
+    players.set(playerId, { ...p, heard: BRACKET_HELD, wink: visibleWink(false, WINK_BRACKET) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, bracket: true },
+    flagged: true,
+    heard: BRACKET_COPY,
+    wink: visibleWink(false, WINK_BRACKET),
+  });
+  const pois = w.pois.some((poi) => poi.id === WET_GRID.id)
+    ? w.pois.map((poi) => (poi.id === WET_GRID.id ? bracketPoi() : poi))
+    : [...w.pois, bracketPoi()];
+  const signs = w.signs.some((s) => s.id === WET_GRID.id)
+    ? w.signs.map((s) => (s.id === WET_GRID.id ? { ...BRACKET_PLAQUE } : s))
+    : [...w.signs, { ...BRACKET_PLAQUE }];
+  return { ...w, players, bracketHeld: true, pois, signs };
 }
 
 export function applyPartyBlind(w: WorldState, playerId: string, npc: { x: number; y: number }): WorldState {
@@ -3192,6 +3240,7 @@ export function snapshot(w: WorldState) {
     founderHeld: w.founderHeld,
     logHeld: w.logHeld,
     stillHeld: w.stillHeld,
+    bracketHeld: w.bracketHeld,
     bountyHeld: w.bountyHeld,
     stormPressHeld: w.stormPressHeld,
     winkSeedHeld: w.winkSeedHeld,

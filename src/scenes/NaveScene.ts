@@ -487,6 +487,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0x7eb6ff
                       : poi.kind === "wet-grid-season"
                           ? 0x7eb6ff
+                      : poi.kind === "wet-grid-bracket"
+                          ? 0x7eb6ff
                       : poi.kind === "wet-grid-cult"
                           ? 0xc9a56a
                       : poi.kind === "yield-empty"
@@ -767,6 +769,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — unflag the Wet Grid. Quill keeps the street. Not a fetch.";
     } else if (wet && (snap.creditsHeld || me.beats.credits) && !snap.seasonHeld && !me.beats.season) {
       this.prompt = "F — name the residual season. Wet Grid flags by default. The MMO is the rest of life.";
+    } else if (wet && (snap.bracketHeld || me.beats.bracket)) {
+      this.prompt = me.heard || "The season — equal. Serials stay visible. Combat is not.";
+    } else if (wet && (snap.seasonHeld || me.beats.season) && !snap.bracketHeld) {
+      this.prompt = "F — optional equalized bracket. Serials stay visible. Not a stick.";
     } else if (wet && (snap.seasonHeld || me.beats.season)) {
       this.prompt = me.heard || "The season — residual. Flagged by default. Spoils from people. Combat is not.";
     } else if (wet && me.flagged) {
@@ -1128,7 +1134,7 @@ export class NaveScene extends Phaser.Scene {
       const ordBit = snap.ordGone ? " · Ord gone" : "";
       const quillBit = snap.quillGone ? " · Quill gone" : "";
       const vesperBit = snap.vesperGone ? " · Vesper gone" : "";
-      const seasonBit = snap.seasonHeld ? " · season" : "";
+      const seasonBit = snap.bracketHeld ? " · equal bracket" : snap.seasonHeld ? " · season" : "";
       stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}${naraBit}${ordBit}${quillBit}${vesperBit}${seasonBit}`;
     }
     const lock = hud("lock-panel");

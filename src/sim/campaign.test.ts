@@ -253,6 +253,12 @@ import {
   SEASON_SPECTATOR,
   SEASON_CULT,
   SEASON_PLAQUE,
+  BRACKET_COPY,
+  WINK_BRACKET,
+  BRACKET_NEED,
+  BRACKET_HELD,
+  BRACKET_SPECTATOR,
+  BRACKET_PLAQUE,
   wetGridDefaultFlag,
   PARTY_BLIND,
   WINK_PARTY_BLIND,
@@ -524,6 +530,7 @@ import {
   applyPassing,
   applyCredits,
   applySeason,
+  applyBracket,
   applyPartyBlind,
   applyStorm,
   applyAnnounce,
@@ -2271,7 +2278,7 @@ describe("Movement IV Clearing and Passing", () => {
     expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
     expect(guestCanClaim(p)).toBe(false);
     expect(snapshot(named).seasonHeld).toBe(true);
-    expect(applySeason(named, "a").players.get("a")?.heard).toBe(SEASON_HELD);
+    expect(applySeason(named, "a").players.get("a")?.heard).toBe(BRACKET_COPY);
     expect(applyRead(w, "a", WET_GRID.id).seasonHeld).toBe(true);
 
     const early = emptyWorld();
@@ -2315,6 +2322,58 @@ describe("Movement IV Clearing and Passing", () => {
     expect(applySeason(gWorld, "g").players.get("g")?.heard).toBe(SEASON_SPECTATOR);
     expect(applySeason(gWorld, "g").seasonHeld).toBe(false);
     expect(tickWorld(gWorld, 0.05).players.get("g")?.flagged).toBe(false);
+  });
+
+  it("optional equalized bracket after season; serials stay visible; not a stick", () => {
+    const w = emptyWorld();
+    w.seasonHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), season: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: 2,
+      beats: { ...emptyBeats(), season: true },
+      x: WET_GRID.x + 8,
+      y: WET_GRID.y,
+    });
+    const eq = applySeason(w, "a");
+    const p = eq.players.get("a")!;
+    expect(p.heard).toBe(BRACKET_COPY);
+    expect(p.wink).toBe(WINK_BRACKET);
+    expect(p.beats.bracket).toBe(true);
+    expect(eq.bracketHeld).toBe(true);
+    expect(eq.pois.find((poi) => poi.id === WET_GRID.id)?.kind).toBe("wet-grid-bracket");
+    expect(eq.signs.find((s) => s.id === WET_GRID.id)?.title).toBe(BRACKET_PLAQUE.title);
+    expect(formatSerial(p.serial)).toBe("#7777");
+    expect(formatSerial(eq.players.get("b")?.serial ?? null)).toBe("#0002");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(eq.players.get("b")!));
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBracket(eq, "a").players.get("a")?.heard).toBe(BRACKET_HELD);
+    expect(applySeason(eq, "a").players.get("a")?.heard).toBe(SEASON_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    expect(applyBracket(early, "a").players.get("a")?.heard).toBe(BRACKET_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.seasonHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyBracket(gWorld, "g").players.get("g")?.heard).toBe(BRACKET_SPECTATOR);
+    expect(gWorld.bracketHeld).toBe(false);
   });
 
   it("party reacts to a Wink they cannot see; guests cannot", () => {

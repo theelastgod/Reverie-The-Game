@@ -107,6 +107,7 @@ export type Beats = {
   winkSeed: boolean;
   log: boolean;
   still: boolean;
+  bracket: boolean;
 };
 
 export type WeatherHeard = {
@@ -196,6 +197,7 @@ export type Poi = {
     | "quill-gone"
     | "vesper-gone"
     | "wet-grid-season"
+    | "wet-grid-bracket"
     | "party-blind"
     | "guest-arena"
     | "screening"
@@ -1662,6 +1664,7 @@ export function emptyBeats(): Beats {
     winkSeed: false,
     log: false,
     still: false,
+    bracket: false,
   };
 }
 
@@ -2311,6 +2314,32 @@ export function seasonPoi(): Poi {
     x: WET_GRID.x,
     y: WET_GRID.y,
     kind: "wet-grid-season",
+  };
+}
+
+export const BRACKET_COPY =
+  "Equalized seasonal bracket. Serials stay visible. You did not strike harder. This was not a fetch.";
+export const WINK_BRACKET = "A bracket is equal. Presence, not a stick. The token does not strike.";
+export const BRACKET_NEED = "Name the residual season first.";
+export const BRACKET_HELD = "The bracket already holds. Serials stay visible. Combat is not.";
+export const BRACKET_SPECTATOR = "A wet street. You do not get a bracket.";
+export const BRACKET_CULT = "The street is cult. A bracket does not list here.";
+
+export const BRACKET_PLAQUE: Sign = {
+  id: WET_GRID.id,
+  title: "The season — equal",
+  text: "Equalized. Serials stay. The number does not strike.",
+  x: WET_GRID.x,
+  y: WET_GRID.y,
+};
+
+export function bracketPoi(): Poi {
+  return {
+    id: WET_GRID.id,
+    name: "The season — equal",
+    x: WET_GRID.x,
+    y: WET_GRID.y,
+    kind: "wet-grid-bracket",
   };
 }
 
