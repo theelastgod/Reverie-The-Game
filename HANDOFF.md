@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 29** — House tithe sink (upkeep for omen, never a damage buff). No mint.
+**Next stage: 30** — Repair sink (Bestand, exhibition kit, never cult). No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -140,8 +140,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Signing the Safety freeze costs 10 Bestand. Poor signatures refuse. Guests cannot sign.
 - Freeze still starves the Passing and blocks extract. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 29 (do this next)
-House tithe sink: Bestand upkeep for the omen, never a damage buff. No mint. No Base.
+## Stage 29 (landed)
+- Winning House omen tax-cut arms only after hall tithe (6 Bestand). Unpaid omen is flavor, not a skim.
+- Wrong House, guests, and empty wars refuse. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 30 (do this next)
+Repair sink: Bestand repairs exhibition kit after wreckage. Cult objects do not repair. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

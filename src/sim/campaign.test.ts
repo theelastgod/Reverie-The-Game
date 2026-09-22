@@ -99,6 +99,13 @@ import {
   WINK_ANNOUNCE,
   WAR_WIN,
   WAR_TITHE,
+  TITHE_COST,
+  TITHE_COPY,
+  TITHE_NEED,
+  TITHE_SPECTATOR,
+  TITHE_WRONG,
+  TITHE_NONE,
+  TITHE_HELD,
   WAR_OMEN_KEEP,
   WAR_OMEN_EXTRACT,
   WINK_WAR,
@@ -176,6 +183,7 @@ import {
   applyClearing,
   applyPassing,
   applyAnnounce,
+  applyTithe,
   applyMarket,
   applyOperator,
   applyRead,
@@ -1031,11 +1039,12 @@ describe("House war on the Clearing", () => {
     expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
   });
 
-  it("winning House skims less tithe and still cannot buy a strike", () => {
-    expect(warTax(8, "mortals", { ...emptyWar(), winner: "mortals", titheCut: 2 })).toBe(6);
-    expect(warTax(8, "sky", { ...emptyWar(), winner: "mortals", titheCut: 2 })).toBe(8);
+  it("winning House skims less tithe only after upkeep, never a strike", () => {
+    expect(warTax(8, "mortals", { ...emptyWar(), winner: "mortals", titheCut: 2, tithePaid: true })).toBe(6);
+    expect(warTax(8, "mortals", { ...emptyWar(), winner: "mortals", titheCut: 2, tithePaid: false })).toBe(8);
+    expect(warTax(8, "sky", { ...emptyWar(), winner: "mortals", titheCut: 2, tithePaid: true })).toBe(8);
     const w = emptyWorld();
-    w.war = { ...emptyWar(), winner: "mortals", titheCut: WAR_TITHE, omen: WAR_OMEN_KEEP };
+    w.war = { ...emptyWar(), winner: "mortals", titheCut: WAR_TITHE, omen: WAR_OMEN_KEEP, tithePaid: true };
     const node = w.nodes[0];
     w.players.set("a", {
       ...spawnGuest("a"),
@@ -1051,6 +1060,55 @@ describe("House war on the Clearing", () => {
     expect(after.players.get("a")?.bestand).toBeGreaterThan(40 - tax);
     expect(damageFor(after.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
     expect(guestCanClaim(after.players.get("a")!)).toBe(false);
+  });
+
+  it("House tithe spends Bestand to arm the omen cut", () => {
+    const w = emptyWorld();
+    w.war = { ...emptyWar(), winner: "mortals", titheCut: WAR_TITHE, omen: WAR_OMEN_KEEP };
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      house: "mortals",
+      beats: { ...emptyBeats(), hall: true, care: true },
+      inCare: true,
+      bestand: 4,
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    const poor = applyTithe(w, "a");
+    expect(poor.war.tithePaid).toBe(false);
+    expect(poor.players.get("a")?.heard).toBe(TITHE_NEED);
+
+    w.players.set("a", { ...w.players.get("a")!, bestand: 20 });
+    const paid = applyTithe(w, "a");
+    expect(paid.war.tithePaid).toBe(true);
+    expect(paid.players.get("a")?.bestand).toBe(20 - TITHE_COST);
+    expect(paid.players.get("a")?.heard).toBe(TITHE_COPY);
+    expect(paid.players.get("a")?.wink).toBe(WINK_WAR);
+    expect(TITHE_COST).toBe(6);
+    expect(damageFor(paid.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(paid.players.get("a")!)).toBe(false);
+
+    const again = applyTithe(paid, "a");
+    expect(again.players.get("a")?.heard).toBe(TITHE_HELD);
+    expect(again.players.get("a")?.bestand).toBe(20 - TITHE_COST);
+
+    const none = emptyWorld();
+    none.players.set("a", { ...spawnGuest("a"), guest: false, house: "mortals", inCare: true, x: HOUSE_HALL.x, y: HOUSE_HALL.y, bestand: 20 });
+    expect(applyTithe(none, "a").players.get("a")?.heard).toBe(TITHE_NONE);
+
+    const wrong = emptyWorld();
+    wrong.war = { ...emptyWar(), winner: "sky", titheCut: WAR_TITHE };
+    wrong.players.set("a", { ...spawnGuest("a"), guest: false, house: "mortals", inCare: true, x: HOUSE_HALL.x, y: HOUSE_HALL.y, bestand: 20 });
+    expect(applyTithe(wrong, "a").players.get("a")?.heard).toBe(TITHE_WRONG);
+
+    const gWorld = emptyWorld();
+    gWorld.war = { ...emptyWar(), winner: "mortals", titheCut: WAR_TITHE };
+    gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, bestand: 20 });
+    const g = applyTithe(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(TITHE_SPECTATOR);
+    expect(g.war.tithePaid).toBe(false);
+    expect(g.players.get("g")?.bestand).toBe(20);
   });
 
   it("holding the ring ticks a keep win without extra damage", () => {

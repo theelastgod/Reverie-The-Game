@@ -671,14 +671,23 @@ export type HouseWar = {
   winner: House;
   omen: string;
   titheCut: number;
+  tithePaid: boolean;
 };
 
 export const WAR_WIN = 2;
 export const WAR_TITHE = 2;
+export const TITHE_COST = 6;
+export const TITHE_COPY =
+  "You paid the House tithe. Six Bestand. The omen holds. Combat is not.";
+export const TITHE_NEED = "Six Bestand keeps the omen. Tithe is upkeep, not a stick.";
+export const TITHE_SPECTATOR = "A House ledger. Guests do not tithe.";
+export const TITHE_WRONG = "This omen is not yours to keep.";
+export const TITHE_NONE = "No omen yet. Win the hole first.";
+export const TITHE_HELD = "The tithe is current. The omen already holds.";
 export const WAR_OMEN_KEEP =
-  "House omen: the hole holds. Tithe eases. The number does not strike.";
+  "House omen: the hole holds. Tithe eases after upkeep. The number does not strike.";
 export const WAR_OMEN_EXTRACT =
-  "House omen: the hole is stock. Tithe eases. Combat is not.";
+  "House omen: the hole is stock. Tithe eases after upkeep. Combat is not.";
 export const WINK_WAR = "Friends split here. Tithe and omen, never a bigger stick.";
 
 export function emptyScores(): HouseScores {
@@ -686,7 +695,7 @@ export function emptyScores(): HouseScores {
 }
 
 export function emptyWar(): HouseWar {
-  return { keep: emptyScores(), extract: emptyScores(), winner: "", omen: "", titheCut: 0 };
+  return { keep: emptyScores(), extract: emptyScores(), winner: "", omen: "", titheCut: 0, tithePaid: false };
 }
 
 export function leadingHouse(scores: HouseScores): House {
@@ -720,12 +729,13 @@ export function resolveWar(war: HouseWar, side: "keep" | "extract"): HouseWar {
     ...war,
     winner: lead,
     titheCut: WAR_TITHE,
+    tithePaid: false,
     omen: side === "keep" ? WAR_OMEN_KEEP : WAR_OMEN_EXTRACT,
   };
 }
 
 export function warTax(tax: number, house: House, war: HouseWar): number {
-  if (house && house === war.winner) return Math.max(0, tax - war.titheCut);
+  if (house && house === war.winner && war.tithePaid) return Math.max(0, tax - war.titheCut);
   return tax;
 }
 

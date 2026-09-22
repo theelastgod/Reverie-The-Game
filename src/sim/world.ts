@@ -178,6 +178,13 @@ import {
   scoreWar,
   resolveWar,
   warTax,
+  TITHE_COST,
+  TITHE_COPY,
+  TITHE_NEED,
+  TITHE_SPECTATOR,
+  TITHE_WRONG,
+  TITHE_NONE,
+  TITHE_HELD,
   WINK_WAR,
   Messenger,
   messengerFor,
@@ -673,6 +680,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (!p || p.hp <= 0 || !sign || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
   if (sign.id === HOUSE_HALL.id) {
     if (!p.inCare || p.guest || p.locked) return w;
+    if (p.beats.hall && w.war.winner) return applyTithe(w, playerId);
     const tax = gestellTax(w.gestell);
     const players = new Map(w.players);
     players.set(playerId, {
@@ -1297,6 +1305,41 @@ export function snapshot(w: WorldState) {
     announced: w.announced,
     war: w.war,
   };
+}
+
+export function applyTithe(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: TITHE_SPECTATOR, wink: visibleWink(true, WINK_WAR) });
+    return { ...w, players };
+  }
+  if (!w.war.winner) {
+    players.set(playerId, { ...p, heard: TITHE_NONE });
+    return { ...w, players };
+  }
+  if (p.house !== w.war.winner) {
+    players.set(playerId, { ...p, heard: TITHE_WRONG, wink: visibleWink(false, WINK_WAR) });
+    return { ...w, players };
+  }
+  if (w.war.tithePaid) {
+    players.set(playerId, { ...p, heard: TITHE_HELD, wink: visibleWink(false, WINK_WAR) });
+    return { ...w, players };
+  }
+  if (p.bestand < TITHE_COST) {
+    players.set(playerId, { ...p, heard: TITHE_NEED });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    bestand: p.bestand - TITHE_COST,
+    heard: TITHE_COPY,
+    wink: visibleWink(false, WINK_WAR),
+    lastCareX: HOUSE_HALL.x,
+    lastCareY: HOUSE_HALL.y,
+  });
+  return { ...w, players, war: { ...w.war, tithePaid: true } };
 }
 
 export function applyAnnounce(w: WorldState, playerId: string, nodeId: string): WorldState {

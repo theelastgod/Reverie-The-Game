@@ -8,6 +8,7 @@ import {
   HOUSE_HALL,
   SAFETY_ANNEX,
   FREEZE_COST,
+  TITHE_COST,
   CLEARING_STALL,
   CLEARING_PRICE,
   M3_DOOR,
@@ -542,9 +543,12 @@ export class NaveScene extends Phaser.Scene {
     } else if (me.locked) {
       this.prompt = care ? me.heard || "You see a door. You do not see what it is for." : me.heard || "A guest cannot prepare the ground.";
     } else if (hall && me.inCare && !me.guest) {
-      this.prompt = me.beats.hall
-        ? me.heard
-        : `F read House of Mortals. Gestell tax ${snap.tax}. The number does not strike.`;
+      this.prompt =
+        me.beats.hall && snap.war?.winner && !snap.war.tithePaid && me.house === snap.war.winner
+          ? `F — pay House tithe (${TITHE_COST} Bestand). Omen holds after upkeep. Not a stick.`
+          : me.beats.hall
+            ? me.heard
+            : `F read House of Mortals. Gestell tax ${snap.tax}. The number does not strike.`;
     } else if (hall) {
       this.prompt = "You see a hall. You do not see who owns the nodes.";
     } else if (annex && (me.guest || me.locked)) {
@@ -675,7 +679,9 @@ export class NaveScene extends Phaser.Scene {
       const taxBit = me.inCare ? ` · tax ${snap.tax}` : "";
       const freezeBit = snap.frozen ? " · freeze" : "";
       const omenBit = me.house === "sky" && !snap.passing.outcome ? ` · omen ${snap.passing.ready}` : "";
-      const warBit = snap.war?.winner ? ` · ${houseName(snap.war.winner)} omen` : "";
+      const warBit = snap.war?.winner
+        ? ` · ${houseName(snap.war.winner)} omen${snap.war.tithePaid ? "" : " · tithe due"}`
+        : "";
       const passBit = snap.passing.outcome
         ? ` · Passing ${snap.passing.outcome}`
         : snap.passing.starved
