@@ -99,6 +99,7 @@ export type Beats = {
   winkBlind: boolean;
   ruinBack: boolean;
   arena: boolean;
+  screening: boolean;
 };
 
 export type WeatherHeard = {
@@ -188,7 +189,8 @@ export type Poi = {
     | "vesper-gone"
     | "wet-grid-season"
     | "party-blind"
-    | "guest-arena";
+    | "guest-arena"
+    | "screening";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -242,6 +244,39 @@ export function arenaDummy(): Clerk {
     hp: CLERK_HP,
     telegraph: 0,
     dummy: true,
+  };
+}
+
+export const SCREENING = { id: "screening", x: 840, y: 280 };
+export const SCREENING_COPY =
+  "A dispatch. Public screening. The Last God is a room, not a stick. Combat is not. This was not a fetch.";
+export const WINK_SCREENING = "Observer proximity. A screening, not a stick. The token does not strike.";
+export const SCREENING_HELD = "The dispatch already holds. The screening stays public.";
+export const SCREENING_SPECTATOR = "A screen. You do not get the dispatch.";
+
+export const SCREENING_PLAQUE: Sign = {
+  id: SCREENING.id,
+  title: "Public screening",
+  text: "Dispatch. Observer room. The number does not strike.",
+  x: SCREENING.x,
+  y: SCREENING.y,
+};
+
+export const SCREENING_OPEN_PLAQUE: Sign = {
+  id: SCREENING.id,
+  title: "Dispatch",
+  text: "The Last God screens. Proximity, not a stick. The number does not strike.",
+  x: SCREENING.x,
+  y: SCREENING.y,
+};
+
+export function screeningPoi(open = false): Poi {
+  return {
+    id: SCREENING.id,
+    name: open ? "Dispatch" : "Public screening",
+    x: SCREENING.x,
+    y: SCREENING.y,
+    kind: "screening",
   };
 }
 export const TEST_SERIAL = 7777;
@@ -1392,6 +1427,7 @@ export function emptyBeats(): Beats {
     winkBlind: false,
     ruinBack: false,
     arena: false,
+    screening: false,
   };
 }
 
@@ -1420,6 +1456,7 @@ export function naveSigns(): Sign[] {
     { ...CLEARING_PLAQUE },
     { ...WET_PLAQUE },
     { ...ARENA_PLAQUE },
+    { ...SCREENING_PLAQUE },
     { ...CLAIMS_PLAQUE },
     { ...SHRINE_PLAQUE },
   ];
@@ -1437,6 +1474,7 @@ export function navePois(): Poi[] {
     clearingPoi(false),
     wetGridPoi(),
     arenaPoi(),
+    screeningPoi(),
     claimsPoi(),
     shrinePoi(),
   ];

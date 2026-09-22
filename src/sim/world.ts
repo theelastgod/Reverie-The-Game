@@ -479,6 +479,13 @@ import {
   ARENA_OPEN_PLAQUE,
   arenaPoi,
   arenaDummy,
+  SCREENING,
+  SCREENING_COPY,
+  WINK_SCREENING,
+  SCREENING_HELD,
+  SCREENING_SPECTATOR,
+  SCREENING_OPEN_PLAQUE,
+  screeningPoi,
   CYBER_COPY,
   WINK_CYBER,
   CYBER_NEED,
@@ -655,6 +662,7 @@ export type WorldState = {
   blitzHeld: boolean;
   ruinBackHeld: boolean;
   arenaHeld: boolean;
+  screeningHeld: boolean;
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
   glamourHeld: boolean;
@@ -853,6 +861,7 @@ export function emptyWorld(): WorldState {
     blitzHeld: false,
     ruinBackHeld: false,
     arenaHeld: false,
+    screeningHeld: false,
     blitzMarks: [],
     cyberHeld: false,
     glamourHeld: false,
@@ -1484,6 +1493,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === IONE.id) return applyIoneMark(w, playerId);
   if (sign.id === GUEST_ARENA.id) return applyArena(w, playerId);
+  if (sign.id === SCREENING.id) return applyScreening(w, playerId);
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) {
     if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
@@ -2971,6 +2981,7 @@ export function snapshot(w: WorldState) {
     blitzHeld: w.blitzHeld,
     ruinBackHeld: w.ruinBackHeld,
     arenaHeld: w.arenaHeld,
+    screeningHeld: w.screeningHeld,
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,
@@ -3221,6 +3232,33 @@ export function applyArena(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === GUEST_ARENA.id ? { ...ARENA_OPEN_PLAQUE } : s))
     : [...w.signs, { ...ARENA_OPEN_PLAQUE }];
   return { ...w, players, arenaHeld: true, clerks: dummy, pois, signs };
+}
+
+export function applyScreening(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SCREENING.x, SCREENING.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: SCREENING_SPECTATOR, wink: visibleWink(true, WINK_SCREENING) });
+    return { ...w, players };
+  }
+  if (w.screeningHeld && p.beats.screening) {
+    players.set(playerId, { ...p, heard: SCREENING_HELD, wink: visibleWink(false, WINK_SCREENING) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, screening: true },
+    heard: SCREENING_COPY,
+    wink: visibleWink(false, WINK_SCREENING),
+  });
+  const pois = w.pois.some((poi) => poi.id === SCREENING.id)
+    ? w.pois.map((poi) => (poi.id === SCREENING.id ? screeningPoi(true) : poi))
+    : [...w.pois, screeningPoi(true)];
+  const signs = w.signs.some((s) => s.id === SCREENING.id)
+    ? w.signs.map((s) => (s.id === SCREENING.id ? { ...SCREENING_OPEN_PLAQUE } : s))
+    : [...w.signs, { ...SCREENING_OPEN_PLAQUE }];
+  return { ...w, players, screeningHeld: true, pois, signs };
 }
 
 export function applyCyber(w: WorldState, playerId: string, nodeId: string): WorldState {

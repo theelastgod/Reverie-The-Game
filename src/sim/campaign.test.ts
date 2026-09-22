@@ -10,6 +10,12 @@ import {
   ARENA_HELD,
   ARENA_HIT,
   ARENA_OPEN_PLAQUE,
+  SCREENING,
+  SCREENING_COPY,
+  WINK_SCREENING,
+  SCREENING_HELD,
+  SCREENING_SPECTATOR,
+  SCREENING_OPEN_PLAQUE,
   CLERK_HP,
   GOING_UNDER,
   FREEZE_COPY,
@@ -471,6 +477,7 @@ import {
   applyBlitz,
   applyRuinBack,
   applyArena,
+  applyScreening,
   applyCyber,
   applyGlamour,
   applyDwell,
@@ -2595,6 +2602,37 @@ describe("Guest arena", () => {
     const aOpen = applyArena(angel, "a");
     expect(aOpen.arenaHeld).toBe(true);
     expect(damageFor(aOpen.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+  });
+});
+
+describe("Public screening", () => {
+  it("Angels take a dispatch; guests cannot; combat is not", () => {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    const shown = applyScreening(w, "a");
+    const p = shown.players.get("a")!;
+    expect(p.heard).toBe(SCREENING_COPY);
+    expect(p.wink).toBe(WINK_SCREENING);
+    expect(p.beats.screening).toBe(true);
+    expect(shown.screeningHeld).toBe(true);
+    expect(shown.pois.find((poi) => poi.id === SCREENING.id)?.name).toBe("Dispatch");
+    expect(shown.signs.find((s) => s.id === SCREENING.id)?.title).toBe(SCREENING_OPEN_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyScreening(shown, "a").players.get("a")?.heard).toBe(SCREENING_HELD);
+    expect(applyRead(w, "a", SCREENING.id).screeningHeld).toBe(true);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
+    expect(applyScreening(gWorld, "g").players.get("g")?.heard).toBe(SCREENING_SPECTATOR);
+    expect(gWorld.screeningHeld).toBe(false);
   });
 });
 

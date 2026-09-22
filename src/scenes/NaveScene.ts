@@ -6,6 +6,7 @@ import {
   messengerName,
   GOING_UNDER,
   GUEST_ARENA,
+  SCREENING,
   HOUSE_HALL,
   SAFETY_ANNEX,
   FREEZE_COST,
@@ -494,6 +495,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7eb6ff
                       : poi.kind === "guest-arena"
                         ? 0xe8e8e8
+                      : poi.kind === "screening"
+                        ? 0xc9a56a
                       : poi.kind === "ord-gone"
                         ? 0x7a1028
                       : poi.kind === "quill-gone"
@@ -673,6 +676,7 @@ export class NaveScene extends Phaser.Scene {
     const stall = nearPoint(me.x, me.y, CLEARING_STALL.x, CLEARING_STALL.y, 56);
     const wet = inWetGrid(me.x, me.y);
     const arena = nearPoint(me.x, me.y, GUEST_ARENA.x, GUEST_ARENA.y, 56);
+    const screening = nearPoint(me.x, me.y, SCREENING.x, SCREENING.y, 56);
     const deskClaim = nearPoint(me.x, me.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56);
     const forge =
       nearPoint(me.x, me.y, FORGE_TRAY.x, FORGE_TRAY.y, 64) ||
@@ -701,7 +705,13 @@ export class NaveScene extends Phaser.Scene {
     const shrine = nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56);
     const ioneGoneNear = !!(snap.ioneGone && nearPoint(me.x, me.y, IONE.x, IONE.y, 56));
 
-    if (arena && (snap.arenaHeld || me.beats.arena)) {
+    if (screening && (me.guest || me.locked)) {
+      this.prompt = "A screen. You do not get the dispatch.";
+    } else if (screening && (snap.screeningHeld || me.beats.screening)) {
+      this.prompt = me.heard || "Dispatch. Public screening. The Last God is a room, not a stick.";
+    } else if (screening) {
+      this.prompt = "F — take the public screening. Observer proximity. Not a stick.";
+    } else if (arena && (snap.arenaHeld || me.beats.arena)) {
       this.prompt = me.heard || "Guest arena. Click strike the dummy. Practice. No spoils.";
     } else if (arena) {
       this.prompt = "F — open the guest arena. Practice. No spoils. Guests are not loot.";

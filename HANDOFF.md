@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 78** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 79** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -337,7 +337,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Guest arena: F opens a practice dummy. Strike it: no spoils, no wreckage, no Gestell. Plaque/POI Guest arena — practice. Guests can.
 - Angels practice the same. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 78 (do this next)
+## Stage 78 (landed)
+- Public screening: F takes a dispatch. Plaque/POI Dispatch. Observer proximity. Not a stick.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 79 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
