@@ -487,6 +487,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0xe8d5a3
                           : poi.kind === "clearing-held"
                             ? 0x7eb6ff
+                            : poi.kind === "clearing-absence"
+                              ? 0x7a1028
                             : poi.kind === "clearing-ring"
                               ? 0xc9a56a
             : poi.kind === "care-shut"
@@ -723,6 +725,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A ring in the asphalt. You cannot prepare the ground.";
     } else if (ring && snap.war?.winner) {
       this.prompt = snap.war.omen || me.heard;
+    } else if (ring && (snap.naraAtClearing || snap.passing.outcome === "absence")) {
+      this.prompt = me.heard || "The Clearing — absence. Nara Vale stays. The hour went by.";
     } else if (ring && snap.passing.outcome) {
       this.prompt = me.heard || "The hour already went by.";
     } else if (ring && me.beats.clearing && snap.clearingOpen) {
@@ -763,6 +767,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Movement III is shut. The private yield funds this door the Cold way.";
     } else if (gardenNear && !gardenNear.done && !me.guest) {
       this.prompt = "F bury the Clearing that Movement I over-extracted. Nara Vale will not speak until you do.";
+    } else if (npcNear?.id === "nara" && (snap.naraAtClearing || me.beats.absenceHour)) {
+      this.prompt = me.heard || "Nara Vale stays. The hour went by. Absence is honest.";
     } else if (npcNear?.id === "nara" && (me.beats.naraGod || snap.lastGodBuried || snap.naraAtCare)) {
       this.prompt = me.heard || "The last god is in the earth. Nara Vale is at the Care.";
     } else if (npcNear?.id === "nara" && me.beats.naraGodAsk) {
@@ -968,7 +974,9 @@ export class NaveScene extends Phaser.Scene {
                     : "The Cable"
               : "Movement III"
         : ring
-          ? snap.clearingOpen
+          ? snap.naraAtClearing || snap.passing.outcome === "absence"
+            ? "The Clearing — absence"
+            : snap.clearingOpen
             ? "The Clearing · held"
             : "The Clearing"
         : me.inCare

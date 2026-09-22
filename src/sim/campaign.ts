@@ -81,6 +81,8 @@ export type Beats = {
   quillNoPrint: boolean;
   restraint: boolean;
   vesperNoGod: boolean;
+  absenceHour: boolean;
+  naraStay: boolean;
 };
 
 export type WeatherHeard = {
@@ -134,6 +136,7 @@ export type Poi = {
     | "forge-tray"
     | "clearing-ring"
     | "clearing-held"
+    | "clearing-absence"
     | "wet-grid"
     | "wet-grid-cult"
     | "claims-desk"
@@ -1260,6 +1263,8 @@ export function emptyBeats(): Beats {
     quillNoPrint: false,
     restraint: false,
     vesperNoGod: false,
+    absenceHour: false,
+    naraStay: false,
   };
 }
 
@@ -1639,6 +1644,29 @@ export function auraTowardSeed(args: {
 }
 export const PASSING_ABSENCE =
   "The hour went by. Absence is honest. Nara Vale stays. Solo cannot force a god.";
+export const NARA_STAYS =
+  "The hour went by. I stay. The hole is still a grave. Fetch would have sent me home.";
+export const NARA_STAYS_LATER = "I am still here. Absence is honest. I will not number a god.";
+export const WINK_PASS_ABSENCE =
+  "A going-under Wink. The hour declined. Nara Vale stays. Combat is not.";
+
+export const ABSENCE_PLAQUE: Sign = {
+  id: CLEARING_RING.id,
+  title: "The Clearing — absence",
+  text: "The hour went by. Nara Vale stays. Absence is a standing. The number does not strike.",
+  x: CLEARING_RING.x,
+  y: CLEARING_RING.y,
+};
+
+export function absencePoi(): Poi {
+  return {
+    id: CLEARING_RING.id,
+    name: "The Clearing — absence",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+    kind: "clearing-absence",
+  };
+}
 export const PASSING_HIJACK =
   "Safety or Cold claimed the rite. The world continues. You are marked. No mint.";
 export const PASSING_FAIL = "Gestell is maxed. Without a Clearing the hour does not open.";
@@ -1700,6 +1728,7 @@ export function liveNpcs(
   naraAtCare = false,
   quillNoPrint = false,
   vesperNoGod = false,
+  naraAtClearing = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1753,6 +1782,13 @@ export function liveNpcs(
     base = base.map((n) =>
       n.id === "nara"
         ? { ...n, x: CARE_DOOR.x + 40, y: CARE_DOOR.y + 40, role: "Burying absence" }
+        : n,
+    );
+  }
+  if (naraAtClearing) {
+    base = base.map((n) =>
+      n.id === "nara"
+        ? { ...n, x: CLEARING_RING.x + 40, y: CLEARING_RING.y + 36, role: "Stays" }
         : n,
     );
   }

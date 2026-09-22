@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 58** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 59** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -257,7 +257,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Passing Appearance slows aura decay toward seed (not to zero). Guests stay aura 0. HUD: aura holds.
 - Absence/hijack do not grant the slow. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 58 (do this next)
+## Stage 58 (landed)
+- Passing Absence plants a going-under Wink. Clearing plaque/POI The Clearing — absence. Nara Vale stays at the hole. Not a fetch.
+- Appearance does not move her. Guests cannot keep the hole. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 59 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

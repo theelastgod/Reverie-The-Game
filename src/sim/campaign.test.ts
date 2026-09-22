@@ -166,6 +166,10 @@ import {
   APPEAR_SLOW,
   auraTowardSeed,
   PASSING_ABSENCE,
+  NARA_STAYS,
+  NARA_STAYS_LATER,
+  WINK_PASS_ABSENCE,
+  ABSENCE_PLAQUE,
   PASSING_HIJACK,
   PASSING_FAIL,
   PASSING_NEED,
@@ -1650,9 +1654,21 @@ describe("Movement IV Clearing and Passing", () => {
     const after = applyPassing(held, "a");
     const p = after.players.get("a")!;
     expect(p.heard).toBe(PASSING_ABSENCE);
+    expect(p.wink).toBe(WINK_PASS_ABSENCE);
+    expect(p.beats.absenceHour).toBe(true);
     expect(after.passing.outcome).toBe("absence");
     expect(after.passing.ready).toBe(0);
+    expect(after.naraAtClearing).toBe(true);
+    expect(after.pois.find((poi) => poi.id === CLEARING_RING.id)?.kind).toBe("clearing-absence");
+    expect(after.signs.find((s) => s.id === CLEARING_RING.id)?.title).toBe(ABSENCE_PLAQUE.title);
     expect(p.heard).toContain("Nara Vale");
+    const stayed = liveNpcs(false, false, false, false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "nara")!;
+    expect(stayed.role).toBe("Stays");
+    after.players.set("a", { ...p, x: stayed.x, y: stayed.y });
+    const stayedTalk = applyTalk(after, "a", "nara");
+    expect(stayedTalk.players.get("a")?.heard).toBe(NARA_STAYS);
+    stayedTalk.players.set("a", { ...stayedTalk.players.get("a")!, x: stayed.x, y: stayed.y });
+    expect(applyTalk(stayedTalk, "a", "nara").players.get("a")?.heard).toBe(NARA_STAYS_LATER);
     expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
     expect(guestCanClaim(p)).toBe(false);
   });

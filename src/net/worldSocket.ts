@@ -50,6 +50,7 @@ export type Snap = {
   vesperNoGod?: boolean;
   deskVaulted?: boolean;
   appearSlow?: boolean;
+  naraAtClearing?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

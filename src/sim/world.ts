@@ -268,6 +268,11 @@ import {
   LAST_WORD_GONE,
   WINK_TURN,
   PASSING_NEED,
+  NARA_STAYS,
+  NARA_STAYS_LATER,
+  WINK_PASS_ABSENCE,
+  ABSENCE_PLAQUE,
+  absencePoi,
   clearingPoi,
   liveNpcs,
   NARA_AFTER_GARDEN,
@@ -501,6 +506,7 @@ export type WorldState = {
   vesperNoGod: boolean;
   deskVaulted: boolean;
   appearSlow: boolean;
+  naraAtClearing: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -667,6 +673,7 @@ export function emptyWorld(): WorldState {
     vesperNoGod: false,
     deskVaulted: false,
     appearSlow: false,
+    naraAtClearing: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -937,14 +944,27 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
   const players = new Map(w.players);
   const gardenOpen = w.rites.some((r) => r.kind === "garden" && !r.done);
-  if (id === "nara" && gardenOpen && (p.beats.under || w.m3Open)) {
+  if (id === "nara" && gardenOpen && (p.beats.under || w.m3Open) && !w.naraAtClearing) {
     players.set(playerId, { ...p, heard: NARA_SILENCE });
+    return { ...w, players };
+  }
+  if (id === "nara" && w.naraAtClearing && !p.guest && !p.locked) {
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, naraStay: true, absenceHour: true, nara: true },
+      heard: p.beats.naraStay ? NARA_STAYS_LATER : NARA_STAYS,
+      wink: visibleWink(false, WINK_PASS_ABSENCE),
+    });
+    return { ...w, players };
+  }
+  if (id === "nara" && w.naraAtClearing && (p.guest || p.locked)) {
+    players.set(playerId, { ...p, heard: SEXTON_SPECTATOR });
     return { ...w, players };
   }
   if (id === "nara" && p.beats.garden && !p.guest && !p.locked) {
@@ -2498,7 +2518,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2522,6 +2542,7 @@ export function snapshot(w: WorldState) {
     vesperNoGod: w.vesperNoGod,
     deskVaulted: w.deskVaulted,
     appearSlow: w.appearSlow,
+    naraAtClearing: w.naraAtClearing,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2811,11 +2832,12 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
   });
   players.set(playerId, {
     ...p,
-    beats: { ...p.beats, passing: true },
+    beats: { ...p.beats, passing: true, absenceHour: outcome === "absence" ? true : p.beats.absenceHour },
     heard: passingCopy(outcome),
-    wink: visibleWink(false, WINK_TURN),
+    wink: visibleWink(false, outcome === "absence" ? WINK_PASS_ABSENCE : WINK_TURN),
     readiness: p.readiness + (outcome === "appearance" && !p.beats.passing ? 2 : 0),
   });
+  const absent = outcome === "absence";
   return {
     ...w,
     players,
@@ -2825,5 +2847,14 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
       outcome,
     },
     appearSlow: outcome === "appearance" ? true : w.appearSlow,
+    naraAtClearing: absent ? true : w.naraAtClearing,
+    pois: absent
+      ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? absencePoi() : poi))
+      : w.pois,
+    signs: absent
+      ? w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...ABSENCE_PLAQUE } : s)).concat(
+          w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...ABSENCE_PLAQUE }],
+        )
+      : w.signs,
   };
 }
