@@ -428,6 +428,12 @@ import {
   SPECTATE_PEOPLE_HELD,
   SPECTATE_PEOPLE_SPECTATOR,
   SPECTATE_PEOPLE_PLAQUE,
+  LASTWORD_PEOPLE_COPY,
+  WINK_LASTWORD_PEOPLE,
+  LASTWORD_PEOPLE_NEED,
+  LASTWORD_PEOPLE_HELD,
+  LASTWORD_PEOPLE_SPECTATOR,
+  LASTWORD_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1006,6 +1012,7 @@ import {
   applyHeavyPeople,
   applyHitStopPeople,
   applySpectatePeople,
+  applyLastWordPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4163,6 +4170,45 @@ describe("Spectate — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
     expect(applySpectatePeople(gWorld, "g").players.get("g")?.heard).toBe(SPECTATE_PEOPLE_SPECTATOR);
     expect(gWorld.spectatePeopleHeld).toBe(false);
+  });
+});
+
+describe("Last word — people", () => {
+  it("names last-word as people after spectate; Ione stays; guests cannot", () => {
+    const w = emptyWorld();
+    w.spectatePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), spectatePeople: true },
+      x: IONE.x,
+      y: IONE.y,
+    });
+    const named = applyTalk(w, "a", "ione");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(LASTWORD_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_LASTWORD_PEOPLE);
+    expect(p.beats.lastWordPeople).toBe(true);
+    expect(named.lastWordPeopleHeld).toBe(true);
+    expect(named.ioneGone).toBe(false);
+    expect(named.pois.find((poi) => poi.kind === "lastword-people")?.name).toBe("Last word — people");
+    expect(named.signs.find((s) => s.id === "lastword-people")?.title).toBe(LASTWORD_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Ione still speaks");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyLastWordPeople(named, "a").players.get("a")?.heard).toBe(LASTWORD_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: IONE.x, y: IONE.y });
+    expect(applyLastWordPeople(early, "a").players.get("a")?.heard).toBe(LASTWORD_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.spectatePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: IONE.x, y: IONE.y, locked: true });
+    expect(applyLastWordPeople(gWorld, "g").players.get("g")?.heard).toBe(LASTWORD_PEOPLE_SPECTATOR);
+    expect(gWorld.lastWordPeopleHeld).toBe(false);
   });
 });
 

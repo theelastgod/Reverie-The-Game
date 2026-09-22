@@ -101,6 +101,24 @@ export class BootScene extends Phaser.Scene {
     this.load.image("organ-cable-dark", asset("organ-cable-dark.jpg"));
     this.load.image("house-war", asset("house-war.jpg"));
     this.load.image("shrine-upkeep", asset("shrine-upkeep.jpg"));
+    this.load.image("plate-m3", asset("plate-m3.jpg"));
+    this.load.image("plate-care", asset("plate-care.jpg"));
+    this.load.image("plate-forge", asset("plate-forge.jpg"));
+    this.load.image("plate-operator", asset("plate-operator.jpg"));
+    this.load.image("plate-under", asset("plate-under.jpg"));
+    this.load.image("plate-arena", asset("plate-arena.jpg"));
+    this.load.image("plate-screening", asset("plate-screening.jpg"));
+    this.load.image("plate-claims", asset("plate-claims.jpg"));
+    this.load.image("guest", asset("sprites/guest.png"));
+    this.load.image("nara", asset("sprites/nara.png"));
+    this.load.image("quill", asset("sprites/quill.png"));
+    this.load.image("ord", asset("sprites/ord.png"));
+    this.load.image("ione", asset("sprites/ione.png"));
+    this.load.image("vesper", asset("sprites/vesper.png"));
+    this.load.image("clerk", asset("sprites/clerk.png"));
+    this.load.image("angel", asset("sprites/angel.png"));
+    this.load.image("fx-strike", asset("sprites/fx-strike.png"));
+    this.load.image("fx-aura", asset("sprites/fx-aura.png"));
   }
 
   create() {

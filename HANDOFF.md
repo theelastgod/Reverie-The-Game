@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 151** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 154** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -642,7 +642,21 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After hit-stop as people, F at a wreckage: spectate as people. Plaque/POI **Spectate — people**. Aura still caps. The duel still pays from a person.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 151 (do this next)
+## Stage 151 (landed)
+- Graft: floors tile at native grain (`tileSprite` + `tilePosition`). Location plates at Clearing, Wet Grid, organs, hall, annex, stall, shrine, garden, screening, arena, M3, Care, forge, operator, going-under, claims. Gold frames. No NPC portraits as plates.
+- Imagine dedicated plates for M3, Care, forge, operator, under, arena, screening, claims. Higgsfield later.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 152 (landed)
+- After spectate as people, F at Ione: last-word as people. Plaque/POI **Last word — people**. Ione still speaks. Absence still waits. Ione is not extracted.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 153 (landed)
+- Graft isolated Imagine sprites over portraits: guest, Nara, Quill, Ord, Ione, Vesper, clerk. Strike/aura FX. Burial and House-war plates. Floors still tile at native grain.
+- Higgsfield later.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 154 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

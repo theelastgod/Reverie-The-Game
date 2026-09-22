@@ -531,6 +531,13 @@ import {
   SPECTATE_PEOPLE_SPECTATOR,
   SPECTATE_PEOPLE_PLAQUE,
   spectatePeoplePoi,
+  LASTWORD_PEOPLE_COPY,
+  WINK_LASTWORD_PEOPLE,
+  LASTWORD_PEOPLE_NEED,
+  LASTWORD_PEOPLE_HELD,
+  LASTWORD_PEOPLE_SPECTATOR,
+  LASTWORD_PEOPLE_PLAQUE,
+  lastWordPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1258,6 +1265,7 @@ export type WorldState = {
   heavyPeopleHeld: boolean;
   hitStopPeopleHeld: boolean;
   spectatePeopleHeld: boolean;
+  lastWordPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1553,6 +1561,7 @@ export function emptyWorld(): WorldState {
     heavyPeopleHeld: false,
     hitStopPeopleHeld: false,
     spectatePeopleHeld: false,
+    lastWordPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2507,7 +2516,12 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
     players.set(playerId, { ...p, heard: w.lastGodNamed ? NARA_GOD_SPECTATOR : SEXTON_SPECTATOR });
     return { ...w, players };
   }
-  if (id === "ione") return applyLastWord(w, playerId);
+  if (id === "ione") {
+    if (w.spectatePeopleHeld && (!w.lastWordPeopleHeld || !p.beats.lastWordPeople)) {
+      return applyLastWordPeople(w, playerId);
+    }
+    return applyLastWord(w, playerId);
+  }
   if (id === "vesper") {
     if ((p.beats.foundryDark || w.foundryDark || w.vesperPersonHeld) && !w.vesperGone && !w.lastGodNamed) {
       return applyVesperPerson(w, playerId);
@@ -4827,6 +4841,37 @@ export function applySpectatePeople(w: WorldState, playerId: string): WorldState
   return { ...w, players, spectatePeopleHeld: true, pois, signs };
 }
 
+export function applyLastWordPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, IONE.x, IONE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: LASTWORD_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_LASTWORD_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.spectatePeopleHeld) {
+    players.set(playerId, { ...p, heard: LASTWORD_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.lastWordPeopleHeld && p.beats.lastWordPeople) {
+    players.set(playerId, { ...p, heard: LASTWORD_PEOPLE_HELD, wink: visibleWink(false, WINK_LASTWORD_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, lastWordPeople: true },
+    heard: LASTWORD_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_LASTWORD_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "lastword-people")
+    ? w.pois.map((poi) => (poi.id === "lastword-people" ? lastWordPeoplePoi() : poi))
+    : [...w.pois, lastWordPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "lastword-people")
+    ? w.signs.map((s) => (s.id === "lastword-people" ? { ...LASTWORD_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...LASTWORD_PEOPLE_PLAQUE }];
+  return { ...w, players, lastWordPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6039,6 +6084,7 @@ export function snapshot(w: WorldState) {
     heavyPeopleHeld: w.heavyPeopleHeld,
     hitStopPeopleHeld: w.hitStopPeopleHeld,
     spectatePeopleHeld: w.spectatePeopleHeld,
+    lastWordPeopleHeld: w.lastWordPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

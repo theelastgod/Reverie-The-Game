@@ -78,6 +78,7 @@ export class NaveScene extends Phaser.Scene {
   private following = false;
   private signsDrawn = false;
   private stallStill: Phaser.GameObjects.Image | null = null;
+  private auraImg: Phaser.GameObjects.Image | null = null;
 
   constructor() {
     super("nave");
@@ -120,11 +121,22 @@ export class NaveScene extends Phaser.Scene {
     this.input.keyboard.addKey("E").on("down", () => this.useNear("extract"));
     this.input.keyboard.addKey("Q").on("down", () => this.useNear("keep"));
     this.input.keyboard.addKey("F").on("down", () => this.interact());
-    this.input.keyboard.addKey("SPACE").on("down", () => this.net.strike());
-    this.input.keyboard.addKey("R").on("down", () => this.net.heavy());
+    this.input.keyboard.addKey("SPACE").on("down", () => {
+      this.net.strike();
+      this.flashStrike();
+    });
+    this.input.keyboard.addKey("R").on("down", () => {
+      this.net.heavy();
+      this.flashStrike(true);
+    });
     this.input.on("pointerdown", (ptr: Phaser.Input.Pointer) => {
-      if (ptr.event && (ptr.event as MouseEvent).shiftKey) this.net.heavy();
-      else this.net.strike();
+      if (ptr.event && (ptr.event as MouseEvent).shiftKey) {
+        this.net.heavy();
+        this.flashStrike(true);
+      } else {
+        this.net.strike();
+        this.flashStrike();
+      }
     });
     hud("mock-link")?.addEventListener("click", () => this.net.link(TEST_SERIAL));
 
@@ -178,25 +190,26 @@ export class NaveScene extends Phaser.Scene {
   }
 
   private graftPlates() {
-    this.plate(CLEARING_RING.x, CLEARING_RING.y - 8, "clearing-ring", 268, 150);
-    this.plate(WET_GRID.x, WET_GRID.y - 18, "wet-grid-cult", 188, 112);
-    this.plate(ORGAN_STRAIT.x, ORGAN_STRAIT.y + 28, "organ-strait", 132, 74);
-    this.plate(ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y + 28, "organ-foundry-dark", 132, 74);
-    this.plate(ORGAN_CABLE.x, ORGAN_CABLE.y + 28, "organ-cable-dark", 132, 74);
-    this.plate(HOUSE_HALL.x, HOUSE_HALL.y - 36, "house-hall", 156, 88);
-    this.plate(SAFETY_ANNEX.x, SAFETY_ANNEX.y - 36, "safety-annex", 148, 84);
-    this.stallStill = this.plate(CLEARING_STALL.x, CLEARING_STALL.y - 36, "clearing-stall", 148, 84);
-    this.plate(SHRINE.x, SHRINE.y - 36, "shrine-upkeep", 140, 80);
-    this.plate(WRECK_GARDEN.x, WRECK_GARDEN.y - 36, "wreckage-garden", 148, 84);
-    this.plate(IONE.x, IONE.y - 44, "ione", 120, 148);
-    this.plate(SCREENING.x, SCREENING.y - 36, "failed-passing", 140, 80);
-    this.plate(GUEST_ARENA.x, GUEST_ARENA.y - 36, "serial-wreckage", 128, 72);
-    this.plate(M3_DOOR.x, M3_DOOR.y + 28, "organ-foundry-dark", 120, 68);
-    this.plate(CARE_DOOR.x, CARE_DOOR.y - 28, "house-hall", 128, 72);
-    this.plate(FORGE_TRAY.x, FORGE_TRAY.y - 36, "house-war", 128, 72);
-    this.plate(OPERATOR_DESK.x, OPERATOR_DESK.y - 36, "vesper", 96, 120);
-    this.plate(GOING_UNDER.x, GOING_UNDER.y + 28, "serial-wreckage", 120, 68);
-    this.plate(CLAIMS_DESK.x, CLAIMS_DESK.y - 36, "safety-annex", 128, 72);
+    this.plate(CLEARING_RING.x, CLEARING_RING.y - 10, "clearing-ring", 280, 158);
+    this.plate(WET_GRID.x, WET_GRID.y - 20, "wet-grid-cult", 196, 116);
+    this.plate(ORGAN_STRAIT.x, ORGAN_STRAIT.y + 30, "organ-strait", 140, 78);
+    this.plate(ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y + 30, "organ-foundry-dark", 140, 78);
+    this.plate(ORGAN_CABLE.x, ORGAN_CABLE.y + 30, "organ-cable-dark", 140, 78);
+    this.plate(HOUSE_HALL.x, HOUSE_HALL.y - 38, "house-hall", 160, 90);
+    this.plate(SAFETY_ANNEX.x, SAFETY_ANNEX.y - 38, "safety-annex", 152, 86);
+    this.stallStill = this.plate(CLEARING_STALL.x, CLEARING_STALL.y - 38, "clearing-stall", 152, 86);
+    this.plate(SHRINE.x, SHRINE.y - 38, "shrine-upkeep", 144, 82);
+    this.plate(WRECK_GARDEN.x, WRECK_GARDEN.y - 38, "wreckage-garden", 152, 86);
+    this.plate(SCREENING.x, SCREENING.y - 38, "plate-screening", 148, 84);
+    this.plate(GUEST_ARENA.x, GUEST_ARENA.y - 38, "plate-arena", 140, 80);
+    this.plate(M3_DOOR.x, M3_DOOR.y + 30, "plate-m3", 132, 74);
+    this.plate(CARE_DOOR.x, CARE_DOOR.y - 30, "plate-care", 140, 80);
+    this.plate(FORGE_TRAY.x, FORGE_TRAY.y - 38, "plate-forge", 140, 80);
+    this.plate(OPERATOR_DESK.x, OPERATOR_DESK.y - 38, "plate-operator", 132, 74);
+    this.plate(GOING_UNDER.x, GOING_UNDER.y + 30, "plate-under", 132, 74);
+    this.plate(CLAIMS_DESK.x, CLAIMS_DESK.y - 38, "plate-claims", 140, 80);
+    this.plate(BURIAL_PLOT.x, BURIAL_PLOT.y - 38, "serial-wreckage", 148, 84);
+    this.plate(HOUSE_HALL.x + 180, HOUSE_HALL.y + 70, "house-war", 140, 80);
   }
 
   private drawSign(s: Sign) {
@@ -220,7 +233,7 @@ export class NaveScene extends Phaser.Scene {
     for (const s of NAVE_SIGNS) this.drawSign(s);
     for (const n of this.net.snap?.npcs ?? [...NAVE_NPCS, IONE]) {
       if (this.npcMarks.has(n.id)) continue;
-      const img = this.add.image(n.x, n.y, n.id).setDisplaySize(52, 64).setDepth(9);
+      const img = this.add.image(n.x, n.y, n.id).setDisplaySize(56, 72).setDepth(9);
       const nm = this.add
         .text(n.x, n.y - 40, n.name, {
           fontFamily: "Space Grotesk, sans-serif",
@@ -242,7 +255,7 @@ export class NaveScene extends Phaser.Scene {
       let img = this.npcMarks.get(n.id);
       let nm = this.npcNames.get(n.id);
       if (!img) {
-        img = this.add.image(n.x, n.y, n.id).setDisplaySize(52, 64).setDepth(9);
+        img = this.add.image(n.x, n.y, n.id).setDisplaySize(56, 72).setDepth(9);
         nm = this.add
           .text(n.x, n.y - 40, n.name, {
             fontFamily: "Space Grotesk, sans-serif",
@@ -397,10 +410,28 @@ export class NaveScene extends Phaser.Scene {
     }
   }
 
+  private flashStrike(heavy = false) {
+    const me = this.net.you;
+    if (!me || !this.textures.exists("fx-strike")) return;
+    const fx = this.add
+      .image(me.x, me.y - 8, "fx-strike")
+      .setDisplaySize(heavy ? 96 : 72, heavy ? 96 : 72)
+      .setDepth(20)
+      .setAlpha(0.95);
+    this.tweens.add({
+      targets: fx,
+      alpha: 0,
+      scale: heavy ? 1.6 : 1.35,
+      duration: heavy ? 220 : 160,
+      onComplete: () => fx.destroy(),
+    });
+  }
+
   private bodyFor(p: Player): Phaser.GameObjects.Image {
     let img = this.bodies.get(p.id);
     if (!img) {
-      img = this.add.image(p.x, p.y, "guest").setDisplaySize(40, 48).setDepth(10);
+      const key = !p.guest && this.textures.exists("angel") ? "angel" : "guest";
+      img = this.add.image(p.x, p.y, key).setDisplaySize(48, 64).setDepth(10);
       this.bodies.set(p.id, img);
     }
     return img;
@@ -449,7 +480,7 @@ export class NaveScene extends Phaser.Scene {
       seen.add(c.id);
       let img = this.clerkMarks.get(c.id);
       if (!img) {
-        img = this.add.image(c.x, c.y, "clerk").setDisplaySize(36, 44).setDepth(8);
+        img = this.add.image(c.x, c.y, "clerk").setDisplaySize(48, 60).setDepth(8);
         const nm = this.add
           .text(c.x, c.y - 28, c.name, {
             fontFamily: "Space Grotesk, sans-serif",
@@ -566,6 +597,8 @@ export class NaveScene extends Phaser.Scene {
                       : poi.kind === "ione-gone"
                         ? 0x7a1028
                       : poi.kind === "ione-people"
+                        ? 0xc9a56a
+                      : poi.kind === "lastword-people"
                         ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
@@ -757,6 +790,13 @@ export class NaveScene extends Phaser.Scene {
         this.cameras.main.startFollow(img, true, 0.12, 0.12);
         this.following = true;
       }
+      if (p.id === me.id && this.textures.exists("fx-aura")) {
+        if (!this.auraImg) {
+          this.auraImg = this.add.image(img.x, img.y, "fx-aura").setDisplaySize(78, 78).setDepth(8).setAlpha(0.5);
+        }
+        this.auraImg.setPosition(img.x, img.y + 4);
+        this.auraImg.setVisible(!p.guest);
+      }
     }
     for (const [id, img] of this.bodies) {
       if (!seen.has(id)) {
@@ -829,7 +869,7 @@ export class NaveScene extends Phaser.Scene {
       }
     }
 
-    const npcNear = (snap.npcs ?? NAVE_NPCS).find((n) => nearPoint(me.x, me.y, n.x, n.y));
+    const npcNear = (snap.npcs ?? [...NAVE_NPCS, IONE]).find((n) => nearPoint(me.x, me.y, n.x, n.y));
     const burial = snap.rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
     const sign = (snap.signs ?? NAVE_SIGNS).find((s) => nearPoint(me.x, me.y, s.x, s.y, 56));
     const clerkNear = snap.clerks.find((c) => nearPoint(me.x, me.y, c.x, c.y, 70));
@@ -1136,6 +1176,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `Q keep the eye (cult). E sell a copy (+${FORGE_PAY - LISTING_FEE} after listing fee). Cult does not list.`;
     } else if (forge && me.beats.market) {
       this.prompt = "F — Quill will teach the difference, or sell you the print.";
+    } else if (npcNear?.id === "ione" && (me.beats.lastWordPeople || snap.lastWordPeopleHeld)) {
+      this.prompt = me.heard || "Last word — people. Ione still speaks. Absence still waits. Not a stick.";
+    } else if (npcNear?.id === "ione" && snap.spectatePeopleHeld && !me.guest) {
+      this.prompt = "F — the last word as a house of people. Ione still speaks. Not a fetch.";
     } else if (ioneGoneNear && (me.guest || me.locked)) {
       this.prompt = "An empty place. You do not get a last word.";
     } else if (ioneGoneNear && (me.beats.people || snap.peopleHeld)) {

@@ -170,6 +170,7 @@ export type Beats = {
   heavyPeople: boolean;
   hitStopPeople: boolean;
   spectatePeople: boolean;
+  lastWordPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -328,6 +329,7 @@ export type Poi = {
     | "heavy-people"
     | "hitstop-people"
     | "spectate-people"
+    | "lastword-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2627,6 +2629,31 @@ export function spectatePeoplePoi(x = 200, y = 480): Poi {
     kind: "spectate-people",
   };
 }
+
+export const LASTWORD_PEOPLE_COPY =
+  "The last word is a house of people, not a disappearance of process. Ione still speaks. Absence still waits. Combat is not. This was not a fetch.";
+export const WINK_LASTWORD_PEOPLE = "People, not a last-word stick. The token does not strike.";
+export const LASTWORD_PEOPLE_NEED = "Spectate as people first. A last word of people is not a fetch.";
+export const LASTWORD_PEOPLE_HELD = "The last word already holds as people. Ione still speaks. Absence still waits.";
+export const LASTWORD_PEOPLE_SPECTATOR = "Someone is leaving. You do not get a house of people.";
+
+export const LASTWORD_PEOPLE_PLAQUE: Sign = {
+  id: "lastword-people",
+  title: "Last word — people",
+  text: "A house of people. Ione still speaks. Absence still waits. The number does not strike.",
+  x: IONE.x,
+  y: IONE.y,
+};
+
+export function lastWordPeoplePoi(): Poi {
+  return {
+    id: "lastword-people",
+    name: "Last word — people",
+    x: IONE.x,
+    y: IONE.y,
+    kind: "lastword-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3259,6 +3286,7 @@ export function emptyBeats(): Beats {
     heavyPeople: false,
     hitStopPeople: false,
     spectatePeople: false,
+    lastWordPeople: false,
   };
 }
 
