@@ -256,6 +256,12 @@ import {
   NAVE_PEOPLE_HELD,
   NAVE_PEOPLE_SPECTATOR,
   NAVE_PEOPLE_PLAQUE,
+  CREDITS_PEOPLE_COPY,
+  WINK_CREDITS_PEOPLE,
+  CREDITS_PEOPLE_NEED,
+  CREDITS_PEOPLE_HELD,
+  CREDITS_PEOPLE_SPECTATOR,
+  CREDITS_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -806,6 +812,7 @@ import {
   applyBurialPeople,
   applyWeatherPeople,
   applyNavePeople,
+  applyCreditsPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2760,6 +2767,44 @@ describe("The Nave — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: 192, y: 340, locked: true });
     expect(applyNavePeople(gWorld, "g").players.get("g")?.heard).toBe(NAVE_PEOPLE_SPECTATOR);
     expect(gWorld.navePeopleHeld).toBe(false);
+  });
+});
+
+describe("Credits — people", () => {
+  it("names credits as people after the Nave; TAKE stays disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.navePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), navePeople: true },
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+    });
+    const named = applyClearing(w, "a", "keep");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CREDITS_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CREDITS_PEOPLE);
+    expect(p.beats.creditsPeople).toBe(true);
+    expect(named.creditsPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "credits-people")?.name).toBe("Credits — people");
+    expect(named.signs.find((s) => s.id === "credits-people")?.title).toBe(CREDITS_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("TAKE stays disarmed");
+    expect(p.heard).not.toMatch(/heidegger|midgar|APY/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCreditsPeople(named, "a").players.get("a")?.heard).toBe(CREDITS_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLEARING_RING.x, y: CLEARING_RING.y });
+    expect(applyCreditsPeople(early, "a").players.get("a")?.heard).toBe(CREDITS_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.navePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y, locked: true });
+    expect(applyCreditsPeople(gWorld, "g").players.get("g")?.heard).toBe(CREDITS_PEOPLE_SPECTATOR);
+    expect(gWorld.creditsPeopleHeld).toBe(false);
   });
 });
 

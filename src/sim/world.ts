@@ -331,6 +331,13 @@ import {
   NAVE_PEOPLE_SPECTATOR,
   NAVE_PEOPLE_PLAQUE,
   navePeoplePoi,
+  CREDITS_PEOPLE_COPY,
+  WINK_CREDITS_PEOPLE,
+  CREDITS_PEOPLE_NEED,
+  CREDITS_PEOPLE_HELD,
+  CREDITS_PEOPLE_SPECTATOR,
+  CREDITS_PEOPLE_PLAQUE,
+  creditsPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1030,6 +1037,7 @@ export type WorldState = {
   burialPeopleHeld: boolean;
   weatherPeopleHeld: boolean;
   navePeopleHeld: boolean;
+  creditsPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1297,6 +1305,7 @@ export function emptyWorld(): WorldState {
     burialPeopleHeld: false,
     weatherPeopleHeld: false,
     navePeopleHeld: false,
+    creditsPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3600,6 +3609,37 @@ export function applyNavePeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, navePeopleHeld: true, pois, signs };
 }
 
+export function applyCreditsPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CREDITS_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_CREDITS_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.navePeopleHeld) {
+    players.set(playerId, { ...p, heard: CREDITS_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.creditsPeopleHeld && p.beats.creditsPeople) {
+    players.set(playerId, { ...p, heard: CREDITS_PEOPLE_HELD, wink: visibleWink(false, WINK_CREDITS_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, creditsPeople: true },
+    heard: CREDITS_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_CREDITS_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "credits-people")
+    ? w.pois.map((poi) => (poi.id === "credits-people" ? creditsPeoplePoi() : poi))
+    : [...w.pois, creditsPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "credits-people")
+    ? w.signs.map((s) => (s.id === "credits-people" ? { ...CREDITS_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...CREDITS_PEOPLE_PLAQUE }];
+  return { ...w, players, creditsPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -4781,6 +4821,7 @@ export function snapshot(w: WorldState) {
     burialPeopleHeld: w.burialPeopleHeld,
     weatherPeopleHeld: w.weatherPeopleHeld,
     navePeopleHeld: w.navePeopleHeld,
+    creditsPeopleHeld: w.creditsPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
@@ -5447,6 +5488,7 @@ export function applyClearing(
     return { ...w, players };
   }
   if (choice !== "extract" && w.hallPeopleHeld && !w.clearingPeopleHeld) return applyClearingPeople(w, playerId);
+  if (choice !== "extract" && w.navePeopleHeld && !w.creditsPeopleHeld) return applyCreditsPeople(w, playerId);
   if (choice === "extract") {
     const war = scoreWar(w.war, p.house, "extract");
     players.set(playerId, {

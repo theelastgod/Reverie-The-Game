@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 122** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 123** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -514,8 +514,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After weather as people, F at the weather plaque gathers the Nave. Plaque/POI The Nave — people. Extract still costs. Not a fetch.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 122 (do this next)
-Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
+## Stage 122 (landed)
+- After the Nave as people, F at the Clearing ring: credits as people, not a process. Plaque/POI Credits — people. TAKE stays disarmed.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 123 (do this next)
+Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 authored hours are in; more hours still allowed.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

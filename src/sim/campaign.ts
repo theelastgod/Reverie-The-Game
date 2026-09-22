@@ -142,6 +142,7 @@ export type Beats = {
   burialPeople: boolean;
   weatherPeople: boolean;
   navePeople: boolean;
+  creditsPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -272,6 +273,7 @@ export type Poi = {
     | "burial-people"
     | "weather-people"
     | "nave-people"
+    | "credits-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -984,6 +986,31 @@ export function navePeoplePoi(): Poi {
     x: 192,
     y: 340,
     kind: "nave-people",
+  };
+}
+
+export const CREDITS_PEOPLE_COPY =
+  "Credits is a house of people, not a process. TAKE stays disarmed. The names still hold. Combat is not. This was not a fetch.";
+export const WINK_CREDITS_PEOPLE = "People, not a roll. The token does not settle.";
+export const CREDITS_PEOPLE_NEED = "The Nave as people first. Credits of people is not a fetch.";
+export const CREDITS_PEOPLE_HELD = "Credits already holds as people. TAKE stays disarmed.";
+export const CREDITS_PEOPLE_SPECTATOR = "A ring. You do not get a house of people.";
+
+export const CREDITS_PEOPLE_PLAQUE: Sign = {
+  id: "credits-people",
+  title: "Credits — people",
+  text: "A house of people. TAKE stays disarmed. The number does not strike.",
+  x: 720,
+  y: 580,
+};
+
+export function creditsPeoplePoi(): Poi {
+  return {
+    id: "credits-people",
+    name: "Credits — people",
+    x: 720,
+    y: 580,
+    kind: "credits-people",
   };
 }
 
@@ -2471,6 +2498,7 @@ export function emptyBeats(): Beats {
     burialPeople: false,
     weatherPeople: false,
     navePeople: false,
+    creditsPeople: false,
   };
 }
 
