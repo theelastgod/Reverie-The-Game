@@ -278,7 +278,15 @@ export class NaveScene extends Phaser.Scene {
     const mate = (this.net.snap?.players ?? []).find(
       (o) => o.id !== me.id && !o.guest && nearPoint(me.x, me.y, o.x, o.y, 56),
     );
-    if (mate && this.net.snap?.weatherNamed && !me.guest && !me.beats.party) {
+    if (me.partyOf && !me.guest) {
+      this.net.party();
+      return;
+    }
+    if (mate && me.flagged && mate.flagged && !me.guest) {
+      this.net.truce();
+      return;
+    }
+    if (mate && this.net.snap?.weatherNamed && !me.guest) {
       this.net.party();
       return;
     }
@@ -529,6 +537,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7eb6ff
                       : poi.kind === "heavy"
                         ? 0x7eb6ff
+                      : poi.kind === "truce"
+                        ? 0x7eb6ff
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -761,6 +771,10 @@ export class NaveScene extends Phaser.Scene {
     );
     if (me.partyOf && !me.guest) {
       this.prompt = "F — part the hour. The walk ends. Not a stick.";
+    } else if (mateNear && me.flagged && mateNear.flagged && !me.guest) {
+      this.prompt = me.beats.truce || snap.truceHeld
+        ? me.heard || "Truce. Both unflag. Spoils stay. Seconds, not a stick."
+        : "F — truce. Both unflag. Spoils stay. Not a stick.";
     } else if (mateNear && (me.beats.party || snap.partyHeld) && !me.partyOf) {
       this.prompt = me.heard || "You walk the hour together. A party, not a stick.";
     } else if (mateNear && snap.weatherNamed && !me.guest) {
@@ -1209,7 +1223,8 @@ export class NaveScene extends Phaser.Scene {
       const vesperBit = snap.vesperGone ? " · Vesper gone" : "";
       const seasonBit = snap.bracketHeld ? " · equal bracket" : snap.seasonHeld ? " · season" : "";
       const partyBit = me.partyOf ? " · party" : snap.partedHeld ? " · parted" : "";
-      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}${naraBit}${ordBit}${quillBit}${vesperBit}${seasonBit}${partyBit}`;
+      const truceBit = me.truceUntil && me.truceUntil > snap.now ? " · truce" : snap.truceHeld ? " · truce held" : "";
+      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}${naraBit}${ordBit}${quillBit}${vesperBit}${seasonBit}${partyBit}${truceBit}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;

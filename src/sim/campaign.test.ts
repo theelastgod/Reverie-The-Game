@@ -109,6 +109,13 @@ import {
   HEAVY_COPY,
   WINK_HEAVY,
   HEAVY_PLAQUE,
+  TRUCE_HOLD,
+  TRUCE_COPY,
+  WINK_TRUCE,
+  TRUCE_NEED,
+  TRUCE_HELD,
+  TRUCE_SPECTATOR,
+  TRUCE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -631,6 +638,7 @@ import {
   applyParty,
   applyPart,
   applyHeavy,
+  applyTruce,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1534,6 +1542,70 @@ describe("Heavy strike", () => {
     expect(missed.heavyHeld).toBe(false);
     expect(missed.players.get("a")?.heard).toBe(DODGE_WHIFF);
     expect(missed.players.get("a")?.strikeCd).toBe(STRIKE_COOLDOWN);
+  });
+});
+
+describe("Truce", () => {
+  it("unflags two Angels, holds the street, does not buy damage", () => {
+    const w = emptyWorld();
+    w.seasonHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      flagged: true,
+      x: 720,
+      y: 520,
+    });
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: 2,
+      flagged: true,
+      x: 736,
+      y: 520,
+    });
+    const truced = applyTruce(w, "a");
+    const a = truced.players.get("a")!;
+    const b = truced.players.get("b")!;
+    expect(a.heard).toBe(TRUCE_COPY);
+    expect(a.wink).toBe(WINK_TRUCE);
+    expect(a.beats.truce).toBe(true);
+    expect(a.flagged).toBe(false);
+    expect(b.flagged).toBe(false);
+    expect(a.truceUntil).toBe(TRUCE_HOLD);
+    expect(b.truceUntil).toBe(TRUCE_HOLD);
+    expect(truced.truceHeld).toBe(true);
+    expect(truced.pois.find((poi) => poi.kind === "truce")?.name).toBe("Truce");
+    expect(truced.signs.find((s) => s.id === "truce")?.title).toBe(TRUCE_PLAQUE.title);
+    expect(a.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(a)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(a)).toBe(false);
+
+    const held = tickWorld(truced, 1);
+    expect(held.players.get("a")?.flagged).toBe(false);
+    expect(held.now).toBe(1);
+    expect(applyTruce(truced, "a").players.get("a")?.heard).toBe(TRUCE_HELD);
+
+    const expired = tickWorld({ ...truced, now: TRUCE_HOLD }, 1);
+    expect(expired.players.get("a")?.flagged).toBe(true);
+    expect(expired.players.get("b")?.flagged).toBe(true);
+
+    const alone = emptyWorld();
+    alone.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 720, y: 520 });
+    expect(applyTruce(alone, "a").players.get("a")?.heard).toBe(TRUCE_NEED);
+
+    const unflagged = emptyWorld();
+    unflagged.players.set("a", { ...spawnGuest("a"), guest: false, flagged: false, x: 720, y: 520 });
+    unflagged.players.set("b", { ...spawnGuest("b"), guest: false, flagged: true, x: 736, y: 520 });
+    expect(applyTruce(unflagged, "a").players.get("a")?.heard).toBe(TRUCE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), flagged: true, x: 720, y: 520, locked: true });
+    gWorld.players.set("b", { ...spawnGuest("b"), guest: false, flagged: true, x: 736, y: 520 });
+    expect(applyTruce(gWorld, "g").players.get("g")?.heard).toBe(TRUCE_SPECTATOR);
+    expect(gWorld.truceHeld).toBe(false);
+    expect(gWorld.players.get("b")?.flagged).toBe(true);
   });
 });
 

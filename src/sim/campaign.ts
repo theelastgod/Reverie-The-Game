@@ -118,6 +118,7 @@ export type Beats = {
   people: boolean;
   parted: boolean;
   heavy: boolean;
+  truce: boolean;
 };
 
 export type WeatherHeard = {
@@ -224,6 +225,7 @@ export type Poi = {
     | "party-walk"
     | "party-parted"
     | "heavy"
+    | "truce"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1387,6 +1389,26 @@ export function heavyPoi(x: number, y: number): Poi {
   return { id: "heavy", name: "Heavy", x, y, kind: "heavy" };
 }
 
+export const TRUCE_HOLD = 20;
+export const TRUCE_COPY =
+  "You unflagged together. Twenty seconds. Spoils stay in the pocket. A truce, not a stick. This was not a fetch.";
+export const WINK_TRUCE = "A fight can end. Presence, not a stick. The token does not strike.";
+export const TRUCE_NEED = "Both must be flagged Angels. Guests are not a fight.";
+export const TRUCE_HELD = "The truce already holds. You can flag again when the street takes you.";
+export const TRUCE_SPECTATOR = "A wet street. You do not get a truce.";
+
+export const TRUCE_PLAQUE: Sign = {
+  id: "truce",
+  title: "Truce",
+  text: "Both unflag. Spoils stay. Seconds, not a stick. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function trucePoi(x: number, y: number): Poi {
+  return { id: "truce", name: "Truce", x, y, kind: "truce" };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1788,6 +1810,7 @@ export function emptyBeats(): Beats {
     people: false,
     parted: false,
     heavy: false,
+    truce: false,
   };
 }
 

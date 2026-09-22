@@ -166,6 +166,14 @@ import {
   WINK_HEAVY,
   HEAVY_PLAQUE,
   heavyPoi,
+  TRUCE_HOLD,
+  TRUCE_COPY,
+  WINK_TRUCE,
+  TRUCE_NEED,
+  TRUCE_HELD,
+  TRUCE_SPECTATOR,
+  TRUCE_PLAQUE,
+  trucePoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -746,6 +754,7 @@ export type Player = {
   winkSchool: WinkSchool;
   historyLog: HistoryLog;
   partyOf: string;
+  truceUntil: number;
 };
 
 export type WorldState = {
@@ -830,6 +839,7 @@ export type WorldState = {
   partyHeld: boolean;
   partedHeld: boolean;
   heavyHeld: boolean;
+  truceHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -887,6 +897,7 @@ export function spawnGuest(id: string): Player {
     filmRoom: "",
     historyLog: emptyLog(),
     partyOf: "",
+    truceUntil: 0,
   };
 }
 
@@ -1072,6 +1083,7 @@ export function emptyWorld(): WorldState {
     partyHeld: false,
     partedHeld: false,
     heavyHeld: false,
+    truceHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -1107,7 +1119,7 @@ function tickWetFlag(w: WorldState): WorldState {
   const players = new Map(w.players);
   let changed = false;
   for (const [id, p] of players) {
-    if (p.guest || p.locked || p.flagged || p.hp <= 0) continue;
+    if (p.guest || p.locked || p.flagged || p.hp <= 0 || p.truceUntil > w.now) continue;
     if (!inWetGrid(p.x, p.y)) continue;
     players.set(id, { ...p, flagged: true });
     changed = true;
@@ -1545,6 +1557,55 @@ export function applyHeavy(w: WorldState, playerId: string): WorldState {
     ? before.signs.map((s) => (s.id === "heavy" ? { ...HEAVY_PLAQUE, x: p.x, y: p.y } : s))
     : [...before.signs, { ...HEAVY_PLAQUE, x: p.x, y: p.y }];
   return { ...before, players, clerks, heavyHeld: true, pois, signs };
+}
+
+export function applyTruce(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const other = [...w.players.values()].find(
+    (o) => o.id !== playerId && o.hp > 0 && !o.guest && !o.locked && o.flagged && nearPoint(p.x, p.y, o.x, o.y, 56),
+  );
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: TRUCE_SPECTATOR, wink: visibleWink(true, WINK_TRUCE) });
+    return { ...w, players };
+  }
+  if (!p.flagged || !other) {
+    players.set(playerId, {
+      ...p,
+      heard: p.beats.truce ? TRUCE_HELD : TRUCE_NEED,
+      wink: p.beats.truce ? visibleWink(false, WINK_TRUCE) : p.wink,
+    });
+    return { ...w, players };
+  }
+  const until = w.now + TRUCE_HOLD;
+  const first = !w.truceHeld;
+  players.set(playerId, {
+    ...p,
+    flagged: false,
+    truceUntil: until,
+    beats: { ...p.beats, truce: true },
+    heard: first ? TRUCE_COPY : TRUCE_HELD,
+    wink: visibleWink(false, WINK_TRUCE),
+  });
+  players.set(other.id, {
+    ...other,
+    flagged: false,
+    truceUntil: until,
+    beats: { ...other.beats, truce: true },
+    heard: first ? TRUCE_COPY : TRUCE_HELD,
+    wink: visibleWink(false, WINK_TRUCE),
+  });
+  const mx = Math.round((p.x + other.x) / 2);
+  const my = Math.round((p.y + other.y) / 2);
+  const plaque = { ...TRUCE_PLAQUE, x: mx, y: my };
+  const pois = w.pois.some((poi) => poi.id === "truce")
+    ? w.pois.map((poi) => (poi.id === "truce" ? trucePoi(mx, my) : poi))
+    : [...w.pois, trucePoi(mx, my)];
+  const signs = w.signs.some((s) => s.id === "truce")
+    ? w.signs.map((s) => (s.id === "truce" ? plaque : s))
+    : [...w.signs, plaque];
+  return { ...w, players, truceHeld: true, pois, signs };
 }
 
 export function applyNaraPerson(w: WorldState, playerId: string): WorldState {
@@ -3674,6 +3735,7 @@ export function snapshot(w: WorldState) {
     partyHeld: w.partyHeld,
     partedHeld: w.partedHeld,
     heavyHeld: w.heavyHeld,
+    truceHeld: w.truceHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

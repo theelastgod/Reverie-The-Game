@@ -16,6 +16,7 @@ import {
   applyBlitz,
   applyRuinBack,
   applyParty,
+  applyTruce,
   applyCyber,
   applyDwell,
   applyOperator,
@@ -146,6 +147,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "party") {
       this.w = applyParty(this.w, id);
+      this.broadcast();
+    } else if (data.t === "truce") {
+      this.w = applyTruce(this.w, id);
       this.broadcast();
     } else if (data.t === "cyber" && data.nodeId) {
       this.w = applyCyber(this.w, id, data.nodeId);

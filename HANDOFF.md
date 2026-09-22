@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 98** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 99** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -417,7 +417,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - When Nara, Quill, Ord, and Vesper stay as people, F at Ione's hole: a gathering, not a process. Plaque/POI Ione — people. Not a fetch.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 98 (do this next)
+## Stage 98 (landed)
+- F near another flagged Angel: truce. Both unflag. Wet Grid will not reflag for 20s. Plaque/POI Truce. Guests cannot.
+- Spoils stay in the pocket. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 99 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

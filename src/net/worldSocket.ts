@@ -87,6 +87,7 @@ export type Snap = {
   partyHeld?: boolean;
   partedHeld?: boolean;
   heavyHeld?: boolean;
+  truceHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
@@ -217,6 +218,10 @@ export class WorldSocket {
 
   party() {
     this.send({ t: "party" });
+  }
+
+  truce() {
+    this.send({ t: "truce" });
   }
 
   cyber(nodeId: string) {
