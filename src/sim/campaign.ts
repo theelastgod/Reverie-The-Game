@@ -122,6 +122,7 @@ export type Beats = {
   handoff: boolean;
   carePeople: boolean;
   shrinePeople: boolean;
+  safetyPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -232,6 +233,7 @@ export type Poi = {
     | "stall-handoff"
     | "care-people"
     | "shrine-people"
+    | "safety-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1496,6 +1498,25 @@ export function shrinePeoplePoi(): Poi {
   };
 }
 
+export const SAFETY_PEOPLE_COPY =
+  "Safety is a house of people, not a freeze of process. The freeze still costs. Combat is not. This was not a fetch.";
+export const WINK_SAFETY_PEOPLE = "People, not katechon. The plaque does not strike.";
+export const SAFETY_PEOPLE_NEED = "The shrine as people first. Safety as people is not a fetch.";
+export const SAFETY_PEOPLE_HELD = "Safety already holds as people. The freeze still costs.";
+export const SAFETY_PEOPLE_SPECTATOR = "A plaque. You do not get a house of people.";
+
+export const SAFETY_PEOPLE_PLAQUE: Sign = {
+  id: "safety-people",
+  title: "Safety — people",
+  text: "A house of people. The freeze still costs. The number does not strike.",
+  x: 192,
+  y: 400,
+};
+
+export function safetyPeoplePoi(): Poi {
+  return { id: "safety-people", name: "Safety — people", x: 192, y: 400, kind: "safety-people" };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1901,6 +1922,7 @@ export function emptyBeats(): Beats {
     handoff: false,
     carePeople: false,
     shrinePeople: false,
+    safetyPeople: false,
   };
 }
 

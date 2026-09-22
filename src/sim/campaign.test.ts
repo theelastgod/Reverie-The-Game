@@ -138,6 +138,12 @@ import {
   SHRINE_PEOPLE_HELD,
   SHRINE_PEOPLE_SPECTATOR,
   SHRINE_PEOPLE_PLAQUE,
+  SAFETY_PEOPLE_COPY,
+  WINK_SAFETY_PEOPLE,
+  SAFETY_PEOPLE_NEED,
+  SAFETY_PEOPLE_HELD,
+  SAFETY_PEOPLE_SPECTATOR,
+  SAFETY_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -664,6 +670,7 @@ import {
   applyHandoff,
   applyCarePeople,
   applyShrinePeople,
+  applySafetyPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1835,6 +1842,44 @@ describe("The shrine — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
     expect(applyShrinePeople(gWorld, "g").players.get("g")?.heard).toBe(SHRINE_PEOPLE_SPECTATOR);
     expect(gWorld.shrinePeopleHeld).toBe(false);
+  });
+});
+
+describe("Safety — people", () => {
+  it("names Safety as a house of people after the shrine; freeze still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.shrinePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), shrinePeople: true },
+      x: 192,
+      y: 400,
+    });
+    const named = applyRead(w, "a", "safety-plaque");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SAFETY_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SAFETY_PEOPLE);
+    expect(p.beats.safetyPeople).toBe(true);
+    expect(named.safetyPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "safety-people")?.name).toBe("Safety — people");
+    expect(named.signs.find((s) => s.id === "safety-people")?.title).toBe(SAFETY_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("freeze still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySafetyPeople(named, "a").players.get("a")?.heard).toBe(SAFETY_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: 192, y: 400 });
+    expect(applySafetyPeople(early, "a").players.get("a")?.heard).toBe(SAFETY_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.shrinePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 192, y: 400, locked: true });
+    expect(applySafetyPeople(gWorld, "g").players.get("g")?.heard).toBe(SAFETY_PEOPLE_SPECTATOR);
+    expect(gWorld.safetyPeopleHeld).toBe(false);
   });
 });
 

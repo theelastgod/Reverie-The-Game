@@ -545,6 +545,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "shrine-people"
                         ? 0xc9a56a
+                      : poi.kind === "safety-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1154,6 +1156,13 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — the first going-under. Guests stop here.";
     } else if (under) {
       this.prompt = "A Wink you cannot spend yet. Speak with Nara Vale, Quill, and Ord. Bury the plot.";
+    } else if (
+      (sign?.id === "safety-plaque" || sign?.id === "safety-people") &&
+      (me.beats.safetyPeople || snap.safetyPeopleHeld)
+    ) {
+      this.prompt = me.heard || "Safety — people. The freeze still costs. Not a stick.";
+    } else if (sign?.id === "safety-plaque" && snap.shrinePeopleHeld && !me.guest) {
+      this.prompt = "F — Safety as a house of people. The freeze still costs. Not a fetch.";
     } else if (sign?.id === "safety-plaque" && me.beats.clockOut && snap.annexHome && !me.guest) {
       this.prompt = me.beats.yieldEmpty
         ? me.heard || "The yield is unmanned. The weather still has a name."
