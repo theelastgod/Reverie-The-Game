@@ -349,6 +349,12 @@ import {
   FUNERAL_PEOPLE_HELD,
   FUNERAL_PEOPLE_SPECTATOR,
   FUNERAL_PEOPLE_PLAQUE,
+  RESTORE_PEOPLE_COPY,
+  WINK_RESTORE_PEOPLE,
+  RESTORE_PEOPLE_NEED,
+  RESTORE_PEOPLE_HELD,
+  RESTORE_PEOPLE_SPECTATOR,
+  RESTORE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -914,6 +920,7 @@ import {
   applyVaultPeople,
   applyInsurancePeople,
   applyFuneralPeople,
+  applyRestorePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3512,6 +3519,52 @@ describe("Funeral — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
     expect(applyFuneralPeople(gWorld, "g").players.get("g")?.heard).toBe(FUNERAL_PEOPLE_SPECTATOR);
     expect(gWorld.funeralPeopleHeld).toBe(false);
+  });
+});
+
+describe("Restore — people", () => {
+  it("names restore as people after the funeral; aura still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.funeralPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 40,
+      aura: 2,
+      beats: { ...emptyBeats(), funeralPeople: true },
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const named = applyRead(w, "a", SHRINE.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(RESTORE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_RESTORE_PEOPLE);
+    expect(p.beats.restorePeople).toBe(true);
+    expect(p.aura).toBe(2);
+    expect(p.bestand).toBe(40);
+    expect(named.restorePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "restore-people")?.name).toBe("Restore — people");
+    expect(named.signs.find((s) => s.id === "restore-people")?.title).toBe(RESTORE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Aura still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyRestorePeople(named, "a").players.get("a")?.heard).toBe(RESTORE_PEOPLE_HELD);
+
+    const restored = applyRestore(named, "a");
+    expect(restored.players.get("a")?.aura).toBe(2 + RESTORE_GAIN);
+    expect(restored.players.get("a")?.bestand).toBe(40 - RESTORE_COST);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SHRINE.x, y: SHRINE.y });
+    expect(applyRestorePeople(early, "a").players.get("a")?.heard).toBe(RESTORE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.funeralPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
+    expect(applyRestorePeople(gWorld, "g").players.get("g")?.heard).toBe(RESTORE_PEOPLE_SPECTATOR);
+    expect(gWorld.restorePeopleHeld).toBe(false);
   });
 });
 

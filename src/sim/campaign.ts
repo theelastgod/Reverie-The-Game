@@ -157,6 +157,7 @@ export type Beats = {
   vaultPeople: boolean;
   insurancePeople: boolean;
   funeralPeople: boolean;
+  restorePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -302,6 +303,7 @@ export type Poi = {
     | "vault-people"
     | "insurance-people"
     | "funeral-people"
+    | "restore-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2275,6 +2277,31 @@ export function funeralPeoplePoi(x = 200, y = 480): Poi {
     kind: "funeral-people",
   };
 }
+
+export const RESTORE_PEOPLE_COPY =
+  "Restore is a house of people, not a heal of process. Aura still costs. Combat is not. This was not a fetch.";
+export const WINK_RESTORE_PEOPLE = "People, not an aura stick. The token does not strike.";
+export const RESTORE_PEOPLE_NEED = "The funeral as people first. A restore of people is not a fetch.";
+export const RESTORE_PEOPLE_HELD = "Restore already holds as people. Aura still costs.";
+export const RESTORE_PEOPLE_SPECTATOR = "A shrine. You do not get a house of people.";
+
+export const RESTORE_PEOPLE_PLAQUE: Sign = {
+  id: "restore-people",
+  title: "Restore — people",
+  text: "A house of people. Aura still costs. The number does not strike.",
+  x: SHRINE.x,
+  y: SHRINE.y,
+};
+
+export function restorePeoplePoi(): Poi {
+  return {
+    id: "restore-people",
+    name: "Restore — people",
+    x: SHRINE.x,
+    y: SHRINE.y,
+    kind: "restore-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2894,6 +2921,7 @@ export function emptyBeats(): Beats {
     vaultPeople: false,
     insurancePeople: false,
     funeralPeople: false,
+    restorePeople: false,
   };
 }
 

@@ -1310,6 +1310,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
+    } else if (shrine && (me.beats.restorePeople || snap.restorePeopleHeld)) {
+      this.prompt = me.heard || "Restore — people. Aura still costs. Not a stick.";
+    } else if (shrine && snap.funeralPeopleHeld && !me.guest) {
+      this.prompt = "F — restore as a house of people. Aura still costs. Not a fetch.";
     } else if (shrine && (me.beats.insurancePeople || snap.insurancePeopleHeld)) {
       this.prompt = me.heard || "Insurance — people. Insurance still costs. Death still walks you. Not a stick.";
     } else if (shrine && snap.vaultPeopleHeld && !me.guest) {

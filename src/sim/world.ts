@@ -439,6 +439,13 @@ import {
   FUNERAL_PEOPLE_SPECTATOR,
   FUNERAL_PEOPLE_PLAQUE,
   funeralPeoplePoi,
+  RESTORE_PEOPLE_COPY,
+  WINK_RESTORE_PEOPLE,
+  RESTORE_PEOPLE_NEED,
+  RESTORE_PEOPLE_HELD,
+  RESTORE_PEOPLE_SPECTATOR,
+  RESTORE_PEOPLE_PLAQUE,
+  restorePeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1153,6 +1160,7 @@ export type WorldState = {
   vaultPeopleHeld: boolean;
   insurancePeopleHeld: boolean;
   funeralPeopleHeld: boolean;
+  restorePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1435,6 +1443,7 @@ export function emptyWorld(): WorldState {
     vaultPeopleHeld: false,
     insurancePeopleHeld: false,
     funeralPeopleHeld: false,
+    restorePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2645,9 +2654,11 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (sign.id === "vault-people") return applyVaultPeople(w, playerId);
     return applyDesk(w, playerId, "file");
   }
-  if (sign.id === SHRINE.id || sign.id === "insurance-people") {
+  if (sign.id === SHRINE.id || sign.id === "insurance-people" || sign.id === "restore-people") {
     if (w.vaultPeopleHeld && !w.insurancePeopleHeld) return applyInsurancePeople(w, playerId);
     if (sign.id === "insurance-people") return applyInsurancePeople(w, playerId);
+    if (w.funeralPeopleHeld && !w.restorePeopleHeld) return applyRestorePeople(w, playerId);
+    if (sign.id === "restore-people") return applyRestorePeople(w, playerId);
     if (w.lastGodNamed && !w.restraintHeld) return applyRestraint(w, playerId);
     if (w.restraintHeld && !p.restraint) return applyRestraintStance(w, playerId);
     if (w.carePeopleHeld && !w.shrinePeopleHeld) return applyShrinePeople(w, playerId);
@@ -2899,6 +2910,7 @@ export function applyShrine(w: WorldState, playerId: string): WorldState {
 export function applyRestore(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  if (w.funeralPeopleHeld && !w.restorePeopleHeld) return applyRestorePeople(w, playerId);
   const players = new Map(w.players);
   const atShrine = { lastCareX: SHRINE.x, lastCareY: SHRINE.y };
   if (p.guest || p.locked) {
@@ -4271,6 +4283,37 @@ export function applyFuneralPeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, funeralPeopleHeld: true, pois, signs };
 }
 
+export function applyRestorePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: RESTORE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_RESTORE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.funeralPeopleHeld) {
+    players.set(playerId, { ...p, heard: RESTORE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.restorePeopleHeld && p.beats.restorePeople) {
+    players.set(playerId, { ...p, heard: RESTORE_PEOPLE_HELD, wink: visibleWink(false, WINK_RESTORE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, restorePeople: true },
+    heard: RESTORE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_RESTORE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "restore-people")
+    ? w.pois.map((poi) => (poi.id === "restore-people" ? restorePeoplePoi() : poi))
+    : [...w.pois, restorePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "restore-people")
+    ? w.signs.map((s) => (s.id === "restore-people" ? { ...RESTORE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...RESTORE_PEOPLE_PLAQUE }];
+  return { ...w, players, restorePeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5467,6 +5510,7 @@ export function snapshot(w: WorldState) {
     vaultPeopleHeld: w.vaultPeopleHeld,
     insurancePeopleHeld: w.insurancePeopleHeld,
     funeralPeopleHeld: w.funeralPeopleHeld,
+    restorePeopleHeld: w.restorePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
