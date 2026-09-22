@@ -115,6 +115,7 @@ export type Beats = {
   hitStop: boolean;
   addressed: boolean;
   party: boolean;
+  parted: boolean;
 };
 
 export type WeatherHeard = {
@@ -219,6 +220,7 @@ export type Poi = {
     | "ord-person"
     | "vesper-person"
     | "party-walk"
+    | "party-parted"
     | "hit-stop"
     | "addressed";
 };
@@ -1345,6 +1347,25 @@ export function partyPoi(x: number, y: number): Poi {
   return { id: "party-walk", name: "Party", x, y, kind: "party-walk" };
 }
 
+export const PART_COPY =
+  "You parted. The hour is yours again. Combat is not. This was not a fetch.";
+export const WINK_PART = "Apart. Not a stick. The token does not keep you.";
+export const PART_NEED = "You do not walk with anyone. A parting is not a fetch.";
+export const PART_HELD = "You already parted. The hour is yours.";
+export const PART_SPECTATOR = "They walk. You do not part them.";
+
+export const PART_PLAQUE: Sign = {
+  id: "party-walk",
+  title: "Party — parted",
+  text: "The hour is theirs again. Not a stick. The number does not strike.",
+  x: 200,
+  y: 480,
+};
+
+export function partPoi(x: number, y: number): Poi {
+  return { id: "party-walk", name: "Party — parted", x, y, kind: "party-parted" };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1743,6 +1764,7 @@ export function emptyBeats(): Beats {
     hitStop: false,
     addressed: false,
     party: false,
+    parted: false,
   };
 }
 

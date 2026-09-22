@@ -154,6 +154,13 @@ import {
   ADDRESSED_PLAQUE,
   addressedPoi,
   PARTY_COPY,
+  PART_COPY,
+  WINK_PART,
+  PART_NEED,
+  PART_HELD,
+  PART_SPECTATOR,
+  PART_PLAQUE,
+  partPoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -807,6 +814,7 @@ export type WorldState = {
   hitStopHeld: boolean;
   addressedHeld: boolean;
   partyHeld: boolean;
+  partedHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1046,6 +1054,7 @@ export function emptyWorld(): WorldState {
     hitStopHeld: false,
     addressedHeld: false,
     partyHeld: false,
+    partedHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -1415,6 +1424,7 @@ export function applyParty(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: PARTY_NEED });
     return { ...w, players };
   }
+  if (p.partyOf) return applyPart(w, playerId);
   if (w.partyHeld && p.beats.party && p.partyOf === other.id) {
     players.set(playerId, { ...p, heard: PARTY_HELD, wink: visibleWink(false, WINK_PARTY_WALK) });
     return { ...w, players };
@@ -1443,6 +1453,51 @@ export function applyParty(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === "party-walk" ? plaque : s))
     : [...w.signs, plaque];
   return { ...w, players, partyHeld: true, pois, signs };
+}
+
+export function applyPart(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: PART_SPECTATOR, wink: visibleWink(true, WINK_PART) });
+    return { ...w, players };
+  }
+  if (!p.partyOf) {
+    players.set(playerId, {
+      ...p,
+      heard: p.beats.parted ? PART_HELD : PART_NEED,
+      wink: p.beats.parted ? visibleWink(false, WINK_PART) : p.wink,
+    });
+    return { ...w, players };
+  }
+  const mate = w.players.get(p.partyOf);
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, parted: true },
+    partyOf: "",
+    heard: PART_COPY,
+    wink: visibleWink(false, WINK_PART),
+  });
+  if (mate) {
+    players.set(mate.id, {
+      ...mate,
+      beats: { ...mate.beats, parted: true },
+      partyOf: mate.partyOf === playerId ? "" : mate.partyOf,
+      heard: PART_COPY,
+      wink: visibleWink(false, WINK_PART),
+    });
+  }
+  const mx = mate ? Math.round((p.x + mate.x) / 2) : p.x;
+  const my = mate ? Math.round((p.y + mate.y) / 2) : p.y;
+  const plaque = { ...PART_PLAQUE, x: mx, y: my };
+  const pois = w.pois.some((poi) => poi.id === "party-walk")
+    ? w.pois.map((poi) => (poi.id === "party-walk" ? partPoi(mx, my) : poi))
+    : [...w.pois, partPoi(mx, my)];
+  const signs = w.signs.some((s) => s.id === "party-walk")
+    ? w.signs.map((s) => (s.id === "party-walk" ? plaque : s))
+    : [...w.signs, plaque];
+  return { ...w, players, partyHeld: false, partedHeld: true, pois, signs };
 }
 
 export function applyNaraPerson(w: WorldState, playerId: string): WorldState {
@@ -3570,6 +3625,7 @@ export function snapshot(w: WorldState) {
     hitStopHeld: w.hitStopHeld,
     addressedHeld: w.addressedHeld,
     partyHeld: w.partyHeld,
+    partedHeld: w.partedHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -100,6 +100,11 @@ import {
   ADDRESSED_SPECTATOR,
   ADDRESSED_PLAQUE,
   PARTY_COPY,
+  PART_COPY,
+  WINK_PART,
+  PART_NEED,
+  PART_HELD,
+  PART_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -611,6 +616,7 @@ import {
   applyStrike,
   applyAddressed,
   applyParty,
+  applyPart,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1448,7 +1454,16 @@ describe("Party walk", () => {
     expect(a.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
     expect(damageFor(a)).toBe(damageFor(spawnGuest("g")));
     expect(guestCanClaim(a)).toBe(false);
-    expect(applyParty(walked, "a").players.get("a")?.heard).toBe(PARTY_HELD);
+    expect(applyParty(walked, "a").players.get("a")?.heard).toBe(PART_COPY);
+    const parted = applyParty(walked, "a");
+    expect(parted.players.get("a")?.partyOf).toBe("");
+    expect(parted.players.get("b")?.partyOf).toBe("");
+    expect(parted.partedHeld).toBe(true);
+    expect(parted.partyHeld).toBe(false);
+    expect(parted.pois.find((poi) => poi.kind === "party-parted")?.id).toBe("party-walk");
+    expect(parted.signs.find((s) => s.id === "party-walk")?.title).toBe(PART_PLAQUE.title);
+    expect(applyPart(parted, "a").players.get("a")?.heard).toBe(PART_HELD);
+    expect(applyParty(parted, "a").players.get("a")?.heard).toBe(PARTY_COPY);
 
     const alone = emptyWorld();
     alone.weatherNamed = true;

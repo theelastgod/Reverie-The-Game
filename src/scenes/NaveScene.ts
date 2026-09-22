@@ -519,6 +519,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7eb6ff
                       : poi.kind === "party-walk"
                         ? 0x7eb6ff
+                      : poi.kind === "party-parted"
+                        ? 0x7eb6ff
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -749,7 +751,9 @@ export class NaveScene extends Phaser.Scene {
     const mateNear = snap.players.find(
       (o) => o.id !== me.id && !o.guest && nearPoint(me.x, me.y, o.x, o.y, 56),
     );
-    if (mateNear && (me.beats.party || snap.partyHeld)) {
+    if (me.partyOf && !me.guest) {
+      this.prompt = "F — part the hour. The walk ends. Not a stick.";
+    } else if (mateNear && (me.beats.party || snap.partyHeld) && !me.partyOf) {
       this.prompt = me.heard || "You walk the hour together. A party, not a stick.";
     } else if (mateNear && snap.weatherNamed && !me.guest) {
       this.prompt = "F — ask them to walk the hour. A party, not a stick.";
@@ -1184,7 +1188,7 @@ export class NaveScene extends Phaser.Scene {
       const quillBit = snap.quillGone ? " · Quill gone" : "";
       const vesperBit = snap.vesperGone ? " · Vesper gone" : "";
       const seasonBit = snap.bracketHeld ? " · equal bracket" : snap.seasonHeld ? " · season" : "";
-      const partyBit = me.partyOf ? " · party" : "";
+      const partyBit = me.partyOf ? " · party" : snap.partedHeld ? " · parted" : "";
       stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}${naraBit}${ordBit}${quillBit}${vesperBit}${seasonBit}${partyBit}`;
     }
     const lock = hud("lock-panel");
