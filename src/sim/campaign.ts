@@ -61,6 +61,7 @@ export type Beats = {
   foundryAsk: boolean;
   foundryDark: boolean;
   annexHome: boolean;
+  straitRefuse: boolean;
 };
 
 export type WeatherHeard = {
@@ -99,6 +100,7 @@ export type Poi = {
     | "m3-open"
     | "wreckage-garden"
     | "organ-strait"
+    | "organ-strait-refused"
     | "organ-foundry"
     | "organ-foundry-dark"
     | "organ-cable"
@@ -442,6 +444,32 @@ export const CABLE_QUIET_PLAQUE: Sign = {
   y: ORGAN_CABLE.y,
 };
 
+export const STRAIT_REFUSE =
+  "You refused the water. The Strait stops paying a furnace that is already dark. Nara Vale does not have to forgive it.";
+export const WINK_STRAIT_REFUSE =
+  "An organ can stop. You unlit the heat, then you shut the mouth that fed it. Fetch would have left the canal paying.";
+export const STRAIT_NEED_DARK = "The Foundry still drinks. Unlight it first. The Strait will not refuse a live furnace.";
+export const STRAIT_REFUSED_LATER = "The water is not paying. The Foundry is dark. The process is quieter.";
+export const STRAIT_SPECTATOR = "A canal. You do not refuse organs.";
+
+export const STRAIT_REFUSED_PLAQUE: Sign = {
+  id: ORGAN_STRAIT.id,
+  title: "The Strait — refused",
+  text: "Someone stopped the water. The furnace is already dark. No country here. Only a closed mouth.",
+  x: ORGAN_STRAIT.x,
+  y: ORGAN_STRAIT.y,
+};
+
+export function straitRefusedPoi(): Poi {
+  return {
+    id: ORGAN_STRAIT.id,
+    name: "The Strait — refused",
+    x: ORGAN_STRAIT.x,
+    y: ORGAN_STRAIT.y,
+    kind: "organ-strait-refused",
+  };
+}
+
 export function cableQuietPoi(): Poi {
   return {
     id: ORGAN_CABLE.id,
@@ -771,6 +799,7 @@ export function emptyBeats(): Beats {
     foundryAsk: false,
     foundryDark: false,
     annexHome: false,
+    straitRefuse: false,
   };
 }
 

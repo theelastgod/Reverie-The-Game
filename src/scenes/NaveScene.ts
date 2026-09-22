@@ -449,6 +449,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
                         ? 0x7eb6ff
+                      : poi.kind === "organ-strait-refused"
+                        ? 0x5a5a5a
                       : poi.kind.startsWith("organ-")
                         ? 0xc9a56a
                         : poi.kind === "forge-tray"
@@ -711,6 +713,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The Foundry is dark. Vesper Hale is here. Heat is not a nation.";
     } else if (foundry && me.beats.foundryAsk && !me.guest) {
       this.prompt = "F — unlight the Foundry. Vesper walks. This is not a fetch.";
+    } else if (strait && (snap.straitRefused || me.beats.straitRefuse) && !me.guest) {
+      this.prompt = me.heard || "The Strait is refused. The water is not paying.";
+    } else if (strait && snap.foundryDark && !me.guest) {
+      this.prompt = "F — refuse the Strait. The furnace is dark. Stop the water. Not a fetch.";
     } else if ((strait || foundry || cable) && snap.m3Open && !me.guest) {
       this.prompt = cable && me.beats.cableQuiet
         ? "The Cable is quiet. You changed the plaque."
@@ -812,7 +818,9 @@ export class NaveScene extends Phaser.Scene {
     if (zone) {
       zone.textContent = me.inM3
         ? strait
-          ? "The Strait"
+          ? snap.straitRefused
+            ? "The Strait — refused"
+            : "The Strait"
           : foundry
             ? snap.foundryDark
               ? "The Foundry — dark"

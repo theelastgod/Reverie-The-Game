@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 38** — Named side quest. Keep writing until 24 authored hours. No mint.
+**Next stage: 39** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -177,7 +177,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the freeze is signed, F at Annex Runner: they come in. Street route empty. Annex plaque becomes runner-in. Freeze still holds.
 - Weather-named clock-out is Desk Three only. Guests cannot send the runner inside. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 38 (do this next)
+## Stage 38 (landed)
+- After the Foundry is dark, F at the Strait: refuse the water. Plaque/POI become The Strait — refused. Gestell thins. Not a fetch.
+- Live furnace refuses. Guests cannot shut the canal. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 39 (do this next)
 Named side quest. Fetch-only forbidden. No mint. No Base.
 
 ## Rules

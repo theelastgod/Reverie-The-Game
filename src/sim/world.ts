@@ -232,6 +232,13 @@ import {
   OPERATOR_VACANT_PLAQUE,
   foundryDarkPoi,
   operatorVacantPoi,
+  STRAIT_REFUSE,
+  WINK_STRAIT_REFUSE,
+  STRAIT_NEED_DARK,
+  STRAIT_REFUSED_LATER,
+  STRAIT_SPECTATOR,
+  STRAIT_REFUSED_PLAQUE,
+  straitRefusedPoi,
   passingCopy,
   passingResult,
   House,
@@ -349,6 +356,7 @@ export type WorldState = {
   vesperAtFoundry: boolean;
   foundryDark: boolean;
   annexHome: boolean;
+  straitRefused: boolean;
   hallLamp: boolean;
   standing: HouseScores;
   announced: string | null;
@@ -497,6 +505,7 @@ export function emptyWorld(): WorldState {
     vesperAtFoundry: false,
     foundryDark: false,
     annexHome: false,
+    straitRefused: false,
     hallLamp: false,
     standing: emptyScores(),
     announced: null,
@@ -1382,6 +1391,13 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     players.set(playerId, { ...p, heard: ORGAN_NEED_M3 });
     return { ...w, players };
   }
+  if (sign.id === ORGAN_STRAIT.id) {
+    if (w.straitRefused || p.beats.straitRefuse) {
+      players.set(playerId, { ...p, heard: STRAIT_REFUSED_LATER, wink: visibleWink(p.guest, WINK_STRAIT_REFUSE) });
+      return { ...w, players };
+    }
+    if (w.foundryDark && !p.guest && !p.locked) return applyStraitRefuse(w, playerId);
+  }
   if (sign.id === ORGAN_FOUNDRY.id) {
     if (w.foundryDark || p.beats.foundryDark) {
       players.set(playerId, { ...p, heard: FOUNDRY_DARK_LATER, wink: visibleWink(p.guest, WINK_FOUNDRY_DARK) });
@@ -1446,6 +1462,39 @@ export function applyUnlight(w: WorldState, playerId: string): WorldState {
             : s,
       )
       .concat(w.signs.some((s) => s.id === OPERATOR_DESK.id) ? [] : [{ ...OPERATOR_VACANT_PLAQUE }]),
+  };
+}
+
+export function applyStraitRefuse(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, ORGAN_STRAIT.x, ORGAN_STRAIT.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: STRAIT_SPECTATOR, wink: visibleWink(true, WINK_STRAIT_REFUSE) });
+    return { ...w, players };
+  }
+  if (w.straitRefused || p.beats.straitRefuse) {
+    players.set(playerId, { ...p, heard: STRAIT_REFUSED_LATER, wink: visibleWink(false, WINK_STRAIT_REFUSE) });
+    return { ...w, players };
+  }
+  if (!w.foundryDark) {
+    players.set(playerId, { ...p, heard: STRAIT_NEED_DARK });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, straitRefuse: true, strait: true },
+    heard: STRAIT_REFUSE,
+    wink: visibleWink(false, WINK_STRAIT_REFUSE),
+    readiness: p.readiness + 1,
+  });
+  return {
+    ...w,
+    players,
+    straitRefused: true,
+    gestell: Math.max(0, w.gestell - 2),
+    pois: w.pois.map((poi) => (poi.id === ORGAN_STRAIT.id ? straitRefusedPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === ORGAN_STRAIT.id ? { ...STRAIT_REFUSED_PLAQUE } : s)),
   };
 }
 
@@ -1722,6 +1771,7 @@ export function snapshot(w: WorldState) {
     vesperAtFoundry: w.vesperAtFoundry,
     foundryDark: w.foundryDark,
     annexHome: w.annexHome,
+    straitRefused: w.straitRefused,
     hallLamp: w.hallLamp,
     standing: w.standing,
     signs: w.signs,

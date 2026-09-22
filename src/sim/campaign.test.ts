@@ -200,6 +200,12 @@ import {
   ANNEX_SPECTATOR,
   WINK_ANNEX,
   ANNEX_HOME_PLAQUE,
+  STRAIT_REFUSE,
+  WINK_STRAIT_REFUSE,
+  STRAIT_NEED_DARK,
+  STRAIT_REFUSED_LATER,
+  STRAIT_SPECTATOR,
+  STRAIT_REFUSED_PLAQUE,
   VESPER,
   VESPER_NEED_FOUNDRY,
   VESPER_UNLIGHT_ASK,
@@ -242,6 +248,7 @@ import {
   applyTithe,
   applyClockOut,
   applyAnnexHome,
+  applyStraitRefuse,
   applyUnlight,
   applyStanding,
   applyMarket,
@@ -1833,6 +1840,64 @@ describe("Desk Three clocks out", () => {
     const g = applyClockOut(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(CLOCK_SPECTATOR);
     expect(g.clerks).toHaveLength(2);
+  });
+});
+
+describe("The Strait is refused", () => {
+  it("after the Foundry is dark, an Angel can shut the water; guests cannot", () => {
+    const w = emptyWorld();
+    w.m3Open = true;
+    w.foundryDark = true;
+    w.pois = [
+      ...w.pois,
+      { id: ORGAN_STRAIT.id, name: "The Strait", x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y, kind: "organ-strait" },
+    ];
+    w.signs = [...w.signs, ORGAN_PLAQUES.find((s) => s.id === ORGAN_STRAIT.id)!];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), foundryDark: true, foundry: true, m3: true },
+      x: ORGAN_STRAIT.x,
+      y: ORGAN_STRAIT.y,
+    });
+    const shut = applyRead(w, "a", ORGAN_STRAIT.id);
+    const p = shut.players.get("a")!;
+    expect(p.heard).toBe(STRAIT_REFUSE);
+    expect(p.wink).toBe(WINK_STRAIT_REFUSE);
+    expect(p.beats.straitRefuse).toBe(true);
+    expect(shut.straitRefused).toBe(true);
+    expect(shut.pois.find((poi) => poi.id === ORGAN_STRAIT.id)?.kind).toBe("organ-strait-refused");
+    expect(shut.signs.find((s) => s.id === ORGAN_STRAIT.id)?.title).toBe(STRAIT_REFUSED_PLAQUE.title);
+    expect(shut.gestell).toBeLessThan(w.gestell);
+    expect(p.heard).not.toMatch(/heidegger|hormuz|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyRead(shut, "a", ORGAN_STRAIT.id).players.get("a")?.heard).toBe(STRAIT_REFUSED_LATER);
+
+    const live = emptyWorld();
+    live.m3Open = true;
+    live.pois = [...w.pois];
+    live.signs = [...w.signs];
+    live.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), m3: true },
+      x: ORGAN_STRAIT.x,
+      y: ORGAN_STRAIT.y,
+    });
+    const early = applyStraitRefuse(live, "a");
+    expect(early.players.get("a")?.heard).toBe(STRAIT_NEED_DARK);
+    expect(early.straitRefused).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.m3Open = true;
+    gWorld.foundryDark = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y, locked: true });
+    const g = applyStraitRefuse(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(STRAIT_SPECTATOR);
+    expect(g.straitRefused).toBe(false);
   });
 });
 
