@@ -484,6 +484,12 @@ import {
   STORMPRESS_PEOPLE_HELD,
   STORMPRESS_PEOPLE_SPECTATOR,
   STORMPRESS_PEOPLE_PLAQUE,
+  FALLEN_PEOPLE_COPY,
+  WINK_FALLEN_PEOPLE,
+  FALLEN_PEOPLE_NEED,
+  FALLEN_PEOPLE_HELD,
+  FALLEN_PEOPLE_SPECTATOR,
+  FALLEN_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1071,6 +1077,7 @@ import {
   applyTakePeople,
   applyBankPeople,
   applyStormPressPeople,
+  applyFallenPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4603,6 +4610,44 @@ describe("Storm-press — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyStormPressPeople(gWorld, "g").players.get("g")?.heard).toBe(STORMPRESS_PEOPLE_SPECTATOR);
     expect(gWorld.stormPressPeopleHeld).toBe(false);
+  });
+});
+
+describe("Fallen — people", () => {
+  it("names fallen graves as people after storm-press; fallen still do not crack; guests cannot", () => {
+    const w = emptyWorld();
+    w.stormPressPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), stormPressPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FALLEN_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FALLEN_PEOPLE);
+    expect(p.beats.fallenPeople).toBe(true);
+    expect(named.fallenPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "fallen-people")?.name).toBe("Fallen — people");
+    expect(named.signs.find((s) => s.id === "fallen-people")?.title).toBe(FALLEN_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Fallen graves still do not crack");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFallenPeople(named, "a").players.get("a")?.heard).toBe(FALLEN_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyFallenPeople(early, "a").players.get("a")?.heard).toBe(FALLEN_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.stormPressPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyFallenPeople(gWorld, "g").players.get("g")?.heard).toBe(FALLEN_PEOPLE_SPECTATOR);
+    expect(gWorld.fallenPeopleHeld).toBe(false);
   });
 });
 

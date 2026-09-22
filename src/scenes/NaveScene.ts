@@ -610,6 +610,10 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "file-people"
                         ? 0xc9a56a
+                      : poi.kind === "stormpress-people"
+                        ? 0xc9a56a
+                      : poi.kind === "fallen-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1042,6 +1046,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.fallenPeople || snap.fallenPeopleHeld)) {
+      this.prompt = me.heard || "Fallen — people. Fallen graves still do not crack. Geared graves still crack. Not a stick.";
+    } else if (wet && snap.stormPressPeopleHeld && !me.guest) {
+      this.prompt = "F — fallen graves as a house of people. Fallen graves still do not crack. Not a fetch.";
     } else if (wet && (me.beats.stormPressPeople || snap.stormPressPeopleHeld)) {
       this.prompt = me.heard || "Storm-press — people. Geared graves still crack. Fallen graves still do not. Not a stick.";
     } else if (wet && snap.bankPeopleHeld && !me.guest) {
