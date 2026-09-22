@@ -608,6 +608,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "claims-people"
                         ? 0xc9a56a
+                      : poi.kind === "file-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1009,6 +1011,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — open the guest arena. Practice. No spoils. Guests are not loot.";
     } else if (deskClaim && (me.guest || me.locked)) {
       this.prompt = "A period on a ledger. Guests cannot claim.";
+    } else if (deskClaim && (me.beats.filePeople || snap.filePeopleHeld)) {
+      this.prompt = me.heard || "File — people. File still sits. TAKE stays disarmed. Not a stick.";
+    } else if (deskClaim && snap.claimsPeopleHeld && !me.guest) {
+      this.prompt = "F — filing as a house of people. File still sits. TAKE stays disarmed. Not a fetch.";
     } else if (deskClaim && (me.beats.claimsPeople || snap.claimsPeopleHeld)) {
       this.prompt = me.heard || "Claims — people. TAKE stays disarmed. The token does not strike.";
     } else if (deskClaim && snap.passingPeopleHeld && !me.guest) {

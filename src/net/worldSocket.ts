@@ -144,6 +144,7 @@ export type Snap = {
   campPeopleHeld?: boolean;
   passingPeopleHeld?: boolean;
   claimsPeopleHeld?: boolean;
+  filePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

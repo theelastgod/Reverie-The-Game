@@ -175,6 +175,7 @@ export type Beats = {
   campPeople: boolean;
   passingPeople: boolean;
   claimsPeople: boolean;
+  filePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -338,6 +339,7 @@ export type Poi = {
     | "camp-people"
     | "passing-people"
     | "claims-people"
+    | "file-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2739,6 +2741,31 @@ export function claimsPeoplePoi(): Poi {
   };
 }
 
+export const FILE_PEOPLE_COPY =
+  "Filing is a house of people, not a yield of process. File still sits. TAKE stays disarmed. Combat is not. This was not a fetch.";
+export const WINK_FILE_PEOPLE = "People, not a file stick. The token does not strike.";
+export const FILE_PEOPLE_NEED = "Claims as people first. A file of people is not a fetch.";
+export const FILE_PEOPLE_HELD = "Filing already holds as people. File still sits. TAKE stays disarmed.";
+export const FILE_PEOPLE_SPECTATOR = "Paper. You do not get a house of people.";
+
+export const FILE_PEOPLE_PLAQUE: Sign = {
+  id: "file-people",
+  title: "File — people",
+  text: "A house of people. File still sits. TAKE stays disarmed. The number does not strike.",
+  x: CLAIMS_DESK.x,
+  y: CLAIMS_DESK.y,
+};
+
+export function filePeoplePoi(): Poi {
+  return {
+    id: "file-people",
+    name: "File — people",
+    x: CLAIMS_DESK.x,
+    y: CLAIMS_DESK.y,
+    kind: "file-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3401,6 +3428,7 @@ export function emptyBeats(): Beats {
     campPeople: false,
     passingPeople: false,
     claimsPeople: false,
+    filePeople: false,
   };
 }
 

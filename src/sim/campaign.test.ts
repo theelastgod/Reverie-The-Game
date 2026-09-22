@@ -460,6 +460,12 @@ import {
   CLAIMS_PEOPLE_HELD,
   CLAIMS_PEOPLE_SPECTATOR,
   CLAIMS_PEOPLE_PLAQUE,
+  FILE_PEOPLE_COPY,
+  WINK_FILE_PEOPLE,
+  FILE_PEOPLE_NEED,
+  FILE_PEOPLE_HELD,
+  FILE_PEOPLE_SPECTATOR,
+  FILE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1043,6 +1049,7 @@ import {
   applyCampPeople,
   applyPassingPeople,
   applyClaimsPeople,
+  applyFilePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4409,6 +4416,44 @@ describe("Claims — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
     expect(applyClaimsPeople(gWorld, "g").players.get("g")?.heard).toBe(CLAIMS_PEOPLE_SPECTATOR);
     expect(gWorld.claimsPeopleHeld).toBe(false);
+  });
+});
+
+describe("File — people", () => {
+  it("names filing as people after claims; TAKE stays disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.claimsPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), claimsPeople: true },
+      x: CLAIMS_DESK.x,
+      y: CLAIMS_DESK.y,
+    });
+    const named = applyRead(w, "a", CLAIMS_DESK.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FILE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FILE_PEOPLE);
+    expect(p.beats.filePeople).toBe(true);
+    expect(named.filePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "file-people")?.name).toBe("File — people");
+    expect(named.signs.find((s) => s.id === "file-people")?.title).toBe(FILE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("TAKE stays disarmed");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFilePeople(named, "a").players.get("a")?.heard).toBe(FILE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLAIMS_DESK.x, y: CLAIMS_DESK.y });
+    expect(applyFilePeople(early, "a").players.get("a")?.heard).toBe(FILE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.claimsPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
+    expect(applyFilePeople(gWorld, "g").players.get("g")?.heard).toBe(FILE_PEOPLE_SPECTATOR);
+    expect(gWorld.filePeopleHeld).toBe(false);
   });
 });
 
