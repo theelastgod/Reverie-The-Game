@@ -191,6 +191,7 @@ export type Beats = {
   gearedPeople: boolean;
   serialPeople: boolean;
   bandPeople: boolean;
+  numberPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -370,6 +371,7 @@ export type Poi = {
     | "geared-people"
     | "serial-people"
     | "band-people"
+    | "number-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3171,6 +3173,31 @@ export function bandPeoplePoi(): Poi {
   };
 }
 
+export const NUMBER_PEOPLE_COPY =
+  "The number is a house of people, not a kit of process. Same skill, different serials: same number. Combat is not. This was not a fetch.";
+export const WINK_NUMBER_PEOPLE = "People, not a number stick. The token does not strike.";
+export const NUMBER_PEOPLE_NEED = "The band as people first. A number of people is not a fetch.";
+export const NUMBER_PEOPLE_HELD = "The number already holds as people. Same skill, different serials: same number.";
+export const NUMBER_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const NUMBER_PEOPLE_PLAQUE: Sign = {
+  id: "number-people",
+  title: "Number — people",
+  text: "A house of people. Same skill, different serials: same number. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function numberPeoplePoi(): Poi {
+  return {
+    id: "number-people",
+    name: "Number — people",
+    x: 720,
+    y: 520,
+    kind: "number-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3849,6 +3876,7 @@ export function emptyBeats(): Beats {
     gearedPeople: false,
     serialPeople: false,
     bandPeople: false,
+    numberPeople: false,
   };
 }
 

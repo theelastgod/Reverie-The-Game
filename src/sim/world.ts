@@ -672,6 +672,13 @@ import {
   BAND_PEOPLE_SPECTATOR,
   BAND_PEOPLE_PLAQUE,
   bandPeoplePoi,
+  NUMBER_PEOPLE_COPY,
+  WINK_NUMBER_PEOPLE,
+  NUMBER_PEOPLE_NEED,
+  NUMBER_PEOPLE_HELD,
+  NUMBER_PEOPLE_SPECTATOR,
+  NUMBER_PEOPLE_PLAQUE,
+  numberPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1428,6 +1435,7 @@ export type WorldState = {
   gearedPeopleHeld: boolean;
   serialPeopleHeld: boolean;
   bandPeopleHeld: boolean;
+  numberPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1744,6 +1752,7 @@ export function emptyWorld(): WorldState {
     gearedPeopleHeld: false,
     serialPeopleHeld: false,
     bandPeopleHeld: false,
+    numberPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2968,7 +2977,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people") {
+    if (w.bandPeopleHeld && !w.numberPeopleHeld) return applyNumberPeople(w, playerId);
+    if (sign.id === "number-people") return applyNumberPeople(w, playerId);
     if (w.serialPeopleHeld && !w.bandPeopleHeld) return applyBandPeople(w, playerId);
     if (sign.id === "band-people") return applyBandPeople(w, playerId);
     if (w.gearedPeopleHeld && !w.serialPeopleHeld) return applySerialPeople(w, playerId);
@@ -5720,6 +5731,37 @@ export function applyBandPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, bandPeopleHeld: true, pois, signs };
 }
 
+export function applyNumberPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: NUMBER_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_NUMBER_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.bandPeopleHeld) {
+    players.set(playerId, { ...p, heard: NUMBER_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.numberPeopleHeld && p.beats.numberPeople) {
+    players.set(playerId, { ...p, heard: NUMBER_PEOPLE_HELD, wink: visibleWink(false, WINK_NUMBER_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, numberPeople: true },
+    heard: NUMBER_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_NUMBER_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "number-people")
+    ? w.pois.map((poi) => (poi.id === "number-people" ? numberPeoplePoi() : poi))
+    : [...w.pois, numberPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "number-people")
+    ? w.signs.map((s) => (s.id === "number-people" ? { ...NUMBER_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...NUMBER_PEOPLE_PLAQUE }];
+  return { ...w, players, numberPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6953,6 +6995,7 @@ export function snapshot(w: WorldState) {
     gearedPeopleHeld: w.gearedPeopleHeld,
     serialPeopleHeld: w.serialPeopleHeld,
     bandPeopleHeld: w.bandPeopleHeld,
+    numberPeopleHeld: w.numberPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
