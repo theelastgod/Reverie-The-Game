@@ -462,6 +462,11 @@ import {
   DWELL_SPECTATOR,
   DWELL_PLAQUE,
   dwellPoi,
+  PARTY_STAND,
+  WINK_PARTY,
+  PARTY_PLAQUE,
+  emptyPartyPoi,
+  partyWilling,
   NARA_LEAVE,
   WINK_NARA_LEAVE,
   NARA_LEAVE_HELD,
@@ -3267,14 +3272,17 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
     };
   }
   const dwellers = [...w.players.values()].filter((x) => !x.guest && !x.locked && x.beats.clearing).length;
+  const willing = partyWilling(w);
   const outcome = passingResult({
     starved: w.passing.starved || w.frozen,
     gestell: w.gestell,
     clearingOpen: w.clearingOpen,
     dwellers,
     cold: p.current === "cold",
+    partyWilling: willing,
   });
   const hijacked = outcome === "hijack";
+  const emptyParty = outcome === "absence" && !willing;
   const by = hijacked ? hijackByOf(w.frozen, w.passing.starved, p.current === "cold") : w.hijackBy;
   players.set(playerId, {
     ...p,
@@ -3284,16 +3292,18 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
       absenceHour: outcome === "absence" ? true : p.beats.absenceHour,
       hijacked: hijacked ? true : p.beats.hijacked,
     },
-    heard: passingCopy(outcome),
+    heard: emptyParty ? PARTY_STAND : passingCopy(outcome),
     wink: visibleWink(
       false,
       outcome === "appearance"
         ? WINK_STIPEND
-        : outcome === "absence"
-          ? WINK_PASS_ABSENCE
-          : hijacked
-            ? WINK_HIJACK
-            : WINK_TURN,
+        : emptyParty
+          ? WINK_PARTY
+          : outcome === "absence"
+            ? WINK_PASS_ABSENCE
+            : hijacked
+              ? WINK_HIJACK
+              : WINK_TURN,
     ),
     readiness: p.readiness + (outcome === "appearance" && !p.beats.passing ? 2 : 0),
     stipend: outcome === "appearance" ? p.stipend + STIPEND : p.stipend,
@@ -3311,21 +3321,27 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
     },
     appearSlow: outcome === "appearance" ? true : w.appearSlow,
     appearWorld: outcome === "appearance" ? true : w.appearWorld,
-    naraAtClearing: absent ? true : w.naraAtClearing,
+    naraAtClearing: absent && !w.naraGone ? true : w.naraAtClearing,
     hijacked: hijacked ? true : w.hijacked,
     hijackBy: hijacked && by ? by : w.hijackBy,
     ordAtHijack: hijacked && by === "safety" ? true : w.ordAtHijack,
     vesperAtHijack: hijacked && by === "cold" ? true : w.vesperAtHijack,
     history:
       mark && !w.history.some((h) => h.id === mark.id) ? [...w.history, mark] : w.history,
-    pois: absent
+    pois: emptyParty
+      ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? emptyPartyPoi() : poi))
+      : absent
       ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? absencePoi() : poi))
       : outcome === "appearance"
         ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? appearPoi() : poi))
       : hijacked && by
         ? w.pois.map((poi) => (poi.id === CLEARING_RING.id ? hijackPoi(by) : poi))
         : w.pois,
-    signs: absent
+    signs: emptyParty
+      ? w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...PARTY_PLAQUE } : s)).concat(
+          w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...PARTY_PLAQUE }],
+        )
+      : absent
       ? w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...ABSENCE_PLAQUE } : s)).concat(
           w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...ABSENCE_PLAQUE }],
         )

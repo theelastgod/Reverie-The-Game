@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 71** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 72** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -309,7 +309,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Quill leaves if you sell a copy without hanging the prayer. Plaque/POI Quill — gone. Schedule change. Not a fetch.
 - Hang keeps her. Guests cannot walk her off. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 71 (do this next)
+## Stage 71 (landed)
+- Appearance needs the party willing. If Nara, Ord, or Quill walked, Passing is absence. Plaque/POI The Clearing — empty party. Not a stick.
+- Freeze still hijacks. Guests cannot force the hour. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 72 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

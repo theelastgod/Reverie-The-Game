@@ -148,6 +148,7 @@ export type Poi = {
     | "clearing-held"
     | "clearing-appear"
     | "clearing-absence"
+    | "clearing-empty"
     | "clearing-hijack"
     | "clearing-failed"
     | "clearing-storm"
@@ -1878,6 +1879,31 @@ export function auraTowardSeed(args: {
 }
 export const PASSING_ABSENCE =
   "The hour went by. Absence is honest. Nara Vale stays. Solo cannot force a god.";
+export const PARTY_STAND =
+  "The party will not stand. Nara, Ord, or Quill walked. You cannot force the hour alone. This was not a fetch.";
+export const WINK_PARTY = "A Clearing needs the living. Combat is not.";
+
+export const PARTY_PLAQUE: Sign = {
+  id: CLEARING_RING.id,
+  title: "The Clearing — empty party",
+  text: "The hour is not a solo. They will not stand. The number does not strike.",
+  x: CLEARING_RING.x,
+  y: CLEARING_RING.y,
+};
+
+export function emptyPartyPoi(): Poi {
+  return {
+    id: CLEARING_RING.id,
+    name: "The Clearing — empty party",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+    kind: "clearing-empty",
+  };
+}
+
+export function partyWilling(args: { naraGone?: boolean; ordGone?: boolean; quillGone?: boolean }): boolean {
+  return !args.naraGone && !args.ordGone && !args.quillGone;
+}
 export const NARA_STAYS =
   "The hour went by. I stay. The hole is still a grave. Fetch would have sent me home.";
 export const NARA_STAYS_LATER = "I am still here. Absence is honest. I will not number a god.";
@@ -2024,9 +2050,11 @@ export function passingResult(args: {
   clearingOpen: boolean;
   dwellers: number;
   cold: boolean;
+  partyWilling?: boolean;
 }): Exclude<PassingOutcome, ""> {
   if (!args.clearingOpen) return "failed";
   if (args.starved) return "hijack";
+  if (args.partyWilling === false) return "absence";
   if (args.gestell >= GESTELL_HOT && args.dwellers < dwellNeed(args.gestell)) return "absence";
   if (args.cold && args.gestell >= 71) return "hijack";
   return "appearance";

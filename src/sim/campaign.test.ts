@@ -183,6 +183,10 @@ import {
   APPEAR_SLOW,
   auraTowardSeed,
   PASSING_ABSENCE,
+  PARTY_STAND,
+  WINK_PARTY,
+  PARTY_PLAQUE,
+  partyWilling,
   NARA_STAYS,
   NARA_STAYS_LATER,
   WINK_PASS_ABSENCE,
@@ -1926,6 +1930,45 @@ describe("Movement IV Clearing and Passing", () => {
     const vesper = liveNpcs(false, false, false, false, false, false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "vesper")!;
     expect(vesper.role).toBe("Claimed the yield");
     expect(guestCanClaim(coldHijack.players.get("a")!)).toBe(false);
+  });
+
+  it("Appearance needs the party willing; a gone sexton is absence, not a stick", () => {
+    expect(partyWilling({})).toBe(true);
+    expect(partyWilling({ naraGone: true })).toBe(false);
+    expect(passingResult({ starved: false, gestell: 12, clearingOpen: true, dwellers: 1, cold: false, partyWilling: false })).toBe("absence");
+    const w = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
+      beats: { ...emptyBeats(), garden: true, lastWord: true },
+    });
+    const held = applyClearing(w, "a", "keep");
+    held.naraGone = true;
+    const after = applyPassing(held, "a");
+    const p = after.players.get("a")!;
+    expect(p.heard).toBe(PARTY_STAND);
+    expect(p.wink).toBe(WINK_PARTY);
+    expect(p.beats.absenceHour).toBe(true);
+    expect(p.stipend).toBe(0);
+    expect(after.passing.outcome).toBe("absence");
+    expect(after.appearWorld).toBe(false);
+    expect(after.naraAtClearing).toBe(false);
+    expect(after.pois.find((poi) => poi.id === CLEARING_RING.id)?.kind).toBe("clearing-empty");
+    expect(after.signs.find((s) => s.id === CLEARING_RING.id)?.title).toBe(PARTY_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const quillGone = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
+      beats: { ...emptyBeats(), garden: true, lastWord: true, clearing: true },
+    });
+    quillGone.clearingOpen = true;
+    quillGone.quillGone = true;
+    expect(applyPassing(quillGone, "a").passing.outcome).toBe("absence");
+
+    const gWorld = emptyWorld();
+    gWorld.clearingOpen = true;
+    gWorld.naraGone = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y, locked: true });
+    expect(applyPassing(gWorld, "g").players.get("g")?.heard).toBe(CLEARING_SPECTATOR);
+    expect(applyPassing(gWorld, "g").passing.outcome).toBe("");
   });
 
   it("low Gestell Appearance is a trace; guests cannot keep the hole", () => {

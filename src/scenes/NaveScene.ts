@@ -523,6 +523,8 @@ export class NaveScene extends Phaser.Scene {
                               ? 0xc9a56a
                             : poi.kind === "clearing-absence"
                               ? 0x7a1028
+                            : poi.kind === "clearing-empty"
+                              ? 0x7a1028
                             : poi.kind === "clearing-hijack"
                               ? 0x7a1028
                             : poi.kind === "clearing-storm"
@@ -783,6 +785,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = snap.war.omen || me.heard;
     } else if (ring && (snap.appearWorld || snap.passing.outcome === "appearance")) {
       this.prompt = me.heard || "The Clearing — world. A stipend for the shrine. Cult upkeep. Not a stick.";
+    } else if (ring && snap.passing.outcome === "absence" && (snap.naraGone || snap.ordGone || snap.quillGone)) {
+      this.prompt = me.heard || "The Clearing — empty party. They will not stand. You cannot force the hour alone.";
     } else if (ring && (snap.naraAtClearing || snap.passing.outcome === "absence")) {
       this.prompt = me.heard || "The Clearing — absence. Nara Vale stays. The hour went by.";
     } else if (ring && (snap.stormHeld || me.storm || me.beats.storm)) {
