@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 136** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 137** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -577,7 +577,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Imagine forge floor tile. Higgsfield later.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 136 (do this next)
+## Stage 136 (landed)
+- After the vault as people, F at the shrine: the paper as people. Plaque/POI **Insurance — people**. Insurance still costs. Death still walks you. Not a revive.
+- Imagine annex floor tile. Higgsfield later.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 137 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

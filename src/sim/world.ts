@@ -424,6 +424,13 @@ import {
   VAULT_PEOPLE_SPECTATOR,
   VAULT_PEOPLE_PLAQUE,
   vaultPeoplePoi,
+  INSURANCE_PEOPLE_COPY,
+  WINK_INSURANCE_PEOPLE,
+  INSURANCE_PEOPLE_NEED,
+  INSURANCE_PEOPLE_HELD,
+  INSURANCE_PEOPLE_SPECTATOR,
+  INSURANCE_PEOPLE_PLAQUE,
+  insurancePeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1136,6 +1143,7 @@ export type WorldState = {
   trucePeopleHeld: boolean;
   handoffPeopleHeld: boolean;
   vaultPeopleHeld: boolean;
+  insurancePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1416,6 +1424,7 @@ export function emptyWorld(): WorldState {
     trucePeopleHeld: false,
     handoffPeopleHeld: false,
     vaultPeopleHeld: false,
+    insurancePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2626,7 +2635,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (sign.id === "vault-people") return applyVaultPeople(w, playerId);
     return applyDesk(w, playerId, "file");
   }
-  if (sign.id === SHRINE.id) {
+  if (sign.id === SHRINE.id || sign.id === "insurance-people") {
+    if (w.vaultPeopleHeld && !w.insurancePeopleHeld) return applyInsurancePeople(w, playerId);
+    if (sign.id === "insurance-people") return applyInsurancePeople(w, playerId);
     if (w.lastGodNamed && !w.restraintHeld) return applyRestraint(w, playerId);
     if (w.restraintHeld && !p.restraint) return applyRestraintStance(w, playerId);
     if (w.carePeopleHeld && !w.shrinePeopleHeld) return applyShrinePeople(w, playerId);
@@ -2908,6 +2919,7 @@ export function applyRestore(w: WorldState, playerId: string): WorldState {
 export function applyInsure(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  if (w.vaultPeopleHeld && !w.insurancePeopleHeld) return applyInsurancePeople(w, playerId);
   const players = new Map(w.players);
   const atShrine = { lastCareX: SHRINE.x, lastCareY: SHRINE.y };
   if (p.guest || p.locked) {
@@ -4181,6 +4193,37 @@ export function applyVaultPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, vaultPeopleHeld: true, pois, signs };
 }
 
+export function applyInsurancePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: INSURANCE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_INSURANCE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.vaultPeopleHeld) {
+    players.set(playerId, { ...p, heard: INSURANCE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.insurancePeopleHeld && p.beats.insurancePeople) {
+    players.set(playerId, { ...p, heard: INSURANCE_PEOPLE_HELD, wink: visibleWink(false, WINK_INSURANCE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, insurancePeople: true },
+    heard: INSURANCE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_INSURANCE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "insurance-people")
+    ? w.pois.map((poi) => (poi.id === "insurance-people" ? insurancePeoplePoi() : poi))
+    : [...w.pois, insurancePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "insurance-people")
+    ? w.signs.map((s) => (s.id === "insurance-people" ? { ...INSURANCE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...INSURANCE_PEOPLE_PLAQUE }];
+  return { ...w, players, insurancePeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5375,6 +5418,7 @@ export function snapshot(w: WorldState) {
     trucePeopleHeld: w.trucePeopleHeld,
     handoffPeopleHeld: w.handoffPeopleHeld,
     vaultPeopleHeld: w.vaultPeopleHeld,
+    insurancePeopleHeld: w.insurancePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -104,6 +104,7 @@ export class NaveScene extends Phaser.Scene {
         else if (!wall && nearPoint(cx, cy, HOUSE_HALL.x, HOUSE_HALL.y, 80)) key = "tile-hall";
         else if (!wall && nearPoint(cx, cy, CLEARING_STALL.x, CLEARING_STALL.y, 80)) key = "tile-stall";
         else if (!wall && nearPoint(cx, cy, FORGE_TRAY.x, FORGE_TRAY.y, 80)) key = "tile-forge";
+        else if (!wall && nearPoint(cx, cy, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 80)) key = "tile-annex";
         this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
       }
     }
@@ -1309,6 +1310,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
+    } else if (shrine && (me.beats.insurancePeople || snap.insurancePeopleHeld)) {
+      this.prompt = me.heard || "Insurance — people. Insurance still costs. Death still walks you. Not a stick.";
+    } else if (shrine && snap.vaultPeopleHeld && !me.guest) {
+      this.prompt = "F — the paper as a house of people. Insurance still costs. Not a revive. Not a fetch.";
     } else if (shrine && (me.beats.shrinePeople || snap.shrinePeopleHeld)) {
       this.prompt = me.heard || `The shrine — people. F keep (${SHRINE_COST}). Restore still costs. Not a stick.`;
     } else if (shrine && snap.carePeopleHeld && !me.guest) {

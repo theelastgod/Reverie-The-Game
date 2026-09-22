@@ -336,6 +336,12 @@ import {
   VAULT_PEOPLE_HELD,
   VAULT_PEOPLE_SPECTATOR,
   VAULT_PEOPLE_PLAQUE,
+  INSURANCE_PEOPLE_COPY,
+  WINK_INSURANCE_PEOPLE,
+  INSURANCE_PEOPLE_NEED,
+  INSURANCE_PEOPLE_HELD,
+  INSURANCE_PEOPLE_SPECTATOR,
+  INSURANCE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -899,6 +905,7 @@ import {
   applyTrucePeople,
   applyHandoffPeople,
   applyVaultPeople,
+  applyInsurancePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3398,6 +3405,51 @@ describe("The vault — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
     expect(applyVaultPeople(gWorld, "g").players.get("g")?.heard).toBe(VAULT_PEOPLE_SPECTATOR);
     expect(gWorld.vaultPeopleHeld).toBe(false);
+  });
+});
+
+describe("Insurance — people", () => {
+  it("names the paper as people after the vault; insurance still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.vaultPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 40,
+      beats: { ...emptyBeats(), vaultPeople: true },
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const named = applyRead(w, "a", SHRINE.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(INSURANCE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_INSURANCE_PEOPLE);
+    expect(p.beats.insurancePeople).toBe(true);
+    expect(p.insured).toBe(false);
+    expect(p.bestand).toBe(40);
+    expect(named.insurancePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "insurance-people")?.name).toBe("Insurance — people");
+    expect(named.signs.find((s) => s.id === "insurance-people")?.title).toBe(INSURANCE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Insurance still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyInsurancePeople(named, "a").players.get("a")?.heard).toBe(INSURANCE_PEOPLE_HELD);
+
+    const paper = applyInsure(named, "a");
+    expect(paper.players.get("a")?.insured).toBe(true);
+    expect(paper.players.get("a")?.bestand).toBe(40 - INSURANCE_COST);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SHRINE.x, y: SHRINE.y });
+    expect(applyInsurancePeople(early, "a").players.get("a")?.heard).toBe(INSURANCE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.vaultPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
+    expect(applyInsurancePeople(gWorld, "g").players.get("g")?.heard).toBe(INSURANCE_PEOPLE_SPECTATOR);
+    expect(gWorld.insurancePeopleHeld).toBe(false);
   });
 });
 

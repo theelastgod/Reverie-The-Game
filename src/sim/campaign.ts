@@ -155,6 +155,7 @@ export type Beats = {
   trucePeople: boolean;
   handoffPeople: boolean;
   vaultPeople: boolean;
+  insurancePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -298,6 +299,7 @@ export type Poi = {
     | "truce-people"
     | "handoff-people"
     | "vault-people"
+    | "insurance-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2220,6 +2222,31 @@ export function vaultPeoplePoi(): Poi {
     kind: "vault-people",
   };
 }
+
+export const INSURANCE_PEOPLE_COPY =
+  "The paper is a house of people, not a revive of process. Insurance still costs. Death still walks you. Combat is not. This was not a fetch.";
+export const WINK_INSURANCE_PEOPLE = "People, not a paper stick. The token does not strike.";
+export const INSURANCE_PEOPLE_NEED = "The vault as people first. A paper of people is not a fetch.";
+export const INSURANCE_PEOPLE_HELD = "The paper already holds as people. Insurance still costs. Not a revive.";
+export const INSURANCE_PEOPLE_SPECTATOR = "A shrine. You do not get a house of people.";
+
+export const INSURANCE_PEOPLE_PLAQUE: Sign = {
+  id: "insurance-people",
+  title: "Insurance — people",
+  text: "A house of people. Insurance still costs. Death still walks you. The number does not strike.",
+  x: SHRINE.x,
+  y: SHRINE.y,
+};
+
+export function insurancePeoplePoi(): Poi {
+  return {
+    id: "insurance-people",
+    name: "Insurance — people",
+    x: SHRINE.x,
+    y: SHRINE.y,
+    kind: "insurance-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2837,6 +2864,7 @@ export function emptyBeats(): Beats {
     trucePeople: false,
     handoffPeople: false,
     vaultPeople: false,
+    insurancePeople: false,
   };
 }
 
