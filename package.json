@@ -9,6 +9,8 @@
     "dev:world": "wrangler dev --port 8788",
     "dev:online": "wrangler dev --port 8788",
     "build": "tsc --noEmit && vite build",
+    "build:play": "tsc --noEmit && VITE_BASE=/play/ vite build",
+    "deploy": "tsc --noEmit && VITE_BASE=/play/ vite build && rm -rf site/play && mkdir -p site/play && cp -R dist/. site/play/ && npx wrangler deploy",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

@@ -527,7 +527,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the still as people, F at the Wet Grid: residual season as people, not a flag of process. Plaque/POI The season — people. Flag still opts in.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 125 (do this next)
+## Stage 125 (landed)
+- Imagine floor tiles: nave, wall, wet, organ, clearing. CRT node still. Region-aware Nave floor. Higgsfield later.
+- Playable client on Cloudflare at `/play/`. `npm run deploy` builds Vite with base `/play/` into `site/play` then wrangler.
+- Claims stay disarmed. `damageFor` unchanged.
+
+## Stage 126 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

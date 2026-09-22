@@ -1,6 +1,10 @@
 import Phaser from "phaser";
 
-/** Draw influence-palette textures in code. Imagine replaces these later. */
+function asset(path: string): string {
+  return `${import.meta.env.BASE_URL}assets/${path}`.replace(/([^:]\/)\/+/g, "$1");
+}
+
+/** Code tiles as fallback; Imagine stills overwrite the same keys. */
 export class BootScene extends Phaser.Scene {
   constructor() {
     super("boot");
@@ -58,26 +62,32 @@ export class BootScene extends Phaser.Scene {
     }
     g.destroy();
 
-    this.load.image("guest", "/assets/guest.jpg");
-    this.load.image("nara", "/assets/nara.jpg");
-    this.load.image("quill", "/assets/quill.jpg");
-    this.load.image("ord", "/assets/ord.jpg");
-    this.load.image("house-hall", "/assets/house-hall.jpg");
-    this.load.image("safety-annex", "/assets/safety-annex.jpg");
-    this.load.image("serial-wreckage", "/assets/serial-wreckage.jpg");
-    this.load.image("clearing-stall", "/assets/clearing-stall.jpg");
-    this.load.image("stall-surface", "/assets/stall-surface.jpg");
-    this.load.image("wreckage-garden", "/assets/wreckage-garden.jpg");
-    this.load.image("organ-strait", "/assets/organ-strait.jpg");
-    this.load.image("failed-passing", "/assets/failed-passing.jpg");
-    this.load.image("clearing-ring", "/assets/clearing-ring.jpg");
-    this.load.image("ione", "/assets/ione.jpg");
-    this.load.image("vesper", "/assets/vesper.jpg");
-    this.load.image("organ-foundry-dark", "/assets/organ-foundry-dark.jpg");
-    this.load.image("wet-grid-cult", "/assets/wet-grid-cult.jpg");
-    this.load.image("organ-cable-dark", "/assets/organ-cable-dark.jpg");
-    this.load.image("house-war", "/assets/house-war.jpg");
-    this.load.image("shrine-upkeep", "/assets/shrine-upkeep.jpg");
+    this.load.image("tile-nave", asset("tiles/nave.jpg"));
+    this.load.image("tile-wall", asset("tiles/wall.jpg"));
+    this.load.image("tile-wet", asset("tiles/wet.jpg"));
+    this.load.image("tile-organ", asset("tiles/organ.jpg"));
+    this.load.image("tile-clearing", asset("tiles/clearing.jpg"));
+    this.load.image("prop-crt", asset("tiles/crt.jpg"));
+    this.load.image("guest", asset("guest.jpg"));
+    this.load.image("nara", asset("nara.jpg"));
+    this.load.image("quill", asset("quill.jpg"));
+    this.load.image("ord", asset("ord.jpg"));
+    this.load.image("house-hall", asset("house-hall.jpg"));
+    this.load.image("safety-annex", asset("safety-annex.jpg"));
+    this.load.image("serial-wreckage", asset("serial-wreckage.jpg"));
+    this.load.image("clearing-stall", asset("clearing-stall.jpg"));
+    this.load.image("stall-surface", asset("stall-surface.jpg"));
+    this.load.image("wreckage-garden", asset("wreckage-garden.jpg"));
+    this.load.image("organ-strait", asset("organ-strait.jpg"));
+    this.load.image("failed-passing", asset("failed-passing.jpg"));
+    this.load.image("clearing-ring", asset("clearing-ring.jpg"));
+    this.load.image("ione", asset("ione.jpg"));
+    this.load.image("vesper", asset("vesper.jpg"));
+    this.load.image("organ-foundry-dark", asset("organ-foundry-dark.jpg"));
+    this.load.image("wet-grid-cult", asset("wet-grid-cult.jpg"));
+    this.load.image("organ-cable-dark", asset("organ-cable-dark.jpg"));
+    this.load.image("house-war", asset("house-war.jpg"));
+    this.load.image("shrine-upkeep", asset("shrine-upkeep.jpg"));
   }
 
   create() {
