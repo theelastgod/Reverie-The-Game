@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 72** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 73** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -313,7 +313,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Appearance needs the party willing. If Nara, Ord, or Quill walked, Passing is absence. Plaque/POI The Clearing — empty party. Not a stick.
 - Freeze still hijacks. Guests cannot force the hour. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 72 (do this next)
+## Stage 72 (landed)
+- Vesper Hale leaves if you keep a Clearing with Cold heat still live. Plaque/POI Vesper Hale — gone. Unlight keeps her. Not a fetch.
+- Refuse never bought the heat. Guests cannot walk her off. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 73 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

@@ -93,6 +93,7 @@ export type Beats = {
   naraGone: boolean;
   ordGone: boolean;
   quillGone: boolean;
+  vesperGone: boolean;
 };
 
 export type WeatherHeard = {
@@ -175,7 +176,8 @@ export type Poi = {
     | "clearing-seed"
     | "nara-gone"
     | "ord-gone"
-    | "quill-gone";
+    | "quill-gone"
+    | "vesper-gone";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1329,6 +1331,7 @@ export function emptyBeats(): Beats {
     naraGone: false,
     ordGone: false,
     quillGone: false,
+    vesperGone: false,
   };
 }
 
@@ -1714,6 +1717,24 @@ export function quillGonePoi(x = 1080, y = 504): Poi {
   return { id: "quill-gone", name: "Quill — gone", x, y, kind: "quill-gone" };
 }
 
+export const VESPER_LEAVE =
+  "Vesper Hale left. You bought the heat and never unlit it. She will not sell a god into a live furnace. This was not a fetch.";
+export const WINK_VESPER_LEAVE = "The desk walked. The furnace kept. Combat is not.";
+export const VESPER_LEAVE_HELD = "Vesper Hale is gone. You kept the heat and lost the concentrator.";
+export const VESPER_LEAVE_SPECTATOR = "An empty desk. You do not know who left.";
+
+export const VESPER_GONE_PLAQUE: Sign = {
+  id: "vesper-gone",
+  title: "Vesper Hale — gone",
+  text: "She will not sell a city that will not unlight. The number does not strike.",
+  x: OPERATOR_DESK.x,
+  y: OPERATOR_DESK.y,
+};
+
+export function vesperGonePoi(x = OPERATOR_DESK.x, y = OPERATOR_DESK.y): Poi {
+  return { id: "vesper-gone", name: "Vesper Hale — gone", x, y, kind: "vesper-gone" };
+}
+
 export function auraSeed(serial: number): number {
   return 8 + (serial % 13);
 }
@@ -2086,6 +2107,7 @@ export function liveNpcs(
   naraGone = false,
   ordGone = false,
   quillGone = false,
+  vesperGone = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -2167,5 +2189,6 @@ export function liveNpcs(
   if (naraGone) base = base.filter((n) => n.id !== "nara");
   if (ordGone) base = base.filter((n) => n.id !== "ord");
   if (quillGone) base = base.filter((n) => n.id !== "quill");
+  if (vesperGone) base = base.filter((n) => n.id !== "vesper");
   return base;
 }

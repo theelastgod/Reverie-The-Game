@@ -128,6 +128,10 @@ import {
   FORGE_SELL,
   QUILL_LEAVE,
   WINK_QUILL_LEAVE,
+  VESPER_LEAVE,
+  WINK_VESPER_LEAVE,
+  VESPER_LEAVE_HELD,
+  VESPER_GONE_PLAQUE,
   QUILL_GONE_PLAQUE,
   FORGE_SPOT,
   FORGE_SPECTATOR,
@@ -2642,6 +2646,70 @@ describe("Quill leaves the party", () => {
     const guest = applyForge(gWorld, "g", "sell");
     expect(guest.quillGone).toBe(false);
     expect(guest.forgedSold).toBe(false);
+  });
+});
+
+describe("Vesper leaves the desk", () => {
+  it("keeping a Clearing with live Cold heat walks her off; unlight keeps her", () => {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), garden: true, lastWord: true, cold: true },
+      current: "cold",
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+    });
+    const left = applyClearing(w, "a", "keep");
+    const p = left.players.get("a")!;
+    expect(left.clearingOpen).toBe(true);
+    expect(left.vesperGone).toBe(true);
+    expect(p.beats.vesperGone).toBe(true);
+    expect(p.heard).toBe(VESPER_LEAVE);
+    expect(p.wink).toBe(WINK_VESPER_LEAVE);
+    expect(left.pois.find((poi) => poi.kind === "vesper-gone")?.id).toBe("vesper-gone");
+    expect(left.signs.find((s) => s.id === "vesper-gone")?.title).toBe(VESPER_GONE_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(snapshot(left).vesperGone).toBe(true);
+    left.players.set("a", { ...p, x: OPERATOR_DESK.x, y: OPERATOR_DESK.y });
+    expect(applyOperator(left, "a", "hear").players.get("a")?.heard).toBe(VESPER_LEAVE_HELD);
+
+    const unlit = emptyWorld();
+    unlit.foundryDark = true;
+    unlit.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), garden: true, lastWord: true, cold: true, foundryDark: true },
+      current: "cold",
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+    });
+    const stayed = applyClearing(unlit, "a", "keep");
+    expect(stayed.vesperGone).toBe(false);
+    expect(stayed.players.get("a")?.heard).toBe(CLEARING_PREPARE);
+
+    const refused = emptyWorld();
+    refused.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), garden: true, lastWord: true, refuse: true },
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+    });
+    expect(applyClearing(refused, "a", "keep").vesperGone).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+      locked: true,
+      beats: { ...emptyBeats(), garden: true, lastWord: true, cold: true },
+    });
+    expect(applyClearing(gWorld, "g", "keep").vesperGone).toBe(false);
   });
 });
 

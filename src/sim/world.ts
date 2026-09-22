@@ -483,6 +483,12 @@ import {
   WINK_QUILL_LEAVE,
   QUILL_GONE_PLAQUE,
   quillGonePoi,
+  VESPER_LEAVE,
+  WINK_VESPER_LEAVE,
+  VESPER_LEAVE_HELD,
+  VESPER_LEAVE_SPECTATOR,
+  VESPER_GONE_PLAQUE,
+  vesperGonePoi,
   BlitzMark,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
@@ -611,6 +617,7 @@ export type WorldState = {
   naraGone: boolean;
   ordGone: boolean;
   quillGone: boolean;
+  vesperGone: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -801,6 +808,7 @@ export function emptyWorld(): WorldState {
     naraGone: false,
     ordGone: false,
     quillGone: false,
+    vesperGone: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -1112,7 +1120,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -1427,6 +1435,15 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
       return { ...w, players };
     }
     players.set(playerId, { ...p, heard: NARA_LEAVE_HELD, wink: visibleWink(false, WINK_NARA_LEAVE) });
+    return { ...w, players };
+  }
+  if (sign.id === "vesper-gone") {
+    const players = new Map(w.players);
+    if (p.guest || p.locked) {
+      players.set(playerId, { ...p, heard: VESPER_LEAVE_SPECTATOR, wink: visibleWink(true, WINK_VESPER_LEAVE) });
+      return { ...w, players };
+    }
+    players.set(playerId, { ...p, heard: VESPER_LEAVE_HELD, wink: visibleWink(false, WINK_VESPER_LEAVE) });
     return { ...w, players };
   }
   if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
@@ -2029,6 +2046,10 @@ export function applyOperator(
   const players = new Map(w.players);
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, heard: OPERATOR_SPECTATOR, wink: visibleWink(true, WINK_OPERATOR) });
+    return { ...w, players };
+  }
+  if (w.vesperGone) {
+    players.set(playerId, { ...p, heard: VESPER_LEAVE_HELD, wink: visibleWink(false, WINK_VESPER_LEAVE) });
     return { ...w, players };
   }
   if (!p.beats.hall) {
@@ -2762,7 +2783,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2802,6 +2823,7 @@ export function snapshot(w: WorldState) {
     naraGone: w.naraGone,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
+    vesperGone: w.vesperGone,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -3190,14 +3212,31 @@ export function applyClearing(
     wink: visibleWink(false, war.winner ? WINK_WAR : WINK_TURN),
     readiness: p.readiness + (p.beats.clearing ? 0 : 1),
   });
-  return {
+  return withVesperLeave({
     ...w,
     players,
     war,
     clearingOpen: true,
     gestell: Math.max(0, w.gestell - 4),
     pois: w.pois.map((poi) => (poi.id === CLEARING_RING.id ? clearingPoi(true) : poi)),
-  };
+  }, playerId);
+}
+
+function withVesperLeave(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.guest || p.locked || w.vesperGone) return w;
+  if (!p.beats.cold && p.current !== "cold") return w;
+  if (w.foundryDark || p.beats.foundryDark) return w;
+  const players = new Map(w.players);
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, vesperGone: true },
+    heard: VESPER_LEAVE,
+    wink: visibleWink(false, WINK_VESPER_LEAVE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "vesper-gone") ? w.pois : [...w.pois, vesperGonePoi()];
+  const signs = w.signs.some((s) => s.id === "vesper-gone") ? w.signs : [...w.signs, { ...VESPER_GONE_PLAQUE }];
+  return { ...w, players, vesperGone: true, pois, signs };
 }
 
 export function applyStorm(w: WorldState, playerId: string): WorldState {

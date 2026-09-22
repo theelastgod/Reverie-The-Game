@@ -479,6 +479,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7a1028
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
+                      : poi.kind === "vesper-gone"
+                        ? 0x7a1028
                       : poi.kind === "ord-gone"
                         ? 0x7a1028
                       : poi.kind === "quill-gone"
@@ -811,6 +813,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Nara Vale will not stand in a hole you left as wreckage.";
     } else if (desk && (me.guest || me.locked)) {
       this.prompt = "A woman at a desk. She is not speaking to you.";
+    } else if (desk && snap.vesperGone) {
+      this.prompt = me.heard || "Vesper Hale is gone. The furnace kept the heat.";
     } else if (desk && (me.beats.vesperNoGod || snap.vesperNoGod)) {
       this.prompt = me.heard || "No god for sale. Private yield does not list absence.";
     } else if (desk && (snap.lastGodNamed || me.beats.lastGod) && !me.guest) {
@@ -1036,7 +1040,8 @@ export class NaveScene extends Phaser.Scene {
       const naraBit = snap.naraGone ? " · sexton gone" : "";
       const ordBit = snap.ordGone ? " · Ord gone" : "";
       const quillBit = snap.quillGone ? " · Quill gone" : "";
-      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}${naraBit}${ordBit}${quillBit}`;
+      const vesperBit = snap.vesperGone ? " · Vesper gone" : "";
+      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}${naraBit}${ordBit}${quillBit}${vesperBit}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;
