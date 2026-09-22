@@ -448,6 +448,12 @@ import {
   CAMP_PEOPLE_HELD,
   CAMP_PEOPLE_SPECTATOR,
   CAMP_PEOPLE_PLAQUE,
+  PASSING_PEOPLE_COPY,
+  WINK_PASSING_PEOPLE,
+  PASSING_PEOPLE_NEED,
+  PASSING_PEOPLE_HELD,
+  PASSING_PEOPLE_SPECTATOR,
+  PASSING_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1029,6 +1035,7 @@ import {
   applyLastWordPeople,
   applyDuelPeople,
   applyCampPeople,
+  applyPassingPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4319,6 +4326,44 @@ describe("Camp — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
     expect(applyCampPeople(gWorld, "g").players.get("g")?.heard).toBe(CAMP_PEOPLE_SPECTATOR);
     expect(gWorld.campPeopleHeld).toBe(false);
+  });
+});
+
+describe("Passing — people", () => {
+  it("names the Passing as people after camp; appearance still opens; guests cannot", () => {
+    const w = emptyWorld();
+    w.campPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), campPeople: true },
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+    });
+    const named = applyClearing(w, "a", "keep");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PASSING_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PASSING_PEOPLE);
+    expect(p.beats.passingPeople).toBe(true);
+    expect(named.passingPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "passing-people")?.name).toBe("Passing — people");
+    expect(named.signs.find((s) => s.id === "passing-people")?.title).toBe(PASSING_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Appearance still opens");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPassingPeople(named, "a").players.get("a")?.heard).toBe(PASSING_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLEARING_RING.x, y: CLEARING_RING.y });
+    expect(applyPassingPeople(early, "a").players.get("a")?.heard).toBe(PASSING_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.campPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y, locked: true });
+    expect(applyPassingPeople(gWorld, "g").players.get("g")?.heard).toBe(PASSING_PEOPLE_SPECTATOR);
+    expect(gWorld.passingPeopleHeld).toBe(false);
   });
 });
 

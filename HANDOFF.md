@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 156** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 157** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -664,7 +664,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the ruin duel as people, F at a wreckage: camping as people. Plaque/POI **Camp — people**. Gestell still rises. Aura still thins.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 156 (do this next)
+## Stage 156 (landed)
+- After camping as people, F at the Clearing ring: Passing as people. Plaque/POI **Passing — people**. Appearance still opens. Absence still waits.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 157 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

@@ -602,6 +602,10 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "duel-people"
                         ? 0xc9a56a
+                      : poi.kind === "camp-people"
+                        ? 0xc9a56a
+                      : poi.kind === "passing-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1198,6 +1202,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The hole holds. Ione Kade is gone.";
     } else if (ioneGoneNear) {
       this.prompt = "F — stand in the hole Ione left. Absence is a standing. Not a fetch.";
+    } else if (ring && (me.beats.passingPeople || snap.passingPeopleHeld)) {
+      this.prompt = me.heard || "Passing — people. Appearance still opens. Absence still waits. Not a stick.";
+    } else if (ring && snap.campPeopleHeld && !me.guest) {
+      this.prompt = "F — the Passing as a house of people. Appearance still opens. Not a fetch.";
     } else if (ring && (me.guest || me.locked)) {
       this.prompt = "A ring in the asphalt. You cannot prepare the ground.";
     } else if (ring && (me.beats.stormPeople || snap.stormPeopleHeld)) {

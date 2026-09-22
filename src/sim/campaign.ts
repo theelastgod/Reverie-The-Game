@@ -2698,16 +2698,16 @@ export const PASSING_PEOPLE_PLAQUE: Sign = {
   id: "passing-people",
   title: "Passing — people",
   text: "A house of people. Appearance still opens. Absence still waits. The number does not strike.",
-  x: CLEARING_RING.x,
-  y: CLEARING_RING.y,
+  x: 720,
+  y: 580,
 };
 
 export function passingPeoplePoi(): Poi {
   return {
     id: "passing-people",
     name: "Passing — people",
-    x: CLEARING_RING.x,
-    y: CLEARING_RING.y,
+    x: 720,
+    y: 580,
     kind: "passing-people",
   };
 }
