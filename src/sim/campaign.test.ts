@@ -304,6 +304,12 @@ import {
   STORM_PEOPLE_HELD,
   STORM_PEOPLE_SPECTATOR,
   STORM_PEOPLE_PLAQUE,
+  BOUNTY_PEOPLE_COPY,
+  WINK_BOUNTY_PEOPLE,
+  BOUNTY_PEOPLE_NEED,
+  BOUNTY_PEOPLE_HELD,
+  BOUNTY_PEOPLE_SPECTATOR,
+  BOUNTY_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -862,6 +868,7 @@ import {
   applyFounderPeople,
   applyRoomsPeople,
   applyStormPeople,
+  applyBountyPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3120,6 +3127,45 @@ describe("Storm — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y, locked: true });
     expect(applyStormPeople(gWorld, "g").players.get("g")?.heard).toBe(STORM_PEOPLE_SPECTATOR);
     expect(gWorld.stormPeopleHeld).toBe(false);
+  });
+});
+
+describe("The bounty — people", () => {
+  it("names the bounty as people after Storm; one omen one purse; guests cannot", () => {
+    const w = emptyWorld();
+    w.stormPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), stormPeople: true, hall: true },
+      inCare: true,
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    const named = applyBountyPeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BOUNTY_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BOUNTY_PEOPLE);
+    expect(p.beats.bountyPeople).toBe(true);
+    expect(named.bountyPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "bounty-people")?.name).toBe("The bounty — people");
+    expect(named.signs.find((s) => s.id === "bounty-people")?.title).toBe(BOUNTY_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("One omen, one purse");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBountyPeople(named, "a").players.get("a")?.heard).toBe(BOUNTY_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: HOUSE_HALL.x, y: HOUSE_HALL.y });
+    expect(applyBountyPeople(early, "a").players.get("a")?.heard).toBe(BOUNTY_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.stormPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
+    expect(applyBountyPeople(gWorld, "g").players.get("g")?.heard).toBe(BOUNTY_PEOPLE_SPECTATOR);
+    expect(gWorld.bountyPeopleHeld).toBe(false);
   });
 });
 

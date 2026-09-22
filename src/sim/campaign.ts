@@ -150,6 +150,7 @@ export type Beats = {
   founderPeople: boolean;
   roomsPeople: boolean;
   stormPeople: boolean;
+  bountyPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -288,6 +289,7 @@ export type Poi = {
     | "founder-people"
     | "rooms-people"
     | "storm-people"
+    | "bounty-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1200,6 +1202,31 @@ export function stormPeoplePoi(): Poi {
     x: 720,
     y: 580,
     kind: "storm-people",
+  };
+}
+
+export const BOUNTY_PEOPLE_COPY =
+  "The bounty is a house of people, not a purse of process. One omen, one purse. Combat is not. This was not a fetch.";
+export const WINK_BOUNTY_PEOPLE = "People, not a bounty stick. The token does not strike.";
+export const BOUNTY_PEOPLE_NEED = "Storm as people first. A bounty of people is not a fetch.";
+export const BOUNTY_PEOPLE_HELD = "The bounty already holds as people. One omen, one purse.";
+export const BOUNTY_PEOPLE_SPECTATOR = "A hall. You do not get a house of people.";
+
+export const BOUNTY_PEOPLE_PLAQUE: Sign = {
+  id: "bounty-people",
+  title: "The bounty — people",
+  text: "A house of people. One omen, one purse. The number does not strike.",
+  x: HOUSE_HALL.x,
+  y: HOUSE_HALL.y,
+};
+
+export function bountyPeoplePoi(): Poi {
+  return {
+    id: "bounty-people",
+    name: "The bounty — people",
+    x: HOUSE_HALL.x,
+    y: HOUSE_HALL.y,
+    kind: "bounty-people",
   };
 }
 
@@ -2695,6 +2722,7 @@ export function emptyBeats(): Beats {
     founderPeople: false,
     roomsPeople: false,
     stormPeople: false,
+    bountyPeople: false,
   };
 }
 

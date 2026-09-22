@@ -387,6 +387,13 @@ import {
   STORM_PEOPLE_SPECTATOR,
   STORM_PEOPLE_PLAQUE,
   stormPeoplePoi,
+  BOUNTY_PEOPLE_COPY,
+  WINK_BOUNTY_PEOPLE,
+  BOUNTY_PEOPLE_NEED,
+  BOUNTY_PEOPLE_HELD,
+  BOUNTY_PEOPLE_SPECTATOR,
+  BOUNTY_PEOPLE_PLAQUE,
+  bountyPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1094,6 +1101,7 @@ export type WorldState = {
   founderPeopleHeld: boolean;
   roomsPeopleHeld: boolean;
   stormPeopleHeld: boolean;
+  bountyPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1369,6 +1377,7 @@ export function emptyWorld(): WorldState {
     founderPeopleHeld: false,
     roomsPeopleHeld: false,
     stormPeopleHeld: false,
+    bountyPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2472,8 +2481,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === CARE_DOOR.id) return applyCare(w, playerId);
   if (sign.id === "organs-people") return applyOrgansPeople(w, playerId);
+  if (sign.id === "bounty-people") return applyBountyPeople(w, playerId);
   if (sign.id === HOUSE_HALL.id) {
     if (!p.inCare || p.guest || p.locked) return w;
+    if (p.beats.hall && w.stormPeopleHeld && !w.bountyPeopleHeld) return applyBountyPeople(w, playerId);
     if (p.beats.hall && w.deskPeopleHeld && !w.hallPeopleHeld) return applyHallPeople(w, playerId);
     if (p.beats.hall && organsPeopleReady(w) && !w.organsPeopleHeld) return applyOrgansPeople(w, playerId);
     if (p.beats.hall && fourfoldReady(w.standing) && !w.fourfoldHeld) return applyFourfold(w, playerId);
@@ -3934,6 +3945,37 @@ export function applyStormPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, stormPeopleHeld: true, pois, signs };
 }
 
+export function applyBountyPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: BOUNTY_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_BOUNTY_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.stormPeopleHeld) {
+    players.set(playerId, { ...p, heard: BOUNTY_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.bountyPeopleHeld && p.beats.bountyPeople) {
+    players.set(playerId, { ...p, heard: BOUNTY_PEOPLE_HELD, wink: visibleWink(false, WINK_BOUNTY_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, bountyPeople: true },
+    heard: BOUNTY_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_BOUNTY_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "bounty-people")
+    ? w.pois.map((poi) => (poi.id === "bounty-people" ? bountyPeoplePoi() : poi))
+    : [...w.pois, bountyPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "bounty-people")
+    ? w.signs.map((s) => (s.id === "bounty-people" ? { ...BOUNTY_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...BOUNTY_PEOPLE_PLAQUE }];
+  return { ...w, players, bountyPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5123,6 +5165,7 @@ export function snapshot(w: WorldState) {
     founderPeopleHeld: w.founderPeopleHeld,
     roomsPeopleHeld: w.roomsPeopleHeld,
     stormPeopleHeld: w.stormPeopleHeld,
+    bountyPeopleHeld: w.bountyPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

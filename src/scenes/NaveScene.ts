@@ -5,6 +5,7 @@ import {
   houseName,
   messengerName,
   GOING_UNDER,
+  BURIAL_PLOT,
   GUEST_ARENA,
   SCREENING,
   STILL,
@@ -98,6 +99,8 @@ export class NaveScene extends Phaser.Scene {
         else if (!wall && nearPoint(cx, cy, CLEARING_RING.x, CLEARING_RING.y, 120)) key = "tile-clearing";
         else if (!wall && nearPoint(cx, cy, CARE_DOOR.x, CARE_DOOR.y, 96)) key = "tile-care";
         else if (!wall && nearPoint(cx, cy, SHRINE.x, SHRINE.y, 80)) key = "tile-shrine";
+        else if (!wall && nearPoint(cx, cy, BURIAL_PLOT.x, BURIAL_PLOT.y, 80)) key = "tile-burial";
+        else if (!wall && nearPoint(cx, cy, GUEST_ARENA.x, GUEST_ARENA.y, 80)) key = "tile-arena";
         this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
       }
     }
@@ -964,7 +967,11 @@ export class NaveScene extends Phaser.Scene {
         snap.standing.mortals >= 1 &&
         snap.standing.divinities >= 1;
       this.prompt =
-        me.beats.organsPeople || snap.organsPeopleHeld
+        me.beats.bountyPeople || snap.bountyPeopleHeld
+          ? me.heard || "The bounty — people. One omen, one purse. Not a stick."
+        : snap.stormPeopleHeld && !me.beats.bountyPeople
+          ? "F — the bounty as a house of people. One omen, one purse. Not a fetch."
+        : me.beats.organsPeople || snap.organsPeopleHeld
           ? me.heard || "The organs — people. Tithe still costs. Not a stick."
         : snap.foundryPeopleHeld && snap.straitPeopleHeld && snap.cablePeopleHeld && me.beats.hall
           ? "F — gather the organs as people. Foundry, Strait, Cable. Not a fetch."
