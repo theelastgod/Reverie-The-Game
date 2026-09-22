@@ -735,6 +735,13 @@ import {
   WINK_PEOPLE_SPECTATOR,
   WINK_PEOPLE_PLAQUE,
   winkPeoplePoi,
+  BESTAND_PEOPLE_COPY,
+  WINK_BESTAND_PEOPLE,
+  BESTAND_PEOPLE_NEED,
+  BESTAND_PEOPLE_HELD,
+  BESTAND_PEOPLE_SPECTATOR,
+  BESTAND_PEOPLE_PLAQUE,
+  bestandPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1500,6 +1507,7 @@ export type WorldState = {
   auraPeopleHeld: boolean;
   presencePeopleHeld: boolean;
   winkPeopleHeld: boolean;
+  bestandPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1825,6 +1833,7 @@ export function emptyWorld(): WorldState {
     auraPeopleHeld: false,
     presencePeopleHeld: false,
     winkPeopleHeld: false,
+    bestandPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3049,7 +3058,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people" || sign.id === "aura-people" || sign.id === "presence-people" || sign.id === "wink-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people" || sign.id === "aura-people" || sign.id === "presence-people" || sign.id === "wink-people" || sign.id === "bestand-people") {
+    if (w.winkPeopleHeld && !w.bestandPeopleHeld) return applyBestandPeople(w, playerId);
+    if (sign.id === "bestand-people") return applyBestandPeople(w, playerId);
     if (w.presencePeopleHeld && !w.winkPeopleHeld) return applyWinkPeople(w, playerId);
     if (sign.id === "wink-people") return applyWinkPeople(w, playerId);
     if (w.auraPeopleHeld && !w.presencePeopleHeld) return applyPresencePeople(w, playerId);
@@ -6098,6 +6109,37 @@ export function applyWinkPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, winkPeopleHeld: true, pois, signs };
 }
 
+export function applyBestandPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: BESTAND_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_BESTAND_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.winkPeopleHeld) {
+    players.set(playerId, { ...p, heard: BESTAND_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.bestandPeopleHeld && p.beats.bestandPeople) {
+    players.set(playerId, { ...p, heard: BESTAND_PEOPLE_HELD, wink: visibleWink(false, WINK_BESTAND_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, bestandPeople: true },
+    heard: BESTAND_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_BESTAND_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "bestand-people")
+    ? w.pois.map((poi) => (poi.id === "bestand-people" ? bestandPeoplePoi() : poi))
+    : [...w.pois, bestandPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "bestand-people")
+    ? w.signs.map((s) => (s.id === "bestand-people" ? { ...BESTAND_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...BESTAND_PEOPLE_PLAQUE }];
+  return { ...w, players, bestandPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -7340,6 +7382,7 @@ export function snapshot(w: WorldState) {
     auraPeopleHeld: w.auraPeopleHeld,
     presencePeopleHeld: w.presencePeopleHeld,
     winkPeopleHeld: w.winkPeopleHeld,
+    bestandPeopleHeld: w.bestandPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

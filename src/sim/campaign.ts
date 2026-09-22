@@ -200,6 +200,7 @@ export type Beats = {
   auraPeople: boolean;
   presencePeople: boolean;
   winkPeople: boolean;
+  bestandPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -388,6 +389,7 @@ export type Poi = {
     | "aura-people"
     | "presence-people"
     | "wink-people"
+    | "bestand-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3414,6 +3416,31 @@ export function winkPeoplePoi(): Poi {
   };
 }
 
+export const BESTAND_PEOPLE_COPY =
+  "Bestand is a house of people, not a token of process. Bestand still spends. The token never buys combat. TAKE stays disarmed. Combat is not. This was not a fetch.";
+export const WINK_BESTAND_PEOPLE = "People, not a Bestand stick. The token does not strike.";
+export const BESTAND_PEOPLE_NEED = "Winke as people first. Bestand of people is not a fetch.";
+export const BESTAND_PEOPLE_HELD = "Bestand already holds as people. Bestand still spends. The token never buys combat.";
+export const BESTAND_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const BESTAND_PEOPLE_PLAQUE: Sign = {
+  id: "bestand-people",
+  title: "Bestand — people",
+  text: "A house of people. Bestand still spends. The token never buys combat. TAKE stays disarmed. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function bestandPeoplePoi(): Poi {
+  return {
+    id: "bestand-people",
+    name: "Bestand — people",
+    x: 720,
+    y: 520,
+    kind: "bestand-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4101,6 +4128,7 @@ export function emptyBeats(): Beats {
     auraPeople: false,
     presencePeople: false,
     winkPeople: false,
+    bestandPeople: false,
   };
 }
 

@@ -654,6 +654,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "wink-people"
                         ? 0xc9a56a
+                      : poi.kind === "bestand-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1102,6 +1104,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.bestandPeople || snap.bestandPeopleHeld)) {
+      this.prompt = me.heard || "Bestand — people. Bestand still spends. The token never buys combat. TAKE stays disarmed. Not a stick.";
+    } else if (wet && snap.winkPeopleHeld && !me.guest) {
+      this.prompt = "F — Bestand as a house of people. Bestand still spends. The token never buys combat. Not a fetch.";
     } else if (wet && (me.beats.winkPeople || snap.winkPeopleHeld)) {
       this.prompt = me.heard || "Wink — people. Winke never withdraw. TAKE stays disarmed. Not a stick.";
     } else if (wet && snap.presencePeopleHeld && !me.guest) {

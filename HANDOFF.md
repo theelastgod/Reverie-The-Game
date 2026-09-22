@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 183** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 184** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -772,7 +772,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After presence as people, F at the Wet Grid: Winke as people. Plaque/POI **Wink — people**. Winke never withdraw. TAKE stays disarmed.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 183 (do this next)
+## Stage 183 (landed)
+- After Winke as people, F at the Wet Grid: Bestand as people. Plaque/POI **Bestand — people**. Bestand still spends. The token never buys combat. TAKE stays disarmed.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 184 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

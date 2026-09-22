@@ -610,6 +610,12 @@ import {
   WINK_PEOPLE_HELD,
   WINK_PEOPLE_SPECTATOR,
   WINK_PEOPLE_PLAQUE,
+  BESTAND_PEOPLE_COPY,
+  WINK_BESTAND_PEOPLE,
+  BESTAND_PEOPLE_NEED,
+  BESTAND_PEOPLE_HELD,
+  BESTAND_PEOPLE_SPECTATOR,
+  BESTAND_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1219,6 +1225,7 @@ import {
   applyAuraPeople,
   applyPresencePeople,
   applyWinkPeople,
+  applyBestandPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5573,6 +5580,46 @@ describe("Wink — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyWinkPeople(gWorld, "g").players.get("g")?.heard).toBe(WINK_PEOPLE_SPECTATOR);
     expect(gWorld.winkPeopleHeld).toBe(false);
+  });
+});
+
+describe("Bestand — people", () => {
+  it("names Bestand as people after Winke; Bestand still spends; token never buys combat; guests cannot", () => {
+    const w = emptyWorld();
+    w.winkPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), winkPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BESTAND_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BESTAND_PEOPLE);
+    expect(p.beats.bestandPeople).toBe(true);
+    expect(named.bestandPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "bestand-people")?.name).toBe("Bestand — people");
+    expect(named.signs.find((s) => s.id === "bestand-people")?.title).toBe(BESTAND_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Bestand still spends");
+    expect(p.heard).toContain("token never buys combat");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBestandPeople(named, "a").players.get("a")?.heard).toBe(BESTAND_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyBestandPeople(early, "a").players.get("a")?.heard).toBe(BESTAND_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.winkPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyBestandPeople(gWorld, "g").players.get("g")?.heard).toBe(BESTAND_PEOPLE_SPECTATOR);
+    expect(gWorld.bestandPeopleHeld).toBe(false);
   });
 });
 
