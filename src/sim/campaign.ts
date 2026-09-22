@@ -123,6 +123,7 @@ export type Beats = {
   carePeople: boolean;
   shrinePeople: boolean;
   safetyPeople: boolean;
+  deskPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -234,6 +235,7 @@ export type Poi = {
     | "care-people"
     | "shrine-people"
     | "safety-people"
+    | "desk-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1517,6 +1519,31 @@ export function safetyPeoplePoi(): Poi {
   return { id: "safety-people", name: "Safety — people", x: 192, y: 400, kind: "safety-people" };
 }
 
+export const DESK_PEOPLE_COPY =
+  "The desk will not price people. File still sits. TAKE stays disarmed. No mint. No Base. This was not a fetch.";
+export const WINK_DESK_PEOPLE = "People are not a claim. Combat is not. The token does not settle.";
+export const DESK_PEOPLE_NEED = "Safety as people first. A desk of people is not a fetch.";
+export const DESK_PEOPLE_HELD = "The desk already holds as people. TAKE stays disarmed.";
+export const DESK_PEOPLE_SPECTATOR = "A period on a ledger. You do not get a house of people.";
+
+export const DESK_PEOPLE_PLAQUE: Sign = {
+  id: "desk-people",
+  title: "DESK — people",
+  text: "Will not price people. TAKE stays disarmed. Not a yield. No Base.",
+  x: CLAIMS_DESK.x,
+  y: CLAIMS_DESK.y,
+};
+
+export function deskPeoplePoi(): Poi {
+  return {
+    id: "desk-people",
+    name: "DESK — people",
+    x: CLAIMS_DESK.x,
+    y: CLAIMS_DESK.y,
+    kind: "desk-people",
+  };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1923,6 +1950,7 @@ export function emptyBeats(): Beats {
     carePeople: false,
     shrinePeople: false,
     safetyPeople: false,
+    deskPeople: false,
   };
 }
 

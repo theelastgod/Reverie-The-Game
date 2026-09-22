@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 103** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 104** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -437,7 +437,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the shrine as people, F at Safety: a house of people, not a freeze of process. Plaque/POI Safety — people. Freeze still costs.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 103 (do this next)
+## Stage 103 (landed)
+- After Safety as people, F at the claims desk: will not price people. Plaque/POI DESK — people. File still sits. TAKE stays disarmed. No mint.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 104 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

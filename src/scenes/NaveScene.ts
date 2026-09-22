@@ -547,6 +547,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "safety-people"
                         ? 0xc9a56a
+                      : poi.kind === "desk-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -819,6 +821,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — open the guest arena. Practice. No spoils. Guests are not loot.";
     } else if (deskClaim && (me.guest || me.locked)) {
       this.prompt = "A period on a ledger. Guests cannot claim.";
+    } else if (deskClaim && (me.beats.deskPeople || snap.deskPeopleHeld)) {
+      this.prompt = me.heard || "DESK — people. F file (not a yield). E TAKE is disarmed. No Base.";
+    } else if (deskClaim && snap.safetyPeopleHeld && !me.guest) {
+      this.prompt = "F — the desk will not price people. TAKE stays disarmed. Not a fetch.";
     } else if (deskClaim) {
       this.prompt = me.heard
         || (snap.deskVaulted
