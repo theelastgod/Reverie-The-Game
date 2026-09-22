@@ -173,6 +173,7 @@ export type Beats = {
   lastWordPeople: boolean;
   duelPeople: boolean;
   campPeople: boolean;
+  passingPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -334,6 +335,7 @@ export type Poi = {
     | "lastword-people"
     | "duel-people"
     | "camp-people"
+    | "passing-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2685,6 +2687,31 @@ export function duelPeoplePoi(x = 200, y = 480): Poi {
   };
 }
 
+export const PASSING_PEOPLE_COPY =
+  "The Passing is a house of people, not a season of process. Appearance still opens. Absence still waits. Combat is not. This was not a fetch.";
+export const WINK_PASSING_PEOPLE = "People, not a Passing stick. The token does not strike.";
+export const PASSING_PEOPLE_NEED = "Camp as people first. A Passing of people is not a fetch.";
+export const PASSING_PEOPLE_HELD = "The Passing already holds as people. Appearance still opens. Absence still waits.";
+export const PASSING_PEOPLE_SPECTATOR = "A ring. You do not get a house of people.";
+
+export const PASSING_PEOPLE_PLAQUE: Sign = {
+  id: "passing-people",
+  title: "Passing — people",
+  text: "A house of people. Appearance still opens. Absence still waits. The number does not strike.",
+  x: CLEARING_RING.x,
+  y: CLEARING_RING.y,
+};
+
+export function passingPeoplePoi(): Poi {
+  return {
+    id: "passing-people",
+    name: "Passing — people",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+    kind: "passing-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3345,6 +3372,7 @@ export function emptyBeats(): Beats {
     lastWordPeople: false,
     duelPeople: false,
     campPeople: false,
+    passingPeople: false,
   };
 }
 

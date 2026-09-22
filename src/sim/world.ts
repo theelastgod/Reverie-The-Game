@@ -546,6 +546,13 @@ import {
   DUEL_PEOPLE_SPECTATOR,
   DUEL_PEOPLE_PLAQUE,
   duelPeoplePoi,
+  PASSING_PEOPLE_COPY,
+  WINK_PASSING_PEOPLE,
+  PASSING_PEOPLE_NEED,
+  PASSING_PEOPLE_HELD,
+  PASSING_PEOPLE_SPECTATOR,
+  PASSING_PEOPLE_PLAQUE,
+  passingPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1284,6 +1291,7 @@ export type WorldState = {
   lastWordPeopleHeld: boolean;
   duelPeopleHeld: boolean;
   campPeopleHeld: boolean;
+  passingPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1582,6 +1590,7 @@ export function emptyWorld(): WorldState {
     lastWordPeopleHeld: false,
     duelPeopleHeld: false,
     campPeopleHeld: false,
+    passingPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -4966,6 +4975,37 @@ export function applyCampPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, campPeopleHeld: true, pois, signs };
 }
 
+export function applyPassingPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: PASSING_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_PASSING_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.campPeopleHeld) {
+    players.set(playerId, { ...p, heard: PASSING_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.passingPeopleHeld && p.beats.passingPeople) {
+    players.set(playerId, { ...p, heard: PASSING_PEOPLE_HELD, wink: visibleWink(false, WINK_PASSING_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, passingPeople: true },
+    heard: PASSING_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_PASSING_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "passing-people")
+    ? w.pois.map((poi) => (poi.id === "passing-people" ? passingPeoplePoi() : poi))
+    : [...w.pois, passingPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "passing-people")
+    ? w.signs.map((s) => (s.id === "passing-people" ? { ...PASSING_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...PASSING_PEOPLE_PLAQUE }];
+  return { ...w, players, passingPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6181,6 +6221,7 @@ export function snapshot(w: WorldState) {
     lastWordPeopleHeld: w.lastWordPeopleHeld,
     duelPeopleHeld: w.duelPeopleHeld,
     campPeopleHeld: w.campPeopleHeld,
+    passingPeopleHeld: w.passingPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
@@ -6850,6 +6891,7 @@ export function applyClearing(
   if (choice !== "extract" && w.hallPeopleHeld && !w.clearingPeopleHeld) return applyClearingPeople(w, playerId);
   if (choice !== "extract" && w.navePeopleHeld && !w.creditsPeopleHeld) return applyCreditsPeople(w, playerId);
   if (choice !== "extract" && w.roomsPeopleHeld && !w.stormPeopleHeld) return applyStormPeople(w, playerId);
+  if (choice !== "extract" && w.campPeopleHeld && !w.passingPeopleHeld) return applyPassingPeople(w, playerId);
   if (choice === "extract") {
     const war = scoreWar(w.war, p.house, "extract");
     players.set(playerId, {

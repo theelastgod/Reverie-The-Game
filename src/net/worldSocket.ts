@@ -142,6 +142,7 @@ export type Snap = {
   lastWordPeopleHeld?: boolean;
   duelPeopleHeld?: boolean;
   campPeopleHeld?: boolean;
+  passingPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
