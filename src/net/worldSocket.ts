@@ -151,6 +151,7 @@ export type Snap = {
   fallenPeopleHeld?: boolean;
   spoilsPeopleHeld?: boolean;
   unflagPeopleHeld?: boolean;
+  secondsPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

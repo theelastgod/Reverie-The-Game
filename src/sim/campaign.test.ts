@@ -502,6 +502,12 @@ import {
   UNFLAG_PEOPLE_HELD,
   UNFLAG_PEOPLE_SPECTATOR,
   UNFLAG_PEOPLE_PLAQUE,
+  SECONDS_PEOPLE_COPY,
+  WINK_SECONDS_PEOPLE,
+  SECONDS_PEOPLE_NEED,
+  SECONDS_PEOPLE_HELD,
+  SECONDS_PEOPLE_SPECTATOR,
+  SECONDS_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1092,6 +1098,7 @@ import {
   applyFallenPeople,
   applySpoilsPeople,
   applyUnflagPeople,
+  applySecondsPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4738,6 +4745,44 @@ describe("Unflag — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyUnflagPeople(gWorld, "g").players.get("g")?.heard).toBe(UNFLAG_PEOPLE_SPECTATOR);
     expect(gWorld.unflagPeopleHeld).toBe(false);
+  });
+});
+
+describe("Seconds — people", () => {
+  it("names seconds as people after unflag; flagged street still lasts seconds; guests cannot", () => {
+    const w = emptyWorld();
+    w.unflagPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), unflagPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SECONDS_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SECONDS_PEOPLE);
+    expect(p.beats.secondsPeople).toBe(true);
+    expect(named.secondsPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "seconds-people")?.name).toBe("Seconds — people");
+    expect(named.signs.find((s) => s.id === "seconds-people")?.title).toBe(SECONDS_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("still lasts seconds");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySecondsPeople(named, "a").players.get("a")?.heard).toBe(SECONDS_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySecondsPeople(early, "a").players.get("a")?.heard).toBe(SECONDS_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.unflagPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySecondsPeople(gWorld, "g").players.get("g")?.heard).toBe(SECONDS_PEOPLE_SPECTATOR);
+    expect(gWorld.secondsPeopleHeld).toBe(false);
   });
 });
 

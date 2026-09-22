@@ -1046,6 +1046,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.secondsPeople || snap.secondsPeopleHeld)) {
+      this.prompt = me.heard || "Seconds — people. Flagged street still lasts seconds. Not a stick.";
+    } else if (wet && snap.unflagPeopleHeld && !me.guest) {
+      this.prompt = "F — seconds as a house of people. Flagged street still lasts seconds. Not a fetch.";
     } else if (wet && (me.beats.unflagPeople || snap.unflagPeopleHeld)) {
       this.prompt = me.heard || "Unflag — people. Unflag still opts out. Cult still hangs. Not a stick.";
     } else if (wet && snap.spoilsPeopleHeld && !me.guest) {
