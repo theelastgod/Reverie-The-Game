@@ -140,6 +140,7 @@ export type Beats = {
   underPeople: boolean;
   gardenPeople: boolean;
   burialPeople: boolean;
+  weatherPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -268,6 +269,7 @@ export type Poi = {
     | "under-people"
     | "garden-people"
     | "burial-people"
+    | "weather-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -922,6 +924,39 @@ export function burialPeoplePoi(): Poi {
     x: BURIAL_PLOT.x,
     y: BURIAL_PLOT.y,
     kind: "burial-people",
+  };
+}
+
+export const WEATHER_SIGN: Sign = {
+  id: "weather",
+  title: "Unnamed weather",
+  text: "Do not name it from a plaque. Speak with the living.",
+  x: 192,
+  y: 340,
+};
+
+export const WEATHER_PEOPLE_COPY =
+  "The weather is a house of people, not a process. Naming still happens by speaking. Combat is not. This was not a fetch.";
+export const WINK_WEATHER_PEOPLE = "People, not a climate stick. The token does not strike.";
+export const WEATHER_PEOPLE_NEED = "The plot as people first. Weather of people is not a fetch.";
+export const WEATHER_PEOPLE_HELD = "The weather already holds as people. Speak with the living to name it.";
+export const WEATHER_PEOPLE_SPECTATOR = "A plaque. You do not get a house of people.";
+
+export const WEATHER_PEOPLE_PLAQUE: Sign = {
+  id: "weather",
+  title: "Weather — people",
+  text: "A house of people. Speak with the living to name it. The number does not strike.",
+  x: 192,
+  y: 340,
+};
+
+export function weatherPeoplePoi(): Poi {
+  return {
+    id: "weather",
+    name: "Weather — people",
+    x: 192,
+    y: 340,
+    kind: "weather-people",
   };
 }
 
@@ -2407,6 +2442,7 @@ export function emptyBeats(): Beats {
     underPeople: false,
     gardenPeople: false,
     burialPeople: false,
+    weatherPeople: false,
   };
 }
 
@@ -2438,6 +2474,7 @@ export function naveSigns(): Sign[] {
     { ...SCREENING_PLAQUE },
     { ...CLAIMS_PLAQUE },
     { ...SHRINE_PLAQUE },
+    { ...WEATHER_SIGN },
   ].filter((s): s is Sign => !!s?.id);
 }
 

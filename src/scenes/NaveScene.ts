@@ -453,6 +453,8 @@ export class NaveScene extends Phaser.Scene {
       const fill =
         poi.kind === "named-weather"
           ? 0xc9a56a
+          : poi.kind === "weather-people"
+            ? 0xc9a56a
           : poi.kind === "house-hall"
             ? 0xc9a56a
             : poi.kind === "safety-frozen"
@@ -806,12 +808,17 @@ export class NaveScene extends Phaser.Scene {
     const wreckNear = snap.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 72));
     const funeralNear = snap.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 56));
     const shrine = nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56);
+    const weatherPlaque = nearPoint(me.x, me.y, 192, 340, 56);
     const ioneGoneNear = !!(snap.ioneGone && nearPoint(me.x, me.y, IONE.x, IONE.y, 56));
 
     const mateNear = snap.players.find(
       (o) => o.id !== me.id && !o.guest && nearPoint(me.x, me.y, o.x, o.y, 56),
     );
-    if (me.partyOf && !me.guest) {
+    if (weatherPlaque && (me.beats.weatherPeople || snap.weatherPeopleHeld)) {
+      this.prompt = me.heard || "Weather — people. Speak with the living to name it. Not a stick.";
+    } else if (weatherPlaque && snap.burialPeopleHeld && !me.guest) {
+      this.prompt = "F — the weather as a house of people. Speak with the living to name it. Not a fetch.";
+    } else if (me.partyOf && !me.guest) {
       this.prompt = "F — part the hour. The walk ends. Not a stick.";
     } else if (mateNear && me.flagged && mateNear.flagged && !me.guest) {
       this.prompt = me.beats.truce || snap.truceHeld

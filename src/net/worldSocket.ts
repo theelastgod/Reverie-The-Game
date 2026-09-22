@@ -109,6 +109,7 @@ export type Snap = {
   underPeopleHeld?: boolean;
   gardenPeopleHeld?: boolean;
   burialPeopleHeld?: boolean;
+  weatherPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

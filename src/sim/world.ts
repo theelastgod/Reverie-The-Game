@@ -317,6 +317,13 @@ import {
   BURIAL_PEOPLE_SPECTATOR,
   BURIAL_PEOPLE_PLAQUE,
   burialPeoplePoi,
+  WEATHER_PEOPLE_COPY,
+  WINK_WEATHER_PEOPLE,
+  WEATHER_PEOPLE_NEED,
+  WEATHER_PEOPLE_HELD,
+  WEATHER_PEOPLE_SPECTATOR,
+  WEATHER_PEOPLE_PLAQUE,
+  weatherPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1014,6 +1021,7 @@ export type WorldState = {
   underPeopleHeld: boolean;
   gardenPeopleHeld: boolean;
   burialPeopleHeld: boolean;
+  weatherPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1279,6 +1287,7 @@ export function emptyWorld(): WorldState {
     underPeopleHeld: false,
     gardenPeopleHeld: false,
     burialPeopleHeld: false,
+    weatherPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2375,6 +2384,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   const p = w.players.get(playerId);
   const sign = w.signs.find((s) => s.id === signId);
   if (!p || p.hp <= 0 || !sign || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
+  if (sign.id === "weather") return applyWeatherPeople(w, playerId);
   if (sign.id === CARE_DOOR.id) return applyCare(w, playerId);
   if (sign.id === "organs-people") return applyOrgansPeople(w, playerId);
   if (sign.id === HOUSE_HALL.id) {
@@ -3513,6 +3523,37 @@ export function applyBurialPeople(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === BURIAL_PLOT.id ? { ...BURIAL_PEOPLE_PLAQUE } : s))
     : [...w.signs, { ...BURIAL_PEOPLE_PLAQUE }];
   return { ...w, players, burialPeopleHeld: true, pois, signs };
+}
+
+export function applyWeatherPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, 192, 340, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: WEATHER_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_WEATHER_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.burialPeopleHeld) {
+    players.set(playerId, { ...p, heard: WEATHER_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.weatherPeopleHeld && p.beats.weatherPeople) {
+    players.set(playerId, { ...p, heard: WEATHER_PEOPLE_HELD, wink: visibleWink(false, WINK_WEATHER_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, weatherPeople: true },
+    heard: WEATHER_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_WEATHER_PEOPLE),
+  });
+  return {
+    ...w,
+    players,
+    weatherPeopleHeld: true,
+    pois: w.pois.map((poi) => (poi.id === "weather" ? weatherPeoplePoi() : poi)),
+    signs: w.signs.map((s) => (s.id === "weather" ? { ...WEATHER_PEOPLE_PLAQUE } : s)),
+  };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -4694,6 +4735,7 @@ export function snapshot(w: WorldState) {
     underPeopleHeld: w.underPeopleHeld,
     gardenPeopleHeld: w.gardenPeopleHeld,
     burialPeopleHeld: w.burialPeopleHeld,
+    weatherPeopleHeld: w.weatherPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
