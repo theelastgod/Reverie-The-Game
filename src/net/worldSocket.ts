@@ -138,6 +138,7 @@ export type Snap = {
   dodgePeopleHeld?: boolean;
   heavyPeopleHeld?: boolean;
   hitStopPeopleHeld?: boolean;
+  spectatePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

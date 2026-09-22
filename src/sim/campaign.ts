@@ -169,6 +169,7 @@ export type Beats = {
   dodgePeople: boolean;
   heavyPeople: boolean;
   hitStopPeople: boolean;
+  spectatePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -326,6 +327,7 @@ export type Poi = {
     | "dodge-people"
     | "heavy-people"
     | "hitstop-people"
+    | "spectate-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2599,6 +2601,32 @@ export function hitStopPeoplePoi(): Poi {
     kind: "hitstop-people",
   };
 }
+
+export const SPECTATE_PEOPLE_COPY =
+  "Spectate is a house of people, not a faucet of process. Aura still caps. The duel still pays from a person. Combat is not. This was not a fetch.";
+export const WINK_SPECTATE_PEOPLE = "People, not a watch stick. The token does not strike.";
+export const SPECTATE_PEOPLE_NEED = "Hit-stop as people first. A watch of people is not a fetch.";
+export const SPECTATE_PEOPLE_GRAVE = "Stand with a wreckage. A watch of people is not a fetch.";
+export const SPECTATE_PEOPLE_HELD = "Spectate already holds as people. Aura still caps.";
+export const SPECTATE_PEOPLE_SPECTATOR = "A grave. You do not get a house of people.";
+
+export const SPECTATE_PEOPLE_PLAQUE: Sign = {
+  id: "spectate-people",
+  title: "Spectate — people",
+  text: "A house of people. Aura still caps. The duel still pays from a person. The number does not strike.",
+  x: 200,
+  y: 480,
+};
+
+export function spectatePeoplePoi(x = 200, y = 480): Poi {
+  return {
+    id: "spectate-people",
+    name: "Spectate — people",
+    x,
+    y,
+    kind: "spectate-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3230,6 +3258,7 @@ export function emptyBeats(): Beats {
     dodgePeople: false,
     heavyPeople: false,
     hitStopPeople: false,
+    spectatePeople: false,
   };
 }
 

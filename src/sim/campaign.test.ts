@@ -421,6 +421,13 @@ import {
   HITSTOP_PEOPLE_HELD,
   HITSTOP_PEOPLE_SPECTATOR,
   HITSTOP_PEOPLE_PLAQUE,
+  SPECTATE_PEOPLE_COPY,
+  WINK_SPECTATE_PEOPLE,
+  SPECTATE_PEOPLE_NEED,
+  SPECTATE_PEOPLE_GRAVE,
+  SPECTATE_PEOPLE_HELD,
+  SPECTATE_PEOPLE_SPECTATOR,
+  SPECTATE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -998,6 +1005,7 @@ import {
   applyDodgePeople,
   applyHeavyPeople,
   applyHitStopPeople,
+  applySpectatePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4108,6 +4116,53 @@ describe("Hit-stop — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
     expect(applyHitStopPeople(gWorld, "g").players.get("g")?.heard).toBe(HITSTOP_PEOPLE_SPECTATOR);
     expect(gWorld.hitStopPeopleHeld).toBe(false);
+  });
+});
+
+describe("Spectate — people", () => {
+  it("names spectate as people after hit-stop; aura still caps; guests cannot", () => {
+    const w = emptyWorld();
+    w.hitStopPeopleHeld = true;
+    w.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), hitStopPeople: true },
+      x: 200,
+      y: 480,
+    });
+    const named = applyBury(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SPECTATE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SPECTATE_PEOPLE);
+    expect(p.beats.spectatePeople).toBe(true);
+    expect(named.wreckage).toHaveLength(1);
+    expect(named.spectatePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "spectate-people")?.name).toBe("Spectate — people");
+    expect(named.signs.find((s) => s.id === "spectate-people")?.title).toBe(SPECTATE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Aura still caps");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySpectatePeople(named, "a").players.get("a")?.heard).toBe(SPECTATE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    expect(applySpectatePeople(early, "a").players.get("a")?.heard).toBe(SPECTATE_PEOPLE_NEED);
+
+    const nograve = emptyWorld();
+    nograve.hitStopPeopleHeld = true;
+    nograve.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    expect(applySpectatePeople(nograve, "a").players.get("a")?.heard).toBe(SPECTATE_PEOPLE_GRAVE);
+
+    const gWorld = emptyWorld();
+    gWorld.hitStopPeopleHeld = true;
+    gWorld.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
+    expect(applySpectatePeople(gWorld, "g").players.get("g")?.heard).toBe(SPECTATE_PEOPLE_SPECTATOR);
+    expect(gWorld.spectatePeopleHeld).toBe(false);
   });
 });
 

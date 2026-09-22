@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 150** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 151** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -638,7 +638,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After heavy as people, F at the guest arena: hit-stop as people. Plaque/POI **Hit-stop — people**. The hit still holds. You did not strike harder.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 150 (do this next)
+## Stage 150 (landed)
+- After hit-stop as people, F at a wreckage: spectate as people. Plaque/POI **Spectate — people**. Aura still caps. The duel still pays from a person.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 151 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

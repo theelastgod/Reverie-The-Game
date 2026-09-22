@@ -86,34 +86,8 @@ export class NaveScene extends Phaser.Scene {
   create() {
     this.cameras.main.setBackgroundColor("#16141c");
 
-    for (let y = 0; y < ROWS; y++) {
-      for (let x = 0; x < COLS; x++) {
-        const edge = x === 0 || y === 0 || x === COLS - 1 || y === ROWS - 1;
-        const aisle = x === 9 || x === 18;
-        const wall = edge || (aisle && y > 3 && y < ROWS - 3 && y % 4 !== 0);
-        const cx = x * TILE + TILE / 2;
-        const cy = y * TILE + TILE / 2;
-        let key = wall ? "tile-wall" : "tile-nave";
-        if (!wall && inWetGrid(cx, cy)) key = "tile-wet";
-        else if (!wall && cy < 168) key = "tile-organ";
-        else if (!wall && nearPoint(cx, cy, CLEARING_RING.x, CLEARING_RING.y, 120)) key = "tile-clearing";
-        else if (!wall && nearPoint(cx, cy, CARE_DOOR.x, CARE_DOOR.y, 96)) key = "tile-care";
-        else if (!wall && nearPoint(cx, cy, SHRINE.x, SHRINE.y, 80)) key = "tile-shrine";
-        else if (!wall && nearPoint(cx, cy, BURIAL_PLOT.x, BURIAL_PLOT.y, 80)) key = "tile-burial";
-        else if (!wall && nearPoint(cx, cy, GUEST_ARENA.x, GUEST_ARENA.y, 80)) key = "tile-arena";
-        else if (!wall && nearPoint(cx, cy, HOUSE_HALL.x, HOUSE_HALL.y, 80)) key = "tile-hall";
-        else if (!wall && nearPoint(cx, cy, CLEARING_STALL.x, CLEARING_STALL.y, 80)) key = "tile-stall";
-        else if (!wall && nearPoint(cx, cy, FORGE_TRAY.x, FORGE_TRAY.y, 80)) key = "tile-forge";
-        else if (!wall && nearPoint(cx, cy, M3_DOOR.x, M3_DOOR.y, 80)) key = "tile-m3";
-        else if (!wall && nearPoint(cx, cy, OPERATOR_DESK.x, OPERATOR_DESK.y, 80)) key = "tile-operator";
-        else if (!wall && nearPoint(cx, cy, GOING_UNDER.x, GOING_UNDER.y, 80)) key = "tile-under";
-        else if (!wall && nearPoint(cx, cy, WRECK_GARDEN.x, WRECK_GARDEN.y, 80)) key = "tile-garden";
-        else if (!wall && nearPoint(cx, cy, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 80)) key = "tile-annex";
-        else if (!wall && nearPoint(cx, cy, SCREENING.x, SCREENING.y, 80)) key = "tile-screening";
-        this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
-      }
-    }
-    this.add.image(CLEARING_RING.x, CLEARING_RING.y, "clearing-ring").setDisplaySize(220, 124).setAlpha(0.55).setDepth(2);
+    this.paintFloors();
+    this.graftPlates();
 
     this.add
       .text(TILE * 2, TILE * 2.2, "NAVE OF TUBES", {
@@ -157,27 +131,77 @@ export class NaveScene extends Phaser.Scene {
     this.net.connect();
   }
 
+  private floorKey(cx: number, cy: number, wall: boolean): string {
+    if (wall) return "tile-wall";
+    if (inWetGrid(cx, cy)) return "tile-wet";
+    if (cy < 168) return "tile-organ";
+    if (nearPoint(cx, cy, CLEARING_RING.x, CLEARING_RING.y, 140)) return "tile-clearing";
+    if (nearPoint(cx, cy, CARE_DOOR.x, CARE_DOOR.y, 110)) return "tile-care";
+    if (nearPoint(cx, cy, SHRINE.x, SHRINE.y, 90)) return "tile-shrine";
+    if (nearPoint(cx, cy, BURIAL_PLOT.x, BURIAL_PLOT.y, 90)) return "tile-burial";
+    if (nearPoint(cx, cy, GUEST_ARENA.x, GUEST_ARENA.y, 90)) return "tile-arena";
+    if (nearPoint(cx, cy, HOUSE_HALL.x, HOUSE_HALL.y, 90)) return "tile-hall";
+    if (nearPoint(cx, cy, CLEARING_STALL.x, CLEARING_STALL.y, 90)) return "tile-stall";
+    if (nearPoint(cx, cy, FORGE_TRAY.x, FORGE_TRAY.y, 90)) return "tile-forge";
+    if (nearPoint(cx, cy, M3_DOOR.x, M3_DOOR.y, 90)) return "tile-m3";
+    if (nearPoint(cx, cy, OPERATOR_DESK.x, OPERATOR_DESK.y, 90)) return "tile-operator";
+    if (nearPoint(cx, cy, GOING_UNDER.x, GOING_UNDER.y, 90)) return "tile-under";
+    if (nearPoint(cx, cy, WRECK_GARDEN.x, WRECK_GARDEN.y, 90)) return "tile-garden";
+    if (nearPoint(cx, cy, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 90)) return "tile-annex";
+    if (nearPoint(cx, cy, SCREENING.x, SCREENING.y, 90)) return "tile-screening";
+    return "tile-nave";
+  }
+
+  private paintFloors() {
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const edge = x === 0 || y === 0 || x === COLS - 1 || y === ROWS - 1;
+        const aisle = x === 9 || x === 18;
+        const wall = edge || (aisle && y > 3 && y < ROWS - 3 && y % 4 !== 0);
+        const cx = x * TILE + TILE / 2;
+        const cy = y * TILE + TILE / 2;
+        const key = this.floorKey(cx, cy, wall);
+        if (wall) {
+          this.add.image(cx, cy, key).setDisplaySize(TILE, TILE).setDepth(0);
+          continue;
+        }
+        const cell = this.add.tileSprite(cx, cy, TILE, TILE, key).setDepth(0);
+        cell.setTilePosition(x * TILE, y * TILE);
+      }
+    }
+  }
+
+  private plate(x: number, y: number, tex: string, w: number, h: number): Phaser.GameObjects.Image {
+    this.add.rectangle(x, y, w + 8, h + 8, 0x0a0a0a).setDepth(2);
+    this.add.rectangle(x, y, w + 4, h + 4, 0xc9a56a).setDepth(2);
+    return this.add.image(x, y, tex).setDisplaySize(w, h).setDepth(3);
+  }
+
+  private graftPlates() {
+    this.plate(CLEARING_RING.x, CLEARING_RING.y - 8, "clearing-ring", 268, 150);
+    this.plate(WET_GRID.x, WET_GRID.y - 18, "wet-grid-cult", 188, 112);
+    this.plate(ORGAN_STRAIT.x, ORGAN_STRAIT.y + 28, "organ-strait", 132, 74);
+    this.plate(ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y + 28, "organ-foundry-dark", 132, 74);
+    this.plate(ORGAN_CABLE.x, ORGAN_CABLE.y + 28, "organ-cable-dark", 132, 74);
+    this.plate(HOUSE_HALL.x, HOUSE_HALL.y - 36, "house-hall", 156, 88);
+    this.plate(SAFETY_ANNEX.x, SAFETY_ANNEX.y - 36, "safety-annex", 148, 84);
+    this.stallStill = this.plate(CLEARING_STALL.x, CLEARING_STALL.y - 36, "clearing-stall", 148, 84);
+    this.plate(SHRINE.x, SHRINE.y - 36, "shrine-upkeep", 140, 80);
+    this.plate(WRECK_GARDEN.x, WRECK_GARDEN.y - 36, "wreckage-garden", 148, 84);
+    this.plate(IONE.x, IONE.y - 44, "ione", 120, 148);
+    this.plate(SCREENING.x, SCREENING.y - 36, "failed-passing", 140, 80);
+    this.plate(GUEST_ARENA.x, GUEST_ARENA.y - 36, "serial-wreckage", 128, 72);
+    this.plate(M3_DOOR.x, M3_DOOR.y + 28, "organ-foundry-dark", 120, 68);
+    this.plate(CARE_DOOR.x, CARE_DOOR.y - 28, "house-hall", 128, 72);
+    this.plate(FORGE_TRAY.x, FORGE_TRAY.y - 36, "house-war", 128, 72);
+    this.plate(OPERATOR_DESK.x, OPERATOR_DESK.y - 36, "vesper", 96, 120);
+    this.plate(GOING_UNDER.x, GOING_UNDER.y + 28, "serial-wreckage", 120, 68);
+    this.plate(CLAIMS_DESK.x, CLAIMS_DESK.y - 36, "safety-annex", 128, 72);
+  }
+
   private drawSign(s: Sign) {
     if (this.signLabels.has(s.id)) return;
     this.add.rectangle(s.x, s.y, 112, 28, 0xffffff).setStrokeStyle(3, 0x0a0a0a).setDepth(4);
-    if (s.id === HOUSE_HALL.id) {
-      this.add.image(s.x, s.y - 52, "house-hall").setDisplaySize(88, 50).setDepth(3);
-    }
-    if (s.id === SAFETY_ANNEX.id) {
-      this.add.image(s.x, s.y - 52, "safety-annex").setDisplaySize(88, 50).setDepth(3);
-    }
-    if (s.id === CLEARING_STALL.id) {
-      this.stallStill = this.add.image(s.x, s.y - 52, "clearing-stall").setDisplaySize(88, 50).setDepth(3);
-    }
-    if (s.id === ORGAN_STRAIT.id) {
-      this.add.image(s.x, s.y - 52, "organ-strait").setDisplaySize(88, 50).setDepth(3);
-    }
-    if (s.id === CLEARING_RING.id) {
-      this.add.image(s.x, s.y - 52, "house-war").setDisplaySize(88, 50).setDepth(3);
-    }
-    if (s.id === SHRINE.id) {
-      this.add.image(s.x, s.y - 52, "shrine-upkeep").setDisplaySize(88, 50).setDepth(3);
-    }
     const label = this.add
       .text(s.x, s.y - 2, s.title, {
         fontFamily: "Space Grotesk, sans-serif",
@@ -386,8 +410,8 @@ export class NaveScene extends Phaser.Scene {
     for (const n of nodes) {
       let g = this.nodeMarks.get(n.id);
       if (!g) {
-        g = this.add.circle(n.x, n.y, 16, 0x88a0c8, 0.35).setDepth(3);
-        this.add.image(n.x, n.y, "prop-crt").setDisplaySize(36, 36).setDepth(4);
+        g = this.add.circle(n.x, n.y, 14, 0x88a0c8, 0.28).setDepth(3);
+        this.add.image(n.x, n.y - 6, "prop-crt").setDisplaySize(44, 48).setDepth(4);
         this.nodeMarks.set(n.id, g);
       }
       const announced = this.net.snap?.announced === n.id;
@@ -400,10 +424,7 @@ export class NaveScene extends Phaser.Scene {
     for (const r of rites) {
       let g = this.riteMarks.get(r.id);
       if (!g) {
-        g = this.add.circle(r.x, r.y, r.kind === "going-under" ? 18 : 12, 0x7a1028, 0.75).setDepth(4);
-        if (r.kind === "garden") {
-          this.add.image(r.x, r.y - 36, "wreckage-garden").setDisplaySize(72, 40).setDepth(3);
-        }
+        g = this.add.circle(r.x, r.y, r.kind === "going-under" ? 18 : 12, 0x7a1028, 0.55).setDepth(4);
         const label = r.kind === "going-under" ? "GOING-UNDER" : r.kind === "garden" ? "WRECKAGE GARDEN" : "BURIAL";
         this.add
           .text(r.x, r.y + 22, label, {
@@ -1394,6 +1415,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — name the storm at your back. Every grave is a season. Not a stick.";
     } else if (wreckNear && (me.beats.ruinBack || snap.ruinBackHeld) && me.messenger === "ruin-angel") {
       this.prompt = me.heard || "The storm holds. Graves stay seasons. Combat is not.";
+    } else if (funeralNear && (me.beats.spectatePeople || snap.spectatePeopleHeld)) {
+      this.prompt = me.heard || "Spectate — people. Aura still caps. The duel still pays from a person. Not a stick.";
+    } else if (funeralNear && snap.hitStopPeopleHeld && !me.guest) {
+      this.prompt = "F — spectate as a house of people. Aura still caps. Not a fetch.";
     } else if (funeralNear && (me.beats.funeralPeople || snap.funeralPeopleHeld)) {
       this.prompt = me.heard || "Funeral — people. Twelve Bestand. The body is in the ground. Not a stick.";
     } else if (funeralNear && snap.insurancePeopleHeld && !me.guest) {
