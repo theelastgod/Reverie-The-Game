@@ -856,9 +856,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard
         || `Holding-back. F keep (${SHRINE_COST}). E restore (${RESTORE_COST}). Q insurance (${INSURANCE_COST}). Not a stick.`;
     } else if (shrine) {
+      const vault = me.banked > 0 ? " Vault covers if the pocket is short." : "";
       this.prompt = me.insured
-        ? `F keep (${SHRINE_COST}). E restore (${RESTORE_COST}). Paper held — death walks you here. Not a stick.`
-        : `F keep (${SHRINE_COST}). E restore aura (${RESTORE_COST}). Q insurance (${INSURANCE_COST}). A walk, not a revive.`;
+        ? `F keep (${SHRINE_COST}). E restore (${RESTORE_COST}). Paper held — death walks you here. Not a stick.${vault}`
+        : `F keep (${SHRINE_COST}). E restore aura (${RESTORE_COST}). Q insurance (${INSURANCE_COST}). A walk, not a revive.${vault}`;
     } else if (funeralNear && !me.locked) {
       this.prompt = `F funeral. ${FUNERAL_COST} Bestand on Nara Vale's street.`;
     } else if (failNear) {

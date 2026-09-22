@@ -219,6 +219,8 @@ import {
   BANK_EMPTY,
   BANK_SPECTATOR,
   BANK_PLAQUE,
+  VAULT_COVER,
+  spendBestand,
   DUEL_COPY,
   SPECTATE_COPY,
   SPECTATE_CAP,
@@ -1977,6 +1979,46 @@ describe("Desk vault", () => {
     expect(g.players.get("g")?.heard).toBe(BANK_SPECTATOR);
     expect(g.players.get("g")?.banked).toBe(0);
     expect(g.deskVaulted).toBe(false);
+  });
+
+  it("vault covers shrine keep when the pocket is short; guests still cannot", () => {
+    expect(spendBestand({ bestand: 8, banked: 0 }, 8)).toEqual({ bestand: 0, banked: 0, fromVault: 0 });
+    expect(spendBestand({ bestand: 3, banked: 10 }, 8)).toEqual({ bestand: 0, banked: 5, fromVault: 5 });
+    expect(spendBestand({ bestand: 2, banked: 2 }, 8)).toBeNull();
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 3,
+      banked: 10,
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const paid = applyShrine(w, "a");
+    const p = paid.players.get("a")!;
+    expect(p.bestand).toBe(0);
+    expect(p.banked).toBe(5);
+    expect(p.heard).toBe(`${SHRINE_COPY} ${VAULT_COVER}`);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const broke = emptyWorld();
+    broke.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      bestand: 1,
+      banked: 1,
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    expect(applyShrine(broke, "a").players.get("a")?.heard).toBe(SHRINE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true, banked: 99 });
+    expect(applyShrine(gWorld, "g").players.get("g")?.heard).toBe(SHRINE_SPECTATOR);
+    expect(gWorld.players.get("g")?.banked).toBe(99);
   });
 });
 

@@ -193,6 +193,8 @@ import {
   WINK_BANK,
   BANK_EMPTY,
   BANK_SPECTATOR,
+  spendBestand,
+  vaultHeard,
   BANK_PLAQUE,
   bankPoi,
   FUNERAL_COST,
@@ -1257,15 +1259,17 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   }
   const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
   if (wreck) {
-    if (p.bestand < FUNERAL_COST) {
+    const spent = spendBestand(p, FUNERAL_COST);
+    if (!spent) {
       players.set(playerId, { ...p, heard: FUNERAL_NEED });
       return { ...w, players };
     }
     players.set(playerId, {
       ...p,
-      bestand: p.bestand - FUNERAL_COST,
+      bestand: spent.bestand,
+      banked: spent.banked,
       readiness: p.readiness + (p.house === "earth" ? 2 : 1),
-      heard: FUNERAL_COPY,
+      heard: vaultHeard(FUNERAL_COPY, spent.fromVault),
       wink: visibleWink(p.guest, WINK_SINK),
     });
     return { ...w, players, wreckage: w.wreckage.filter((r) => r.id !== wreck.id) };
@@ -1325,16 +1329,18 @@ export function applyShrine(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, ...atShrine, heard: SHRINE_SPECTATOR, wink: visibleWink(true, WINK_SINK) });
     return { ...w, players };
   }
-  if (p.bestand < SHRINE_COST) {
+  const spent = spendBestand(p, SHRINE_COST);
+  if (!spent) {
     players.set(playerId, { ...p, ...atShrine, heard: SHRINE_NEED });
     return { ...w, players };
   }
   players.set(playerId, {
     ...p,
     ...atShrine,
-    bestand: p.bestand - SHRINE_COST,
+    bestand: spent.bestand,
+    banked: spent.banked,
     readiness: p.readiness + 1,
-    heard: SHRINE_COPY,
+    heard: vaultHeard(SHRINE_COPY, spent.fromVault),
     wink: visibleWink(false, WINK_SINK),
   });
   return { ...w, players, gestell: Math.max(0, w.gestell - 2) };
@@ -1353,7 +1359,8 @@ export function applyRestore(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, ...atShrine, heard: RESTORE_FULL });
     return { ...w, players };
   }
-  if (p.bestand < RESTORE_COST) {
+  const spent = spendBestand(p, RESTORE_COST);
+  if (!spent) {
     players.set(playerId, { ...p, ...atShrine, heard: RESTORE_NEED, wink: visibleWink(false, p.wink, p.aura) });
     return { ...w, players };
   }
@@ -1361,9 +1368,10 @@ export function applyRestore(w: WorldState, playerId: string): WorldState {
   players.set(playerId, {
     ...p,
     ...atShrine,
-    bestand: p.bestand - RESTORE_COST,
+    bestand: spent.bestand,
+    banked: spent.banked,
     aura,
-    heard: RESTORE_COPY,
+    heard: vaultHeard(RESTORE_COPY, spent.fromVault),
     wink: visibleWink(false, p.wink || WINK_SINK, aura),
   });
   return { ...w, players };
@@ -1382,16 +1390,18 @@ export function applyInsure(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, ...atShrine, heard: INSURANCE_HELD });
     return { ...w, players };
   }
-  if (p.bestand < INSURANCE_COST) {
+  const spent = spendBestand(p, INSURANCE_COST);
+  if (!spent) {
     players.set(playerId, { ...p, ...atShrine, heard: INSURANCE_NEED });
     return { ...w, players };
   }
   players.set(playerId, {
     ...p,
     ...atShrine,
-    bestand: p.bestand - INSURANCE_COST,
+    bestand: spent.bestand,
+    banked: spent.banked,
     insured: true,
-    heard: INSURANCE_COPY,
+    heard: vaultHeard(INSURANCE_COPY, spent.fromVault),
     wink: visibleWink(false, WINK_SINK),
   });
   return { ...w, players };
@@ -1409,17 +1419,19 @@ export function applyRepair(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: REPAIR_NONE });
     return { ...w, players };
   }
-  if (p.bestand < REPAIR_COST) {
+  const spent = spendBestand(p, REPAIR_COST);
+  if (!spent) {
     players.set(playerId, { ...p, heard: REPAIR_NEED });
     return { ...w, players };
   }
   players.set(playerId, {
     ...p,
-    bestand: p.bestand - REPAIR_COST,
+    bestand: spent.bestand,
+    banked: spent.banked,
     damaged: p.damaged - 1,
     fakeWinke: p.fakeWinke + 1,
     exhibitT: 0,
-    heard: REPAIR_COPY,
+    heard: vaultHeard(REPAIR_COPY, spent.fromVault),
     wink: visibleWink(false, WINK_SINK),
   });
   return { ...w, players };
@@ -1651,15 +1663,17 @@ export function applyMarket(w: WorldState, playerId: string): WorldState {
     });
     return { ...w, players };
   }
-  if (p.bestand < CLEARING_PRICE) {
+  const spent = spendBestand(p, CLEARING_PRICE);
+  if (!spent) {
     players.set(playerId, { ...p, heard: MARKET_LISTING });
     return { ...w, players };
   }
   players.set(playerId, {
     ...p,
-    bestand: p.bestand - CLEARING_PRICE,
+    bestand: spent.bestand,
+    banked: spent.banked,
     aura: Math.max(0, p.aura - 2),
-    heard: MARKET_BUY,
+    heard: vaultHeard(MARKET_BUY, spent.fromVault),
     wink: visibleWink(false, WINK_MARKET),
   });
   return { ...w, players, clearingOpen: false };
@@ -1681,15 +1695,17 @@ export function applyFreeze(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: FREEZE_COPY, wink: visibleWink(false, WINK_FREEZE) });
     return { ...w, players };
   }
-  if (p.bestand < FREEZE_COST) {
+  const spent = spendBestand(p, FREEZE_COST);
+  if (!spent) {
     players.set(playerId, { ...p, heard: FREEZE_NEED });
     return { ...w, players };
   }
   players.set(playerId, {
     ...p,
-    bestand: p.bestand - FREEZE_COST,
+    bestand: spent.bestand,
+    banked: spent.banked,
     beats: { ...p.beats, freeze: true },
-    heard: FREEZE_COPY,
+    heard: vaultHeard(FREEZE_COPY, spent.fromVault),
     wink: visibleWink(false, WINK_FREEZE),
     readiness: p.readiness + (p.beats.freeze ? 0 : 1),
   });
@@ -2600,14 +2616,16 @@ export function applyTithe(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: TITHE_HELD, wink: visibleWink(false, WINK_WAR) });
     return { ...w, players };
   }
-  if (p.bestand < TITHE_COST) {
+  const spent = spendBestand(p, TITHE_COST);
+  if (!spent) {
     players.set(playerId, { ...p, heard: TITHE_NEED });
     return { ...w, players };
   }
   players.set(playerId, {
     ...p,
-    bestand: p.bestand - TITHE_COST,
-    heard: TITHE_COPY,
+    bestand: spent.bestand,
+    banked: spent.banked,
+    heard: vaultHeard(TITHE_COPY, spent.fromVault),
     wink: visibleWink(false, WINK_WAR),
     lastCareX: HOUSE_HALL.x,
     lastCareY: HOUSE_HALL.y,

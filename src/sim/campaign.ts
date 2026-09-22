@@ -870,6 +870,25 @@ export const BANK_COPY =
 export const WINK_BANK = "Banked is not a stick. Unbanked still drops. The token does not strike.";
 export const BANK_EMPTY = "Nothing to bank. The vault does not print Bestand.";
 export const BANK_SPECTATOR = "A vault. You cannot put a guest ledger in it.";
+export const VAULT_COVER = "The vault covered the rest. Banked is a sink, not a stick.";
+
+export function spendBestand(
+  p: { bestand: number; banked: number },
+  cost: number,
+): { bestand: number; banked: number; fromVault: number } | null {
+  const pocket = Math.max(0, Math.floor(p.bestand));
+  const vault = Math.max(0, Math.floor(p.banked));
+  const need = Math.max(0, Math.floor(cost));
+  if (need <= 0) return { bestand: pocket, banked: vault, fromVault: 0 };
+  if (pocket + vault < need) return null;
+  if (pocket >= need) return { bestand: pocket - need, banked: vault, fromVault: 0 };
+  const fromVault = need - pocket;
+  return { bestand: 0, banked: vault - fromVault, fromVault };
+}
+
+export function vaultHeard(copy: string, fromVault: number): string {
+  return fromVault > 0 ? `${copy} ${VAULT_COVER}` : copy;
+}
 
 export const BANK_PLAQUE: Sign = {
   id: CLAIMS_DESK.id,
