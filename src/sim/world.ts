@@ -213,6 +213,13 @@ import {
   DESK_PEOPLE_SPECTATOR,
   DESK_PEOPLE_PLAQUE,
   deskPeoplePoi,
+  HALL_PEOPLE_COPY,
+  WINK_HALL_PEOPLE,
+  HALL_PEOPLE_NEED,
+  HALL_PEOPLE_HELD,
+  HALL_PEOPLE_SPECTATOR,
+  HALL_PEOPLE_PLAQUE,
+  hallPeoplePoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -884,6 +891,7 @@ export type WorldState = {
   shrinePeopleHeld: boolean;
   safetyPeopleHeld: boolean;
   deskPeopleHeld: boolean;
+  hallPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1133,6 +1141,7 @@ export function emptyWorld(): WorldState {
     shrinePeopleHeld: false,
     safetyPeopleHeld: false,
     deskPeopleHeld: false,
+    hallPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2232,6 +2241,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === CARE_DOOR.id) return applyCare(w, playerId);
   if (sign.id === HOUSE_HALL.id) {
     if (!p.inCare || p.guest || p.locked) return w;
+    if (p.beats.hall && w.deskPeopleHeld && !w.hallPeopleHeld) return applyHallPeople(w, playerId);
     if (p.beats.hall && fourfoldReady(w.standing) && !w.fourfoldHeld) return applyFourfold(w, playerId);
     if (p.beats.hall && w.fourfoldHeld) return applyFourfold(w, playerId);
     if (p.beats.hall && w.war.winner && w.war.tithePaid && !w.bountyHeld) return applyBounty(w, playerId);
@@ -2828,6 +2838,38 @@ export function applyDeskPeople(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === "desk-people" ? { ...DESK_PEOPLE_PLAQUE } : s))
     : [...w.signs, { ...DESK_PEOPLE_PLAQUE }];
   return { ...w, players, deskPeopleHeld: true, pois, signs };
+}
+
+export function applyHallPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: HALL_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_HALL_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.deskPeopleHeld) {
+    players.set(playerId, { ...p, heard: HALL_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.hallPeopleHeld && p.beats.hallPeople) {
+    players.set(playerId, { ...p, heard: HALL_PEOPLE_HELD, wink: visibleWink(false, WINK_HALL_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, hallPeople: true, hall: true },
+    heard: HALL_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_HALL_PEOPLE),
+    inCare: true,
+  });
+  const pois = w.pois.some((poi) => poi.id === "hall-people")
+    ? w.pois.map((poi) => (poi.id === "hall-people" ? hallPeoplePoi() : poi))
+    : [...w.pois, hallPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "hall-people")
+    ? w.signs.map((s) => (s.id === "hall-people" ? { ...HALL_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...HALL_PEOPLE_PLAQUE }];
+  return { ...w, players, hallPeopleHeld: true, pois, signs };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -3989,6 +4031,7 @@ export function snapshot(w: WorldState) {
     shrinePeopleHeld: w.shrinePeopleHeld,
     safetyPeopleHeld: w.safetyPeopleHeld,
     deskPeopleHeld: w.deskPeopleHeld,
+    hallPeopleHeld: w.hallPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

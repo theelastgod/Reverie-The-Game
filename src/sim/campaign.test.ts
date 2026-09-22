@@ -150,6 +150,12 @@ import {
   DESK_PEOPLE_HELD,
   DESK_PEOPLE_SPECTATOR,
   DESK_PEOPLE_PLAQUE,
+  HALL_PEOPLE_COPY,
+  WINK_HALL_PEOPLE,
+  HALL_PEOPLE_NEED,
+  HALL_PEOPLE_HELD,
+  HALL_PEOPLE_SPECTATOR,
+  HALL_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -678,6 +684,7 @@ import {
   applyShrinePeople,
   applySafetyPeople,
   applyDeskPeople,
+  applyHallPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1930,6 +1937,46 @@ describe("DESK — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
     expect(applyDeskPeople(gWorld, "g").players.get("g")?.heard).toBe(DESK_PEOPLE_SPECTATOR);
     expect(gWorld.deskPeopleHeld).toBe(false);
+  });
+});
+
+describe("The hall — people", () => {
+  it("names the hall as a house of people after the desk; tithe still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.deskPeopleHeld = true;
+    w.signs = [...w.signs, { id: HOUSE_HALL.id, title: "House of Mortals", text: "Hall.", x: HOUSE_HALL.x, y: HOUSE_HALL.y }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      inCare: true,
+      beats: { ...emptyBeats(), hall: true, deskPeople: true },
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    const named = applyRead(w, "a", HOUSE_HALL.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HALL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HALL_PEOPLE);
+    expect(p.beats.hallPeople).toBe(true);
+    expect(named.hallPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "hall-people")?.name).toBe("The hall — people");
+    expect(named.signs.find((s) => s.id === "hall-people")?.title).toBe(HALL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Tithe still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHallPeople(named, "a").players.get("a")?.heard).toBe(HALL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, inCare: true, x: HOUSE_HALL.x, y: HOUSE_HALL.y });
+    expect(applyHallPeople(early, "a").players.get("a")?.heard).toBe(HALL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.deskPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
+    expect(applyHallPeople(gWorld, "g").players.get("g")?.heard).toBe(HALL_PEOPLE_SPECTATOR);
+    expect(gWorld.hallPeopleHeld).toBe(false);
   });
 });
 

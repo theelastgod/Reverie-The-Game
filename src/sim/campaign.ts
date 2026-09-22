@@ -124,6 +124,7 @@ export type Beats = {
   shrinePeople: boolean;
   safetyPeople: boolean;
   deskPeople: boolean;
+  hallPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -236,6 +237,7 @@ export type Poi = {
     | "shrine-people"
     | "safety-people"
     | "desk-people"
+    | "hall-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1544,6 +1546,31 @@ export function deskPeoplePoi(): Poi {
   };
 }
 
+export const HALL_PEOPLE_COPY =
+  "The hall is a house of people, not standing-reserve. Tithe still costs. Bounty still costs. Combat is not. This was not a fetch.";
+export const WINK_HALL_PEOPLE = "People, not a House stick. The token does not strike.";
+export const HALL_PEOPLE_NEED = "The desk as people first. A hall of people is not a fetch.";
+export const HALL_PEOPLE_HELD = "The hall already holds as people. Tithe still costs.";
+export const HALL_PEOPLE_SPECTATOR = "A hall. You do not get a house of people.";
+
+export const HALL_PEOPLE_PLAQUE: Sign = {
+  id: "hall-people",
+  title: "The hall — people",
+  text: "A house of people. Tithe still costs. The number does not strike.",
+  x: HOUSE_HALL.x,
+  y: HOUSE_HALL.y,
+};
+
+export function hallPeoplePoi(): Poi {
+  return {
+    id: "hall-people",
+    name: "The hall — people",
+    x: HOUSE_HALL.x,
+    y: HOUSE_HALL.y,
+    kind: "hall-people",
+  };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1951,6 +1978,7 @@ export function emptyBeats(): Beats {
     shrinePeople: false,
     safetyPeople: false,
     deskPeople: false,
+    hallPeople: false,
   };
 }
 

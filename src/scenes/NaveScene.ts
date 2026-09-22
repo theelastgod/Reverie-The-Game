@@ -549,6 +549,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "desk-people"
                         ? 0xc9a56a
+                      : poi.kind === "hall-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -858,7 +860,11 @@ export class NaveScene extends Phaser.Scene {
         snap.standing.mortals >= 1 &&
         snap.standing.divinities >= 1;
       this.prompt =
-        me.beats.fourfold || snap.fourfoldHeld
+        me.beats.hallPeople || snap.hallPeopleHeld
+          ? me.heard || "The hall — people. Tithe still costs. Bounty still costs."
+        : snap.deskPeopleHeld && me.beats.hall
+          ? "F — the hall as a house of people. Tithe still costs. Not a fetch."
+        : me.beats.fourfold || snap.fourfoldHeld
           ? me.heard || "The fourfold holds. A gathering, not a stick."
           : four
             ? "F — gather the fourfold in the hall. Earth, Sky, Mortals, Divinities. Not a fetch."
