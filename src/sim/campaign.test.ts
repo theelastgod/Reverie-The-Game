@@ -126,6 +126,12 @@ import {
   HANDOFF_CULT,
   HANDOFF_DARK,
   HANDOFF_PLAQUE,
+  CARE_PEOPLE_COPY,
+  WINK_CARE_PEOPLE,
+  CARE_PEOPLE_NEED,
+  CARE_PEOPLE_HELD,
+  CARE_PEOPLE_SPECTATOR,
+  CARE_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -650,6 +656,7 @@ import {
   applyHeavy,
   applyTruce,
   applyHandoff,
+  applyCarePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1736,6 +1743,50 @@ describe("Exhibition handoff", () => {
     gWorld.players.set("b", { ...spawnGuest("b"), guest: false, x: CLEARING_STALL.x + 8, y: CLEARING_STALL.y });
     expect(applyHandoff(gWorld, "g").players.get("g")?.heard).toBe(HANDOFF_SPECTATOR);
     expect(gWorld.handoffHeld).toBe(false);
+  });
+});
+
+describe("The Care — people", () => {
+  it("names the Care as a house of people after the gathering; guests cannot", () => {
+    const w = emptyWorld();
+    w.careOpen = true;
+    w.peopleHeld = true;
+    w.lastGodNamed = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), under: true, care: true, lastGod: true, people: true },
+      x: CARE_DOOR.x,
+      y: CARE_DOOR.y,
+    });
+    const named = applyCare(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CARE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CARE_PEOPLE);
+    expect(p.beats.carePeople).toBe(true);
+    expect(named.carePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "care-people")?.name).toBe("The Care — people");
+    expect(named.signs.find((s) => s.id === "care-people")?.title).toBe(CARE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Restore still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCarePeople(named, "a").players.get("a")?.heard).toBe(CARE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.careOpen = true;
+    early.peopleHeld = true;
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CARE_DOOR.x, y: CARE_DOOR.y });
+    expect(applyCarePeople(early, "a").players.get("a")?.heard).toBe(CARE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.careOpen = true;
+    gWorld.peopleHeld = true;
+    gWorld.lastGodNamed = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), locked: true, x: CARE_DOOR.x, y: CARE_DOOR.y });
+    expect(applyCarePeople(gWorld, "g").players.get("g")?.heard).toBe(CARE_PEOPLE_SPECTATOR);
+    expect(gWorld.carePeopleHeld).toBe(false);
   });
 });
 

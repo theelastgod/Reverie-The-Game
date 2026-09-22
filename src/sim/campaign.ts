@@ -120,6 +120,7 @@ export type Beats = {
   heavy: boolean;
   truce: boolean;
   handoff: boolean;
+  carePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -228,6 +229,7 @@ export type Poi = {
     | "heavy"
     | "truce"
     | "stall-handoff"
+    | "care-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1441,6 +1443,32 @@ export function handoffPoi(): Poi {
   };
 }
 
+export const CARE_PEOPLE_COPY =
+  "The Care is a house of people, not a clinic of process. Restore still costs. Insurance still costs. Combat is not. This was not a fetch.";
+export const WINK_CARE_PEOPLE = "People, not Bestand. The door does not strike.";
+export const CARE_PEOPLE_NEED =
+  "Ione's gathering and the last god named as absence first. A house of people is not a fetch.";
+export const CARE_PEOPLE_HELD = "The Care already holds as people. Restore still costs. Insurance still costs.";
+export const CARE_PEOPLE_SPECTATOR = "A door. You do not get a house of people.";
+
+export const CARE_PEOPLE_PLAQUE: Sign = {
+  id: "care-people",
+  title: "The Care — people",
+  text: "A house of people. Restore still costs. The number does not strike.",
+  x: CARE_DOOR.x,
+  y: CARE_DOOR.y,
+};
+
+export function carePeoplePoi(): Poi {
+  return {
+    id: "care-people",
+    name: "The Care — people",
+    x: CARE_DOOR.x,
+    y: CARE_DOOR.y,
+    kind: "care-people",
+  };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1844,6 +1872,7 @@ export function emptyBeats(): Beats {
     heavy: false,
     truce: false,
     handoff: false,
+    carePeople: false,
   };
 }
 

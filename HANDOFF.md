@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 100** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 101** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -425,7 +425,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - F at Quill's stall with a print and another Angel: pass the copy. Listing fee 5. Cult refuses. Dark stall refuses. Plaque/POI The stall — handoff. Guests cannot.
 - `damageFor` unchanged. Claims stay disarmed. TAKE stays disarmed.
 
-## Stage 100 (do this next)
+## Stage 100 (landed)
+- After Ione — people and the last god named as absence, F at the Care: a house of people, not a clinic. Plaque/POI The Care — people. Restore and insurance still cost. Guests cannot.
+- `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 101 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

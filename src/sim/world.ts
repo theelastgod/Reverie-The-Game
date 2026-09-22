@@ -185,6 +185,13 @@ import {
   HANDOFF_DARK,
   HANDOFF_PLAQUE,
   handoffPoi,
+  CARE_PEOPLE_COPY,
+  WINK_CARE_PEOPLE,
+  CARE_PEOPLE_NEED,
+  CARE_PEOPLE_HELD,
+  CARE_PEOPLE_SPECTATOR,
+  CARE_PEOPLE_PLAQUE,
+  carePeoplePoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -852,6 +859,7 @@ export type WorldState = {
   heavyHeld: boolean;
   truceHeld: boolean;
   handoffHeld: boolean;
+  carePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1097,6 +1105,7 @@ export function emptyWorld(): WorldState {
     heavyHeld: false,
     truceHeld: false,
     handoffHeld: false,
+    carePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2636,6 +2645,7 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
   if (!nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
+  if (w.peopleHeld && w.careOpen && (w.lastGodNamed || w.lastGodBuried)) return applyCarePeople(w, playerId);
   if (w.fourfoldHeld && w.careOpen) return applyLastGod(w, playerId);
   const players = new Map(w.players);
   if (p.guest || p.locked || !w.careOpen || !p.beats.under) {
@@ -2656,6 +2666,38 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
     lastCareY: HOUSE_HALL.y,
   });
   return { ...w, players };
+}
+
+export function applyCarePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CARE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_CARE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.peopleHeld || !w.careOpen || !(w.lastGodNamed || w.lastGodBuried)) {
+    players.set(playerId, { ...p, heard: CARE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.carePeopleHeld && p.beats.carePeople) {
+    players.set(playerId, { ...p, heard: CARE_PEOPLE_HELD, wink: visibleWink(false, WINK_CARE_PEOPLE), inCare: true });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, carePeople: true, care: true },
+    heard: CARE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_CARE_PEOPLE),
+    inCare: true,
+  });
+  const pois = w.pois.some((poi) => poi.id === "care-people")
+    ? w.pois.map((poi) => (poi.id === "care-people" ? carePeoplePoi() : poi))
+    : [...w.pois, carePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "care-people")
+    ? w.signs.map((s) => (s.id === "care-people" ? { ...CARE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...CARE_PEOPLE_PLAQUE }];
+  return { ...w, players, carePeopleHeld: true, pois, signs };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -3813,6 +3855,7 @@ export function snapshot(w: WorldState) {
     heavyHeld: w.heavyHeld,
     truceHeld: w.truceHeld,
     handoffHeld: w.handoffHeld,
+    carePeopleHeld: w.carePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -541,6 +541,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7eb6ff
                       : poi.kind === "stall-handoff"
                         ? 0xc9a56a
+                      : poi.kind === "care-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1083,7 +1085,11 @@ export class NaveScene extends Phaser.Scene {
         : "F read the organ. Extract here lights a factory there. No country names.";
     } else if (care && snap.careOpen && !me.guest && me.beats.under) {
       this.prompt =
-        snap.lastGodBuried || me.beats.naraGod
+        snap.carePeopleHeld || me.beats.carePeople
+          ? me.heard || "The Care — people. Restore still costs. Insurance still costs."
+          : snap.peopleHeld && (snap.lastGodNamed || snap.lastGodBuried)
+            ? "F — name the Care as a house of people. Restore still costs. Not a fetch."
+        : snap.lastGodBuried || me.beats.naraGod
           ? me.heard || "The last god is in the earth. Nara Vale is at the Care."
           : me.beats.lastGod || snap.lastGodNamed
           ? me.heard || "The last god is not here. Absence is a standing. Not a stick."
