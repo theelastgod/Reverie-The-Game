@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 130** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 131** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -549,7 +549,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After Founder as people, F at the screening gathers Observer, Participant, Founder. Plaque/POI The rooms — people. Proximity still holds. Not a fetch.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 130 (do this next)
+## Stage 130 (landed)
+- After the rooms as people, F at the Clearing ring: the failed hole as people. Plaque/POI Storm — people. Storm still burns readiness.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 131 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

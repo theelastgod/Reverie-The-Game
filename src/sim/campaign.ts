@@ -149,6 +149,7 @@ export type Beats = {
   logPeople: boolean;
   founderPeople: boolean;
   roomsPeople: boolean;
+  stormPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -286,6 +287,7 @@ export type Poi = {
     | "log-people"
     | "founder-people"
     | "rooms-people"
+    | "storm-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1173,6 +1175,31 @@ export function roomsPeoplePoi(): Poi {
     x: SCREENING.x,
     y: SCREENING.y,
     kind: "rooms-people",
+  };
+}
+
+export const STORM_PEOPLE_COPY =
+  "The failed hole is a house of people, not a storm of process. Storm still burns readiness. Combat is not. This was not a fetch.";
+export const WINK_STORM_PEOPLE = "People, not a wreckage stick. The token does not strike.";
+export const STORM_PEOPLE_NEED = "The rooms as people first. A storm of people is not a fetch.";
+export const STORM_PEOPLE_HELD = "The hole already holds as people. Storm still burns readiness.";
+export const STORM_PEOPLE_SPECTATOR = "A ring. You do not get a house of people.";
+
+export const STORM_PEOPLE_PLAQUE: Sign = {
+  id: "storm-people",
+  title: "Storm — people",
+  text: "A house of people. Storm still burns readiness. The number does not strike.",
+  x: 720,
+  y: 580,
+};
+
+export function stormPeoplePoi(): Poi {
+  return {
+    id: "storm-people",
+    name: "Storm — people",
+    x: 720,
+    y: 580,
+    kind: "storm-people",
   };
 }
 
@@ -2667,6 +2694,7 @@ export function emptyBeats(): Beats {
     logPeople: false,
     founderPeople: false,
     roomsPeople: false,
+    stormPeople: false,
   };
 }
 

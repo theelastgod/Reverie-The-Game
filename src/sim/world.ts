@@ -380,6 +380,13 @@ import {
   ROOMS_PEOPLE_SPECTATOR,
   ROOMS_PEOPLE_PLAQUE,
   roomsPeoplePoi,
+  STORM_PEOPLE_COPY,
+  WINK_STORM_PEOPLE,
+  STORM_PEOPLE_NEED,
+  STORM_PEOPLE_HELD,
+  STORM_PEOPLE_SPECTATOR,
+  STORM_PEOPLE_PLAQUE,
+  stormPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1086,6 +1093,7 @@ export type WorldState = {
   logPeopleHeld: boolean;
   founderPeopleHeld: boolean;
   roomsPeopleHeld: boolean;
+  stormPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1360,6 +1368,7 @@ export function emptyWorld(): WorldState {
     logPeopleHeld: false,
     founderPeopleHeld: false,
     roomsPeopleHeld: false,
+    stormPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3894,6 +3903,37 @@ export function applyRoomsPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, roomsPeopleHeld: true, pois, signs };
 }
 
+export function applyStormPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: STORM_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_STORM_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.roomsPeopleHeld) {
+    players.set(playerId, { ...p, heard: STORM_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.stormPeopleHeld && p.beats.stormPeople) {
+    players.set(playerId, { ...p, heard: STORM_PEOPLE_HELD, wink: visibleWink(false, WINK_STORM_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, stormPeople: true },
+    heard: STORM_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_STORM_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "storm-people")
+    ? w.pois.map((poi) => (poi.id === "storm-people" ? stormPeoplePoi() : poi))
+    : [...w.pois, stormPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "storm-people")
+    ? w.signs.map((s) => (s.id === "storm-people" ? { ...STORM_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...STORM_PEOPLE_PLAQUE }];
+  return { ...w, players, stormPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5082,6 +5122,7 @@ export function snapshot(w: WorldState) {
     logPeopleHeld: w.logPeopleHeld,
     founderPeopleHeld: w.founderPeopleHeld,
     roomsPeopleHeld: w.roomsPeopleHeld,
+    stormPeopleHeld: w.stormPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
@@ -5749,6 +5790,7 @@ export function applyClearing(
   }
   if (choice !== "extract" && w.hallPeopleHeld && !w.clearingPeopleHeld) return applyClearingPeople(w, playerId);
   if (choice !== "extract" && w.navePeopleHeld && !w.creditsPeopleHeld) return applyCreditsPeople(w, playerId);
+  if (choice !== "extract" && w.roomsPeopleHeld && !w.stormPeopleHeld) return applyStormPeople(w, playerId);
   if (choice === "extract") {
     const war = scoreWar(w.war, p.house, "extract");
     players.set(playerId, {
@@ -5822,6 +5864,7 @@ export function applyStorm(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: STORM_SPECTATOR, wink: visibleWink(true, WINK_STORM) });
     return { ...w, players };
   }
+  if (w.roomsPeopleHeld && !w.stormPeopleHeld) return applyStormPeople(w, playerId);
   if (!w.clearingFailed && w.passing.outcome !== "failed") {
     players.set(playerId, { ...p, heard: STORM_NEED });
     return { ...w, players };

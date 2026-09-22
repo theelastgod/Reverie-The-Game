@@ -606,6 +606,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "rooms-people"
                         ? 0xc9a56a
+                      : poi.kind === "storm-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1067,6 +1069,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — stand in the hole Ione left. Absence is a standing. Not a fetch.";
     } else if (ring && (me.guest || me.locked)) {
       this.prompt = "A ring in the asphalt. You cannot prepare the ground.";
+    } else if (ring && (me.beats.stormPeople || snap.stormPeopleHeld)) {
+      this.prompt = me.heard || "Storm — people. Storm still burns readiness. Not a stick.";
+    } else if (ring && snap.roomsPeopleHeld && !me.guest) {
+      this.prompt = "F — the failed hole as a house of people. Storm still burns readiness. Not a fetch.";
     } else if (ring && (me.beats.creditsPeople || snap.creditsPeopleHeld)) {
       this.prompt = me.heard || "Credits — people. TAKE stays disarmed. Not a stick.";
     } else if (ring && snap.navePeopleHeld && !me.guest) {
