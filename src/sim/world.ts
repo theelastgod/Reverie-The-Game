@@ -637,6 +637,13 @@ import {
   KIT_PEOPLE_SPECTATOR,
   KIT_PEOPLE_PLAQUE,
   kitPeoplePoi,
+  PRACTICE_PEOPLE_COPY,
+  WINK_PRACTICE_PEOPLE,
+  PRACTICE_PEOPLE_NEED,
+  PRACTICE_PEOPLE_HELD,
+  PRACTICE_PEOPLE_SPECTATOR,
+  PRACTICE_PEOPLE_PLAQUE,
+  practicePeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1388,6 +1395,7 @@ export type WorldState = {
   streetPeopleHeld: boolean;
   griefPeopleHeld: boolean;
   kitPeopleHeld: boolean;
+  practicePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1699,6 +1707,7 @@ export function emptyWorld(): WorldState {
     streetPeopleHeld: false,
     griefPeopleHeld: false,
     kitPeopleHeld: false,
+    practicePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2850,7 +2859,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === "safety-plaque" && w.weatherNamed) return applyAddressed(w, playerId);
   if (sign.id === IONE.id) return applyIoneMark(w, playerId);
-  if (sign.id === GUEST_ARENA.id || sign.id === "heavy-people" || sign.id === "hitstop-people" || sign.id === "grief-people" || sign.id === "kit-people") {
+  if (sign.id === GUEST_ARENA.id || sign.id === "heavy-people" || sign.id === "hitstop-people" || sign.id === "grief-people" || sign.id === "kit-people" || sign.id === "practice-people") {
+    if (w.kitPeopleHeld && !w.practicePeopleHeld) return applyPracticePeople(w, playerId);
+    if (sign.id === "practice-people") return applyPracticePeople(w, playerId);
     if (w.griefPeopleHeld && !w.kitPeopleHeld) return applyKitPeople(w, playerId);
     if (sign.id === "kit-people") return applyKitPeople(w, playerId);
     if (w.streetPeopleHeld && !w.griefPeopleHeld) return applyGriefPeople(w, playerId);
@@ -5510,6 +5521,37 @@ export function applyKitPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, kitPeopleHeld: true, pois, signs };
 }
 
+export function applyPracticePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, GUEST_ARENA.x, GUEST_ARENA.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: PRACTICE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_PRACTICE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.kitPeopleHeld) {
+    players.set(playerId, { ...p, heard: PRACTICE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.practicePeopleHeld && p.beats.practicePeople) {
+    players.set(playerId, { ...p, heard: PRACTICE_PEOPLE_HELD, wink: visibleWink(false, WINK_PRACTICE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, practicePeople: true },
+    heard: PRACTICE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_PRACTICE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "practice-people")
+    ? w.pois.map((poi) => (poi.id === "practice-people" ? practicePeoplePoi() : poi))
+    : [...w.pois, practicePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "practice-people")
+    ? w.signs.map((s) => (s.id === "practice-people" ? { ...PRACTICE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...PRACTICE_PEOPLE_PLAQUE }];
+  return { ...w, players, practicePeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6738,6 +6780,7 @@ export function snapshot(w: WorldState) {
     streetPeopleHeld: w.streetPeopleHeld,
     griefPeopleHeld: w.griefPeopleHeld,
     kitPeopleHeld: w.kitPeopleHeld,
+    practicePeopleHeld: w.practicePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

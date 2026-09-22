@@ -526,6 +526,12 @@ import {
   KIT_PEOPLE_HELD,
   KIT_PEOPLE_SPECTATOR,
   KIT_PEOPLE_PLAQUE,
+  PRACTICE_PEOPLE_COPY,
+  WINK_PRACTICE_PEOPLE,
+  PRACTICE_PEOPLE_NEED,
+  PRACTICE_PEOPLE_HELD,
+  PRACTICE_PEOPLE_SPECTATOR,
+  PRACTICE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1121,6 +1127,7 @@ import {
   applyStreetPeople,
   applyGriefPeople,
   applyKitPeople,
+  applyPracticePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4926,6 +4933,44 @@ describe("Kit — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
     expect(applyKitPeople(gWorld, "g").players.get("g")?.heard).toBe(KIT_PEOPLE_SPECTATOR);
     expect(gWorld.kitPeopleHeld).toBe(false);
+  });
+});
+
+describe("Practice — people", () => {
+  it("names practice as people after the kit; dummy still pays nothing; guests cannot", () => {
+    const w = emptyWorld();
+    w.kitPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), kitPeople: true },
+      x: GUEST_ARENA.x,
+      y: GUEST_ARENA.y,
+    });
+    const named = applyRead(w, "a", GUEST_ARENA.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PRACTICE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PRACTICE_PEOPLE);
+    expect(p.beats.practicePeople).toBe(true);
+    expect(named.practicePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "practice-people")?.name).toBe("Practice — people");
+    expect(named.signs.find((s) => s.id === "practice-people")?.title).toBe(PRACTICE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("dummy still pays nothing");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPracticePeople(named, "a").players.get("a")?.heard).toBe(PRACTICE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: GUEST_ARENA.x, y: GUEST_ARENA.y });
+    expect(applyPracticePeople(early, "a").players.get("a")?.heard).toBe(PRACTICE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.kitPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
+    expect(applyPracticePeople(gWorld, "g").players.get("g")?.heard).toBe(PRACTICE_PEOPLE_SPECTATOR);
+    expect(gWorld.practicePeopleHeld).toBe(false);
   });
 });
 
