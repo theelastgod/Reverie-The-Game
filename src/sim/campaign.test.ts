@@ -52,6 +52,7 @@ import {
   NARA_MARK,
   NARA_MARK_LATER,
   WINK_SEXTON,
+  SEXTON_SPECTATOR,
   liveNpcs,
   GARDEN_BURY,
   M3_ENTER,
@@ -89,6 +90,12 @@ import {
   UNFLAG_SPECTATOR,
   FLAG_CULT,
   UNFLAG_PLAQUE,
+  NARA_CANAL_ASK,
+  NARA_CANAL,
+  NARA_CANAL_LATER,
+  WINK_CANAL,
+  CANAL_SPECTATOR,
+  CANAL_PLAQUE,
   QUILL_HANG_SPECTATOR,
   WINK_HANG,
   STALL_DARK_COPY,
@@ -1911,6 +1918,80 @@ describe("The Strait is refused", () => {
     const g = applyStraitRefuse(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(STRAIT_SPECTATOR);
     expect(g.straitRefused).toBe(false);
+  });
+});
+
+describe("Nara buries the refused Strait", () => {
+  it("sexton plus refused canal lets an Angel bury the organ; guests cannot", () => {
+    const nara = NAVE_NPCS.find((n) => n.id === "nara")!;
+    const w = emptyWorld();
+    w.straitRefused = true;
+    w.naraAtStrait = true;
+    w.pois = [
+      ...w.pois,
+      {
+        id: ORGAN_STRAIT.id,
+        name: "The Strait — refused",
+        x: ORGAN_STRAIT.x,
+        y: ORGAN_STRAIT.y,
+        kind: "organ-strait-refused",
+      },
+    ];
+    w.signs = [...w.signs, { id: ORGAN_STRAIT.id, title: "The Strait — refused", text: "Shut.", x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y }];
+    const at = liveNpcs(false, false, true).find((n) => n.id === "nara")!;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), garden: true, sexton: true, sextonAsk: true, straitRefuse: true, nara: true },
+      cultWink: true,
+      x: at.x,
+      y: at.y,
+    });
+    const asked = applyTalk(w, "a", "nara");
+    expect(asked.players.get("a")?.heard).toBe(NARA_CANAL_ASK);
+    expect(asked.players.get("a")?.beats.canalAsk).toBe(true);
+    const buried = applyTalk(asked, "a", "nara");
+    const p = buried.players.get("a")!;
+    expect(p.heard).toBe(NARA_CANAL);
+    expect(p.wink).toBe(WINK_CANAL);
+    expect(p.beats.canalBury).toBe(true);
+    expect(buried.straitBuried).toBe(true);
+    expect(buried.naraAtStrait).toBe(true);
+    expect(buried.pois.find((poi) => poi.id === ORGAN_STRAIT.id)?.kind).toBe("organ-strait-buried");
+    expect(buried.signs.find((s) => s.id === ORGAN_STRAIT.id)?.title).toBe(CANAL_PLAQUE.title);
+    expect(liveNpcs(false, false, true, false, false, false, false, true).find((n) => n.id === "nara")?.role).toBe(
+      "Burying the canal",
+    );
+    expect(p.heard).not.toMatch(/heidegger|hormuz|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTalk(buried, "a", "nara").players.get("a")?.heard).toBe(NARA_CANAL_LATER);
+
+    const live = emptyWorld();
+    live.naraAtStrait = true;
+    live.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), garden: true, sexton: true },
+      x: nara.x,
+      y: nara.y,
+    });
+    expect(applyTalk(live, "a", "nara").players.get("a")?.heard).not.toBe(NARA_CANAL_ASK);
+
+    const gWorld = emptyWorld();
+    gWorld.straitRefused = true;
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: nara.x,
+      y: nara.y,
+      locked: true,
+      beats: { ...emptyBeats(), garden: true, sexton: true },
+    });
+    const g = applyTalk(gWorld, "g", "nara");
+    expect(g.players.get("g")?.heard).toBe(SEXTON_SPECTATOR);
+    expect(g.straitBuried).toBe(false);
   });
 });
 

@@ -34,6 +34,7 @@ export type Snap = {
   annexHome?: boolean;
   straitRefused?: boolean;
   ordAtStrait?: boolean;
+  straitBuried?: boolean;
   hallLamp?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };

@@ -218,6 +218,15 @@ import {
   WINK_SEXTON,
   SEXTON_SPECTATOR,
   sextonPoi,
+  NARA_CANAL_ASK,
+  NARA_CANAL,
+  NARA_CANAL_WAIT,
+  NARA_CANAL_LATER,
+  WINK_CANAL,
+  CANAL_SPECTATOR,
+  CANAL_NEED,
+  CANAL_PLAQUE,
+  canalBuriedPoi,
   ORD_ERRAND,
   ORD_ERRAND_WAIT,
   ORD_CABLE_LATER,
@@ -372,6 +381,7 @@ export type WorldState = {
   annexHome: boolean;
   straitRefused: boolean;
   ordAtStrait: boolean;
+  straitBuried: boolean;
   hallLamp: boolean;
   standing: HouseScores;
   announced: string | null;
@@ -523,6 +533,7 @@ export function emptyWorld(): WorldState {
     annexHome: false,
     straitRefused: false,
     ordAtStrait: false,
+    straitBuried: false,
     hallLamp: false,
     standing: emptyScores(),
     announced: null,
@@ -780,7 +791,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -792,6 +803,37 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   }
   if (id === "nara" && p.beats.garden && !p.guest && !p.locked) {
     if (p.beats.sexton) {
+      if (p.beats.canalBury || w.straitBuried) {
+        players.set(playerId, { ...p, heard: NARA_CANAL_LATER, wink: visibleWink(false, WINK_CANAL) });
+        return { ...w, players };
+      }
+      if (w.straitRefused || p.beats.straitRefuse) {
+        if (p.beats.canalAsk) {
+          players.set(playerId, {
+            ...p,
+            beats: { ...p.beats, canalBury: true, nara: true },
+            cultWink: true,
+            heard: NARA_CANAL,
+            wink: visibleWink(false, WINK_CANAL),
+            readiness: p.readiness + 1,
+          });
+          return {
+            ...w,
+            players,
+            naraAtStrait: true,
+            straitBuried: true,
+            pois: w.pois.map((poi) => (poi.id === ORGAN_STRAIT.id ? canalBuriedPoi() : poi)),
+            signs: w.signs.map((s) => (s.id === ORGAN_STRAIT.id ? { ...CANAL_PLAQUE } : s)),
+          };
+        }
+        players.set(playerId, {
+          ...p,
+          beats: { ...p.beats, canalAsk: true, nara: true },
+          heard: NARA_CANAL_ASK,
+          wink: visibleWink(false, WINK_CANAL),
+        });
+        return { ...w, players };
+      }
       players.set(playerId, { ...p, heard: NARA_MARK_LATER, wink: visibleWink(false, WINK_SEXTON) });
       return { ...w, players };
     }
@@ -1443,6 +1485,10 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     return { ...w, players };
   }
   if (sign.id === ORGAN_STRAIT.id) {
+    if (w.straitBuried || p.beats.canalBury) {
+      players.set(playerId, { ...p, heard: NARA_CANAL_LATER, wink: visibleWink(p.guest, WINK_CANAL) });
+      return { ...w, players };
+    }
     if (w.straitRefused || p.beats.straitRefuse) {
       players.set(playerId, { ...p, heard: STRAIT_REFUSED_LATER, wink: visibleWink(p.guest, WINK_STRAIT_REFUSE) });
       return { ...w, players };
@@ -1858,7 +1904,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -1866,6 +1912,7 @@ export function snapshot(w: WorldState) {
     annexHome: w.annexHome,
     straitRefused: w.straitRefused,
     ordAtStrait: w.ordAtStrait,
+    straitBuried: w.straitBuried,
     hallLamp: w.hallLamp,
     standing: w.standing,
     signs: w.signs,

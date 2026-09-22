@@ -65,6 +65,8 @@ export type Beats = {
   ordWitness: boolean;
   unflagAsk: boolean;
   unflag: boolean;
+  canalAsk: boolean;
+  canalBury: boolean;
 };
 
 export type WeatherHeard = {
@@ -104,6 +106,7 @@ export type Poi = {
     | "wreckage-garden"
     | "organ-strait"
     | "organ-strait-refused"
+    | "organ-strait-buried"
     | "organ-foundry"
     | "organ-foundry-dark"
     | "organ-cable"
@@ -351,6 +354,33 @@ export const NARA_MARK_LATER =
 export const WINK_SEXTON =
   "A cult object is a standing, not a fetch. Nara Vale left the garden. The hole is a mark.";
 export const SEXTON_SPECTATOR = "Nara Vale is burying something that is not for you.";
+export const NARA_CANAL_ASK =
+  "The water stopped. Put it in the ground. A canal can be a grave. I walk if I must.";
+export const NARA_CANAL =
+  "You buried the refused Strait. Cult. Nara Vale is at the canal. This was not a fetch.";
+export const NARA_CANAL_WAIT = "The canal is still a mouth. Speak again. I will not carry the earth for you.";
+export const NARA_CANAL_LATER = "It is in the earth. The factory is dark. I still will not forgive it.";
+export const WINK_CANAL = "A side hour. You buried an organ. Cult standing. Combat is not.";
+export const CANAL_SPECTATOR = "Nara Vale is burying water. Not for you.";
+export const CANAL_NEED = "Refuse the Strait first. I will not bury a live canal.";
+
+export const CANAL_PLAQUE: Sign = {
+  id: ORGAN_STRAIT.id,
+  title: "The Strait — buried",
+  text: "Someone put the refused water in the ground. Cult. The factory is already dark.",
+  x: ORGAN_STRAIT.x,
+  y: ORGAN_STRAIT.y,
+};
+
+export function canalBuriedPoi(): Poi {
+  return {
+    id: ORGAN_STRAIT.id,
+    name: "The Strait — buried",
+    x: ORGAN_STRAIT.x,
+    y: ORGAN_STRAIT.y,
+    kind: "organ-strait-buried",
+  };
+}
 
 export function sextonPoi(): Poi {
   return {
@@ -839,6 +869,8 @@ export function emptyBeats(): Beats {
     ordWitness: false,
     unflagAsk: false,
     unflag: false,
+    canalAsk: false,
+    canalBury: false,
   };
 }
 
@@ -1242,6 +1274,7 @@ export function liveNpcs(
   vesperAtFoundry = false,
   ordAtStrait = false,
   wetCult = false,
+  straitBuried = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1251,7 +1284,14 @@ export function liveNpcs(
   }
   if (naraAtStrait) {
     base = base.map((n) =>
-      n.id === "nara" ? { ...n, x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y + 48, role: "At the Strait" } : n,
+      n.id === "nara"
+        ? {
+            ...n,
+            x: ORGAN_STRAIT.x,
+            y: ORGAN_STRAIT.y + 48,
+            role: straitBuried ? "Burying the canal" : "At the Strait",
+          }
+        : n,
     );
   }
   if (ordAtStrait) {

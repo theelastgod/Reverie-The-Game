@@ -453,6 +453,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7eb6ff
                       : poi.kind === "organ-strait-refused"
                         ? 0x5a5a5a
+                      : poi.kind === "organ-strait-buried"
+                        ? 0xc9a56a
                       : poi.kind.startsWith("organ-")
                         ? 0xc9a56a
                         : poi.kind === "forge-tray"
@@ -707,6 +709,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Movement III is shut. The private yield funds this door the Cold way.";
     } else if (gardenNear && !gardenNear.done && !me.guest) {
       this.prompt = "F bury the Clearing that Movement I over-extracted. Nara Vale will not speak until you do.";
+    } else if (npcNear?.id === "nara" && (me.beats.canalBury || snap.straitBuried)) {
+      this.prompt = me.heard || "The canal is in the earth. Nara Vale is burying it.";
+    } else if (npcNear?.id === "nara" && me.beats.canalAsk) {
+      this.prompt = "F — bury the refused Strait with Nara. Cult. She walks if she must.";
+    } else if (npcNear?.id === "nara" && me.beats.sexton && (snap.straitRefused || me.beats.straitRefuse)) {
+      this.prompt = "F — Nara will bury the refused water. A canal can be a grave.";
     } else if (npcNear?.id === "nara" && me.beats.sexton) {
       this.prompt = me.heard || "The sexton mark is cult. Nara Vale is at the Strait.";
     } else if (npcNear?.id === "nara" && me.beats.sextonAsk) {
@@ -832,9 +840,11 @@ export class NaveScene extends Phaser.Scene {
     if (zone) {
       zone.textContent = me.inM3
         ? strait
-          ? snap.straitRefused
-            ? "The Strait — refused"
-            : "The Strait"
+          ? snap.straitBuried
+            ? "The Strait — buried"
+            : snap.straitRefused
+              ? "The Strait — refused"
+              : "The Strait"
           : foundry
             ? snap.foundryDark
               ? "The Foundry — dark"
