@@ -190,6 +190,10 @@ import {
   INSURANCE_USED,
   INSURANCE_SPECTATOR,
   WINK_SINK,
+  CLOCK_OUT,
+  CLOCK_NEED,
+  CLOCK_SPECTATOR,
+  WINK_CLOCK,
   REPAIR_COST,
   REPAIR_COPY,
   REPAIR_NEED,
@@ -218,6 +222,7 @@ import {
   applyPassing,
   applyAnnounce,
   applyTithe,
+  applyClockOut,
   applyStanding,
   applyMarket,
   applyOperator,
@@ -1772,6 +1777,42 @@ describe("Bestand sinks", () => {
     expect(g.players.get("g")?.heard).toBe(REPAIR_SPECTATOR);
     expect(g.players.get("g")?.damaged).toBe(2);
     expect(g.players.get("g")?.bestand).toBe(20);
+  });
+});
+
+describe("Desk Three clocks out", () => {
+  it("named weather lets an Angel empty the desk; guests cannot", () => {
+    const w = emptyWorld();
+    const desk = w.clerks.find((c) => c.id === "clerk-desk-three")!;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      x: desk.x,
+      y: desk.y,
+    });
+    const early = applyClockOut(w, "a");
+    expect(early.players.get("a")?.heard).toBe(CLOCK_NEED);
+    expect(early.clerks).toHaveLength(2);
+
+    w.weatherNamed = true;
+    const gone = applyClockOut(w, "a");
+    const p = gone.players.get("a")!;
+    expect(p.heard).toBe(CLOCK_OUT);
+    expect(p.wink).toBe(WINK_CLOCK);
+    expect(p.beats.clockOut).toBe(true);
+    expect(gone.clerks.find((c) => c.id === "clerk-desk-three")).toBeUndefined();
+    expect(gone.pois.find((poi) => poi.kind === "desk-empty")?.name).toBe("Desk Three — empty");
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.weatherNamed = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: desk.x, y: desk.y, locked: true });
+    const g = applyClockOut(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(CLOCK_SPECTATOR);
+    expect(g.clerks).toHaveLength(2);
   });
 });
 

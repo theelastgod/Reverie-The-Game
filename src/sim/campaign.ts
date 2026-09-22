@@ -57,6 +57,7 @@ export type Beats = {
   hangAsk: boolean;
   hang: boolean;
   standing: boolean;
+  clockOut: boolean;
 };
 
 export type WeatherHeard = {
@@ -104,7 +105,8 @@ export type Poi = {
     | "shrine-upkeep"
     | "sexton-mark"
     | "stall-dark"
-    | "house-standing";
+    | "house-standing"
+    | "desk-empty";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -621,6 +623,17 @@ export const CLERK_HP = 44;
 export const CLERK_AGGRO = 70;
 export const CLERK_DAMAGE = 14;
 export const CLERK_TELEGRAPH = 0.6;
+export const CLOCK_OUT =
+  "Desk Three clocks out. The yield still wants a body. The desk is empty. You named the weather; they would not stay.";
+export const CLOCK_NEED = "They will not leave until the weather has a name.";
+export const CLOCK_GONE = "Desk Three already left. The empty desk is the POI.";
+export const CLOCK_SPECTATOR = "A clerk doing a job. Not for you to send home.";
+export const WINK_CLOCK =
+  "A schedule changed. The Gestell still wants a desk. Naming the weather made a person walk.";
+
+export function deskEmptyPoi(c: { id: string; x: number; y: number; name: string }): Poi {
+  return { id: `empty-${c.id}`, name: `${c.name} — empty`, x: c.x, y: c.y, kind: "desk-empty" };
+}
 
 export function emptyBeats(): Beats {
   return {
@@ -656,6 +669,7 @@ export function emptyBeats(): Beats {
     hangAsk: false,
     hang: false,
     standing: false,
+    clockOut: false,
   };
 }
 

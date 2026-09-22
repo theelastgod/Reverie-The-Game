@@ -173,6 +173,12 @@ import {
   SPECTATE_CAP,
   WINK_DUEL,
   CAMP_COPY,
+  CLOCK_OUT,
+  CLOCK_NEED,
+  CLOCK_GONE,
+  CLOCK_SPECTATOR,
+  WINK_CLOCK,
+  deskEmptyPoi,
   inWetGrid,
   CLEARING_RING,
   CLEARING_PREPARE,
@@ -1488,6 +1494,38 @@ export function applyForge(
     wink: visibleWink(false, WINK_FORGE),
   });
   return { ...w, players, forgedSold: true };
+}
+
+export function applyClockOut(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const clerk = w.clerks.find((c) => nearPoint(p.x, p.y, c.x, c.y, 70));
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CLOCK_SPECTATOR });
+    return { ...w, players };
+  }
+  if (!clerk) return w;
+  if (!w.weatherNamed) {
+    players.set(playerId, { ...p, heard: CLOCK_NEED });
+    return { ...w, players };
+  }
+  if (p.beats.clockOut && !w.clerks.some((c) => c.id === "clerk-desk-three")) {
+    players.set(playerId, { ...p, heard: CLOCK_GONE, wink: visibleWink(false, WINK_CLOCK) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, clockOut: true },
+    heard: CLOCK_OUT,
+    wink: visibleWink(false, WINK_CLOCK),
+    readiness: p.readiness + 1,
+  });
+  const left = w.clerks.filter((c) => c.id !== clerk.id);
+  const pois = w.pois.some((poi) => poi.id === `empty-${clerk.id}`)
+    ? w.pois
+    : [...w.pois, deskEmptyPoi(clerk)];
+  return { ...w, players, clerks: left, pois };
 }
 
 export function applyLink(w: WorldState, playerId: string, serial: number, sig: string): WorldState {

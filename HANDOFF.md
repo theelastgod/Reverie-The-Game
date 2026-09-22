@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 35** — Named side quest (NPC schedule or POI). Keep writing until 24 authored hours. No mint.
+**Next stage: 36** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -164,8 +164,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Mortals Angel who buried the garden F at the hall: Mortals standing +1. Hall plaque becomes standing. Other Houses refused.
 - Guests cannot light the lamp. `damageFor` unchanged.
 
-## Stage 35 (do this next)
-Named side quest that changes an NPC schedule or POI. Fetch-only forbidden. No mint. No Base.
+## Stage 35 (landed)
+- After the weather is named, F at Desk Three: they clock out. Clerk gone. Empty-desk POI.
+- Unnamed weather refuses. Guests cannot send them home. `damageFor` unchanged.
+
+## Stage 36 (do this next)
+Named side quest (Annex Runner, Vesper, or Foundry). Fetch-only forbidden. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

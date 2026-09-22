@@ -255,6 +255,11 @@ export class NaveScene extends Phaser.Scene {
       this.net.talk(npc.id);
       return;
     }
+    const clerk = this.net.snap?.clerks.find((c) => nearPoint(me.x, me.y, c.x, c.y, 70));
+    if (clerk) {
+      this.net.clockOut();
+      return;
+    }
     const sign = (this.net.snap?.signs ?? NAVE_SIGNS).find((s) => nearPoint(me.x, me.y, s.x, s.y, 56));
     if (sign) {
       this.net.read(sign.id);
@@ -428,6 +433,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0xffffff
                       : poi.kind === "wet-grid"
                           ? 0x7eb6ff
+                      : poi.kind === "desk-empty"
+                        ? 0x5a5a5a
                       : poi.kind === "sexton-mark"
                         ? 0xc9a56a
                       : poi.kind === "house-standing"
@@ -718,6 +725,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A Wink you cannot spend yet. Speak with Nara Vale, Quill, and Ord. Bury the plot.";
     } else if (sign) {
       this.prompt = `F read ${sign.title}: ${sign.text}`;
+    } else if (clerkNear && snap.weatherNamed && !me.guest) {
+      this.prompt = `F — send ${clerkNear.name} home. The weather has a name. The desk will empty.`;
     } else if (clerkNear) {
       this.prompt = `${clerkNear.name} is working the yield. They will strike if you stay. Click to interrupt.`;
     } else if (wreckNear && !me.guest) {
