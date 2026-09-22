@@ -443,6 +443,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0x7eb6ff
                       : poi.kind === "wet-grid-cult"
                           ? 0xc9a56a
+                      : poi.kind === "yield-empty"
+                        ? 0x5a5a5a
                       : poi.kind === "desk-empty"
                         ? 0x5a5a5a
                       : poi.kind === "sexton-mark"
@@ -773,6 +775,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — the first going-under. Guests stop here.";
     } else if (under) {
       this.prompt = "A Wink you cannot spend yet. Speak with Nara Vale, Quill, and Ord. Bury the plot.";
+    } else if (sign?.id === "safety-plaque" && me.beats.clockOut && snap.annexHome && !me.guest) {
+      this.prompt = me.beats.yieldEmpty
+        ? me.heard || "The yield is unmanned. The weather still has a name."
+        : "F — name the unmanned yield. Both desks are empty. Not a fetch.";
     } else if (sign) {
       this.prompt = `F read ${sign.title}: ${sign.text}`;
     } else if (clerkNear?.id === "clerk-annex" && snap.frozen && !me.guest) {

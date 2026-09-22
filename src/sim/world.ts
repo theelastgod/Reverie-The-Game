@@ -24,6 +24,13 @@ import {
   Rite,
   Sign,
   STRUCK_PLAQUE,
+  YIELD_EMPTY,
+  WINK_YIELD_EMPTY,
+  YIELD_EMPTY_NEED,
+  YIELD_EMPTY_LATER,
+  YIELD_EMPTY_SPECTATOR,
+  YIELD_EMPTY_PLAQUE,
+  yieldEmptyPoi,
   weatherComplete,
   WeatherHeard,
   WEATHER_NAMED,
@@ -1001,6 +1008,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     });
     return { ...w, players };
   }
+  if (sign.id === "safety-plaque" && (p.beats.clockOut || !w.clerks.some((c) => c.id === "clerk-desk-three")) && w.annexHome) {
+    return applyYieldEmpty(w, playerId);
+  }
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) {
     if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
@@ -1800,6 +1810,42 @@ export function applyForge(
     wink: visibleWink(false, WINK_FORGE),
   });
   return { ...w, players, forgedSold: true };
+}
+
+export function applyYieldEmpty(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, 192, 400, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: YIELD_EMPTY_SPECTATOR });
+    return { ...w, players };
+  }
+  const desksClear =
+    (p.beats.clockOut || !w.clerks.some((c) => c.id === "clerk-desk-three")) &&
+    (p.beats.annexHome || w.annexHome);
+  if (!desksClear) {
+    players.set(playerId, { ...p, heard: YIELD_EMPTY_NEED });
+    return { ...w, players };
+  }
+  if (p.beats.yieldEmpty) {
+    players.set(playerId, { ...p, heard: YIELD_EMPTY_LATER, wink: visibleWink(false, WINK_YIELD_EMPTY) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, yieldEmpty: true },
+    heard: YIELD_EMPTY,
+    wink: visibleWink(false, WINK_YIELD_EMPTY),
+    readiness: p.readiness + 1,
+  });
+  return {
+    ...w,
+    players,
+    signs: w.signs.map((s) => (s.id === "safety-plaque" ? { ...YIELD_EMPTY_PLAQUE } : s)),
+    pois: w.pois.some((poi) => poi.kind === "yield-empty")
+      ? w.pois
+      : [...w.pois, yieldEmptyPoi()],
+  };
 }
 
 export function applyClockOut(w: WorldState, playerId: string): WorldState {

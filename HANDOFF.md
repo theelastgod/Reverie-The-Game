@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 42** — Named side quest. Keep writing until 24 authored hours. No mint.
+**Next stage: 43** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -193,7 +193,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After sexton mark and refused Strait, talk to Nara twice: she buries the canal. POI/plaque The Strait — buried. Cult. She stays as sexton of the organ.
 - Live canal refuses. Guests cannot bury water. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 42 (do this next)
+## Stage 42 (landed)
+- After Desk Three clocks out and the Annex Runner comes in, F at the Safety plaque: unmanned yield. Plaque/POI change. Not a fetch.
+- Desks with bodies refuse. Guests cannot name it. `damageFor` unchanged.
+
+## Stage 43 (do this next)
 Named side quest. Fetch-only forbidden. No mint. No Base.
 
 ## Rules

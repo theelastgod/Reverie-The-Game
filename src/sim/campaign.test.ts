@@ -209,6 +209,11 @@ import {
   CLOCK_NEED,
   CLOCK_SPECTATOR,
   WINK_CLOCK,
+  YIELD_EMPTY,
+  YIELD_EMPTY_NEED,
+  YIELD_EMPTY_SPECTATOR,
+  YIELD_EMPTY_PLAQUE,
+  WINK_YIELD_EMPTY,
   ANNEX_HOME,
   ANNEX_NEED,
   ANNEX_GONE,
@@ -267,6 +272,7 @@ import {
   applyAnnounce,
   applyTithe,
   applyClockOut,
+  applyYieldEmpty,
   applyAnnexHome,
   applyStraitRefuse,
   applyUnlight,
@@ -1860,6 +1866,59 @@ describe("Desk Three clocks out", () => {
     const g = applyClockOut(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(CLOCK_SPECTATOR);
     expect(g.clerks).toHaveLength(2);
+  });
+});
+
+describe("unmanned yield", () => {
+  it("empty desks let an Angel rename Safety; guests cannot", () => {
+    const w = emptyWorld();
+    w.weatherNamed = true;
+    w.annexHome = true;
+    w.clerks = w.clerks.filter((c) => c.id !== "clerk-desk-three" && c.id !== "clerk-annex");
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), clockOut: true, annexHome: true },
+      x: 192,
+      y: 400,
+    });
+    const need = applyYieldEmpty(
+      {
+        ...emptyWorld(),
+        players: new Map([
+          [
+            "a",
+            {
+              ...spawnGuest("a"),
+              guest: false,
+              x: 192,
+              y: 400,
+              beats: { ...emptyBeats(), clockOut: true },
+            },
+          ],
+        ]),
+      },
+      "a",
+    );
+    expect(need.players.get("a")?.heard).toBe(YIELD_EMPTY_NEED);
+
+    const named = applyRead(w, "a", "safety-plaque");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(YIELD_EMPTY);
+    expect(p.wink).toBe(WINK_YIELD_EMPTY);
+    expect(p.beats.yieldEmpty).toBe(true);
+    expect(named.signs.find((s) => s.id === "safety-plaque")?.title).toBe(YIELD_EMPTY_PLAQUE.title);
+    expect(named.pois.find((poi) => poi.kind === "yield-empty")?.name).toBe("Yield — unmanned");
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.annexHome = true;
+    gWorld.clerks = [];
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 192, y: 400, locked: true, beats: { ...emptyBeats(), clockOut: true } });
+    expect(applyYieldEmpty(gWorld, "g").players.get("g")?.heard).toBe(YIELD_EMPTY_SPECTATOR);
   });
 });
 

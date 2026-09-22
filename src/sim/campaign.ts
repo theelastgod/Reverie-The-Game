@@ -67,6 +67,7 @@ export type Beats = {
   unflag: boolean;
   canalAsk: boolean;
   canalBury: boolean;
+  yieldEmpty: boolean;
 };
 
 export type WeatherHeard = {
@@ -122,7 +123,8 @@ export type Poi = {
     | "sexton-mark"
     | "stall-dark"
     | "house-standing"
-    | "desk-empty";
+    | "desk-empty"
+    | "yield-empty";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -774,6 +776,27 @@ export function annexPoi(frozen: boolean): Poi {
 export const WEATHER_NAMED =
   "You named the weather. Safety still sells stability. The plaque is a lie the city paid for.";
 
+export const YIELD_EMPTY =
+  "No clerk at the yield. You sent Desk Three home and the Runner inside. The process continues without a body. This was not a fetch.";
+export const WINK_YIELD_EMPTY =
+  "A schedule of two desks. The Gestell still wants a yield. It no longer has a person to strike you.";
+export const YIELD_EMPTY_NEED =
+  "The desks still have bodies. Clock Desk Three out. Send the Annex Runner in.";
+export const YIELD_EMPTY_LATER = "The yield is unmanned. The weather still has a name.";
+export const YIELD_EMPTY_SPECTATOR = "Empty desks. Not yours to name.";
+
+export const YIELD_EMPTY_PLAQUE: Sign = {
+  id: "safety-plaque",
+  title: "Office of Safety — unmanned",
+  text: "No clerk at the yield. Extraction is still civic. There is no one left to strike you for it.",
+  x: 192,
+  y: 400,
+};
+
+export function yieldEmptyPoi(): Poi {
+  return { id: "safety-plaque", name: "Yield — unmanned", x: 192, y: 400, kind: "yield-empty" };
+}
+
 export const STRUCK_PLAQUE: Sign = {
   id: "safety-plaque",
   title: "Office of Safety — struck",
@@ -871,6 +894,7 @@ export function emptyBeats(): Beats {
     unflag: false,
     canalAsk: false,
     canalBury: false,
+    yieldEmpty: false,
   };
 }
 
