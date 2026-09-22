@@ -108,6 +108,10 @@ import {
   FLAG_SPECTATOR,
   SPOILS_COPY,
   GUEST_GRIEF,
+  DUEL_COPY,
+  SPECTATE_COPY,
+  SPECTATE_CAP,
+  WINK_DUEL,
   CAMP_COPY,
   inWetGrid,
   CLEARING_RING,
@@ -195,6 +199,7 @@ export type Player = {
   flagged: boolean;
   banked: number;
   lastKillId: string;
+  spectated: number;
 };
 
 export type WorldState = {
@@ -251,6 +256,7 @@ export function spawnGuest(id: string): Player {
     flagged: false,
     banked: 0,
     lastKillId: "",
+    spectated: 0,
   };
 }
 
@@ -402,6 +408,8 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
   const dmg = damageFor(a);
   let wreckage = w.wreckage;
   let gestell = w.gestell;
+  const duelGraves: { x: number; y: number }[] = [];
+  const fallen = new Set<string>();
   for (const [id, b] of w.players) {
     if (id === attackerId || b.hp <= 0) continue;
     const dx = b.x - a.x;
@@ -414,10 +422,14 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         { id: `w-${id}-${w.now}`, x: b.x, y: b.y, fromId: id, fromName: b.guest ? "Guest" : "Angel", until: w.now + 45 },
       ];
       const grief = a.guest || b.guest || b.locked;
+      const grave = w.wreckage.find(
+        (r) => nearPoint(a.x, a.y, r.x, r.y, 72) && nearPoint(b.x, b.y, r.x, r.y, 72),
+      );
+      const ruinDuel = !grief && !!grave;
       const flaggedFight = !grief && a.flagged && b.flagged;
-      const drop = flaggedFight ? Math.floor(b.bestand * 0.3) : 0;
-      const fakeDrop = flaggedFight && b.fakeWinke > 0 ? 1 : 0;
-      const camp = flaggedFight && a.lastKillId === id;
+      const drop = flaggedFight || ruinDuel ? Math.floor(b.bestand * 0.3) : 0;
+      const fakeDrop = (flaggedFight || ruinDuel) && b.fakeWinke > 0 ? 1 : 0;
+      const camp = (flaggedFight || ruinDuel) && a.lastKillId === id;
       const killer = players.get(attackerId)!;
       players.set(attackerId, {
         ...killer,
@@ -425,8 +437,11 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         fakeWinke: killer.fakeWinke + fakeDrop,
         aura: camp ? Math.max(0, killer.aura - 4) : killer.aura,
         lastKillId: id,
-        heard: grief ? GUEST_GRIEF : camp ? CAMP_COPY : drop ? SPOILS_COPY : killer.heard,
+        heard: grief ? GUEST_GRIEF : camp ? CAMP_COPY : ruinDuel ? DUEL_COPY : drop ? SPOILS_COPY : killer.heard,
+        wink: ruinDuel ? visibleWink(false, WINK_DUEL) : killer.wink,
       });
+      fallen.add(id);
+      if (ruinDuel && grave) duelGraves.push(grave);
       players.set(id, {
         ...spawnGuest(id),
         bestand: b.bestand - drop,
@@ -450,10 +465,25 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         flagged: b.flagged,
         banked: b.banked,
         lastKillId: b.lastKillId,
+        spectated: b.spectated,
       });
       if (camp) gestell = Math.min(100, gestell + 4);
     } else {
       players.set(id, { ...b, hp });
+    }
+  }
+  for (const grave of duelGraves) {
+    for (const [sid, s] of players) {
+      if (sid === attackerId || fallen.has(sid) || s.guest || s.locked || s.hp <= 0) continue;
+      if (!nearPoint(s.x, s.y, grave.x, grave.y, 80)) continue;
+      if (s.spectated >= SPECTATE_CAP) continue;
+      players.set(sid, {
+        ...s,
+        spectated: s.spectated + 1,
+        aura: s.aura + 1,
+        heard: SPECTATE_COPY,
+        wink: visibleWink(false, WINK_DUEL),
+      });
     }
   }
   const clerks: Clerk[] = [];

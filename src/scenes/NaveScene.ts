@@ -501,6 +501,7 @@ export class NaveScene extends Phaser.Scene {
     const keptNear = snap.nodes.find(
       (n) => n.kept && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
+    const wreckNear = snap.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 72));
 
     if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
@@ -604,8 +605,9 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `F read ${sign.title}: ${sign.text}`;
     } else if (clerkNear) {
       this.prompt = `${clerkNear.name} is working the yield. They will strike if you stay. Click to interrupt.`;
+    } else if (wreckNear && !me.guest) {
+      this.prompt = "Ruin duel. The grave is the ring. Spectators gain a little aura. Not a bigger stick.";
     } else if (keptNear && me.messenger === "herald") {
-      this.prompt = "F — Herald Announce. Ping the kept node. This is not a strike.";
     } else if (nearNode) {
       this.prompt = "E extract Bestand · Q keep (Winke). A guest cannot cash out.";
     } else if (me.heard) {

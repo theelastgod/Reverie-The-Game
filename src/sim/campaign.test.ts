@@ -104,6 +104,10 @@ import {
   SPOILS_COPY,
   GUEST_GRIEF,
   CAMP_COPY,
+  DUEL_COPY,
+  SPECTATE_COPY,
+  SPECTATE_CAP,
+  WINK_DUEL,
   gestellTax,
   hallCopy,
   auraSeed,
@@ -1049,6 +1053,89 @@ describe("Wet Grid flagged PvP", () => {
     expect(camp.players.get("a")?.aura).toBeLessThan(auraSeed(TEST_SERIAL));
     expect(camp.gestell).toBeGreaterThan(duel.gestell);
     expect(guestCanClaim(camp.players.get("a")!)).toBe(false);
+  });
+});
+
+describe("Ruin duel", () => {
+  it("1v1 at a wreckage takes unbanked not cult; spectators gain capped aura", () => {
+    const w = emptyWorld();
+    w.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      messenger: "ruin-angel",
+      aura: auraSeed(TEST_SERIAL),
+      x: 200,
+      y: 480,
+      bestand: 5,
+    });
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: 2,
+      messenger: "herald",
+      x: 210,
+      y: 480,
+      hp: 20,
+      bestand: 100,
+      banked: 50,
+      cultWink: true,
+      fakeWinke: 1,
+    });
+    w.players.set("s", {
+      ...spawnGuest("s"),
+      guest: false,
+      serial: 3,
+      aura: 4,
+      x: 200,
+      y: 500,
+    });
+    w.players.set("g", { ...spawnGuest("g"), x: 200, y: 490 });
+    const after = applyStrike(w, "a");
+    const a = after.players.get("a")!;
+    const b = after.players.get("b")!;
+    const s = after.players.get("s")!;
+    expect(a.heard).toBe(DUEL_COPY);
+    expect(a.wink).toBe(WINK_DUEL);
+    expect(a.bestand).toBe(5 + 30);
+    expect(b.banked).toBe(50);
+    expect(b.cultWink).toBe(true);
+    expect(s.aura).toBe(5);
+    expect(s.spectated).toBe(1);
+    expect(s.heard).toBe(SPECTATE_COPY);
+    expect(after.players.get("g")?.aura).toBe(0);
+    expect(SPECTATE_CAP).toBe(3);
+    expect(damageFor(a)).toBe(damageFor({ ...spawnGuest("h"), messenger: "herald" }));
+    expect(guestCanClaim(a)).toBe(false);
+
+    s.hp = 100;
+    after.players.set("s", { ...s, x: 200, y: 500 });
+    after.players.set("a", { ...a, strikeCd: 0 });
+    after.players.set("c", {
+      ...spawnGuest("c"),
+      guest: false,
+      x: 208,
+      y: 480,
+      hp: 20,
+      bestand: 10,
+    });
+    let cur = after;
+    for (let i = 0; i < 4; i++) {
+      cur.players.set("a", { ...cur.players.get("a")!, strikeCd: 0, hp: 100 });
+      cur.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+      cur.players.set("c", {
+        ...spawnGuest("c"),
+        guest: false,
+        x: 208,
+        y: 480,
+        hp: 20,
+        bestand: 10,
+      });
+      cur = applyStrike(cur, "a");
+    }
+    expect(cur.players.get("s")!.spectated).toBe(SPECTATE_CAP);
+    expect(cur.players.get("s")!.aura).toBe(4 + SPECTATE_CAP);
   });
 });
 

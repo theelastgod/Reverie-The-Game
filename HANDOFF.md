@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 22** — Ruin duel at wreckage (1v1). Spectator aura gain capped. No token DPS. No mint.
+**Next stage: 23** — Claims desk **disarmed**: Bestand claim object, 24h hold, guest reject, no Base settle. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -109,8 +109,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Clearing keep/extract scores House war. Two keeps or a ring-hold win Readiness omen; two extracts win Cold omen.
 - Winner: tithe cut and omen, never a damage buff. Guests do not score. Claims stay disarmed.
 
-## Stage 22 (do this next)
-Ruin duel at a wreckage. 1v1. Ruin-angel kit is flavor, not DPS. Spectator aura gain small and capped. Cult/banked never drop. No mint. No Base.
+## Stage 22 (landed)
+- 1v1 at a wreckage is a ruin duel. Unbanked + exhibition spoils. Cult and banked stay.
+- Spectators gain 1 aura, cap 3. Ruin-angel kit is not DPS. Guests gain nothing. Claims stay disarmed.
+
+## Stage 23 (do this next)
+Claims desk **disarmed**. Play earns a claim object (not a yield). 24h hold. Guest cannot claim. TAKE would pay Bestand only; `$REVERIE` settle is off. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

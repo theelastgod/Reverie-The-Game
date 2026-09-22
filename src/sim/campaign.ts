@@ -307,6 +307,10 @@ export const FLAG_SPECTATOR = "A wet street. You are not flagged. You are not sp
 export const SPOILS_COPY = "Spoils from a person. Unbanked and copies. The cult hint stayed in the grave.";
 export const GUEST_GRIEF = "A guest is not a spoils path. The server will not pay you for that.";
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
+export const SPECTATE_CAP = 3;
+export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
+export const SPECTATE_COPY = "You watched a ruin duel. Aura thickens a little. The cap holds.";
+export const WINK_DUEL = "Face the wreckage. Presence, not a bigger stick.";
 
 export function inWetGrid(x: number, y: number): boolean {
   const dx = x - WET_GRID.x;
