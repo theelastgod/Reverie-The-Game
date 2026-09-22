@@ -125,6 +125,18 @@ import {
   RESTRAINT_SPECTATOR,
   RESTRAINT_PLAQUE,
   restraintPoi,
+  EXTRACT_PAY,
+  RESTRAINT_PAY,
+  STANCE_COPY,
+  WINK_STANCE,
+  STANCE_HELD,
+  STANCE_STORM,
+  STANCE_NEED,
+  STANCE_SPECTATOR,
+  STORM_BURNS,
+  RESTRAINT_YIELD,
+  STANCE_PLAQUE,
+  stancePoi,
   VESPER_NOGOD,
   WINK_NOGOD,
   VESPER_NOGOD_LATER,
@@ -483,6 +495,7 @@ export type Player = {
   cultMark: boolean;
   stipend: number;
   storm: boolean;
+  restraint: boolean;
 };
 
 export type WorldState = {
@@ -584,6 +597,7 @@ export function spawnGuest(id: string): Player {
     cultMark: false,
     stipend: 0,
     storm: false,
+    restraint: false,
   };
 }
 
@@ -624,6 +638,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     fakeWinke: 0,
     stipend: p.stipend,
     storm: p.storm,
+    restraint: p.restraint,
     x,
     y,
     ...patch,
@@ -937,7 +952,12 @@ export function applyUse(
     nodes[idx] = { ...node, depleted: true, kept: false };
     const tax = p.beats.hall ? warTax(earthTax(gestellTax(w.gestell), p.house), p.house, w.war) : 0;
     const heard = p.beats.errand && !p.beats.cableQuiet ? ERRAND_EXTRACT : p.heard;
-    players.set(playerId, { ...p, bestand: p.bestand + Math.max(0, 40 - tax), heard });
+    const pay = p.restraint ? RESTRAINT_PAY : EXTRACT_PAY;
+    players.set(playerId, {
+      ...p,
+      bestand: p.bestand + Math.max(0, pay - tax),
+      heard: p.restraint ? RESTRAINT_YIELD : heard,
+    });
     return { ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) };
   }
   nodes[idx] = { ...node, depleted: true, kept: true };
@@ -960,7 +980,11 @@ export function applyUse(
       signs: w.signs.map((s) => (s.id === ORGAN_CABLE.id ? { ...CABLE_QUIET_PLAQUE } : s)),
     };
   }
-  players.set(playerId, { ...p, winke: p.winke + divinitiesKeep(p.house), readiness: p.readiness + 1 });
+  players.set(playerId, {
+    ...p,
+    winke: p.winke + divinitiesKeep(p.house) + (p.restraint ? 1 : 0),
+    readiness: p.readiness + 1,
+  });
   return { ...w, nodes, players, gestell: Math.max(0, w.gestell - 3) };
 }
 
@@ -1288,6 +1312,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === CLAIMS_DESK.id) return applyDesk(w, playerId, "file");
   if (sign.id === SHRINE.id) {
     if (w.lastGodNamed && !w.restraintHeld) return applyRestraint(w, playerId);
+    if (w.restraintHeld && !p.restraint) return applyRestraintStance(w, playerId);
     return applyShrine(w, playerId);
   }
   if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
@@ -1396,6 +1421,42 @@ export function applyRestraint(w: WorldState, playerId: string): WorldState {
     restraintHeld: true,
     pois: w.pois.map((poi) => (poi.id === SHRINE.id ? restraintPoi() : poi)),
     signs: w.signs.map((s) => (s.id === SHRINE.id ? { ...RESTRAINT_PLAQUE } : s)),
+  };
+}
+
+export function applyRestraintStance(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: STANCE_SPECTATOR, wink: visibleWink(true, WINK_STANCE) });
+    return { ...w, players };
+  }
+  if (!w.restraintHeld) {
+    players.set(playerId, { ...p, heard: STANCE_NEED });
+    return { ...w, players };
+  }
+  if (p.storm) {
+    players.set(playerId, { ...p, heard: STANCE_STORM, wink: visibleWink(false, WINK_STORM) });
+    return { ...w, players };
+  }
+  if (p.restraint) {
+    players.set(playerId, { ...p, heard: STANCE_HELD, wink: visibleWink(false, WINK_STANCE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    restraint: true,
+    heard: STANCE_COPY,
+    wink: visibleWink(false, WINK_STANCE),
+    lastCareX: SHRINE.x,
+    lastCareY: SHRINE.y,
+  });
+  return {
+    ...w,
+    players,
+    pois: w.pois.map((poi) => (poi.id === SHRINE.id ? stancePoi() : poi)),
+    signs: w.signs.map((s) => (s.id === SHRINE.id ? { ...STANCE_PLAQUE } : s)),
   };
 }
 
@@ -2882,8 +2943,9 @@ export function applyStorm(w: WorldState, playerId: string): WorldState {
     ...p,
     beats: { ...p.beats, storm: true },
     storm: true,
+    restraint: false,
     readiness: Math.max(0, p.readiness - STORM_BURN),
-    heard: STORM_COPY,
+    heard: p.restraint ? STORM_BURNS : STORM_COPY,
     wink: visibleWink(false, WINK_STORM),
   });
   return {

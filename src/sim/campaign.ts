@@ -156,6 +156,7 @@ export type Poi = {
     | "last-god-buried"
     | "last-god-unlisted"
     | "shrine-restraint"
+    | "shrine-stance"
     | "desk-empty"
     | "yield-empty"
     | "ione-gone";
@@ -981,6 +982,37 @@ export function restraintPoi(): Poi {
     x: SHRINE.x,
     y: SHRINE.y,
     kind: "shrine-restraint",
+  };
+}
+
+export const EXTRACT_PAY = 40;
+export const RESTRAINT_PAY = 30;
+export const STANCE_COPY =
+  "You take Restraint. Yield thins. Winke hold. Storm would burn this. Combat is not. This was not a fetch.";
+export const WINK_STANCE = "Holding-back is a stance. You see more. You take less. Combat is not.";
+export const STANCE_HELD = "Restraint already holds. Yield still thins. Keep still costs.";
+export const STANCE_STORM = "Storm burned holding-back. You cannot take Restraint until the weather turns.";
+export const STANCE_NEED = "Name holding-back at the shrine first. A stance is not a fetch.";
+export const STANCE_SPECTATOR = "A stance you cannot hold.";
+export const STORM_BURNS =
+  "Storm burns holding-back. Wreckage vision. Readiness thins. Restraint is gone. Combat is not.";
+export const RESTRAINT_YIELD = "Restraint. You took less. The Wink is not a stick.";
+
+export const STANCE_PLAQUE: Sign = {
+  id: SHRINE.id,
+  title: "Restraint",
+  text: "Yield thins. Winke hold. Storm burns this. The number does not strike.",
+  x: SHRINE.x,
+  y: SHRINE.y,
+};
+
+export function stancePoi(): Poi {
+  return {
+    id: SHRINE.id,
+    name: "Restraint",
+    x: SHRINE.x,
+    y: SHRINE.y,
+    kind: "shrine-stance",
   };
 }
 

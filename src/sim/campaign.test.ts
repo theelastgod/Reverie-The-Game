@@ -38,6 +38,16 @@ import {
   RESTRAINT_HELD,
   RESTRAINT_SPECTATOR,
   RESTRAINT_PLAQUE,
+  STANCE_COPY,
+  WINK_STANCE,
+  STANCE_HELD,
+  STANCE_STORM,
+  STANCE_NEED,
+  STANCE_SPECTATOR,
+  STANCE_PLAQUE,
+  STORM_BURNS,
+  RESTRAINT_YIELD,
+  RESTRAINT_PAY,
   VESPER_NOGOD,
   WINK_NOGOD,
   VESPER_NOGOD_LATER,
@@ -368,6 +378,7 @@ import {
   applyDesk,
   applyShrine,
   applyRestraint,
+  applyRestraintStance,
   applyRestore,
   applyInsure,
   applyRepair,
@@ -984,6 +995,74 @@ describe("holding-back at the shrine", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
     expect(applyRestraint(gWorld, "g").players.get("g")?.heard).toBe(RESTRAINT_SPECTATOR);
     expect(gWorld.restraintHeld).toBe(false);
+  });
+});
+
+describe("Restraint stance", () => {
+  it("thins extract yield and extra Winke on keep; Storm burns it; guests cannot", () => {
+    const w = emptyWorld();
+    w.restraintHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), restraint: true },
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const stood = applyRead(w, "a", SHRINE.id);
+    const p = stood.players.get("a")!;
+    expect(p.heard).toBe(STANCE_COPY);
+    expect(p.wink).toBe(WINK_STANCE);
+    expect(p.restraint).toBe(true);
+    expect(stood.pois.find((poi) => poi.id === SHRINE.id)?.kind).toBe("shrine-stance");
+    expect(stood.signs.find((s) => s.id === SHRINE.id)?.title).toBe(STANCE_PLAQUE.title);
+    expect(applyRestraintStance(stood, "a").players.get("a")?.heard).toBe(STANCE_HELD);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const node = stood.nodes[0];
+    stood.players.set("a", { ...p, x: node.x, y: node.y });
+    const took = applyUse(stood, "a", node.id, "extract");
+    expect(took.players.get("a")?.bestand).toBe(RESTRAINT_PAY);
+    expect(took.players.get("a")?.heard).toBe(RESTRAINT_YIELD);
+
+    const keepW = emptyWorld();
+    keepW.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      restraint: true,
+      x: node.x,
+      y: node.y,
+    });
+    const kept = applyUse(keepW, "a", node.id, "keep");
+    expect(kept.players.get("a")?.winke).toBe(2);
+
+    const burned = applyStorm(
+      {
+        ...emptyWorld(),
+        clearingFailed: true,
+        restraintHeld: true,
+        players: new Map([["a", { ...p, x: CLEARING_RING.x, y: CLEARING_RING.y, restraint: true, readiness: 4 }]]),
+      },
+      "a",
+    );
+    expect(burned.players.get("a")?.restraint).toBe(false);
+    expect(burned.players.get("a")?.storm).toBe(true);
+    expect(burned.players.get("a")?.heard).toBe(STORM_BURNS);
+    burned.players.set("a", { ...burned.players.get("a")!, x: SHRINE.x, y: SHRINE.y });
+    expect(applyRestraintStance(burned, "a").players.get("a")?.heard).toBe(STANCE_STORM);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SHRINE.x, y: SHRINE.y });
+    expect(applyRestraintStance(early, "a").players.get("a")?.heard).toBe(STANCE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.restraintHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
+    expect(applyRestraintStance(gWorld, "g").players.get("g")?.heard).toBe(STANCE_SPECTATOR);
+    expect(gWorld.players.get("g")?.restraint).toBe(false);
   });
 });
 

@@ -467,6 +467,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "shrine-restraint"
                         ? 0xc9a56a
+                      : poi.kind === "shrine-stance"
+                        ? 0x7eb6ff
                       : poi.kind === "house-standing"
                         ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
@@ -884,6 +886,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || `F spend Passing stipend on the shrine (${me.stipend} left). Cult upkeep. Not a stick.`;
     } else if (shrine && (snap.lastGodNamed || me.beats.lastGod) && !me.beats.restraint && !snap.restraintHeld) {
       this.prompt = "F — name holding-back at the shrine. The last god is not a spend. Not a fetch.";
+    } else if (shrine && snap.restraintHeld && !me.restraint && !me.guest) {
+      this.prompt = me.storm
+        ? "Storm burned holding-back. You cannot take Restraint."
+        : "F — take Restraint. Yield thins. Winke hold. Storm would burn this. Not a stick.";
     } else if (shrine && (me.beats.restraint || snap.restraintHeld) && !me.insured) {
       this.prompt = me.heard
         || `Holding-back. F keep (${SHRINE_COST}). E restore (${RESTORE_COST}). Q insurance (${INSURANCE_COST}). Not a stick.`;
@@ -964,7 +970,8 @@ export class NaveScene extends Phaser.Scene {
           : snap.clearingOpen
             ? " · Clearing held"
             : omenBit;
-      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}`;
+      const stanceBit = me.storm ? " · Storm" : me.restraint ? " · Restraint" : "";
+      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""}${me.stipend ? ` · stipend ${me.stipend}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}${stanceBit}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;
