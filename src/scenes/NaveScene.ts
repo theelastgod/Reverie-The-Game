@@ -602,6 +602,10 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "log-people"
                         ? 0xc9a56a
+                      : poi.kind === "founder-people"
+                        ? 0xc9a56a
+                      : poi.kind === "rooms-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -867,6 +871,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A still. Participant first. Optional.";
     } else if (screening && (me.guest || me.locked)) {
       this.prompt = "A screen. You do not get the dispatch.";
+    } else if (screening && (me.beats.roomsPeople || snap.roomsPeopleHeld)) {
+      this.prompt = me.heard || "The rooms — people. Proximity still holds. Not a stick.";
+    } else if (screening && snap.founderPeopleHeld && !me.guest) {
+      this.prompt = "F — gather the rooms as people. Observer, Participant, Founder. Not a fetch.";
     } else if (screening && (me.beats.founderPeople || snap.founderPeopleHeld)) {
       this.prompt = me.heard || "Founder — people. Proximity still holds. Not a stick.";
     } else if (screening && snap.logPeopleHeld && !me.guest) {

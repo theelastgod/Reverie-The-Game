@@ -292,6 +292,12 @@ import {
   FOUNDER_PEOPLE_HELD,
   FOUNDER_PEOPLE_SPECTATOR,
   FOUNDER_PEOPLE_PLAQUE,
+  ROOMS_PEOPLE_COPY,
+  WINK_ROOMS_PEOPLE,
+  ROOMS_PEOPLE_NEED,
+  ROOMS_PEOPLE_HELD,
+  ROOMS_PEOPLE_SPECTATOR,
+  ROOMS_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -848,6 +854,7 @@ import {
   applyBracketPeople,
   applyLogPeople,
   applyFounderPeople,
+  applyRoomsPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3030,6 +3037,44 @@ describe("Founder — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
     expect(applyFounderPeople(gWorld, "g").players.get("g")?.heard).toBe(FOUNDER_PEOPLE_SPECTATOR);
     expect(gWorld.founderPeopleHeld).toBe(false);
+  });
+});
+
+describe("The rooms — people", () => {
+  it("gathers Observer, Participant, Founder as people; proximity still holds; guests cannot", () => {
+    const w = emptyWorld();
+    w.founderPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), founderPeople: true },
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    const named = applyRead(w, "a", SCREENING.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(ROOMS_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_ROOMS_PEOPLE);
+    expect(p.beats.roomsPeople).toBe(true);
+    expect(named.roomsPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "rooms-people")?.name).toBe("The rooms — people");
+    expect(named.signs.find((s) => s.id === "rooms-people")?.title).toBe(ROOMS_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Proximity still holds");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyRoomsPeople(named, "a").players.get("a")?.heard).toBe(ROOMS_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SCREENING.x, y: SCREENING.y });
+    expect(applyRoomsPeople(early, "a").players.get("a")?.heard).toBe(ROOMS_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.founderPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
+    expect(applyRoomsPeople(gWorld, "g").players.get("g")?.heard).toBe(ROOMS_PEOPLE_SPECTATOR);
+    expect(gWorld.roomsPeopleHeld).toBe(false);
   });
 });
 

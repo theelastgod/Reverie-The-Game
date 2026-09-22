@@ -373,6 +373,13 @@ import {
   FOUNDER_PEOPLE_SPECTATOR,
   FOUNDER_PEOPLE_PLAQUE,
   founderPeoplePoi,
+  ROOMS_PEOPLE_COPY,
+  WINK_ROOMS_PEOPLE,
+  ROOMS_PEOPLE_NEED,
+  ROOMS_PEOPLE_HELD,
+  ROOMS_PEOPLE_SPECTATOR,
+  ROOMS_PEOPLE_PLAQUE,
+  roomsPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1078,6 +1085,7 @@ export type WorldState = {
   bracketPeopleHeld: boolean;
   logPeopleHeld: boolean;
   founderPeopleHeld: boolean;
+  roomsPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1351,6 +1359,7 @@ export function emptyWorld(): WorldState {
     bracketPeopleHeld: false,
     logPeopleHeld: false,
     founderPeopleHeld: false,
+    roomsPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2488,13 +2497,15 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.annexPeopleHeld && !w.arenaPeopleHeld && !p.guest && !p.locked) return applyArenaPeople(w, playerId);
     return applyArena(w, playerId);
   }
-  if (sign.id === SCREENING.id || sign.id === "screening-people" || sign.id === "log-people" || sign.id === "founder-people") {
+  if (sign.id === SCREENING.id || sign.id === "screening-people" || sign.id === "log-people" || sign.id === "founder-people" || sign.id === "rooms-people") {
     if (w.m3PeopleHeld && !w.screeningPeopleHeld) return applyScreeningPeople(w, playerId);
     if (sign.id === "screening-people") return applyScreeningPeople(w, playerId);
     if (w.bracketPeopleHeld && !w.logPeopleHeld) return applyLogPeople(w, playerId);
     if (sign.id === "log-people") return applyLogPeople(w, playerId);
     if (w.logPeopleHeld && !w.founderPeopleHeld) return applyFounderPeople(w, playerId);
     if (sign.id === "founder-people") return applyFounderPeople(w, playerId);
+    if (w.founderPeopleHeld && !w.roomsPeopleHeld) return applyRoomsPeople(w, playerId);
+    if (sign.id === "rooms-people") return applyRoomsPeople(w, playerId);
     return applyScreening(w, playerId);
   }
   if (sign.id === STILL.id || sign.id === "still-people") {
@@ -3852,6 +3863,37 @@ export function applyFounderPeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, founderPeopleHeld: true, pois, signs };
 }
 
+export function applyRoomsPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SCREENING.x, SCREENING.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: ROOMS_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_ROOMS_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.founderPeopleHeld) {
+    players.set(playerId, { ...p, heard: ROOMS_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.roomsPeopleHeld && p.beats.roomsPeople) {
+    players.set(playerId, { ...p, heard: ROOMS_PEOPLE_HELD, wink: visibleWink(false, WINK_ROOMS_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, roomsPeople: true },
+    heard: ROOMS_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_ROOMS_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "rooms-people")
+    ? w.pois.map((poi) => (poi.id === "rooms-people" ? roomsPeoplePoi() : poi))
+    : [...w.pois, roomsPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "rooms-people")
+    ? w.signs.map((s) => (s.id === "rooms-people" ? { ...ROOMS_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...ROOMS_PEOPLE_PLAQUE }];
+  return { ...w, players, roomsPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5039,6 +5081,7 @@ export function snapshot(w: WorldState) {
     bracketPeopleHeld: w.bracketPeopleHeld,
     logPeopleHeld: w.logPeopleHeld,
     founderPeopleHeld: w.founderPeopleHeld,
+    roomsPeopleHeld: w.roomsPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
