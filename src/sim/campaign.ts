@@ -196,6 +196,7 @@ export type Beats = {
   traitPeople: boolean;
   tokenPeople: boolean;
   fairPeople: boolean;
+  visiblePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -380,6 +381,7 @@ export type Poi = {
     | "trait-people"
     | "token-people"
     | "fair-people"
+    | "visible-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3306,6 +3308,31 @@ export function fairPeoplePoi(): Poi {
   };
 }
 
+export const VISIBLE_PEOPLE_COPY =
+  "Visibility is a house of people, not a ledger of process. Serials stay visible. Serials do not buy damage. Combat is not. This was not a fetch.";
+export const WINK_VISIBLE_PEOPLE = "People, not a visibility stick. The token does not strike.";
+export const VISIBLE_PEOPLE_NEED = "The published band as people first. Visibility of people is not a fetch.";
+export const VISIBLE_PEOPLE_HELD = "Visibility already holds as people. Serials stay visible. Serials do not buy damage.";
+export const VISIBLE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const VISIBLE_PEOPLE_PLAQUE: Sign = {
+  id: "visible-people",
+  title: "Visible — people",
+  text: "A house of people. Serials stay visible. Serials do not buy damage. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function visiblePeoplePoi(): Poi {
+  return {
+    id: "visible-people",
+    name: "Visible — people",
+    x: 720,
+    y: 520,
+    kind: "visible-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3989,6 +4016,7 @@ export function emptyBeats(): Beats {
     traitPeople: false,
     tokenPeople: false,
     fairPeople: false,
+    visiblePeople: false,
   };
 }
 

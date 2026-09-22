@@ -707,6 +707,13 @@ import {
   FAIR_PEOPLE_SPECTATOR,
   FAIR_PEOPLE_PLAQUE,
   fairPeoplePoi,
+  VISIBLE_PEOPLE_COPY,
+  WINK_VISIBLE_PEOPLE,
+  VISIBLE_PEOPLE_NEED,
+  VISIBLE_PEOPLE_HELD,
+  VISIBLE_PEOPLE_SPECTATOR,
+  VISIBLE_PEOPLE_PLAQUE,
+  visiblePeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1468,6 +1475,7 @@ export type WorldState = {
   traitPeopleHeld: boolean;
   tokenPeopleHeld: boolean;
   fairPeopleHeld: boolean;
+  visiblePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1789,6 +1797,7 @@ export function emptyWorld(): WorldState {
     traitPeopleHeld: false,
     tokenPeopleHeld: false,
     fairPeopleHeld: false,
+    visiblePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3013,7 +3022,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people") {
+    if (w.fairPeopleHeld && !w.visiblePeopleHeld) return applyVisiblePeople(w, playerId);
+    if (sign.id === "visible-people") return applyVisiblePeople(w, playerId);
     if (w.tokenPeopleHeld && !w.fairPeopleHeld) return applyFairPeople(w, playerId);
     if (sign.id === "fair-people") return applyFairPeople(w, playerId);
     if (w.traitPeopleHeld && !w.tokenPeopleHeld) return applyTokenPeople(w, playerId);
@@ -5930,6 +5941,37 @@ export function applyFairPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, fairPeopleHeld: true, pois, signs };
 }
 
+export function applyVisiblePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: VISIBLE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_VISIBLE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.fairPeopleHeld) {
+    players.set(playerId, { ...p, heard: VISIBLE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.visiblePeopleHeld && p.beats.visiblePeople) {
+    players.set(playerId, { ...p, heard: VISIBLE_PEOPLE_HELD, wink: visibleWink(false, WINK_VISIBLE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, visiblePeople: true },
+    heard: VISIBLE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_VISIBLE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "visible-people")
+    ? w.pois.map((poi) => (poi.id === "visible-people" ? visiblePeoplePoi() : poi))
+    : [...w.pois, visiblePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "visible-people")
+    ? w.signs.map((s) => (s.id === "visible-people" ? { ...VISIBLE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...VISIBLE_PEOPLE_PLAQUE }];
+  return { ...w, players, visiblePeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -7168,6 +7210,7 @@ export function snapshot(w: WorldState) {
     traitPeopleHeld: w.traitPeopleHeld,
     tokenPeopleHeld: w.tokenPeopleHeld,
     fairPeopleHeld: w.fairPeopleHeld,
+    visiblePeopleHeld: w.visiblePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

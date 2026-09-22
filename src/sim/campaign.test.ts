@@ -586,6 +586,12 @@ import {
   FAIR_PEOPLE_HELD,
   FAIR_PEOPLE_SPECTATOR,
   FAIR_PEOPLE_PLAQUE,
+  VISIBLE_PEOPLE_COPY,
+  WINK_VISIBLE_PEOPLE,
+  VISIBLE_PEOPLE_NEED,
+  VISIBLE_PEOPLE_HELD,
+  VISIBLE_PEOPLE_SPECTATOR,
+  VISIBLE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1191,6 +1197,7 @@ import {
   applyTraitPeople,
   applyTokenPeople,
   applyFairPeople,
+  applyVisiblePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5386,6 +5393,45 @@ describe("Fair — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyFairPeople(gWorld, "g").players.get("g")?.heard).toBe(FAIR_PEOPLE_SPECTATOR);
     expect(gWorld.fairPeopleHeld).toBe(false);
+  });
+});
+
+describe("Visible — people", () => {
+  it("names visibility as people after the published band; serials stay visible; guests cannot", () => {
+    const w = emptyWorld();
+    w.fairPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), fairPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(VISIBLE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_VISIBLE_PEOPLE);
+    expect(p.beats.visiblePeople).toBe(true);
+    expect(named.visiblePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "visible-people")?.name).toBe("Visible — people");
+    expect(named.signs.find((s) => s.id === "visible-people")?.title).toBe(VISIBLE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Serials stay visible");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyVisiblePeople(named, "a").players.get("a")?.heard).toBe(VISIBLE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyVisiblePeople(early, "a").players.get("a")?.heard).toBe(VISIBLE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.fairPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyVisiblePeople(gWorld, "g").players.get("g")?.heard).toBe(VISIBLE_PEOPLE_SPECTATOR);
+    expect(gWorld.visiblePeopleHeld).toBe(false);
   });
 });
 

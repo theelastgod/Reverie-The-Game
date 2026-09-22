@@ -165,6 +165,7 @@ export type Snap = {
   traitPeopleHeld?: boolean;
   tokenPeopleHeld?: boolean;
   fairPeopleHeld?: boolean;
+  visiblePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
