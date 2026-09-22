@@ -52,6 +52,10 @@ import {
   WINK_FAILED,
   FORGE_TRAY,
   FORGE_PAY,
+  LISTING_FEE,
+  EXHIBIT_DECAY,
+  CULT_NO_LIST,
+  DECAY_COPY,
   FORGE_LESSON,
   FORGE_NEED_MARKET,
   FORGE_SELL,
@@ -717,7 +721,7 @@ describe("forged Winke", () => {
 
     const sold = applyForge(heard, "a", "sell");
     const k = sold.players.get("a")!;
-    expect(k.bestand).toBe(FORGE_PAY);
+    expect(k.bestand).toBe(FORGE_PAY - LISTING_FEE);
     expect(k.fakeWinke).toBe(1);
     expect(k.cultWink).toBe(false);
     expect(k.aura).toBe(auraSeed(TEST_SERIAL) - 3);
@@ -736,6 +740,27 @@ describe("forged Winke", () => {
     expect(after.players.get("g")?.wink).toBe("");
     expect(after.forgedSold).toBe(false);
     expect(guestCanClaim(after.players.get("g")!)).toBe(false);
+  });
+
+  it("cult cannot list; listing fee sinks Bestand; prints decay", () => {
+    const heard = applyForge(angelAtQuill(true), "a", "hear");
+    const spotted = applyForge(heard, "a", "spot");
+    const blocked = applyForge(spotted, "a", "sell");
+    expect(blocked.players.get("a")?.heard).toBe(CULT_NO_LIST);
+    expect(blocked.players.get("a")?.cultWink).toBe(true);
+    expect(blocked.forgedSold).toBe(false);
+    expect(LISTING_FEE).toBe(5);
+    expect(FORGE_PAY - LISTING_FEE).toBe(20);
+
+    const sold = applyForge(heard, "a", "sell");
+    expect(sold.players.get("a")?.bestand).toBe(20);
+    let decay = sold;
+    for (let i = 0; i < 410; i++) decay = tickWorld(decay, 0.05);
+    expect(decay.players.get("a")?.fakeWinke).toBe(0);
+    expect(decay.players.get("a")?.heard).toBe(DECAY_COPY);
+    expect(EXHIBIT_DECAY).toBe(20);
+    expect(damageFor(sold.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(sold.players.get("a")!)).toBe(false);
   });
 });
 

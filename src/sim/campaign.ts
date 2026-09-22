@@ -291,6 +291,8 @@ export const ORGAN_PLAQUES: Sign[] = [
 
 export const FORGE_TRAY = { id: "forge-tray", x: 1080, y: 600 };
 export const FORGE_PAY = 25;
+export const LISTING_FEE = 5;
+export const EXHIBIT_DECAY = 20;
 export const FORGE_LESSON =
   "Quill fans two hints. One was buried. One was printed. The printed one lists. The buried one opens. I can teach the difference. I can also sell the print.";
 export const WINK_FORGE =
@@ -298,7 +300,9 @@ export const WINK_FORGE =
 export const FORGE_SPOT =
   "You keep the eye. The cult hint does not list. Copies will not open the hole.";
 export const FORGE_SELL =
-  "You sold a copy. Twenty-five Bestand. Aura thins. The cult hint is not in the bag you sold.";
+  "You sold a copy. Listing fee five. Twenty net. Aura thins. Cult does not list.";
+export const CULT_NO_LIST = "Cult objects do not list. The buried hint stays in the hand.";
+export const DECAY_COPY = "A print thinned. Exhibition decays. Cult does not.";
 export const FORGE_SPECTATOR = "Quill is doing something with paper. You cannot tell which sheet is the prayer.";
 export const FORGE_NEED_MARKET = "Quill is not teaching until you have stood at the listing.";
 

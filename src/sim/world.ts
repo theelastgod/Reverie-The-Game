@@ -98,6 +98,10 @@ import {
   organsComplete,
   FORGE_TRAY,
   FORGE_PAY,
+  LISTING_FEE,
+  EXHIBIT_DECAY,
+  CULT_NO_LIST,
+  DECAY_COPY,
   FORGE_LESSON,
   FORGE_NEED_MARKET,
   FORGE_SELL,
@@ -219,6 +223,7 @@ export type Player = {
   lastKillId: string;
   spectated: number;
   claims: Claim[];
+  exhibitT: number;
 };
 
 export type WorldState = {
@@ -277,6 +282,7 @@ export function spawnGuest(id: string): Player {
     lastKillId: "",
     spectated: 0,
     claims: [],
+    exhibitT: 0,
   };
 }
 
@@ -347,10 +353,33 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
   }
   const afterClerks = tickClerks({ ...w, now, players }, dt);
   const afterWar = tickHouseWar(afterClerks, dt);
+  const afterDecay = tickExhibit(afterWar, dt);
   return {
-    ...afterWar,
-    wreckage: afterWar.wreckage.filter((r) => r.until > now),
+    ...afterDecay,
+    wreckage: afterDecay.wreckage.filter((r) => r.until > now),
   };
+}
+
+export function tickExhibit(w: WorldState, dt: number): WorldState {
+  const players = new Map(w.players);
+  let changed = false;
+  for (const [id, p] of players) {
+    if (p.fakeWinke <= 0) continue;
+    let exhibitT = p.exhibitT + dt;
+    let fakeWinke = p.fakeWinke;
+    let heard = p.heard;
+    while (fakeWinke > 0 && exhibitT >= EXHIBIT_DECAY) {
+      exhibitT -= EXHIBIT_DECAY;
+      fakeWinke -= 1;
+      heard = DECAY_COPY;
+      changed = true;
+    }
+    if (exhibitT !== p.exhibitT || fakeWinke !== p.fakeWinke) {
+      players.set(id, { ...p, exhibitT, fakeWinke, heard });
+      changed = true;
+    }
+  }
+  return changed ? { ...w, players } : w;
 }
 
 export function tickHouseWar(w: WorldState, dt: number): WorldState {
@@ -486,6 +515,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         banked: b.banked,
         lastKillId: b.lastKillId,
         claims: b.claims,
+        exhibitT: b.exhibitT,
         spectated: b.spectated,
       });
       if (camp) gestell = Math.min(100, gestell + 4);
@@ -1111,11 +1141,15 @@ export function applyForge(
     });
     return { ...w, players };
   }
+  if (p.cultWink) {
+    players.set(playerId, { ...p, heard: CULT_NO_LIST, wink: visibleWink(false, WINK_FORGE) });
+    return { ...w, players };
+  }
   players.set(playerId, {
     ...p,
     beats: { ...p.beats, sold: true },
     fakeWinke: p.fakeWinke + 1,
-    bestand: p.bestand + FORGE_PAY,
+    bestand: p.bestand + FORGE_PAY - LISTING_FEE,
     aura: Math.max(0, p.aura - 3),
     cultWink: false,
     heard: FORGE_SELL,

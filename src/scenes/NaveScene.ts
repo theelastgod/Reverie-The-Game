@@ -16,6 +16,7 @@ import {
   ORGAN_CABLE,
   FORGE_TRAY,
   FORGE_PAY,
+  LISTING_FEE,
   PRIVATE_YIELD,
   WRECK_GARDEN,
   CLEARING_RING,
@@ -560,7 +561,7 @@ export class NaveScene extends Phaser.Scene {
     } else if (forge && me.beats.sold) {
       this.prompt = me.heard || "You sold a copy. The cult hint is not in the bag.";
     } else if (forge && me.beats.forge) {
-      this.prompt = `Q keep the eye (cult). E sell a copy (+${FORGE_PAY} Bestand).`;
+      this.prompt = `Q keep the eye (cult). E sell a copy (+${FORGE_PAY - LISTING_FEE} after listing fee). Cult does not list.`;
     } else if (forge && me.beats.market) {
       this.prompt = "F — Quill will teach the difference, or sell you the print.";
     } else if (ring && (me.guest || me.locked)) {
