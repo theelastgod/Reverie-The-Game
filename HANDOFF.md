@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 144** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 145** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -608,7 +608,16 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the freeze as people, F at the stall: repair as people. Plaque/POI **Repair — people**. Seven Bestand still. Cult does not crack.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 143 (do this next)
+## Stage 143 (landed)
+- After repair as people, F at the forge: listing as people. Plaque/POI Listing — people. The fee still sits.
+- Imagine operator desk floor. Higgsfield later.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 144 (landed)
+- After listing as people, F at the stall: the market as people. Plaque/POI **Market — people**. Forty Bestand still. The Clearing stays closed.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 145 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

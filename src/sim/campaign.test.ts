@@ -385,6 +385,12 @@ import {
   LISTING_PEOPLE_HELD,
   LISTING_PEOPLE_SPECTATOR,
   LISTING_PEOPLE_PLAQUE,
+  MARKET_PEOPLE_COPY,
+  WINK_MARKET_PEOPLE,
+  MARKET_PEOPLE_NEED,
+  MARKET_PEOPLE_HELD,
+  MARKET_PEOPLE_SPECTATOR,
+  MARKET_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -956,6 +962,7 @@ import {
   applyFreezePeople,
   applyRepairPeople,
   applyListingPeople,
+  applyMarketPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3820,6 +3827,50 @@ describe("Listing — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: FORGE_TRAY.x, y: FORGE_TRAY.y, locked: true });
     expect(applyListingPeople(gWorld, "g").players.get("g")?.heard).toBe(LISTING_PEOPLE_SPECTATOR);
     expect(gWorld.listingPeopleHeld).toBe(false);
+  });
+});
+
+describe("Market — people", () => {
+  it("names the market as people after listing; Clearing stays closed; guests cannot", () => {
+    const w = emptyWorld();
+    w.listingPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 50,
+      beats: { ...emptyBeats(), listingPeople: true, hall: true, market: true },
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    const named = applyMarket(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(MARKET_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_MARKET_PEOPLE);
+    expect(p.beats.marketPeople).toBe(true);
+    expect(p.bestand).toBe(50);
+    expect(named.marketPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "market-people")?.name).toBe("Market — people");
+    expect(named.signs.find((s) => s.id === "market-people")?.title).toBe(MARKET_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Clearing stays closed");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyMarketPeople(named, "a").players.get("a")?.heard).toBe(MARKET_PEOPLE_HELD);
+
+    const bought = applyMarket(named, "a");
+    expect(bought.players.get("a")?.bestand).toBe(50 - CLEARING_PRICE);
+    expect(bought.clearingOpen).toBe(false);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLEARING_STALL.x, y: CLEARING_STALL.y });
+    expect(applyMarketPeople(early, "a").players.get("a")?.heard).toBe(MARKET_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.listingPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
+    expect(applyMarketPeople(gWorld, "g").players.get("g")?.heard).toBe(MARKET_PEOPLE_SPECTATOR);
+    expect(gWorld.marketPeopleHeld).toBe(false);
   });
 });
 

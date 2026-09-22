@@ -1038,6 +1038,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Safety Annex. The desk will not take a name that has not read the hall.";
     } else if (stall && (me.guest || me.locked)) {
       this.prompt = "A stall of lights. You cannot afford a sky you cannot see.";
+    } else if (stall && (me.beats.marketPeople || snap.marketPeopleHeld)) {
+      this.prompt = me.heard || "Market — people. Forty Bestand. The Clearing stays closed. Not a stick.";
+    } else if (stall && snap.listingPeopleHeld && !me.guest) {
+      this.prompt = "F — the market as a house of people. Forty Bestand. The Clearing stays closed. Not a fetch.";
     } else if (stall && (me.beats.repairPeople || snap.repairPeopleHeld)) {
       this.prompt = me.heard || "Repair — people. Seven Bestand. Cult does not crack. Not a stick.";
     } else if (stall && snap.freezePeopleHeld && !me.guest) {
