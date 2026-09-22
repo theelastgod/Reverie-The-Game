@@ -66,6 +66,7 @@ export type Snap = {
   arenaHeld?: boolean;
   screeningHeld?: boolean;
   participantHeld?: boolean;
+  founderHeld?: boolean;
   blitzMarks?: { id: string; x: number; y: number; fromName: string }[];
   cyberHeld?: boolean;
   glamourHeld?: boolean;

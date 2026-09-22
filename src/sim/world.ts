@@ -493,6 +493,13 @@ import {
   PARTICIPANT_SPECTATOR,
   PARTICIPANT_PLAQUE,
   participantPoi,
+  FOUNDER_COPY,
+  WINK_FOUNDER,
+  FOUNDER_NEED,
+  FOUNDER_HELD,
+  FOUNDER_SPECTATOR,
+  FOUNDER_PLAQUE,
+  founderPoi,
   screeningPoi,
   CYBER_COPY,
   WINK_CYBER,
@@ -673,6 +680,7 @@ export type WorldState = {
   arenaHeld: boolean;
   screeningHeld: boolean;
   participantHeld: boolean;
+  founderHeld: boolean;
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
   glamourHeld: boolean;
@@ -875,6 +883,7 @@ export function emptyWorld(): WorldState {
     arenaHeld: false,
     screeningHeld: false,
     participantHeld: false,
+    founderHeld: false,
     blitzMarks: [],
     cyberHeld: false,
     glamourHeld: false,
@@ -2996,6 +3005,7 @@ export function snapshot(w: WorldState) {
     arenaHeld: w.arenaHeld,
     screeningHeld: w.screeningHeld,
     participantHeld: w.participantHeld,
+    founderHeld: w.founderHeld,
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,
@@ -3258,6 +3268,11 @@ export function applyScreening(w: WorldState, playerId: string): WorldState {
   }
   if (w.screeningHeld && p.beats.screening) {
     if (p.beats.under && !p.beats.participant) return applyParticipant(w, playerId);
+    if (p.beats.participant && !p.beats.founder) return applyFounder(w, playerId);
+    if (w.founderHeld && p.beats.founder) {
+      players.set(playerId, { ...p, heard: FOUNDER_HELD, wink: visibleWink(false, WINK_FOUNDER) });
+      return { ...w, players };
+    }
     players.set(playerId, { ...p, heard: SCREENING_HELD, wink: visibleWink(false, WINK_SCREENING) });
     return { ...w, players };
   }
@@ -3310,6 +3325,42 @@ export function applyParticipant(w: WorldState, playerId: string): WorldState {
     participantHeld: true,
     pois: w.pois.map((poi) => (poi.id === SCREENING.id ? participantPoi() : poi)),
     signs: w.signs.map((s) => (s.id === SCREENING.id ? { ...PARTICIPANT_PLAQUE } : s)),
+  };
+}
+
+export function applyFounder(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SCREENING.x, SCREENING.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: FOUNDER_SPECTATOR, wink: visibleWink(true, WINK_FOUNDER) });
+    return { ...w, players };
+  }
+  if (!w.participantHeld || !p.beats.participant) {
+    players.set(playerId, { ...p, heard: FOUNDER_NEED });
+    return { ...w, players };
+  }
+  if (!w.creditsHeld && !w.appearWorld && !p.beats.credits) {
+    players.set(playerId, { ...p, heard: FOUNDER_NEED, wink: visibleWink(false, WINK_PARTICIPANT) });
+    return { ...w, players };
+  }
+  if (w.founderHeld && p.beats.founder) {
+    players.set(playerId, { ...p, heard: FOUNDER_HELD, wink: visibleWink(false, WINK_FOUNDER) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, founder: true },
+    filmRoom: "founder",
+    heard: FOUNDER_COPY,
+    wink: visibleWink(false, WINK_FOUNDER),
+  });
+  return {
+    ...w,
+    players,
+    founderHeld: true,
+    pois: w.pois.map((poi) => (poi.id === SCREENING.id ? founderPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === SCREENING.id ? { ...FOUNDER_PLAQUE } : s)),
   };
 }
 

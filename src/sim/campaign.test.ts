@@ -22,6 +22,12 @@ import {
   PARTICIPANT_HELD,
   PARTICIPANT_SPECTATOR,
   PARTICIPANT_PLAQUE,
+  FOUNDER_COPY,
+  WINK_FOUNDER,
+  FOUNDER_NEED,
+  FOUNDER_HELD,
+  FOUNDER_SPECTATOR,
+  FOUNDER_PLAQUE,
   CLERK_HP,
   GOING_UNDER,
   FREEZE_COPY,
@@ -485,6 +491,7 @@ import {
   applyArena,
   applyScreening,
   applyParticipant,
+  applyFounder,
   applyCyber,
   applyGlamour,
   applyDwell,
@@ -2691,6 +2698,64 @@ describe("Public screening", () => {
     });
     expect(applyParticipant(gWorld, "g").players.get("g")?.heard).toBe(PARTICIPANT_SPECTATOR);
     expect(gWorld.participantHeld).toBe(false);
+  });
+
+  it("credits plus Participant enter Founder room; guests cannot; combat is not", () => {
+    const w = emptyWorld();
+    w.screeningHeld = true;
+    w.participantHeld = true;
+    w.creditsHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), screening: true, under: true, participant: true, credits: true },
+      filmRoom: "participant",
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    const room = applyScreening(w, "a");
+    const p = room.players.get("a")!;
+    expect(p.heard).toBe(FOUNDER_COPY);
+    expect(p.wink).toBe(WINK_FOUNDER);
+    expect(p.beats.founder).toBe(true);
+    expect(p.filmRoom).toBe("founder");
+    expect(room.founderHeld).toBe(true);
+    expect(room.pois.find((poi) => poi.id === SCREENING.id)?.kind).toBe("screening-founder");
+    expect(room.signs.find((s) => s.id === SCREENING.id)?.title).toBe(FOUNDER_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFounder(room, "a").players.get("a")?.heard).toBe(FOUNDER_HELD);
+    expect(applyScreening(room, "a").players.get("a")?.heard).toBe(FOUNDER_HELD);
+
+    const early = emptyWorld();
+    early.screeningHeld = true;
+    early.participantHeld = true;
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), screening: true, under: true, participant: true },
+      filmRoom: "participant",
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    expect(applyFounder(early, "a").players.get("a")?.heard).toBe(FOUNDER_NEED);
+    expect(applyFounder(early, "a").founderHeld).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.screeningHeld = true;
+    gWorld.participantHeld = true;
+    gWorld.creditsHeld = true;
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: SCREENING.x,
+      y: SCREENING.y,
+      locked: true,
+      beats: { ...emptyBeats(), screening: true, under: true, participant: true, credits: true },
+    });
+    expect(applyFounder(gWorld, "g").players.get("g")?.heard).toBe(FOUNDER_SPECTATOR);
+    expect(gWorld.founderHeld).toBe(false);
   });
 });
 

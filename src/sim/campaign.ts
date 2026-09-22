@@ -101,6 +101,7 @@ export type Beats = {
   arena: boolean;
   screening: boolean;
   participant: boolean;
+  founder: boolean;
 };
 
 export type WeatherHeard = {
@@ -192,7 +193,8 @@ export type Poi = {
     | "party-blind"
     | "guest-arena"
     | "screening"
-    | "screening-participant";
+    | "screening-participant"
+    | "screening-founder";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -306,6 +308,31 @@ export function participantPoi(): Poi {
     x: SCREENING.x,
     y: SCREENING.y,
     kind: "screening-participant",
+  };
+}
+
+export const FOUNDER_COPY =
+  "Founder room. Clearing watches. Passing rites. Credits. The Last God is a room you keep. Combat is not. This was not a fetch.";
+export const WINK_FOUNDER = "Founder proximity. A watch, not a stick. The token does not strike.";
+export const FOUNDER_NEED = "Credits first. Participant is not Founder. Clearing watches wait on the hour.";
+export const FOUNDER_HELD = "The Founder room already holds. The MMO is the rest of life.";
+export const FOUNDER_SPECTATOR = "A last screen. You do not get this room.";
+
+export const FOUNDER_PLAQUE: Sign = {
+  id: SCREENING.id,
+  title: "Founder room",
+  text: "Clearing watches. Passing rites. Credits. Proximity, not a stick. The number does not strike.",
+  x: SCREENING.x,
+  y: SCREENING.y,
+};
+
+export function founderPoi(): Poi {
+  return {
+    id: SCREENING.id,
+    name: "Founder room",
+    x: SCREENING.x,
+    y: SCREENING.y,
+    kind: "screening-founder",
   };
 }
 export const TEST_SERIAL = 7777;
@@ -1458,6 +1485,7 @@ export function emptyBeats(): Beats {
     arena: false,
     screening: false,
     participant: false,
+    founder: false,
   };
 }
 

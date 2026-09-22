@@ -499,6 +499,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7eb6ff
                       : poi.kind === "screening-participant"
                         ? 0xc9a56a
+                      : poi.kind === "screening-founder"
+                        ? 0xc9a56a
                       : poi.kind === "ord-gone"
                         ? 0x7a1028
                       : poi.kind === "quill-gone"
@@ -709,6 +711,10 @@ export class NaveScene extends Phaser.Scene {
 
     if (screening && (me.guest || me.locked)) {
       this.prompt = "A screen. You do not get the dispatch.";
+    } else if (screening && (me.beats.founder || snap.founderHeld)) {
+      this.prompt = me.heard || "Founder room. Clearing watches. Passing rites. Credits. Not a stick.";
+    } else if (screening && (me.beats.participant || snap.participantHeld) && (snap.creditsHeld || me.beats.credits || snap.appearWorld)) {
+      this.prompt = "F — Founder room. Credits named the hour. Clearing watches. Not a stick.";
     } else if (screening && (me.beats.participant || snap.participantHeld)) {
       this.prompt = me.heard || "Participant room. You went under. A room, not a stick.";
     } else if (screening && (snap.screeningHeld || me.beats.screening) && me.beats.under) {
@@ -1063,7 +1069,7 @@ export class NaveScene extends Phaser.Scene {
         ? me.locked
           ? `Guest · locked · aura 0`
           : `Guest · aura 0 · hp ${me.hp}`
-        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.storm ? " · storm" : ""}${me.surface ? " · surface" : ""}${me.beats.dwell ? " · seed" : ""}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
+        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.filmRoom ? ` · ${me.filmRoom}` : ""}${me.storm ? " · storm" : ""}${me.surface ? " · surface" : ""}${me.beats.dwell ? " · seed" : ""}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
     }
     const stats = hud("stat-chip");
     if (stats) {
