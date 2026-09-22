@@ -302,6 +302,13 @@ import {
   UNDER_PEOPLE_HELD,
   UNDER_PEOPLE_SPECTATOR,
   UNDER_PEOPLE_PLAQUE,
+  GARDEN_PEOPLE_COPY,
+  WINK_GARDEN_PEOPLE,
+  GARDEN_PEOPLE_NEED,
+  GARDEN_PEOPLE_HELD,
+  GARDEN_PEOPLE_SPECTATOR,
+  GARDEN_PEOPLE_PLAQUE,
+  gardenPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -997,6 +1004,7 @@ export type WorldState = {
   annexPeopleHeld: boolean;
   arenaPeopleHeld: boolean;
   underPeopleHeld: boolean;
+  gardenPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1260,6 +1268,7 @@ export function emptyWorld(): WorldState {
     annexPeopleHeld: false,
     arenaPeopleHeld: false,
     underPeopleHeld: false,
+    gardenPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2485,6 +2494,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   const garden = w.rites.find((r) => r.kind === "garden" && !r.done);
   if (garden && nearPoint(p.x, p.y, garden.x, garden.y, 56)) {
     if (p.guest) return w;
+    if (w.underPeopleHeld && !w.gardenPeopleHeld) return applyGardenPeople(w, playerId);
     const rites = w.rites.map((r) => (r.id === garden.id ? { ...r, done: true } : r));
     players.set(playerId, {
       ...p,
@@ -3430,6 +3440,37 @@ export function applyUnderPeople(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === "going-under" ? { ...UNDER_PEOPLE_PLAQUE } : s))
     : [...w.signs, { ...UNDER_PEOPLE_PLAQUE }];
   return { ...w, players, underPeopleHeld: true, pois, signs };
+}
+
+export function applyGardenPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, WRECK_GARDEN.x, WRECK_GARDEN.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: GARDEN_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_GARDEN_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.underPeopleHeld) {
+    players.set(playerId, { ...p, heard: GARDEN_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.gardenPeopleHeld && p.beats.gardenPeople) {
+    players.set(playerId, { ...p, heard: GARDEN_PEOPLE_HELD, wink: visibleWink(false, WINK_GARDEN_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, gardenPeople: true },
+    heard: GARDEN_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_GARDEN_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === WRECK_GARDEN.id)
+    ? w.pois.map((poi) => (poi.id === WRECK_GARDEN.id ? gardenPeoplePoi() : poi))
+    : [...w.pois, gardenPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === WRECK_GARDEN.id)
+    ? w.signs.map((s) => (s.id === WRECK_GARDEN.id ? { ...GARDEN_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...GARDEN_PEOPLE_PLAQUE }];
+  return { ...w, players, gardenPeopleHeld: true, pois, signs };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -4609,6 +4650,7 @@ export function snapshot(w: WorldState) {
     annexPeopleHeld: w.annexPeopleHeld,
     arenaPeopleHeld: w.arenaPeopleHeld,
     underPeopleHeld: w.underPeopleHeld,
+    gardenPeopleHeld: w.gardenPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

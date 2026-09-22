@@ -138,6 +138,7 @@ export type Beats = {
   annexPeople: boolean;
   arenaPeople: boolean;
   underPeople: boolean;
+  gardenPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -264,6 +265,7 @@ export type Poi = {
     | "annex-people"
     | "arena-people"
     | "under-people"
+    | "garden-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -870,6 +872,31 @@ export const VESPER: Npc = {
 };
 
 export const GARDEN_RITE: Rite = { id: WRECK_GARDEN.id, kind: "garden", x: WRECK_GARDEN.x, y: WRECK_GARDEN.y, done: false };
+
+export const GARDEN_PEOPLE_COPY =
+  "The wreckage garden is a house of people, not a hole of process. Bury still works. Combat is not. This was not a fetch.";
+export const WINK_GARDEN_PEOPLE = "People, not a garden stick. The token does not strike.";
+export const GARDEN_PEOPLE_NEED = "Going-under as people first. A garden of people is not a fetch.";
+export const GARDEN_PEOPLE_HELD = "The garden already holds as people. Bury still works.";
+export const GARDEN_PEOPLE_SPECTATOR = "A garden. You do not get a house of people.";
+
+export const GARDEN_PEOPLE_PLAQUE: Sign = {
+  id: WRECK_GARDEN.id,
+  title: "Garden — people",
+  text: "A house of people. Bury still works. The number does not strike.",
+  x: WRECK_GARDEN.x,
+  y: WRECK_GARDEN.y,
+};
+
+export function gardenPeoplePoi(): Poi {
+  return {
+    id: WRECK_GARDEN.id,
+    name: "Garden — people",
+    x: WRECK_GARDEN.x,
+    y: WRECK_GARDEN.y,
+    kind: "garden-people",
+  };
+}
 
 export const NARA_SILENCE =
   "Nara Vale looks at the garden that used to be a hole. She will not speak until it is in the ground.";
@@ -2351,6 +2378,7 @@ export function emptyBeats(): Beats {
     annexPeople: false,
     arenaPeople: false,
     underPeople: false,
+    gardenPeople: false,
   };
 }
 

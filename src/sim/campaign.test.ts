@@ -235,6 +235,12 @@ import {
   UNDER_PEOPLE_HELD,
   UNDER_PEOPLE_SPECTATOR,
   UNDER_PEOPLE_PLAQUE,
+  GARDEN_PEOPLE_COPY,
+  WINK_GARDEN_PEOPLE,
+  GARDEN_PEOPLE_NEED,
+  GARDEN_PEOPLE_HELD,
+  GARDEN_PEOPLE_SPECTATOR,
+  GARDEN_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -777,6 +783,7 @@ import {
   applyAnnexPeople,
   applyArenaPeople,
   applyUnderPeople,
+  applyGardenPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2575,6 +2582,44 @@ describe("Going-under — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: GOING_UNDER.x, y: GOING_UNDER.y, locked: true });
     expect(applyUnderPeople(gWorld, "g").players.get("g")?.heard).toBe(UNDER_PEOPLE_SPECTATOR);
     expect(gWorld.underPeopleHeld).toBe(false);
+  });
+});
+
+describe("Garden — people", () => {
+  it("names the wreckage garden as people after going-under; bury still works; guests cannot", () => {
+    const w = emptyWorld();
+    w.underPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), underPeople: true },
+      x: WRECK_GARDEN.x,
+      y: WRECK_GARDEN.y,
+    });
+    const named = applyGardenPeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(GARDEN_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_GARDEN_PEOPLE);
+    expect(p.beats.gardenPeople).toBe(true);
+    expect(named.gardenPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === WRECK_GARDEN.id)?.kind).toBe("garden-people");
+    expect(named.signs.find((s) => s.id === WRECK_GARDEN.id)?.title).toBe(GARDEN_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Bury still works");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyGardenPeople(named, "a").players.get("a")?.heard).toBe(GARDEN_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WRECK_GARDEN.x, y: WRECK_GARDEN.y });
+    expect(applyGardenPeople(early, "a").players.get("a")?.heard).toBe(GARDEN_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.underPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WRECK_GARDEN.x, y: WRECK_GARDEN.y, locked: true });
+    expect(applyGardenPeople(gWorld, "g").players.get("g")?.heard).toBe(GARDEN_PEOPLE_SPECTATOR);
+    expect(gWorld.gardenPeopleHeld).toBe(false);
   });
 });
 

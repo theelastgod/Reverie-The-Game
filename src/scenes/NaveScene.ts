@@ -575,6 +575,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "under-people"
                         ? 0xc9a56a
+                      : poi.kind === "garden-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1075,6 +1077,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.inM3 ? me.heard || "The Third Movement is organs, not nations." : "F — enter Movement III. Strait / Foundry / Cable.";
     } else if (m3) {
       this.prompt = "Movement III is shut. The private yield funds this door the Cold way.";
+    } else if (gardenNear && (me.beats.gardenPeople || snap.gardenPeopleHeld)) {
+      this.prompt = me.heard || "Garden — people. Bury still works. Not a stick.";
+    } else if (gardenNear && snap.underPeopleHeld && !me.guest) {
+      this.prompt = "F — the wreckage garden as a house of people. Bury still works. Not a fetch.";
     } else if (gardenNear && !gardenNear.done && !me.guest) {
       this.prompt = "F bury the Clearing that Movement I over-extracted. Nara Vale will not speak until you do.";
     } else if (npcNear?.id === "nara" && (me.beats.naraPerson || snap.naraPersonHeld)) {
