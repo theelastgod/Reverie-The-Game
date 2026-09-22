@@ -261,6 +261,14 @@ import {
   CABLE_PEOPLE_SPECTATOR,
   CABLE_PEOPLE_PLAQUE,
   cablePeoplePoi,
+  organsPeopleReady,
+  ORGANS_PEOPLE_COPY,
+  WINK_ORGANS_PEOPLE,
+  ORGANS_PEOPLE_NEED,
+  ORGANS_PEOPLE_HELD,
+  ORGANS_PEOPLE_SPECTATOR,
+  ORGANS_PEOPLE_PLAQUE,
+  organsPeoplePoi,
   straitPeoplePoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
@@ -940,6 +948,7 @@ export type WorldState = {
   foundryPeopleHeld: boolean;
   straitPeopleHeld: boolean;
   cablePeopleHeld: boolean;
+  organsPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1196,6 +1205,7 @@ export function emptyWorld(): WorldState {
     foundryPeopleHeld: false,
     straitPeopleHeld: false,
     cablePeopleHeld: false,
+    organsPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2293,9 +2303,11 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   const sign = w.signs.find((s) => s.id === signId);
   if (!p || p.hp <= 0 || !sign || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
   if (sign.id === CARE_DOOR.id) return applyCare(w, playerId);
+  if (sign.id === "organs-people") return applyOrgansPeople(w, playerId);
   if (sign.id === HOUSE_HALL.id) {
     if (!p.inCare || p.guest || p.locked) return w;
     if (p.beats.hall && w.deskPeopleHeld && !w.hallPeopleHeld) return applyHallPeople(w, playerId);
+    if (p.beats.hall && organsPeopleReady(w) && !w.organsPeopleHeld) return applyOrgansPeople(w, playerId);
     if (p.beats.hall && fourfoldReady(w.standing) && !w.fourfoldHeld) return applyFourfold(w, playerId);
     if (p.beats.hall && w.fourfoldHeld) return applyFourfold(w, playerId);
     if (p.beats.hall && w.war.winner && w.war.tithePaid && !w.bountyHeld) return applyBounty(w, playerId);
@@ -3128,6 +3140,38 @@ export function applyCablePeople(w: WorldState, playerId: string): WorldState {
       w.signs.some((s) => s.id === ORGAN_CABLE.id) ? [] : [{ ...CABLE_PEOPLE_PLAQUE }],
     ),
   };
+}
+
+export function applyOrgansPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: ORGANS_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_ORGANS_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!organsPeopleReady(w)) {
+    players.set(playerId, { ...p, heard: ORGANS_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.organsPeopleHeld && p.beats.organsPeople) {
+    players.set(playerId, { ...p, heard: ORGANS_PEOPLE_HELD, wink: visibleWink(false, WINK_ORGANS_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, organsPeople: true, hall: true },
+    heard: ORGANS_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_ORGANS_PEOPLE),
+    inCare: true,
+  });
+  const pois = w.pois.some((poi) => poi.id === "organs-people")
+    ? w.pois.map((poi) => (poi.id === "organs-people" ? organsPeoplePoi() : poi))
+    : [...w.pois, organsPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "organs-people")
+    ? w.signs.map((s) => (s.id === "organs-people" ? { ...ORGANS_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...ORGANS_PEOPLE_PLAQUE }];
+  return { ...w, players, organsPeopleHeld: true, pois, signs };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -4299,6 +4343,7 @@ export function snapshot(w: WorldState) {
     foundryPeopleHeld: w.foundryPeopleHeld,
     straitPeopleHeld: w.straitPeopleHeld,
     cablePeopleHeld: w.cablePeopleHeld,
+    organsPeopleHeld: w.organsPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

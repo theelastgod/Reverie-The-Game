@@ -192,6 +192,13 @@ import {
   CABLE_PEOPLE_HELD,
   CABLE_PEOPLE_SPECTATOR,
   CABLE_PEOPLE_PLAQUE,
+  organsPeopleReady,
+  ORGANS_PEOPLE_COPY,
+  WINK_ORGANS_PEOPLE,
+  ORGANS_PEOPLE_NEED,
+  ORGANS_PEOPLE_HELD,
+  ORGANS_PEOPLE_SPECTATOR,
+  ORGANS_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -727,6 +734,7 @@ import {
   applyFoundryPeople,
   applyStraitPeople,
   applyCablePeople,
+  applyOrgansPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2246,6 +2254,56 @@ describe("The Cable — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_CABLE.x, y: ORGAN_CABLE.y, locked: true });
     expect(applyCablePeople(gWorld, "g").players.get("g")?.heard).toBe(CABLE_PEOPLE_SPECTATOR);
     expect(gWorld.cablePeopleHeld).toBe(false);
+  });
+});
+
+describe("The organs — people", () => {
+  it("gathers Foundry, Strait, and Cable as people in the hall; tithe still costs; guests cannot", () => {
+    expect(
+      organsPeopleReady({ foundryPeopleHeld: true, straitPeopleHeld: true, cablePeopleHeld: true }),
+    ).toBe(true);
+    expect(
+      organsPeopleReady({ foundryPeopleHeld: true, straitPeopleHeld: true, cablePeopleHeld: false }),
+    ).toBe(false);
+    const w = emptyWorld();
+    w.foundryPeopleHeld = true;
+    w.straitPeopleHeld = true;
+    w.cablePeopleHeld = true;
+    w.signs = [...w.signs, { id: HOUSE_HALL.id, title: "House of Mortals", text: "Hall.", x: HOUSE_HALL.x, y: HOUSE_HALL.y }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      inCare: true,
+      beats: { ...emptyBeats(), hall: true },
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    const named = applyRead(w, "a", HOUSE_HALL.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(ORGANS_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_ORGANS_PEOPLE);
+    expect(p.beats.organsPeople).toBe(true);
+    expect(named.organsPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "organs-people")?.name).toBe("The organs — people");
+    expect(named.signs.find((s) => s.id === "organs-people")?.title).toBe(ORGANS_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Tithe still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyOrgansPeople(named, "a").players.get("a")?.heard).toBe(ORGANS_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: HOUSE_HALL.x, y: HOUSE_HALL.y });
+    expect(applyOrgansPeople(early, "a").players.get("a")?.heard).toBe(ORGANS_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.foundryPeopleHeld = true;
+    gWorld.straitPeopleHeld = true;
+    gWorld.cablePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
+    expect(applyOrgansPeople(gWorld, "g").players.get("g")?.heard).toBe(ORGANS_PEOPLE_SPECTATOR);
+    expect(gWorld.organsPeopleHeld).toBe(false);
   });
 });
 

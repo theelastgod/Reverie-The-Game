@@ -131,6 +131,7 @@ export type Beats = {
   foundryPeople: boolean;
   straitPeople: boolean;
   cablePeople: boolean;
+  organsPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -250,6 +251,7 @@ export type Poi = {
     | "foundry-people"
     | "strait-people"
     | "cable-people"
+    | "organs-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1861,6 +1863,39 @@ export function cablePeoplePoi(): Poi {
   };
 }
 
+export function organsPeopleReady(w: {
+  foundryPeopleHeld: boolean;
+  straitPeopleHeld: boolean;
+  cablePeopleHeld: boolean;
+}): boolean {
+  return w.foundryPeopleHeld && w.straitPeopleHeld && w.cablePeopleHeld;
+}
+
+export const ORGANS_PEOPLE_COPY =
+  "Foundry, Strait, Cable hold as people. The organs are not process. Tithe still costs. Combat is not. This was not a fetch.";
+export const WINK_ORGANS_PEOPLE = "Three organs. People, not a map. The token does not strike.";
+export const ORGANS_PEOPLE_NEED = "Name Foundry, Strait, and Cable as people first. A gathering is not a fetch.";
+export const ORGANS_PEOPLE_HELD = "The organs already hold as people. Tithe still costs.";
+export const ORGANS_PEOPLE_SPECTATOR = "A hall. You do not get the organs as people.";
+
+export const ORGANS_PEOPLE_PLAQUE: Sign = {
+  id: "organs-people",
+  title: "The organs — people",
+  text: "Three organs hold. People, not process. Tithe still costs. The number does not strike.",
+  x: HOUSE_HALL.x,
+  y: HOUSE_HALL.y,
+};
+
+export function organsPeoplePoi(): Poi {
+  return {
+    id: "organs-people",
+    name: "The organs — people",
+    x: HOUSE_HALL.x,
+    y: HOUSE_HALL.y,
+    kind: "organs-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2147,6 +2182,7 @@ export function emptyBeats(): Beats {
     foundryPeople: false,
     straitPeople: false,
     cablePeople: false,
+    organsPeople: false,
   };
 }
 

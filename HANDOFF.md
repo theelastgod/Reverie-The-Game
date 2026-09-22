@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 111** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 112** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -470,7 +470,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the Strait as people, F at the Cable: a house of people, not a line of process. Plaque/POI The Cable — people. Quiet still works.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 111 (do this next)
+## Stage 111 (landed)
+- After Foundry, Strait, and Cable as people, F at the House hall gathers the organs. Plaque/POI The organs — people. Tithe still costs. Not a fetch.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 112 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed. Organs as people are in.
 
 ## Rules

@@ -563,6 +563,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "cable-people"
                         ? 0xc9a56a
+                      : poi.kind === "organs-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -876,7 +878,11 @@ export class NaveScene extends Phaser.Scene {
         snap.standing.mortals >= 1 &&
         snap.standing.divinities >= 1;
       this.prompt =
-        me.beats.hallPeople || snap.hallPeopleHeld
+        me.beats.organsPeople || snap.organsPeopleHeld
+          ? me.heard || "The organs — people. Tithe still costs. Not a stick."
+        : snap.foundryPeopleHeld && snap.straitPeopleHeld && snap.cablePeopleHeld && me.beats.hall
+          ? "F — gather the organs as people. Foundry, Strait, Cable. Not a fetch."
+        : me.beats.hallPeople || snap.hallPeopleHeld
           ? me.heard || "The hall — people. Tithe still costs. Bounty still costs."
         : snap.deskPeopleHeld && me.beats.hall
           ? "F — the hall as a house of people. Tithe still costs. Not a fetch."
