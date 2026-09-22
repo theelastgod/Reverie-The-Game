@@ -474,6 +474,10 @@ import {
   WINK_ORD_LEAVE,
   ORD_GONE_PLAQUE,
   ordGonePoi,
+  QUILL_LEAVE,
+  WINK_QUILL_LEAVE,
+  QUILL_GONE_PLAQUE,
+  quillGonePoi,
   BlitzMark,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
@@ -601,6 +605,7 @@ export type WorldState = {
   dwellHeld: boolean;
   naraGone: boolean;
   ordGone: boolean;
+  quillGone: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -790,6 +795,7 @@ export function emptyWorld(): WorldState {
     dwellHeld: false,
     naraGone: false,
     ordGone: false,
+    quillGone: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -1101,7 +1107,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -2595,7 +2601,22 @@ export function applyForge(
     heard: FORGE_SELL,
     wink: visibleWink(false, WINK_FORGE),
   });
-  return { ...w, players, forgedSold: true };
+  return withQuillLeave({ ...w, players, forgedSold: true }, playerId);
+}
+
+function withQuillLeave(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.guest || p.locked || w.quillGone || p.beats.hang || w.stallDark) return w;
+  const players = new Map(w.players);
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, quillGone: true },
+    heard: QUILL_LEAVE,
+    wink: visibleWink(false, WINK_QUILL_LEAVE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "quill-gone") ? w.pois : [...w.pois, quillGonePoi()];
+  const signs = w.signs.some((s) => s.id === "quill-gone") ? w.signs : [...w.signs, { ...QUILL_GONE_PLAQUE }];
+  return { ...w, players, quillGone: true, pois, signs };
 }
 
 export function applyYieldEmpty(w: WorldState, playerId: string): WorldState {
@@ -2736,7 +2757,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -2775,6 +2796,7 @@ export function snapshot(w: WorldState) {
     dwellHeld: w.dwellHeld,
     naraGone: w.naraGone,
     ordGone: w.ordGone,
+    quillGone: w.quillGone,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,

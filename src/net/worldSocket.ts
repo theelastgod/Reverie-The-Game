@@ -65,6 +65,7 @@ export type Snap = {
   dwellHeld?: boolean;
   naraGone?: boolean;
   ordGone?: boolean;
+  quillGone?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

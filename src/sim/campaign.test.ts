@@ -126,6 +126,9 @@ import {
   FORGE_LESSON,
   FORGE_NEED_MARKET,
   FORGE_SELL,
+  QUILL_LEAVE,
+  WINK_QUILL_LEAVE,
+  QUILL_GONE_PLAQUE,
   FORGE_SPOT,
   FORGE_SPECTATOR,
   WINK_FORGE,
@@ -1563,8 +1566,9 @@ describe("forged Winke", () => {
     expect(k.fakeWinke).toBe(1);
     expect(k.cultWink).toBe(false);
     expect(k.aura).toBe(auraSeed(TEST_SERIAL) - 3);
-    expect(k.heard).toBe(FORGE_SELL);
+    expect(k.heard).toBe(QUILL_LEAVE);
     expect(sold.forgedSold).toBe(true);
+    expect(sold.quillGone).toBe(true);
     expect(sold.clearingOpen).toBe(false);
     expect(guestCanClaim(k)).toBe(false);
   });
@@ -2548,6 +2552,53 @@ describe("Ord leaves the party", () => {
     const guest = applyUse(gWorld, "g", node.id, "extract");
     expect(guest.ordGone).toBe(false);
     expect(guest.gestell).toBe(100);
+  });
+});
+
+describe("Quill leaves the party", () => {
+  it("selling a copy without hanging the prayer walks her off; hang keeps her", () => {
+    const tray = emptyWorld();
+    tray.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), market: true, forge: true },
+      x: FORGE_TRAY.x,
+      y: FORGE_TRAY.y,
+    });
+    const left = applyForge(tray, "a", "sell");
+    const p = left.players.get("a")!;
+    expect(left.quillGone).toBe(true);
+    expect(p.beats.quillGone).toBe(true);
+    expect(p.heard).toBe(QUILL_LEAVE);
+    expect(p.wink).toBe(WINK_QUILL_LEAVE);
+    expect(left.pois.find((poi) => poi.kind === "quill-gone")?.id).toBe("quill-gone");
+    expect(left.signs.find((s) => s.id === "quill-gone")?.title).toBe(QUILL_GONE_PLAQUE.title);
+    expect(liveNpcs(false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true).some((n) => n.id === "quill")).toBe(false);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(snapshot(left).quillGone).toBe(true);
+
+    const hung = emptyWorld();
+    hung.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), market: true, forge: true, hang: true },
+      x: FORGE_TRAY.x,
+      y: FORGE_TRAY.y,
+    });
+    const stayed = applyForge(hung, "a", "sell");
+    expect(stayed.quillGone).toBe(false);
+    expect(stayed.players.get("a")?.heard).toBe(FORGE_SELL);
+    expect(liveNpcs(false).some((n) => n.id === "quill")).toBe(true);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: FORGE_TRAY.x, y: FORGE_TRAY.y, locked: true });
+    const guest = applyForge(gWorld, "g", "sell");
+    expect(guest.quillGone).toBe(false);
+    expect(guest.forgedSold).toBe(false);
   });
 });
 

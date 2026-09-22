@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 70** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 71** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -305,7 +305,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Ord leaves if extract maxes Gestell at 100 without a freeze. Plaque/POI Ord — gone. Schedule change. Not a fetch.
 - A freeze keeps him. Guests cannot walk him off. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 70 (do this next)
+## Stage 70 (landed)
+- Quill leaves if you sell a copy without hanging the prayer. Plaque/POI Quill — gone. Schedule change. Not a fetch.
+- Hang keeps her. Guests cannot walk her off. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 71 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

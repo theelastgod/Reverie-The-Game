@@ -92,6 +92,7 @@ export type Beats = {
   funeral: boolean;
   naraGone: boolean;
   ordGone: boolean;
+  quillGone: boolean;
 };
 
 export type WeatherHeard = {
@@ -172,7 +173,8 @@ export type Poi = {
     | "process-read"
     | "clearing-seed"
     | "nara-gone"
-    | "ord-gone";
+    | "ord-gone"
+    | "quill-gone";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1325,6 +1327,7 @@ export function emptyBeats(): Beats {
     funeral: false,
     naraGone: false,
     ordGone: false,
+    quillGone: false,
   };
 }
 
@@ -1692,6 +1695,24 @@ export function ordGonePoi(x = 400, y = 260): Poi {
   return { id: "ord-gone", name: "Ord — gone", x, y, kind: "ord-gone" };
 }
 
+export const QUILL_LEAVE =
+  "Quill left. You sold a face and never hung the prayer. Copies travel. She will not. This was not a fetch.";
+export const WINK_QUILL_LEAVE = "The stall walked. Aura listed. Combat is not.";
+export const QUILL_LEAVE_HELD = "Quill is gone. You kept the listing and lost the forger.";
+export const QUILL_LEAVE_SPECTATOR = "An empty stall. You do not know who left.";
+
+export const QUILL_GONE_PLAQUE: Sign = {
+  id: "quill-gone",
+  title: "Quill — gone",
+  text: "She will not list a city that will not hang a prayer. The number does not strike.",
+  x: 1080,
+  y: 504,
+};
+
+export function quillGonePoi(x = 1080, y = 504): Poi {
+  return { id: "quill-gone", name: "Quill — gone", x, y, kind: "quill-gone" };
+}
+
 export function auraSeed(serial: number): number {
   return 8 + (serial % 13);
 }
@@ -2036,6 +2057,7 @@ export function liveNpcs(
   vesperAtHijack = false,
   naraGone = false,
   ordGone = false,
+  quillGone = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -2116,5 +2138,6 @@ export function liveNpcs(
   }
   if (naraGone) base = base.filter((n) => n.id !== "nara");
   if (ordGone) base = base.filter((n) => n.id !== "ord");
+  if (quillGone) base = base.filter((n) => n.id !== "quill");
   return base;
 }
