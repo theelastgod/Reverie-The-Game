@@ -557,6 +557,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "stall-people"
                         ? 0xc9a56a
+                      : poi.kind === "foundry-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1087,6 +1089,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — Vesper will not sell the last god. The desk lists no absence. Not a fetch.";
     } else if (npcNear?.id === "vesper") {
       this.prompt = me.heard || "Vesper Hale walked. The furnace is off.";
+    } else if (foundry && (me.beats.foundryPeople || snap.foundryPeopleHeld) && !me.guest) {
+      this.prompt = me.heard || "The Foundry — people. Unlight still works. Not a stick.";
+    } else if (foundry && snap.stallPeopleHeld && !me.guest) {
+      this.prompt = "F — the Foundry as a house of people. Unlight still works. Not a fetch.";
     } else if (foundry && (snap.earthStanding || me.beats.earthStanding) && !me.guest) {
       this.prompt = me.heard || "House of Earth named the dark heat. Standing. Not a stick.";
     } else if (foundry && (snap.foundryDark || me.beats.foundryDark) && me.house === "earth" && !me.guest) {

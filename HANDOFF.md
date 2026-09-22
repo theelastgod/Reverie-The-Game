@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 108** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 109** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -458,7 +458,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After Wet Grid as people, F at Quill's stall: a house of people, not a listing process. Plaque/POI The stall — people. Listing still costs. Cult does not list.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 108 (do this next)
+## Stage 108 (landed)
+- After the stall as people, F at the Foundry: a house of people, not a furnace of process. Plaque/POI The Foundry — people. Unlight still works.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 109 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

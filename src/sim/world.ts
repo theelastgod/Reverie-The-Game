@@ -241,6 +241,13 @@ import {
   STALL_PEOPLE_SPECTATOR,
   STALL_PEOPLE_PLAQUE,
   stallPeoplePoi,
+  FOUNDRY_PEOPLE_COPY,
+  WINK_FOUNDRY_PEOPLE,
+  FOUNDRY_PEOPLE_NEED,
+  FOUNDRY_PEOPLE_HELD,
+  FOUNDRY_PEOPLE_SPECTATOR,
+  FOUNDRY_PEOPLE_PLAQUE,
+  foundryPeoplePoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -916,6 +923,7 @@ export type WorldState = {
   clearingPeopleHeld: boolean;
   wetPeopleHeld: boolean;
   stallPeopleHeld: boolean;
+  foundryPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1169,6 +1177,7 @@ export function emptyWorld(): WorldState {
     clearingPeopleHeld: false,
     wetPeopleHeld: false,
     stallPeopleHeld: false,
+    foundryPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2998,6 +3007,41 @@ export function applyStallPeople(w: WorldState, playerId: string): WorldState {
   };
 }
 
+export function applyFoundryPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, ORGAN_FOUNDRY.x, ORGAN_FOUNDRY.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: FOUNDRY_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_FOUNDRY_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.stallPeopleHeld) {
+    players.set(playerId, { ...p, heard: FOUNDRY_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.foundryPeopleHeld && p.beats.foundryPeople) {
+    players.set(playerId, { ...p, heard: FOUNDRY_PEOPLE_HELD, wink: visibleWink(false, WINK_FOUNDRY_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, foundryPeople: true, foundry: true },
+    heard: FOUNDRY_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_FOUNDRY_PEOPLE),
+  });
+  return {
+    ...w,
+    players,
+    foundryPeopleHeld: true,
+    pois: w.pois.map((poi) => (poi.id === ORGAN_FOUNDRY.id ? foundryPeoplePoi() : poi)).concat(
+      w.pois.some((poi) => poi.id === ORGAN_FOUNDRY.id) ? [] : [foundryPeoplePoi()],
+    ),
+    signs: w.signs.map((s) => (s.id === ORGAN_FOUNDRY.id ? { ...FOUNDRY_PEOPLE_PLAQUE } : s)).concat(
+      w.signs.some((s) => s.id === ORGAN_FOUNDRY.id) ? [] : [{ ...FOUNDRY_PEOPLE_PLAQUE }],
+    ),
+  };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -3345,6 +3389,7 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     if (w.foundryDark && !p.guest && !p.locked) return applyStraitRefuse(w, playerId);
   }
   if (sign.id === ORGAN_FOUNDRY.id) {
+    if (w.stallPeopleHeld && !w.foundryPeopleHeld) return applyFoundryPeople(w, playerId);
     if (w.foundryDark || p.beats.foundryDark) {
       if (!p.guest && !p.locked && p.house === "earth") return applyEarthStanding(w, playerId);
       players.set(playerId, { ...p, heard: FOUNDRY_DARK_LATER, wink: visibleWink(p.guest, WINK_FOUNDRY_DARK) });
@@ -4161,6 +4206,7 @@ export function snapshot(w: WorldState) {
     clearingPeopleHeld: w.clearingPeopleHeld,
     wetPeopleHeld: w.wetPeopleHeld,
     stallPeopleHeld: w.stallPeopleHeld,
+    foundryPeopleHeld: w.foundryPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -128,6 +128,7 @@ export type Beats = {
   clearingPeople: boolean;
   wetPeople: boolean;
   stallPeople: boolean;
+  foundryPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -244,6 +245,7 @@ export type Poi = {
     | "clearing-people"
     | "wet-people"
     | "stall-people"
+    | "foundry-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1780,6 +1782,31 @@ export function stallPeoplePoi(): Poi {
   };
 }
 
+export const FOUNDRY_PEOPLE_COPY =
+  "The Foundry is a house of people, not a furnace of process. Unlight still works. Combat is not. This was not a fetch.";
+export const WINK_FOUNDRY_PEOPLE = "People, not heat. The token does not strike.";
+export const FOUNDRY_PEOPLE_NEED = "The stall as people first. A foundry of people is not a fetch.";
+export const FOUNDRY_PEOPLE_HELD = "The Foundry already holds as people. Unlight still works.";
+export const FOUNDRY_PEOPLE_SPECTATOR = "Heat. You do not get a house of people.";
+
+export const FOUNDRY_PEOPLE_PLAQUE: Sign = {
+  id: ORGAN_FOUNDRY.id,
+  title: "The Foundry — people",
+  text: "A house of people. Unlight still works. The number does not strike.",
+  x: ORGAN_FOUNDRY.x,
+  y: ORGAN_FOUNDRY.y,
+};
+
+export function foundryPeoplePoi(): Poi {
+  return {
+    id: ORGAN_FOUNDRY.id,
+    name: "The Foundry — people",
+    x: ORGAN_FOUNDRY.x,
+    y: ORGAN_FOUNDRY.y,
+    kind: "foundry-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2063,6 +2090,7 @@ export function emptyBeats(): Beats {
     clearingPeople: false,
     wetPeople: false,
     stallPeople: false,
+    foundryPeople: false,
   };
 }
 

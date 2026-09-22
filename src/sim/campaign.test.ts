@@ -174,6 +174,12 @@ import {
   STALL_PEOPLE_HELD,
   STALL_PEOPLE_SPECTATOR,
   STALL_PEOPLE_PLAQUE,
+  FOUNDRY_PEOPLE_COPY,
+  WINK_FOUNDRY_PEOPLE,
+  FOUNDRY_PEOPLE_NEED,
+  FOUNDRY_PEOPLE_HELD,
+  FOUNDRY_PEOPLE_SPECTATOR,
+  FOUNDRY_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -706,6 +712,7 @@ import {
   applyClearingPeople,
   applyWetPeople,
   applyStallPeople,
+  applyFoundryPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2111,6 +2118,44 @@ describe("The stall — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
     expect(applyStallPeople(gWorld, "g").players.get("g")?.heard).toBe(STALL_PEOPLE_SPECTATOR);
     expect(gWorld.stallPeopleHeld).toBe(false);
+  });
+});
+
+describe("The Foundry — people", () => {
+  it("names the Foundry as people after the stall; unlight still works; guests cannot", () => {
+    const w = emptyWorld();
+    w.stallPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), stallPeople: true },
+      x: ORGAN_FOUNDRY.x,
+      y: ORGAN_FOUNDRY.y,
+    });
+    const named = applyFoundryPeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FOUNDRY_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FOUNDRY_PEOPLE);
+    expect(p.beats.foundryPeople).toBe(true);
+    expect(named.foundryPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === ORGAN_FOUNDRY.id)?.kind).toBe("foundry-people");
+    expect(named.signs.find((s) => s.id === ORGAN_FOUNDRY.id)?.title).toBe(FOUNDRY_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Unlight still works");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFoundryPeople(named, "a").players.get("a")?.heard).toBe(FOUNDRY_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y });
+    expect(applyFoundryPeople(early, "a").players.get("a")?.heard).toBe(FOUNDRY_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.stallPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y, locked: true });
+    expect(applyFoundryPeople(gWorld, "g").players.get("g")?.heard).toBe(FOUNDRY_PEOPLE_SPECTATOR);
+    expect(gWorld.foundryPeopleHeld).toBe(false);
   });
 });
 
