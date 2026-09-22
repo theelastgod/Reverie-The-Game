@@ -125,6 +125,7 @@ export type Beats = {
   safetyPeople: boolean;
   deskPeople: boolean;
   hallPeople: boolean;
+  clearingPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -238,6 +239,7 @@ export type Poi = {
     | "safety-people"
     | "desk-people"
     | "hall-people"
+    | "clearing-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1571,6 +1573,31 @@ export function hallPeoplePoi(): Poi {
   };
 }
 
+export const CLEARING_PEOPLE_COPY =
+  "The Clearing is a house of people, not a hole in process. Passing still happens. Combat is not. This was not a fetch.";
+export const WINK_CLEARING_PEOPLE = "People, not a weather stick. The token does not strike.";
+export const CLEARING_PEOPLE_NEED = "The hall as people first. A Clearing of people is not a fetch.";
+export const CLEARING_PEOPLE_HELD = "The Clearing already holds as people. Passing still happens.";
+export const CLEARING_PEOPLE_SPECTATOR = "A ring. You do not get a house of people.";
+
+export const CLEARING_PEOPLE_PLAQUE: Sign = {
+  id: "clearing-ring",
+  title: "The Clearing — people",
+  text: "A house of people. Passing still happens. The number does not strike.",
+  x: 720,
+  y: 580,
+};
+
+export function clearingPeoplePoi(): Poi {
+  return {
+    id: "clearing-ring",
+    name: "The Clearing — people",
+    x: 720,
+    y: 580,
+    kind: "clearing-people",
+  };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1979,6 +2006,7 @@ export function emptyBeats(): Beats {
     safetyPeople: false,
     deskPeople: false,
     hallPeople: false,
+    clearingPeople: false,
   };
 }
 

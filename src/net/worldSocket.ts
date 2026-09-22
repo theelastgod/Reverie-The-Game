@@ -94,6 +94,7 @@ export type Snap = {
   safetyPeopleHeld?: boolean;
   deskPeopleHeld?: boolean;
   hallPeopleHeld?: boolean;
+  clearingPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

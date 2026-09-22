@@ -156,6 +156,12 @@ import {
   HALL_PEOPLE_HELD,
   HALL_PEOPLE_SPECTATOR,
   HALL_PEOPLE_PLAQUE,
+  CLEARING_PEOPLE_COPY,
+  WINK_CLEARING_PEOPLE,
+  CLEARING_PEOPLE_NEED,
+  CLEARING_PEOPLE_HELD,
+  CLEARING_PEOPLE_SPECTATOR,
+  CLEARING_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -685,6 +691,7 @@ import {
   applySafetyPeople,
   applyDeskPeople,
   applyHallPeople,
+  applyClearingPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1977,6 +1984,44 @@ describe("The hall — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
     expect(applyHallPeople(gWorld, "g").players.get("g")?.heard).toBe(HALL_PEOPLE_SPECTATOR);
     expect(gWorld.hallPeopleHeld).toBe(false);
+  });
+});
+
+describe("The Clearing — people", () => {
+  it("names the Clearing as a house of people after the hall; guests cannot", () => {
+    const w = emptyWorld();
+    w.hallPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), hallPeople: true, garden: true, lastWord: true },
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+    });
+    const named = applyClearing(w, "a", "keep");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CLEARING_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CLEARING_PEOPLE);
+    expect(p.beats.clearingPeople).toBe(true);
+    expect(named.clearingPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === CLEARING_RING.id)?.kind).toBe("clearing-people");
+    expect(named.signs.find((s) => s.id === CLEARING_RING.id)?.title).toBe(CLEARING_PEOPLE_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyClearingPeople(named, "a").players.get("a")?.heard).toBe(CLEARING_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLEARING_RING.x, y: CLEARING_RING.y });
+    expect(applyClearingPeople(early, "a").players.get("a")?.heard).toBe(CLEARING_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.hallPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y, locked: true });
+    expect(applyClearing(gWorld, "g", "keep").players.get("g")?.heard).toBe(CLEARING_SPECTATOR);
+    expect(applyClearingPeople(gWorld, "g").players.get("g")?.heard).toBe(CLEARING_PEOPLE_SPECTATOR);
+    expect(gWorld.clearingPeopleHeld).toBe(false);
   });
 });
 
