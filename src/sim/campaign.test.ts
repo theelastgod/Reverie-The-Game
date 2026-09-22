@@ -434,6 +434,20 @@ import {
   LASTWORD_PEOPLE_HELD,
   LASTWORD_PEOPLE_SPECTATOR,
   LASTWORD_PEOPLE_PLAQUE,
+  DUEL_PEOPLE_COPY,
+  WINK_DUEL_PEOPLE,
+  DUEL_PEOPLE_NEED,
+  DUEL_PEOPLE_GRAVE,
+  DUEL_PEOPLE_HELD,
+  DUEL_PEOPLE_SPECTATOR,
+  DUEL_PEOPLE_PLAQUE,
+  CAMP_PEOPLE_COPY,
+  WINK_CAMP_PEOPLE,
+  CAMP_PEOPLE_NEED,
+  CAMP_PEOPLE_GRAVE,
+  CAMP_PEOPLE_HELD,
+  CAMP_PEOPLE_SPECTATOR,
+  CAMP_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1013,6 +1027,8 @@ import {
   applyHitStopPeople,
   applySpectatePeople,
   applyLastWordPeople,
+  applyDuelPeople,
+  applyCampPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4209,6 +4225,100 @@ describe("Last word — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: IONE.x, y: IONE.y, locked: true });
     expect(applyLastWordPeople(gWorld, "g").players.get("g")?.heard).toBe(LASTWORD_PEOPLE_SPECTATOR);
     expect(gWorld.lastWordPeopleHeld).toBe(false);
+  });
+});
+
+describe("Duel — people", () => {
+  it("names the ruin duel as people after last-word; grave still the ring; guests cannot", () => {
+    const w = emptyWorld();
+    w.lastWordPeopleHeld = true;
+    w.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), lastWordPeople: true },
+      x: 200,
+      y: 480,
+    });
+    const named = applyBury(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(DUEL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_DUEL_PEOPLE);
+    expect(p.beats.duelPeople).toBe(true);
+    expect(named.wreckage).toHaveLength(1);
+    expect(named.duelPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "duel-people")?.name).toBe("Duel — people");
+    expect(named.signs.find((s) => s.id === "duel-people")?.title).toBe(DUEL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("grave is still the ring");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyDuelPeople(named, "a").players.get("a")?.heard).toBe(DUEL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    expect(applyDuelPeople(early, "a").players.get("a")?.heard).toBe(DUEL_PEOPLE_NEED);
+
+    const nograve = emptyWorld();
+    nograve.lastWordPeopleHeld = true;
+    nograve.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    expect(applyDuelPeople(nograve, "a").players.get("a")?.heard).toBe(DUEL_PEOPLE_GRAVE);
+
+    const gWorld = emptyWorld();
+    gWorld.lastWordPeopleHeld = true;
+    gWorld.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
+    expect(applyDuelPeople(gWorld, "g").players.get("g")?.heard).toBe(DUEL_PEOPLE_SPECTATOR);
+    expect(gWorld.duelPeopleHeld).toBe(false);
+  });
+});
+
+describe("Camp — people", () => {
+  it("names camping as people after the duel; Gestell still rises; guests cannot", () => {
+    const w = emptyWorld();
+    w.duelPeopleHeld = true;
+    w.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), duelPeople: true },
+      x: 200,
+      y: 480,
+    });
+    const named = applyBury(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CAMP_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CAMP_PEOPLE);
+    expect(p.beats.campPeople).toBe(true);
+    expect(named.wreckage).toHaveLength(1);
+    expect(named.campPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "camp-people")?.name).toBe("Camp — people");
+    expect(named.signs.find((s) => s.id === "camp-people")?.title).toBe(CAMP_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Gestell still rises");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCampPeople(named, "a").players.get("a")?.heard).toBe(CAMP_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    expect(applyCampPeople(early, "a").players.get("a")?.heard).toBe(CAMP_PEOPLE_NEED);
+
+    const nograve = emptyWorld();
+    nograve.duelPeopleHeld = true;
+    nograve.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    expect(applyCampPeople(nograve, "a").players.get("a")?.heard).toBe(CAMP_PEOPLE_GRAVE);
+
+    const gWorld = emptyWorld();
+    gWorld.duelPeopleHeld = true;
+    gWorld.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
+    expect(applyCampPeople(gWorld, "g").players.get("g")?.heard).toBe(CAMP_PEOPLE_SPECTATOR);
+    expect(gWorld.campPeopleHeld).toBe(false);
   });
 });
 

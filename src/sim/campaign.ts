@@ -171,6 +171,8 @@ export type Beats = {
   hitStopPeople: boolean;
   spectatePeople: boolean;
   lastWordPeople: boolean;
+  duelPeople: boolean;
+  campPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -330,6 +332,8 @@ export type Poi = {
     | "hitstop-people"
     | "spectate-people"
     | "lastword-people"
+    | "duel-people"
+    | "camp-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2654,6 +2658,58 @@ export function lastWordPeoplePoi(): Poi {
     kind: "lastword-people",
   };
 }
+
+export const DUEL_PEOPLE_COPY =
+  "The ruin duel is a house of people, not a kit of process. The grave is still the ring. The kit still does not strike harder. Combat is not. This was not a fetch.";
+export const WINK_DUEL_PEOPLE = "People, not a duel stick. The token does not strike.";
+export const DUEL_PEOPLE_NEED = "Last-word as people first. A duel of people is not a fetch.";
+export const DUEL_PEOPLE_GRAVE = "Stand with a wreckage. A duel of people is not a fetch.";
+export const DUEL_PEOPLE_HELD = "The ruin duel already holds as people. The grave is still the ring.";
+export const DUEL_PEOPLE_SPECTATOR = "A grave. You do not get a house of people.";
+
+export const DUEL_PEOPLE_PLAQUE: Sign = {
+  id: "duel-people",
+  title: "Duel — people",
+  text: "A house of people. The grave is still the ring. The kit still does not strike harder. The number does not strike.",
+  x: 200,
+  y: 480,
+};
+
+export function duelPeoplePoi(x = 200, y = 480): Poi {
+  return {
+    id: "duel-people",
+    name: "Duel — people",
+    x,
+    y,
+    kind: "duel-people",
+  };
+}
+
+export const CAMP_PEOPLE_COPY =
+  "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
+export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
+export const CAMP_PEOPLE_NEED = "The ruin duel as people first. A camp of people is not a fetch.";
+export const CAMP_PEOPLE_GRAVE = "Stand with a wreckage. A camp of people is not a fetch.";
+export const CAMP_PEOPLE_HELD = "Camping already holds as people. Gestell still rises. Aura still thins.";
+export const CAMP_PEOPLE_SPECTATOR = "A grave. You do not get a house of people.";
+
+export const CAMP_PEOPLE_PLAQUE: Sign = {
+  id: "camp-people",
+  title: "Camp — people",
+  text: "A house of people. Gestell still rises. Aura still thins. The number does not strike.",
+  x: 200,
+  y: 480,
+};
+
+export function campPeoplePoi(x = 200, y = 480): Poi {
+  return {
+    id: "camp-people",
+    name: "Camp — people",
+    x,
+    y,
+    kind: "camp-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3287,6 +3343,8 @@ export function emptyBeats(): Beats {
     hitStopPeople: false,
     spectatePeople: false,
     lastWordPeople: false,
+    duelPeople: false,
+    campPeople: false,
   };
 }
 

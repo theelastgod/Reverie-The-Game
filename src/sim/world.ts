@@ -538,6 +538,22 @@ import {
   LASTWORD_PEOPLE_SPECTATOR,
   LASTWORD_PEOPLE_PLAQUE,
   lastWordPeoplePoi,
+  DUEL_PEOPLE_COPY,
+  WINK_DUEL_PEOPLE,
+  DUEL_PEOPLE_NEED,
+  DUEL_PEOPLE_GRAVE,
+  DUEL_PEOPLE_HELD,
+  DUEL_PEOPLE_SPECTATOR,
+  DUEL_PEOPLE_PLAQUE,
+  duelPeoplePoi,
+  CAMP_PEOPLE_COPY,
+  WINK_CAMP_PEOPLE,
+  CAMP_PEOPLE_NEED,
+  CAMP_PEOPLE_GRAVE,
+  CAMP_PEOPLE_HELD,
+  CAMP_PEOPLE_SPECTATOR,
+  CAMP_PEOPLE_PLAQUE,
+  campPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1266,6 +1282,8 @@ export type WorldState = {
   hitStopPeopleHeld: boolean;
   spectatePeopleHeld: boolean;
   lastWordPeopleHeld: boolean;
+  duelPeopleHeld: boolean;
+  campPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1562,6 +1580,8 @@ export function emptyWorld(): WorldState {
     hitStopPeopleHeld: false,
     spectatePeopleHeld: false,
     lastWordPeopleHeld: false,
+    duelPeopleHeld: false,
+    campPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2883,6 +2903,8 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   if (wreck) {
     if (w.insurancePeopleHeld && !w.funeralPeopleHeld) return applyFuneralPeople(w, playerId);
     if (w.hitStopPeopleHeld && !w.spectatePeopleHeld) return applySpectatePeople(w, playerId);
+    if (w.lastWordPeopleHeld && !w.duelPeopleHeld) return applyDuelPeople(w, playerId);
+    if (w.duelPeopleHeld && !w.campPeopleHeld) return applyCampPeople(w, playerId);
     const spent = spendBestand(p, FUNERAL_COST);
     if (!spent) {
       players.set(playerId, { ...p, heard: FUNERAL_NEED });
@@ -4872,6 +4894,78 @@ export function applyLastWordPeople(w: WorldState, playerId: string): WorldState
   return { ...w, players, lastWordPeopleHeld: true, pois, signs };
 }
 
+export function applyDuelPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: DUEL_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_DUEL_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.lastWordPeopleHeld) {
+    players.set(playerId, { ...p, heard: DUEL_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.duelPeopleHeld && p.beats.duelPeople) {
+    players.set(playerId, { ...p, heard: DUEL_PEOPLE_HELD, wink: visibleWink(false, WINK_DUEL_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!wreck) {
+    players.set(playerId, { ...p, heard: DUEL_PEOPLE_GRAVE });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, duelPeople: true },
+    heard: DUEL_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_DUEL_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "duel-people")
+    ? w.pois.map((poi) => (poi.id === "duel-people" ? duelPeoplePoi(wreck.x, wreck.y) : poi))
+    : [...w.pois, duelPeoplePoi(wreck.x, wreck.y)];
+  const signs = w.signs.some((s) => s.id === "duel-people")
+    ? w.signs.map((s) => (s.id === "duel-people" ? { ...DUEL_PEOPLE_PLAQUE, x: wreck.x, y: wreck.y } : s))
+    : [...w.signs, { ...DUEL_PEOPLE_PLAQUE, x: wreck.x, y: wreck.y }];
+  return { ...w, players, duelPeopleHeld: true, pois, signs };
+}
+
+export function applyCampPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CAMP_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_CAMP_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.duelPeopleHeld) {
+    players.set(playerId, { ...p, heard: CAMP_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.campPeopleHeld && p.beats.campPeople) {
+    players.set(playerId, { ...p, heard: CAMP_PEOPLE_HELD, wink: visibleWink(false, WINK_CAMP_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!wreck) {
+    players.set(playerId, { ...p, heard: CAMP_PEOPLE_GRAVE });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, campPeople: true },
+    heard: CAMP_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_CAMP_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "camp-people")
+    ? w.pois.map((poi) => (poi.id === "camp-people" ? campPeoplePoi(wreck.x, wreck.y) : poi))
+    : [...w.pois, campPeoplePoi(wreck.x, wreck.y)];
+  const signs = w.signs.some((s) => s.id === "camp-people")
+    ? w.signs.map((s) => (s.id === "camp-people" ? { ...CAMP_PEOPLE_PLAQUE, x: wreck.x, y: wreck.y } : s))
+    : [...w.signs, { ...CAMP_PEOPLE_PLAQUE, x: wreck.x, y: wreck.y }];
+  return { ...w, players, campPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6085,6 +6179,8 @@ export function snapshot(w: WorldState) {
     hitStopPeopleHeld: w.hitStopPeopleHeld,
     spectatePeopleHeld: w.spectatePeopleHeld,
     lastWordPeopleHeld: w.lastWordPeopleHeld,
+    duelPeopleHeld: w.duelPeopleHeld,
+    campPeopleHeld: w.campPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -600,6 +600,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "lastword-people"
                         ? 0xc9a56a
+                      : poi.kind === "duel-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1459,6 +1461,14 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — name the storm at your back. Every grave is a season. Not a stick.";
     } else if (wreckNear && (me.beats.ruinBack || snap.ruinBackHeld) && me.messenger === "ruin-angel") {
       this.prompt = me.heard || "The storm holds. Graves stay seasons. Combat is not.";
+    } else if (funeralNear && (me.beats.campPeople || snap.campPeopleHeld)) {
+      this.prompt = me.heard || "Camp — people. Gestell still rises. Aura still thins. Not a stick.";
+    } else if (funeralNear && snap.duelPeopleHeld && !me.guest) {
+      this.prompt = "F — camping as a house of people. Gestell still rises. Aura still thins. Not a fetch.";
+    } else if (funeralNear && (me.beats.duelPeople || snap.duelPeopleHeld)) {
+      this.prompt = me.heard || "Duel — people. The grave is still the ring. The kit still does not strike harder. Not a stick.";
+    } else if (funeralNear && snap.lastWordPeopleHeld && !me.guest) {
+      this.prompt = "F — the ruin duel as a house of people. The grave is still the ring. Not a fetch.";
     } else if (funeralNear && (me.beats.spectatePeople || snap.spectatePeopleHeld)) {
       this.prompt = me.heard || "Spectate — people. Aura still caps. The duel still pays from a person. Not a stick.";
     } else if (funeralNear && snap.hitStopPeopleHeld && !me.guest) {
