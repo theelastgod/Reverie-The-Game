@@ -160,6 +160,7 @@ export type Beats = {
   restorePeople: boolean;
   keepPeople: boolean;
   tithePeople: boolean;
+  freezePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -308,6 +309,7 @@ export type Poi = {
     | "restore-people"
     | "keep-people"
     | "tithe-people"
+    | "freeze-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2356,6 +2358,31 @@ export function tithePeoplePoi(): Poi {
     kind: "tithe-people",
   };
 }
+
+export const FREEZE_PEOPLE_COPY =
+  "The freeze is a house of people, not a katechon of process. Ten Bestand still. The Passing still starves. Combat is not. This was not a fetch.";
+export const WINK_FREEZE_PEOPLE = "People, not a freeze stick. The token does not strike.";
+export const FREEZE_PEOPLE_NEED = "The tithe as people first. A freeze of people is not a fetch.";
+export const FREEZE_PEOPLE_HELD = "The freeze already holds as people. Ten Bestand still. The Passing still starves.";
+export const FREEZE_PEOPLE_SPECTATOR = "A desk. You do not get a house of people.";
+
+export const FREEZE_PEOPLE_PLAQUE: Sign = {
+  id: "freeze-people",
+  title: "Freeze — people",
+  text: "A house of people. Ten Bestand. The Passing still starves. The number does not strike.",
+  x: SAFETY_ANNEX.x,
+  y: SAFETY_ANNEX.y,
+};
+
+export function freezePeoplePoi(): Poi {
+  return {
+    id: "freeze-people",
+    name: "Freeze — people",
+    x: SAFETY_ANNEX.x,
+    y: SAFETY_ANNEX.y,
+    kind: "freeze-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2978,6 +3005,7 @@ export function emptyBeats(): Beats {
     restorePeople: false,
     keepPeople: false,
     tithePeople: false,
+    freezePeople: false,
   };
 }
 

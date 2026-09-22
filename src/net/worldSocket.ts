@@ -129,6 +129,7 @@ export type Snap = {
   restorePeopleHeld?: boolean;
   keepPeopleHeld?: boolean;
   tithePeopleHeld?: boolean;
+  freezePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

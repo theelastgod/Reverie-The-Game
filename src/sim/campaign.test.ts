@@ -367,6 +367,12 @@ import {
   TITHE_PEOPLE_HELD,
   TITHE_PEOPLE_SPECTATOR,
   TITHE_PEOPLE_PLAQUE,
+  FREEZE_PEOPLE_COPY,
+  WINK_FREEZE_PEOPLE,
+  FREEZE_PEOPLE_NEED,
+  FREEZE_PEOPLE_HELD,
+  FREEZE_PEOPLE_SPECTATOR,
+  FREEZE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -935,6 +941,7 @@ import {
   applyRestorePeople,
   applyKeepPeople,
   applyTithePeople,
+  applyFreezePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3668,6 +3675,51 @@ describe("Tithe — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
     expect(applyTithePeople(gWorld, "g").players.get("g")?.heard).toBe(TITHE_PEOPLE_SPECTATOR);
     expect(gWorld.tithePeopleHeld).toBe(false);
+  });
+});
+
+describe("Freeze — people", () => {
+  it("names the freeze as people after the tithe; ten Bestand still; guests cannot", () => {
+    const w = emptyWorld();
+    w.tithePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 30,
+      beats: { ...emptyBeats(), tithePeople: true, hall: true },
+      x: SAFETY_ANNEX.x,
+      y: SAFETY_ANNEX.y,
+    });
+    const named = applyFreeze(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FREEZE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FREEZE_PEOPLE);
+    expect(p.beats.freezePeople).toBe(true);
+    expect(p.bestand).toBe(30);
+    expect(named.frozen).toBe(false);
+    expect(named.freezePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "freeze-people")?.name).toBe("Freeze — people");
+    expect(named.signs.find((s) => s.id === "freeze-people")?.title).toBe(FREEZE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Ten Bestand");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFreezePeople(named, "a").players.get("a")?.heard).toBe(FREEZE_PEOPLE_HELD);
+
+    const signed = applyFreeze(named, "a");
+    expect(signed.frozen).toBe(true);
+    expect(signed.players.get("a")?.bestand).toBe(30 - FREEZE_COST);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SAFETY_ANNEX.x, y: SAFETY_ANNEX.y });
+    expect(applyFreezePeople(early, "a").players.get("a")?.heard).toBe(FREEZE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.tithePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SAFETY_ANNEX.x, y: SAFETY_ANNEX.y, locked: true });
+    expect(applyFreezePeople(gWorld, "g").players.get("g")?.heard).toBe(FREEZE_PEOPLE_SPECTATOR);
+    expect(gWorld.freezePeopleHeld).toBe(false);
   });
 });
 

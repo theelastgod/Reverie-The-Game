@@ -1019,6 +1019,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "You see a hall. You do not see who owns the nodes.";
     } else if (annex && (me.guest || me.locked)) {
       this.prompt = "A desk. Paper. You are not the one who signs.";
+    } else if (annex && (me.beats.freezePeople || snap.freezePeopleHeld)) {
+      this.prompt = me.heard || "Freeze — people. Ten Bestand. The Passing still starves. Not a stick.";
+    } else if (annex && snap.tithePeopleHeld && !me.guest) {
+      this.prompt = "F — the freeze as a house of people. Ten Bestand. The Passing still starves. Not a fetch.";
     } else if (annex && (me.beats.annexPeople || snap.annexPeopleHeld)) {
       this.prompt = me.heard || "Annex — people. The freeze still costs. Not a stick.";
     } else if (annex && snap.screeningPeopleHeld && !me.guest) {

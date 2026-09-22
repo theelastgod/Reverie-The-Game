@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 141** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 142** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -600,7 +600,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Imagine screening floor tile. Higgsfield later.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 141 (do this next)
+## Stage 141 (landed)
+- After the tithe as people, F at the Safety Annex: the freeze as people. Plaque/POI **Freeze — people**. Ten Bestand still. The Passing still starves.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 142 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
