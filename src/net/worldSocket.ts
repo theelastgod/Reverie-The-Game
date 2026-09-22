@@ -49,6 +49,7 @@ export type Snap = {
   restraintHeld?: boolean;
   vesperNoGod?: boolean;
   deskVaulted?: boolean;
+  appearSlow?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

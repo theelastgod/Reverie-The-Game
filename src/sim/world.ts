@@ -37,6 +37,7 @@ import {
   MOCK_SIG,
   TEST_SERIAL,
   auraSeed,
+  auraTowardSeed,
   formatSerial,
   annexPoi,
   FailedPassing,
@@ -499,6 +500,7 @@ export type WorldState = {
   restraintHeld: boolean;
   vesperNoGod: boolean;
   deskVaulted: boolean;
+  appearSlow: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -664,6 +666,7 @@ export function emptyWorld(): WorldState {
     restraintHeld: false,
     vesperNoGod: false,
     deskVaulted: false,
+    appearSlow: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -682,10 +685,24 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
   const afterClerks = tickClerks({ ...w, now, players }, dt);
   const afterWar = tickHouseWar(afterClerks, dt);
   const afterDecay = tickExhibit(afterWar, dt);
+  const afterAura = tickAura(afterDecay, dt);
   return {
-    ...afterDecay,
-    wreckage: afterDecay.wreckage.filter((r) => r.until > now),
+    ...afterAura,
+    wreckage: afterAura.wreckage.filter((r) => r.until > now),
   };
+}
+
+export function tickAura(w: WorldState, dt: number): WorldState {
+  const players = new Map(w.players);
+  let changed = false;
+  for (const [id, p] of players) {
+    const seed = p.guest ? 0 : auraSeed(p.serial ?? 0);
+    const aura = auraTowardSeed({ aura: p.aura, seed, dt, slow: w.appearSlow, guest: p.guest });
+    if (aura === p.aura) continue;
+    players.set(id, { ...p, aura });
+    changed = true;
+  }
+  return changed ? { ...w, players } : w;
 }
 
 export function tickExhibit(w: WorldState, dt: number): WorldState {
@@ -2504,6 +2521,7 @@ export function snapshot(w: WorldState) {
     restraintHeld: w.restraintHeld,
     vesperNoGod: w.vesperNoGod,
     deskVaulted: w.deskVaulted,
+    appearSlow: w.appearSlow,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2806,5 +2824,6 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
       starved: outcome !== "appearance" ? true : w.passing.starved,
       outcome,
     },
+    appearSlow: outcome === "appearance" ? true : w.appearSlow,
   };
 }

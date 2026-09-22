@@ -162,6 +162,9 @@ import {
   IONE_GONE_PLAQUE,
   WINK_TURN,
   PASSING_APPEAR,
+  AURA_DECAY,
+  APPEAR_SLOW,
+  auraTowardSeed,
   PASSING_ABSENCE,
   PASSING_HIJACK,
   PASSING_FAIL,
@@ -380,6 +383,7 @@ import {
   guestCanClaim,
   spawnGuest,
   tickWorld,
+  tickAura,
   NAVE_SPAWN_X,
   NAVE_SPAWN_Y,
 } from "./world";
@@ -1703,6 +1707,7 @@ describe("Movement IV Clearing and Passing", () => {
     const after = applyPassing(held, "a");
     expect(after.players.get("a")?.heard).toBe(PASSING_APPEAR);
     expect(after.passing.outcome).toBe("appearance");
+    expect(after.appearSlow).toBe(true);
     expect(GESTELL_HOT).toBe(91);
     expect(PASSING_FAIL).toContain("Clearing");
 
@@ -1712,7 +1717,36 @@ describe("Movement IV Clearing and Passing", () => {
     expect(guest.clearingOpen).toBe(false);
     expect(guest.players.get("g")?.heard).toBe(CLEARING_SPECTATOR);
     expect(guest.players.get("g")?.wink).toBe("");
-    expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
+  });
+
+  it("Appearance slows aura toward seed; guests stay 0; damage is unchanged", () => {
+    const seed = auraSeed(TEST_SERIAL);
+    expect(auraTowardSeed({ aura: seed + 8, seed, dt: 1, slow: false, guest: false })).toBe(seed + 8 - AURA_DECAY);
+    expect(auraTowardSeed({ aura: seed + 8, seed, dt: 1, slow: true, guest: false })).toBe(seed + 8 - APPEAR_SLOW * AURA_DECAY);
+    expect(auraTowardSeed({ aura: 20, seed, dt: 1, slow: false, guest: true })).toBe(0);
+    const w = emptyWorld();
+    w.appearSlow = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: seed + 8,
+    });
+    w.players.set("g", { ...spawnGuest("g"), aura: 12 });
+    const slow = tickAura(w, 1);
+    expect(slow.players.get("a")?.aura).toBe(seed + 8 - APPEAR_SLOW * AURA_DECAY);
+    expect(slow.players.get("g")?.aura).toBe(0);
+    const fast = emptyWorld();
+    fast.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: seed + 8,
+    });
+    expect(tickAura(fast, 1).players.get("a")?.aura).toBe(seed + 8 - AURA_DECAY);
+    expect(damageFor(slow.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(slow.players.get("a")!)).toBe(false);
+    expect(PASSING_APPEAR).not.toMatch(/heidegger|midgar|\$REVERIE strike/i);
   });
 });
 

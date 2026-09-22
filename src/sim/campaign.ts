@@ -1622,6 +1622,21 @@ export const CLEARING_CONTEST =
   "You extracted the Clearing. Cold is a current. The hole closes. The hour does not open.";
 export const PASSING_APPEAR =
   "A trace, not a face. The city is briefly world again. No mint. The token does not buy the hour.";
+export const AURA_DECAY = 1;
+export const APPEAR_SLOW = 0.25;
+
+export function auraTowardSeed(args: {
+  aura: number;
+  seed: number;
+  dt: number;
+  slow: boolean;
+  guest: boolean;
+}): number {
+  if (args.guest) return 0;
+  if (args.aura <= args.seed) return args.aura;
+  const rate = (args.slow ? APPEAR_SLOW : 1) * AURA_DECAY;
+  return Math.max(args.seed, args.aura - rate * args.dt);
+}
 export const PASSING_ABSENCE =
   "The hour went by. Absence is honest. Nara Vale stays. Solo cannot force a god.";
 export const PASSING_HIJACK =

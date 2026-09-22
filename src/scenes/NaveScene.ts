@@ -923,7 +923,9 @@ export class NaveScene extends Phaser.Scene {
       const warBit = snap.war?.winner
         ? ` · ${houseName(snap.war.winner)} omen${snap.war.tithePaid ? "" : " · tithe due"}`
         : "";
-      const passBit = snap.passing.outcome
+      const passBit = snap.appearSlow || snap.passing.outcome === "appearance"
+        ? " · Passing appearance · aura holds"
+        : snap.passing.outcome
         ? ` · Passing ${snap.passing.outcome}`
         : snap.passing.starved
           ? " · Passing starved"
