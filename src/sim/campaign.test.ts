@@ -214,6 +214,11 @@ import {
   DESK_DISARMED,
   DESK_EMPTY,
   DESK_SPECTATOR,
+  BANK_COPY,
+  WINK_BANK,
+  BANK_EMPTY,
+  BANK_SPECTATOR,
+  BANK_PLAQUE,
   DUEL_COPY,
   SPECTATE_COPY,
   SPECTATE_CAP,
@@ -1914,6 +1919,64 @@ describe("Wet Grid flagged PvP", () => {
     expect(camp.players.get("a")?.aura).toBeLessThan(auraSeed(TEST_SERIAL));
     expect(camp.gestell).toBeGreaterThan(duel.gestell);
     expect(guestCanClaim(camp.players.get("a")!)).toBe(false);
+  });
+});
+
+describe("Desk vault", () => {
+  it("banks unbanked so spoils cannot take it; guests cannot; TAKE stays disarmed", () => {
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      bestand: 40,
+      banked: 5,
+      x: CLAIMS_DESK.x,
+      y: CLAIMS_DESK.y,
+    });
+    const vault = applyDesk(w, "a", "bank");
+    const p = vault.players.get("a")!;
+    expect(p.heard).toBe(BANK_COPY);
+    expect(p.wink).toBe(WINK_BANK);
+    expect(p.bestand).toBe(0);
+    expect(p.banked).toBe(45);
+    expect(vault.deskVaulted).toBe(true);
+    expect(vault.pois.find((poi) => poi.id === CLAIMS_DESK.id)?.kind).toBe("claims-vault");
+    expect(vault.signs.find((s) => s.id === CLAIMS_DESK.id)?.title).toBe(BANK_PLAQUE.title);
+    expect(p.heard).not.toMatch(/APY|yield faucet|\$REVERIE settle live/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyDesk(vault, "a", "take").players.get("a")?.heard).toBe(DESK_EMPTY);
+    expect(applyDesk(vault, "a", "bank").players.get("a")?.heard).toBe(BANK_EMPTY);
+
+    const fight = emptyWorld();
+    fight.players.set("k", {
+      ...spawnGuest("k"),
+      guest: false,
+      flagged: true,
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    fight.players.set("v", {
+      ...spawnGuest("v"),
+      guest: false,
+      flagged: true,
+      x: WET_GRID.x + 10,
+      y: WET_GRID.y,
+      hp: 20,
+      bestand: 0,
+      banked: 45,
+    });
+    const after = applyStrike(fight, "k");
+    expect(after.players.get("k")?.bestand).toBe(0);
+    expect(after.players.get("v")?.banked).toBe(45);
+
+    w.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true, bestand: 99 });
+    const g = applyDesk(w, "g", "bank");
+    expect(g.players.get("g")?.heard).toBe(BANK_SPECTATOR);
+    expect(g.players.get("g")?.banked).toBe(0);
+    expect(g.deskVaulted).toBe(false);
   });
 });
 

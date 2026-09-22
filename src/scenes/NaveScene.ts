@@ -236,7 +236,7 @@ export class NaveScene extends Phaser.Scene {
       return;
     }
     if (nearPoint(me.x, me.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) {
-      this.net.desk(choice === "extract" ? "take" : "file");
+      this.net.desk(choice === "extract" ? "take" : "bank");
       return;
     }
     if (nearPoint(me.x, me.y, CLEARING_RING.x, CLEARING_RING.y, 64)) {
@@ -443,6 +443,8 @@ export class NaveScene extends Phaser.Scene {
                       ? 0x7a1028
                       : poi.kind === "claims-desk"
                           ? 0xffffff
+                      : poi.kind === "claims-vault"
+                          ? 0xc9a56a
                       : poi.kind === "wet-grid"
                           ? 0x7eb6ff
                       : poi.kind === "wet-grid-cult"
@@ -626,7 +628,10 @@ export class NaveScene extends Phaser.Scene {
     if (deskClaim && (me.guest || me.locked)) {
       this.prompt = "A period on a ledger. Guests cannot claim.";
     } else if (deskClaim) {
-      this.prompt = me.heard || "F / Q file a claim (not a yield). E TAKE is disarmed. No Base.";
+      this.prompt = me.heard
+        || (snap.deskVaulted
+          ? "Q bank unbanked. F file a claim (not a yield). E TAKE is disarmed. No Base."
+          : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
     } else if (wet && (snap.wetCult || me.beats.unflag)) {
@@ -924,7 +929,7 @@ export class NaveScene extends Phaser.Scene {
           : snap.clearingOpen
             ? " · Clearing held"
             : omenBit;
-      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}`;
+      stats.textContent = `Bestand ${me.bestand}${me.banked ? ` · banked ${me.banked}` : ""} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}${me.damaged ? ` · cracked ${me.damaged}` : ""}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;

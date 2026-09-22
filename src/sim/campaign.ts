@@ -137,6 +137,7 @@ export type Poi = {
     | "wet-grid"
     | "wet-grid-cult"
     | "claims-desk"
+    | "claims-vault"
     | "shrine-upkeep"
     | "sexton-mark"
     | "stall-dark"
@@ -864,6 +865,23 @@ export const DESK_DISARMED =
 export const DESK_EMPTY = "Nothing to file. Play first. This is not a faucet.";
 export const DESK_SPECTATOR = "A period on a ledger. Guests cannot claim.";
 export const DESK_KEY = ".";
+export const BANK_COPY =
+  "You banked Bestand. Spoils cannot take it. A vault, not a yield. TAKE stays disarmed. This was not a fetch.";
+export const WINK_BANK = "Banked is not a stick. Unbanked still drops. The token does not strike.";
+export const BANK_EMPTY = "Nothing to bank. The vault does not print Bestand.";
+export const BANK_SPECTATOR = "A vault. You cannot put a guest ledger in it.";
+
+export const BANK_PLAQUE: Sign = {
+  id: CLAIMS_DESK.id,
+  title: "DESK — vault",
+  text: "Banked Bestand does not drop. Claims stay disarmed. Not a yield. No Base.",
+  x: CLAIMS_DESK.x,
+  y: CLAIMS_DESK.y,
+};
+
+export function bankPoi(): Poi {
+  return { id: CLAIMS_DESK.id, name: "DESK — vault", x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, kind: "claims-vault" };
+}
 
 export const FUNERAL_COST = 12;
 export const SHRINE_COST = 8;

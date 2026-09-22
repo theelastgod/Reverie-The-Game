@@ -189,6 +189,12 @@ import {
   DESK_DISARMED,
   DESK_EMPTY,
   DESK_SPECTATOR,
+  BANK_COPY,
+  WINK_BANK,
+  BANK_EMPTY,
+  BANK_SPECTATOR,
+  BANK_PLAQUE,
+  bankPoi,
   FUNERAL_COST,
   FUNERAL_COPY,
   FUNERAL_NEED,
@@ -490,6 +496,7 @@ export type WorldState = {
   quillNoPrint: boolean;
   restraintHeld: boolean;
   vesperNoGod: boolean;
+  deskVaulted: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -654,6 +661,7 @@ export function emptyWorld(): WorldState {
     quillNoPrint: false,
     restraintHeld: false,
     vesperNoGod: false,
+    deskVaulted: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -2141,13 +2149,33 @@ export function applyM3(w: WorldState, playerId: string): WorldState {
   return { ...w, players };
 }
 
-export function applyDesk(w: WorldState, playerId: string, choice: "file" | "take"): WorldState {
+export function applyDesk(w: WorldState, playerId: string, choice: "file" | "take" | "bank"): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) return w;
   const players = new Map(w.players);
   if (p.guest || p.locked) {
-    players.set(playerId, { ...p, heard: DESK_SPECTATOR });
+    players.set(playerId, { ...p, heard: choice === "bank" ? BANK_SPECTATOR : DESK_SPECTATOR });
     return { ...w, players };
+  }
+  if (choice === "bank") {
+    if (p.bestand <= 0) {
+      players.set(playerId, { ...p, heard: BANK_EMPTY, wink: visibleWink(false, WINK_BANK) });
+      return { ...w, players };
+    }
+    players.set(playerId, {
+      ...p,
+      banked: p.banked + p.bestand,
+      bestand: 0,
+      heard: BANK_COPY,
+      wink: visibleWink(false, WINK_BANK),
+    });
+    return {
+      ...w,
+      players,
+      deskVaulted: true,
+      pois: w.pois.map((poi) => (poi.id === CLAIMS_DESK.id ? bankPoi() : poi)),
+      signs: w.signs.map((s) => (s.id === CLAIMS_DESK.id ? { ...BANK_PLAQUE } : s)),
+    };
   }
   if (choice === "file") {
     if (p.bestand <= 0) {
@@ -2459,6 +2487,7 @@ export function snapshot(w: WorldState) {
     quillNoPrint: w.quillNoPrint,
     restraintHeld: w.restraintHeld,
     vesperNoGod: w.vesperNoGod,
+    deskVaulted: w.deskVaulted,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,

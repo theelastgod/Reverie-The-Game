@@ -130,7 +130,7 @@ export class ReverieWorld {
       this.w = applyAnnounce(this.w, id, data.nodeId);
       this.broadcast();
     } else if (data.t === "desk") {
-      this.w = applyDesk(this.w, id, data.choice === "take" ? "take" : "file");
+      this.w = applyDesk(this.w, id, data.choice === "take" ? "take" : data.choice === "bank" ? "bank" : "file");
       this.broadcast();
     } else if (data.t === "restore") {
       this.w = applyRestore(this.w, id);

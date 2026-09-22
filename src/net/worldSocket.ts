@@ -48,6 +48,7 @@ export type Snap = {
   quillNoPrint?: boolean;
   restraintHeld?: boolean;
   vesperNoGod?: boolean;
+  deskVaulted?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 
@@ -116,7 +117,7 @@ export class WorldSocket {
     this.send({ t: "care" });
   }
 
-  desk(choice: "file" | "take") {
+  desk(choice: "file" | "take" | "bank") {
     this.send({ t: "desk", choice });
   }
 
