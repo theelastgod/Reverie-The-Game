@@ -579,6 +579,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x7eb6ff
                       : poi.kind === "guest-arena"
                         ? 0xe8e8e8
+                      : poi.kind === "arena-people"
+                        ? 0xe8e8e8
                       : poi.kind === "screening"
                         ? 0x7eb6ff
                       : poi.kind === "screening-participant"
@@ -843,6 +845,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "Dispatch. Public screening. The Last God is a room, not a stick.";
     } else if (screening) {
       this.prompt = "F — take the public screening. Observer proximity. Not a stick.";
+    } else if (arena && (me.beats.arenaPeople || snap.arenaPeopleHeld)) {
+      this.prompt = me.heard || "Arena — people. Practice still has no spoils. Not a stick.";
+    } else if (arena && snap.annexPeopleHeld && !me.guest) {
+      this.prompt = "F — the arena as a house of people. Practice still has no spoils. Not a fetch.";
     } else if (arena && (snap.arenaHeld || me.beats.arena)) {
       this.prompt = me.heard || "Guest arena. Click strike the dummy. Practice. No spoils.";
     } else if (arena) {

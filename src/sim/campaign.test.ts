@@ -223,6 +223,12 @@ import {
   ANNEX_PEOPLE_HELD,
   ANNEX_PEOPLE_SPECTATOR,
   ANNEX_PEOPLE_PLAQUE,
+  ARENA_PEOPLE_COPY,
+  WINK_ARENA_PEOPLE,
+  ARENA_PEOPLE_NEED,
+  ARENA_PEOPLE_HELD,
+  ARENA_PEOPLE_SPECTATOR,
+  ARENA_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -763,6 +769,7 @@ import {
   applyM3People,
   applyScreeningPeople,
   applyAnnexPeople,
+  applyArenaPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2485,6 +2492,44 @@ describe("Annex — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SAFETY_ANNEX.x, y: SAFETY_ANNEX.y, locked: true });
     expect(applyAnnexPeople(gWorld, "g").players.get("g")?.heard).toBe(ANNEX_PEOPLE_SPECTATOR);
     expect(gWorld.annexPeopleHeld).toBe(false);
+  });
+});
+
+describe("Arena — people", () => {
+  it("names the arena as people after the Annex; practice still has no spoils; guests cannot", () => {
+    const w = emptyWorld();
+    w.annexPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), annexPeople: true },
+      x: GUEST_ARENA.x,
+      y: GUEST_ARENA.y,
+    });
+    const named = applyRead(w, "a", GUEST_ARENA.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(ARENA_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_ARENA_PEOPLE);
+    expect(p.beats.arenaPeople).toBe(true);
+    expect(named.arenaPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === GUEST_ARENA.id)?.kind).toBe("arena-people");
+    expect(named.signs.find((s) => s.id === GUEST_ARENA.id)?.title).toBe(ARENA_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("no spoils");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyArenaPeople(named, "a").players.get("a")?.heard).toBe(ARENA_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: GUEST_ARENA.x, y: GUEST_ARENA.y });
+    expect(applyArenaPeople(early, "a").players.get("a")?.heard).toBe(ARENA_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.annexPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
+    expect(applyArenaPeople(gWorld, "g").players.get("g")?.heard).toBe(ARENA_PEOPLE_SPECTATOR);
+    expect(gWorld.arenaPeopleHeld).toBe(false);
   });
 });
 

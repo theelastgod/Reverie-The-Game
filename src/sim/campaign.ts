@@ -136,6 +136,7 @@ export type Beats = {
   m3People: boolean;
   screeningPeople: boolean;
   annexPeople: boolean;
+  arenaPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -260,6 +261,7 @@ export type Poi = {
     | "m3-people"
     | "screening-people"
     | "annex-people"
+    | "arena-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2004,6 +2006,31 @@ export function annexPeoplePoi(): Poi {
   };
 }
 
+export const ARENA_PEOPLE_COPY =
+  "The arena is a house of people, not a spoils process. Practice still has no spoils. Combat is not. This was not a fetch.";
+export const WINK_ARENA_PEOPLE = "People, not a dummy stick. The token does not strike.";
+export const ARENA_PEOPLE_NEED = "The Annex as people first. An arena of people is not a fetch.";
+export const ARENA_PEOPLE_HELD = "The arena already holds as people. Practice still has no spoils.";
+export const ARENA_PEOPLE_SPECTATOR = "A dummy. You do not get a house of people.";
+
+export const ARENA_PEOPLE_PLAQUE: Sign = {
+  id: GUEST_ARENA.id,
+  title: "Arena — people",
+  text: "A house of people. Practice still has no spoils. The number does not strike.",
+  x: GUEST_ARENA.x,
+  y: GUEST_ARENA.y,
+};
+
+export function arenaPeoplePoi(): Poi {
+  return {
+    id: GUEST_ARENA.id,
+    name: "Arena — people",
+    x: GUEST_ARENA.x,
+    y: GUEST_ARENA.y,
+    kind: "arena-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2295,6 +2322,7 @@ export function emptyBeats(): Beats {
     m3People: false,
     screeningPeople: false,
     annexPeople: false,
+    arenaPeople: false,
   };
 }
 

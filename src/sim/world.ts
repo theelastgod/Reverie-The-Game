@@ -290,6 +290,13 @@ import {
   ANNEX_PEOPLE_HELD,
   ANNEX_PEOPLE_SPECTATOR,
   ANNEX_PEOPLE_PLAQUE,
+  ARENA_PEOPLE_COPY,
+  WINK_ARENA_PEOPLE,
+  ARENA_PEOPLE_NEED,
+  ARENA_PEOPLE_HELD,
+  ARENA_PEOPLE_SPECTATOR,
+  ARENA_PEOPLE_PLAQUE,
+  arenaPeoplePoi,
   annexPeoplePoi,
   WINK_VESPER_PEOPLE,
   VESPER_PEOPLE_NEED,
@@ -981,6 +988,7 @@ export type WorldState = {
   m3PeopleHeld: boolean;
   screeningPeopleHeld: boolean;
   annexPeopleHeld: boolean;
+  arenaPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1242,6 +1250,7 @@ export function emptyWorld(): WorldState {
     m3PeopleHeld: false,
     screeningPeopleHeld: false,
     annexPeopleHeld: false,
+    arenaPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2370,7 +2379,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === "safety-plaque" && w.weatherNamed) return applyAddressed(w, playerId);
   if (sign.id === IONE.id) return applyIoneMark(w, playerId);
-  if (sign.id === GUEST_ARENA.id) return applyArena(w, playerId);
+  if (sign.id === GUEST_ARENA.id) {
+    if (w.annexPeopleHeld && !w.arenaPeopleHeld && !p.guest && !p.locked) return applyArenaPeople(w, playerId);
+    return applyArena(w, playerId);
+  }
   if (sign.id === SCREENING.id || sign.id === "screening-people") {
     if (w.m3PeopleHeld && !w.screeningPeopleHeld) return applyScreeningPeople(w, playerId);
     if (sign.id === "screening-people") return applyScreeningPeople(w, playerId);
@@ -3346,6 +3358,37 @@ export function applyAnnexPeople(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === "annex-people" ? { ...ANNEX_PEOPLE_PLAQUE } : s))
     : [...w.signs, { ...ANNEX_PEOPLE_PLAQUE }];
   return { ...w, players, annexPeopleHeld: true, pois, signs };
+}
+
+export function applyArenaPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, GUEST_ARENA.x, GUEST_ARENA.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: ARENA_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_ARENA_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.annexPeopleHeld) {
+    players.set(playerId, { ...p, heard: ARENA_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.arenaPeopleHeld && p.beats.arenaPeople) {
+    players.set(playerId, { ...p, heard: ARENA_PEOPLE_HELD, wink: visibleWink(false, WINK_ARENA_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, arenaPeople: true },
+    heard: ARENA_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_ARENA_PEOPLE),
+  });
+  return {
+    ...w,
+    players,
+    arenaPeopleHeld: true,
+    pois: w.pois.map((poi) => (poi.id === GUEST_ARENA.id ? arenaPeoplePoi() : poi)),
+    signs: w.signs.map((s) => (s.id === GUEST_ARENA.id ? { ...ARENA_PEOPLE_PLAQUE } : s)),
+  };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -4523,6 +4566,7 @@ export function snapshot(w: WorldState) {
     m3PeopleHeld: w.m3PeopleHeld,
     screeningPeopleHeld: w.screeningPeopleHeld,
     annexPeopleHeld: w.annexPeopleHeld,
+    arenaPeopleHeld: w.arenaPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
