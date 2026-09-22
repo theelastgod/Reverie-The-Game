@@ -120,6 +120,7 @@ export type Snap = {
   roomsPeopleHeld?: boolean;
   stormPeopleHeld?: boolean;
   bountyPeopleHeld?: boolean;
+  flagPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

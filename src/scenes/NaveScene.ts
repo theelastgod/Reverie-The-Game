@@ -101,6 +101,8 @@ export class NaveScene extends Phaser.Scene {
         else if (!wall && nearPoint(cx, cy, SHRINE.x, SHRINE.y, 80)) key = "tile-shrine";
         else if (!wall && nearPoint(cx, cy, BURIAL_PLOT.x, BURIAL_PLOT.y, 80)) key = "tile-burial";
         else if (!wall && nearPoint(cx, cy, GUEST_ARENA.x, GUEST_ARENA.y, 80)) key = "tile-arena";
+        else if (!wall && nearPoint(cx, cy, HOUSE_HALL.x, HOUSE_HALL.y, 80)) key = "tile-hall";
+        else if (!wall && nearPoint(cx, cy, CLEARING_STALL.x, CLEARING_STALL.y, 80)) key = "tile-stall";
         this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
       }
     }
@@ -929,6 +931,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.flagPeople || snap.flagPeopleHeld)) {
+      this.prompt = me.heard || "Flag — people. Flag still opts in. Guests are not loot. Not a stick.";
+    } else if (wet && snap.bountyPeopleHeld && !me.guest) {
+      this.prompt = "F — the flag as a house of people. Guests are not loot. Seconds. Not a fetch.";
     } else if (wet && (me.beats.bracketPeople || snap.bracketPeopleHeld)) {
       this.prompt = me.heard || "The bracket — people. Serials stay visible. Not a stick.";
     } else if (wet && snap.seasonPeopleHeld && !me.guest) {

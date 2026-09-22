@@ -151,6 +151,7 @@ export type Beats = {
   roomsPeople: boolean;
   stormPeople: boolean;
   bountyPeople: boolean;
+  flagPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -290,6 +291,7 @@ export type Poi = {
     | "rooms-people"
     | "storm-people"
     | "bounty-people"
+    | "flag-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2109,7 +2111,32 @@ export const FLAG_COPY =
   "You flagged. Wet Grid spoils are unbanked Bestand and exhibition copies. Cult and banked stay. Guests are not loot.";
 export const FLAG_SPECTATOR = "A wet street. You are not flagged. You are not spoils.";
 export const SPOILS_COPY = "Spoils from a person. Unbanked and copies. The cult hint stayed in the grave.";
-export const GUEST_GRIEF = "A guest is not a spoils path. The server will not pay you for that.";
+export const GUEST_GRIEF =
+  "A guest is not a spoils path. Protocol reject. The server will not strike them for you.";
+export const FLAG_PEOPLE_COPY =
+  "The flag is a house of people, not a spoils process. Flag still opts in. Guests are not loot. Seconds, not a stick. Combat is not. This was not a fetch.";
+export const WINK_FLAG_PEOPLE = "People, not a flag stick. The token does not strike.";
+export const FLAG_PEOPLE_NEED = "The bounty as people first. A flag of people is not a fetch.";
+export const FLAG_PEOPLE_HELD = "The flag already holds as people. Flag still opts in. Guests are not loot.";
+export const FLAG_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const FLAG_PEOPLE_PLAQUE: Sign = {
+  id: "flag-people",
+  title: "Flag — people",
+  text: "A house of people. Flag still opts in. Guests are not loot. The number does not strike.",
+  x: WET_GRID.x,
+  y: WET_GRID.y,
+};
+
+export function flagPeoplePoi(): Poi {
+  return {
+    id: "flag-people",
+    name: "Flag — people",
+    x: WET_GRID.x,
+    y: WET_GRID.y,
+    kind: "flag-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2723,6 +2750,7 @@ export function emptyBeats(): Beats {
     roomsPeople: false,
     stormPeople: false,
     bountyPeople: false,
+    flagPeople: false,
   };
 }
 

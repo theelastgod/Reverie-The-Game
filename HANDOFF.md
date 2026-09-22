@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 132** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 133** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -558,7 +558,13 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Imagine burial and arena floor tiles. Higgsfield later.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 132 (do this next)
+## Stage 132 (landed)
+- After bounty as people, F at the Wet Grid: the flag as people. Plaque/POI **Flag — people**. Flag still opts in. Seconds, not a stick.
+- Angel strike vs guest/locked is a protocol reject: no HP, no wreckage, no spoils.
+- Fairness: different serials share `damageFor`. Imagine hall and stall floor tiles. Higgsfield later.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 133 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

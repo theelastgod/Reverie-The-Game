@@ -3,10 +3,12 @@ import { circleHitsWalls, isWallTile, nearNode } from "./nave";
 import {
   applyStrike,
   applyUse,
+  damageFor,
   emptyWorld,
   guestCanClaim,
   spawnGuest,
   stepPlayer,
+  STRIKE_DAMAGE,
   tickWorld,
 } from "./world";
 
@@ -22,6 +24,14 @@ describe("world", () => {
     expect(g.aura).toBe(0);
     expect(g.guest).toBe(true);
     expect(guestCanClaim(g)).toBe(false);
+  });
+
+  it("two Angels, different serials, same damage band; token is not in damageFor", () => {
+    const a = { ...spawnGuest("a"), guest: false, serial: 1111, bestand: 999 };
+    const b = { ...spawnGuest("b"), guest: false, serial: 7777, bestand: 0, aura: 99 };
+    expect(damageFor(a)).toBe(damageFor(b));
+    expect(damageFor(a)).toBe(STRIKE_DAMAGE);
+    expect(damageFor(a)).toBe(damageFor(spawnGuest("g")));
   });
 
   it("intent moves the body", () => {

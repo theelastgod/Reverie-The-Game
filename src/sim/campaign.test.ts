@@ -310,6 +310,12 @@ import {
   BOUNTY_PEOPLE_HELD,
   BOUNTY_PEOPLE_SPECTATOR,
   BOUNTY_PEOPLE_PLAQUE,
+  FLAG_PEOPLE_COPY,
+  WINK_FLAG_PEOPLE,
+  FLAG_PEOPLE_NEED,
+  FLAG_PEOPLE_HELD,
+  FLAG_PEOPLE_SPECTATOR,
+  FLAG_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -869,6 +875,7 @@ import {
   applyRoomsPeople,
   applyStormPeople,
   applyBountyPeople,
+  applyFlagPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3169,6 +3176,49 @@ describe("The bounty — people", () => {
   });
 });
 
+describe("Flag — people", () => {
+  it("names the flag as people after bounty; guests cannot; protocol reject; flag still opts in", () => {
+    const w = emptyWorld();
+    w.bountyPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), bountyPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FLAG_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FLAG_PEOPLE);
+    expect(p.beats.flagPeople).toBe(true);
+    expect(named.flagPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "flag-people")?.name).toBe("Flag — people");
+    expect(named.signs.find((s) => s.id === "flag-people")?.title).toBe(FLAG_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Flag still opts in");
+    expect(p.heard).toContain("Guests are not loot");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFlagPeople(named, "a").players.get("a")?.heard).toBe(FLAG_PEOPLE_HELD);
+
+    const flagged = applyFlag(named, "a");
+    expect(flagged.players.get("a")?.flagged).toBe(true);
+    expect(flagged.players.get("a")?.heard).toBe(FLAG_COPY);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyFlagPeople(early, "a").players.get("a")?.heard).toBe(FLAG_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.bountyPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyFlagPeople(gWorld, "g").players.get("g")?.heard).toBe(FLAG_PEOPLE_SPECTATOR);
+    expect(gWorld.flagPeopleHeld).toBe(false);
+  });
+});
+
 describe("Storm vs high-progress", () => {
   it("skims geared graves, not fallen ones, and does not buy damage", () => {
     expect(stormProgress({ guest: false, bestand: STORM_GEAR, fakeWinke: 0 })).toBe(true);
@@ -4681,6 +4731,9 @@ describe("Wet Grid flagged PvP", () => {
     expect(grief.players.get("a")?.heard).toBe(GUEST_GRIEF);
     expect(grief.players.get("a")?.bestand).toBe(0);
     expect(grief.players.get("g")?.bestand).toBe(90);
+    expect(grief.players.get("g")?.hp).toBe(20);
+    expect(grief.wreckage.length).toBe(0);
+    expect(damageFor(grief.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
 
     const duel = emptyWorld();
     duel.players.set("a", angel("a", { lastKillId: "b" }));
