@@ -447,6 +447,14 @@ import {
   CYBER_SPECTATOR,
   CYBER_PLAQUE,
   cyberPoi,
+  GLAMOUR_COPY,
+  WINK_GLAMOUR,
+  GLAMOUR_NEED,
+  GLAMOUR_HELD,
+  GLAMOUR_SPECTATOR,
+  GLAMOUR_DARK,
+  GLAMOUR_PLAQUE,
+  glamourPoi,
   BlitzMark,
 } from "./campaign";
 import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave";
@@ -511,6 +519,7 @@ export type Player = {
   stipend: number;
   storm: boolean;
   restraint: boolean;
+  surface: boolean;
 };
 
 export type WorldState = {
@@ -569,6 +578,7 @@ export type WorldState = {
   blitzHeld: boolean;
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
+  glamourHeld: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -616,6 +626,7 @@ export function spawnGuest(id: string): Player {
     stipend: 0,
     storm: false,
     restraint: false,
+    surface: false,
   };
 }
 
@@ -657,6 +668,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     stipend: p.stipend,
     storm: p.storm,
     restraint: p.restraint,
+    surface: p.surface,
     x,
     y,
     ...patch,
@@ -752,6 +764,7 @@ export function emptyWorld(): WorldState {
     blitzHeld: false,
     blitzMarks: [],
     cyberHeld: false,
+    glamourHeld: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -1323,6 +1336,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === SAFETY_ANNEX.id) return applyFreeze(w, playerId);
   if (sign.id === CLEARING_STALL.id) {
     if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
+    if (p.messenger === "iridescent" && !p.guest && !p.locked && !w.glamourHeld && !p.beats.glamour) {
+      return applyGlamour(w, playerId);
+    }
     return applyMarket(w, playerId);
   }
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
@@ -2688,6 +2704,7 @@ export function snapshot(w: WorldState) {
     blitzHeld: w.blitzHeld,
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
+    glamourHeld: w.glamourHeld,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2905,6 +2922,43 @@ export function applyCyber(w: WorldState, playerId: string, nodeId: string): Wor
     ? w.signs.map((s) => (s.id === "process-read" ? plaque : s))
     : [...w.signs, plaque];
   return { ...w, players, cyberHeld: true, pois, signs };
+}
+
+export function applyGlamour(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: GLAMOUR_SPECTATOR, wink: visibleWink(true, WINK_GLAMOUR) });
+    return { ...w, players };
+  }
+  if (p.messenger !== "iridescent") {
+    players.set(playerId, { ...p, heard: GLAMOUR_NEED });
+    return { ...w, players };
+  }
+  if (w.stallDark) {
+    players.set(playerId, { ...p, heard: GLAMOUR_DARK, wink: visibleWink(false, WINK_GLAMOUR) });
+    return { ...w, players };
+  }
+  if (w.glamourHeld || p.beats.glamour) {
+    players.set(playerId, { ...p, heard: GLAMOUR_HELD, wink: visibleWink(false, WINK_GLAMOUR) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, glamour: true },
+    surface: true,
+    heard: GLAMOUR_COPY,
+    wink: visibleWink(false, WINK_GLAMOUR),
+    readiness: p.readiness + 1,
+  });
+  const pois = w.pois.some((poi) => poi.id === CLEARING_STALL.id)
+    ? w.pois.map((poi) => (poi.id === CLEARING_STALL.id ? glamourPoi() : poi))
+    : [...w.pois, glamourPoi()];
+  const signs = w.signs.some((s) => s.id === CLEARING_STALL.id)
+    ? w.signs.map((s) => (s.id === CLEARING_STALL.id ? { ...GLAMOUR_PLAQUE } : s))
+    : [...w.signs, { ...GLAMOUR_PLAQUE }];
+  return { ...w, players, glamourHeld: true, pois, signs };
 }
 
 export function applyLastWord(w: WorldState, playerId: string): WorldState {

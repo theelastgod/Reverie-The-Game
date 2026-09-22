@@ -71,6 +71,7 @@ export class NaveScene extends Phaser.Scene {
   private prompt = "";
   private following = false;
   private signsDrawn = false;
+  private stallStill: Phaser.GameObjects.Image | null = null;
 
   constructor() {
     super("nave");
@@ -136,7 +137,7 @@ export class NaveScene extends Phaser.Scene {
       this.add.image(s.x, s.y - 52, "safety-annex").setDisplaySize(88, 50).setDepth(3);
     }
     if (s.id === CLEARING_STALL.id) {
-      this.add.image(s.x, s.y - 52, "clearing-stall").setDisplaySize(88, 50).setDepth(3);
+      this.stallStill = this.add.image(s.x, s.y - 52, "clearing-stall").setDisplaySize(88, 50).setDepth(3);
     }
     if (s.id === ORGAN_STRAIT.id) {
       this.add.image(s.x, s.y - 52, "organ-strait").setDisplaySize(88, 50).setDepth(3);
@@ -434,6 +435,8 @@ export class NaveScene extends Phaser.Scene {
                 ? 0x7eb6ff
               : poi.kind === "stall-dark"
                 ? 0xc9a56a
+              : poi.kind === "stall-glamour"
+                ? 0x7eb6ff
             : poi.kind === "care-open"
               ? 0x7eb6ff
               : poi.kind === "operator-desk"
@@ -520,6 +523,10 @@ export class NaveScene extends Phaser.Scene {
                 ? 0x3a3a3a
                 : 0x5a5a5a;
       g.setFillStyle(fill, 0.85);
+    }
+    if (this.stallStill) {
+      const glam = (this.net.snap?.pois ?? []).some((poi) => poi.kind === "stall-glamour");
+      this.stallStill.setTexture(glam ? "stall-surface" : "clearing-stall");
     }
     for (const s of this.net.snap?.signs ?? []) {
       this.drawSign(s);
@@ -718,6 +725,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The stall is dark. Cult hangs. Copies do not travel.";
     } else if (stall && me.beats.hangAsk && me.cultWink) {
       this.prompt = "F — hang the cult sheet. The stall goes dark. Quill walks the Wet Grid.";
+    } else if (stall && me.messenger === "iridescent" && !me.guest && !me.beats.glamour && !snap.glamourHeld) {
+      this.prompt = "F — Iridescent Glamour. Aura as surface. Copies travel. Cult does not. Not a stick.";
     } else if (stall && me.beats.market) {
       this.prompt = me.damaged
         ? `F buy a copy (${CLEARING_PRICE}). Q repair a cracked print (${REPAIR_COST}). Cult does not crack.`
@@ -982,7 +991,7 @@ export class NaveScene extends Phaser.Scene {
         ? me.locked
           ? `Guest · locked · aura 0`
           : `Guest · aura 0 · hp ${me.hp}`
-        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.storm ? " · storm" : ""}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
+        : `Angel ${formatSerial(me.serial)} · ${houseName(me.house)} · ${messengerName(me.messenger)} · aura ${me.aura} · hp ${me.hp}${me.storm ? " · storm" : ""}${me.surface ? " · surface" : ""}${me.flagged ? " · flagged" : ""}${me.insured ? " · paper" : ""}`;
     }
     const stats = hud("stat-chip");
     if (stats) {

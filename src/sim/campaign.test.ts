@@ -226,6 +226,13 @@ import {
   CYBER_HELD,
   CYBER_SPECTATOR,
   CYBER_PLAQUE,
+  GLAMOUR_COPY,
+  WINK_GLAMOUR,
+  GLAMOUR_NEED,
+  GLAMOUR_HELD,
+  GLAMOUR_SPECTATOR,
+  GLAMOUR_DARK,
+  GLAMOUR_PLAQUE,
   ORD_ERRAND,
   ORD_CABLE_LATER,
   CABLE_QUIET_COPY,
@@ -403,6 +410,7 @@ import {
   applyAnnounce,
   applyBlitz,
   applyCyber,
+  applyGlamour,
   applyTithe,
   applyClockOut,
   applyYieldEmpty,
@@ -2268,6 +2276,90 @@ describe("Cybernetic process read", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: node.x, y: node.y, locked: true });
     expect(applyCyber(gWorld, "g", node.id).players.get("g")?.heard).toBe(CYBER_SPECTATOR);
     expect(gWorld.cyberHeld).toBe(false);
+  });
+});
+
+describe("Iridescent Glamour", () => {
+  it("paints a live stall as surface; other kits and guests cannot", () => {
+    expect(messengerFor(6)).toBe("iridescent");
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: 6,
+      messenger: "iridescent",
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    const painted = applyGlamour(w, "a");
+    const p = painted.players.get("a")!;
+    expect(p.heard).toBe(GLAMOUR_COPY);
+    expect(p.wink).toBe(WINK_GLAMOUR);
+    expect(p.beats.glamour).toBe(true);
+    expect(p.surface).toBe(true);
+    expect(painted.glamourHeld).toBe(true);
+    expect(painted.pois.find((poi) => poi.id === CLEARING_STALL.id)?.kind).toBe("stall-glamour");
+    expect(painted.signs.find((s) => s.id === CLEARING_STALL.id)?.title).toBe(GLAMOUR_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyGlamour(painted, "a").players.get("a")?.heard).toBe(GLAMOUR_HELD);
+    expect(snapshot(painted).glamourHeld).toBe(true);
+
+    const viaRead = emptyWorld();
+    viaRead.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      messenger: "iridescent",
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    expect(applyRead(viaRead, "a", CLEARING_STALL.id).glamourHeld).toBe(true);
+
+    const herald = emptyWorld();
+    herald.players.set("h", {
+      ...spawnGuest("h"),
+      guest: false,
+      messenger: "herald",
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    expect(applyGlamour(herald, "h").players.get("h")?.heard).toBe(GLAMOUR_NEED);
+    expect(applyGlamour(herald, "h").glamourHeld).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
+    expect(applyGlamour(gWorld, "g").players.get("g")?.heard).toBe(GLAMOUR_SPECTATOR);
+    expect(gWorld.glamourHeld).toBe(false);
+
+    const dark = emptyWorld();
+    dark.stallDark = true;
+    dark.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      messenger: "iridescent",
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    expect(applyGlamour(dark, "a").players.get("a")?.heard).toBe(GLAMOUR_DARK);
+    expect(applyGlamour(dark, "a").glamourHeld).toBe(false);
+
+    const hung = applyHang({
+      ...painted,
+      players: new Map([
+        [
+          "a",
+          {
+            ...p,
+            beats: { ...p.beats, hangAsk: true },
+            cultWink: true,
+          },
+        ],
+      ]),
+    }, "a");
+    expect(hung.stallDark).toBe(true);
+    expect(hung.pois.find((poi) => poi.id === CLEARING_STALL.id)?.kind).toBe("stall-dark");
+    expect(damageFor(hung.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
   });
 });
 

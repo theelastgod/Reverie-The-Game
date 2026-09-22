@@ -87,6 +87,7 @@ export type Beats = {
   storm: boolean;
   blitz: boolean;
   cyber: boolean;
+  glamour: boolean;
 };
 
 export type WeatherHeard = {
@@ -152,6 +153,7 @@ export type Poi = {
     | "shrine-upkeep"
     | "sexton-mark"
     | "stall-dark"
+    | "stall-glamour"
     | "house-standing"
     | "fourfold-held"
     | "last-god-absent"
@@ -1311,6 +1313,7 @@ export function emptyBeats(): Beats {
     storm: false,
     blitz: false,
     cyber: false,
+    glamour: false,
   };
 }
 
@@ -1593,6 +1596,32 @@ export const CYBER_PLAQUE: Sign = {
 
 export function cyberPoi(x: number, y: number): Poi {
   return { id: "process-read", name: "The process — read", x, y, kind: "process-read" };
+}
+
+export const GLAMOUR_COPY =
+  "You glamoured the stall. Aura as surface. Copies travel. Cult does not hang on the shine. Combat is not. This was not a fetch.";
+export const WINK_GLAMOUR = "Iridescent kit. A surface, not a stick. The token does not shine for you.";
+export const GLAMOUR_NEED = "Only an iridescent angel paints a live stall as surface.";
+export const GLAMOUR_HELD = "The stall is already surface. Aura shows. Combat is not.";
+export const GLAMOUR_SPECTATOR = "Lights. You do not see the surface.";
+export const GLAMOUR_DARK = "A shrine does not take surface. Cult hangs. Copies do not travel.";
+
+export const GLAMOUR_PLAQUE: Sign = {
+  id: CLEARING_STALL.id,
+  title: "The stall — surface",
+  text: "Aura as surface. Copies travel. Cult does not hang on glamour. The number does not strike.",
+  x: CLEARING_STALL.x,
+  y: CLEARING_STALL.y,
+};
+
+export function glamourPoi(): Poi {
+  return {
+    id: CLEARING_STALL.id,
+    name: "The stall — surface",
+    x: CLEARING_STALL.x,
+    y: CLEARING_STALL.y,
+    kind: "stall-glamour",
+  };
 }
 
 export function auraSeed(serial: number): number {

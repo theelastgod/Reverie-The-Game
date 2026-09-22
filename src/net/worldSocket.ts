@@ -61,6 +61,7 @@ export type Snap = {
   blitzHeld?: boolean;
   blitzMarks?: { id: string; x: number; y: number; fromName: string }[];
   cyberHeld?: boolean;
+  glamourHeld?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 

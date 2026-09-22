@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 66** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 67** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -289,8 +289,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Cybernetic kit: F at a live CRT node reads the process. Extract drinks Gestell. Keep thins it. Plaque/POI The process — read. Not a stick.
 - Other kits and guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 66 (do this next)
-Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
+## Stage 66 (landed)
+- Iridescent kit: F at a live stall glamours it. Aura as surface. Copies travel. Cult does not hang on the shine. Plaque/POI The stall — surface. Not a stick.
+- A dark shrine refuses. Hang still unlists. Other kits and guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 67 (do this next)
+Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed. Dweller kit still open.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
