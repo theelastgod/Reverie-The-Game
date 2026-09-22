@@ -291,6 +291,15 @@ import {
   CREDITS_HELD,
   CREDITS_SPECTATOR,
   CREDITS_PLAQUE,
+  SEASON_COPY,
+  WINK_SEASON,
+  SEASON_NEED,
+  SEASON_HELD,
+  SEASON_SPECTATOR,
+  SEASON_CULT,
+  SEASON_PLAQUE,
+  seasonPoi,
+  wetGridDefaultFlag,
   creditsPoi,
   WINK_PASS_FAIL,
   FAIL_PLAQUE,
@@ -610,6 +619,7 @@ export type WorldState = {
   appearSlow: boolean;
   appearWorld: boolean;
   creditsHeld: boolean;
+  seasonHeld: boolean;
   naraAtClearing: boolean;
   hijacked: boolean;
   hijackBy: "" | "safety" | "cold";
@@ -802,6 +812,7 @@ export function emptyWorld(): WorldState {
     appearSlow: false,
     appearWorld: false,
     creditsHeld: false,
+    seasonHeld: false,
     naraAtClearing: false,
     hijacked: false,
     hijackBy: "",
@@ -837,10 +848,24 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
   const afterWar = tickHouseWar(afterClerks, dt);
   const afterDecay = tickExhibit(afterWar, dt);
   const afterAura = tickAura(afterDecay, dt);
+  const afterFlag = tickWetFlag(afterAura);
   return {
-    ...afterAura,
-    wreckage: afterAura.wreckage.filter((r) => r.until > now),
+    ...afterFlag,
+    wreckage: afterFlag.wreckage.filter((r) => r.until > now),
   };
+}
+
+function tickWetFlag(w: WorldState): WorldState {
+  if (!wetGridDefaultFlag(w)) return w;
+  const players = new Map(w.players);
+  let changed = false;
+  for (const [id, p] of players) {
+    if (p.guest || p.locked || p.flagged || p.hp <= 0) continue;
+    if (!inWetGrid(p.x, p.y)) continue;
+    players.set(id, { ...p, flagged: true });
+    changed = true;
+  }
+  return changed ? { ...w, players } : w;
 }
 
 export function tickAura(w: WorldState, dt: number): WorldState {
@@ -1429,6 +1454,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
   if (sign.id === WET_GRID.id) {
     if (p.beats.unflagAsk && !p.beats.unflag && !p.guest && !p.locked) return applyUnflag(w, playerId);
+    if (w.creditsHeld && !w.seasonHeld && !w.wetCult && !p.guest && !p.locked) return applySeason(w, playerId);
     return applyFlag(w, playerId);
   }
   if (sign.id === CLAIMS_DESK.id) return applyDesk(w, playerId, "file");
@@ -2546,6 +2572,47 @@ export function applyFlag(w: WorldState, playerId: string): WorldState {
   return { ...w, players };
 }
 
+export function applySeason(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: SEASON_SPECTATOR, wink: visibleWink(true, WINK_SEASON) });
+    return { ...w, players };
+  }
+  if (w.wetCult) {
+    players.set(playerId, { ...p, heard: SEASON_CULT, wink: visibleWink(false, WINK_UNFLAG) });
+    return { ...w, players };
+  }
+  if (!w.creditsHeld) {
+    players.set(playerId, { ...p, heard: SEASON_NEED });
+    return { ...w, players };
+  }
+  if (w.seasonHeld || p.beats.season) {
+    players.set(playerId, {
+      ...p,
+      flagged: true,
+      heard: SEASON_HELD,
+      wink: visibleWink(false, WINK_SEASON),
+    });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, season: true },
+    flagged: true,
+    heard: SEASON_COPY,
+    wink: visibleWink(false, WINK_SEASON),
+  });
+  const pois = w.pois.some((poi) => poi.id === WET_GRID.id)
+    ? w.pois.map((poi) => (poi.id === WET_GRID.id ? seasonPoi() : poi))
+    : [...w.pois, seasonPoi()];
+  const signs = w.signs.some((s) => s.id === WET_GRID.id)
+    ? w.signs.map((s) => (s.id === WET_GRID.id ? { ...SEASON_PLAQUE } : s))
+    : [...w.signs, { ...SEASON_PLAQUE }];
+  return { ...w, players, seasonHeld: true, pois, signs };
+}
+
 export function applyUnflag(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
@@ -2818,6 +2885,7 @@ export function snapshot(w: WorldState) {
     appearSlow: w.appearSlow,
     appearWorld: w.appearWorld,
     creditsHeld: w.creditsHeld,
+    seasonHeld: w.seasonHeld,
     naraAtClearing: w.naraAtClearing,
     hijacked: w.hijacked,
     hijackBy: w.hijackBy,

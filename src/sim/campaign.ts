@@ -95,6 +95,7 @@ export type Beats = {
   quillGone: boolean;
   vesperGone: boolean;
   credits: boolean;
+  season: boolean;
 };
 
 export type WeatherHeard = {
@@ -179,7 +180,8 @@ export type Poi = {
     | "nara-gone"
     | "ord-gone"
     | "quill-gone"
-    | "vesper-gone";
+    | "vesper-gone"
+    | "wet-grid-season";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1335,6 +1337,7 @@ export function emptyBeats(): Beats {
     quillGone: false,
     vesperGone: false,
     credits: false,
+    season: false,
   };
 }
 
@@ -1910,6 +1913,36 @@ export function creditsPoi(): Poi {
     y: CLEARING_RING.y,
     kind: "clearing-credits",
   };
+}
+
+export const SEASON_COPY =
+  "The residual season. Wet Grid flags by default. Spoils from people. The MMO is the rest of life. Combat is not. This was not a fetch.";
+export const WINK_SEASON = "A season is a street, not a stick. The token does not strike.";
+export const SEASON_NEED = "Credits first. The hour is not residual yet.";
+export const SEASON_HELD = "The season already holds. The street flags. Combat is not.";
+export const SEASON_SPECTATOR = "A wet street. You do not get a season.";
+export const SEASON_CULT = "The street is cult. A season does not list here.";
+
+export const SEASON_PLAQUE: Sign = {
+  id: WET_GRID.id,
+  title: "The season — residual",
+  text: "Flagged by default. Spoils from people. Guests are not loot. The number does not strike.",
+  x: WET_GRID.x,
+  y: WET_GRID.y,
+};
+
+export function seasonPoi(): Poi {
+  return {
+    id: WET_GRID.id,
+    name: "The season — residual",
+    x: WET_GRID.x,
+    y: WET_GRID.y,
+    kind: "wet-grid-season",
+  };
+}
+
+export function wetGridDefaultFlag(args: { wetCult: boolean; seasonHeld: boolean; gestell: number }): boolean {
+  return !args.wetCult && (args.seasonHeld || args.gestell >= GESTELL_HOT);
 }
 export const AURA_DECAY = 1;
 export const APPEAR_SLOW = 0.25;

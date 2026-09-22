@@ -189,6 +189,14 @@ import {
   CREDITS_HELD,
   CREDITS_SPECTATOR,
   CREDITS_PLAQUE,
+  SEASON_COPY,
+  WINK_SEASON,
+  SEASON_NEED,
+  SEASON_HELD,
+  SEASON_SPECTATOR,
+  SEASON_CULT,
+  SEASON_PLAQUE,
+  wetGridDefaultFlag,
   AURA_DECAY,
   APPEAR_SLOW,
   auraTowardSeed,
@@ -438,6 +446,7 @@ import {
   applyClearing,
   applyPassing,
   applyCredits,
+  applySeason,
   applyStorm,
   applyAnnounce,
   applyBlitz,
@@ -2037,7 +2046,84 @@ describe("Movement IV Clearing and Passing", () => {
     });
     expect(applyCredits(gCredits, "g").players.get("g")?.heard).toBe(CREDITS_SPECTATOR);
     expect(gCredits.creditsHeld).toBe(false);
+  });
 
+  it("after credits, F at Wet Grid names the residual season and flags by default", () => {
+    expect(wetGridDefaultFlag({ wetCult: false, seasonHeld: true, gestell: 12 })).toBe(true);
+    expect(wetGridDefaultFlag({ wetCult: false, seasonHeld: false, gestell: GESTELL_HOT })).toBe(true);
+    expect(wetGridDefaultFlag({ wetCult: true, seasonHeld: true, gestell: 100 })).toBe(false);
+    expect(wetGridDefaultFlag({ wetCult: false, seasonHeld: false, gestell: 12 })).toBe(false);
+
+    const w = emptyWorld();
+    w.creditsHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), credits: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applySeason(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SEASON_COPY);
+    expect(p.wink).toBe(WINK_SEASON);
+    expect(p.beats.season).toBe(true);
+    expect(p.flagged).toBe(true);
+    expect(named.seasonHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === WET_GRID.id)?.kind).toBe("wet-grid-season");
+    expect(named.signs.find((s) => s.id === WET_GRID.id)?.title).toBe(SEASON_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(snapshot(named).seasonHeld).toBe(true);
+    expect(applySeason(named, "a").players.get("a")?.heard).toBe(SEASON_HELD);
+    expect(applyRead(w, "a", WET_GRID.id).seasonHeld).toBe(true);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    expect(applySeason(early, "a").players.get("a")?.heard).toBe(SEASON_NEED);
+    expect(applySeason(early, "a").seasonHeld).toBe(false);
+
+    const cult = emptyWorld();
+    cult.creditsHeld = true;
+    cult.wetCult = true;
+    cult.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    expect(applySeason(cult, "a").players.get("a")?.heard).toBe(SEASON_CULT);
+    expect(applySeason(cult, "a").seasonHeld).toBe(false);
+
+    const hot = emptyWorld();
+    hot.gestell = GESTELL_HOT;
+    hot.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const ticked = tickWorld(hot, 0.05);
+    expect(ticked.players.get("a")?.flagged).toBe(true);
+    expect(damageFor(ticked.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+
+    const gWorld = emptyWorld();
+    gWorld.creditsHeld = true;
+    gWorld.gestell = GESTELL_HOT;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySeason(gWorld, "g").players.get("g")?.heard).toBe(SEASON_SPECTATOR);
+    expect(applySeason(gWorld, "g").seasonHeld).toBe(false);
+    expect(tickWorld(gWorld, 0.05).players.get("g")?.flagged).toBe(false);
+  });
+
+  it("low Gestell Appearance leftover guest lock still holds", () => {
     const gWorld = emptyWorld();
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y });
     const guest = applyClearing(gWorld, "g", "keep");
