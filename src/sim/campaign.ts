@@ -115,6 +115,7 @@ export type Beats = {
   hitStop: boolean;
   addressed: boolean;
   party: boolean;
+  people: boolean;
   parted: boolean;
   heavy: boolean;
 };
@@ -223,6 +224,7 @@ export type Poi = {
     | "party-walk"
     | "party-parted"
     | "heavy"
+    | "ione-people"
     | "hit-stop"
     | "addressed";
 };
@@ -1783,6 +1785,7 @@ export function emptyBeats(): Beats {
     hitStop: false,
     addressed: false,
     party: false,
+    people: false,
     parted: false,
     heavy: false,
   };
@@ -2426,6 +2429,34 @@ export const IONE_GONE_PLAQUE: Sign = {
 
 export function ioneGonePoi(): Poi {
   return { id: IONE.id, name: "Ione Kade — gone", x: IONE.x, y: IONE.y, kind: "ione-gone" };
+}
+
+export function peopleReady(w: {
+  naraPersonHeld: boolean;
+  quillPersonHeld: boolean;
+  ordPersonHeld: boolean;
+  vesperPersonHeld: boolean;
+}): boolean {
+  return w.naraPersonHeld && w.quillPersonHeld && w.ordPersonHeld && w.vesperPersonHeld;
+}
+
+export const PEOPLE_COPY =
+  "The people stayed. Ione's hole is a gathering, not a process. Combat is not. This was not a fetch.";
+export const WINK_PEOPLE = "People, not functions. Gestell does not get this hour.";
+export const PEOPLE_NEED = "Nara, Quill, Ord, and Vesper must stay as people first. A gathering is not a fetch.";
+export const PEOPLE_HELD = "The gathering already holds. Ione is not a story.";
+export const PEOPLE_SPECTATOR = "An empty place. You do not get a gathering.";
+
+export const PEOPLE_PLAQUE: Sign = {
+  id: IONE.id,
+  title: "Ione — people",
+  text: "They stayed as people. Absence is a gathering. The number does not strike.",
+  x: IONE.x,
+  y: IONE.y,
+};
+
+export function peoplePoi(): Poi {
+  return { id: IONE.id, name: "Ione — people", x: IONE.x, y: IONE.y, kind: "ione-people" };
 }
 
 export const CLEARING_PREPARE =

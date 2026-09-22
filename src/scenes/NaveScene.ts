@@ -511,6 +511,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x5a5a5a
                       : poi.kind === "ione-gone"
                         ? 0x7a1028
+                      : poi.kind === "ione-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -897,6 +899,16 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — Quill will teach the difference, or sell you the print.";
     } else if (ioneGoneNear && (me.guest || me.locked)) {
       this.prompt = "An empty place. You do not get a last word.";
+    } else if (ioneGoneNear && (me.beats.people || snap.peopleHeld)) {
+      this.prompt = me.heard || "Ione — people. A gathering, not a process.";
+    } else if (
+      ioneGoneNear &&
+      snap.naraPersonHeld &&
+      snap.quillPersonHeld &&
+      snap.ordPersonHeld &&
+      snap.vesperPersonHeld
+    ) {
+      this.prompt = "F — the people stayed. Ione's hole is a gathering. Not a fetch.";
     } else if (ioneGoneNear && me.beats.ioneMark) {
       this.prompt = me.heard || "The hole holds. Ione Kade is gone.";
     } else if (ioneGoneNear) {

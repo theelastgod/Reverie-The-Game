@@ -259,8 +259,16 @@ import {
   IONE_MARK,
   IONE_MARK_LATER,
   IONE_MARK_SPECTATOR,
+  peopleReady,
+  PEOPLE_COPY,
+  WINK_PEOPLE,
+  PEOPLE_NEED,
+  PEOPLE_HELD,
+  PEOPLE_SPECTATOR,
+  PEOPLE_PLAQUE,
   WINK_ABSENCE,
   IONE_GONE_PLAQUE,
+  ioneGonePoi,
   WINK_TURN,
   PASSING_APPEAR,
   STIPEND,
@@ -578,6 +586,7 @@ import {
   applyRepair,
   applyLastWord,
   applyIoneMark,
+  applyPeople,
   applyClearing,
   applyPassing,
   applyCredits,
@@ -2218,6 +2227,53 @@ describe("Movement IV Clearing and Passing", () => {
     expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
     gWorld.ioneGone = true;
     expect(applyIoneMark(gWorld, "g").players.get("g")?.heard).toBe(IONE_MARK_SPECTATOR);
+  });
+
+  it("when the four stay as people, Ione's hole is a gathering; guests cannot", () => {
+    expect(peopleReady({ naraPersonHeld: true, quillPersonHeld: true, ordPersonHeld: true, vesperPersonHeld: true })).toBe(true);
+    expect(peopleReady({ naraPersonHeld: true, quillPersonHeld: true, ordPersonHeld: true, vesperPersonHeld: false })).toBe(false);
+    const w = emptyWorld();
+    w.ioneGone = true;
+    w.naraPersonHeld = true;
+    w.quillPersonHeld = true;
+    w.ordPersonHeld = true;
+    w.vesperPersonHeld = true;
+    w.pois = [...w.pois, ioneGonePoi()];
+    w.signs = [...w.signs, { ...IONE_GONE_PLAQUE }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      x: IONE.x,
+      y: IONE.y,
+    });
+    const gathered = applyIoneMark(w, "a");
+    const p = gathered.players.get("a")!;
+    expect(p.heard).toBe(PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PEOPLE);
+    expect(p.beats.people).toBe(true);
+    expect(gathered.peopleHeld).toBe(true);
+    expect(gathered.pois.find((poi) => poi.id === IONE.id)?.kind).toBe("ione-people");
+    expect(gathered.signs.find((s) => s.id === IONE.id)?.title).toBe(PEOPLE_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPeople(gathered, "a").players.get("a")?.heard).toBe(PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.ioneGone = true;
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: IONE.x, y: IONE.y });
+    expect(applyPeople(early, "a").players.get("a")?.heard).toBe(PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.ioneGone = true;
+    gWorld.naraPersonHeld = true;
+    gWorld.quillPersonHeld = true;
+    gWorld.ordPersonHeld = true;
+    gWorld.vesperPersonHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: IONE.x, y: IONE.y, locked: true });
+    expect(applyPeople(gWorld, "g").players.get("g")?.heard).toBe(PEOPLE_SPECTATOR);
+    expect(gWorld.peopleHeld).toBe(false);
   });
 
   it("Clearing needs garden and last word; keeping does not mint", () => {

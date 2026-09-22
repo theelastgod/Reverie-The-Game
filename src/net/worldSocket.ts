@@ -25,6 +25,7 @@ export type Snap = {
   m3Open: boolean;
   forgedSold: boolean;
   ioneGone: boolean;
+  peopleHeld?: boolean;
   announced: string | null;
   war: HouseWar;
   stallDark?: boolean;

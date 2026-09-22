@@ -331,6 +331,14 @@ import {
   WINK_ABSENCE,
   IONE_GONE_PLAQUE,
   ioneGonePoi,
+  peopleReady,
+  PEOPLE_COPY,
+  WINK_PEOPLE,
+  PEOPLE_NEED,
+  PEOPLE_HELD,
+  PEOPLE_SPECTATOR,
+  PEOPLE_PLAQUE,
+  peoplePoi,
   LAST_WORD,
   LAST_WORD_GONE,
   WINK_TURN,
@@ -759,6 +767,7 @@ export type WorldState = {
   m3Open: boolean;
   forgedSold: boolean;
   ioneGone: boolean;
+  peopleHeld: boolean;
   ordAtCable: boolean;
   naraAtStrait: boolean;
   stallDark: boolean;
@@ -1000,6 +1009,7 @@ export function emptyWorld(): WorldState {
     m3Open: false,
     forgedSold: false,
     ioneGone: false,
+    peopleHeld: false,
     ordAtCable: false,
     naraAtStrait: false,
     stallDark: false,
@@ -3682,6 +3692,7 @@ export function snapshot(w: WorldState) {
     m3Open: w.m3Open,
     forgedSold: w.forgedSold,
     ioneGone: w.ioneGone,
+    peopleHeld: w.peopleHeld,
     announced: w.announced,
     war: w.war,
   };
@@ -4268,6 +4279,7 @@ export function applyIoneMark(w: WorldState, playerId: string): WorldState {
     return { ...w, players };
   }
   if (!w.ioneGone) return w;
+  if (peopleReady(w)) return applyPeople(w, playerId);
   if (p.beats.ioneMark) {
     players.set(playerId, { ...p, heard: IONE_MARK_LATER, wink: visibleWink(false, WINK_ABSENCE) });
     return { ...w, players };
@@ -4280,6 +4292,39 @@ export function applyIoneMark(w: WorldState, playerId: string): WorldState {
     readiness: p.readiness + 1,
   });
   return { ...w, players };
+}
+
+export function applyPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, IONE.x, IONE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.ioneGone || !peopleReady(w)) {
+    players.set(playerId, { ...p, heard: PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.peopleHeld && p.beats.people) {
+    players.set(playerId, { ...p, heard: PEOPLE_HELD, wink: visibleWink(false, WINK_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, people: true, ioneMark: true },
+    heard: PEOPLE_COPY,
+    wink: visibleWink(false, WINK_PEOPLE),
+  });
+  return {
+    ...w,
+    players,
+    peopleHeld: true,
+    pois: w.pois.map((poi) => (poi.id === IONE.id ? peoplePoi() : poi)),
+    signs: w.signs.map((s) => (s.id === IONE.id ? { ...PEOPLE_PLAQUE } : s)).concat(
+      w.signs.some((s) => s.id === IONE.id) ? [] : [{ ...PEOPLE_PLAQUE }],
+    ),
+  };
 }
 
 export function applyClearing(
