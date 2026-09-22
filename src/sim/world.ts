@@ -417,6 +417,13 @@ import {
   HANDOFF_PEOPLE_SPECTATOR,
   HANDOFF_PEOPLE_PLAQUE,
   handoffPeoplePoi,
+  VAULT_PEOPLE_COPY,
+  WINK_VAULT_PEOPLE,
+  VAULT_PEOPLE_NEED,
+  VAULT_PEOPLE_HELD,
+  VAULT_PEOPLE_SPECTATOR,
+  VAULT_PEOPLE_PLAQUE,
+  vaultPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1128,6 +1135,7 @@ export type WorldState = {
   flagPeopleHeld: boolean;
   trucePeopleHeld: boolean;
   handoffPeopleHeld: boolean;
+  vaultPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1407,6 +1415,7 @@ export function emptyWorld(): WorldState {
     flagPeopleHeld: false,
     trucePeopleHeld: false,
     handoffPeopleHeld: false,
+    vaultPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2610,9 +2619,11 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.seasonHeld && !w.bracketHeld && !w.wetCult && !p.guest && !p.locked) return applyBracket(w, playerId);
     return applyFlag(w, playerId);
   }
-  if (sign.id === CLAIMS_DESK.id || sign.id === "desk-people") {
+  if (sign.id === CLAIMS_DESK.id || sign.id === "desk-people" || sign.id === "vault-people") {
     if (w.safetyPeopleHeld && !w.deskPeopleHeld) return applyDeskPeople(w, playerId);
     if (sign.id === "desk-people") return applyDeskPeople(w, playerId);
+    if (w.handoffPeopleHeld && !w.vaultPeopleHeld) return applyVaultPeople(w, playerId);
+    if (sign.id === "vault-people") return applyVaultPeople(w, playerId);
     return applyDesk(w, playerId, "file");
   }
   if (sign.id === SHRINE.id) {
@@ -4139,6 +4150,37 @@ export function applyHandoffPeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, handoffPeopleHeld: true, pois, signs };
 }
 
+export function applyVaultPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: VAULT_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_VAULT_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.handoffPeopleHeld) {
+    players.set(playerId, { ...p, heard: VAULT_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.vaultPeopleHeld && p.beats.vaultPeople) {
+    players.set(playerId, { ...p, heard: VAULT_PEOPLE_HELD, wink: visibleWink(false, WINK_VAULT_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, vaultPeople: true },
+    heard: VAULT_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_VAULT_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "vault-people")
+    ? w.pois.map((poi) => (poi.id === "vault-people" ? vaultPeoplePoi() : poi))
+    : [...w.pois, vaultPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "vault-people")
+    ? w.signs.map((s) => (s.id === "vault-people" ? { ...VAULT_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...VAULT_PEOPLE_PLAQUE }];
+  return { ...w, players, vaultPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5332,6 +5374,7 @@ export function snapshot(w: WorldState) {
     flagPeopleHeld: w.flagPeopleHeld,
     trucePeopleHeld: w.trucePeopleHeld,
     handoffPeopleHeld: w.handoffPeopleHeld,
+    vaultPeopleHeld: w.vaultPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

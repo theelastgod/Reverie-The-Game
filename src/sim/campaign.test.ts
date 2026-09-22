@@ -330,6 +330,12 @@ import {
   HANDOFF_PEOPLE_HELD,
   HANDOFF_PEOPLE_SPECTATOR,
   HANDOFF_PEOPLE_PLAQUE,
+  VAULT_PEOPLE_COPY,
+  WINK_VAULT_PEOPLE,
+  VAULT_PEOPLE_NEED,
+  VAULT_PEOPLE_HELD,
+  VAULT_PEOPLE_SPECTATOR,
+  VAULT_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -892,6 +898,7 @@ import {
   applyFlagPeople,
   applyTrucePeople,
   applyHandoffPeople,
+  applyVaultPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3353,6 +3360,44 @@ describe("Handoff — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
     expect(applyHandoffPeople(gWorld, "g").players.get("g")?.heard).toBe(HANDOFF_PEOPLE_SPECTATOR);
     expect(gWorld.handoffPeopleHeld).toBe(false);
+  });
+});
+
+describe("The vault — people", () => {
+  it("names the vault as people after the handoff; TAKE stays disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.handoffPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), handoffPeople: true },
+      x: CLAIMS_DESK.x,
+      y: CLAIMS_DESK.y,
+    });
+    const named = applyVaultPeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(VAULT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_VAULT_PEOPLE);
+    expect(p.beats.vaultPeople).toBe(true);
+    expect(named.vaultPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "vault-people")?.name).toBe("The vault — people");
+    expect(named.signs.find((s) => s.id === "vault-people")?.title).toBe(VAULT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("TAKE stays disarmed");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyVaultPeople(named, "a").players.get("a")?.heard).toBe(VAULT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLAIMS_DESK.x, y: CLAIMS_DESK.y });
+    expect(applyVaultPeople(early, "a").players.get("a")?.heard).toBe(VAULT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.handoffPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
+    expect(applyVaultPeople(gWorld, "g").players.get("g")?.heard).toBe(VAULT_PEOPLE_SPECTATOR);
+    expect(gWorld.vaultPeopleHeld).toBe(false);
   });
 });
 

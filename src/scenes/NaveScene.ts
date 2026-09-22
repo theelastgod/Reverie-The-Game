@@ -103,6 +103,7 @@ export class NaveScene extends Phaser.Scene {
         else if (!wall && nearPoint(cx, cy, GUEST_ARENA.x, GUEST_ARENA.y, 80)) key = "tile-arena";
         else if (!wall && nearPoint(cx, cy, HOUSE_HALL.x, HOUSE_HALL.y, 80)) key = "tile-hall";
         else if (!wall && nearPoint(cx, cy, CLEARING_STALL.x, CLEARING_STALL.y, 80)) key = "tile-stall";
+        else if (!wall && nearPoint(cx, cy, FORGE_TRAY.x, FORGE_TRAY.y, 80)) key = "tile-forge";
         this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
       }
     }
@@ -925,6 +926,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — open the guest arena. Practice. No spoils. Guests are not loot.";
     } else if (deskClaim && (me.guest || me.locked)) {
       this.prompt = "A period on a ledger. Guests cannot claim.";
+    } else if (deskClaim && (me.beats.vaultPeople || snap.vaultPeopleHeld)) {
+      this.prompt = me.heard || "The vault — people. File still sits. TAKE stays disarmed.";
+    } else if (deskClaim && snap.handoffPeopleHeld && !me.guest) {
+      this.prompt = "F — the vault as a house of people. File still sits. TAKE stays disarmed. Not a fetch.";
     } else if (deskClaim && (me.beats.deskPeople || snap.deskPeopleHeld)) {
       this.prompt = me.heard || "DESK — people. F file (not a yield). E TAKE is disarmed. No Base.";
     } else if (deskClaim && snap.safetyPeopleHeld && !me.guest) {

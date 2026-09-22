@@ -154,6 +154,7 @@ export type Beats = {
   flagPeople: boolean;
   trucePeople: boolean;
   handoffPeople: boolean;
+  vaultPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -296,6 +297,7 @@ export type Poi = {
     | "flag-people"
     | "truce-people"
     | "handoff-people"
+    | "vault-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2193,6 +2195,31 @@ export function handoffPeoplePoi(): Poi {
     kind: "handoff-people",
   };
 }
+
+export const VAULT_PEOPLE_COPY =
+  "The vault is a house of people, not a ledger of process. File still sits. TAKE stays disarmed. Combat is not. This was not a fetch.";
+export const WINK_VAULT_PEOPLE = "People, not a vault stick. The token does not strike.";
+export const VAULT_PEOPLE_NEED = "Handoff as people first. A vault of people is not a fetch.";
+export const VAULT_PEOPLE_HELD = "The vault already holds as people. File still sits. TAKE stays disarmed.";
+export const VAULT_PEOPLE_SPECTATOR = "A desk. You do not get a house of people.";
+
+export const VAULT_PEOPLE_PLAQUE: Sign = {
+  id: "vault-people",
+  title: "The vault — people",
+  text: "A house of people. File still sits. TAKE stays disarmed. The number does not strike.",
+  x: CLAIMS_DESK.x,
+  y: CLAIMS_DESK.y,
+};
+
+export function vaultPeoplePoi(): Poi {
+  return {
+    id: "vault-people",
+    name: "The vault — people",
+    x: CLAIMS_DESK.x,
+    y: CLAIMS_DESK.y,
+    kind: "vault-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2809,6 +2836,7 @@ export function emptyBeats(): Beats {
     flagPeople: false,
     trucePeople: false,
     handoffPeople: false,
+    vaultPeople: false,
   };
 }
 
