@@ -446,6 +446,13 @@ import {
   RESTORE_PEOPLE_SPECTATOR,
   RESTORE_PEOPLE_PLAQUE,
   restorePeoplePoi,
+  KEEP_PEOPLE_COPY,
+  WINK_KEEP_PEOPLE,
+  KEEP_PEOPLE_NEED,
+  KEEP_PEOPLE_HELD,
+  KEEP_PEOPLE_SPECTATOR,
+  KEEP_PEOPLE_PLAQUE,
+  keepPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1161,6 +1168,7 @@ export type WorldState = {
   insurancePeopleHeld: boolean;
   funeralPeopleHeld: boolean;
   restorePeopleHeld: boolean;
+  keepPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1444,6 +1452,7 @@ export function emptyWorld(): WorldState {
     insurancePeopleHeld: false,
     funeralPeopleHeld: false,
     restorePeopleHeld: false,
+    keepPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2654,11 +2663,13 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (sign.id === "vault-people") return applyVaultPeople(w, playerId);
     return applyDesk(w, playerId, "file");
   }
-  if (sign.id === SHRINE.id || sign.id === "insurance-people" || sign.id === "restore-people") {
+  if (sign.id === SHRINE.id || sign.id === "insurance-people" || sign.id === "restore-people" || sign.id === "keep-people") {
     if (w.vaultPeopleHeld && !w.insurancePeopleHeld) return applyInsurancePeople(w, playerId);
     if (sign.id === "insurance-people") return applyInsurancePeople(w, playerId);
     if (w.funeralPeopleHeld && !w.restorePeopleHeld) return applyRestorePeople(w, playerId);
     if (sign.id === "restore-people") return applyRestorePeople(w, playerId);
+    if (w.restorePeopleHeld && !w.keepPeopleHeld) return applyKeepPeople(w, playerId);
+    if (sign.id === "keep-people") return applyKeepPeople(w, playerId);
     if (w.lastGodNamed && !w.restraintHeld) return applyRestraint(w, playerId);
     if (w.restraintHeld && !p.restraint) return applyRestraintStance(w, playerId);
     if (w.carePeopleHeld && !w.shrinePeopleHeld) return applyShrinePeople(w, playerId);
@@ -4314,6 +4325,37 @@ export function applyRestorePeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, restorePeopleHeld: true, pois, signs };
 }
 
+export function applyKeepPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: KEEP_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_KEEP_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.restorePeopleHeld) {
+    players.set(playerId, { ...p, heard: KEEP_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.keepPeopleHeld && p.beats.keepPeople) {
+    players.set(playerId, { ...p, heard: KEEP_PEOPLE_HELD, wink: visibleWink(false, WINK_KEEP_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, keepPeople: true },
+    heard: KEEP_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_KEEP_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "keep-people")
+    ? w.pois.map((poi) => (poi.id === "keep-people" ? keepPeoplePoi() : poi))
+    : [...w.pois, keepPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "keep-people")
+    ? w.signs.map((s) => (s.id === "keep-people" ? { ...KEEP_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...KEEP_PEOPLE_PLAQUE }];
+  return { ...w, players, keepPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5511,6 +5553,7 @@ export function snapshot(w: WorldState) {
     insurancePeopleHeld: w.insurancePeopleHeld,
     funeralPeopleHeld: w.funeralPeopleHeld,
     restorePeopleHeld: w.restorePeopleHeld,
+    keepPeopleHeld: w.keepPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 139** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 140** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -590,7 +590,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the funeral as people, F at the shrine: restore as people. Plaque/POI **Restore — people**. Aura still costs. Not a stick.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 139 (do this next)
+## Stage 139 (landed)
+- After restore as people, F at the shrine: keep as people. Plaque/POI Keep — people. Eight Bestand still.
+- Imagine M3 tube floor. Higgsfield later.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 140 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

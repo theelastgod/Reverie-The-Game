@@ -158,6 +158,7 @@ export type Beats = {
   insurancePeople: boolean;
   funeralPeople: boolean;
   restorePeople: boolean;
+  keepPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -304,6 +305,7 @@ export type Poi = {
     | "insurance-people"
     | "funeral-people"
     | "restore-people"
+    | "keep-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2302,6 +2304,31 @@ export function restorePeoplePoi(): Poi {
     kind: "restore-people",
   };
 }
+
+export const KEEP_PEOPLE_COPY =
+  "Keep is a house of people, not a sink of process. Eight Bestand. Combat is not. This was not a fetch.";
+export const WINK_KEEP_PEOPLE = "People, not a keep stick. The token does not strike.";
+export const KEEP_PEOPLE_NEED = "Restore as people first. A keep of people is not a fetch.";
+export const KEEP_PEOPLE_HELD = "Keep already holds as people. Eight Bestand still.";
+export const KEEP_PEOPLE_SPECTATOR = "A shrine. You do not get a house of people.";
+
+export const KEEP_PEOPLE_PLAQUE: Sign = {
+  id: "keep-people",
+  title: "Keep — people",
+  text: "A house of people. Eight Bestand. The number does not strike.",
+  x: SHRINE.x,
+  y: SHRINE.y,
+};
+
+export function keepPeoplePoi(): Poi {
+  return {
+    id: "keep-people",
+    name: "Keep — people",
+    x: SHRINE.x,
+    y: SHRINE.y,
+    kind: "keep-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2922,6 +2949,7 @@ export function emptyBeats(): Beats {
     insurancePeople: false,
     funeralPeople: false,
     restorePeople: false,
+    keepPeople: false,
   };
 }
 

@@ -355,6 +355,12 @@ import {
   RESTORE_PEOPLE_HELD,
   RESTORE_PEOPLE_SPECTATOR,
   RESTORE_PEOPLE_PLAQUE,
+  KEEP_PEOPLE_COPY,
+  WINK_KEEP_PEOPLE,
+  KEEP_PEOPLE_NEED,
+  KEEP_PEOPLE_HELD,
+  KEEP_PEOPLE_SPECTATOR,
+  KEEP_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -921,6 +927,7 @@ import {
   applyInsurancePeople,
   applyFuneralPeople,
   applyRestorePeople,
+  applyKeepPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3565,6 +3572,47 @@ describe("Restore — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
     expect(applyRestorePeople(gWorld, "g").players.get("g")?.heard).toBe(RESTORE_PEOPLE_SPECTATOR);
     expect(gWorld.restorePeopleHeld).toBe(false);
+  });
+});
+
+describe("Keep — people", () => {
+  it("names keep as people after restore; eight Bestand still; guests cannot", () => {
+    const w = emptyWorld();
+    w.restorePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 40,
+      beats: { ...emptyBeats(), restorePeople: true },
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const named = applyKeepPeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(KEEP_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_KEEP_PEOPLE);
+    expect(p.beats.keepPeople).toBe(true);
+    expect(named.keepPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "keep-people")?.name).toBe("Keep — people");
+    expect(named.signs.find((s) => s.id === "keep-people")?.title).toBe(KEEP_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Eight Bestand");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyKeepPeople(named, "a").players.get("a")?.heard).toBe(KEEP_PEOPLE_HELD);
+    const kept = applyShrine(named, "a");
+    expect(kept.players.get("a")?.bestand).toBe(40 - 8);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SHRINE.x, y: SHRINE.y });
+    expect(applyKeepPeople(early, "a").players.get("a")?.heard).toBe(KEEP_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.restorePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
+    expect(applyKeepPeople(gWorld, "g").players.get("g")?.heard).toBe(KEEP_PEOPLE_SPECTATOR);
+    expect(gWorld.keepPeopleHeld).toBe(false);
   });
 });
 

@@ -104,6 +104,7 @@ export class NaveScene extends Phaser.Scene {
         else if (!wall && nearPoint(cx, cy, HOUSE_HALL.x, HOUSE_HALL.y, 80)) key = "tile-hall";
         else if (!wall && nearPoint(cx, cy, CLEARING_STALL.x, CLEARING_STALL.y, 80)) key = "tile-stall";
         else if (!wall && nearPoint(cx, cy, FORGE_TRAY.x, FORGE_TRAY.y, 80)) key = "tile-forge";
+        else if (!wall && nearPoint(cx, cy, M3_DOOR.x, M3_DOOR.y, 80)) key = "tile-m3";
         else if (!wall && nearPoint(cx, cy, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 80)) key = "tile-annex";
         this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
       }
@@ -1310,6 +1311,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
+    } else if (shrine && (me.beats.keepPeople || snap.keepPeopleHeld)) {
+      this.prompt = me.heard || "Keep — people. Eight Bestand. Not a stick.";
+    } else if (shrine && snap.restorePeopleHeld && !me.guest) {
+      this.prompt = "F — keep as a house of people. Eight Bestand. Not a fetch.";
     } else if (shrine && (me.beats.restorePeople || snap.restorePeopleHeld)) {
       this.prompt = me.heard || "Restore — people. Aura still costs. Not a stick.";
     } else if (shrine && snap.funeralPeopleHeld && !me.guest) {
