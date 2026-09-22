@@ -273,6 +273,10 @@ import {
   STIPEND_SINK,
   APPEAR_PLAQUE,
   appearPoi,
+  WINK_PASS_FAIL,
+  FAIL_PLAQUE,
+  FAIL_LATER,
+  failPoi,
   NARA_STAYS,
   NARA_STAYS_LATER,
   WINK_PASS_ABSENCE,
@@ -523,6 +527,7 @@ export type WorldState = {
   hijackBy: "" | "safety" | "cold";
   ordAtHijack: boolean;
   vesperAtHijack: boolean;
+  clearingFailed: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -697,6 +702,7 @@ export function emptyWorld(): WorldState {
     hijackBy: "",
     ordAtHijack: false,
     vesperAtHijack: false,
+    clearingFailed: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -2582,6 +2588,7 @@ export function snapshot(w: WorldState) {
     hijackBy: w.hijackBy,
     ordAtHijack: w.ordAtHijack,
     vesperAtHijack: w.vesperAtHijack,
+    clearingFailed: w.clearingFailed,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2851,15 +2858,33 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
   }
   if (!w.clearingOpen) {
     const failed = p.beats.clearing;
+    if (!failed) {
+      players.set(playerId, { ...p, heard: PASSING_NEED, wink: visibleWink(false, WINK_TURN) });
+      return { ...w, players };
+    }
+    if (w.clearingFailed && p.beats.passing) {
+      players.set(playerId, { ...p, heard: FAIL_LATER, wink: visibleWink(false, WINK_PASS_FAIL) });
+      return { ...w, players };
+    }
     players.set(playerId, {
       ...p,
-      beats: { ...p.beats, passing: failed },
-      heard: failed ? passingCopy("failed") : PASSING_NEED,
-      wink: visibleWink(false, WINK_TURN),
+      beats: { ...p.beats, passing: true },
+      heard: passingCopy("failed"),
+      wink: visibleWink(false, WINK_PASS_FAIL),
     });
-    return failed
-      ? { ...w, players, passing: { ...w.passing, ready: 0, outcome: "failed" } }
-      : { ...w, players };
+    const failedMarks = w.failed.some((f) => f.id === FAILED_PASSING.id) ? w.failed : [...w.failed, { ...FAILED_PASSING }];
+    return {
+      ...w,
+      players,
+      passing: { ...w.passing, ready: 0, starved: true, outcome: "failed" },
+      clearingFailed: true,
+      gestell: Math.min(100, w.gestell + 4),
+      failed: failedMarks,
+      pois: w.pois.map((poi) => (poi.id === CLEARING_RING.id ? failPoi() : poi)),
+      signs: w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...FAIL_PLAQUE } : s)).concat(
+        w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...FAIL_PLAQUE }],
+      ),
+    };
   }
   const dwellers = [...w.players.values()].filter((x) => !x.guest && !x.locked && x.beats.clearing).length;
   const outcome = passingResult({

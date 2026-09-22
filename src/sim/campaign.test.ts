@@ -179,6 +179,9 @@ import {
   HIJACK_MARK_LINE,
   hijackPlaque,
   PASSING_FAIL,
+  FAIL_PLAQUE,
+  WINK_PASS_FAIL,
+  FAIL_LATER,
   PASSING_NEED,
   dwellNeed,
   passingResult,
@@ -1650,6 +1653,43 @@ describe("Movement IV Clearing and Passing", () => {
     const forced = applyClearing(w, "a", "pass");
     expect(forced.players.get("a")?.heard).toBe(PASSING_NEED);
     expect(guestCanClaim(p)).toBe(false);
+  });
+
+  it("failed Passing writes the hole; Gestell drinks; no stipend; guests cannot", () => {
+    const w = angelAt(CLEARING_RING.x, CLEARING_RING.y, {
+      beats: { ...emptyBeats(), garden: true, lastWord: true, clearing: true },
+    });
+    w.clearingOpen = false;
+    w.gestell = 90;
+    const failed = applyPassing(w, "a");
+    const p = failed.players.get("a")!;
+    expect(p.heard).toBe(PASSING_FAIL);
+    expect(p.wink).toBe(WINK_PASS_FAIL);
+    expect(p.beats.passing).toBe(true);
+    expect(p.stipend).toBe(0);
+    expect(failed.passing.outcome).toBe("failed");
+    expect(failed.clearingFailed).toBe(true);
+    expect(failed.gestell).toBe(94);
+    expect(failed.pois.find((poi) => poi.id === CLEARING_RING.id)?.kind).toBe("clearing-failed");
+    expect(failed.signs.find((s) => s.id === CLEARING_RING.id)?.title).toBe(FAIL_PLAQUE.title);
+    expect(failed.failed.some((f) => f.id === FAILED_PASSING.id)).toBe(true);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPassing(failed, "a").players.get("a")?.heard).toBe(FAIL_LATER);
+
+    const gWorld = emptyWorld();
+    gWorld.clearingOpen = false;
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+      locked: true,
+      beats: { ...emptyBeats(), clearing: true },
+    });
+    const g = applyPassing(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(CLEARING_SPECTATOR);
+    expect(g.clearingFailed).toBe(false);
   });
 
   it("solo cannot force Appearance when Gestell is maxed even with a held Clearing", () => {

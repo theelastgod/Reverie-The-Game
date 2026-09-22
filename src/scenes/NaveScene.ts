@@ -493,6 +493,8 @@ export class NaveScene extends Phaser.Scene {
                               ? 0x7a1028
                             : poi.kind === "clearing-hijack"
                               ? 0x7a1028
+                            : poi.kind === "clearing-failed"
+                              ? 0x3a3a3a
                             : poi.kind === "clearing-ring"
                               ? 0xc9a56a
             : poi.kind === "care-shut"
@@ -733,6 +735,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The Clearing — world. A stipend for the shrine. Cult upkeep. Not a stick.";
     } else if (ring && (snap.naraAtClearing || snap.passing.outcome === "absence")) {
       this.prompt = me.heard || "The Clearing — absence. Nara Vale stays. The hour went by.";
+    } else if (ring && (snap.clearingFailed || snap.passing.outcome === "failed")) {
+      this.prompt = me.heard || "The Clearing — failed. Gestell kept the weather. No stipend.";
     } else if (ring && (snap.hijacked || snap.passing.outcome === "hijack")) {
       this.prompt =
         me.heard ||
@@ -1000,6 +1004,8 @@ export class NaveScene extends Phaser.Scene {
               ? snap.hijackBy === "cold"
                 ? "The Clearing — Cold"
                 : "The Clearing — Safety"
+            : snap.clearingFailed || snap.passing.outcome === "failed"
+              ? "The Clearing — failed"
             : snap.clearingOpen
             ? "The Clearing · held"
             : "The Clearing"

@@ -140,6 +140,7 @@ export type Poi = {
     | "clearing-appear"
     | "clearing-absence"
     | "clearing-hijack"
+    | "clearing-failed"
     | "wet-grid"
     | "wet-grid-cult"
     | "claims-desk"
@@ -1740,6 +1741,27 @@ export function hijackMark(serial: number): HistoryMark {
   };
 }
 export const PASSING_FAIL = "Gestell is maxed. Without a Clearing the hour does not open.";
+export const WINK_PASS_FAIL =
+  "The hour did not open. Gestell drinks the hole. A stipend is not owed. Combat is not.";
+export const FAIL_LATER = "The Clearing already failed. The process kept the weather.";
+
+export const FAIL_PLAQUE: Sign = {
+  id: CLEARING_RING.id,
+  title: "The Clearing — failed",
+  text: "No hole. Gestell kept the weather. No stipend. The number does not strike.",
+  x: CLEARING_RING.x,
+  y: CLEARING_RING.y,
+};
+
+export function failPoi(): Poi {
+  return {
+    id: CLEARING_RING.id,
+    name: "The Clearing — failed",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+    kind: "clearing-failed",
+  };
+}
 export const PASSING_NEED = "The Clearing is not held. Keep the hole first.";
 
 export const CLEARING_PLAQUE: Sign = {

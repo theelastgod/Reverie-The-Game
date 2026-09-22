@@ -56,6 +56,7 @@ export type Snap = {
   hijackBy?: "" | "safety" | "cold";
   ordAtHijack?: boolean;
   vesperAtHijack?: boolean;
+  clearingFailed?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 
