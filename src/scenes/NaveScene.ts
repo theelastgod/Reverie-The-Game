@@ -496,6 +496,8 @@ export class NaveScene extends Phaser.Scene {
                       : poi.kind === "guest-arena"
                         ? 0xe8e8e8
                       : poi.kind === "screening"
+                        ? 0x7eb6ff
+                      : poi.kind === "screening-participant"
                         ? 0xc9a56a
                       : poi.kind === "ord-gone"
                         ? 0x7a1028
@@ -707,6 +709,10 @@ export class NaveScene extends Phaser.Scene {
 
     if (screening && (me.guest || me.locked)) {
       this.prompt = "A screen. You do not get the dispatch.";
+    } else if (screening && (me.beats.participant || snap.participantHeld)) {
+      this.prompt = me.heard || "Participant room. You went under. A room, not a stick.";
+    } else if (screening && (snap.screeningHeld || me.beats.screening) && me.beats.under) {
+      this.prompt = "F — Participant room. You went under. Proximity, not a stick.";
     } else if (screening && (snap.screeningHeld || me.beats.screening)) {
       this.prompt = me.heard || "Dispatch. Public screening. The Last God is a room, not a stick.";
     } else if (screening) {

@@ -100,6 +100,7 @@ export type Beats = {
   ruinBack: boolean;
   arena: boolean;
   screening: boolean;
+  participant: boolean;
 };
 
 export type WeatherHeard = {
@@ -190,7 +191,8 @@ export type Poi = {
     | "wet-grid-season"
     | "party-blind"
     | "guest-arena"
-    | "screening";
+    | "screening"
+    | "screening-participant";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -277,6 +279,33 @@ export function screeningPoi(open = false): Poi {
     x: SCREENING.x,
     y: SCREENING.y,
     kind: "screening",
+  };
+}
+
+export type FilmRoom = "" | "observer" | "participant" | "founder";
+
+export const PARTICIPANT_COPY =
+  "Participant room. You went under. The Last God is a room you stand in. Combat is not. This was not a fetch.";
+export const WINK_PARTICIPANT = "Participant proximity. A room, not a stick. The token does not strike.";
+export const PARTICIPANT_NEED = "Go under first. Observer dispatch is not Participant.";
+export const PARTICIPANT_HELD = "The Participant room already holds. Founder is not this door.";
+export const PARTICIPANT_SPECTATOR = "A darker screen. You do not get this room.";
+
+export const PARTICIPANT_PLAQUE: Sign = {
+  id: SCREENING.id,
+  title: "Participant room",
+  text: "You stood in the hour. Proximity, not a stick. The number does not strike.",
+  x: SCREENING.x,
+  y: SCREENING.y,
+};
+
+export function participantPoi(): Poi {
+  return {
+    id: SCREENING.id,
+    name: "Participant room",
+    x: SCREENING.x,
+    y: SCREENING.y,
+    kind: "screening-participant",
   };
 }
 export const TEST_SERIAL = 7777;
@@ -1428,6 +1457,7 @@ export function emptyBeats(): Beats {
     ruinBack: false,
     arena: false,
     screening: false,
+    participant: false,
   };
 }
 

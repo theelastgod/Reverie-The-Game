@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 79** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 80** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -341,8 +341,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Public screening: F takes a dispatch. Plaque/POI Dispatch. Observer proximity. Not a stick.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 79 (do this next)
-Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
+## Stage 79 (landed)
+- After a dispatch, Angels who went under enter the Participant room. Plaque/POI Participant room. Proximity, not a stick. Observer stays Observer until under.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 80 (do this next)
+Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed. Founder room still open.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

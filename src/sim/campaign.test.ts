@@ -16,6 +16,12 @@ import {
   SCREENING_HELD,
   SCREENING_SPECTATOR,
   SCREENING_OPEN_PLAQUE,
+  PARTICIPANT_COPY,
+  WINK_PARTICIPANT,
+  PARTICIPANT_NEED,
+  PARTICIPANT_HELD,
+  PARTICIPANT_SPECTATOR,
+  PARTICIPANT_PLAQUE,
   CLERK_HP,
   GOING_UNDER,
   FREEZE_COPY,
@@ -478,6 +484,7 @@ import {
   applyRuinBack,
   applyArena,
   applyScreening,
+  applyParticipant,
   applyCyber,
   applyGlamour,
   applyDwell,
@@ -2633,6 +2640,57 @@ describe("Public screening", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SCREENING.x, y: SCREENING.y, locked: true });
     expect(applyScreening(gWorld, "g").players.get("g")?.heard).toBe(SCREENING_SPECTATOR);
     expect(gWorld.screeningHeld).toBe(false);
+  });
+
+  it("gone-under Angels enter Participant room; guests cannot; combat is not", () => {
+    const w = emptyWorld();
+    w.screeningHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), screening: true, under: true },
+      filmRoom: "observer",
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    const room = applyScreening(w, "a");
+    const p = room.players.get("a")!;
+    expect(p.heard).toBe(PARTICIPANT_COPY);
+    expect(p.wink).toBe(WINK_PARTICIPANT);
+    expect(p.beats.participant).toBe(true);
+    expect(p.filmRoom).toBe("participant");
+    expect(room.participantHeld).toBe(true);
+    expect(room.pois.find((poi) => poi.id === SCREENING.id)?.kind).toBe("screening-participant");
+    expect(room.signs.find((s) => s.id === SCREENING.id)?.title).toBe(PARTICIPANT_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyParticipant(room, "a").players.get("a")?.heard).toBe(PARTICIPANT_HELD);
+
+    const observer = emptyWorld();
+    observer.screeningHeld = true;
+    observer.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), screening: true },
+      x: SCREENING.x,
+      y: SCREENING.y,
+    });
+    expect(applyParticipant(observer, "a").players.get("a")?.heard).toBe(PARTICIPANT_NEED);
+    expect(applyScreening(observer, "a").players.get("a")?.heard).toBe(SCREENING_HELD);
+
+    const gWorld = emptyWorld();
+    gWorld.screeningHeld = true;
+    gWorld.players.set("g", {
+      ...spawnGuest("g"),
+      x: SCREENING.x,
+      y: SCREENING.y,
+      locked: true,
+      beats: { ...emptyBeats(), screening: true, under: true },
+    });
+    expect(applyParticipant(gWorld, "g").players.get("g")?.heard).toBe(PARTICIPANT_SPECTATOR);
+    expect(gWorld.participantHeld).toBe(false);
   });
 });
 

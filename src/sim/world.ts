@@ -485,6 +485,14 @@ import {
   SCREENING_HELD,
   SCREENING_SPECTATOR,
   SCREENING_OPEN_PLAQUE,
+  FilmRoom,
+  PARTICIPANT_COPY,
+  WINK_PARTICIPANT,
+  PARTICIPANT_NEED,
+  PARTICIPANT_HELD,
+  PARTICIPANT_SPECTATOR,
+  PARTICIPANT_PLAQUE,
+  participantPoi,
   screeningPoi,
   CYBER_COPY,
   WINK_CYBER,
@@ -601,6 +609,7 @@ export type Player = {
   ruinBack: boolean;
   restraint: boolean;
   surface: boolean;
+  filmRoom: FilmRoom;
 };
 
 export type WorldState = {
@@ -663,6 +672,7 @@ export type WorldState = {
   ruinBackHeld: boolean;
   arenaHeld: boolean;
   screeningHeld: boolean;
+  participantHeld: boolean;
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
   glamourHeld: boolean;
@@ -720,6 +730,7 @@ export function spawnGuest(id: string): Player {
     ruinBack: false,
     restraint: false,
     surface: false,
+    filmRoom: "",
   };
 }
 
@@ -763,6 +774,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     ruinBack: p.ruinBack,
     restraint: p.restraint,
     surface: p.surface,
+    filmRoom: p.filmRoom,
     x,
     y,
     ...patch,
@@ -862,6 +874,7 @@ export function emptyWorld(): WorldState {
     ruinBackHeld: false,
     arenaHeld: false,
     screeningHeld: false,
+    participantHeld: false,
     blitzMarks: [],
     cyberHeld: false,
     glamourHeld: false,
@@ -2982,6 +2995,7 @@ export function snapshot(w: WorldState) {
     ruinBackHeld: w.ruinBackHeld,
     arenaHeld: w.arenaHeld,
     screeningHeld: w.screeningHeld,
+    participantHeld: w.participantHeld,
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,
@@ -3243,12 +3257,14 @@ export function applyScreening(w: WorldState, playerId: string): WorldState {
     return { ...w, players };
   }
   if (w.screeningHeld && p.beats.screening) {
+    if (p.beats.under && !p.beats.participant) return applyParticipant(w, playerId);
     players.set(playerId, { ...p, heard: SCREENING_HELD, wink: visibleWink(false, WINK_SCREENING) });
     return { ...w, players };
   }
   players.set(playerId, {
     ...p,
     beats: { ...p.beats, screening: true },
+    filmRoom: p.filmRoom || "observer",
     heard: SCREENING_COPY,
     wink: visibleWink(false, WINK_SCREENING),
   });
@@ -3259,6 +3275,42 @@ export function applyScreening(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === SCREENING.id ? { ...SCREENING_OPEN_PLAQUE } : s))
     : [...w.signs, { ...SCREENING_OPEN_PLAQUE }];
   return { ...w, players, screeningHeld: true, pois, signs };
+}
+
+export function applyParticipant(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SCREENING.x, SCREENING.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: PARTICIPANT_SPECTATOR, wink: visibleWink(true, WINK_PARTICIPANT) });
+    return { ...w, players };
+  }
+  if (!w.screeningHeld || !p.beats.screening) {
+    players.set(playerId, { ...p, heard: PARTICIPANT_NEED });
+    return { ...w, players };
+  }
+  if (!p.beats.under) {
+    players.set(playerId, { ...p, heard: PARTICIPANT_NEED, wink: visibleWink(false, WINK_SCREENING) });
+    return { ...w, players };
+  }
+  if (w.participantHeld && p.beats.participant) {
+    players.set(playerId, { ...p, heard: PARTICIPANT_HELD, wink: visibleWink(false, WINK_PARTICIPANT) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, participant: true },
+    filmRoom: "participant",
+    heard: PARTICIPANT_COPY,
+    wink: visibleWink(false, WINK_PARTICIPANT),
+  });
+  return {
+    ...w,
+    players,
+    participantHeld: true,
+    pois: w.pois.map((poi) => (poi.id === SCREENING.id ? participantPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === SCREENING.id ? { ...PARTICIPANT_PLAQUE } : s)),
+  };
 }
 
 export function applyCyber(w: WorldState, playerId: string, nodeId: string): WorldState {
