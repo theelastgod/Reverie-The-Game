@@ -25,6 +25,8 @@ import {
   SHRINE,
   FUNERAL_COST,
   SHRINE_COST,
+  AURA_DIM,
+  RESTORE_COST,
   inWetGrid,
   IONE,
   movementReady,
@@ -185,6 +187,10 @@ export class NaveScene extends Phaser.Scene {
       nearPoint(me.x, me.y, FORGE_TRAY.x, FORGE_TRAY.y, 64) || nearPoint(me.x, me.y, 1080, 504, 64);
     if (atForge && me.beats.forge) {
       this.net.forge(choice === "extract" ? "sell" : "spot");
+      return;
+    }
+    if (nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56)) {
+      if (choice === "extract") this.net.restore();
       return;
     }
     if (nearPoint(me.x, me.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) {
@@ -615,7 +621,7 @@ export class NaveScene extends Phaser.Scene {
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
     } else if (shrine) {
-      this.prompt = `F keep the shrine. ${SHRINE_COST} Bestand. The Gestell thins. Not a stick.`;
+      this.prompt = `F keep (${SHRINE_COST}). E restore aura (${RESTORE_COST}). Low aura darkens Winke. Not a stick.`;
     } else if (funeralNear && !me.locked) {
       this.prompt = `F funeral. ${FUNERAL_COST} Bestand on Nara Vale's street.`;
     } else if (failNear) {
@@ -678,7 +684,7 @@ export class NaveScene extends Phaser.Scene {
     if (lock) lock.hidden = !me.locked;
     const wink = hud("wink-chip");
     if (wink) {
-      wink.hidden = me.guest || !me.wink;
+      wink.hidden = me.guest || !me.wink || me.aura < AURA_DIM;
       wink.textContent = me.wink ? `Wink · ${me.wink}` : "";
     }
     const zone = hud("zone-chip");

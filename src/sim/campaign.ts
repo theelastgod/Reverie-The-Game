@@ -327,6 +327,14 @@ export const SHRINE_COPY =
   "You kept the shrine. Eight Bestand. The Gestell thins a little. Combat is not.";
 export const SHRINE_NEED = "The shrine wants upkeep. Eight Bestand. Not a stick.";
 export const SHRINE_SPECTATOR = "A shrine. You do not keep it.";
+export const AURA_DIM = 5;
+export const RESTORE_COST = 15;
+export const RESTORE_GAIN = 8;
+export const RESTORE_COPY =
+  "You spent Bestand. Aura returns. The Wink can be held again. Combat is not.";
+export const RESTORE_NEED = "Fifteen Bestand to restore aura. Low aura darkens Winke.";
+export const RESTORE_FULL = "Your aura already holds. The spend would not strike anyway.";
+export const RESTORE_SPECTATOR = "A light you cannot buy. Guests have no aura to restore.";
 export const WINK_SINK = "Every earner has a hole. Bestand goes into the ground. The token does not strike.";
 
 export const SHRINE = { id: "shrine-upkeep", x: 640, y: 200 };
@@ -571,10 +579,6 @@ export function hallPlaque(): Sign {
   return { ...HALL_PLAQUE };
 }
 
-export function visibleWink(guest: boolean, wink: string): string {
-  return guest ? "" : wink;
-}
-
 export function namedWeatherPoi(): Poi {
   return { id: "weather", name: "Named weather", x: 192, y: 340, kind: "named-weather" };
 }
@@ -755,6 +759,11 @@ export function auraSeed(serial: number): number {
 
 export function winkeVisible(guest: boolean): boolean {
   return !guest;
+}
+
+export function visibleWink(guest: boolean, wink: string, aura = 99): string {
+  if (guest || aura < AURA_DIM) return "";
+  return wink;
 }
 
 export type HistoryMark = {

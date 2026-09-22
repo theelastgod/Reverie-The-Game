@@ -98,6 +98,10 @@ export class WorldSocket {
     this.send({ t: "desk", choice });
   }
 
+  restore() {
+    this.send({ t: "restore" });
+  }
+
   operator(choice: "hear" | "take" | "refuse") {
     this.send({ t: "operator", choice });
   }

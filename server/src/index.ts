@@ -7,6 +7,7 @@ import {
   applyWatch,
   applyForge,
   applyDesk,
+  applyRestore,
   applyClearing,
   applyAnnounce,
   applyOperator,
@@ -127,6 +128,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "desk") {
       this.w = applyDesk(this.w, id, data.choice === "take" ? "take" : "file");
+      this.broadcast();
+    } else if (data.t === "restore") {
+      this.w = applyRestore(this.w, id);
       this.broadcast();
     }
   }

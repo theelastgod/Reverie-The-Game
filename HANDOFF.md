@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 26** — Aura restoration sink (Bestand). Low aura darkens Winke. No mint.
+**Next stage: 27** — Insurance paper sink (Bestand, not a P2W revive). No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -126,8 +126,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Selling a print nets 20 after a 5 Bestand listing fee. Cult Winke refuse the stall.
 - Exhibition copies decay (20s). Cult does not. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 26 (do this next)
-Aura restoration sink (Bestand). Low aura darkens Winke. No combat from the spend. No mint. No Base.
+## Stage 26 (landed)
+- Shrine E restores aura (15 Bestand, +8 aura). Aura below 5 darkens Winke.
+- Guests cannot restore. Spend does not change `damageFor`. Claims stay disarmed.
+
+## Stage 27 (do this next)
+Insurance paper: Bestand sink, respawn convenience, not a pay-to-win revive. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

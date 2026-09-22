@@ -124,6 +124,13 @@ import {
   SHRINE_COPY,
   SHRINE_NEED,
   SHRINE_SPECTATOR,
+  AURA_DIM,
+  RESTORE_COST,
+  RESTORE_GAIN,
+  RESTORE_COPY,
+  RESTORE_NEED,
+  RESTORE_FULL,
+  RESTORE_SPECTATOR,
   WINK_SINK,
   Claim,
   FLAG_COPY,
@@ -756,6 +763,33 @@ export function applyShrine(w: WorldState, playerId: string): WorldState {
     wink: visibleWink(false, WINK_SINK),
   });
   return { ...w, players, gestell: Math.max(0, w.gestell - 2) };
+}
+
+export function applyRestore(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: RESTORE_SPECTATOR, wink: visibleWink(true, p.wink, 0) });
+    return { ...w, players };
+  }
+  if (p.aura >= AURA_DIM + RESTORE_GAIN) {
+    players.set(playerId, { ...p, heard: RESTORE_FULL });
+    return { ...w, players };
+  }
+  if (p.bestand < RESTORE_COST) {
+    players.set(playerId, { ...p, heard: RESTORE_NEED, wink: visibleWink(false, p.wink, p.aura) });
+    return { ...w, players };
+  }
+  const aura = p.aura + RESTORE_GAIN;
+  players.set(playerId, {
+    ...p,
+    bestand: p.bestand - RESTORE_COST,
+    aura,
+    heard: RESTORE_COPY,
+    wink: visibleWink(false, p.wink || WINK_SINK, aura),
+  });
+  return { ...w, players };
 }
 
 export function applyGoingUnder(w: WorldState, playerId: string): WorldState {

@@ -140,6 +140,13 @@ import {
   SHRINE_COPY,
   SHRINE_NEED,
   SHRINE_SPECTATOR,
+  AURA_DIM,
+  RESTORE_COST,
+  RESTORE_GAIN,
+  RESTORE_COPY,
+  RESTORE_NEED,
+  RESTORE_FULL,
+  RESTORE_SPECTATOR,
   WINK_SINK,
   SHRINE,
 } from "./campaign";
@@ -155,6 +162,7 @@ import {
   applyFlag,
   applyDesk,
   applyShrine,
+  applyRestore,
   applyLastWord,
   applyClearing,
   applyPassing,
@@ -1279,6 +1287,47 @@ describe("Bestand sinks", () => {
     expect(guest.players.get("g")?.heard).toBe(SHRINE_SPECTATOR);
     expect(guest.players.get("g")?.bestand).toBe(20);
     expect(guest.gestell).toBe(gWorld.gestell);
+  });
+
+  it("aura restore spends Bestand, un-dims Winke, never damage", () => {
+    expect(visibleWink(false, WINK_SINK, 2)).toBe("");
+    expect(visibleWink(false, WINK_SINK, AURA_DIM)).toBe(WINK_SINK);
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: 2,
+      wink: WINK_SINK,
+      bestand: 4,
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const poor = applyRestore(w, "a");
+    expect(poor.players.get("a")?.heard).toBe(RESTORE_NEED);
+    expect(poor.players.get("a")?.aura).toBe(2);
+
+    w.players.set("a", { ...poor.players.get("a")!, bestand: 20 });
+    const paid = applyRestore(w, "a");
+    const p = paid.players.get("a")!;
+    expect(p.bestand).toBe(20 - RESTORE_COST);
+    expect(p.aura).toBe(2 + RESTORE_GAIN);
+    expect(p.heard).toBe(RESTORE_COPY);
+    expect(p.wink).toBe(WINK_SINK);
+    expect(visibleWink(false, p.wink, p.aura)).toBe(WINK_SINK);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const full = applyRestore({ ...paid, players: new Map([["a", { ...p, aura: 40, bestand: 40 }]]) }, "a");
+    expect(full.players.get("a")?.heard).toBe(RESTORE_FULL);
+    expect(full.players.get("a")?.bestand).toBe(40);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, bestand: 40 });
+    const g = applyRestore(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(RESTORE_SPECTATOR);
+    expect(g.players.get("g")?.aura).toBe(0);
+    expect(guestCanClaim(g.players.get("g")!)).toBe(false);
   });
 });
 
