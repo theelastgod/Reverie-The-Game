@@ -102,6 +102,7 @@ export type Snap = {
   cablePeopleHeld?: boolean;
   organsPeopleHeld?: boolean;
   vesperPeopleHeld?: boolean;
+  m3PeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

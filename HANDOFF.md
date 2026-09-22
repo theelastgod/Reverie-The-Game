@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 113** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 114** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -478,8 +478,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the organs as people, F at Vesper's desk: a house of people, not a concentrator. Plaque/POI Vesper — people. She will not sell a god.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 113 (do this next)
-Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed. Organs as people are in.
+## Stage 113 (landed)
+- After Vesper as people, F at M3: a house of people, not a tube of process. Plaque/POI M3 — people. Going-under still works.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 114 (do this next)
+Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

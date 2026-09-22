@@ -270,6 +270,13 @@ import {
   ORGANS_PEOPLE_PLAQUE,
   organsPeoplePoi,
   VESPER_PEOPLE_COPY,
+  M3_PEOPLE_COPY,
+  WINK_M3_PEOPLE,
+  M3_PEOPLE_NEED,
+  M3_PEOPLE_HELD,
+  M3_PEOPLE_SPECTATOR,
+  M3_PEOPLE_PLAQUE,
+  m3PeoplePoi,
   WINK_VESPER_PEOPLE,
   VESPER_PEOPLE_NEED,
   VESPER_PEOPLE_HELD,
@@ -957,6 +964,7 @@ export type WorldState = {
   cablePeopleHeld: boolean;
   organsPeopleHeld: boolean;
   vesperPeopleHeld: boolean;
+  m3PeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1215,6 +1223,7 @@ export function emptyWorld(): WorldState {
     cablePeopleHeld: false,
     organsPeopleHeld: false,
     vesperPeopleHeld: false,
+    m3PeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3216,6 +3225,41 @@ export function applyVesperPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, vesperPeopleHeld: true, pois, signs };
 }
 
+export function applyM3People(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, M3_DOOR.x, M3_DOOR.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: M3_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_M3_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.vesperPeopleHeld) {
+    players.set(playerId, { ...p, heard: M3_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.m3PeopleHeld && p.beats.m3People) {
+    players.set(playerId, { ...p, heard: M3_PEOPLE_HELD, wink: visibleWink(false, WINK_M3_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, m3People: true },
+    heard: M3_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_M3_PEOPLE),
+  });
+  return {
+    ...w,
+    players,
+    m3PeopleHeld: true,
+    pois: w.pois.map((poi) => (poi.id === M3_DOOR.id ? m3PeoplePoi() : poi)).concat(
+      w.pois.some((poi) => poi.id === M3_DOOR.id) ? [] : [m3PeoplePoi()],
+    ),
+    signs: w.signs.map((s) => (s.id === M3_DOOR.id ? { ...M3_PEOPLE_PLAQUE } : s)).concat(
+      w.signs.some((s) => s.id === M3_DOOR.id) ? [] : [{ ...M3_PEOPLE_PLAQUE }],
+    ),
+  };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -3851,6 +3895,7 @@ export function applyM3(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: M3_SPECTATOR, wink: "" });
     return { ...w, players };
   }
+  if (w.vesperPeopleHeld && !w.m3PeopleHeld) return applyM3People(w, playerId);
   if (!w.m3Open) {
     players.set(playerId, { ...p, heard: ORGAN_NEED_M3 });
     return { ...w, players };
@@ -4387,6 +4432,7 @@ export function snapshot(w: WorldState) {
     cablePeopleHeld: w.cablePeopleHeld,
     organsPeopleHeld: w.organsPeopleHeld,
     vesperPeopleHeld: w.vesperPeopleHeld,
+    m3PeopleHeld: w.m3PeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

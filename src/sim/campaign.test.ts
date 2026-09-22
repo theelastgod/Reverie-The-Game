@@ -205,6 +205,12 @@ import {
   VESPER_PEOPLE_HELD,
   VESPER_PEOPLE_SPECTATOR,
   VESPER_PEOPLE_PLAQUE,
+  M3_PEOPLE_COPY,
+  WINK_M3_PEOPLE,
+  M3_PEOPLE_NEED,
+  M3_PEOPLE_HELD,
+  M3_PEOPLE_SPECTATOR,
+  M3_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -742,6 +748,7 @@ import {
   applyCablePeople,
   applyOrgansPeople,
   applyVesperPeople,
+  applyM3People,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2349,6 +2356,45 @@ describe("Vesper — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: OPERATOR_DESK.x, y: OPERATOR_DESK.y, locked: true });
     expect(applyVesperPeople(gWorld, "g").players.get("g")?.heard).toBe(VESPER_PEOPLE_SPECTATOR);
     expect(gWorld.vesperPeopleHeld).toBe(false);
+  });
+});
+
+describe("M3 — people", () => {
+  it("names M3 as people after Vesper; going-under still works; guests cannot", () => {
+    const w = emptyWorld();
+    w.vesperPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), vesperPeople: true },
+      x: M3_DOOR.x,
+      y: M3_DOOR.y,
+    });
+    const named = applyM3(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(M3_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_M3_PEOPLE);
+    expect(p.beats.m3People).toBe(true);
+    expect(named.m3PeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === M3_DOOR.id)?.kind).toBe("m3-people");
+    expect(named.signs.find((s) => s.id === M3_DOOR.id)?.title).toBe(M3_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Going-under still works");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyM3People(named, "a").players.get("a")?.heard).toBe(M3_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: M3_DOOR.x, y: M3_DOOR.y });
+    expect(applyM3People(early, "a").players.get("a")?.heard).toBe(M3_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.vesperPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: M3_DOOR.x, y: M3_DOOR.y, locked: true });
+    expect(applyM3(gWorld, "g").players.get("g")?.heard).toBe(M3_SPECTATOR);
+    expect(applyM3People(gWorld, "g").players.get("g")?.heard).toBe(M3_PEOPLE_SPECTATOR);
+    expect(gWorld.m3PeopleHeld).toBe(false);
   });
 });
 

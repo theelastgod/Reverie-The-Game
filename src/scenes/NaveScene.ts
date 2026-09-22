@@ -567,6 +567,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "vesper-people"
                         ? 0xc9a56a
+                      : poi.kind === "m3-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1045,6 +1047,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A concentrator. She will not quote until you have read the hall.";
     } else if (m3 && (me.guest || me.locked)) {
       this.prompt = "A door with a number. You do not travel organs.";
+    } else if (m3 && (me.beats.m3People || snap.m3PeopleHeld)) {
+      this.prompt = me.heard || "M3 — people. Going-under still works. Not a stick.";
+    } else if (m3 && snap.vesperPeopleHeld && !me.guest) {
+      this.prompt = "F — M3 as a house of people. Going-under still works. Not a fetch.";
     } else if (m3 && snap.m3Open && !me.guest) {
       this.prompt = me.inM3 ? me.heard || "The Third Movement is organs, not nations." : "F — enter Movement III. Strait / Foundry / Cable.";
     } else if (m3) {

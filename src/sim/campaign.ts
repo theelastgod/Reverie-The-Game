@@ -133,6 +133,7 @@ export type Beats = {
   cablePeople: boolean;
   organsPeople: boolean;
   vesperPeople: boolean;
+  m3People: boolean;
 };
 
 export type WeatherHeard = {
@@ -254,6 +255,7 @@ export type Poi = {
     | "cable-people"
     | "organs-people"
     | "vesper-people"
+    | "m3-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1923,6 +1925,31 @@ export function vesperPeoplePoi(): Poi {
   };
 }
 
+export const M3_PEOPLE_COPY =
+  "M3 is a house of people, not a tube of process. Going-under still works. Combat is not. This was not a fetch.";
+export const WINK_M3_PEOPLE = "People, not a corridor. The token does not strike.";
+export const M3_PEOPLE_NEED = "Vesper as people first. A tube of people is not a fetch.";
+export const M3_PEOPLE_HELD = "M3 already holds as people. Going-under still works.";
+export const M3_PEOPLE_SPECTATOR = "A door. You do not get a house of people.";
+
+export const M3_PEOPLE_PLAQUE: Sign = {
+  id: M3_DOOR.id,
+  title: "M3 — people",
+  text: "A house of people. Going-under still works. The number does not strike.",
+  x: M3_DOOR.x,
+  y: M3_DOOR.y,
+};
+
+export function m3PeoplePoi(): Poi {
+  return {
+    id: M3_DOOR.id,
+    name: "M3 — people",
+    x: M3_DOOR.x,
+    y: M3_DOOR.y,
+    kind: "m3-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2211,6 +2238,7 @@ export function emptyBeats(): Beats {
     cablePeople: false,
     organsPeople: false,
     vesperPeople: false,
+    m3People: false,
   };
 }
 
