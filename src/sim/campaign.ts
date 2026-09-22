@@ -161,6 +161,7 @@ export type Beats = {
   keepPeople: boolean;
   tithePeople: boolean;
   freezePeople: boolean;
+  repairPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -310,6 +311,7 @@ export type Poi = {
     | "keep-people"
     | "tithe-people"
     | "freeze-people"
+    | "repair-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2383,6 +2385,31 @@ export function freezePeoplePoi(): Poi {
     kind: "freeze-people",
   };
 }
+
+export const REPAIR_PEOPLE_COPY =
+  "Repair is a house of people, not a print of process. Seven Bestand still. Cult does not crack. Combat is not. This was not a fetch.";
+export const WINK_REPAIR_PEOPLE = "People, not a repair stick. The token does not strike.";
+export const REPAIR_PEOPLE_NEED = "The freeze as people first. A repair of people is not a fetch.";
+export const REPAIR_PEOPLE_HELD = "Repair already holds as people. Seven Bestand still. Cult does not crack.";
+export const REPAIR_PEOPLE_SPECTATOR = "A stall. You do not get a house of people.";
+
+export const REPAIR_PEOPLE_PLAQUE: Sign = {
+  id: "repair-people",
+  title: "Repair — people",
+  text: "A house of people. Seven Bestand. Cult does not crack. The number does not strike.",
+  x: CLEARING_STALL.x,
+  y: CLEARING_STALL.y,
+};
+
+export function repairPeoplePoi(): Poi {
+  return {
+    id: "repair-people",
+    name: "Repair — people",
+    x: CLEARING_STALL.x,
+    y: CLEARING_STALL.y,
+    kind: "repair-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3006,6 +3033,7 @@ export function emptyBeats(): Beats {
     keepPeople: false,
     tithePeople: false,
     freezePeople: false,
+    repairPeople: false,
   };
 }
 

@@ -467,6 +467,13 @@ import {
   FREEZE_PEOPLE_SPECTATOR,
   FREEZE_PEOPLE_PLAQUE,
   freezePeoplePoi,
+  REPAIR_PEOPLE_COPY,
+  WINK_REPAIR_PEOPLE,
+  REPAIR_PEOPLE_NEED,
+  REPAIR_PEOPLE_HELD,
+  REPAIR_PEOPLE_SPECTATOR,
+  REPAIR_PEOPLE_PLAQUE,
+  repairPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1185,6 +1192,7 @@ export type WorldState = {
   keepPeopleHeld: boolean;
   tithePeopleHeld: boolean;
   freezePeopleHeld: boolean;
+  repairPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1471,6 +1479,7 @@ export function emptyWorld(): WorldState {
     keepPeopleHeld: false,
     tithePeopleHeld: false,
     freezePeopleHeld: false,
+    repairPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2644,7 +2653,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (sign.id === "annex-people") return applyAnnexPeople(w, playerId);
     return applyFreeze(w, playerId);
   }
-  if (sign.id === CLEARING_STALL.id) {
+  if (sign.id === CLEARING_STALL.id || sign.id === "repair-people") {
+    if (w.freezePeopleHeld && !w.repairPeopleHeld) return applyRepairPeople(w, playerId);
+    if (sign.id === "repair-people") return applyRepairPeople(w, playerId);
     if (p.beats.hangAsk && p.cultWink && !p.beats.hang && !p.guest && !p.locked) return applyHang(w, playerId);
     if (p.messenger === "iridescent" && !p.guest && !p.locked && !w.glamourHeld && !p.beats.glamour) {
       return applyGlamour(w, playerId);
@@ -3006,6 +3017,7 @@ export function applyInsure(w: WorldState, playerId: string): WorldState {
 export function applyRepair(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  if (w.freezePeopleHeld && !w.repairPeopleHeld) return applyRepairPeople(w, playerId);
   const players = new Map(w.players);
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, heard: REPAIR_SPECTATOR, wink: visibleWink(true, WINK_SINK) });
@@ -4440,6 +4452,37 @@ export function applyFreezePeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, freezePeopleHeld: true, pois, signs };
 }
 
+export function applyRepairPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_STALL.x, CLEARING_STALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: REPAIR_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_REPAIR_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.freezePeopleHeld) {
+    players.set(playerId, { ...p, heard: REPAIR_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.repairPeopleHeld && p.beats.repairPeople) {
+    players.set(playerId, { ...p, heard: REPAIR_PEOPLE_HELD, wink: visibleWink(false, WINK_REPAIR_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, repairPeople: true },
+    heard: REPAIR_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_REPAIR_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "repair-people")
+    ? w.pois.map((poi) => (poi.id === "repair-people" ? repairPeoplePoi() : poi))
+    : [...w.pois, repairPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "repair-people")
+    ? w.signs.map((s) => (s.id === "repair-people" ? { ...REPAIR_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...REPAIR_PEOPLE_PLAQUE }];
+  return { ...w, players, repairPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5641,6 +5684,7 @@ export function snapshot(w: WorldState) {
     keepPeopleHeld: w.keepPeopleHeld,
     tithePeopleHeld: w.tithePeopleHeld,
     freezePeopleHeld: w.freezePeopleHeld,
+    repairPeopleHeld: w.repairPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

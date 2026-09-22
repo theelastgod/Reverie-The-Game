@@ -373,6 +373,12 @@ import {
   FREEZE_PEOPLE_HELD,
   FREEZE_PEOPLE_SPECTATOR,
   FREEZE_PEOPLE_PLAQUE,
+  REPAIR_PEOPLE_COPY,
+  WINK_REPAIR_PEOPLE,
+  REPAIR_PEOPLE_NEED,
+  REPAIR_PEOPLE_HELD,
+  REPAIR_PEOPLE_SPECTATOR,
+  REPAIR_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -942,6 +948,7 @@ import {
   applyKeepPeople,
   applyTithePeople,
   applyFreezePeople,
+  applyRepairPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3720,6 +3727,54 @@ describe("Freeze — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SAFETY_ANNEX.x, y: SAFETY_ANNEX.y, locked: true });
     expect(applyFreezePeople(gWorld, "g").players.get("g")?.heard).toBe(FREEZE_PEOPLE_SPECTATOR);
     expect(gWorld.freezePeopleHeld).toBe(false);
+  });
+});
+
+describe("Repair — people", () => {
+  it("names repair as people after the freeze; seven Bestand still; guests cannot", () => {
+    const w = emptyWorld();
+    w.freezePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 20,
+      damaged: 1,
+      fakeWinke: 0,
+      beats: { ...emptyBeats(), freezePeople: true },
+      x: CLEARING_STALL.x,
+      y: CLEARING_STALL.y,
+    });
+    const named = applyRepair(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(REPAIR_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_REPAIR_PEOPLE);
+    expect(p.beats.repairPeople).toBe(true);
+    expect(p.damaged).toBe(1);
+    expect(p.bestand).toBe(20);
+    expect(named.repairPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "repair-people")?.name).toBe("Repair — people");
+    expect(named.signs.find((s) => s.id === "repair-people")?.title).toBe(REPAIR_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Seven Bestand");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyRepairPeople(named, "a").players.get("a")?.heard).toBe(REPAIR_PEOPLE_HELD);
+
+    const fixed = applyRepair(named, "a");
+    expect(fixed.players.get("a")?.damaged).toBe(0);
+    expect(fixed.players.get("a")?.fakeWinke).toBe(1);
+    expect(fixed.players.get("a")?.bestand).toBe(20 - REPAIR_COST);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLEARING_STALL.x, y: CLEARING_STALL.y });
+    expect(applyRepairPeople(early, "a").players.get("a")?.heard).toBe(REPAIR_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.freezePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
+    expect(applyRepairPeople(gWorld, "g").players.get("g")?.heard).toBe(REPAIR_PEOPLE_SPECTATOR);
+    expect(gWorld.repairPeopleHeld).toBe(false);
   });
 });
 
