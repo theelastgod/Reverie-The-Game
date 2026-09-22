@@ -168,6 +168,7 @@ export type Beats = {
   restraintPeople: boolean;
   dodgePeople: boolean;
   heavyPeople: boolean;
+  hitStopPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -324,6 +325,7 @@ export type Poi = {
     | "restraint-people"
     | "dodge-people"
     | "heavy-people"
+    | "hitstop-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2572,6 +2574,31 @@ export function heavyPeoplePoi(): Poi {
     kind: "heavy-people",
   };
 }
+
+export const HITSTOP_PEOPLE_COPY =
+  "Hit-stop is a house of people, not a freeze of process. The hit still holds. You did not strike harder. Combat is not. This was not a fetch.";
+export const WINK_HITSTOP_PEOPLE = "People, not a hold stick. The token does not strike.";
+export const HITSTOP_PEOPLE_NEED = "Heavy as people first. A hit-stop of people is not a fetch.";
+export const HITSTOP_PEOPLE_HELD = "Hit-stop already holds as people. The hit still holds. You did not strike harder.";
+export const HITSTOP_PEOPLE_SPECTATOR = "An arena. You do not get a house of people.";
+
+export const HITSTOP_PEOPLE_PLAQUE: Sign = {
+  id: "hitstop-people",
+  title: "Hit-stop — people",
+  text: "A house of people. The hit still holds. You did not strike harder. The number does not strike.",
+  x: GUEST_ARENA.x,
+  y: GUEST_ARENA.y,
+};
+
+export function hitStopPeoplePoi(): Poi {
+  return {
+    id: "hitstop-people",
+    name: "Hit-stop — people",
+    x: GUEST_ARENA.x,
+    y: GUEST_ARENA.y,
+    kind: "hitstop-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3202,6 +3229,7 @@ export function emptyBeats(): Beats {
     restraintPeople: false,
     dodgePeople: false,
     heavyPeople: false,
+    hitStopPeople: false,
   };
 }
 

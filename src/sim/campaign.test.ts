@@ -415,6 +415,12 @@ import {
   HEAVY_PEOPLE_HELD,
   HEAVY_PEOPLE_SPECTATOR,
   HEAVY_PEOPLE_PLAQUE,
+  HITSTOP_PEOPLE_COPY,
+  WINK_HITSTOP_PEOPLE,
+  HITSTOP_PEOPLE_NEED,
+  HITSTOP_PEOPLE_HELD,
+  HITSTOP_PEOPLE_SPECTATOR,
+  HITSTOP_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -991,6 +997,7 @@ import {
   applyRestraintPeople,
   applyDodgePeople,
   applyHeavyPeople,
+  applyHitStopPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4063,6 +4070,44 @@ describe("Heavy — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
     expect(applyHeavyPeople(gWorld, "g").players.get("g")?.heard).toBe(HEAVY_PEOPLE_SPECTATOR);
     expect(gWorld.heavyPeopleHeld).toBe(false);
+  });
+});
+
+describe("Hit-stop — people", () => {
+  it("names hit-stop as people after heavy; the hit still holds; guests cannot", () => {
+    const w = emptyWorld();
+    w.heavyPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), heavyPeople: true },
+      x: GUEST_ARENA.x,
+      y: GUEST_ARENA.y,
+    });
+    const named = applyRead(w, "a", GUEST_ARENA.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HITSTOP_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HITSTOP_PEOPLE);
+    expect(p.beats.hitStopPeople).toBe(true);
+    expect(named.hitStopPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "hitstop-people")?.name).toBe("Hit-stop — people");
+    expect(named.signs.find((s) => s.id === "hitstop-people")?.title).toBe(HITSTOP_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("did not strike harder");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHitStopPeople(named, "a").players.get("a")?.heard).toBe(HITSTOP_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: GUEST_ARENA.x, y: GUEST_ARENA.y });
+    expect(applyHitStopPeople(early, "a").players.get("a")?.heard).toBe(HITSTOP_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.heavyPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
+    expect(applyHitStopPeople(gWorld, "g").players.get("g")?.heard).toBe(HITSTOP_PEOPLE_SPECTATOR);
+    expect(gWorld.hitStopPeopleHeld).toBe(false);
   });
 });
 

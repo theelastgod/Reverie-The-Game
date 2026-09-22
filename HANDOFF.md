@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 149** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 150** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -634,7 +634,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After dodge as people, F at the guest arena: heavy as people. Plaque/POI **Heavy — people**. Same number. Telegraph still drops.
 - Guests cannot name it. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 149 (do this next)
+## Stage 149 (landed)
+- After heavy as people, F at the guest arena: hit-stop as people. Plaque/POI **Hit-stop — people**. The hit still holds. You did not strike harder.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 150 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
