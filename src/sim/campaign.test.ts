@@ -229,6 +229,12 @@ import {
   ARENA_PEOPLE_HELD,
   ARENA_PEOPLE_SPECTATOR,
   ARENA_PEOPLE_PLAQUE,
+  UNDER_PEOPLE_COPY,
+  WINK_UNDER_PEOPLE,
+  UNDER_PEOPLE_NEED,
+  UNDER_PEOPLE_HELD,
+  UNDER_PEOPLE_SPECTATOR,
+  UNDER_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -770,6 +776,7 @@ import {
   applyScreeningPeople,
   applyAnnexPeople,
   applyArenaPeople,
+  applyUnderPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2530,6 +2537,44 @@ describe("Arena — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
     expect(applyArenaPeople(gWorld, "g").players.get("g")?.heard).toBe(ARENA_PEOPLE_SPECTATOR);
     expect(gWorld.arenaPeopleHeld).toBe(false);
+  });
+});
+
+describe("Going-under — people", () => {
+  it("names going-under as people after the arena; the first hour still works; guests cannot", () => {
+    const w = emptyWorld();
+    w.arenaPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), arenaPeople: true },
+      x: GOING_UNDER.x,
+      y: GOING_UNDER.y,
+    });
+    const named = applyUnderPeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(UNDER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_UNDER_PEOPLE);
+    expect(p.beats.underPeople).toBe(true);
+    expect(named.underPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === "going-under")?.kind).toBe("under-people");
+    expect(named.signs.find((s) => s.id === "going-under")?.title).toBe(UNDER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("first hour still works");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyUnderPeople(named, "a").players.get("a")?.heard).toBe(UNDER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: GOING_UNDER.x, y: GOING_UNDER.y });
+    expect(applyUnderPeople(early, "a").players.get("a")?.heard).toBe(UNDER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.arenaPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: GOING_UNDER.x, y: GOING_UNDER.y, locked: true });
+    expect(applyUnderPeople(gWorld, "g").players.get("g")?.heard).toBe(UNDER_PEOPLE_SPECTATOR);
+    expect(gWorld.underPeopleHeld).toBe(false);
   });
 });
 

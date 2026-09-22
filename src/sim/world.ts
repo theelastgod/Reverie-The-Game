@@ -296,6 +296,13 @@ import {
   ARENA_PEOPLE_HELD,
   ARENA_PEOPLE_SPECTATOR,
   ARENA_PEOPLE_PLAQUE,
+  UNDER_PEOPLE_COPY,
+  WINK_UNDER_PEOPLE,
+  UNDER_PEOPLE_NEED,
+  UNDER_PEOPLE_HELD,
+  UNDER_PEOPLE_SPECTATOR,
+  UNDER_PEOPLE_PLAQUE,
+  underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
   WINK_VESPER_PEOPLE,
@@ -989,6 +996,7 @@ export type WorldState = {
   screeningPeopleHeld: boolean;
   annexPeopleHeld: boolean;
   arenaPeopleHeld: boolean;
+  underPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1251,6 +1259,7 @@ export function emptyWorld(): WorldState {
     screeningPeopleHeld: false,
     annexPeopleHeld: false,
     arenaPeopleHeld: false,
+    underPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2765,6 +2774,7 @@ export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, locked: true, heard: GUEST_LOCK });
     return { ...w, players };
   }
+  if (w.arenaPeopleHeld && !w.underPeopleHeld) return applyUnderPeople(w, playerId);
   const rites = w.rites.map((r) => (r.kind === "going-under" ? { ...r, done: true } : r));
   players.set(playerId, {
     ...p,
@@ -3389,6 +3399,37 @@ export function applyArenaPeople(w: WorldState, playerId: string): WorldState {
     pois: w.pois.map((poi) => (poi.id === GUEST_ARENA.id ? arenaPeoplePoi() : poi)),
     signs: w.signs.map((s) => (s.id === GUEST_ARENA.id ? { ...ARENA_PEOPLE_PLAQUE } : s)),
   };
+}
+
+export function applyUnderPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, GOING_UNDER.x, GOING_UNDER.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: UNDER_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_UNDER_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.arenaPeopleHeld) {
+    players.set(playerId, { ...p, heard: UNDER_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.underPeopleHeld && p.beats.underPeople) {
+    players.set(playerId, { ...p, heard: UNDER_PEOPLE_HELD, wink: visibleWink(false, WINK_UNDER_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, underPeople: true },
+    heard: UNDER_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_UNDER_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "going-under")
+    ? w.pois.map((poi) => (poi.id === "going-under" ? underPeoplePoi() : poi))
+    : [...w.pois, underPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "going-under")
+    ? w.signs.map((s) => (s.id === "going-under" ? { ...UNDER_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...UNDER_PEOPLE_PLAQUE }];
+  return { ...w, players, underPeopleHeld: true, pois, signs };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -4567,6 +4608,7 @@ export function snapshot(w: WorldState) {
     screeningPeopleHeld: w.screeningPeopleHeld,
     annexPeopleHeld: w.annexPeopleHeld,
     arenaPeopleHeld: w.arenaPeopleHeld,
+    underPeopleHeld: w.underPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

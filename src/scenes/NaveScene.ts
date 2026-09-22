@@ -573,6 +573,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "annex-people"
                         ? 0xc9a56a
+                      : poi.kind === "under-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1236,6 +1238,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — seed a palindrome Wink. Not a stick.";
     } else if (histNear) {
       this.prompt = "F — bury a prior hour. Only your serial can see this wreckage.";
+    } else if (under && (me.beats.underPeople || snap.underPeopleHeld)) {
+      this.prompt = me.heard || "Going-under — people. The first hour still works. Not a stick.";
+    } else if (under && snap.arenaPeopleHeld && !me.guest) {
+      this.prompt = "F — going-under as a house of people. The first hour still works. Not a fetch.";
     } else if (under && movementReady(me.beats)) {
       this.prompt = "F — the first going-under. Guests stop here.";
     } else if (under) {

@@ -137,6 +137,7 @@ export type Beats = {
   screeningPeople: boolean;
   annexPeople: boolean;
   arenaPeople: boolean;
+  underPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -262,6 +263,7 @@ export type Poi = {
     | "screening-people"
     | "annex-people"
     | "arena-people"
+    | "under-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -522,6 +524,31 @@ export const NAVE_SIGNS: Sign[] = [
 
 export const BURIAL_PLOT: Rite = { id: "nara-plot", kind: "burial", x: 240, y: 780, done: false };
 export const GOING_UNDER: Rite = { id: "going-under", kind: "going-under", x: 696, y: 120, done: false };
+
+export const UNDER_PEOPLE_COPY =
+  "Going-under is a house of people, not a lock of process. The first hour still works. Combat is not. This was not a fetch.";
+export const WINK_UNDER_PEOPLE = "People, not a guest lock. The token does not strike.";
+export const UNDER_PEOPLE_NEED = "The arena as people first. A going-under of people is not a fetch.";
+export const UNDER_PEOPLE_HELD = "Going-under already holds as people. The first hour still works.";
+export const UNDER_PEOPLE_SPECTATOR = "A hole. You do not get a house of people.";
+
+export const UNDER_PEOPLE_PLAQUE: Sign = {
+  id: "going-under",
+  title: "Going-under — people",
+  text: "A house of people. The first hour still works. The number does not strike.",
+  x: 696,
+  y: 120,
+};
+
+export function underPeoplePoi(): Poi {
+  return {
+    id: "going-under",
+    name: "Going-under — people",
+    x: 696,
+    y: 120,
+    kind: "under-people",
+  };
+}
 
 export const NPC_LINES: Record<Exclude<NpcId, "ione" | "vesper">, { first: string; later: string }> = {
   nara: {
@@ -2323,6 +2350,7 @@ export function emptyBeats(): Beats {
     screeningPeople: false,
     annexPeople: false,
     arenaPeople: false,
+    underPeople: false,
   };
 }
 

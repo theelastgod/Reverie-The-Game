@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 117** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 118** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -494,7 +494,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the Annex as people, F at the guest arena: a house of people, not a spoils process. Plaque/POI Arena — people. Practice still has no spoils.
 - Guests cannot name it. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 117 (do this next)
+## Stage 117 (landed)
+- After the arena as people, F at going-under: a house of people, not a lock of process. Plaque/POI Going-under — people. The first hour still works.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 118 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
