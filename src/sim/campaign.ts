@@ -187,6 +187,7 @@ export type Beats = {
   griefPeople: boolean;
   kitPeople: boolean;
   practicePeople: boolean;
+  dummyPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -362,6 +363,7 @@ export type Poi = {
     | "grief-people"
     | "kit-people"
     | "practice-people"
+    | "dummy-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3063,6 +3065,31 @@ export function practicePeoplePoi(): Poi {
   };
 }
 
+export const DUMMY_PEOPLE_COPY =
+  "The dummy is a house of people, not a payout of process. The dummy still pays nothing. Guests are not loot. Combat is not. This was not a fetch.";
+export const WINK_DUMMY_PEOPLE = "People, not a dummy stick. The token does not strike.";
+export const DUMMY_PEOPLE_NEED = "Practice as people first. A dummy of people is not a fetch.";
+export const DUMMY_PEOPLE_HELD = "The dummy already holds as people. The dummy still pays nothing.";
+export const DUMMY_PEOPLE_SPECTATOR = "An arena. You do not get a house of people.";
+
+export const DUMMY_PEOPLE_PLAQUE: Sign = {
+  id: "dummy-people",
+  title: "Dummy — people",
+  text: "A house of people. The dummy still pays nothing. Guests are not loot. The number does not strike.",
+  x: GUEST_ARENA.x,
+  y: GUEST_ARENA.y,
+};
+
+export function dummyPeoplePoi(): Poi {
+  return {
+    id: "dummy-people",
+    name: "Dummy — people",
+    x: GUEST_ARENA.x,
+    y: GUEST_ARENA.y,
+    kind: "dummy-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3737,6 +3764,7 @@ export function emptyBeats(): Beats {
     griefPeople: false,
     kitPeople: false,
     practicePeople: false,
+    dummyPeople: false,
   };
 }
 

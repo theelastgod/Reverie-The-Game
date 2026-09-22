@@ -644,6 +644,13 @@ import {
   PRACTICE_PEOPLE_SPECTATOR,
   PRACTICE_PEOPLE_PLAQUE,
   practicePeoplePoi,
+  DUMMY_PEOPLE_COPY,
+  WINK_DUMMY_PEOPLE,
+  DUMMY_PEOPLE_NEED,
+  DUMMY_PEOPLE_HELD,
+  DUMMY_PEOPLE_SPECTATOR,
+  DUMMY_PEOPLE_PLAQUE,
+  dummyPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1396,6 +1403,7 @@ export type WorldState = {
   griefPeopleHeld: boolean;
   kitPeopleHeld: boolean;
   practicePeopleHeld: boolean;
+  dummyPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1708,6 +1716,7 @@ export function emptyWorld(): WorldState {
     griefPeopleHeld: false,
     kitPeopleHeld: false,
     practicePeopleHeld: false,
+    dummyPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2859,7 +2868,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === "safety-plaque" && w.weatherNamed) return applyAddressed(w, playerId);
   if (sign.id === IONE.id) return applyIoneMark(w, playerId);
-  if (sign.id === GUEST_ARENA.id || sign.id === "heavy-people" || sign.id === "hitstop-people" || sign.id === "grief-people" || sign.id === "kit-people" || sign.id === "practice-people") {
+  if (sign.id === GUEST_ARENA.id || sign.id === "heavy-people" || sign.id === "hitstop-people" || sign.id === "grief-people" || sign.id === "kit-people" || sign.id === "practice-people" || sign.id === "dummy-people") {
+    if (w.practicePeopleHeld && !w.dummyPeopleHeld) return applyDummyPeople(w, playerId);
+    if (sign.id === "dummy-people") return applyDummyPeople(w, playerId);
     if (w.kitPeopleHeld && !w.practicePeopleHeld) return applyPracticePeople(w, playerId);
     if (sign.id === "practice-people") return applyPracticePeople(w, playerId);
     if (w.griefPeopleHeld && !w.kitPeopleHeld) return applyKitPeople(w, playerId);
@@ -5552,6 +5563,37 @@ export function applyPracticePeople(w: WorldState, playerId: string): WorldState
   return { ...w, players, practicePeopleHeld: true, pois, signs };
 }
 
+export function applyDummyPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, GUEST_ARENA.x, GUEST_ARENA.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: DUMMY_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_DUMMY_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.practicePeopleHeld) {
+    players.set(playerId, { ...p, heard: DUMMY_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.dummyPeopleHeld && p.beats.dummyPeople) {
+    players.set(playerId, { ...p, heard: DUMMY_PEOPLE_HELD, wink: visibleWink(false, WINK_DUMMY_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, dummyPeople: true },
+    heard: DUMMY_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_DUMMY_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "dummy-people")
+    ? w.pois.map((poi) => (poi.id === "dummy-people" ? dummyPeoplePoi() : poi))
+    : [...w.pois, dummyPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "dummy-people")
+    ? w.signs.map((s) => (s.id === "dummy-people" ? { ...DUMMY_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...DUMMY_PEOPLE_PLAQUE }];
+  return { ...w, players, dummyPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6781,6 +6823,7 @@ export function snapshot(w: WorldState) {
     griefPeopleHeld: w.griefPeopleHeld,
     kitPeopleHeld: w.kitPeopleHeld,
     practicePeopleHeld: w.practicePeopleHeld,
+    dummyPeopleHeld: w.dummyPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -532,6 +532,12 @@ import {
   PRACTICE_PEOPLE_HELD,
   PRACTICE_PEOPLE_SPECTATOR,
   PRACTICE_PEOPLE_PLAQUE,
+  DUMMY_PEOPLE_COPY,
+  WINK_DUMMY_PEOPLE,
+  DUMMY_PEOPLE_NEED,
+  DUMMY_PEOPLE_HELD,
+  DUMMY_PEOPLE_SPECTATOR,
+  DUMMY_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1128,6 +1134,7 @@ import {
   applyGriefPeople,
   applyKitPeople,
   applyPracticePeople,
+  applyDummyPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4971,6 +4978,44 @@ describe("Practice — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
     expect(applyPracticePeople(gWorld, "g").players.get("g")?.heard).toBe(PRACTICE_PEOPLE_SPECTATOR);
     expect(gWorld.practicePeopleHeld).toBe(false);
+  });
+});
+
+describe("Dummy — people", () => {
+  it("names the dummy as people after practice; dummy still pays nothing; guests cannot", () => {
+    const w = emptyWorld();
+    w.practicePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), practicePeople: true },
+      x: GUEST_ARENA.x,
+      y: GUEST_ARENA.y,
+    });
+    const named = applyRead(w, "a", GUEST_ARENA.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(DUMMY_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_DUMMY_PEOPLE);
+    expect(p.beats.dummyPeople).toBe(true);
+    expect(named.dummyPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "dummy-people")?.name).toBe("Dummy — people");
+    expect(named.signs.find((s) => s.id === "dummy-people")?.title).toBe(DUMMY_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("dummy still pays nothing");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyDummyPeople(named, "a").players.get("a")?.heard).toBe(DUMMY_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: GUEST_ARENA.x, y: GUEST_ARENA.y });
+    expect(applyDummyPeople(early, "a").players.get("a")?.heard).toBe(DUMMY_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.practicePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
+    expect(applyDummyPeople(gWorld, "g").players.get("g")?.heard).toBe(DUMMY_PEOPLE_SPECTATOR);
+    expect(gWorld.dummyPeopleHeld).toBe(false);
   });
 });
 
