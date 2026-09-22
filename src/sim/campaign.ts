@@ -195,6 +195,7 @@ export type Beats = {
   skillPeople: boolean;
   traitPeople: boolean;
   tokenPeople: boolean;
+  fairPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -378,6 +379,7 @@ export type Poi = {
     | "skill-people"
     | "trait-people"
     | "token-people"
+    | "fair-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3279,6 +3281,31 @@ export function tokenPeoplePoi(): Poi {
   };
 }
 
+export const FAIR_PEOPLE_COPY =
+  "The published band is a house of people, not a kit of process. Same skill, different serials: same number. Serials stay visible. Combat is not. This was not a fetch.";
+export const WINK_FAIR_PEOPLE = "People, not a fairness stick. The token does not strike.";
+export const FAIR_PEOPLE_NEED = "The token as people first. A published band of people is not a fetch.";
+export const FAIR_PEOPLE_HELD = "The published band already holds as people. Same skill, different serials: same number.";
+export const FAIR_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const FAIR_PEOPLE_PLAQUE: Sign = {
+  id: "fair-people",
+  title: "Fair — people",
+  text: "A house of people. Same skill, different serials: same number. Serials stay visible. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function fairPeoplePoi(): Poi {
+  return {
+    id: "fair-people",
+    name: "Fair — people",
+    x: 720,
+    y: 520,
+    kind: "fair-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3961,6 +3988,7 @@ export function emptyBeats(): Beats {
     skillPeople: false,
     traitPeople: false,
     tokenPeople: false,
+    fairPeople: false,
   };
 }
 

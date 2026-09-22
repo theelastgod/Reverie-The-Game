@@ -580,6 +580,12 @@ import {
   TOKEN_PEOPLE_HELD,
   TOKEN_PEOPLE_SPECTATOR,
   TOKEN_PEOPLE_PLAQUE,
+  FAIR_PEOPLE_COPY,
+  WINK_FAIR_PEOPLE,
+  FAIR_PEOPLE_NEED,
+  FAIR_PEOPLE_HELD,
+  FAIR_PEOPLE_SPECTATOR,
+  FAIR_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1184,6 +1190,7 @@ import {
   applySkillPeople,
   applyTraitPeople,
   applyTokenPeople,
+  applyFairPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5339,6 +5346,46 @@ describe("Token — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyTokenPeople(gWorld, "g").players.get("g")?.heard).toBe(TOKEN_PEOPLE_SPECTATOR);
     expect(gWorld.tokenPeopleHeld).toBe(false);
+  });
+});
+
+describe("Fair — people", () => {
+  it("names the published band as people after the token; same skill different serials same number; guests cannot", () => {
+    const w = emptyWorld();
+    w.tokenPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), tokenPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FAIR_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FAIR_PEOPLE);
+    expect(p.beats.fairPeople).toBe(true);
+    expect(named.fairPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "fair-people")?.name).toBe("Fair — people");
+    expect(named.signs.find((s) => s.id === "fair-people")?.title).toBe(FAIR_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("same number");
+    expect(p.heard).toContain("Serials stay visible");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFairPeople(named, "a").players.get("a")?.heard).toBe(FAIR_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyFairPeople(early, "a").players.get("a")?.heard).toBe(FAIR_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.tokenPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyFairPeople(gWorld, "g").players.get("g")?.heard).toBe(FAIR_PEOPLE_SPECTATOR);
+    expect(gWorld.fairPeopleHeld).toBe(false);
   });
 });
 

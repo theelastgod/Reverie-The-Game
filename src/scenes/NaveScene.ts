@@ -644,6 +644,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "token-people"
                         ? 0xc9a56a
+                      : poi.kind === "fair-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1092,6 +1094,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.fairPeople || snap.fairPeopleHeld)) {
+      this.prompt = me.heard || "Fair — people. Same skill, different serials: same number. Serials stay visible. Not a stick.";
+    } else if (wet && snap.tokenPeopleHeld && !me.guest) {
+      this.prompt = "F — the published band as a house of people. Same skill, different serials: same number. Not a fetch.";
     } else if (wet && (me.beats.tokenPeople || snap.tokenPeopleHeld)) {
       this.prompt = me.heard || "Token — people. The token never buys combat. TAKE stays disarmed. Not a stick.";
     } else if (wet && snap.traitPeopleHeld && !me.guest) {

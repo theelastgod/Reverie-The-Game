@@ -700,6 +700,13 @@ import {
   TOKEN_PEOPLE_SPECTATOR,
   TOKEN_PEOPLE_PLAQUE,
   tokenPeoplePoi,
+  FAIR_PEOPLE_COPY,
+  WINK_FAIR_PEOPLE,
+  FAIR_PEOPLE_NEED,
+  FAIR_PEOPLE_HELD,
+  FAIR_PEOPLE_SPECTATOR,
+  FAIR_PEOPLE_PLAQUE,
+  fairPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1460,6 +1467,7 @@ export type WorldState = {
   skillPeopleHeld: boolean;
   traitPeopleHeld: boolean;
   tokenPeopleHeld: boolean;
+  fairPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1780,6 +1788,7 @@ export function emptyWorld(): WorldState {
     skillPeopleHeld: false,
     traitPeopleHeld: false,
     tokenPeopleHeld: false,
+    fairPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3004,7 +3013,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people") {
+    if (w.tokenPeopleHeld && !w.fairPeopleHeld) return applyFairPeople(w, playerId);
+    if (sign.id === "fair-people") return applyFairPeople(w, playerId);
     if (w.traitPeopleHeld && !w.tokenPeopleHeld) return applyTokenPeople(w, playerId);
     if (sign.id === "token-people") return applyTokenPeople(w, playerId);
     if (w.skillPeopleHeld && !w.traitPeopleHeld) return applyTraitPeople(w, playerId);
@@ -5888,6 +5899,37 @@ export function applyTokenPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, tokenPeopleHeld: true, pois, signs };
 }
 
+export function applyFairPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: FAIR_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_FAIR_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.tokenPeopleHeld) {
+    players.set(playerId, { ...p, heard: FAIR_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.fairPeopleHeld && p.beats.fairPeople) {
+    players.set(playerId, { ...p, heard: FAIR_PEOPLE_HELD, wink: visibleWink(false, WINK_FAIR_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, fairPeople: true },
+    heard: FAIR_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_FAIR_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "fair-people")
+    ? w.pois.map((poi) => (poi.id === "fair-people" ? fairPeoplePoi() : poi))
+    : [...w.pois, fairPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "fair-people")
+    ? w.signs.map((s) => (s.id === "fair-people" ? { ...FAIR_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...FAIR_PEOPLE_PLAQUE }];
+  return { ...w, players, fairPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -7125,6 +7167,7 @@ export function snapshot(w: WorldState) {
     skillPeopleHeld: w.skillPeopleHeld,
     traitPeopleHeld: w.traitPeopleHeld,
     tokenPeopleHeld: w.tokenPeopleHeld,
+    fairPeopleHeld: w.fairPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
