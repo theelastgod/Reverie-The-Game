@@ -125,6 +125,7 @@ export type Snap = {
   handoffPeopleHeld?: boolean;
   vaultPeopleHeld?: boolean;
   insurancePeopleHeld?: boolean;
+  funeralPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

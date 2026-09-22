@@ -342,6 +342,13 @@ import {
   INSURANCE_PEOPLE_HELD,
   INSURANCE_PEOPLE_SPECTATOR,
   INSURANCE_PEOPLE_PLAQUE,
+  FUNERAL_PEOPLE_COPY,
+  WINK_FUNERAL_PEOPLE,
+  FUNERAL_PEOPLE_NEED,
+  FUNERAL_PEOPLE_GRAVE,
+  FUNERAL_PEOPLE_HELD,
+  FUNERAL_PEOPLE_SPECTATOR,
+  FUNERAL_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -906,6 +913,7 @@ import {
   applyHandoffPeople,
   applyVaultPeople,
   applyInsurancePeople,
+  applyFuneralPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3450,6 +3458,60 @@ describe("Insurance — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
     expect(applyInsurancePeople(gWorld, "g").players.get("g")?.heard).toBe(INSURANCE_PEOPLE_SPECTATOR);
     expect(gWorld.insurancePeopleHeld).toBe(false);
+  });
+});
+
+describe("Funeral — people", () => {
+  it("names the funeral as people after insurance; still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.insurancePeopleHeld = true;
+    w.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 30,
+      beats: { ...emptyBeats(), insurancePeople: true },
+      x: 200,
+      y: 480,
+    });
+    const named = applyBury(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FUNERAL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FUNERAL_PEOPLE);
+    expect(p.beats.funeralPeople).toBe(true);
+    expect(p.bestand).toBe(30);
+    expect(named.wreckage).toHaveLength(1);
+    expect(named.funeralPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "funeral-people")?.name).toBe("Funeral — people");
+    expect(named.signs.find((s) => s.id === "funeral-people")?.title).toBe(FUNERAL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Twelve Bestand");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFuneralPeople(named, "a").players.get("a")?.heard).toBe(FUNERAL_PEOPLE_HELD);
+
+    const paid = applyBury(named, "a");
+    expect(paid.wreckage).toHaveLength(0);
+    expect(paid.players.get("a")?.bestand).toBe(30 - FUNERAL_COST);
+    expect(paid.players.get("a")?.beats.funeral).toBe(true);
+
+    const early = emptyWorld();
+    early.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    expect(applyFuneralPeople(early, "a").players.get("a")?.heard).toBe(FUNERAL_PEOPLE_NEED);
+
+    const nograve = emptyWorld();
+    nograve.insurancePeopleHeld = true;
+    nograve.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    expect(applyFuneralPeople(nograve, "a").players.get("a")?.heard).toBe(FUNERAL_PEOPLE_GRAVE);
+
+    const gWorld = emptyWorld();
+    gWorld.insurancePeopleHeld = true;
+    gWorld.wreckage = [{ id: "grave", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480, locked: true });
+    expect(applyFuneralPeople(gWorld, "g").players.get("g")?.heard).toBe(FUNERAL_PEOPLE_SPECTATOR);
+    expect(gWorld.funeralPeopleHeld).toBe(false);
   });
 });
 

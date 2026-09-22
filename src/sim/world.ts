@@ -431,6 +431,14 @@ import {
   INSURANCE_PEOPLE_SPECTATOR,
   INSURANCE_PEOPLE_PLAQUE,
   insurancePeoplePoi,
+  FUNERAL_PEOPLE_COPY,
+  WINK_FUNERAL_PEOPLE,
+  FUNERAL_PEOPLE_NEED,
+  FUNERAL_PEOPLE_GRAVE,
+  FUNERAL_PEOPLE_HELD,
+  FUNERAL_PEOPLE_SPECTATOR,
+  FUNERAL_PEOPLE_PLAQUE,
+  funeralPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1144,6 +1152,7 @@ export type WorldState = {
   handoffPeopleHeld: boolean;
   vaultPeopleHeld: boolean;
   insurancePeopleHeld: boolean;
+  funeralPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1425,6 +1434,7 @@ export function emptyWorld(): WorldState {
     handoffPeopleHeld: false,
     vaultPeopleHeld: false,
     insurancePeopleHeld: false,
+    funeralPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2713,6 +2723,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   }
   const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
   if (wreck) {
+    if (w.insurancePeopleHeld && !w.funeralPeopleHeld) return applyFuneralPeople(w, playerId);
     const spent = spendBestand(p, FUNERAL_COST);
     if (!spent) {
       players.set(playerId, { ...p, heard: FUNERAL_NEED });
@@ -4224,6 +4235,42 @@ export function applyInsurancePeople(w: WorldState, playerId: string): WorldStat
   return { ...w, players, insurancePeopleHeld: true, pois, signs };
 }
 
+export function applyFuneralPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: FUNERAL_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_FUNERAL_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.insurancePeopleHeld) {
+    players.set(playerId, { ...p, heard: FUNERAL_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.funeralPeopleHeld && p.beats.funeralPeople) {
+    players.set(playerId, { ...p, heard: FUNERAL_PEOPLE_HELD, wink: visibleWink(false, WINK_FUNERAL_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!wreck) {
+    players.set(playerId, { ...p, heard: FUNERAL_PEOPLE_GRAVE });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, funeralPeople: true },
+    heard: FUNERAL_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_FUNERAL_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "funeral-people")
+    ? w.pois.map((poi) => (poi.id === "funeral-people" ? funeralPeoplePoi(wreck.x, wreck.y) : poi))
+    : [...w.pois, funeralPeoplePoi(wreck.x, wreck.y)];
+  const signs = w.signs.some((s) => s.id === "funeral-people")
+    ? w.signs.map((s) => (s.id === "funeral-people" ? { ...FUNERAL_PEOPLE_PLAQUE, x: wreck.x, y: wreck.y } : s))
+    : [...w.signs, { ...FUNERAL_PEOPLE_PLAQUE, x: wreck.x, y: wreck.y }];
+  return { ...w, players, funeralPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5419,6 +5466,7 @@ export function snapshot(w: WorldState) {
     handoffPeopleHeld: w.handoffPeopleHeld,
     vaultPeopleHeld: w.vaultPeopleHeld,
     insurancePeopleHeld: w.insurancePeopleHeld,
+    funeralPeopleHeld: w.funeralPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

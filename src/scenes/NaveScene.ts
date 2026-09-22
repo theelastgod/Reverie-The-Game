@@ -1342,6 +1342,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — name the storm at your back. Every grave is a season. Not a stick.";
     } else if (wreckNear && (me.beats.ruinBack || snap.ruinBackHeld) && me.messenger === "ruin-angel") {
       this.prompt = me.heard || "The storm holds. Graves stay seasons. Combat is not.";
+    } else if (funeralNear && (me.beats.funeralPeople || snap.funeralPeopleHeld)) {
+      this.prompt = me.heard || "Funeral — people. Twelve Bestand. The body is in the ground. Not a stick.";
+    } else if (funeralNear && snap.insurancePeopleHeld && !me.guest) {
+      this.prompt = "F — the funeral as a house of people. Twelve Bestand. Not a fetch.";
     } else if (funeralNear && !me.locked) {
       this.prompt = `F funeral. ${FUNERAL_COST} Bestand on Nara Vale's street.`;
     } else if (failNear) {

@@ -156,6 +156,7 @@ export type Beats = {
   handoffPeople: boolean;
   vaultPeople: boolean;
   insurancePeople: boolean;
+  funeralPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -300,6 +301,7 @@ export type Poi = {
     | "handoff-people"
     | "vault-people"
     | "insurance-people"
+    | "funeral-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2247,6 +2249,32 @@ export function insurancePeoplePoi(): Poi {
     kind: "insurance-people",
   };
 }
+
+export const FUNERAL_PEOPLE_COPY =
+  "The funeral is a house of people, not a sink of process. Twelve Bestand. The body is in the ground. Combat is not. This was not a fetch.";
+export const WINK_FUNERAL_PEOPLE = "People, not a grave stick. The token does not strike.";
+export const FUNERAL_PEOPLE_NEED = "Insurance as people first. A funeral of people is not a fetch.";
+export const FUNERAL_PEOPLE_GRAVE = "Stand with a wreckage. Nara Vale does not work the empty street.";
+export const FUNERAL_PEOPLE_HELD = "The funeral already holds as people. Twelve Bestand. The body is in the ground.";
+export const FUNERAL_PEOPLE_SPECTATOR = "A grave. You do not get a house of people.";
+
+export const FUNERAL_PEOPLE_PLAQUE: Sign = {
+  id: "funeral-people",
+  title: "Funeral — people",
+  text: "A house of people. Twelve Bestand. The body is in the ground. The number does not strike.",
+  x: 200,
+  y: 480,
+};
+
+export function funeralPeoplePoi(x = 200, y = 480): Poi {
+  return {
+    id: "funeral-people",
+    name: "Funeral — people",
+    x,
+    y,
+    kind: "funeral-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -2865,6 +2893,7 @@ export function emptyBeats(): Beats {
     handoffPeople: false,
     vaultPeople: false,
     insurancePeople: false,
+    funeralPeople: false,
   };
 }
 
