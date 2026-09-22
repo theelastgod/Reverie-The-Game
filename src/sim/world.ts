@@ -502,6 +502,13 @@ import {
   RESTRAINT_PEOPLE_SPECTATOR,
   RESTRAINT_PEOPLE_PLAQUE,
   restraintPeoplePoi,
+  DODGE_PEOPLE_COPY,
+  WINK_DODGE_PEOPLE,
+  DODGE_PEOPLE_NEED,
+  DODGE_PEOPLE_HELD,
+  DODGE_PEOPLE_SPECTATOR,
+  DODGE_PEOPLE_PLAQUE,
+  dodgePeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1225,6 +1232,7 @@ export type WorldState = {
   marketPeopleHeld: boolean;
   hangPeopleHeld: boolean;
   restraintPeopleHeld: boolean;
+  dodgePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1516,6 +1524,7 @@ export function emptyWorld(): WorldState {
     marketPeopleHeld: false,
     hangPeopleHeld: false,
     restraintPeopleHeld: false,
+    dodgePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2740,9 +2749,11 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (sign.id === "vault-people") return applyVaultPeople(w, playerId);
     return applyDesk(w, playerId, "file");
   }
-  if (sign.id === SHRINE.id || sign.id === "insurance-people" || sign.id === "restore-people" || sign.id === "keep-people" || sign.id === "restraint-people") {
+  if (sign.id === SHRINE.id || sign.id === "insurance-people" || sign.id === "restore-people" || sign.id === "keep-people" || sign.id === "restraint-people" || sign.id === "dodge-people") {
     if (w.hangPeopleHeld && !w.restraintPeopleHeld) return applyRestraintPeople(w, playerId);
     if (sign.id === "restraint-people") return applyRestraintPeople(w, playerId);
+    if (w.restraintPeopleHeld && !w.dodgePeopleHeld) return applyDodgePeople(w, playerId);
+    if (sign.id === "dodge-people") return applyDodgePeople(w, playerId);
     if (w.vaultPeopleHeld && !w.insurancePeopleHeld) return applyInsurancePeople(w, playerId);
     if (sign.id === "insurance-people") return applyInsurancePeople(w, playerId);
     if (w.funeralPeopleHeld && !w.restorePeopleHeld) return applyRestorePeople(w, playerId);
@@ -4654,6 +4665,37 @@ export function applyRestraintPeople(w: WorldState, playerId: string): WorldStat
   return { ...w, players, restraintPeopleHeld: true, pois, signs };
 }
 
+export function applyDodgePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: DODGE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_DODGE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.restraintPeopleHeld) {
+    players.set(playerId, { ...p, heard: DODGE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.dodgePeopleHeld && p.beats.dodgePeople) {
+    players.set(playerId, { ...p, heard: DODGE_PEOPLE_HELD, wink: visibleWink(false, WINK_DODGE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, dodgePeople: true },
+    heard: DODGE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_DODGE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "dodge-people")
+    ? w.pois.map((poi) => (poi.id === "dodge-people" ? dodgePeoplePoi() : poi))
+    : [...w.pois, dodgePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "dodge-people")
+    ? w.signs.map((s) => (s.id === "dodge-people" ? { ...DODGE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...DODGE_PEOPLE_PLAQUE }];
+  return { ...w, players, dodgePeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5862,6 +5904,7 @@ export function snapshot(w: WorldState) {
     marketPeopleHeld: w.marketPeopleHeld,
     hangPeopleHeld: w.hangPeopleHeld,
     restraintPeopleHeld: w.restraintPeopleHeld,
+    dodgePeopleHeld: w.dodgePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

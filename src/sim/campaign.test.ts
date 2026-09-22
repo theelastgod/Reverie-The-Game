@@ -403,6 +403,12 @@ import {
   RESTRAINT_PEOPLE_HELD,
   RESTRAINT_PEOPLE_SPECTATOR,
   RESTRAINT_PEOPLE_PLAQUE,
+  DODGE_PEOPLE_COPY,
+  WINK_DODGE_PEOPLE,
+  DODGE_PEOPLE_NEED,
+  DODGE_PEOPLE_HELD,
+  DODGE_PEOPLE_SPECTATOR,
+  DODGE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -977,6 +983,7 @@ import {
   applyMarketPeople,
   applyHangPeople,
   applyRestraintPeople,
+  applyDodgePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3973,6 +3980,44 @@ describe("Restraint — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
     expect(applyRestraintPeople(gWorld, "g").players.get("g")?.heard).toBe(RESTRAINT_PEOPLE_SPECTATOR);
     expect(gWorld.restraintPeopleHeld).toBe(false);
+  });
+});
+
+describe("Dodge — people", () => {
+  it("names dodge as people after Restraint; moving still skips; guests cannot", () => {
+    const w = emptyWorld();
+    w.restraintPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), restraintPeople: true },
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const named = applyDodgePeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(DODGE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_DODGE_PEOPLE);
+    expect(p.beats.dodgePeople).toBe(true);
+    expect(named.dodgePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "dodge-people")?.name).toBe("Dodge — people");
+    expect(named.signs.find((s) => s.id === "dodge-people")?.title).toBe(DODGE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Moving still skips");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyDodgePeople(named, "a").players.get("a")?.heard).toBe(DODGE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SHRINE.x, y: SHRINE.y });
+    expect(applyDodgePeople(early, "a").players.get("a")?.heard).toBe(DODGE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.restraintPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
+    expect(applyDodgePeople(gWorld, "g").players.get("g")?.heard).toBe(DODGE_PEOPLE_SPECTATOR);
+    expect(gWorld.dodgePeopleHeld).toBe(false);
   });
 });
 

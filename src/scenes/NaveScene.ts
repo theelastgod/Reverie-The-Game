@@ -106,6 +106,8 @@ export class NaveScene extends Phaser.Scene {
         else if (!wall && nearPoint(cx, cy, FORGE_TRAY.x, FORGE_TRAY.y, 80)) key = "tile-forge";
         else if (!wall && nearPoint(cx, cy, M3_DOOR.x, M3_DOOR.y, 80)) key = "tile-m3";
         else if (!wall && nearPoint(cx, cy, OPERATOR_DESK.x, OPERATOR_DESK.y, 80)) key = "tile-operator";
+        else if (!wall && nearPoint(cx, cy, GOING_UNDER.x, GOING_UNDER.y, 80)) key = "tile-under";
+        else if (!wall && nearPoint(cx, cy, WRECK_GARDEN.x, WRECK_GARDEN.y, 80)) key = "tile-garden";
         else if (!wall && nearPoint(cx, cy, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 80)) key = "tile-annex";
         else if (!wall && nearPoint(cx, cy, SCREENING.x, SCREENING.y, 80)) key = "tile-screening";
         this.add.image(cx, cy, key).setDisplaySize(TILE, TILE);
@@ -1337,6 +1339,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
+    } else if (shrine && (me.beats.dodgePeople || snap.dodgePeopleHeld)) {
+      this.prompt = me.heard || "Dodge — people. Moving still skips. Standing still does not.";
+    } else if (shrine && snap.restraintPeopleHeld && !me.guest) {
+      this.prompt = "F — dodge as a house of people. Moving still skips. Not a fetch.";
     } else if (shrine && (me.beats.restraintPeople || snap.restraintPeopleHeld)) {
       this.prompt = me.heard || "Restraint — people. Restraint still thins yield. Storm still burns it. Not a stick.";
     } else if (shrine && snap.hangPeopleHeld && !me.guest) {

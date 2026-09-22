@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 147** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 148** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -625,7 +625,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the hang as people, F at the shrine: holding-back as people. Plaque/POI **Restraint — people**. Restraint still thins yield. Storm still burns it.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 147 (do this next)
+## Stage 147 (landed)
+- After Restraint as people, F at the shrine: dodge as people. Plaque/POI Dodge — people. Moving still skips. Standing still does not.
+- Imagine going-under and garden floors. Higgsfield later.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 148 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

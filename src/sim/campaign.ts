@@ -166,6 +166,7 @@ export type Beats = {
   marketPeople: boolean;
   hangPeople: boolean;
   restraintPeople: boolean;
+  dodgePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -320,6 +321,7 @@ export type Poi = {
     | "market-people"
     | "hang-people"
     | "restraint-people"
+    | "dodge-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2518,6 +2520,31 @@ export function restraintPeoplePoi(): Poi {
     kind: "restraint-people",
   };
 }
+
+export const DODGE_PEOPLE_COPY =
+  "Dodge is a house of people, not a window of process. Moving still skips. Standing still does not. Combat is not. This was not a fetch.";
+export const WINK_DODGE_PEOPLE = "People, not a dodge stick. The token does not strike.";
+export const DODGE_PEOPLE_NEED = "Restraint as people first. A dodge of people is not a fetch.";
+export const DODGE_PEOPLE_HELD = "Dodge already holds as people. Moving still skips.";
+export const DODGE_PEOPLE_SPECTATOR = "A shrine. You do not get a house of people.";
+
+export const DODGE_PEOPLE_PLAQUE: Sign = {
+  id: "dodge-people",
+  title: "Dodge — people",
+  text: "A house of people. Moving still skips. Standing still does not. The number does not strike.",
+  x: SHRINE.x,
+  y: SHRINE.y,
+};
+
+export function dodgePeoplePoi(): Poi {
+  return {
+    id: "dodge-people",
+    name: "Dodge — people",
+    x: SHRINE.x,
+    y: SHRINE.y,
+    kind: "dodge-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3146,6 +3173,7 @@ export function emptyBeats(): Beats {
     marketPeople: false,
     hangPeople: false,
     restraintPeople: false,
+    dodgePeople: false,
   };
 }
 
