@@ -180,6 +180,7 @@ export type Beats = {
   bankPeople: boolean;
   stormPressPeople: boolean;
   fallenPeople: boolean;
+  spoilsPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -348,6 +349,7 @@ export type Poi = {
     | "bank-people"
     | "stormpress-people"
     | "fallen-people"
+    | "spoils-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2874,6 +2876,31 @@ export function fallenPeoplePoi(): Poi {
   };
 }
 
+export const SPOILS_PEOPLE_COPY =
+  "Spoils are a house of people, not a faucet of process. Unbanked still drops. Guests are not loot. Combat is not. This was not a fetch.";
+export const WINK_SPOILS_PEOPLE = "People, not a spoils stick. The token does not strike.";
+export const SPOILS_PEOPLE_NEED = "Fallen graves as people first. Spoils of people are not a fetch.";
+export const SPOILS_PEOPLE_HELD = "Spoils already hold as people. Unbanked still drops. Guests are not loot.";
+export const SPOILS_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SPOILS_PEOPLE_PLAQUE: Sign = {
+  id: "spoils-people",
+  title: "Spoils — people",
+  text: "A house of people. Unbanked still drops. Guests are not loot. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function spoilsPeoplePoi(): Poi {
+  return {
+    id: "spoils-people",
+    name: "Spoils — people",
+    x: 720,
+    y: 520,
+    kind: "spoils-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3541,6 +3568,7 @@ export function emptyBeats(): Beats {
     bankPeople: false,
     stormPressPeople: false,
     fallenPeople: false,
+    spoilsPeople: false,
   };
 }
 

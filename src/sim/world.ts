@@ -595,6 +595,13 @@ import {
   FALLEN_PEOPLE_SPECTATOR,
   FALLEN_PEOPLE_PLAQUE,
   fallenPeoplePoi,
+  SPOILS_PEOPLE_COPY,
+  WINK_SPOILS_PEOPLE,
+  SPOILS_PEOPLE_NEED,
+  SPOILS_PEOPLE_HELD,
+  SPOILS_PEOPLE_SPECTATOR,
+  SPOILS_PEOPLE_PLAQUE,
+  spoilsPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1340,6 +1347,7 @@ export type WorldState = {
   bankPeopleHeld: boolean;
   stormPressPeopleHeld: boolean;
   fallenPeopleHeld: boolean;
+  spoilsPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1645,6 +1653,7 @@ export function emptyWorld(): WorldState {
     bankPeopleHeld: false,
     stormPressPeopleHeld: false,
     fallenPeopleHeld: false,
+    spoilsPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2861,7 +2870,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people") {
+    if (w.fallenPeopleHeld && !w.spoilsPeopleHeld) return applySpoilsPeople(w, playerId);
+    if (sign.id === "spoils-people") return applySpoilsPeople(w, playerId);
     if (w.stormPressPeopleHeld && !w.fallenPeopleHeld) return applyFallenPeople(w, playerId);
     if (sign.id === "fallen-people") return applyFallenPeople(w, playerId);
     if (w.bankPeopleHeld && !w.stormPressPeopleHeld) return applyStormPressPeople(w, playerId);
@@ -5258,6 +5269,37 @@ export function applyFallenPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, fallenPeopleHeld: true, pois, signs };
 }
 
+export function applySpoilsPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: SPOILS_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_SPOILS_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.fallenPeopleHeld) {
+    players.set(playerId, { ...p, heard: SPOILS_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.spoilsPeopleHeld && p.beats.spoilsPeople) {
+    players.set(playerId, { ...p, heard: SPOILS_PEOPLE_HELD, wink: visibleWink(false, WINK_SPOILS_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, spoilsPeople: true },
+    heard: SPOILS_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_SPOILS_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "spoils-people")
+    ? w.pois.map((poi) => (poi.id === "spoils-people" ? spoilsPeoplePoi() : poi))
+    : [...w.pois, spoilsPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "spoils-people")
+    ? w.signs.map((s) => (s.id === "spoils-people" ? { ...SPOILS_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...SPOILS_PEOPLE_PLAQUE }];
+  return { ...w, players, spoilsPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6480,6 +6522,7 @@ export function snapshot(w: WorldState) {
     bankPeopleHeld: w.bankPeopleHeld,
     stormPressPeopleHeld: w.stormPressPeopleHeld,
     fallenPeopleHeld: w.fallenPeopleHeld,
+    spoilsPeopleHeld: w.spoilsPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
