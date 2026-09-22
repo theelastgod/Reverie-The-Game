@@ -174,6 +174,7 @@ export type Beats = {
   duelPeople: boolean;
   campPeople: boolean;
   passingPeople: boolean;
+  claimsPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -336,6 +337,7 @@ export type Poi = {
     | "duel-people"
     | "camp-people"
     | "passing-people"
+    | "claims-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2712,6 +2714,31 @@ export function passingPeoplePoi(): Poi {
   };
 }
 
+export const CLAIMS_PEOPLE_COPY =
+  "The claims desk is a house of people, not a mint of process. TAKE stays disarmed. The token does not strike. Combat is not. This was not a fetch.";
+export const WINK_CLAIMS_PEOPLE = "People, not a claims stick. The token does not strike.";
+export const CLAIMS_PEOPLE_NEED = "Passing as people first. A claims desk of people is not a fetch.";
+export const CLAIMS_PEOPLE_HELD = "The claims desk already holds as people. TAKE stays disarmed.";
+export const CLAIMS_PEOPLE_SPECTATOR = "Paper. You do not get a house of people.";
+
+export const CLAIMS_PEOPLE_PLAQUE: Sign = {
+  id: "claims-people",
+  title: "Claims — people",
+  text: "A house of people. TAKE stays disarmed. The number does not strike.",
+  x: CLAIMS_DESK.x,
+  y: CLAIMS_DESK.y,
+};
+
+export function claimsPeoplePoi(): Poi {
+  return {
+    id: "claims-people",
+    name: "Claims — people",
+    x: CLAIMS_DESK.x,
+    y: CLAIMS_DESK.y,
+    kind: "claims-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3373,6 +3400,7 @@ export function emptyBeats(): Beats {
     duelPeople: false,
     campPeople: false,
     passingPeople: false,
+    claimsPeople: false,
   };
 }
 

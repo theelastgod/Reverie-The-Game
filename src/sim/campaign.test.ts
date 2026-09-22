@@ -454,6 +454,12 @@ import {
   PASSING_PEOPLE_HELD,
   PASSING_PEOPLE_SPECTATOR,
   PASSING_PEOPLE_PLAQUE,
+  CLAIMS_PEOPLE_COPY,
+  WINK_CLAIMS_PEOPLE,
+  CLAIMS_PEOPLE_NEED,
+  CLAIMS_PEOPLE_HELD,
+  CLAIMS_PEOPLE_SPECTATOR,
+  CLAIMS_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1036,6 +1042,7 @@ import {
   applyDuelPeople,
   applyCampPeople,
   applyPassingPeople,
+  applyClaimsPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4364,6 +4371,44 @@ describe("Passing — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y, locked: true });
     expect(applyPassingPeople(gWorld, "g").players.get("g")?.heard).toBe(PASSING_PEOPLE_SPECTATOR);
     expect(gWorld.passingPeopleHeld).toBe(false);
+  });
+});
+
+describe("Claims — people", () => {
+  it("names the claims desk as people after Passing; TAKE stays disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.passingPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), passingPeople: true },
+      x: CLAIMS_DESK.x,
+      y: CLAIMS_DESK.y,
+    });
+    const named = applyRead(w, "a", CLAIMS_DESK.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CLAIMS_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CLAIMS_PEOPLE);
+    expect(p.beats.claimsPeople).toBe(true);
+    expect(named.claimsPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "claims-people")?.name).toBe("Claims — people");
+    expect(named.signs.find((s) => s.id === "claims-people")?.title).toBe(CLAIMS_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("TAKE stays disarmed");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyClaimsPeople(named, "a").players.get("a")?.heard).toBe(CLAIMS_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLAIMS_DESK.x, y: CLAIMS_DESK.y });
+    expect(applyClaimsPeople(early, "a").players.get("a")?.heard).toBe(CLAIMS_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.passingPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
+    expect(applyClaimsPeople(gWorld, "g").players.get("g")?.heard).toBe(CLAIMS_PEOPLE_SPECTATOR);
+    expect(gWorld.claimsPeopleHeld).toBe(false);
   });
 });
 

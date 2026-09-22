@@ -606,6 +606,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "passing-people"
                         ? 0xc9a56a
+                      : poi.kind === "claims-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -998,6 +1000,7 @@ export class NaveScene extends Phaser.Scene {
     } else if (arena && snap.dodgePeopleHeld && !me.guest) {
       this.prompt = "F — heavy as a house of people. Same number. Telegraph still drops. Not a fetch.";
     } else if (arena && (me.beats.arenaPeople || snap.arenaPeopleHeld)) {
+      this.prompt = me.heard || "Arena — people. Practice still has no spoils. Not a stick.";
     } else if (arena && snap.annexPeopleHeld && !me.guest) {
       this.prompt = "F — the arena as a house of people. Practice still has no spoils. Not a fetch.";
     } else if (arena && (snap.arenaHeld || me.beats.arena)) {
@@ -1006,6 +1009,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — open the guest arena. Practice. No spoils. Guests are not loot.";
     } else if (deskClaim && (me.guest || me.locked)) {
       this.prompt = "A period on a ledger. Guests cannot claim.";
+    } else if (deskClaim && (me.beats.claimsPeople || snap.claimsPeopleHeld)) {
+      this.prompt = me.heard || "Claims — people. TAKE stays disarmed. The token does not strike.";
+    } else if (deskClaim && snap.passingPeopleHeld && !me.guest) {
+      this.prompt = "F — the claims desk as a house of people. TAKE stays disarmed. Not a fetch.";
     } else if (deskClaim && (me.beats.vaultPeople || snap.vaultPeopleHeld)) {
       this.prompt = me.heard || "The vault — people. File still sits. TAKE stays disarmed.";
     } else if (deskClaim && snap.handoffPeopleHeld && !me.guest) {

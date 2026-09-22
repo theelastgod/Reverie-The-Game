@@ -553,6 +553,13 @@ import {
   PASSING_PEOPLE_SPECTATOR,
   PASSING_PEOPLE_PLAQUE,
   passingPeoplePoi,
+  CLAIMS_PEOPLE_COPY,
+  WINK_CLAIMS_PEOPLE,
+  CLAIMS_PEOPLE_NEED,
+  CLAIMS_PEOPLE_HELD,
+  CLAIMS_PEOPLE_SPECTATOR,
+  CLAIMS_PEOPLE_PLAQUE,
+  claimsPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1292,6 +1299,7 @@ export type WorldState = {
   duelPeopleHeld: boolean;
   campPeopleHeld: boolean;
   passingPeopleHeld: boolean;
+  claimsPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1591,6 +1599,7 @@ export function emptyWorld(): WorldState {
     duelPeopleHeld: false,
     campPeopleHeld: false,
     passingPeopleHeld: false,
+    claimsPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2817,7 +2826,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.seasonHeld && !w.bracketHeld && !w.wetCult && !p.guest && !p.locked) return applyBracket(w, playerId);
     return applyFlag(w, playerId);
   }
-  if (sign.id === CLAIMS_DESK.id || sign.id === "desk-people" || sign.id === "vault-people") {
+  if (sign.id === CLAIMS_DESK.id || sign.id === "desk-people" || sign.id === "vault-people" || sign.id === "claims-people") {
+    if (w.passingPeopleHeld && !w.claimsPeopleHeld) return applyClaimsPeople(w, playerId);
+    if (sign.id === "claims-people") return applyClaimsPeople(w, playerId);
     if (w.safetyPeopleHeld && !w.deskPeopleHeld) return applyDeskPeople(w, playerId);
     if (sign.id === "desk-people") return applyDeskPeople(w, playerId);
     if (w.handoffPeopleHeld && !w.vaultPeopleHeld) return applyVaultPeople(w, playerId);
@@ -5006,6 +5017,37 @@ export function applyPassingPeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, passingPeopleHeld: true, pois, signs };
 }
 
+export function applyClaimsPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CLAIMS_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_CLAIMS_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.passingPeopleHeld) {
+    players.set(playerId, { ...p, heard: CLAIMS_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.claimsPeopleHeld && p.beats.claimsPeople) {
+    players.set(playerId, { ...p, heard: CLAIMS_PEOPLE_HELD, wink: visibleWink(false, WINK_CLAIMS_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, claimsPeople: true },
+    heard: CLAIMS_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_CLAIMS_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "claims-people")
+    ? w.pois.map((poi) => (poi.id === "claims-people" ? claimsPeoplePoi() : poi))
+    : [...w.pois, claimsPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "claims-people")
+    ? w.signs.map((s) => (s.id === "claims-people" ? { ...CLAIMS_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...CLAIMS_PEOPLE_PLAQUE }];
+  return { ...w, players, claimsPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6222,6 +6264,7 @@ export function snapshot(w: WorldState) {
     duelPeopleHeld: w.duelPeopleHeld,
     campPeopleHeld: w.campPeopleHeld,
     passingPeopleHeld: w.passingPeopleHeld,
+    claimsPeopleHeld: w.claimsPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
