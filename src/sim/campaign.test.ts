@@ -550,6 +550,12 @@ import {
   SERIAL_PEOPLE_HELD,
   SERIAL_PEOPLE_SPECTATOR,
   SERIAL_PEOPLE_PLAQUE,
+  BAND_PEOPLE_COPY,
+  WINK_BAND_PEOPLE,
+  BAND_PEOPLE_NEED,
+  BAND_PEOPLE_HELD,
+  BAND_PEOPLE_SPECTATOR,
+  BAND_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1149,6 +1155,7 @@ import {
   applyDummyPeople,
   applyGearedPeople,
   applySerialPeople,
+  applyBandPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5106,6 +5113,45 @@ describe("Serial — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applySerialPeople(gWorld, "g").players.get("g")?.heard).toBe(SERIAL_PEOPLE_SPECTATOR);
     expect(gWorld.serialPeopleHeld).toBe(false);
+  });
+});
+
+describe("Band — people", () => {
+  it("names the band as people after serials; same skill different serials same number; guests cannot", () => {
+    const w = emptyWorld();
+    w.serialPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), serialPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BAND_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BAND_PEOPLE);
+    expect(p.beats.bandPeople).toBe(true);
+    expect(named.bandPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "band-people")?.name).toBe("Band — people");
+    expect(named.signs.find((s) => s.id === "band-people")?.title).toBe(BAND_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("different serials");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBandPeople(named, "a").players.get("a")?.heard).toBe(BAND_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyBandPeople(early, "a").players.get("a")?.heard).toBe(BAND_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.serialPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyBandPeople(gWorld, "g").players.get("g")?.heard).toBe(BAND_PEOPLE_SPECTATOR);
+    expect(gWorld.bandPeopleHeld).toBe(false);
   });
 });
 
