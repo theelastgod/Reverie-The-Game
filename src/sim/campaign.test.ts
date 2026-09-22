@@ -180,6 +180,12 @@ import {
   FOUNDRY_PEOPLE_HELD,
   FOUNDRY_PEOPLE_SPECTATOR,
   FOUNDRY_PEOPLE_PLAQUE,
+  STRAIT_PEOPLE_COPY,
+  WINK_STRAIT_PEOPLE,
+  STRAIT_PEOPLE_NEED,
+  STRAIT_PEOPLE_HELD,
+  STRAIT_PEOPLE_SPECTATOR,
+  STRAIT_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -713,6 +719,7 @@ import {
   applyWetPeople,
   applyStallPeople,
   applyFoundryPeople,
+  applyStraitPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2156,6 +2163,44 @@ describe("The Foundry — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_FOUNDRY.x, y: ORGAN_FOUNDRY.y, locked: true });
     expect(applyFoundryPeople(gWorld, "g").players.get("g")?.heard).toBe(FOUNDRY_PEOPLE_SPECTATOR);
     expect(gWorld.foundryPeopleHeld).toBe(false);
+  });
+});
+
+describe("The Strait — people", () => {
+  it("names the Strait as people after the Foundry; refuse still works; guests cannot", () => {
+    const w = emptyWorld();
+    w.foundryPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), foundryPeople: true },
+      x: ORGAN_STRAIT.x,
+      y: ORGAN_STRAIT.y,
+    });
+    const named = applyStraitPeople(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(STRAIT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_STRAIT_PEOPLE);
+    expect(p.beats.straitPeople).toBe(true);
+    expect(named.straitPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === ORGAN_STRAIT.id)?.kind).toBe("strait-people");
+    expect(named.signs.find((s) => s.id === ORGAN_STRAIT.id)?.title).toBe(STRAIT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Refuse still works");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyStraitPeople(named, "a").players.get("a")?.heard).toBe(STRAIT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y });
+    expect(applyStraitPeople(early, "a").players.get("a")?.heard).toBe(STRAIT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.foundryPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y, locked: true });
+    expect(applyStraitPeople(gWorld, "g").players.get("g")?.heard).toBe(STRAIT_PEOPLE_SPECTATOR);
+    expect(gWorld.straitPeopleHeld).toBe(false);
   });
 });
 

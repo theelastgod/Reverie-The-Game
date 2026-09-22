@@ -129,6 +129,7 @@ export type Beats = {
   wetPeople: boolean;
   stallPeople: boolean;
   foundryPeople: boolean;
+  straitPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -246,6 +247,7 @@ export type Poi = {
     | "wet-people"
     | "stall-people"
     | "foundry-people"
+    | "strait-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1807,6 +1809,31 @@ export function foundryPeoplePoi(): Poi {
   };
 }
 
+export const STRAIT_PEOPLE_COPY =
+  "The Strait is a house of people, not a canal of process. Refuse still works. Combat is not. This was not a fetch.";
+export const WINK_STRAIT_PEOPLE = "People, not water. The token does not strike.";
+export const STRAIT_PEOPLE_NEED = "The Foundry as people first. A strait of people is not a fetch.";
+export const STRAIT_PEOPLE_HELD = "The Strait already holds as people. Refuse still works.";
+export const STRAIT_PEOPLE_SPECTATOR = "Water. You do not get a house of people.";
+
+export const STRAIT_PEOPLE_PLAQUE: Sign = {
+  id: ORGAN_STRAIT.id,
+  title: "The Strait — people",
+  text: "A house of people. Refuse still works. The number does not strike.",
+  x: ORGAN_STRAIT.x,
+  y: ORGAN_STRAIT.y,
+};
+
+export function straitPeoplePoi(): Poi {
+  return {
+    id: ORGAN_STRAIT.id,
+    name: "The Strait — people",
+    x: ORGAN_STRAIT.x,
+    y: ORGAN_STRAIT.y,
+    kind: "strait-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2091,6 +2118,7 @@ export function emptyBeats(): Beats {
     wetPeople: false,
     stallPeople: false,
     foundryPeople: false,
+    straitPeople: false,
   };
 }
 

@@ -559,6 +559,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "foundry-people"
                         ? 0xc9a56a
+                      : poi.kind === "strait-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1101,6 +1103,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The Foundry is dark. Vesper Hale is here. Heat is not a nation.";
     } else if (foundry && me.beats.foundryAsk && !me.guest) {
       this.prompt = "F — unlight the Foundry. Vesper walks. This is not a fetch.";
+    } else if (strait && (me.beats.straitPeople || snap.straitPeopleHeld) && !me.guest) {
+      this.prompt = me.heard || "The Strait — people. Refuse still works. Not a stick.";
+    } else if (strait && snap.foundryPeopleHeld && !me.guest) {
+      this.prompt = "F — the Strait as a house of people. Refuse still works. Not a fetch.";
     } else if (strait && (snap.divStanding || me.beats.divStanding) && !me.guest) {
       this.prompt = me.heard || "House of Divinities named the buried water. Standing. Not a stick.";
     } else if (strait && (snap.straitBuried || me.beats.canalBury) && me.house === "divinities" && !me.guest) {
