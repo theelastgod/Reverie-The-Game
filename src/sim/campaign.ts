@@ -177,6 +177,7 @@ export type Beats = {
   claimsPeople: boolean;
   filePeople: boolean;
   takePeople: boolean;
+  bankPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -342,6 +343,7 @@ export type Poi = {
     | "claims-people"
     | "file-people"
     | "take-people"
+    | "bank-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2793,6 +2795,31 @@ export function takePeoplePoi(): Poi {
   };
 }
 
+export const BANK_PEOPLE_COPY =
+  "The vault is a house of people, not a yield of process. Banked still does not drop. TAKE stays disarmed. Combat is not. This was not a fetch.";
+export const WINK_BANK_PEOPLE = "People, not a vault stick. The token does not strike.";
+export const BANK_PEOPLE_NEED = "TAKE as people first. A vault of people is not a fetch.";
+export const BANK_PEOPLE_HELD = "The vault already holds as people. Banked still does not drop. TAKE stays disarmed.";
+export const BANK_PEOPLE_SPECTATOR = "A vault. You do not get a house of people.";
+
+export const BANK_PEOPLE_PLAQUE: Sign = {
+  id: "bank-people",
+  title: "Bank — people",
+  text: "A house of people. Banked still does not drop. TAKE stays disarmed. The number does not strike.",
+  x: CLAIMS_DESK.x,
+  y: CLAIMS_DESK.y,
+};
+
+export function bankPeoplePoi(): Poi {
+  return {
+    id: "bank-people",
+    name: "Bank — people",
+    x: CLAIMS_DESK.x,
+    y: CLAIMS_DESK.y,
+    kind: "bank-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3457,6 +3484,7 @@ export function emptyBeats(): Beats {
     claimsPeople: false,
     filePeople: false,
     takePeople: false,
+    bankPeople: false,
   };
 }
 

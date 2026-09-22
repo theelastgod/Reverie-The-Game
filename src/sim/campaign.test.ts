@@ -472,6 +472,12 @@ import {
   TAKE_PEOPLE_HELD,
   TAKE_PEOPLE_SPECTATOR,
   TAKE_PEOPLE_PLAQUE,
+  BANK_PEOPLE_COPY,
+  WINK_BANK_PEOPLE,
+  BANK_PEOPLE_NEED,
+  BANK_PEOPLE_HELD,
+  BANK_PEOPLE_SPECTATOR,
+  BANK_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1057,6 +1063,7 @@ import {
   applyClaimsPeople,
   applyFilePeople,
   applyTakePeople,
+  applyBankPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4507,6 +4514,50 @@ describe("TAKE — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
     expect(applyTakePeople(gWorld, "g").players.get("g")?.heard).toBe(TAKE_PEOPLE_SPECTATOR);
     expect(gWorld.takePeopleHeld).toBe(false);
+  });
+});
+
+describe("Bank — people", () => {
+  it("names the vault as people after TAKE; banked still does not drop; guests cannot", () => {
+    const w = emptyWorld();
+    w.takePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      bestand: 20,
+      beats: { ...emptyBeats(), takePeople: true },
+      x: CLAIMS_DESK.x,
+      y: CLAIMS_DESK.y,
+    });
+    const named = applyRead(w, "a", CLAIMS_DESK.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BANK_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BANK_PEOPLE);
+    expect(p.beats.bankPeople).toBe(true);
+    expect(p.bestand).toBe(20);
+    expect(named.bankPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "bank-people")?.name).toBe("Bank — people");
+    expect(named.signs.find((s) => s.id === "bank-people")?.title).toBe(BANK_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Banked still does not drop");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBankPeople(named, "a").players.get("a")?.heard).toBe(BANK_PEOPLE_HELD);
+
+    const banked = applyDesk(named, "a", "bank");
+    expect(banked.players.get("a")?.banked).toBe(20);
+    expect(banked.players.get("a")?.bestand).toBe(0);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLAIMS_DESK.x, y: CLAIMS_DESK.y });
+    expect(applyBankPeople(early, "a").players.get("a")?.heard).toBe(BANK_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.takePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
+    expect(applyBankPeople(gWorld, "g").players.get("g")?.heard).toBe(BANK_PEOPLE_SPECTATOR);
+    expect(gWorld.bankPeopleHeld).toBe(false);
   });
 });
 

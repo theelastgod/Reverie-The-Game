@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 160** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 161** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -680,7 +680,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After filing as people, F at the claims desk: TAKE as people. Plaque/POI **TAKE — people**. TAKE stays disarmed. No Base.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 160 (do this next)
+## Stage 160 (landed)
+- After TAKE as people, F at the claims desk: the vault as people. Plaque/POI **Bank — people**. Banked still does not drop. TAKE stays disarmed.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 161 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

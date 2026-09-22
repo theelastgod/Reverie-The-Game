@@ -1011,6 +1011,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F — open the guest arena. Practice. No spoils. Guests are not loot.";
     } else if (deskClaim && (me.guest || me.locked)) {
       this.prompt = "A period on a ledger. Guests cannot claim.";
+    } else if (deskClaim && (me.beats.bankPeople || snap.bankPeopleHeld)) {
+      this.prompt = me.heard || "Bank — people. Banked still does not drop. TAKE stays disarmed. Not a stick.";
+    } else if (deskClaim && snap.takePeopleHeld && !me.guest) {
+      this.prompt = "F — the vault as a house of people. Banked still does not drop. TAKE stays disarmed. Not a fetch.";
     } else if (deskClaim && (me.beats.takePeople || snap.takePeopleHeld)) {
       this.prompt = me.heard || "TAKE — people. TAKE stays disarmed. No Base. Not a stick.";
     } else if (deskClaim && snap.filePeopleHeld && !me.guest) {
