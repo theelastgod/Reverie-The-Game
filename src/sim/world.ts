@@ -139,6 +139,16 @@ import {
   DODGE_COPY,
   DODGE_WHIFF,
   intentMoving,
+  STORM_GEAR,
+  STORM_SKIM,
+  STORM_PRESS,
+  STORM_SKIM_COPY,
+  STORM_FALLEN,
+  WINK_STORM_PRESS,
+  STORM_PROGRESS_PLAQUE,
+  stormProgressPoi,
+  stormProgress,
+  alreadyFallen,
   STANCE_PLAQUE,
   stancePoi,
   VESPER_NOGOD,
@@ -694,6 +704,7 @@ export type WorldState = {
   participantHeld: boolean;
   founderHeld: boolean;
   bountyHeld: boolean;
+  stormPressHeld: boolean;
   blitzMarks: BlitzMark[];
   cyberHeld: boolean;
   glamourHeld: boolean;
@@ -898,6 +909,7 @@ export function emptyWorld(): WorldState {
     participantHeld: false,
     founderHeld: false,
     bountyHeld: false,
+    stormPressHeld: false,
     blitzMarks: [],
     cyberHeld: false,
     glamourHeld: false,
@@ -1042,6 +1054,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
   let gestell = w.gestell;
   const duelGraves: { x: number; y: number }[] = [];
   const fallen = new Set<string>();
+  let stormMark: { x: number; y: number } | null = null;
   for (const [id, b] of w.players) {
     if (id === attackerId || b.hp <= 0) continue;
     const dx = b.x - a.x;
@@ -1053,6 +1066,8 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       players.set(attackerId, { ...k, heard: DODGE_WHIFF });
       continue;
     }
+    const isFallen = alreadyFallen(b, w.wreckage);
+    const geared = a.storm && !a.guest && stormProgress(b) && !isFallen;
     let hp = b.hp - dmg;
     if (hp <= 0) {
       wreckage = [
@@ -1065,7 +1080,8 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       );
       const ruinDuel = !grief && !!grave;
       const flaggedFight = !grief && a.flagged && b.flagged;
-      const drop = flaggedFight || ruinDuel ? Math.floor(b.bestand * 0.3) : 0;
+      const stormSkim = !grief && geared ? Math.floor(b.bestand * STORM_SKIM) : 0;
+      const drop = (flaggedFight || ruinDuel ? Math.floor(b.bestand * 0.3) : 0) + stormSkim;
       const fakeDrop = (flaggedFight || ruinDuel) && b.fakeWinke > 0 ? 1 : 0;
       const camp = (flaggedFight || ruinDuel) && a.lastKillId === id;
       const killer = players.get(attackerId)!;
@@ -1075,9 +1091,27 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         fakeWinke: killer.fakeWinke + fakeDrop,
         aura: camp ? Math.max(0, killer.aura - 4) : killer.aura,
         lastKillId: id,
-        heard: grief ? GUEST_GRIEF : camp ? CAMP_COPY : ruinDuel ? DUEL_COPY : drop ? SPOILS_COPY : killer.heard,
-        wink: ruinDuel ? visibleWink(false, WINK_DUEL) : killer.wink,
+        beats: stormSkim ? { ...killer.beats, stormPress: true } : killer.beats,
+        heard: grief
+          ? GUEST_GRIEF
+          : camp
+            ? CAMP_COPY
+            : stormSkim
+              ? STORM_SKIM_COPY
+              : ruinDuel
+                ? DUEL_COPY
+                : drop
+                  ? SPOILS_COPY
+                  : killer.heard,
+        wink: stormSkim
+          ? visibleWink(false, WINK_STORM_PRESS)
+          : ruinDuel
+            ? visibleWink(false, WINK_DUEL)
+            : killer.wink,
       });
+      if (stormSkim) {
+        stormMark = { x: b.x, y: b.y };
+      }
       fallen.add(id);
       if (ruinDuel && grave) duelGraves.push(grave);
       players.set(
@@ -1089,6 +1123,27 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         }),
       );
       if (camp) gestell = Math.min(100, gestell + 4);
+    } else if (geared) {
+      const crack = b.fakeWinke > 0 ? 1 : 0;
+      players.set(id, {
+        ...b,
+        hp,
+        damaged: b.damaged + crack,
+        fakeWinke: Math.max(0, b.fakeWinke - crack),
+        heard: STORM_PRESS,
+      });
+      const k = players.get(attackerId)!;
+      players.set(attackerId, {
+        ...k,
+        beats: { ...k.beats, stormPress: true },
+        heard: STORM_PRESS,
+        wink: visibleWink(false, WINK_STORM_PRESS),
+      });
+      stormMark = { x: b.x, y: b.y };
+    } else if (a.storm && !a.guest && isFallen) {
+      players.set(id, { ...b, hp, heard: STORM_FALLEN });
+      const k = players.get(attackerId)!;
+      players.set(attackerId, { ...k, heard: STORM_FALLEN });
     } else {
       players.set(id, { ...b, hp });
     }
@@ -1131,7 +1186,15 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       clerks.push({ ...c, hp });
     }
   }
-  return { ...w, players, wreckage, clerks, gestell };
+  if (!stormMark) return { ...w, players, wreckage, clerks, gestell };
+  const plaque = { ...STORM_PROGRESS_PLAQUE, x: stormMark.x, y: stormMark.y };
+  const pois = w.pois.some((poi) => poi.id === "storm-progress")
+    ? w.pois.map((poi) => (poi.id === "storm-progress" ? stormProgressPoi(stormMark.x, stormMark.y) : poi))
+    : [...w.pois, stormProgressPoi(stormMark.x, stormMark.y)];
+  const signs = w.signs.some((s) => s.id === "storm-progress")
+    ? w.signs.map((s) => (s.id === "storm-progress" ? plaque : s))
+    : [...w.signs, plaque];
+  return { ...w, players, wreckage, clerks, gestell, stormPressHeld: true, pois, signs };
 }
 
 function withNaraLeave(w: WorldState, playerId: string): WorldState {
@@ -3033,6 +3096,7 @@ export function snapshot(w: WorldState) {
     participantHeld: w.participantHeld,
     founderHeld: w.founderHeld,
     bountyHeld: w.bountyHeld,
+    stormPressHeld: w.stormPressHeld,
     blitzMarks: w.blitzMarks,
     cyberHeld: w.cyberHeld,
     glamourHeld: w.glamourHeld,

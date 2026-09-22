@@ -73,6 +73,15 @@ import {
   RESTRAINT_YIELD,
   DODGE_COPY,
   DODGE_WHIFF,
+  STORM_GEAR,
+  STORM_SKIM,
+  STORM_PRESS,
+  STORM_SKIM_COPY,
+  STORM_FALLEN,
+  WINK_STORM_PRESS,
+  STORM_PROGRESS_PLAQUE,
+  stormProgress,
+  alreadyFallen,
   intentMoving,
   RESTRAINT_PAY,
   VESPER_NOGOD,
@@ -1222,7 +1231,74 @@ describe("Restraint dodge window", () => {
     });
     const hit = applyStrike(still, "a");
     expect(hit.wreckage.length).toBe(1);
-    expect(hit.players.get("b")?.hp).toBe(100);
+    expect(damageFor(hit.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+  });
+});
+
+describe("Storm vs high-progress", () => {
+  it("skims geared graves, not fallen ones, and does not buy damage", () => {
+    expect(stormProgress({ guest: false, bestand: STORM_GEAR, fakeWinke: 0 })).toBe(true);
+    expect(stormProgress({ guest: false, bestand: 0, fakeWinke: 1 })).toBe(true);
+    expect(stormProgress({ guest: true, bestand: 99, fakeWinke: 2 })).toBe(false);
+    expect(alreadyFallen({ hp: 10, x: 0, y: 0 }, [])).toBe(true);
+    expect(alreadyFallen({ hp: 80, x: 0, y: 0 }, [])).toBe(false);
+
+    const w = emptyWorld();
+    w.players.set("a", { ...spawnGuest("a"), guest: false, storm: true, x: 200, y: 480 });
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      hp: 80,
+      bestand: 40,
+      fakeWinke: 1,
+      x: 220,
+      y: 480,
+    });
+    const press = applyStrike(w, "a");
+    expect(press.players.get("b")?.hp).toBe(80 - 22);
+    expect(press.players.get("b")?.heard).toBe(STORM_PRESS);
+    expect(press.players.get("b")?.damaged).toBe(1);
+    expect(press.players.get("a")?.heard).toBe(STORM_PRESS);
+    expect(press.players.get("a")?.wink).toBe(WINK_STORM_PRESS);
+    expect(press.stormPressHeld).toBe(true);
+    expect(press.pois.find((poi) => poi.kind === "storm-progress")?.x).toBe(220);
+    expect(press.signs.find((s) => s.id === "storm-progress")?.title).toBe(STORM_PROGRESS_PLAQUE.title);
+    expect(press.players.get("a")?.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(press.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(press.players.get("a")!)).toBe(false);
+
+    const kill = emptyWorld();
+    kill.players.set("a", { ...spawnGuest("a"), guest: false, storm: true, flagged: true, x: 200, y: 480 });
+    kill.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      flagged: true,
+      hp: 20,
+      bestand: 100,
+      x: 220,
+      y: 480,
+    });
+    const skim = applyStrike(kill, "a");
+    expect(skim.players.get("a")?.heard).toBe(STORM_SKIM_COPY);
+    expect(skim.players.get("a")?.bestand).toBe(Math.floor(100 * 0.3) + Math.floor(100 * STORM_SKIM));
+    expect(damageFor(skim.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+
+    const rag = emptyWorld();
+    rag.wreckage = [{ id: "g", x: 220, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    rag.players.set("a", { ...spawnGuest("a"), guest: false, storm: true, x: 200, y: 480 });
+    rag.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      hp: 80,
+      bestand: 40,
+      x: 220,
+      y: 480,
+    });
+    const weak = applyStrike(rag, "a");
+    expect(weak.players.get("a")?.heard).toBe(STORM_FALLEN);
+    expect(weak.players.get("b")?.hp).toBe(80 - 22);
+    expect(weak.stormPressHeld).toBe(false);
+    expect(guestCanClaim(weak.players.get("b")!)).toBe(false);
   });
 });
 

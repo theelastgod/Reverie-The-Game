@@ -103,6 +103,7 @@ export type Beats = {
   participant: boolean;
   founder: boolean;
   bounty: boolean;
+  stormPress: boolean;
 };
 
 export type WeatherHeard = {
@@ -196,7 +197,8 @@ export type Poi = {
     | "guest-arena"
     | "screening"
     | "screening-participant"
-    | "screening-founder";
+    | "screening-founder"
+    | "storm-progress";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1170,6 +1172,40 @@ export function intentMoving(intent: { up: boolean; down: boolean; left: boolean
   return !!(intent && (intent.up || intent.down || intent.left || intent.right));
 }
 
+export const STORM_GEAR = 40;
+export const STORM_SKIM = 0.1;
+export const STORM_PRESS =
+  "Storm. High-progress cracked. You did not strike harder. This was not a fetch.";
+export const STORM_SKIM_COPY =
+  "Storm. You skimmed the geared. The fallen keep their rags. Combat is not.";
+export const STORM_FALLEN = "Storm is weaker vs the already-fallen. Combat is not.";
+export const WINK_STORM_PRESS = "Angel of History. Progress, not a bigger stick. Combat is not.";
+
+export const STORM_PROGRESS_PLAQUE: Sign = {
+  id: "storm-progress",
+  title: "Storm — progress",
+  text: "Geared graves skim. Fallen graves do not. The number does not strike.",
+  x: 200,
+  y: 480,
+};
+
+export function stormProgressPoi(x: number, y: number): Poi {
+  return { id: "storm-progress", name: "Storm — progress", x, y, kind: "storm-progress" };
+}
+
+export function stormProgress(p: { guest: boolean; locked?: boolean; bestand: number; fakeWinke: number }): boolean {
+  return !p.guest && !p.locked && (p.bestand >= STORM_GEAR || p.fakeWinke > 0);
+}
+
+export function alreadyFallen(
+  p: { hp: number; x: number; y: number },
+  wreckage: { x: number; y: number }[],
+  ragHp = 15,
+): boolean {
+  if (p.hp <= ragHp) return true;
+  return wreckage.some((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
+}
+
 export const STANCE_PLAQUE: Sign = {
   id: SHRINE.id,
   title: "Restraint",
@@ -1495,6 +1531,7 @@ export function emptyBeats(): Beats {
     participant: false,
     founder: false,
     bounty: false,
+    stormPress: false,
   };
 }
 
