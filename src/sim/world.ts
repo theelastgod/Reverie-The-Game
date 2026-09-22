@@ -139,6 +139,11 @@ import {
   DODGE_COPY,
   DODGE_WHIFF,
   intentMoving,
+  HIT_STOP,
+  HIT_STOP_COPY,
+  WINK_HIT_STOP,
+  HIT_STOP_PLAQUE,
+  hitStopPoi,
   STORM_GEAR,
   STORM_SKIM,
   STORM_PRESS,
@@ -782,6 +787,7 @@ export type WorldState = {
   naraPersonHeld: boolean;
   quillPersonHeld: boolean;
   ordPersonHeld: boolean;
+  hitStopHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1016,6 +1022,7 @@ export function emptyWorld(): WorldState {
     naraPersonHeld: false,
     quillPersonHeld: false,
     ordPersonHeld: false,
+    hitStopHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -1157,6 +1164,8 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
   const duelGraves: { x: number; y: number }[] = [];
   const fallen = new Set<string>();
   let stormMark: { x: number; y: number } | null = null;
+  let hitMark: { x: number; y: number } | null = null;
+  const priorHeard = a.heard;
   for (const [id, b] of w.players) {
     if (id === attackerId || b.hp <= 0) continue;
     const dx = b.x - a.x;
@@ -1171,6 +1180,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
     const isFallen = alreadyFallen(b, w.wreckage);
     const geared = a.storm && !a.guest && stormProgress(b) && !isFallen;
     let hp = b.hp - dmg;
+    hitMark = { x: b.x, y: b.y };
     if (hp <= 0) {
       wreckage = [
         ...wreckage,
@@ -1273,6 +1283,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       continue;
     }
     const hp = c.hp - dmg;
+    hitMark = { x: c.x, y: c.y };
     if (hp <= 0) {
       if (c.dummy) {
         clerks.push({ ...c, hp: CLERK_HP, telegraph: 0 });
@@ -1288,15 +1299,47 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       clerks.push({ ...c, hp });
     }
   }
-  if (!stormMark) return { ...w, players, wreckage, clerks, gestell };
+  if (hitMark) {
+    const k = players.get(attackerId)!;
+    const first = !w.hitStopHeld;
+    players.set(attackerId, {
+      ...k,
+      strikeCd: STRIKE_COOLDOWN + HIT_STOP,
+      beats: { ...k.beats, hitStop: true },
+      heard: first && k.heard === priorHeard ? HIT_STOP_COPY : k.heard,
+      wink: first && k.heard === priorHeard ? visibleWink(k.guest, WINK_HIT_STOP) : k.wink,
+    });
+  }
+  const stopPois = hitMark && !w.hitStopHeld
+    ? (w.pois.some((poi) => poi.id === "hit-stop")
+        ? w.pois.map((poi) => (poi.id === "hit-stop" ? hitStopPoi(hitMark.x, hitMark.y) : poi))
+        : [...w.pois, hitStopPoi(hitMark.x, hitMark.y)])
+    : w.pois;
+  const stopSigns = hitMark && !w.hitStopHeld
+    ? (w.signs.some((s) => s.id === "hit-stop")
+        ? w.signs.map((s) => (s.id === "hit-stop" ? { ...HIT_STOP_PLAQUE, x: hitMark.x, y: hitMark.y } : s))
+        : [...w.signs, { ...HIT_STOP_PLAQUE, x: hitMark.x, y: hitMark.y }])
+    : w.signs;
+  if (!stormMark) {
+    return {
+      ...w,
+      players,
+      wreckage,
+      clerks,
+      gestell,
+      hitStopHeld: hitMark ? true : w.hitStopHeld,
+      pois: stopPois,
+      signs: stopSigns,
+    };
+  }
   const plaque = { ...STORM_PROGRESS_PLAQUE, x: stormMark.x, y: stormMark.y };
-  const pois = w.pois.some((poi) => poi.id === "storm-progress")
-    ? w.pois.map((poi) => (poi.id === "storm-progress" ? stormProgressPoi(stormMark.x, stormMark.y) : poi))
-    : [...w.pois, stormProgressPoi(stormMark.x, stormMark.y)];
-  const signs = w.signs.some((s) => s.id === "storm-progress")
-    ? w.signs.map((s) => (s.id === "storm-progress" ? plaque : s))
-    : [...w.signs, plaque];
-  return { ...w, players, wreckage, clerks, gestell, stormPressHeld: true, pois, signs };
+  const pois = stopPois.some((poi) => poi.id === "storm-progress")
+    ? stopPois.map((poi) => (poi.id === "storm-progress" ? stormProgressPoi(stormMark.x, stormMark.y) : poi))
+    : [...stopPois, stormProgressPoi(stormMark.x, stormMark.y)];
+  const signs = stopSigns.some((s) => s.id === "storm-progress")
+    ? stopSigns.map((s) => (s.id === "storm-progress" ? plaque : s))
+    : [...stopSigns, plaque];
+  return { ...w, players, wreckage, clerks, gestell, stormPressHeld: true, hitStopHeld: true, pois, signs };
 }
 
 export function applyNaraPerson(w: WorldState, playerId: string): WorldState {
@@ -3420,6 +3463,7 @@ export function snapshot(w: WorldState) {
     naraPersonHeld: w.naraPersonHeld,
     quillPersonHeld: w.quillPersonHeld,
     ordPersonHeld: w.ordPersonHeld,
+    hitStopHeld: w.hitStopHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -471,6 +471,8 @@ export class NaveScene extends Phaser.Scene {
                       ? 0x7a1028
                     : poi.kind === "storm-progress"
                       ? 0x7eb6ff
+                    : poi.kind === "hit-stop"
+                      ? 0x7eb6ff
                     : poi.kind === "wink-seed"
                       ? 0xc9a56a
                     : poi.kind === "process-read"
@@ -1151,7 +1153,9 @@ export class NaveScene extends Phaser.Scene {
         ? ` · Storm${snap.stormPressHeld ? " vs progress" : ""}`
         : me.restraint
           ? " · Restraint · dodge if moving"
-          : "";
+          : snap.hitStopHeld
+            ? " · hit-stop"
+            : "";
       const naraBit = snap.naraGone ? " · sexton gone" : "";
       const ordBit = snap.ordGone ? " · Ord gone" : "";
       const quillBit = snap.quillGone ? " · Quill gone" : "";

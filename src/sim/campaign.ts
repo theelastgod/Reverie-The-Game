@@ -112,6 +112,7 @@ export type Beats = {
   quillPerson: boolean;
   ordPerson: boolean;
   vesperPerson: boolean;
+  hitStop: boolean;
 };
 
 export type WeatherHeard = {
@@ -214,7 +215,8 @@ export type Poi = {
     | "nara-person"
     | "quill-person"
     | "ord-person"
-    | "vesper-person";
+    | "vesper-person"
+    | "hit-stop";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1282,6 +1284,23 @@ export function intentMoving(intent: { up: boolean; down: boolean; left: boolean
   return !!(intent && (intent.up || intent.down || intent.left || intent.right));
 }
 
+export const HIT_STOP = 0.12;
+export const HIT_STOP_COPY =
+  "The hit held. Telegraph is readable. You did not strike harder. This was not a fetch.";
+export const WINK_HIT_STOP = "Hit-stop. Presence, not a bigger stick. Combat is not.";
+
+export const HIT_STOP_PLAQUE: Sign = {
+  id: "hit-stop",
+  title: "Hit-stop",
+  text: "The hit held. Readable. The number does not strike harder.",
+  x: 200,
+  y: 480,
+};
+
+export function hitStopPoi(x: number, y: number): Poi {
+  return { id: "hit-stop", name: "Hit-stop", x, y, kind: "hit-stop" };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1677,6 +1696,7 @@ export function emptyBeats(): Beats {
     quillPerson: false,
     ordPerson: false,
     vesperPerson: false,
+    hitStop: false,
   };
 }
 

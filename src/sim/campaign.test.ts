@@ -87,6 +87,10 @@ import {
   STORM_BURNS,
   RESTRAINT_YIELD,
   DODGE_COPY,
+  HIT_STOP,
+  HIT_STOP_COPY,
+  WINK_HIT_STOP,
+  HIT_STOP_PLAQUE,
   DODGE_WHIFF,
   STORM_GEAR,
   STORM_SKIM,
@@ -591,6 +595,7 @@ import {
   applyRead,
   snapshot,
   applyStrike,
+  STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
   applyQuillPerson,
@@ -1291,6 +1296,51 @@ describe("Restraint dodge window", () => {
     const hit = applyStrike(still, "a");
     expect(hit.wreckage.length).toBe(1);
     expect(damageFor(hit.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+  });
+});
+
+describe("Hit-stop", () => {
+  it("connecting strike holds the hit without buying damage; dodge does not", () => {
+    const w = emptyWorld();
+    w.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    w.players.set("b", { ...spawnGuest("b"), guest: false, hp: 80, x: 220, y: 480 });
+    const held = applyStrike(w, "a");
+    const p = held.players.get("a")!;
+    expect(p.heard).toBe(HIT_STOP_COPY);
+    expect(p.wink).toBe(WINK_HIT_STOP);
+    expect(p.beats.hitStop).toBe(true);
+    expect(p.strikeCd).toBeCloseTo(STRIKE_COOLDOWN + HIT_STOP);
+    expect(held.hitStopHeld).toBe(true);
+    expect(held.pois.find((poi) => poi.kind === "hit-stop")?.x).toBe(220);
+    expect(held.signs.find((s) => s.id === "hit-stop")?.title).toBe(HIT_STOP_PLAQUE.title);
+    expect(held.players.get("b")?.hp).toBe(80 - 22);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const dodge = emptyWorld();
+    dodge.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    dodge.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      restraint: true,
+      hp: 80,
+      x: 220,
+      y: 480,
+    });
+    dodge.intents.set("b", { up: true, down: false, left: false, right: false });
+    const missed = applyStrike(dodge, "a");
+    expect(missed.hitStopHeld).toBe(false);
+    expect(missed.players.get("a")?.heard).toBe(DODGE_WHIFF);
+    expect(missed.players.get("a")?.strikeCd).toBe(STRIKE_COOLDOWN);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480 });
+    gWorld.players.set("b", { ...spawnGuest("b"), hp: 80, x: 220, y: 480 });
+    const guestHit = applyStrike(gWorld, "g");
+    expect(guestHit.hitStopHeld).toBe(true);
+    expect(guestHit.players.get("g")?.heard).toBe(HIT_STOP_COPY);
+    expect(guestCanClaim(guestHit.players.get("g")!)).toBe(false);
   });
 });
 
