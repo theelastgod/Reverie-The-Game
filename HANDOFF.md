@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 31** — Authored side quest that changes a POI (not a fetch). No mint.
+**Next stage: 32** — More authored side quests (24 named). Next: Quill or Nara hour that changes standing. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -148,8 +148,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Death cracks remaining exhibition prints (`damaged`). Cult stays whole.
 - Quill Q repairs one print for 7 Bestand. Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 31 (do this next)
-Named side quest that changes a POI, NPC schedule, cult object, or House standing. Fetch-only is forbidden. No mint. No Base.
+## Stage 31 (landed)
+- Ord’s Cable errand: after the map, keep a node. The Cable plaque becomes quiet. Ord walks there.
+- Extracting instead leaves the Cable humming. Guests cannot take the errand. `damageFor` unchanged.
+
+## Stage 32 (do this next)
+Another named side quest that changes standing or a cult object. Fetch-only forbidden. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

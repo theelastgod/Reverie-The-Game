@@ -50,6 +50,8 @@ export type Beats = {
   lastWord: boolean;
   clearing: boolean;
   passing: boolean;
+  errand: boolean;
+  cableQuiet: boolean;
 };
 
 export type WeatherHeard = {
@@ -88,6 +90,7 @@ export type Poi = {
     | "organ-strait"
     | "organ-foundry"
     | "organ-cable"
+    | "organ-cable-quiet"
     | "forge-tray"
     | "clearing-ring"
     | "clearing-held"
@@ -266,6 +269,36 @@ export const WINK_ORGANS =
 export const M3_ENTER = "The Third Movement is organs, not nations. The Clearing you touched is already a garden.";
 export const M3_SPECTATOR = "A door with a number. You do not travel organs.";
 export const ORGAN_NEED_M3 = "The organs are shut. Movement III is not funded.";
+export const ORD_ERRAND =
+  "The Cable still hums because the Strait paid. Keep a node. Do not extract. Then find me at the Cable.";
+export const ORD_ERRAND_WAIT = "The Cable is still a light. Keep a node. Do not extract.";
+export const ORD_CABLE_LATER =
+  "You kept the node. I walked. The Cable is quieter. The Foundry will not thank you.";
+export const WINK_ERRAND =
+  "A side hour. You changed an organ, not a list. Fetch would have left the Cable humming.";
+export const CABLE_QUIET_COPY =
+  "You kept a node. The Cable plaque changes. Ord leaves his desk for the organ.";
+export const ERRAND_EXTRACT =
+  "You extracted. The Cable still drinks. Ord will not walk.";
+export const ERRAND_SPECTATOR = "Ord is talking about a cable. Not to you.";
+
+export const CABLE_QUIET_PLAQUE: Sign = {
+  id: ORGAN_CABLE.id,
+  title: "The Cable — quiet",
+  text: "Someone kept a node. The hum is less. The Foundry notices.",
+  x: ORGAN_CABLE.x,
+  y: ORGAN_CABLE.y,
+};
+
+export function cableQuietPoi(): Poi {
+  return {
+    id: ORGAN_CABLE.id,
+    name: "The Cable — quiet",
+    x: ORGAN_CABLE.x,
+    y: ORGAN_CABLE.y,
+    kind: "organ-cable-quiet",
+  };
+}
 
 export const ORGAN_PLAQUES: Sign[] = [
   {
@@ -535,6 +568,8 @@ export function emptyBeats(): Beats {
     lastWord: false,
     clearing: false,
     passing: false,
+    errand: false,
+    cableQuiet: false,
   };
 }
 
@@ -928,6 +963,10 @@ export function passingCopy(outcome: Exclude<PassingOutcome, "">): string {
   return PASSING_FAIL;
 }
 
-export function liveNpcs(ioneGone: boolean): Npc[] {
-  return ioneGone ? NAVE_NPCS : [...NAVE_NPCS, IONE];
+export function liveNpcs(ioneGone: boolean, ordAtCable = false): Npc[] {
+  const base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
+  if (!ordAtCable) return base;
+  return base.map((n) =>
+    n.id === "ord" ? { ...n, x: ORGAN_CABLE.x, y: ORGAN_CABLE.y + 48, role: "At the Cable" } : n,
+  );
 }

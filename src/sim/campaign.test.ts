@@ -49,6 +49,7 @@ import {
   ORGAN_STRAIT,
   ORGAN_FOUNDRY,
   ORGAN_CABLE,
+  ORGAN_PLAQUES,
   FAILED_PASSING,
   WATCH_FAILED,
   WINK_FAILED,
@@ -97,6 +98,13 @@ import {
   ANNOUNCE_NEED,
   ANNOUNCE_SPECTATOR,
   WINK_ANNOUNCE,
+  ORD_ERRAND,
+  ORD_CABLE_LATER,
+  CABLE_QUIET_COPY,
+  CABLE_QUIET_PLAQUE,
+  ERRAND_EXTRACT,
+  WINK_ERRAND,
+  liveNpcs,
   WAR_WIN,
   WAR_TITHE,
   TITHE_COST,
@@ -695,6 +703,62 @@ describe("Movement III organs", () => {
     const guest = applyM3(gWorld, "g");
     expect(guest.players.get("g")?.inM3).toBe(false);
     expect(guest.players.get("g")?.heard).toBe(M3_SPECTATOR);
+  });
+});
+
+describe("Ord's Cable errand", () => {
+  it("keeping a node quiets the Cable plaque and moves Ord; extract does not", () => {
+    const ord = NAVE_NPCS.find((n) => n.id === "ord")!;
+    const w = emptyWorld();
+    w.m3Open = true;
+    w.pois = [...w.pois, { id: ORGAN_CABLE.id, name: "The Cable", x: ORGAN_CABLE.x, y: ORGAN_CABLE.y, kind: "organ-cable" }];
+    w.signs = [...w.signs, ORGAN_PLAQUES.find((s) => s.id === ORGAN_CABLE.id)!];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), map: true, m3: true },
+      x: ord.x,
+      y: ord.y,
+    });
+    const asked = applyTalk(w, "a", "ord");
+    expect(asked.players.get("a")?.heard).toBe(ORD_ERRAND);
+    expect(asked.players.get("a")?.beats.errand).toBe(true);
+    expect(asked.ordAtCable).toBe(false);
+
+    const node = asked.nodes[0];
+    asked.players.set("a", { ...asked.players.get("a")!, x: node.x, y: node.y });
+    const kept = applyUse(asked, "a", node.id, "keep");
+    const p = kept.players.get("a")!;
+    expect(p.beats.cableQuiet).toBe(true);
+    expect(p.heard).toBe(CABLE_QUIET_COPY);
+    expect(p.wink).toBe(WINK_ERRAND);
+    expect(kept.ordAtCable).toBe(true);
+    expect(kept.pois.find((poi) => poi.id === ORGAN_CABLE.id)?.kind).toBe("organ-cable-quiet");
+    expect(kept.signs.find((s) => s.id === ORGAN_CABLE.id)?.title).toBe(CABLE_QUIET_PLAQUE.title);
+    const moved = liveNpcs(false, true).find((n) => n.id === "ord")!;
+    expect(moved.x).toBe(ORGAN_CABLE.x);
+    expect(moved.role).toBe("At the Cable");
+    kept.players.set("a", { ...p, x: moved.x, y: moved.y });
+    const later = applyTalk(kept, "a", "ord");
+    expect(later.players.get("a")?.heard).toBe(ORD_CABLE_LATER);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const extractW = emptyWorld();
+    extractW.m3Open = true;
+    extractW.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), errand: true, map: true },
+      x: node.x,
+      y: node.y,
+    });
+    const extracted = applyUse(extractW, "a", node.id, "extract");
+    expect(extracted.players.get("a")?.heard).toBe(ERRAND_EXTRACT);
+    expect(extracted.ordAtCable).toBe(false);
+    expect(extracted.pois.find((poi) => poi.id === ORGAN_CABLE.id)?.kind).not.toBe("organ-cable-quiet");
   });
 });
 

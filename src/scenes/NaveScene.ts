@@ -163,7 +163,7 @@ export class NaveScene extends Phaser.Scene {
     if (this.signsDrawn) return;
     this.signsDrawn = true;
     for (const s of NAVE_SIGNS) this.drawSign(s);
-    for (const n of [...NAVE_NPCS, IONE]) {
+    for (const n of this.net.snap?.npcs ?? [...NAVE_NPCS, IONE]) {
       if (this.npcMarks.has(n.id)) continue;
       const img = this.add.image(n.x, n.y, n.id).setDisplaySize(52, 64).setDepth(9);
       const nm = this.add
@@ -176,6 +176,39 @@ export class NaveScene extends Phaser.Scene {
         .setDepth(11);
       this.npcMarks.set(n.id, img);
       this.npcNames.set(n.id, nm);
+    }
+  }
+
+  private syncNpcs() {
+    const list = this.net.snap?.npcs ?? [];
+    const seen = new Set<string>();
+    for (const n of list) {
+      seen.add(n.id);
+      let img = this.npcMarks.get(n.id);
+      let nm = this.npcNames.get(n.id);
+      if (!img) {
+        img = this.add.image(n.x, n.y, n.id).setDisplaySize(52, 64).setDepth(9);
+        nm = this.add
+          .text(n.x, n.y - 40, n.name, {
+            fontFamily: "Space Grotesk, sans-serif",
+            fontSize: "11px",
+            color: "#e8d5a3",
+          })
+          .setOrigin(0.5)
+          .setDepth(11);
+        this.npcMarks.set(n.id, img);
+        this.npcNames.set(n.id, nm);
+      }
+      img.setPosition(n.x, n.y);
+      nm?.setPosition(n.x, n.y - 40);
+    }
+    for (const [id, img] of this.npcMarks) {
+      if (!seen.has(id)) {
+        img.destroy();
+        this.npcMarks.delete(id);
+        this.npcNames.get(id)?.destroy();
+        this.npcNames.delete(id);
+      }
     }
   }
 
@@ -393,6 +426,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0xffffff
                       : poi.kind === "wet-grid"
                           ? 0x7eb6ff
+                      : poi.kind === "organ-cable-quiet"
+                        ? 0x7eb6ff
                       : poi.kind.startsWith("organ-")
                         ? 0xc9a56a
                         : poi.kind === "forge-tray"
@@ -449,6 +484,7 @@ export class NaveScene extends Phaser.Scene {
     this.syncRites();
     this.syncClerks();
     this.syncPois();
+    this.syncNpcs();
     const ioneImg = this.npcMarks.get(IONE.id);
     if (ioneImg) ioneImg.setVisible(!snap.ioneGone);
     this.npcNames.get(IONE.id)?.setVisible(!snap.ioneGone);
@@ -618,8 +654,16 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Movement III is shut. The private yield funds this door the Cold way.";
     } else if (gardenNear && !gardenNear.done && !me.guest) {
       this.prompt = "F bury the Clearing that Movement I over-extracted. Nara Vale will not speak until you do.";
+    } else if (npcNear?.id === "ord" && me.beats.cableQuiet) {
+      this.prompt = me.heard || "Ord walked to the Cable. The organ is quieter.";
+    } else if (npcNear?.id === "ord" && me.beats.errand) {
+      this.prompt = "Keep a CRT node (Q). Do not extract. Ord will walk to the Cable.";
+    } else if (npcNear?.id === "ord" && me.beats.map) {
+      this.prompt = "F — Ord has an errand. Keep a node. Change an organ.";
     } else if ((strait || foundry || cable) && snap.m3Open && !me.guest) {
-      this.prompt = "F read the organ. Extract here lights a factory there. No country names.";
+      this.prompt = cable && me.beats.cableQuiet
+        ? "The Cable is quiet. You changed the plaque."
+        : "F read the organ. Extract here lights a factory there. No country names.";
     } else if (care && snap.careOpen && !me.guest && me.beats.under) {
       this.prompt = me.wink || "F — the Care. A Wink only you can hold.";
     } else if (care && !me.guest && !me.beats.under) {

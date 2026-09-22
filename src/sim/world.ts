@@ -171,6 +171,15 @@ import {
   PASSING_NEED,
   clearingPoi,
   liveNpcs,
+  ORD_ERRAND,
+  ORD_ERRAND_WAIT,
+  ORD_CABLE_LATER,
+  WINK_ERRAND,
+  CABLE_QUIET_COPY,
+  CABLE_QUIET_PLAQUE,
+  ERRAND_EXTRACT,
+  ERRAND_SPECTATOR,
+  cableQuietPoi,
   passingCopy,
   passingResult,
   House,
@@ -278,6 +287,7 @@ export type WorldState = {
   m3Open: boolean;
   forgedSold: boolean;
   ioneGone: boolean;
+  ordAtCable: boolean;
   announced: string | null;
   war: HouseWar;
   gestell: number;
@@ -415,6 +425,7 @@ export function emptyWorld(): WorldState {
     m3Open: false,
     forgedSold: false,
     ioneGone: false,
+    ordAtCable: false,
     announced: null,
     war: emptyWar(),
     gestell: 12,
@@ -620,10 +631,30 @@ export function applyUse(
   if (choice === "extract") {
     nodes[idx] = { ...node, depleted: true, kept: false };
     const tax = p.beats.hall ? warTax(earthTax(gestellTax(w.gestell), p.house), p.house, w.war) : 0;
-    players.set(playerId, { ...p, bestand: p.bestand + Math.max(0, 40 - tax) });
+    const heard = p.beats.errand && !p.beats.cableQuiet ? ERRAND_EXTRACT : p.heard;
+    players.set(playerId, { ...p, bestand: p.bestand + Math.max(0, 40 - tax), heard });
     return { ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) };
   }
   nodes[idx] = { ...node, depleted: true, kept: true };
+  if (p.beats.errand && !p.beats.cableQuiet && !p.guest) {
+    players.set(playerId, {
+      ...p,
+      winke: p.winke + divinitiesKeep(p.house),
+      readiness: p.readiness + 2,
+      beats: { ...p.beats, cableQuiet: true },
+      heard: CABLE_QUIET_COPY,
+      wink: visibleWink(false, WINK_ERRAND),
+    });
+    return {
+      ...w,
+      nodes,
+      players,
+      gestell: Math.max(0, w.gestell - 3),
+      ordAtCable: true,
+      pois: w.pois.map((poi) => (poi.id === ORGAN_CABLE.id ? cableQuietPoi() : poi)),
+      signs: w.signs.map((s) => (s.id === ORGAN_CABLE.id ? { ...CABLE_QUIET_PLAQUE } : s)),
+    };
+  }
   players.set(playerId, { ...p, winke: p.winke + divinitiesKeep(p.house), readiness: p.readiness + 1 });
   return { ...w, nodes, players, gestell: Math.max(0, w.gestell - 3) };
 }
@@ -649,7 +680,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
-  const npc = npcById(npcId);
+  const npc = liveNpcs(w.ioneGone, w.ordAtCable).find((n) => n.id === npcId) ?? npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
   const players = new Map(w.players);
@@ -662,7 +693,25 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   if (id === "quill" && p.beats.market && !p.guest && !p.locked) {
     return applyForge(w, playerId, "hear");
   }
-  if (id === "ord" && w.m3Open && !p.guest) {
+  if (id === "ord" && w.m3Open && !p.guest && !p.locked) {
+    if (p.beats.cableQuiet) {
+      players.set(playerId, { ...p, heard: ORD_CABLE_LATER, wink: visibleWink(false, WINK_ERRAND) });
+      return { ...w, players };
+    }
+    if (p.beats.errand) {
+      players.set(playerId, { ...p, heard: ORD_ERRAND_WAIT, wink: visibleWink(false, WINK_ERRAND) });
+      return { ...w, players };
+    }
+    if (p.beats.map) {
+      players.set(playerId, {
+        ...p,
+        beats: { ...p.beats, errand: true },
+        heard: ORD_ERRAND,
+        wink: visibleWink(false, WINK_ERRAND),
+        readiness: p.readiness + 1,
+      });
+      return { ...w, players };
+    }
     players.set(playerId, {
       ...p,
       beats: { ...p.beats, ord: true, map: true },
@@ -670,6 +719,10 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
       wink: visibleWink(false, WINK_ORGANS),
       readiness: p.readiness + (p.beats.map ? 0 : 1),
     });
+    return { ...w, players };
+  }
+  if (id === "ord" && (p.guest || p.locked) && w.m3Open) {
+    players.set(playerId, { ...p, heard: ERRAND_SPECTATOR });
     return { ...w, players };
   }
   const heard = lineFor(id, p.beats);
@@ -1324,7 +1377,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable),
     signs: w.signs,
     pois: w.pois,
     weatherNamed: w.weatherNamed,
