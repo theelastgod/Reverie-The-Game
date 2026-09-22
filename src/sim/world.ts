@@ -240,6 +240,13 @@ import {
   WINK_ERRAND,
   CABLE_QUIET_COPY,
   CABLE_QUIET_PLAQUE,
+  CABLE_DARK,
+  WINK_CABLE_DARK,
+  CABLE_NEED_STRAIT,
+  CABLE_DARK_LATER,
+  CABLE_DARK_SPECTATOR,
+  CABLE_DARK_PLAQUE,
+  cableDarkPoi,
   ERRAND_EXTRACT,
   ERRAND_SPECTATOR,
   cableQuietPoi,
@@ -389,6 +396,7 @@ export type WorldState = {
   straitRefused: boolean;
   ordAtStrait: boolean;
   straitBuried: boolean;
+  cableDark: boolean;
   hallLamp: boolean;
   standing: HouseScores;
   announced: string | null;
@@ -541,6 +549,7 @@ export function emptyWorld(): WorldState {
     straitRefused: false,
     ordAtStrait: false,
     straitBuried: false,
+    cableDark: false,
     hallLamp: false,
     standing: emptyScores(),
     announced: null,
@@ -753,7 +762,7 @@ export function applyUse(
     return { ...w, nodes, players, gestell: Math.min(100, w.gestell + 6) };
   }
   nodes[idx] = { ...node, depleted: true, kept: true };
-  if (p.beats.errand && !p.beats.cableQuiet && !p.guest) {
+  if (p.beats.errand && !p.beats.cableQuiet && !p.guest && !w.cableDark) {
     players.set(playerId, {
       ...p,
       winke: p.winke + divinitiesKeep(p.house),
@@ -1512,6 +1521,15 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     }
     if (p.beats.foundryAsk && !p.guest && !p.locked) return applyUnlight(w, playerId);
   }
+  if (sign.id === ORGAN_CABLE.id) {
+    if (w.cableDark || p.beats.cableDark) {
+      players.set(playerId, { ...p, heard: CABLE_DARK_LATER, wink: visibleWink(p.guest, WINK_CABLE_DARK) });
+      return { ...w, players };
+    }
+    if ((w.straitRefused || w.straitBuried || p.beats.straitRefuse) && !p.guest && !p.locked) {
+      return applyCableDark(w, playerId);
+    }
+  }
   const key = sign.id === ORGAN_STRAIT.id ? "strait" : sign.id === ORGAN_FOUNDRY.id ? "foundry" : "cable";
   const beats = { ...p.beats, [key]: true };
   const done = organsComplete(beats);
@@ -1523,6 +1541,39 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
     readiness: p.readiness + (p.beats[key] ? 0 : 1),
   });
   return { ...w, players };
+}
+
+export function applyCableDark(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, ORGAN_CABLE.x, ORGAN_CABLE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CABLE_DARK_SPECTATOR, wink: visibleWink(true, WINK_CABLE_DARK) });
+    return { ...w, players };
+  }
+  if (w.cableDark || p.beats.cableDark) {
+    players.set(playerId, { ...p, heard: CABLE_DARK_LATER, wink: visibleWink(false, WINK_CABLE_DARK) });
+    return { ...w, players };
+  }
+  if (!w.straitRefused && !w.straitBuried && !p.beats.straitRefuse) {
+    players.set(playerId, { ...p, heard: CABLE_NEED_STRAIT });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, cableDark: true, cable: true },
+    heard: CABLE_DARK,
+    wink: visibleWink(false, WINK_CABLE_DARK),
+    readiness: p.readiness + 1,
+  });
+  return {
+    ...w,
+    players,
+    cableDark: true,
+    gestell: Math.max(0, w.gestell - 2),
+    pois: w.pois.map((poi) => (poi.id === ORGAN_CABLE.id ? cableDarkPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === ORGAN_CABLE.id ? { ...CABLE_DARK_PLAQUE } : s)),
+  };
 }
 
 export function applyUnlight(w: WorldState, playerId: string): WorldState {
@@ -1959,6 +2010,7 @@ export function snapshot(w: WorldState) {
     straitRefused: w.straitRefused,
     ordAtStrait: w.ordAtStrait,
     straitBuried: w.straitBuried,
+    cableDark: w.cableDark,
     hallLamp: w.hallLamp,
     standing: w.standing,
     signs: w.signs,

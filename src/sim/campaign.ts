@@ -68,6 +68,7 @@ export type Beats = {
   canalAsk: boolean;
   canalBury: boolean;
   yieldEmpty: boolean;
+  cableDark: boolean;
 };
 
 export type WeatherHeard = {
@@ -112,6 +113,7 @@ export type Poi = {
     | "organ-foundry-dark"
     | "organ-cable"
     | "organ-cable-quiet"
+    | "organ-cable-dark"
     | "operator-vacant"
     | "forge-tray"
     | "clearing-ring"
@@ -469,6 +471,32 @@ export function operatorVacantPoi(): Poi {
     x: OPERATOR_DESK.x,
     y: OPERATOR_DESK.y,
     kind: "operator-vacant",
+  };
+}
+
+export const CABLE_DARK =
+  "You cut the Cable. It drank the Strait. The water already refused. Signal is not a nation. This was not a fetch.";
+export const WINK_CABLE_DARK =
+  "A side hour. You shut the organ that drank unpaid water. Quiet was a keep. Dark is a grave.";
+export const CABLE_NEED_STRAIT = "The Strait still pays. Refuse the water first. The Cable will not go dark on a live canal.";
+export const CABLE_DARK_LATER = "The Cable is dark. Quiet was mercy. This is absence.";
+export const CABLE_DARK_SPECTATOR = "A line of light going out. Not for you to cut.";
+
+export const CABLE_DARK_PLAQUE: Sign = {
+  id: ORGAN_CABLE.id,
+  title: "The Cable — dark",
+  text: "Someone cut the drink. The Strait is not paying. Signal as flesh, ended.",
+  x: ORGAN_CABLE.x,
+  y: ORGAN_CABLE.y,
+};
+
+export function cableDarkPoi(): Poi {
+  return {
+    id: ORGAN_CABLE.id,
+    name: "The Cable — dark",
+    x: ORGAN_CABLE.x,
+    y: ORGAN_CABLE.y,
+    kind: "organ-cable-dark",
   };
 }
 
@@ -895,6 +923,7 @@ export function emptyBeats(): Beats {
     canalAsk: false,
     canalBury: false,
     yieldEmpty: false,
+    cableDark: false,
   };
 }
 

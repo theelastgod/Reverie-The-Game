@@ -242,6 +242,12 @@ import {
   OPERATOR_VACANT,
   VESPER_FOUNDRY_LATER,
   FOUNDRY_DARK_PLAQUE,
+  CABLE_DARK,
+  WINK_CABLE_DARK,
+  CABLE_NEED_STRAIT,
+  CABLE_DARK_LATER,
+  CABLE_DARK_SPECTATOR,
+  CABLE_DARK_PLAQUE,
   REPAIR_COST,
   REPAIR_COPY,
   REPAIR_NEED,
@@ -275,6 +281,7 @@ import {
   applyYieldEmpty,
   applyAnnexHome,
   applyStraitRefuse,
+  applyCableDark,
   applyUnlight,
   applyStanding,
   applyMarket,
@@ -1977,6 +1984,64 @@ describe("The Strait is refused", () => {
     const g = applyStraitRefuse(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(STRAIT_SPECTATOR);
     expect(g.straitRefused).toBe(false);
+  });
+});
+
+describe("The Cable goes dark", () => {
+  it("after the Strait is refused, an Angel can cut the Cable; guests cannot", () => {
+    const w = emptyWorld();
+    w.m3Open = true;
+    w.straitRefused = true;
+    w.pois = [
+      ...w.pois,
+      { id: ORGAN_CABLE.id, name: "The Cable", x: ORGAN_CABLE.x, y: ORGAN_CABLE.y, kind: "organ-cable" },
+    ];
+    w.signs = [...w.signs, ORGAN_PLAQUES.find((s) => s.id === ORGAN_CABLE.id)!];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), straitRefuse: true, m3: true },
+      x: ORGAN_CABLE.x,
+      y: ORGAN_CABLE.y,
+    });
+    const cut = applyRead(w, "a", ORGAN_CABLE.id);
+    const p = cut.players.get("a")!;
+    expect(p.heard).toBe(CABLE_DARK);
+    expect(p.wink).toBe(WINK_CABLE_DARK);
+    expect(p.beats.cableDark).toBe(true);
+    expect(cut.cableDark).toBe(true);
+    expect(cut.pois.find((poi) => poi.id === ORGAN_CABLE.id)?.kind).toBe("organ-cable-dark");
+    expect(cut.signs.find((s) => s.id === ORGAN_CABLE.id)?.title).toBe(CABLE_DARK_PLAQUE.title);
+    expect(cut.gestell).toBeLessThan(w.gestell);
+    expect(p.heard).not.toMatch(/heidegger|hormuz|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyRead(cut, "a", ORGAN_CABLE.id).players.get("a")?.heard).toBe(CABLE_DARK_LATER);
+
+    const live = emptyWorld();
+    live.m3Open = true;
+    live.pois = [...w.pois];
+    live.signs = [...w.signs];
+    live.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), m3: true },
+      x: ORGAN_CABLE.x,
+      y: ORGAN_CABLE.y,
+    });
+    const early = applyCableDark(live, "a");
+    expect(early.players.get("a")?.heard).toBe(CABLE_NEED_STRAIT);
+    expect(early.cableDark).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.m3Open = true;
+    gWorld.straitRefused = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ORGAN_CABLE.x, y: ORGAN_CABLE.y, locked: true });
+    const g = applyCableDark(gWorld, "g");
+    expect(g.players.get("g")?.heard).toBe(CABLE_DARK_SPECTATOR);
+    expect(g.cableDark).toBe(false);
   });
 });
 

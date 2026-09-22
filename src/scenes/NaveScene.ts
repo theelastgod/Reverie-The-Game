@@ -453,6 +453,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
                         ? 0x7eb6ff
+                      : poi.kind === "organ-cable-dark"
+                        ? 0x3a3a3a
                       : poi.kind === "organ-strait-refused"
                         ? 0x5a5a5a
                       : poi.kind === "organ-strait-buried"
@@ -741,6 +743,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The Strait is refused. The water is not paying.";
     } else if (strait && snap.foundryDark && !me.guest) {
       this.prompt = "F — refuse the Strait. The furnace is dark. Stop the water. Not a fetch.";
+    } else if (cable && (snap.cableDark || me.beats.cableDark) && !me.guest) {
+      this.prompt = me.heard || "The Cable is dark. Quiet was mercy. This is absence.";
+    } else if (cable && (snap.straitRefused || snap.straitBuried || me.beats.straitRefuse) && !me.guest) {
+      this.prompt = "F — cut the Cable. The Strait is not paying. Dark is not a fetch.";
     } else if ((strait || foundry || cable) && snap.m3Open && !me.guest) {
       this.prompt = cable && me.beats.cableQuiet
         ? "The Cable is quiet. You changed the plaque."
@@ -856,7 +862,11 @@ export class NaveScene extends Phaser.Scene {
               ? "The Foundry — dark"
               : "The Foundry"
             : cable
-              ? "The Cable"
+              ? snap.cableDark
+                ? "The Cable — dark"
+                : me.beats.cableQuiet
+                  ? "The Cable — quiet"
+                  : "The Cable"
               : "Movement III"
         : ring
           ? snap.clearingOpen

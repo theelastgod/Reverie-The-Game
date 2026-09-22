@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 43** — Named side quest. Keep writing until 24 authored hours. No mint.
+**Next stage: 44** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -197,7 +197,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After Desk Three clocks out and the Annex Runner comes in, F at the Safety plaque: unmanned yield. Plaque/POI change. Not a fetch.
 - Desks with bodies refuse. Guests cannot name it. `damageFor` unchanged.
 
-## Stage 43 (do this next)
+## Stage 43 (landed)
+- After the Strait is refused, F at the Cable: it goes dark. Plaque/POI The Cable — dark. Quiet was a keep; dark is a grave. Gestell thins.
+- Live canal refuses. Guests cannot cut the line. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 44 (do this next)
 Named side quest. Fetch-only forbidden. No mint. No Base.
 
 ## Rules
