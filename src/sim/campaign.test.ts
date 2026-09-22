@@ -71,6 +71,9 @@ import {
   STANCE_PLAQUE,
   STORM_BURNS,
   RESTRAINT_YIELD,
+  DODGE_COPY,
+  DODGE_WHIFF,
+  intentMoving,
   RESTRAINT_PAY,
   VESPER_NOGOD,
   WINK_NOGOD,
@@ -1179,6 +1182,47 @@ describe("Restraint stance", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
     expect(applyRestraintStance(gWorld, "g").players.get("g")?.heard).toBe(STANCE_SPECTATOR);
     expect(gWorld.players.get("g")?.restraint).toBe(false);
+  });
+});
+
+describe("Restraint dodge window", () => {
+  it("moving Restraint skips a strike; standing still does not; damageFor is unchanged", () => {
+    expect(intentMoving({ up: true, down: false, left: false, right: false })).toBe(true);
+    expect(intentMoving({ up: false, down: false, left: false, right: false })).toBe(false);
+    const w = emptyWorld();
+    w.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    w.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      serial: TEST_SERIAL,
+      restraint: true,
+      hp: 20,
+      x: 220,
+      y: 480,
+    });
+    w.intents.set("b", { up: true, down: false, left: false, right: false });
+    const missed = applyStrike(w, "a");
+    expect(missed.players.get("b")?.hp).toBe(20);
+    expect(missed.players.get("b")?.heard).toBe(DODGE_COPY);
+    expect(missed.players.get("a")?.heard).toBe(DODGE_WHIFF);
+    expect(missed.wreckage).toHaveLength(0);
+    expect(damageFor(missed.players.get("b")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(missed.players.get("b")!)).toBe(false);
+    expect(DODGE_COPY).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+
+    const still = emptyWorld();
+    still.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    still.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      restraint: true,
+      hp: 20,
+      x: 220,
+      y: 480,
+    });
+    const hit = applyStrike(still, "a");
+    expect(hit.wreckage.length).toBe(1);
+    expect(hit.players.get("b")?.hp).toBe(100);
   });
 });
 

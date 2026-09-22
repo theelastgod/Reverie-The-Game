@@ -1094,7 +1094,7 @@ export class NaveScene extends Phaser.Scene {
           : snap.clearingOpen
             ? " · Clearing held"
             : omenBit;
-      const stanceBit = me.storm ? " · Storm" : me.restraint ? " · Restraint" : "";
+      const stanceBit = me.storm ? " · Storm" : me.restraint ? " · Restraint · dodge if moving" : "";
       const naraBit = snap.naraGone ? " · sexton gone" : "";
       const ordBit = snap.ordGone ? " · Ord gone" : "";
       const quillBit = snap.quillGone ? " · Quill gone" : "";

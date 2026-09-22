@@ -1163,6 +1163,12 @@ export const STANCE_SPECTATOR = "A stance you cannot hold.";
 export const STORM_BURNS =
   "Storm burns holding-back. Wreckage vision. Readiness thins. Restraint is gone. Combat is not.";
 export const RESTRAINT_YIELD = "Restraint. You took less. The Wink is not a stick.";
+export const DODGE_COPY = "Restraint. You moved through the window. Combat is not.";
+export const DODGE_WHIFF = "They moved. Restraint is a window. Combat is not.";
+
+export function intentMoving(intent: { up: boolean; down: boolean; left: boolean; right: boolean } | undefined): boolean {
+  return !!(intent && (intent.up || intent.down || intent.left || intent.right));
+}
 
 export const STANCE_PLAQUE: Sign = {
   id: SHRINE.id,

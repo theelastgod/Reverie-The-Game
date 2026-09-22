@@ -136,6 +136,9 @@ import {
   STANCE_SPECTATOR,
   STORM_BURNS,
   RESTRAINT_YIELD,
+  DODGE_COPY,
+  DODGE_WHIFF,
+  intentMoving,
   STANCE_PLAQUE,
   stancePoi,
   VESPER_NOGOD,
@@ -1000,6 +1003,11 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
       const next = c.telegraph - dt;
       if (next <= 0 && target) {
         const hit = players.get(target.id)!;
+        if (hit.restraint && intentMoving(w.intents.get(hit.id))) {
+          players.set(hit.id, { ...hit, heard: DODGE_COPY });
+          clerks.push({ ...c, telegraph: 0 });
+          continue;
+        }
         const hp = hit.hp - CLERK_DAMAGE;
         if (hp <= 0) {
           wreckage = [
@@ -1039,6 +1047,12 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     if (dx * dx + dy * dy > STRIKE_RANGE * STRIKE_RANGE) continue;
+    if (b.restraint && intentMoving(w.intents.get(id))) {
+      players.set(id, { ...b, heard: DODGE_COPY });
+      const k = players.get(attackerId)!;
+      players.set(attackerId, { ...k, heard: DODGE_WHIFF });
+      continue;
+    }
     let hp = b.hp - dmg;
     if (hp <= 0) {
       wreckage = [
