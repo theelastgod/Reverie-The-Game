@@ -81,6 +81,7 @@ export type Snap = {
   naraPersonHeld?: boolean;
   quillPersonHeld?: boolean;
   ordPersonHeld?: boolean;
+  vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
   vesperGone?: boolean;

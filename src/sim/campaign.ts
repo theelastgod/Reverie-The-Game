@@ -111,6 +111,7 @@ export type Beats = {
   naraPerson: boolean;
   quillPerson: boolean;
   ordPerson: boolean;
+  vesperPerson: boolean;
 };
 
 export type WeatherHeard = {
@@ -212,7 +213,8 @@ export type Poi = {
     | "production-still"
     | "nara-person"
     | "quill-person"
-    | "ord-person";
+    | "ord-person"
+    | "vesper-person";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -1674,6 +1676,7 @@ export function emptyBeats(): Beats {
     naraPerson: false,
     quillPerson: false,
     ordPerson: false,
+    vesperPerson: false,
   };
 }
 
@@ -2126,6 +2129,25 @@ export const ORD_PERSON_PLAQUE: Sign = {
 
 export function ordPersonPoi(x = 400, y = 260): Poi {
   return { id: "ord-person", name: "Ord — stays", x, y, kind: "ord-person" };
+}
+
+export const VESPER_PERSON =
+  "Vesper Hale stays. Not as a concentrator. As a person who unlit the heat with you. Yield can wait. Combat is not. This was not a fetch.";
+export const WINK_VESPER_PERSON = "A person, not a furnace. Gestell does not get this hour.";
+export const VESPER_PERSON_HELD = "She already stays. The desk is a person, not a yield.";
+export const VESPER_PERSON_NEED = "Unlight the Foundry first. A person is not a concentrator.";
+export const VESPER_PERSON_SPECTATOR = "A concentrator. You do not get this hour.";
+
+export const VESPER_PERSON_PLAQUE: Sign = {
+  id: "vesper-person",
+  title: "Vesper Hale — stays",
+  text: "A person who unlit the heat. Not a furnace. The number does not strike.",
+  x: ORGAN_FOUNDRY.x,
+  y: ORGAN_FOUNDRY.y + 48,
+};
+
+export function vesperPersonPoi(x = ORGAN_FOUNDRY.x, y = ORGAN_FOUNDRY.y + 48): Poi {
+  return { id: "vesper-person", name: "Vesper Hale — stays", x, y, kind: "vesper-person" };
 }
 
 export const ORD_LEAVE_GESTELL = 100;
@@ -2659,6 +2681,7 @@ export function liveNpcs(
   naraPersonHeld = false,
   quillPersonHeld = false,
   ordPersonHeld = false,
+  vesperPersonHeld = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -2749,6 +2772,10 @@ export function liveNpcs(
   if (quillPersonHeld) {
     base = base.map((n) => (n.id === "quill" ? { ...n, role: "Stays" } : n));
   }
-  if (vesperGone) base = base.filter((n) => n.id !== "vesper");
+  if (vesperGone && !vesperPersonHeld) base = base.filter((n) => n.id !== "vesper");
+  if (vesperPersonHeld) {
+    if (!base.some((n) => n.id === "vesper")) base = [...base, { ...VESPER }];
+    base = base.map((n) => (n.id === "vesper" ? { ...n, role: "Stays" } : n));
+  }
   return base;
 }

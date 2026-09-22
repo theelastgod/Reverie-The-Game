@@ -612,6 +612,13 @@ import {
   ORD_PERSON_SPECTATOR,
   ORD_PERSON_PLAQUE,
   ordPersonPoi,
+  VESPER_PERSON,
+  WINK_VESPER_PERSON,
+  VESPER_PERSON_HELD,
+  VESPER_PERSON_NEED,
+  VESPER_PERSON_SPECTATOR,
+  VESPER_PERSON_PLAQUE,
+  vesperPersonPoi,
   naraPersonPoi,
   ORD_LEAVE_GESTELL,
   ORD_LEAVE,
@@ -775,6 +782,7 @@ export type WorldState = {
   naraPersonHeld: boolean;
   quillPersonHeld: boolean;
   ordPersonHeld: boolean;
+  vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
   vesperGone: boolean;
@@ -1008,6 +1016,7 @@ export function emptyWorld(): WorldState {
     naraPersonHeld: false,
     quillPersonHeld: false,
     ordPersonHeld: false,
+    vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
     vesperGone: false,
@@ -1371,6 +1380,33 @@ export function applyOrdPerson(w: WorldState, playerId: string): WorldState {
   return { ...w, players, ordPersonHeld: true, pois, signs };
 }
 
+export function applyVesperPerson(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: VESPER_PERSON_SPECTATOR, wink: visibleWink(true, WINK_VESPER_PERSON) });
+    return { ...w, players };
+  }
+  if (!p.beats.foundryDark && !w.foundryDark) {
+    players.set(playerId, { ...p, heard: VESPER_PERSON_NEED });
+    return { ...w, players };
+  }
+  if (w.vesperPersonHeld && p.beats.vesperPerson) {
+    players.set(playerId, { ...p, heard: VESPER_PERSON_HELD, wink: visibleWink(false, WINK_VESPER_PERSON) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, vesperPerson: true },
+    heard: VESPER_PERSON,
+    wink: visibleWink(false, WINK_VESPER_PERSON),
+  });
+  const pois = w.pois.some((poi) => poi.id === "vesper-person") ? w.pois : [...w.pois, vesperPersonPoi()];
+  const signs = w.signs.some((s) => s.id === "vesper-person") ? w.signs : [...w.signs, { ...VESPER_PERSON_PLAQUE }];
+  return { ...w, players, vesperPersonHeld: true, pois, signs };
+}
+
 function withNaraLeave(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.guest || p.locked || w.naraGone || p.beats.funeral) return w;
@@ -1484,7 +1520,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone, w.naraPersonHeld, w.quillPersonHeld, w.ordPersonHeld).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone, w.naraPersonHeld, w.quillPersonHeld, w.ordPersonHeld, w.vesperPersonHeld).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -1627,6 +1663,9 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   }
   if (id === "ione") return applyLastWord(w, playerId);
   if (id === "vesper") {
+    if ((p.beats.foundryDark || w.foundryDark || w.vesperPersonHeld) && !w.vesperGone && !w.lastGodNamed) {
+      return applyVesperPerson(w, playerId);
+    }
     if (w.lastGodNamed) return applyVesperNoGod(w, playerId);
     if (!w.vesperAtFoundry) return w;
     if (p.guest || p.locked) {
@@ -3326,7 +3365,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone, w.naraPersonHeld, w.quillPersonHeld, w.ordPersonHeld),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone, w.naraPersonHeld, w.quillPersonHeld, w.ordPersonHeld, w.vesperPersonHeld),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,
@@ -3381,6 +3420,7 @@ export function snapshot(w: WorldState) {
     naraPersonHeld: w.naraPersonHeld,
     quillPersonHeld: w.quillPersonHeld,
     ordPersonHeld: w.ordPersonHeld,
+    vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,
     vesperGone: w.vesperGone,

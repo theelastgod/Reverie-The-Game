@@ -361,6 +361,13 @@ import {
   ORD_PERSON_NEED,
   ORD_PERSON_SPECTATOR,
   ORD_PERSON_PLAQUE,
+  VESPER_PERSON,
+  WINK_VESPER_PERSON,
+  VESPER_PERSON_HELD,
+  VESPER_PERSON_NEED,
+  VESPER_PERSON_SPECTATOR,
+  VESPER_PERSON_PLAQUE,
+  VESPER,
   ORD_LEAVE_GESTELL,
   ORD_LEAVE,
   WINK_ORD_LEAVE,
@@ -588,6 +595,7 @@ import {
   applyNaraPerson,
   applyQuillPerson,
   applyOrdPerson,
+  applyVesperPerson,
   applyUse,
   damageFor,
   emptyWorld,
@@ -3551,6 +3559,52 @@ describe("Ord stays as a person", () => {
   });
 });
 
+describe("Vesper stays as a person", () => {
+  it("after unlight she stays as a person, not a concentrator; guests cannot", () => {
+    const w = emptyWorld();
+    w.foundryDark = true;
+    w.vesperAtFoundry = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), foundryDark: true },
+      x: VESPER.x,
+      y: VESPER.y,
+    });
+    const stayed = applyTalk(w, "a", "vesper");
+    const p = stayed.players.get("a")!;
+    expect(p.heard).toBe(VESPER_PERSON);
+    expect(p.wink).toBe(WINK_VESPER_PERSON);
+    expect(p.beats.vesperPerson).toBe(true);
+    expect(stayed.vesperPersonHeld).toBe(true);
+    expect(stayed.pois.find((poi) => poi.kind === "vesper-person")?.id).toBe("vesper-person");
+    expect(stayed.signs.find((s) => s.id === "vesper-person")?.title).toBe(VESPER_PERSON_PLAQUE.title);
+    expect(liveNpcs(false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true).find((n) => n.id === "vesper")?.role).toBe("Stays");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTalk(stayed, "a", "vesper").players.get("a")?.heard).toBe(VESPER_PERSON_HELD);
+
+    const early = emptyWorld();
+    early.vesperAtFoundry = true;
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: VESPER.x,
+      y: VESPER.y,
+    });
+    expect(applyVesperPerson(early, "a").players.get("a")?.heard).toBe(VESPER_PERSON_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.foundryDark = true;
+    gWorld.vesperAtFoundry = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: VESPER.x, y: VESPER.y, locked: true, beats: { ...emptyBeats(), foundryDark: true } });
+    expect(applyTalk(gWorld, "g", "vesper").players.get("g")?.heard).toBe(VESPER_PERSON_SPECTATOR);
+    expect(gWorld.vesperPersonHeld).toBe(false);
+  });
+});
+
 describe("Ord leaves the party", () => {
   it("extract at max Gestell without a freeze walks him off; a freeze keeps him", () => {
     expect(ORD_LEAVE_GESTELL).toBe(100);
@@ -4875,7 +4929,7 @@ describe("Vesper unlights the Foundry", () => {
     expect(moved.role).toBe("At the Foundry");
     expect(moved.x).toBe(VESPER.x);
     dark.players.set("a", { ...p, x: moved.x, y: moved.y });
-    expect(applyTalk(dark, "a", "vesper").players.get("a")?.heard).toBe(VESPER_FOUNDRY_LATER);
+    expect(applyTalk(dark, "a", "vesper").players.get("a")?.heard).toBe(VESPER_PERSON);
 
     dark.players.set("a", { ...p, x: OPERATOR_DESK.x, y: OPERATOR_DESK.y });
     expect(applyOperator(dark, "a", "hear").players.get("a")?.heard).toBe(OPERATOR_VACANT);

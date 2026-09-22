@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 91** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 92** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -389,7 +389,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After a freeze, talk to Ord: he stays as a person, not a number. Plaque/POI Ord — stays. Optional hour. Not a fetch.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed. Nara, Quill, and Ord can all stay as people.
 
-## Stage 91 (do this next)
+## Stage 91 (landed)
+- After unlight, talk to Vesper Hale: she stays as a person, not a concentrator. Plaque/POI Vesper Hale — stays. Optional hour. Not a fetch.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed. Nara, Quill, Ord, and Vesper can all stay as people.
+
+## Stage 92 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

@@ -502,6 +502,8 @@ export class NaveScene extends Phaser.Scene {
                       : poi.kind === "quill-person"
                         ? 0x7a1028
                       : poi.kind === "ord-person"
+                        ? 0x7a1028
+                      : poi.kind === "vesper-person"
                         ? 0x7eb6ff
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
@@ -974,6 +976,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Keep a CRT node (Q). Do not extract. Ord will walk to the Cable.";
     } else if (npcNear?.id === "ord" && me.beats.map) {
       this.prompt = "F — Ord has an errand. Keep a node. Change an organ.";
+    } else if (npcNear?.id === "vesper" && (me.beats.vesperPerson || snap.vesperPersonHeld)) {
+      this.prompt = me.heard || "Vesper Hale stays. A person, not a furnace.";
+    } else if (npcNear?.id === "vesper" && (me.beats.foundryDark || snap.foundryDark) && !me.guest) {
+      this.prompt = "F — Vesper Hale can stay as a person. Not a fetch.";
     } else if (npcNear?.id === "vesper" && (snap.vesperAtHijack || (me.beats.hijacked && snap.hijackBy === "cold"))) {
       this.prompt = me.heard || "Vesper Hale claimed the yield. The hour is Cold. You are marked.";
     } else if (npcNear?.id === "vesper" && (me.beats.vesperNoGod || snap.vesperNoGod)) {
