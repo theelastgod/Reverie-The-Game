@@ -103,6 +103,13 @@ import {
   FOURFOLD_PLAQUE,
   fourfoldReady,
   fourfoldPoi,
+  LAST_GOD_COPY,
+  WINK_LAST_GOD,
+  LAST_GOD_NEED,
+  LAST_GOD_HELD,
+  LAST_GOD_SPECTATOR,
+  LAST_GOD_PLAQUE,
+  lastGodPoi,
   houseHallPoi,
   openCarePoi,
   serialHistory,
@@ -440,6 +447,7 @@ export type WorldState = {
   divStanding: boolean;
   hallLamp: boolean;
   fourfoldHeld: boolean;
+  lastGodNamed: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -597,6 +605,7 @@ export function emptyWorld(): WorldState {
     divStanding: false,
     hallLamp: false,
     fourfoldHeld: false,
+    lastGodNamed: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -1046,6 +1055,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   const p = w.players.get(playerId);
   const sign = w.signs.find((s) => s.id === signId);
   if (!p || p.hp <= 0 || !sign || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
+  if (sign.id === CARE_DOOR.id) return applyCare(w, playerId);
   if (sign.id === HOUSE_HALL.id) {
     if (!p.inCare || p.guest || p.locked) return w;
     if (p.beats.hall && fourfoldReady(w.standing) && !w.fourfoldHeld) return applyFourfold(w, playerId);
@@ -1320,6 +1330,7 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
   if (!nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
+  if (w.fourfoldHeld && w.careOpen) return applyLastGod(w, playerId);
   const players = new Map(w.players);
   if (p.guest || p.locked || !w.careOpen || !p.beats.under) {
     players.set(playerId, { ...p, heard: p.guest || p.locked ? CARE_SPECTATOR : p.heard, wink: visibleWink(true, WINK_CARE) });
@@ -1339,6 +1350,47 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
     lastCareY: HOUSE_HALL.y,
   });
   return { ...w, players };
+}
+
+export function applyLastGod(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: LAST_GOD_SPECTATOR, wink: visibleWink(true, WINK_LAST_GOD) });
+    return { ...w, players };
+  }
+  if (!w.fourfoldHeld || !w.careOpen) {
+    players.set(playerId, { ...p, heard: LAST_GOD_NEED });
+    return { ...w, players };
+  }
+  if (w.lastGodNamed && p.beats.lastGod) {
+    players.set(playerId, {
+      ...p,
+      heard: LAST_GOD_HELD,
+      wink: visibleWink(false, WINK_LAST_GOD),
+      inCare: true,
+    });
+    return { ...w, players };
+  }
+  const firstCare = !p.beats.care;
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, lastGod: true, care: true },
+    heard: LAST_GOD_COPY,
+    wink: visibleWink(false, WINK_LAST_GOD),
+    inCare: true,
+    readiness: p.readiness + (p.beats.lastGod ? 0 : 1),
+    x: firstCare ? HOUSE_HALL.x - 48 : p.x,
+    y: firstCare ? HOUSE_HALL.y : p.y,
+    lastCareX: HOUSE_HALL.x,
+    lastCareY: HOUSE_HALL.y,
+  });
+  const pois = w.pois.map((poi) => (poi.id === CARE_DOOR.id ? lastGodPoi() : poi));
+  const signs = w.signs.some((s) => s.id === CARE_DOOR.id)
+    ? w.signs.map((s) => (s.id === CARE_DOOR.id ? { ...LAST_GOD_PLAQUE } : s))
+    : [...w.signs, { ...LAST_GOD_PLAQUE }];
+  return { ...w, players, lastGodNamed: true, pois, signs };
 }
 
 export function applyHang(w: WorldState, playerId: string): WorldState {
@@ -2179,6 +2231,7 @@ export function snapshot(w: WorldState) {
     divStanding: w.divStanding,
     hallLamp: w.hallLamp,
     fourfoldHeld: w.fourfoldHeld,
+    lastGodNamed: w.lastGodNamed,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,

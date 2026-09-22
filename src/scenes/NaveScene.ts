@@ -455,6 +455,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "fourfold-held"
                         ? 0xc9a56a
+                      : poi.kind === "last-god-absent"
+                        ? 0xc9a56a
                       : poi.kind === "house-standing"
                         ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
@@ -793,7 +795,12 @@ export class NaveScene extends Phaser.Scene {
         ? "The Cable is quiet. You changed the plaque."
         : "F read the organ. Extract here lights a factory there. No country names.";
     } else if (care && snap.careOpen && !me.guest && me.beats.under) {
-      this.prompt = me.wink || "F — the Care. A Wink only you can hold.";
+      this.prompt =
+        me.beats.lastGod || snap.lastGodNamed
+          ? me.heard || "The last god is not here. Absence is a standing. Not a stick."
+          : snap.fourfoldHeld
+            ? "F — name the last god as absence. The Care is not a room with a body. Not a fetch."
+            : me.wink || "F — the Care. A Wink only you can hold.";
     } else if (care && !me.guest && !me.beats.under) {
       this.prompt = "The Care is shut until you go under.";
     } else if (care) {

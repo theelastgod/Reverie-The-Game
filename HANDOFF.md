@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 49** — Named side quest. Keep writing until 24 authored hours. No mint.
+**Next stage: 50** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -221,7 +221,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - When Earth, Sky, Mortals, and Divinities all stand, F at the hall gathers the fourfold. Plaque/POI The fourfold holds. Not a stick.
 - Partial standing refuses. Guests cannot gather. `damageFor` unchanged.
 
-## Stage 49 (do this next)
+## Stage 49 (landed)
+- After the fourfold holds, F at the Care names the last god as absence. Plaque/POI The last god — not here. A hint, not a stick.
+- Partial fourfold refuses. Guests cannot name it. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 50 (do this next)
 Named side quest. Fetch-only forbidden. No mint. No Base.
 
 ## Rules

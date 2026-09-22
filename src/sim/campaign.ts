@@ -74,6 +74,7 @@ export type Beats = {
   divStanding: boolean;
   ioneMark: boolean;
   fourfold: boolean;
+  lastGod: boolean;
 };
 
 export type WeatherHeard = {
@@ -134,6 +135,7 @@ export type Poi = {
     | "stall-dark"
     | "house-standing"
     | "fourfold-held"
+    | "last-god-absent"
     | "desk-empty"
     | "yield-empty"
     | "ione-gone";
@@ -264,6 +266,33 @@ export function fourfoldPoi(): Poi {
     x: HOUSE_HALL.x,
     y: HOUSE_HALL.y,
     kind: "fourfold-held",
+  };
+}
+
+export const LAST_GOD_COPY =
+  "The last god is not here. The Care is a gathering, not a room with a body. A hint, not a stick. This was not a fetch.";
+export const WINK_LAST_GOD =
+  "The last god is a hint in the fourfold. It does not arrive as a model. Combat is not.";
+export const LAST_GOD_NEED =
+  "Gather the fourfold first. The last god is not a fetch behind a shut hall.";
+export const LAST_GOD_HELD = "The last god is already named as absence. The Care does not strike.";
+export const LAST_GOD_SPECTATOR = "A door. You do not get to name what is not here.";
+
+export const LAST_GOD_PLAQUE: Sign = {
+  id: CARE_DOOR.id,
+  title: "The last god — not here",
+  text: "Absence is a standing. The fourfold holds. The number does not strike.",
+  x: CARE_DOOR.x,
+  y: CARE_DOOR.y,
+};
+
+export function lastGodPoi(): Poi {
+  return {
+    id: CARE_DOOR.id,
+    name: "The last god — not here",
+    x: CARE_DOOR.x,
+    y: CARE_DOOR.y,
+    kind: "last-god-absent",
   };
 }
 
@@ -1048,6 +1077,7 @@ export function emptyBeats(): Beats {
     divStanding: false,
     ioneMark: false,
     fourfold: false,
+    lastGod: false,
   };
 }
 

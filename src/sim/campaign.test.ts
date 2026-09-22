@@ -26,6 +26,12 @@ import {
   FOURFOLD_SPECTATOR,
   FOURFOLD_PLAQUE,
   fourfoldReady,
+  LAST_GOD_COPY,
+  WINK_LAST_GOD,
+  LAST_GOD_NEED,
+  LAST_GOD_HELD,
+  LAST_GOD_SPECTATOR,
+  LAST_GOD_PLAQUE,
   WINK_STANDING,
   HISTORY_7777,
   HOUSE_HALL,
@@ -322,6 +328,7 @@ import {
   applyUnlight,
   applyStanding,
   applyFourfold,
+  applyLastGod,
   applyMarket,
   applyOperator,
   applyRead,
@@ -663,6 +670,55 @@ describe("the fourfold holds", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
     expect(applyFourfold(gWorld, "g").players.get("g")?.heard).toBe(FOURFOLD_SPECTATOR);
     expect(gWorld.fourfoldHeld).toBe(false);
+  });
+});
+
+describe("the last god is not here", () => {
+  it("names absence at the Care after the fourfold; guests cannot", () => {
+    const w = emptyWorld();
+    w.careOpen = true;
+    w.fourfoldHeld = true;
+    w.pois = w.pois.map((poi) =>
+      poi.id === CARE_DOOR.id ? { ...poi, name: "The Care", kind: "care-open" } : poi,
+    );
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), under: true, care: true, hall: true, fourfold: true },
+      x: CARE_DOOR.x,
+      y: CARE_DOOR.y,
+    });
+    const named = applyCare(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(LAST_GOD_COPY);
+    expect(p.wink).toBe(WINK_LAST_GOD);
+    expect(p.beats.lastGod).toBe(true);
+    expect(named.lastGodNamed).toBe(true);
+    expect(named.pois.find((poi) => poi.id === CARE_DOOR.id)?.kind).toBe("last-god-absent");
+    expect(named.signs.find((s) => s.id === CARE_DOOR.id)?.title).toBe(LAST_GOD_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyLastGod(named, "a").players.get("a")?.heard).toBe(LAST_GOD_HELD);
+
+    const early = emptyWorld();
+    early.careOpen = true;
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      beats: { ...emptyBeats(), under: true, care: true },
+      x: CARE_DOOR.x,
+      y: CARE_DOOR.y,
+    });
+    expect(applyLastGod(early, "a").players.get("a")?.heard).toBe(LAST_GOD_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.careOpen = true;
+    gWorld.fourfoldHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CARE_DOOR.x, y: CARE_DOOR.y, locked: true });
+    expect(applyLastGod(gWorld, "g").players.get("g")?.heard).toBe(LAST_GOD_SPECTATOR);
+    expect(gWorld.lastGodNamed).toBe(false);
   });
 });
 

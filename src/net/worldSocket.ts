@@ -41,6 +41,7 @@ export type Snap = {
   divStanding?: boolean;
   hallLamp?: boolean;
   fourfoldHeld?: boolean;
+  lastGodNamed?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };
 
