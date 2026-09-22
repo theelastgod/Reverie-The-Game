@@ -19,6 +19,13 @@ import {
   STANDING_WRONG,
   STANDING_HELD,
   STANDING_SPECTATOR,
+  FOURFOLD_HOLD,
+  WINK_FOURFOLD,
+  FOURFOLD_NEED,
+  FOURFOLD_HELD,
+  FOURFOLD_SPECTATOR,
+  FOURFOLD_PLAQUE,
+  fourfoldReady,
   WINK_STANDING,
   HISTORY_7777,
   HOUSE_HALL,
@@ -314,6 +321,7 @@ import {
   applyDivStanding,
   applyUnlight,
   applyStanding,
+  applyFourfold,
   applyMarket,
   applyOperator,
   applyRead,
@@ -599,6 +607,62 @@ describe("Movement II House hall", () => {
     expect(p.bestand).toBeLessThan(40);
     expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
     expect(guestCanClaim(p)).toBe(false);
+  });
+});
+
+describe("the fourfold holds", () => {
+  it("gathers four House standings in the hall; guests cannot", () => {
+    expect(fourfoldReady({ earth: 1, sky: 1, mortals: 1, divinities: 1 })).toBe(true);
+    expect(fourfoldReady({ earth: 1, sky: 1, mortals: 1, divinities: 0 })).toBe(false);
+    const w = emptyWorld();
+    w.standing = { earth: 1, sky: 1, mortals: 1, divinities: 1 };
+    w.signs = [
+      ...w.signs,
+      { id: HOUSE_HALL.id, title: "Hall", text: "Nodes.", x: HOUSE_HALL.x, y: HOUSE_HALL.y },
+    ];
+    w.pois = [
+      ...w.pois,
+      { id: HOUSE_HALL.id, name: "House of Mortals", x: HOUSE_HALL.x, y: HOUSE_HALL.y, kind: "house-hall" },
+    ];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      house: "mortals",
+      inCare: true,
+      beats: { ...emptyBeats(), hall: true },
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    const held = applyRead(w, "a", HOUSE_HALL.id);
+    const p = held.players.get("a")!;
+    expect(p.heard).toBe(FOURFOLD_HOLD);
+    expect(p.wink).toBe(WINK_FOURFOLD);
+    expect(p.beats.fourfold).toBe(true);
+    expect(held.fourfoldHeld).toBe(true);
+    expect(held.pois.find((poi) => poi.id === HOUSE_HALL.id)?.kind).toBe("fourfold-held");
+    expect(held.signs.find((s) => s.id === HOUSE_HALL.id)?.title).toBe(FOURFOLD_PLAQUE.title);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFourfold(held, "a").players.get("a")?.heard).toBe(FOURFOLD_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      inCare: true,
+      beats: { ...emptyBeats(), hall: true },
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    expect(applyFourfold(early, "a").players.get("a")?.heard).toBe(FOURFOLD_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.standing = { earth: 1, sky: 1, mortals: 1, divinities: 1 };
+    gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
+    expect(applyFourfold(gWorld, "g").players.get("g")?.heard).toBe(FOURFOLD_SPECTATOR);
+    expect(gWorld.fourfoldHeld).toBe(false);
   });
 });
 

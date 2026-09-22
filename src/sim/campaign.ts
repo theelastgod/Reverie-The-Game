@@ -73,6 +73,7 @@ export type Beats = {
   earthStanding: boolean;
   divStanding: boolean;
   ioneMark: boolean;
+  fourfold: boolean;
 };
 
 export type WeatherHeard = {
@@ -132,6 +133,7 @@ export type Poi = {
     | "sexton-mark"
     | "stall-dark"
     | "house-standing"
+    | "fourfold-held"
     | "desk-empty"
     | "yield-empty"
     | "ione-gone";
@@ -233,6 +235,37 @@ export const HALL_STANDING_PLAQUE: Sign = {
   x: HOUSE_HALL.x,
   y: HOUSE_HALL.y,
 };
+
+export const FOURFOLD_HOLD =
+  "Earth, Sky, Mortals, Divinities. The hall holds the fourfold. A gathering, not a stick. This was not a fetch.";
+export const WINK_FOURFOLD =
+  "The fourfold is a standing of four names. The last god is not in the room. Combat is not.";
+export const FOURFOLD_NEED =
+  "Four Houses must stand first. Earth, Sky, Mortals, Divinities. The hall will not gather a partial world.";
+export const FOURFOLD_HELD = "The fourfold already holds. The gathering does not strike.";
+export const FOURFOLD_SPECTATOR = "A hall of names you cannot gather.";
+
+export const FOURFOLD_PLAQUE: Sign = {
+  id: HOUSE_HALL.id,
+  title: "The fourfold holds",
+  text: "Earth, Sky, Mortals, Divinities. The hall is a gathering. The number does not strike.",
+  x: HOUSE_HALL.x,
+  y: HOUSE_HALL.y,
+};
+
+export function fourfoldReady(standing: HouseScores): boolean {
+  return standing.earth >= 1 && standing.sky >= 1 && standing.mortals >= 1 && standing.divinities >= 1;
+}
+
+export function fourfoldPoi(): Poi {
+  return {
+    id: HOUSE_HALL.id,
+    name: "The fourfold holds",
+    x: HOUSE_HALL.x,
+    y: HOUSE_HALL.y,
+    kind: "fourfold-held",
+  };
+}
 
 export function hallStandingPoi(): Poi {
   return {
@@ -1014,6 +1047,7 @@ export function emptyBeats(): Beats {
     earthStanding: false,
     divStanding: false,
     ioneMark: false,
+    fourfold: false,
   };
 }
 

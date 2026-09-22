@@ -95,6 +95,14 @@ import {
   WINK_STANDING,
   HALL_STANDING_PLAQUE,
   hallStandingPoi,
+  FOURFOLD_HOLD,
+  WINK_FOURFOLD,
+  FOURFOLD_NEED,
+  FOURFOLD_HELD,
+  FOURFOLD_SPECTATOR,
+  FOURFOLD_PLAQUE,
+  fourfoldReady,
+  fourfoldPoi,
   houseHallPoi,
   openCarePoi,
   serialHistory,
@@ -431,6 +439,7 @@ export type WorldState = {
   earthStanding: boolean;
   divStanding: boolean;
   hallLamp: boolean;
+  fourfoldHeld: boolean;
   standing: HouseScores;
   announced: string | null;
   war: HouseWar;
@@ -587,6 +596,7 @@ export function emptyWorld(): WorldState {
     earthStanding: false,
     divStanding: false,
     hallLamp: false,
+    fourfoldHeld: false,
     standing: emptyScores(),
     announced: null,
     war: emptyWar(),
@@ -1038,6 +1048,8 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (!p || p.hp <= 0 || !sign || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
   if (sign.id === HOUSE_HALL.id) {
     if (!p.inCare || p.guest || p.locked) return w;
+    if (p.beats.hall && fourfoldReady(w.standing) && !w.fourfoldHeld) return applyFourfold(w, playerId);
+    if (p.beats.hall && w.fourfoldHeld) return applyFourfold(w, playerId);
     if (p.beats.hall && w.war.winner) return applyTithe(w, playerId);
     if (p.beats.hall) return applyStanding(w, playerId);
     const tax = gestellTax(w.gestell);
@@ -2166,6 +2178,7 @@ export function snapshot(w: WorldState) {
     earthStanding: w.earthStanding,
     divStanding: w.divStanding,
     hallLamp: w.hallLamp,
+    fourfoldHeld: w.fourfoldHeld,
     standing: w.standing,
     signs: w.signs,
     pois: w.pois,
@@ -2182,6 +2195,40 @@ export function snapshot(w: WorldState) {
     ioneGone: w.ioneGone,
     announced: w.announced,
     war: w.war,
+  };
+}
+
+export function applyFourfold(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: FOURFOLD_SPECTATOR, wink: visibleWink(true, WINK_FOURFOLD) });
+    return { ...w, players };
+  }
+  if (!fourfoldReady(w.standing)) {
+    players.set(playerId, { ...p, heard: FOURFOLD_NEED });
+    return { ...w, players };
+  }
+  if (w.fourfoldHeld && p.beats.fourfold) {
+    players.set(playerId, { ...p, heard: FOURFOLD_HELD, wink: visibleWink(false, WINK_FOURFOLD) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, fourfold: true, hall: true },
+    heard: FOURFOLD_HOLD,
+    wink: visibleWink(false, WINK_FOURFOLD),
+    readiness: p.readiness + 1,
+    lastCareX: HOUSE_HALL.x,
+    lastCareY: HOUSE_HALL.y,
+  });
+  return {
+    ...w,
+    players,
+    fourfoldHeld: true,
+    pois: w.pois.map((poi) => (poi.id === HOUSE_HALL.id ? fourfoldPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === HOUSE_HALL.id ? { ...FOURFOLD_PLAQUE } : s)),
   };
 }
 

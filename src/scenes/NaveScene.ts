@@ -453,6 +453,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0x5a5a5a
                       : poi.kind === "sexton-mark"
                         ? 0xc9a56a
+                      : poi.kind === "fourfold-held"
+                        ? 0xc9a56a
                       : poi.kind === "house-standing"
                         ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
@@ -628,8 +630,18 @@ export class NaveScene extends Phaser.Scene {
     } else if (me.locked) {
       this.prompt = care ? me.heard || "You see a door. You do not see what it is for." : me.heard || "A guest cannot prepare the ground.";
     } else if (hall && me.inCare && !me.guest) {
+      const four =
+        !!snap.standing &&
+        snap.standing.earth >= 1 &&
+        snap.standing.sky >= 1 &&
+        snap.standing.mortals >= 1 &&
+        snap.standing.divinities >= 1;
       this.prompt =
-        me.beats.hall && snap.war?.winner && !snap.war.tithePaid && me.house === snap.war.winner
+        me.beats.fourfold || snap.fourfoldHeld
+          ? me.heard || "The fourfold holds. A gathering, not a stick."
+          : four
+            ? "F — gather the fourfold in the hall. Earth, Sky, Mortals, Divinities. Not a fetch."
+        : me.beats.hall && snap.war?.winner && !snap.war.tithePaid && me.house === snap.war.winner
           ? `F — pay House tithe (${TITHE_COST} Bestand). Omen holds after upkeep. Not a stick.`
           : me.beats.hall && me.beats.garden && me.house === "mortals" && !snap.hallLamp
             ? "F — name the garden in the hall. Mortals standing. Not a stick."
