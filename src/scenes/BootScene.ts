@@ -71,6 +71,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("clearing-ring", "/assets/clearing-ring.jpg");
     this.load.image("ione", "/assets/ione.jpg");
     this.load.image("house-war", "/assets/house-war.jpg");
+    this.load.image("shrine-upkeep", "/assets/shrine-upkeep.jpg");
   }
 
   create() {

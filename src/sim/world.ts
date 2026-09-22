@@ -9,6 +9,7 @@ import {
   emptyWeather,
   GUEST_LOCK,
   GOING_UNDER,
+  SHRINE,
   lineFor,
   movementReady,
   namedWeatherPoi,
@@ -104,6 +105,23 @@ import {
   FORGE_SPECTATOR,
   WINK_FORGE,
   WET_GRID,
+  CLAIMS_DESK,
+  CLAIMS_ARMED,
+  CLAIM_HOLD,
+  DESK_FILE,
+  DESK_WAIT,
+  DESK_DISARMED,
+  DESK_EMPTY,
+  DESK_SPECTATOR,
+  FUNERAL_COST,
+  FUNERAL_COPY,
+  FUNERAL_NEED,
+  SHRINE_COST,
+  SHRINE_COPY,
+  SHRINE_NEED,
+  SHRINE_SPECTATOR,
+  WINK_SINK,
+  Claim,
   FLAG_COPY,
   FLAG_SPECTATOR,
   SPOILS_COPY,
@@ -200,6 +218,7 @@ export type Player = {
   banked: number;
   lastKillId: string;
   spectated: number;
+  claims: Claim[];
 };
 
 export type WorldState = {
@@ -257,6 +276,7 @@ export function spawnGuest(id: string): Player {
     banked: 0,
     lastKillId: "",
     spectated: 0,
+    claims: [],
   };
 }
 
@@ -465,6 +485,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         flagged: b.flagged,
         banked: b.banked,
         lastKillId: b.lastKillId,
+        claims: b.claims,
         spectated: b.spectated,
       });
       if (camp) gestell = Math.min(100, gestell + 4);
@@ -613,6 +634,8 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === CLEARING_STALL.id) return applyMarket(w, playerId);
   if (sign.id === FORGE_TRAY.id) return applyForge(w, playerId, "hear");
   if (sign.id === WET_GRID.id) return applyFlag(w, playerId);
+  if (sign.id === CLAIMS_DESK.id) return applyDesk(w, playerId, "file");
+  if (sign.id === SHRINE.id) return applyShrine(w, playerId);
   if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
   if (sign.id === OPERATOR_DESK.id) return applyOperator(w, playerId, "hear");
   if (sign.id === ORGAN_STRAIT.id || sign.id === ORGAN_FOUNDRY.id || sign.id === ORGAN_CABLE.id) {
@@ -658,10 +681,16 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   }
   const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
   if (wreck) {
+    if (p.bestand < FUNERAL_COST) {
+      players.set(playerId, { ...p, heard: FUNERAL_NEED });
+      return { ...w, players };
+    }
     players.set(playerId, {
       ...p,
+      bestand: p.bestand - FUNERAL_COST,
       readiness: p.readiness + (p.house === "earth" ? 2 : 1),
-      heard: "Nara Vale would call this someone. You put them in the ground.",
+      heard: FUNERAL_COPY,
+      wink: visibleWink(p.guest, WINK_SINK),
     });
     return { ...w, players, wreckage: w.wreckage.filter((r) => r.id !== wreck.id) };
   }
@@ -675,6 +704,28 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
     wink: visibleWink(false, WINK_HISTORY),
   });
   return { ...w, players, history: w.history.filter((m) => m.id !== mark.id) };
+}
+
+export function applyShrine(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: SHRINE_SPECTATOR, wink: visibleWink(true, WINK_SINK) });
+    return { ...w, players };
+  }
+  if (p.bestand < SHRINE_COST) {
+    players.set(playerId, { ...p, heard: SHRINE_NEED });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    bestand: p.bestand - SHRINE_COST,
+    readiness: p.readiness + 1,
+    heard: SHRINE_COPY,
+    wink: visibleWink(false, WINK_SINK),
+  });
+  return { ...w, players, gestell: Math.max(0, w.gestell - 2) };
 }
 
 export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
@@ -956,6 +1007,51 @@ export function applyM3(w: WorldState, playerId: string): WorldState {
     readiness: p.readiness + (first ? 1 : 0),
     x: first ? ORGAN_STRAIT.x : p.x,
     y: first ? ORGAN_STRAIT.y : p.y,
+  });
+  return { ...w, players };
+}
+
+export function applyDesk(w: WorldState, playerId: string, choice: "file" | "take"): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: DESK_SPECTATOR });
+    return { ...w, players };
+  }
+  if (choice === "file") {
+    if (p.bestand <= 0) {
+      players.set(playerId, { ...p, heard: DESK_EMPTY });
+      return { ...w, players };
+    }
+    const claim: Claim = {
+      id: `c-${playerId}-${w.now}`,
+      amount: p.bestand,
+      created: w.now,
+      readyAt: w.now + CLAIM_HOLD,
+    };
+    players.set(playerId, {
+      ...p,
+      bestand: 0,
+      claims: [...p.claims, claim],
+      heard: DESK_FILE,
+    });
+    return { ...w, players };
+  }
+  const due = p.claims.find((c) => w.now >= c.readyAt);
+  if (!due) {
+    players.set(playerId, { ...p, heard: p.claims.length ? DESK_WAIT : DESK_EMPTY });
+    return { ...w, players };
+  }
+  if (!CLAIMS_ARMED) {
+    players.set(playerId, { ...p, heard: DESK_DISARMED });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    bestand: p.bestand + due.amount,
+    claims: p.claims.filter((c) => c.id !== due.id),
+    heard: DESK_DISARMED,
   });
   return { ...w, players };
 }

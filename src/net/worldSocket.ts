@@ -94,6 +94,10 @@ export class WorldSocket {
     this.send({ t: "care" });
   }
 
+  desk(choice: "file" | "take") {
+    this.send({ t: "desk", choice });
+  }
+
   operator(choice: "hear" | "take" | "refuse") {
     this.send({ t: "operator", choice });
   }

@@ -104,6 +104,14 @@ import {
   SPOILS_COPY,
   GUEST_GRIEF,
   CAMP_COPY,
+  CLAIMS_DESK,
+  CLAIMS_ARMED,
+  CLAIM_HOLD,
+  DESK_FILE,
+  DESK_WAIT,
+  DESK_DISARMED,
+  DESK_EMPTY,
+  DESK_SPECTATOR,
   DUEL_COPY,
   SPECTATE_COPY,
   SPECTATE_CAP,
@@ -121,6 +129,15 @@ import {
   visibleHistory,
   visibleWink,
   winkeVisible,
+  FUNERAL_COST,
+  FUNERAL_COPY,
+  FUNERAL_NEED,
+  SHRINE_COST,
+  SHRINE_COPY,
+  SHRINE_NEED,
+  SHRINE_SPECTATOR,
+  WINK_SINK,
+  SHRINE,
 } from "./campaign";
 import {
   applyBury,
@@ -132,6 +149,8 @@ import {
   applyWatch,
   applyForge,
   applyFlag,
+  applyDesk,
+  applyShrine,
   applyLastWord,
   applyClearing,
   applyPassing,
@@ -1056,6 +1075,53 @@ describe("Wet Grid flagged PvP", () => {
   });
 });
 
+describe("Claims desk disarmed", () => {
+  it("Angel files a claim; TAKE stays disarmed; guests cannot claim", () => {
+    expect(CLAIMS_ARMED).toBe(false);
+    const w = emptyWorld();
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      bestand: 40,
+      x: CLAIMS_DESK.x,
+      y: CLAIMS_DESK.y,
+    });
+    const filed = applyDesk(w, "a", "file");
+    const p = filed.players.get("a")!;
+    expect(p.bestand).toBe(0);
+    expect(p.claims).toHaveLength(1);
+    expect(p.claims[0]?.amount).toBe(40);
+    expect(p.claims[0]?.readyAt).toBe(CLAIM_HOLD);
+    expect(p.heard).toBe(DESK_FILE);
+    expect(p.heard).toMatch(/not a yield/i);
+    expect(guestCanClaim(p)).toBe(false);
+
+    const early = applyDesk(filed, "a", "take");
+    expect(early.players.get("a")?.heard).toBe(DESK_WAIT);
+    expect(early.players.get("a")?.bestand).toBe(0);
+
+    filed.now = CLAIM_HOLD;
+    const take = applyDesk(filed, "a", "take");
+    expect(take.players.get("a")?.heard).toBe(DESK_DISARMED);
+    expect(take.players.get("a")?.bestand).toBe(0);
+    expect(take.players.get("a")?.claims).toHaveLength(1);
+    expect(take.players.get("a")?.heard).not.toMatch(/APY|settle live/i);
+    expect(damageFor(take.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+
+    const empty = applyDesk({ ...w, players: new Map([["a", { ...p, bestand: 0, claims: [] }]]) }, "a", "file");
+    expect(empty.players.get("a")?.heard).toBe(DESK_EMPTY);
+
+    w.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true, bestand: 99 });
+    const guest = applyDesk(w, "g", "file");
+    expect(guest.players.get("g")?.heard).toBe(DESK_SPECTATOR);
+    expect(guest.players.get("g")?.claims).toEqual([]);
+    expect(guest.players.get("g")?.bestand).toBe(99);
+    expect(guestCanClaim(guest.players.get("g")!)).toBe(false);
+  });
+});
+
 describe("Ruin duel", () => {
   it("1v1 at a wreckage takes unbanked not cult; spectators gain capped aura", () => {
     const w = emptyWorld();
@@ -1136,6 +1202,58 @@ describe("Ruin duel", () => {
     }
     expect(cur.players.get("s")!.spectated).toBe(SPECTATE_CAP);
     expect(cur.players.get("s")!.aura).toBe(4 + SPECTATE_CAP);
+  });
+});
+
+describe("Bestand sinks", () => {
+  it("funeral on wreckage costs Bestand; the plot stays free", () => {
+    const plot = emptyWorld().rites.find((r) => r.kind === "burial")!;
+    const free = emptyWorld();
+    free.players.set("a", { ...spawnGuest("a"), x: plot.x, y: plot.y, bestand: 0 });
+    const buried = applyBury(free, "a");
+    expect(buried.rites.find((r) => r.kind === "burial")?.done).toBe(true);
+    expect(buried.players.get("a")?.bestand).toBe(0);
+
+    const w = emptyWorld();
+    w.wreckage = [{ id: "g", x: 200, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
+    w.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480, bestand: 5 });
+    const poor = applyBury(w, "a");
+    expect(poor.wreckage).toHaveLength(1);
+    expect(poor.players.get("a")?.heard).toBe(FUNERAL_NEED);
+
+    w.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480, bestand: 40 });
+    const paid = applyBury(w, "a");
+    expect(paid.wreckage).toHaveLength(0);
+    expect(paid.players.get("a")?.bestand).toBe(40 - FUNERAL_COST);
+    expect(paid.players.get("a")?.heard).toBe(FUNERAL_COPY);
+    expect(paid.players.get("a")?.wink).toBe(WINK_SINK);
+    expect(FUNERAL_COST).toBe(12);
+    expect(damageFor(paid.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(paid.players.get("a")!)).toBe(false);
+  });
+
+  it("shrine upkeep spends Bestand and thins Gestell, never damage", () => {
+    const w = emptyWorld();
+    w.players.set("a", { ...spawnGuest("a"), guest: false, x: SHRINE.x, y: SHRINE.y, bestand: 4 });
+    const poor = applyShrine(w, "a");
+    expect(poor.players.get("a")?.heard).toBe(SHRINE_NEED);
+    expect(poor.gestell).toBe(w.gestell);
+
+    w.players.set("a", { ...spawnGuest("a"), guest: false, x: SHRINE.x, y: SHRINE.y, bestand: 20 });
+    const paid = applyShrine(w, "a");
+    expect(paid.players.get("a")?.bestand).toBe(20 - SHRINE_COST);
+    expect(paid.players.get("a")?.heard).toBe(SHRINE_COPY);
+    expect(paid.gestell).toBe(w.gestell - 2);
+    expect(SHRINE_COST).toBe(8);
+    expect(damageFor(paid.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(paid.players.get("a")!)).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, bestand: 20 });
+    const guest = applyShrine(gWorld, "g");
+    expect(guest.players.get("g")?.heard).toBe(SHRINE_SPECTATOR);
+    expect(guest.players.get("g")?.bestand).toBe(20);
+    expect(guest.gestell).toBe(gWorld.gestell);
   });
 });
 

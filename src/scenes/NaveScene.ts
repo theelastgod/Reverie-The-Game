@@ -20,6 +20,10 @@ import {
   WRECK_GARDEN,
   CLEARING_RING,
   WET_GRID,
+  CLAIMS_DESK,
+  SHRINE,
+  FUNERAL_COST,
+  SHRINE_COST,
   inWetGrid,
   IONE,
   movementReady,
@@ -133,6 +137,9 @@ export class NaveScene extends Phaser.Scene {
     if (s.id === CLEARING_RING.id) {
       this.add.image(s.x, s.y - 52, "house-war").setDisplaySize(88, 50).setDepth(3);
     }
+    if (s.id === SHRINE.id) {
+      this.add.image(s.x, s.y - 52, "shrine-upkeep").setDisplaySize(88, 50).setDepth(3);
+    }
     const label = this.add
       .text(s.x, s.y - 2, s.title, {
         fontFamily: "Space Grotesk, sans-serif",
@@ -177,6 +184,10 @@ export class NaveScene extends Phaser.Scene {
       nearPoint(me.x, me.y, FORGE_TRAY.x, FORGE_TRAY.y, 64) || nearPoint(me.x, me.y, 1080, 504, 64);
     if (atForge && me.beats.forge) {
       this.net.forge(choice === "extract" ? "sell" : "spot");
+      return;
+    }
+    if (nearPoint(me.x, me.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) {
+      this.net.desk(choice === "extract" ? "take" : "file");
       return;
     }
     if (nearPoint(me.x, me.y, CLEARING_RING.x, CLEARING_RING.y, 64)) {
@@ -362,6 +373,8 @@ export class NaveScene extends Phaser.Scene {
                     ? 0x3a3a3a
                     : poi.kind === "wreckage-garden"
                       ? 0x7a1028
+                      : poi.kind === "claims-desk"
+                          ? 0xffffff
                       : poi.kind === "wet-grid"
                           ? 0x7eb6ff
                       : poi.kind.startsWith("organ-")
@@ -479,6 +492,7 @@ export class NaveScene extends Phaser.Scene {
     const annex = nearPoint(me.x, me.y, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 56);
     const stall = nearPoint(me.x, me.y, CLEARING_STALL.x, CLEARING_STALL.y, 56);
     const wet = inWetGrid(me.x, me.y);
+    const deskClaim = nearPoint(me.x, me.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56);
     const forge =
       nearPoint(me.x, me.y, FORGE_TRAY.x, FORGE_TRAY.y, 64) ||
       (npcNear?.id === "quill" && me.beats.market);
@@ -502,8 +516,14 @@ export class NaveScene extends Phaser.Scene {
       (n) => n.kept && Phaser.Math.Distance.Between(me.x, me.y, n.x, n.y) < 40,
     );
     const wreckNear = snap.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 72));
+    const funeralNear = snap.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 56));
+    const shrine = nearPoint(me.x, me.y, SHRINE.x, SHRINE.y, 56);
 
-    if (wet && (me.guest || me.locked)) {
+    if (deskClaim && (me.guest || me.locked)) {
+      this.prompt = "A period on a ledger. Guests cannot claim.";
+    } else if (deskClaim) {
+      this.prompt = me.heard || "F / Q file a claim (not a yield). E TAKE is disarmed. No Base.";
+    } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
     } else if (wet && me.flagged) {
       this.prompt = me.heard || "Flagged. Click strike. Spoils: unbanked and copies. Cult stays. Guests are not loot.";
@@ -591,6 +611,12 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `F speak with ${npcNear.name} · ${npcNear.role}`;
     } else if (burial) {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
+    } else if (shrine && (me.guest || me.locked)) {
+      this.prompt = "A shrine. You do not keep it.";
+    } else if (shrine) {
+      this.prompt = `F keep the shrine. ${SHRINE_COST} Bestand. The Gestell thins. Not a stick.`;
+    } else if (funeralNear && !me.locked) {
+      this.prompt = `F funeral. ${FUNERAL_COST} Bestand on Nara Vale's street.`;
     } else if (failNear) {
       this.prompt = me.beats.failed
         ? me.heard || "Last season’s Passing failed. You already watched."
@@ -608,6 +634,7 @@ export class NaveScene extends Phaser.Scene {
     } else if (wreckNear && !me.guest) {
       this.prompt = "Ruin duel. The grave is the ring. Spectators gain a little aura. Not a bigger stick.";
     } else if (keptNear && me.messenger === "herald") {
+      this.prompt = "F — Herald Announce. Ping the kept node. This is not a strike.";
     } else if (nearNode) {
       this.prompt = "E extract Bestand · Q keep (Winke). A guest cannot cash out.";
     } else if (me.heard) {
@@ -632,6 +659,7 @@ export class NaveScene extends Phaser.Scene {
     const stats = hud("stat-chip");
     if (stats) {
       const winke = winkeVisible(me.guest) ? `Winke ${me.winke}` : "Winke —";
+      const claimBit = me.claims?.length ? ` · claims ${me.claims.length}` : "";
       const taxBit = me.inCare ? ` · tax ${snap.tax}` : "";
       const freezeBit = snap.frozen ? " · freeze" : "";
       const omenBit = me.house === "sky" && !snap.passing.outcome ? ` · omen ${snap.passing.ready}` : "";
@@ -643,7 +671,7 @@ export class NaveScene extends Phaser.Scene {
           : snap.clearingOpen
             ? " · Clearing held"
             : omenBit;
-      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}`;
+      stats.textContent = `Bestand ${me.bestand} · ${winke} · Gestell ${snap.gestell}${taxBit}${freezeBit}${passBit}${warBit}${claimBit}`;
     }
     const lock = hud("lock-panel");
     if (lock) lock.hidden = !me.locked;

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 23** — Claims desk **disarmed**: Bestand claim object, 24h hold, guest reject, no Base settle. No mint.
+**Next stage: 25** — Marketplace listing fee + exhibition decay. Cult never lists. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -113,8 +113,17 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - 1v1 at a wreckage is a ruin duel. Unbanked + exhibition spoils. Cult and banked stay.
 - Spectators gain 1 aura, cap 3. Ruin-angel kit is not DPS. Guests gain nothing. Claims stay disarmed.
 
-## Stage 23 (do this next)
-Claims desk **disarmed**. Play earns a claim object (not a yield). 24h hold. Guest cannot claim. TAKE would pay Bestand only; `$REVERIE` settle is off. No mint. No Base.
+## Stage 23 (landed)
+- DESK plaque. F/Q file unbanked Bestand into a claim (24h hold). E TAKE is **disarmed** — no Bestand paid, no Base.
+- Guests cannot file. `guestCanClaim` stays false. Copy forbids yield/APY.
+
+## Stage 24 (landed)
+- Wreckage funeral costs 12 Bestand (Nara’s street). Movement I plot stays free.
+- Shrine upkeep costs 8 Bestand and thins Gestell. Guests cannot keep the shrine.
+- `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 25 (do this next)
+Marketplace listing fee + exhibition decay. Cult objects never list. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

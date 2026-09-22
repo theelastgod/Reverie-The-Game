@@ -6,6 +6,7 @@ import {
   applyM3,
   applyWatch,
   applyForge,
+  applyDesk,
   applyClearing,
   applyAnnounce,
   applyOperator,
@@ -65,7 +66,7 @@ export class ReverieWorld {
       signId?: string;
       serial?: number;
       sig?: string;
-      choice?: "extract" | "keep" | "hear" | "take" | "refuse" | "spot" | "sell" | "pass";
+      choice?: "extract" | "keep" | "hear" | "take" | "refuse" | "spot" | "sell" | "pass" | "file";
     };
     try {
       data = JSON.parse(msg);
@@ -123,6 +124,9 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "announce" && data.nodeId) {
       this.w = applyAnnounce(this.w, id, data.nodeId);
+      this.broadcast();
+    } else if (data.t === "desk") {
+      this.w = applyDesk(this.w, id, data.choice === "take" ? "take" : "file");
       this.broadcast();
     }
   }

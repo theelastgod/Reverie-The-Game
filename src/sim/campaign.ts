@@ -91,7 +91,9 @@ export type Poi = {
     | "forge-tray"
     | "clearing-ring"
     | "clearing-held"
-    | "wet-grid";
+    | "wet-grid"
+    | "claims-desk"
+    | "shrine-upkeep";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -300,6 +302,62 @@ export const FORGE_SELL =
 export const FORGE_SPECTATOR = "Quill is doing something with paper. You cannot tell which sheet is the prayer.";
 export const FORGE_NEED_MARKET = "Quill is not teaching until you have stood at the listing.";
 
+export const CLAIMS_DESK = { id: "claims-desk", x: 480, y: 640 };
+export const CLAIMS_ARMED = false;
+export const CLAIM_HOLD = 86_400;
+export const DESK_FILE =
+  "Claim filed. Not a yield. Hold twenty-four hours. TAKE would pay Bestand. $REVERIE settle is off.";
+export const DESK_WAIT = "The hold is not done. The claim sits. No faucet.";
+export const DESK_DISARMED =
+  "Desk disarmed. The claim is filed. TAKE does not pay. No mint. No Base.";
+export const DESK_EMPTY = "Nothing to file. Play first. This is not a faucet.";
+export const DESK_SPECTATOR = "A period on a ledger. Guests cannot claim.";
+export const DESK_KEY = ".";
+
+export const FUNERAL_COST = 12;
+export const SHRINE_COST = 8;
+export const FUNERAL_COPY =
+  "You paid Nara Vale's street. Twelve Bestand. The body is in the ground.";
+export const FUNERAL_NEED = "Nara Vale does not work for free. Twelve Bestand for a funeral.";
+export const SHRINE_COPY =
+  "You kept the shrine. Eight Bestand. The Gestell thins a little. Combat is not.";
+export const SHRINE_NEED = "The shrine wants upkeep. Eight Bestand. Not a stick.";
+export const SHRINE_SPECTATOR = "A shrine. You do not keep it.";
+export const WINK_SINK = "Every earner has a hole. Bestand goes into the ground. The token does not strike.";
+
+export const SHRINE = { id: "shrine-upkeep", x: 640, y: 200 };
+
+export function shrinePoi(): Poi {
+  return { id: SHRINE.id, name: "Shrine upkeep", x: SHRINE.x, y: SHRINE.y, kind: "shrine-upkeep" };
+}
+
+export const SHRINE_PLAQUE: Sign = {
+  id: SHRINE.id,
+  title: "Shrine",
+  text: "Eight Bestand to keep. Grief is not a costume. Combat is not.",
+  x: SHRINE.x,
+  y: SHRINE.y,
+};
+
+export type Claim = {
+  id: string;
+  amount: number;
+  created: number;
+  readyAt: number;
+};
+
+export function claimsPoi(): Poi {
+  return { id: CLAIMS_DESK.id, name: "Desk", x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, kind: "claims-desk" };
+}
+
+export const CLAIMS_PLAQUE: Sign = {
+  id: CLAIMS_DESK.id,
+  title: "DESK",
+  text: "Play earns a claim. Not a yield. Hold a day. Disarmed.",
+  x: CLAIMS_DESK.x,
+  y: CLAIMS_DESK.y,
+};
+
 export const WET_GRID = { id: "wet-grid", x: 720, y: 520, r: 110 };
 export const FLAG_COPY =
   "You flagged. Wet Grid spoils are unbanked Bestand and exhibition copies. Cult and banked stay. Guests are not loot.";
@@ -476,6 +534,8 @@ export function naveSigns(): Sign[] {
     { ...FORGE_PLAQUE },
     { ...CLEARING_PLAQUE },
     { ...WET_PLAQUE },
+    { ...CLAIMS_PLAQUE },
+    { ...SHRINE_PLAQUE },
   ];
 }
 
@@ -490,6 +550,8 @@ export function navePois(): Poi[] {
     m3Poi(false),
     clearingPoi(false),
     wetGridPoi(),
+    claimsPoi(),
+    shrinePoi(),
   ];
 }
 
