@@ -184,6 +184,7 @@ export type Beats = {
   unflagPeople: boolean;
   secondsPeople: boolean;
   streetPeople: boolean;
+  griefPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -356,6 +357,7 @@ export type Poi = {
     | "unflag-people"
     | "seconds-people"
     | "street-people"
+    | "grief-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2982,6 +2984,31 @@ export function streetPeoplePoi(): Poi {
   };
 }
 
+export const GRIEF_PEOPLE_COPY =
+  "Grief is a house of people, not a spoils path. Protocol still rejects. Guests are not loot. Combat is not. This was not a fetch.";
+export const WINK_GRIEF_PEOPLE = "People, not a grief stick. The token does not strike.";
+export const GRIEF_PEOPLE_NEED = "The flagged street as people first. Grief of people is not a fetch.";
+export const GRIEF_PEOPLE_HELD = "Grief already holds as people. Protocol still rejects. Guests are not loot.";
+export const GRIEF_PEOPLE_SPECTATOR = "An arena. You do not get a house of people.";
+
+export const GRIEF_PEOPLE_PLAQUE: Sign = {
+  id: "grief-people",
+  title: "Grief — people",
+  text: "A house of people. Protocol still rejects. Guests are not loot. The number does not strike.",
+  x: GUEST_ARENA.x,
+  y: GUEST_ARENA.y,
+};
+
+export function griefPeoplePoi(): Poi {
+  return {
+    id: "grief-people",
+    name: "Grief — people",
+    x: GUEST_ARENA.x,
+    y: GUEST_ARENA.y,
+    kind: "grief-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3653,6 +3680,7 @@ export function emptyBeats(): Beats {
     unflagPeople: false,
     secondsPeople: false,
     streetPeople: false,
+    griefPeople: false,
   };
 }
 

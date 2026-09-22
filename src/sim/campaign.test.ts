@@ -514,6 +514,12 @@ import {
   STREET_PEOPLE_HELD,
   STREET_PEOPLE_SPECTATOR,
   STREET_PEOPLE_PLAQUE,
+  GRIEF_PEOPLE_COPY,
+  WINK_GRIEF_PEOPLE,
+  GRIEF_PEOPLE_NEED,
+  GRIEF_PEOPLE_HELD,
+  GRIEF_PEOPLE_SPECTATOR,
+  GRIEF_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1106,6 +1112,7 @@ import {
   applyUnflagPeople,
   applySecondsPeople,
   applyStreetPeople,
+  applyGriefPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4828,6 +4835,50 @@ describe("Street — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyStreetPeople(gWorld, "g").players.get("g")?.heard).toBe(STREET_PEOPLE_SPECTATOR);
     expect(gWorld.streetPeopleHeld).toBe(false);
+  });
+});
+
+describe("Grief — people", () => {
+  it("names grief as people after the street; protocol still rejects; guests cannot", () => {
+    const w = emptyWorld();
+    w.streetPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), streetPeople: true },
+      x: GUEST_ARENA.x,
+      y: GUEST_ARENA.y,
+    });
+    const named = applyRead(w, "a", GUEST_ARENA.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(GRIEF_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_GRIEF_PEOPLE);
+    expect(p.beats.griefPeople).toBe(true);
+    expect(named.griefPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "grief-people")?.name).toBe("Grief — people");
+    expect(named.signs.find((s) => s.id === "grief-people")?.title).toBe(GRIEF_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Protocol still rejects");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyGriefPeople(named, "a").players.get("a")?.heard).toBe(GRIEF_PEOPLE_HELD);
+
+    const g = { ...spawnGuest("g"), x: GUEST_ARENA.x + 8, y: GUEST_ARENA.y, hp: 40 };
+    named.players.set("g", g);
+    const struck = applyStrike(named, "a");
+    expect(struck.players.get("g")?.hp).toBe(40);
+    expect(struck.players.get("a")?.heard).toBe(GUEST_GRIEF);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: GUEST_ARENA.x, y: GUEST_ARENA.y });
+    expect(applyGriefPeople(early, "a").players.get("a")?.heard).toBe(GRIEF_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.streetPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
+    expect(applyGriefPeople(gWorld, "g").players.get("g")?.heard).toBe(GRIEF_PEOPLE_SPECTATOR);
+    expect(gWorld.griefPeopleHeld).toBe(false);
   });
 });
 
