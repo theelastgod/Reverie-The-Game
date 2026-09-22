@@ -567,6 +567,13 @@ import {
   FILE_PEOPLE_SPECTATOR,
   FILE_PEOPLE_PLAQUE,
   filePeoplePoi,
+  TAKE_PEOPLE_COPY,
+  WINK_TAKE_PEOPLE,
+  TAKE_PEOPLE_NEED,
+  TAKE_PEOPLE_HELD,
+  TAKE_PEOPLE_SPECTATOR,
+  TAKE_PEOPLE_PLAQUE,
+  takePeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1308,6 +1315,7 @@ export type WorldState = {
   passingPeopleHeld: boolean;
   claimsPeopleHeld: boolean;
   filePeopleHeld: boolean;
+  takePeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1609,6 +1617,7 @@ export function emptyWorld(): WorldState {
     passingPeopleHeld: false,
     claimsPeopleHeld: false,
     filePeopleHeld: false,
+    takePeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2835,7 +2844,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.seasonHeld && !w.bracketHeld && !w.wetCult && !p.guest && !p.locked) return applyBracket(w, playerId);
     return applyFlag(w, playerId);
   }
-  if (sign.id === CLAIMS_DESK.id || sign.id === "desk-people" || sign.id === "vault-people" || sign.id === "claims-people" || sign.id === "file-people") {
+  if (sign.id === CLAIMS_DESK.id || sign.id === "desk-people" || sign.id === "vault-people" || sign.id === "claims-people" || sign.id === "file-people" || sign.id === "take-people") {
+    if (w.filePeopleHeld && !w.takePeopleHeld) return applyTakePeople(w, playerId);
+    if (sign.id === "take-people") return applyTakePeople(w, playerId);
     if (w.claimsPeopleHeld && !w.filePeopleHeld) return applyFilePeople(w, playerId);
     if (sign.id === "file-people") return applyFilePeople(w, playerId);
     if (w.passingPeopleHeld && !w.claimsPeopleHeld) return applyClaimsPeople(w, playerId);
@@ -5090,6 +5101,37 @@ export function applyFilePeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, filePeopleHeld: true, pois, signs };
 }
 
+export function applyTakePeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLAIMS_DESK.x, CLAIMS_DESK.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: TAKE_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_TAKE_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.filePeopleHeld) {
+    players.set(playerId, { ...p, heard: TAKE_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.takePeopleHeld && p.beats.takePeople) {
+    players.set(playerId, { ...p, heard: TAKE_PEOPLE_HELD, wink: visibleWink(false, WINK_TAKE_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, takePeople: true },
+    heard: TAKE_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_TAKE_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "take-people")
+    ? w.pois.map((poi) => (poi.id === "take-people" ? takePeoplePoi() : poi))
+    : [...w.pois, takePeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "take-people")
+    ? w.signs.map((s) => (s.id === "take-people" ? { ...TAKE_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...TAKE_PEOPLE_PLAQUE }];
+  return { ...w, players, takePeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -6308,6 +6350,7 @@ export function snapshot(w: WorldState) {
     passingPeopleHeld: w.passingPeopleHeld,
     claimsPeopleHeld: w.claimsPeopleHeld,
     filePeopleHeld: w.filePeopleHeld,
+    takePeopleHeld: w.takePeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

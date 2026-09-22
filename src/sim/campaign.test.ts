@@ -466,6 +466,12 @@ import {
   FILE_PEOPLE_HELD,
   FILE_PEOPLE_SPECTATOR,
   FILE_PEOPLE_PLAQUE,
+  TAKE_PEOPLE_COPY,
+  WINK_TAKE_PEOPLE,
+  TAKE_PEOPLE_NEED,
+  TAKE_PEOPLE_HELD,
+  TAKE_PEOPLE_SPECTATOR,
+  TAKE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1050,6 +1056,7 @@ import {
   applyPassingPeople,
   applyClaimsPeople,
   applyFilePeople,
+  applyTakePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4454,6 +4461,52 @@ describe("File — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
     expect(applyFilePeople(gWorld, "g").players.get("g")?.heard).toBe(FILE_PEOPLE_SPECTATOR);
     expect(gWorld.filePeopleHeld).toBe(false);
+  });
+});
+
+describe("TAKE — people", () => {
+  it("names TAKE as people after filing; TAKE stays disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.filePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), filePeople: true },
+      x: CLAIMS_DESK.x,
+      y: CLAIMS_DESK.y,
+    });
+    const named = applyRead(w, "a", CLAIMS_DESK.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(TAKE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_TAKE_PEOPLE);
+    expect(p.beats.takePeople).toBe(true);
+    expect(named.takePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "take-people")?.name).toBe("TAKE — people");
+    expect(named.signs.find((s) => s.id === "take-people")?.title).toBe(TAKE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("TAKE stays disarmed");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTakePeople(named, "a").players.get("a")?.heard).toBe(TAKE_PEOPLE_HELD);
+    const due = { ...named, now: 10 };
+    due.players.set("a", {
+      ...due.players.get("a")!,
+      claims: [{ id: "c1", amount: 12, created: 0, readyAt: 1 }],
+    });
+    expect(applyDesk(due, "a", "take").players.get("a")?.heard).toBe(DESK_DISARMED);
+    expect(applyDesk(due, "a", "take").players.get("a")?.bestand).toBe(0);
+    expect(CLAIMS_ARMED).toBe(false);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: CLAIMS_DESK.x, y: CLAIMS_DESK.y });
+    expect(applyTakePeople(early, "a").players.get("a")?.heard).toBe(TAKE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.filePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: CLAIMS_DESK.x, y: CLAIMS_DESK.y, locked: true });
+    expect(applyTakePeople(gWorld, "g").players.get("g")?.heard).toBe(TAKE_PEOPLE_SPECTATOR);
+    expect(gWorld.takePeopleHeld).toBe(false);
   });
 });
 

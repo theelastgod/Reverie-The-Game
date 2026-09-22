@@ -176,6 +176,7 @@ export type Beats = {
   passingPeople: boolean;
   claimsPeople: boolean;
   filePeople: boolean;
+  takePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -340,6 +341,7 @@ export type Poi = {
     | "passing-people"
     | "claims-people"
     | "file-people"
+    | "take-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2766,6 +2768,31 @@ export function filePeoplePoi(): Poi {
   };
 }
 
+export const TAKE_PEOPLE_COPY =
+  "TAKE is a house of people, not a mint of process. TAKE stays disarmed. No Base. Combat is not. This was not a fetch.";
+export const WINK_TAKE_PEOPLE = "People, not a TAKE stick. The token does not strike.";
+export const TAKE_PEOPLE_NEED = "Filing as people first. A TAKE of people is not a fetch.";
+export const TAKE_PEOPLE_HELD = "TAKE already holds as people. TAKE stays disarmed. No Base.";
+export const TAKE_PEOPLE_SPECTATOR = "Paper. You do not get a house of people.";
+
+export const TAKE_PEOPLE_PLAQUE: Sign = {
+  id: "take-people",
+  title: "TAKE — people",
+  text: "A house of people. TAKE stays disarmed. No Base. The number does not strike.",
+  x: CLAIMS_DESK.x,
+  y: CLAIMS_DESK.y,
+};
+
+export function takePeoplePoi(): Poi {
+  return {
+    id: "take-people",
+    name: "TAKE — people",
+    x: CLAIMS_DESK.x,
+    y: CLAIMS_DESK.y,
+    kind: "take-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -3429,6 +3456,7 @@ export function emptyBeats(): Beats {
     passingPeople: false,
     claimsPeople: false,
     filePeople: false,
+    takePeople: false,
   };
 }
 
