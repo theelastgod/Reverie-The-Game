@@ -105,6 +105,10 @@ import {
   PART_NEED,
   PART_HELD,
   PART_PLAQUE,
+  HEAVY_HOLD,
+  HEAVY_COPY,
+  WINK_HEAVY,
+  HEAVY_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -617,6 +621,7 @@ import {
   applyAddressed,
   applyParty,
   applyPart,
+  applyHeavy,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -1481,6 +1486,45 @@ describe("Party walk", () => {
     gWorld.players.set("b", { ...spawnGuest("b"), guest: false, x: 220, y: 480 });
     expect(applyParty(gWorld, "g").players.get("g")?.heard).toBe(PARTY_SPECTATOR);
     expect(gWorld.partyHeld).toBe(false);
+  });
+});
+
+describe("Heavy strike", () => {
+  it("holds longer, drops clerk telegraph, does not buy damage", () => {
+    const w = emptyWorld();
+    w.clerks = [{ id: "c1", name: "Yield clerk", x: 210, y: 480, hp: 40, telegraph: 0.4 }];
+    w.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    w.players.set("b", { ...spawnGuest("b"), guest: false, hp: 80, x: 220, y: 480 });
+    const heavy = applyHeavy(w, "a");
+    const p = heavy.players.get("a")!;
+    expect(p.heard).toBe(HEAVY_COPY);
+    expect(p.wink).toBe(WINK_HEAVY);
+    expect(p.beats.heavy).toBe(true);
+    expect(p.strikeCd).toBeCloseTo(STRIKE_COOLDOWN + HIT_STOP + HEAVY_HOLD);
+    expect(heavy.heavyHeld).toBe(true);
+    expect(heavy.clerks.find((c) => c.id === "c1")?.telegraph).toBe(0);
+    expect(heavy.pois.find((poi) => poi.kind === "heavy")?.id).toBe("heavy");
+    expect(heavy.signs.find((s) => s.id === "heavy")?.title).toBe(HEAVY_PLAQUE.title);
+    expect(heavy.players.get("b")?.hp).toBe(80 - 22);
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const dodge = emptyWorld();
+    dodge.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    dodge.players.set("b", {
+      ...spawnGuest("b"),
+      guest: false,
+      restraint: true,
+      hp: 80,
+      x: 220,
+      y: 480,
+    });
+    dodge.intents.set("b", { up: true, down: false, left: false, right: false });
+    const missed = applyHeavy(dodge, "a");
+    expect(missed.heavyHeld).toBe(false);
+    expect(missed.players.get("a")?.heard).toBe(DODGE_WHIFF);
+    expect(missed.players.get("a")?.strikeCd).toBe(STRIKE_COOLDOWN);
   });
 });
 

@@ -102,7 +102,7 @@ export class NaveScene extends Phaser.Scene {
       })
       .setDepth(5);
     this.add
-      .text(TILE * 2, TILE * 2.9, "WASD · F speak / read / bury / under · click strike clerks · E extract · Q keep", {
+      .text(TILE * 2, TILE * 2.9, "WASD · F speak · click light · R / shift-click heavy · E extract · Q keep", {
         fontFamily: "Space Grotesk, sans-serif",
         fontSize: "13px",
         color: "#e8e8e8",
@@ -126,7 +126,11 @@ export class NaveScene extends Phaser.Scene {
     this.input.keyboard.addKey("Q").on("down", () => this.useNear("keep"));
     this.input.keyboard.addKey("F").on("down", () => this.interact());
     this.input.keyboard.addKey("SPACE").on("down", () => this.net.strike());
-    this.input.on("pointerdown", () => this.net.strike());
+    this.input.keyboard.addKey("R").on("down", () => this.net.heavy());
+    this.input.on("pointerdown", (ptr: Phaser.Input.Pointer) => {
+      if (ptr.event && (ptr.event as MouseEvent).shiftKey) this.net.heavy();
+      else this.net.strike();
+    });
     hud("mock-link")?.addEventListener("click", () => this.net.link(TEST_SERIAL));
 
     this.net.connect();
@@ -520,6 +524,8 @@ export class NaveScene extends Phaser.Scene {
                       : poi.kind === "party-walk"
                         ? 0x7eb6ff
                       : poi.kind === "party-parted"
+                        ? 0x7eb6ff
+                      : poi.kind === "heavy"
                         ? 0x7eb6ff
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
@@ -1182,7 +1188,9 @@ export class NaveScene extends Phaser.Scene {
           ? " · Restraint · dodge if moving"
           : snap.hitStopHeld
             ? " · hit-stop"
-            : "";
+            : snap.heavyHeld
+              ? " · heavy"
+              : "";
       const naraBit = snap.naraGone ? " · sexton gone" : "";
       const ordBit = snap.ordGone ? " · Ord gone" : "";
       const quillBit = snap.quillGone ? " · Quill gone" : "";

@@ -116,6 +116,7 @@ export type Beats = {
   addressed: boolean;
   party: boolean;
   parted: boolean;
+  heavy: boolean;
 };
 
 export type WeatherHeard = {
@@ -221,6 +222,7 @@ export type Poi = {
     | "vesper-person"
     | "party-walk"
     | "party-parted"
+    | "heavy"
     | "hit-stop"
     | "addressed";
 };
@@ -1366,6 +1368,23 @@ export function partPoi(x: number, y: number): Poi {
   return { id: "party-walk", name: "Party — parted", x, y, kind: "party-parted" };
 }
 
+export const HEAVY_HOLD = 0.25;
+export const HEAVY_COPY =
+  "Heavy. The telegraph dropped. You did not strike harder. This was not a fetch.";
+export const WINK_HEAVY = "A hold, not a stick. The token does not strike.";
+
+export const HEAVY_PLAQUE: Sign = {
+  id: "heavy",
+  title: "Heavy",
+  text: "Readable interrupt. Same number. The hit is slower.",
+  x: 200,
+  y: 480,
+};
+
+export function heavyPoi(x: number, y: number): Poi {
+  return { id: "heavy", name: "Heavy", x, y, kind: "heavy" };
+}
+
 export const STORM_GEAR = 40;
 export const STORM_SKIM = 0.1;
 export const STORM_PRESS =
@@ -1765,6 +1784,7 @@ export function emptyBeats(): Beats {
     addressed: false,
     party: false,
     parted: false,
+    heavy: false,
   };
 }
 

@@ -161,6 +161,11 @@ import {
   PART_SPECTATOR,
   PART_PLAQUE,
   partPoi,
+  HEAVY_HOLD,
+  HEAVY_COPY,
+  WINK_HEAVY,
+  HEAVY_PLAQUE,
+  heavyPoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -815,6 +820,7 @@ export type WorldState = {
   addressedHeld: boolean;
   partyHeld: boolean;
   partedHeld: boolean;
+  heavyHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1055,6 +1061,7 @@ export function emptyWorld(): WorldState {
     addressedHeld: false,
     partyHeld: false,
     partedHeld: false,
+    heavyHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -1498,6 +1505,36 @@ export function applyPart(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === "party-walk" ? plaque : s))
     : [...w.signs, plaque];
   return { ...w, players, partyHeld: false, partedHeld: true, pois, signs };
+}
+
+export function applyHeavy(w: WorldState, playerId: string): WorldState {
+  const before = applyStrike(w, playerId);
+  if (before === w) return w;
+  const p = before.players.get(playerId);
+  if (!p) return before;
+  const connected = p.beats.hitStop || before.hitStopHeld;
+  const players = new Map(before.players);
+  const first = !w.heavyHeld && connected;
+  players.set(playerId, {
+    ...p,
+    strikeCd: connected ? STRIKE_COOLDOWN + HIT_STOP + HEAVY_HOLD : p.strikeCd,
+    beats: { ...p.beats, heavy: true },
+    heard: first ? HEAVY_COPY : p.heard,
+    wink: first ? visibleWink(p.guest, WINK_HEAVY) : p.wink,
+  });
+  const clerks = before.clerks.map((c) => {
+    if (c.hp <= 0 || c.telegraph <= 0) return c;
+    if (!nearPoint(p.x, p.y, c.x, c.y, STRIKE_RANGE + 8)) return c;
+    return { ...c, telegraph: 0 };
+  });
+  if (!first) return { ...before, players, clerks };
+  const pois = before.pois.some((poi) => poi.id === "heavy")
+    ? before.pois.map((poi) => (poi.id === "heavy" ? heavyPoi(p.x, p.y) : poi))
+    : [...before.pois, heavyPoi(p.x, p.y)];
+  const signs = before.signs.some((s) => s.id === "heavy")
+    ? before.signs.map((s) => (s.id === "heavy" ? { ...HEAVY_PLAQUE, x: p.x, y: p.y } : s))
+    : [...before.signs, { ...HEAVY_PLAQUE, x: p.x, y: p.y }];
+  return { ...before, players, clerks, heavyHeld: true, pois, signs };
 }
 
 export function applyNaraPerson(w: WorldState, playerId: string): WorldState {
@@ -3626,6 +3663,7 @@ export function snapshot(w: WorldState) {
     addressedHeld: w.addressedHeld,
     partyHeld: w.partyHeld,
     partedHeld: w.partedHeld,
+    heavyHeld: w.heavyHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

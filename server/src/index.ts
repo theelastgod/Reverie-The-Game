@@ -21,6 +21,7 @@ import {
   applyOperator,
   applyRead,
   applyStrike,
+  applyHeavy,
   applyTalk,
   applyUse,
   DT,
@@ -91,6 +92,9 @@ export class ReverieWorld {
       });
     } else if (data.t === "strike") {
       this.w = applyStrike(this.w, id);
+      this.broadcast();
+    } else if (data.t === "heavy") {
+      this.w = applyHeavy(this.w, id);
       this.broadcast();
     } else if (data.t === "use" && data.nodeId && (data.choice === "extract" || data.choice === "keep")) {
       this.w = applyUse(this.w, id, data.nodeId, data.choice);

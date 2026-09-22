@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 96** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 97** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -409,7 +409,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - F while walking together parts the hour. Plaque/POI Party — parted. Can walk again. Not a stick.
 - Guests cannot part anyone. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 96 (do this next)
+## Stage 96 (landed)
+- Heavy strike (R / shift-click): longer hold, drops clerk telegraph, same damage. Plaque/POI Heavy. Guests can. Not a stick.
+- Light click unchanged. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 97 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

@@ -85,6 +85,7 @@ export type Snap = {
   addressedHeld?: boolean;
   partyHeld?: boolean;
   partedHeld?: boolean;
+  heavyHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
@@ -127,6 +128,10 @@ export class WorldSocket {
 
   strike() {
     this.send({ t: "strike" });
+  }
+
+  heavy() {
+    this.send({ t: "heavy" });
   }
 
   use(nodeId: string, choice: "extract" | "keep") {
