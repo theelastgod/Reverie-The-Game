@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 34** — Named side quest (House standing). Fetch-only forbidden. Keep writing until 24 authored hours. No mint.
+**Next stage: 35** — Named side quest (NPC schedule or POI). Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -160,8 +160,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After spotting the cult sheet, talk to Quill then F at the stall: hang it. Stall POI goes dark (unlisted). Quill walks the Wet Grid.
 - Selling a print cannot darken the stall. Guests cannot hang. `damageFor` unchanged.
 
-## Stage 34 (do this next)
-Named side quest that changes House standing. Fetch-only forbidden. No mint. No Base.
+## Stage 34 (landed)
+- Mortals Angel who buried the garden F at the hall: Mortals standing +1. Hall plaque becomes standing. Other Houses refused.
+- Guests cannot light the lamp. `damageFor` unchanged.
+
+## Stage 35 (do this next)
+Named side quest that changes an NPC schedule or POI. Fetch-only forbidden. No mint. No Base.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

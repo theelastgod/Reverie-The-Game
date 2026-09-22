@@ -13,6 +13,13 @@ import {
   FREEZE_NEED_HALL,
   FREEZE_SPECTATOR,
   HALL_PLAQUE,
+  HALL_STANDING_PLAQUE,
+  STANDING_COPY,
+  STANDING_NEED,
+  STANDING_WRONG,
+  STANDING_HELD,
+  STANDING_SPECTATOR,
+  WINK_STANDING,
   HISTORY_7777,
   HOUSE_HALL,
   PASSING_READY,
@@ -211,6 +218,7 @@ import {
   applyPassing,
   applyAnnounce,
   applyTithe,
+  applyStanding,
   applyMarket,
   applyOperator,
   applyRead,
@@ -413,6 +421,59 @@ describe("Movement II House hall", () => {
     expect(HALL_PLAQUE.title).toBe("House of Mortals");
     expect(damageFor(p)).toBe(damageFor(spawnGuest("b")));
     expect(guestCanClaim(p)).toBe(false);
+  });
+
+  it("Mortals standing names the garden in the hall; other Houses cannot", () => {
+    const w = emptyWorld();
+    w.pois = [...w.pois, { id: HOUSE_HALL.id, name: "House of Mortals", x: HOUSE_HALL.x, y: HOUSE_HALL.y, kind: "house-hall" }];
+    w.signs = [...w.signs, { ...HALL_PLAQUE }];
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      house: "mortals",
+      inCare: true,
+      beats: { ...emptyBeats(), hall: true, garden: true },
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    const need = applyStanding(
+      { ...w, players: new Map([["a", { ...w.players.get("a")!, beats: { ...emptyBeats(), hall: true } }]]) },
+      "a",
+    );
+    expect(need.players.get("a")?.heard).toBe(STANDING_NEED);
+    expect(need.standing.mortals).toBe(0);
+
+    const paid = applyStanding(w, "a");
+    const p = paid.players.get("a")!;
+    expect(p.heard).toBe(STANDING_COPY);
+    expect(p.beats.standing).toBe(true);
+    expect(p.wink).toBe(WINK_STANDING);
+    expect(paid.hallLamp).toBe(true);
+    expect(paid.standing.mortals).toBe(1);
+    expect(paid.pois.find((poi) => poi.id === HOUSE_HALL.id)?.kind).toBe("house-standing");
+    expect(paid.signs.find((s) => s.id === HOUSE_HALL.id)?.title).toBe(HALL_STANDING_PLAQUE.title);
+    expect(applyStanding(paid, "a").players.get("a")?.heard).toBe(STANDING_HELD);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const earth = emptyWorld();
+    earth.players.set("e", {
+      ...spawnGuest("e"),
+      guest: false,
+      house: "earth",
+      inCare: true,
+      beats: { ...emptyBeats(), hall: true, garden: true },
+      x: HOUSE_HALL.x,
+      y: HOUSE_HALL.y,
+    });
+    expect(applyStanding(earth, "e").players.get("e")?.heard).toBe(STANDING_WRONG);
+    expect(applyStanding(earth, "e").standing.mortals).toBe(0);
+
+    const gWorld = emptyWorld();
+    gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
+    expect(applyStanding(gWorld, "g").players.get("g")?.heard).toBe(STANDING_SPECTATOR);
+    expect(guestCanClaim(gWorld.players.get("g")!)).toBe(false);
   });
 
   it("guest cannot read the House hall even when the Care is open", () => {

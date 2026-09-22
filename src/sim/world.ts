@@ -71,6 +71,14 @@ import {
   gestellTax,
   hallCopy,
   hallPlaque,
+  STANDING_COPY,
+  STANDING_NEED,
+  STANDING_WRONG,
+  STANDING_HELD,
+  STANDING_SPECTATOR,
+  WINK_STANDING,
+  HALL_STANDING_PLAQUE,
+  hallStandingPoi,
   houseHallPoi,
   openCarePoi,
   serialHistory,
@@ -204,6 +212,8 @@ import {
   earthTax,
   divinitiesKeep,
   emptyWar,
+  emptyScores,
+  HouseScores,
   HouseWar,
   scoreWar,
   resolveWar,
@@ -308,6 +318,8 @@ export type WorldState = {
   naraAtStrait: boolean;
   stallDark: boolean;
   quillAtGrid: boolean;
+  hallLamp: boolean;
+  standing: HouseScores;
   announced: string | null;
   war: HouseWar;
   gestell: number;
@@ -451,6 +463,8 @@ export function emptyWorld(): WorldState {
     naraAtStrait: false,
     stallDark: false,
     quillAtGrid: false,
+    hallLamp: false,
+    standing: emptyScores(),
     announced: null,
     war: emptyWar(),
     gestell: 12,
@@ -825,6 +839,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   if (sign.id === HOUSE_HALL.id) {
     if (!p.inCare || p.guest || p.locked) return w;
     if (p.beats.hall && w.war.winner) return applyTithe(w, playerId);
+    if (p.beats.hall) return applyStanding(w, playerId);
     const tax = gestellTax(w.gestell);
     const players = new Map(w.players);
     players.set(playerId, {
@@ -1507,6 +1522,8 @@ export function snapshot(w: WorldState) {
     clerks: w.clerks,
     npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid),
     stallDark: w.stallDark,
+    hallLamp: w.hallLamp,
+    standing: w.standing,
     signs: w.signs,
     pois: w.pois,
     weatherNamed: w.weatherNamed,
@@ -1522,6 +1539,45 @@ export function snapshot(w: WorldState) {
     ioneGone: w.ioneGone,
     announced: w.announced,
     war: w.war,
+  };
+}
+
+export function applyStanding(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: STANDING_SPECTATOR, wink: visibleWink(true, WINK_STANDING) });
+    return { ...w, players };
+  }
+  if (!p.beats.garden) {
+    players.set(playerId, { ...p, heard: STANDING_NEED });
+    return { ...w, players };
+  }
+  if (p.house !== "mortals") {
+    players.set(playerId, { ...p, heard: STANDING_WRONG, wink: visibleWink(false, WINK_STANDING) });
+    return { ...w, players };
+  }
+  if (w.hallLamp || p.beats.standing) {
+    players.set(playerId, { ...p, heard: STANDING_HELD, wink: visibleWink(false, WINK_STANDING) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, standing: true },
+    heard: STANDING_COPY,
+    wink: visibleWink(false, WINK_STANDING),
+    readiness: p.readiness + 1,
+    lastCareX: HOUSE_HALL.x,
+    lastCareY: HOUSE_HALL.y,
+  });
+  return {
+    ...w,
+    players,
+    hallLamp: true,
+    standing: { ...w.standing, mortals: w.standing.mortals + 1 },
+    pois: w.pois.map((poi) => (poi.id === HOUSE_HALL.id ? hallStandingPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === HOUSE_HALL.id ? { ...HALL_STANDING_PLAQUE } : s)),
   };
 }
 

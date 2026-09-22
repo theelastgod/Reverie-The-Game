@@ -56,6 +56,7 @@ export type Beats = {
   sexton: boolean;
   hangAsk: boolean;
   hang: boolean;
+  standing: boolean;
 };
 
 export type WeatherHeard = {
@@ -102,7 +103,8 @@ export type Poi = {
     | "claims-desk"
     | "shrine-upkeep"
     | "sexton-mark"
-    | "stall-dark";
+    | "stall-dark"
+    | "house-standing";
 };
 
 export type PassingOutcome = "" | "appearance" | "absence" | "hijack" | "failed";
@@ -185,6 +187,32 @@ export const HALL_PLAQUE: Sign = {
   x: HOUSE_HALL.x,
   y: HOUSE_HALL.y,
 };
+
+export const STANDING_COPY =
+  "House of Mortals keeps the garden in the hall. Standing, not a stick.";
+export const STANDING_NEED = "Bury the garden first. Standing is not a fetch.";
+export const STANDING_WRONG = "This hall keeps Mortals standing. Your House is elsewhere.";
+export const STANDING_HELD = "The hall already holds the garden. Standing does not strike.";
+export const STANDING_SPECTATOR = "A lamp you cannot light.";
+export const WINK_STANDING = "Standing is a name in the hall. The garden is not stock. Combat is not.";
+
+export const HALL_STANDING_PLAQUE: Sign = {
+  id: HOUSE_HALL.id,
+  title: "House of Mortals — standing",
+  text: "The garden is named here. Mortals standing. The number does not strike.",
+  x: HOUSE_HALL.x,
+  y: HOUSE_HALL.y,
+};
+
+export function hallStandingPoi(): Poi {
+  return {
+    id: HOUSE_HALL.id,
+    name: "House of Mortals — standing",
+    x: HOUSE_HALL.x,
+    y: HOUSE_HALL.y,
+    kind: "house-standing",
+  };
+}
 
 export const SAFETY_ANNEX = { id: "safety-annex", x: 320, y: 320 };
 export const PASSING_READY = 8;
@@ -627,6 +655,7 @@ export function emptyBeats(): Beats {
     sexton: false,
     hangAsk: false,
     hang: false,
+    standing: false,
   };
 }
 

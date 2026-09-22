@@ -430,6 +430,8 @@ export class NaveScene extends Phaser.Scene {
                           ? 0x7eb6ff
                       : poi.kind === "sexton-mark"
                         ? 0xc9a56a
+                      : poi.kind === "house-standing"
+                        ? 0xc9a56a
                       : poi.kind === "organ-cable-quiet"
                         ? 0x7eb6ff
                       : poi.kind.startsWith("organ-")
@@ -591,6 +593,8 @@ export class NaveScene extends Phaser.Scene {
       this.prompt =
         me.beats.hall && snap.war?.winner && !snap.war.tithePaid && me.house === snap.war.winner
           ? `F — pay House tithe (${TITHE_COST} Bestand). Omen holds after upkeep. Not a stick.`
+          : me.beats.hall && me.beats.garden && me.house === "mortals" && !snap.hallLamp
+            ? "F — name the garden in the hall. Mortals standing. Not a stick."
           : me.beats.hall
             ? me.heard
             : `F read House of Mortals. Gestell tax ${snap.tax}. The number does not strike.`;
