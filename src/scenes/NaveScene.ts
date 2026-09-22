@@ -701,6 +701,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "The sexton mark is cult. Nara Vale is at the Strait.";
     } else if (npcNear?.id === "nara" && me.beats.sextonAsk) {
       this.prompt = "F — take the sexton mark. Cult object. Nara walks to the Strait.";
+    } else if (npcNear?.id === "ord" && me.beats.ordWitness) {
+      this.prompt = me.heard || "Ord stands at the refused Strait. The number is quieter.";
+    } else if (npcNear?.id === "ord" && (me.beats.straitRefuse || snap.straitRefused)) {
+      this.prompt = "F — Ord will witness the refused water. He walks. Not a fetch.";
     } else if (npcNear?.id === "ord" && me.beats.cableQuiet) {
       this.prompt = me.heard || "Ord walked to the Cable. The organ is quieter.";
     } else if (npcNear?.id === "ord" && me.beats.errand) {

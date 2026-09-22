@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 39** — Named side quest. Keep writing until 24 authored hours. No mint.
+**Next stage: 40** — Named side quest. Keep writing until 24 authored hours. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -181,7 +181,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the Foundry is dark, F at the Strait: refuse the water. Plaque/POI become The Strait — refused. Gestell thins. Not a fetch.
 - Live furnace refuses. Guests cannot shut the canal. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 39 (do this next)
+## Stage 39 (landed)
+- After the Strait is refused, F at Ord: he walks to the canal. Schedule change. Not a fetch.
+- Guests cannot take him. `damageFor` unchanged.
+
+## Stage 40 (do this next)
 Named side quest. Fetch-only forbidden. No mint. No Base.
 
 ## Rules

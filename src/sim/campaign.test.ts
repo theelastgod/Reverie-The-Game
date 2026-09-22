@@ -206,6 +206,10 @@ import {
   STRAIT_REFUSED_LATER,
   STRAIT_SPECTATOR,
   STRAIT_REFUSED_PLAQUE,
+  ORD_WITNESS,
+  ORD_WITNESS_LATER,
+  WINK_WITNESS,
+  ORD_WITNESS_SPECTATOR,
   VESPER,
   VESPER_NEED_FOUNDRY,
   VESPER_UNLIGHT_ASK,
@@ -1898,6 +1902,43 @@ describe("The Strait is refused", () => {
     const g = applyStraitRefuse(gWorld, "g");
     expect(g.players.get("g")?.heard).toBe(STRAIT_SPECTATOR);
     expect(g.straitRefused).toBe(false);
+  });
+});
+
+describe("Ord witnesses the refused Strait", () => {
+  it("after the canal is shut Ord walks there; guests cannot take him", () => {
+    const ord = NAVE_NPCS.find((n) => n.id === "ord")!;
+    const w = emptyWorld();
+    w.straitRefused = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      aura: auraSeed(TEST_SERIAL),
+      beats: { ...emptyBeats(), straitRefuse: true, map: true },
+      x: ord.x,
+      y: ord.y,
+    });
+    const walked = applyTalk(w, "a", "ord");
+    const p = walked.players.get("a")!;
+    expect(p.heard).toBe(ORD_WITNESS);
+    expect(p.wink).toBe(WINK_WITNESS);
+    expect(p.beats.ordWitness).toBe(true);
+    expect(walked.ordAtStrait).toBe(true);
+    const moved = liveNpcs(false, false, false, false, false, true).find((n) => n.id === "ord")!;
+    expect(moved.role).toBe("At the Strait");
+    expect(moved.x).toBe(ORGAN_STRAIT.x);
+    walked.players.set("a", { ...p, x: moved.x, y: moved.y });
+    expect(applyTalk(walked, "a", "ord").players.get("a")?.heard).toBe(ORD_WITNESS_LATER);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+
+    const gWorld = emptyWorld();
+    gWorld.straitRefused = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: ord.x, y: ord.y, locked: true });
+    const g = applyTalk(gWorld, "g", "ord");
+    expect(g.players.get("g")?.heard).toBe(ORD_WITNESS_SPECTATOR);
+    expect(g.ordAtStrait).toBe(false);
   });
 });
 

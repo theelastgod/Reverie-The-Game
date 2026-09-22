@@ -32,6 +32,7 @@ export type Snap = {
   foundryDark?: boolean;
   annexHome?: boolean;
   straitRefused?: boolean;
+  ordAtStrait?: boolean;
   hallLamp?: boolean;
   standing?: { earth: number; sky: number; mortals: number; divinities: number };
 };

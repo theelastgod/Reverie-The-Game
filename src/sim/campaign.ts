@@ -62,6 +62,7 @@ export type Beats = {
   foundryDark: boolean;
   annexHome: boolean;
   straitRefuse: boolean;
+  ordWitness: boolean;
 };
 
 export type WeatherHeard = {
@@ -450,6 +451,13 @@ export const WINK_STRAIT_REFUSE =
   "An organ can stop. You unlit the heat, then you shut the mouth that fed it. Fetch would have left the canal paying.";
 export const STRAIT_NEED_DARK = "The Foundry still drinks. Unlight it first. The Strait will not refuse a live furnace.";
 export const STRAIT_REFUSED_LATER = "The water is not paying. The Foundry is dark. The process is quieter.";
+export const ORD_WITNESS =
+  "You refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.";
+export const ORD_WITNESS_LATER =
+  "The canal is shut. I am here so the number stays honest. The Foundry is dark. I still will not pretty it.";
+export const WINK_WITNESS =
+  "Ord left his desk for a refused organ. A schedule changed. Fetch would have left him counting yield.";
+export const ORD_WITNESS_SPECTATOR = "Ord is looking at a canal. Not with you.";
 export const STRAIT_SPECTATOR = "A canal. You do not refuse organs.";
 
 export const STRAIT_REFUSED_PLAQUE: Sign = {
@@ -800,6 +808,7 @@ export function emptyBeats(): Beats {
     foundryDark: false,
     annexHome: false,
     straitRefuse: false,
+    ordWitness: false,
   };
 }
 
@@ -1201,6 +1210,7 @@ export function liveNpcs(
   naraAtStrait = false,
   quillAtGrid = false,
   vesperAtFoundry = false,
+  ordAtStrait = false,
 ): Npc[] {
   let base = ioneGone ? [...NAVE_NPCS] : [...NAVE_NPCS, IONE];
   if (ordAtCable) {
@@ -1211,6 +1221,12 @@ export function liveNpcs(
   if (naraAtStrait) {
     base = base.map((n) =>
       n.id === "nara" ? { ...n, x: ORGAN_STRAIT.x, y: ORGAN_STRAIT.y + 48, role: "At the Strait" } : n,
+    );
+  }
+  if (ordAtStrait) {
+    const ox = naraAtStrait ? ORGAN_STRAIT.x + 56 : ORGAN_STRAIT.x;
+    base = base.map((n) =>
+      n.id === "ord" ? { ...n, x: ox, y: ORGAN_STRAIT.y + 48, role: "At the Strait" } : n,
     );
   }
   if (quillAtGrid) {

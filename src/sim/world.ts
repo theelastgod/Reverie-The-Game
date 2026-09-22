@@ -239,6 +239,10 @@ import {
   STRAIT_SPECTATOR,
   STRAIT_REFUSED_PLAQUE,
   straitRefusedPoi,
+  ORD_WITNESS,
+  ORD_WITNESS_LATER,
+  WINK_WITNESS,
+  ORD_WITNESS_SPECTATOR,
   passingCopy,
   passingResult,
   House,
@@ -357,6 +361,7 @@ export type WorldState = {
   foundryDark: boolean;
   annexHome: boolean;
   straitRefused: boolean;
+  ordAtStrait: boolean;
   hallLamp: boolean;
   standing: HouseScores;
   announced: string | null;
@@ -506,6 +511,7 @@ export function emptyWorld(): WorldState {
     foundryDark: false,
     annexHome: false,
     straitRefused: false,
+    ordAtStrait: false,
     hallLamp: false,
     standing: emptyScores(),
     announced: null,
@@ -763,7 +769,7 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry).find((n) => n.id === npcId) ??
+    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
@@ -846,6 +852,24 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   }
   if (id === "quill" && (p.guest || p.locked) && p.beats.spot) {
     players.set(playerId, { ...p, heard: QUILL_HANG_SPECTATOR });
+    return { ...w, players };
+  }
+  if (id === "ord" && !p.guest && !p.locked && (p.beats.straitRefuse || w.straitRefused)) {
+    if (p.beats.ordWitness) {
+      players.set(playerId, { ...p, heard: ORD_WITNESS_LATER, wink: visibleWink(false, WINK_WITNESS) });
+      return { ...w, players };
+    }
+    players.set(playerId, {
+      ...p,
+      beats: { ...p.beats, ordWitness: true, ord: true },
+      heard: ORD_WITNESS,
+      wink: visibleWink(false, WINK_WITNESS),
+      readiness: p.readiness + 1,
+    });
+    return { ...w, players, ordAtStrait: true };
+  }
+  if (id === "ord" && (p.guest || p.locked) && (p.beats.straitRefuse || w.straitRefused)) {
+    players.set(playerId, { ...p, heard: ORD_WITNESS_SPECTATOR });
     return { ...w, players };
   }
   if (id === "ord" && w.m3Open && !p.guest && !p.locked) {
@@ -1766,12 +1790,13 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry),
+    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait),
     stallDark: w.stallDark,
     vesperAtFoundry: w.vesperAtFoundry,
     foundryDark: w.foundryDark,
     annexHome: w.annexHome,
     straitRefused: w.straitRefused,
+    ordAtStrait: w.ordAtStrait,
     hallLamp: w.hallLamp,
     standing: w.standing,
     signs: w.signs,
