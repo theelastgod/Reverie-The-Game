@@ -495,6 +495,13 @@ import {
   HANG_PEOPLE_SPECTATOR,
   HANG_PEOPLE_PLAQUE,
   hangPeoplePoi,
+  RESTRAINT_PEOPLE_COPY,
+  WINK_RESTRAINT_PEOPLE,
+  RESTRAINT_PEOPLE_NEED,
+  RESTRAINT_PEOPLE_HELD,
+  RESTRAINT_PEOPLE_SPECTATOR,
+  RESTRAINT_PEOPLE_PLAQUE,
+  restraintPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1217,6 +1224,7 @@ export type WorldState = {
   listingPeopleHeld: boolean;
   marketPeopleHeld: boolean;
   hangPeopleHeld: boolean;
+  restraintPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1507,6 +1515,7 @@ export function emptyWorld(): WorldState {
     listingPeopleHeld: false,
     marketPeopleHeld: false,
     hangPeopleHeld: false,
+    restraintPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2731,7 +2740,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (sign.id === "vault-people") return applyVaultPeople(w, playerId);
     return applyDesk(w, playerId, "file");
   }
-  if (sign.id === SHRINE.id || sign.id === "insurance-people" || sign.id === "restore-people" || sign.id === "keep-people") {
+  if (sign.id === SHRINE.id || sign.id === "insurance-people" || sign.id === "restore-people" || sign.id === "keep-people" || sign.id === "restraint-people") {
+    if (w.hangPeopleHeld && !w.restraintPeopleHeld) return applyRestraintPeople(w, playerId);
+    if (sign.id === "restraint-people") return applyRestraintPeople(w, playerId);
     if (w.vaultPeopleHeld && !w.insurancePeopleHeld) return applyInsurancePeople(w, playerId);
     if (sign.id === "insurance-people") return applyInsurancePeople(w, playerId);
     if (w.funeralPeopleHeld && !w.restorePeopleHeld) return applyRestorePeople(w, playerId);
@@ -2882,6 +2893,7 @@ export function applyWinkSeed(
 export function applyRestraint(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  if (w.hangPeopleHeld && !w.restraintPeopleHeld) return applyRestraintPeople(w, playerId);
   const players = new Map(w.players);
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, heard: RESTRAINT_SPECTATOR, wink: visibleWink(true, WINK_RESTRAINT) });
@@ -4611,6 +4623,37 @@ export function applyHangPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, hangPeopleHeld: true, pois, signs };
 }
 
+export function applyRestraintPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, SHRINE.x, SHRINE.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: RESTRAINT_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_RESTRAINT_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.hangPeopleHeld) {
+    players.set(playerId, { ...p, heard: RESTRAINT_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.restraintPeopleHeld && p.beats.restraintPeople) {
+    players.set(playerId, { ...p, heard: RESTRAINT_PEOPLE_HELD, wink: visibleWink(false, WINK_RESTRAINT_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, restraintPeople: true },
+    heard: RESTRAINT_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_RESTRAINT_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "restraint-people")
+    ? w.pois.map((poi) => (poi.id === "restraint-people" ? restraintPeoplePoi() : poi))
+    : [...w.pois, restraintPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "restraint-people")
+    ? w.signs.map((s) => (s.id === "restraint-people" ? { ...RESTRAINT_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...RESTRAINT_PEOPLE_PLAQUE }];
+  return { ...w, players, restraintPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5818,6 +5861,7 @@ export function snapshot(w: WorldState) {
     listingPeopleHeld: w.listingPeopleHeld,
     marketPeopleHeld: w.marketPeopleHeld,
     hangPeopleHeld: w.hangPeopleHeld,
+    restraintPeopleHeld: w.restraintPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -1337,6 +1337,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "F bury the unnamed. Nara Vale is watching.";
     } else if (shrine && (me.guest || me.locked)) {
       this.prompt = "A shrine. You do not keep it.";
+    } else if (shrine && (me.beats.restraintPeople || snap.restraintPeopleHeld)) {
+      this.prompt = me.heard || "Restraint — people. Restraint still thins yield. Storm still burns it. Not a stick.";
+    } else if (shrine && snap.hangPeopleHeld && !me.guest) {
+      this.prompt = "F — holding-back as a house of people. Restraint still thins yield. Not a fetch.";
     } else if (shrine && (me.beats.keepPeople || snap.keepPeopleHeld)) {
       this.prompt = me.heard || "Keep — people. Eight Bestand. Not a stick.";
     } else if (shrine && snap.restorePeopleHeld && !me.guest) {

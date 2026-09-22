@@ -165,6 +165,7 @@ export type Beats = {
   listingPeople: boolean;
   marketPeople: boolean;
   hangPeople: boolean;
+  restraintPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -318,6 +319,7 @@ export type Poi = {
     | "listing-people"
     | "market-people"
     | "hang-people"
+    | "restraint-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2491,6 +2493,31 @@ export function hangPeoplePoi(): Poi {
     kind: "hang-people",
   };
 }
+
+export const RESTRAINT_PEOPLE_COPY =
+  "Holding-back is a house of people, not a dodge of process. Restraint still thins yield. Storm still burns it. Combat is not. This was not a fetch.";
+export const WINK_RESTRAINT_PEOPLE = "People, not a dodge stick. The token does not strike.";
+export const RESTRAINT_PEOPLE_NEED = "The hang as people first. Holding-back of people is not a fetch.";
+export const RESTRAINT_PEOPLE_HELD = "Holding-back already holds as people. Restraint still thins yield. Storm still burns it.";
+export const RESTRAINT_PEOPLE_SPECTATOR = "A shrine. You do not get a house of people.";
+
+export const RESTRAINT_PEOPLE_PLAQUE: Sign = {
+  id: "restraint-people",
+  title: "Restraint — people",
+  text: "A house of people. Restraint still thins yield. Storm still burns it. The number does not strike.",
+  x: SHRINE.x,
+  y: SHRINE.y,
+};
+
+export function restraintPeoplePoi(): Poi {
+  return {
+    id: "restraint-people",
+    name: "Restraint — people",
+    x: SHRINE.x,
+    y: SHRINE.y,
+    kind: "restraint-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3118,6 +3145,7 @@ export function emptyBeats(): Beats {
     listingPeople: false,
     marketPeople: false,
     hangPeople: false,
+    restraintPeople: false,
   };
 }
 

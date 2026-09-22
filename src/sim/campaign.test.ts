@@ -397,6 +397,12 @@ import {
   HANG_PEOPLE_HELD,
   HANG_PEOPLE_SPECTATOR,
   HANG_PEOPLE_PLAQUE,
+  RESTRAINT_PEOPLE_COPY,
+  WINK_RESTRAINT_PEOPLE,
+  RESTRAINT_PEOPLE_NEED,
+  RESTRAINT_PEOPLE_HELD,
+  RESTRAINT_PEOPLE_SPECTATOR,
+  RESTRAINT_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -970,6 +976,7 @@ import {
   applyListingPeople,
   applyMarketPeople,
   applyHangPeople,
+  applyRestraintPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -3922,6 +3929,50 @@ describe("Hang — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_STALL.x, y: CLEARING_STALL.y, locked: true });
     expect(applyHangPeople(gWorld, "g").players.get("g")?.heard).toBe(HANG_PEOPLE_SPECTATOR);
     expect(gWorld.hangPeopleHeld).toBe(false);
+  });
+});
+
+describe("Restraint — people", () => {
+  it("names holding-back as people after the hang; dodge still thins yield; guests cannot", () => {
+    const w = emptyWorld();
+    w.hangPeopleHeld = true;
+    w.lastGodNamed = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), hangPeople: true },
+      x: SHRINE.x,
+      y: SHRINE.y,
+    });
+    const named = applyRestraint(w, "a");
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(RESTRAINT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_RESTRAINT_PEOPLE);
+    expect(p.beats.restraintPeople).toBe(true);
+    expect(named.restraintHeld).toBe(false);
+    expect(named.restraintPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "restraint-people")?.name).toBe("Restraint — people");
+    expect(named.signs.find((s) => s.id === "restraint-people")?.title).toBe(RESTRAINT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Storm still burns");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyRestraintPeople(named, "a").players.get("a")?.heard).toBe(RESTRAINT_PEOPLE_HELD);
+
+    const stance = applyRestraint(named, "a");
+    expect(stance.restraintHeld).toBe(true);
+    expect(stance.players.get("a")?.beats.restraint).toBe(true);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: SHRINE.x, y: SHRINE.y });
+    expect(applyRestraintPeople(early, "a").players.get("a")?.heard).toBe(RESTRAINT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.hangPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
+    expect(applyRestraintPeople(gWorld, "g").players.get("g")?.heard).toBe(RESTRAINT_PEOPLE_SPECTATOR);
+    expect(gWorld.restraintPeopleHeld).toBe(false);
   });
 });
 
