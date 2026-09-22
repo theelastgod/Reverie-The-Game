@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 73** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 74** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -317,7 +317,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Vesper Hale leaves if you keep a Clearing with Cold heat still live. Plaque/POI Vesper Hale — gone. Unlight keeps her. Not a fetch.
 - Refuse never bought the heat. Guests cannot walk her off. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 73 (do this next)
+## Stage 73 (landed)
+- After Appearance, F at the Clearing runs credits. Plaque/POI Credits. Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Then the MMO.
+- Guests cannot take the names. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 74 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

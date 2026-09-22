@@ -183,6 +183,12 @@ import {
   WINK_STIPEND,
   STIPEND_SINK,
   APPEAR_PLAQUE,
+  CREDITS_COPY,
+  WINK_CREDITS,
+  CREDITS_NEED,
+  CREDITS_HELD,
+  CREDITS_SPECTATOR,
+  CREDITS_PLAQUE,
   AURA_DECAY,
   APPEAR_SLOW,
   auraTowardSeed,
@@ -431,6 +437,7 @@ import {
   applyIoneMark,
   applyClearing,
   applyPassing,
+  applyCredits,
   applyStorm,
   applyAnnounce,
   applyBlitz,
@@ -1998,6 +2005,38 @@ describe("Movement IV Clearing and Passing", () => {
     expect(damageFor(sunk.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
     expect(GESTELL_HOT).toBe(91);
     expect(PASSING_FAIL).toContain("Clearing");
+
+    sunk.players.set("a", { ...sunk.players.get("a")!, x: CLEARING_RING.x, y: CLEARING_RING.y });
+    const named = applyPassing(sunk, "a");
+    expect(named.players.get("a")?.heard).toBe(CREDITS_COPY);
+    expect(named.players.get("a")?.wink).toBe(WINK_CREDITS);
+    expect(named.players.get("a")?.beats.credits).toBe(true);
+    expect(named.creditsHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.id === CLEARING_RING.id)?.kind).toBe("clearing-credits");
+    expect(named.signs.find((s) => s.id === CLEARING_RING.id)?.title).toBe(CREDITS_PLAQUE.title);
+    expect(named.players.get("a")?.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(applyCredits(named, "a").players.get("a")?.heard).toBe(CREDITS_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+    });
+    expect(applyCredits(early, "a").players.get("a")?.heard).toBe(CREDITS_NEED);
+
+    const gCredits = emptyWorld();
+    gCredits.appearWorld = true;
+    gCredits.players.set("g", {
+      ...spawnGuest("g"),
+      x: CLEARING_RING.x,
+      y: CLEARING_RING.y,
+      locked: true,
+      beats: { ...emptyBeats(), passing: true },
+    });
+    expect(applyCredits(gCredits, "g").players.get("g")?.heard).toBe(CREDITS_SPECTATOR);
+    expect(gCredits.creditsHeld).toBe(false);
 
     const gWorld = emptyWorld();
     gWorld.players.set("g", { ...spawnGuest("g"), x: CLEARING_RING.x, y: CLEARING_RING.y });

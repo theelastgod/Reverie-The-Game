@@ -94,6 +94,7 @@ export type Beats = {
   ordGone: boolean;
   quillGone: boolean;
   vesperGone: boolean;
+  credits: boolean;
 };
 
 export type WeatherHeard = {
@@ -148,6 +149,7 @@ export type Poi = {
     | "clearing-ring"
     | "clearing-held"
     | "clearing-appear"
+    | "clearing-credits"
     | "clearing-absence"
     | "clearing-empty"
     | "clearing-hijack"
@@ -1332,6 +1334,7 @@ export function emptyBeats(): Beats {
     ordGone: false,
     quillGone: false,
     vesperGone: false,
+    credits: false,
   };
 }
 
@@ -1881,6 +1884,31 @@ export function appearPoi(): Poi {
     x: CLEARING_RING.x,
     y: CLEARING_RING.y,
     kind: "clearing-appear",
+  };
+}
+
+export const CREDITS_COPY =
+  "Reverie Studios. The Last God. Lucah Rosenberg-Lee. Collective. The hour is residual. The MMO is the rest of life. No mint. This was not a fetch.";
+export const WINK_CREDITS = "A trace names the room. Combat is not. The token does not buy the hour.";
+export const CREDITS_NEED = "The city is not world yet. Credits wait on Appearance.";
+export const CREDITS_HELD = "The names already hold. The MMO is the rest of life.";
+export const CREDITS_SPECTATOR = "A ring. You do not get the names.";
+
+export const CREDITS_PLAQUE: Sign = {
+  id: CLEARING_RING.id,
+  title: "Credits",
+  text: "Reverie Studios. The Last God. Lucah Rosenberg-Lee. Collective. Then the MMO. The number does not strike.",
+  x: CLEARING_RING.x,
+  y: CLEARING_RING.y,
+};
+
+export function creditsPoi(): Poi {
+  return {
+    id: CLEARING_RING.id,
+    name: "Credits",
+    x: CLEARING_RING.x,
+    y: CLEARING_RING.y,
+    kind: "clearing-credits",
   };
 }
 export const AURA_DECAY = 1;

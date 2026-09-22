@@ -285,6 +285,13 @@ import {
   STIPEND_SINK,
   APPEAR_PLAQUE,
   appearPoi,
+  CREDITS_COPY,
+  WINK_CREDITS,
+  CREDITS_NEED,
+  CREDITS_HELD,
+  CREDITS_SPECTATOR,
+  CREDITS_PLAQUE,
+  creditsPoi,
   WINK_PASS_FAIL,
   FAIL_PLAQUE,
   FAIL_LATER,
@@ -602,6 +609,7 @@ export type WorldState = {
   deskVaulted: boolean;
   appearSlow: boolean;
   appearWorld: boolean;
+  creditsHeld: boolean;
   naraAtClearing: boolean;
   hijacked: boolean;
   hijackBy: "" | "safety" | "cold";
@@ -793,6 +801,7 @@ export function emptyWorld(): WorldState {
     deskVaulted: false,
     appearSlow: false,
     appearWorld: false,
+    creditsHeld: false,
     naraAtClearing: false,
     hijacked: false,
     hijackBy: "",
@@ -2808,6 +2817,7 @@ export function snapshot(w: WorldState) {
     deskVaulted: w.deskVaulted,
     appearSlow: w.appearSlow,
     appearWorld: w.appearWorld,
+    creditsHeld: w.creditsHeld,
     naraAtClearing: w.naraAtClearing,
     hijacked: w.hijacked,
     hijackBy: w.hijackBy,
@@ -3275,6 +3285,39 @@ export function applyStorm(w: WorldState, playerId: string): WorldState {
   };
 }
 
+export function applyCredits(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: CREDITS_SPECTATOR, wink: visibleWink(true, WINK_CREDITS) });
+    return { ...w, players };
+  }
+  if (!w.appearWorld && w.passing.outcome !== "appearance") {
+    players.set(playerId, { ...p, heard: CREDITS_NEED });
+    return { ...w, players };
+  }
+  if (w.creditsHeld && p.beats.credits) {
+    players.set(playerId, { ...p, heard: CREDITS_HELD, wink: visibleWink(false, WINK_CREDITS) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, credits: true },
+    heard: CREDITS_COPY,
+    wink: visibleWink(false, WINK_CREDITS),
+  });
+  return {
+    ...w,
+    players,
+    creditsHeld: true,
+    pois: w.pois.map((poi) => (poi.id === CLEARING_RING.id ? creditsPoi() : poi)),
+    signs: w.signs.map((s) => (s.id === CLEARING_RING.id ? { ...CREDITS_PLAQUE } : s)).concat(
+      w.signs.some((s) => s.id === CLEARING_RING.id) ? [] : [{ ...CREDITS_PLAQUE }],
+    ),
+  };
+}
+
 export function applyPassing(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CLEARING_RING.x, CLEARING_RING.y, 64)) return w;
@@ -3282,6 +3325,9 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, heard: CLEARING_SPECTATOR, wink: visibleWink(true, WINK_TURN) });
     return { ...w, players };
+  }
+  if ((w.appearWorld || w.passing.outcome === "appearance") && p.beats.passing) {
+    return applyCredits(w, playerId);
   }
   if (!w.clearingOpen) {
     const failed = p.beats.clearing;

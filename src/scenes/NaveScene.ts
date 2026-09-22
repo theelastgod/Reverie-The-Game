@@ -523,6 +523,8 @@ export class NaveScene extends Phaser.Scene {
                             ? 0x7eb6ff
                             : poi.kind === "clearing-appear"
                               ? 0xc9a56a
+                            : poi.kind === "clearing-credits"
+                              ? 0xc9a56a
                             : poi.kind === "clearing-absence"
                               ? 0x7a1028
                             : poi.kind === "clearing-empty"
@@ -785,8 +787,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A ring in the asphalt. You cannot prepare the ground.";
     } else if (ring && snap.war?.winner) {
       this.prompt = snap.war.omen || me.heard;
+    } else if (ring && (snap.creditsHeld || me.beats.credits)) {
+      this.prompt = me.heard || "Credits. Reverie Studios. The Last God. Then the MMO.";
     } else if (ring && (snap.appearWorld || snap.passing.outcome === "appearance")) {
-      this.prompt = me.heard || "The Clearing — world. A stipend for the shrine. Cult upkeep. Not a stick.";
+      this.prompt = me.heard || "F — credits. Reverie Studios. The Last God. Then the MMO. Not a stick.";
     } else if (ring && snap.passing.outcome === "absence" && (snap.naraGone || snap.ordGone || snap.quillGone)) {
       this.prompt = me.heard || "The Clearing — empty party. They will not stand. You cannot force the hour alone.";
     } else if (ring && (snap.naraAtClearing || snap.passing.outcome === "absence")) {
@@ -1077,7 +1081,9 @@ export class NaveScene extends Phaser.Scene {
                     : "The Cable"
               : "Movement III"
         : ring
-          ? snap.appearWorld || snap.passing.outcome === "appearance"
+          ? snap.creditsHeld || me.beats.credits
+            ? "Credits"
+          : snap.appearWorld || snap.passing.outcome === "appearance"
             ? "The Clearing — world"
             : snap.naraAtClearing || snap.passing.outcome === "absence"
             ? "The Clearing — absence"
