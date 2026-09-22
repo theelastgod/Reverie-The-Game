@@ -409,6 +409,12 @@ import {
   DODGE_PEOPLE_HELD,
   DODGE_PEOPLE_SPECTATOR,
   DODGE_PEOPLE_PLAQUE,
+  HEAVY_PEOPLE_COPY,
+  WINK_HEAVY_PEOPLE,
+  HEAVY_PEOPLE_NEED,
+  HEAVY_PEOPLE_HELD,
+  HEAVY_PEOPLE_SPECTATOR,
+  HEAVY_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -984,6 +990,7 @@ import {
   applyHangPeople,
   applyRestraintPeople,
   applyDodgePeople,
+  applyHeavyPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -4018,6 +4025,44 @@ describe("Dodge — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: SHRINE.x, y: SHRINE.y, locked: true });
     expect(applyDodgePeople(gWorld, "g").players.get("g")?.heard).toBe(DODGE_PEOPLE_SPECTATOR);
     expect(gWorld.dodgePeopleHeld).toBe(false);
+  });
+});
+
+describe("Heavy — people", () => {
+  it("names heavy as people after dodge; same number; guests cannot", () => {
+    const w = emptyWorld();
+    w.dodgePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), dodgePeople: true },
+      x: GUEST_ARENA.x,
+      y: GUEST_ARENA.y,
+    });
+    const named = applyRead(w, "a", GUEST_ARENA.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HEAVY_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HEAVY_PEOPLE);
+    expect(p.beats.heavyPeople).toBe(true);
+    expect(named.heavyPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "heavy-people")?.name).toBe("Heavy — people");
+    expect(named.signs.find((s) => s.id === "heavy-people")?.title).toBe(HEAVY_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Same number");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHeavyPeople(named, "a").players.get("a")?.heard).toBe(HEAVY_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: GUEST_ARENA.x, y: GUEST_ARENA.y });
+    expect(applyHeavyPeople(early, "a").players.get("a")?.heard).toBe(HEAVY_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.dodgePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: GUEST_ARENA.x, y: GUEST_ARENA.y, locked: true });
+    expect(applyHeavyPeople(gWorld, "g").players.get("g")?.heard).toBe(HEAVY_PEOPLE_SPECTATOR);
+    expect(gWorld.heavyPeopleHeld).toBe(false);
   });
 });
 

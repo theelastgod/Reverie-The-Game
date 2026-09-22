@@ -509,6 +509,13 @@ import {
   DODGE_PEOPLE_SPECTATOR,
   DODGE_PEOPLE_PLAQUE,
   dodgePeoplePoi,
+  HEAVY_PEOPLE_COPY,
+  WINK_HEAVY_PEOPLE,
+  HEAVY_PEOPLE_NEED,
+  HEAVY_PEOPLE_HELD,
+  HEAVY_PEOPLE_SPECTATOR,
+  HEAVY_PEOPLE_PLAQUE,
+  heavyPeoplePoi,
   underPeoplePoi,
   arenaPeoplePoi,
   annexPeoplePoi,
@@ -1233,6 +1240,7 @@ export type WorldState = {
   hangPeopleHeld: boolean;
   restraintPeopleHeld: boolean;
   dodgePeopleHeld: boolean;
+  heavyPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1525,6 +1533,7 @@ export function emptyWorld(): WorldState {
     hangPeopleHeld: false,
     restraintPeopleHeld: false,
     dodgePeopleHeld: false,
+    heavyPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2671,7 +2680,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === "safety-plaque" && w.weatherNamed) return applyAddressed(w, playerId);
   if (sign.id === IONE.id) return applyIoneMark(w, playerId);
-  if (sign.id === GUEST_ARENA.id) {
+  if (sign.id === GUEST_ARENA.id || sign.id === "heavy-people") {
+    if (w.dodgePeopleHeld && !w.heavyPeopleHeld) return applyHeavyPeople(w, playerId);
+    if (sign.id === "heavy-people") return applyHeavyPeople(w, playerId);
     if (w.annexPeopleHeld && !w.arenaPeopleHeld && !p.guest && !p.locked) return applyArenaPeople(w, playerId);
     return applyArena(w, playerId);
   }
@@ -4696,6 +4707,37 @@ export function applyDodgePeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, dodgePeopleHeld: true, pois, signs };
 }
 
+export function applyHeavyPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, GUEST_ARENA.x, GUEST_ARENA.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: HEAVY_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_HEAVY_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.dodgePeopleHeld) {
+    players.set(playerId, { ...p, heard: HEAVY_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.heavyPeopleHeld && p.beats.heavyPeople) {
+    players.set(playerId, { ...p, heard: HEAVY_PEOPLE_HELD, wink: visibleWink(false, WINK_HEAVY_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, heavyPeople: true },
+    heard: HEAVY_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_HEAVY_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "heavy-people")
+    ? w.pois.map((poi) => (poi.id === "heavy-people" ? heavyPeoplePoi() : poi))
+    : [...w.pois, heavyPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "heavy-people")
+    ? w.signs.map((s) => (s.id === "heavy-people" ? { ...HEAVY_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...HEAVY_PEOPLE_PLAQUE }];
+  return { ...w, players, heavyPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -5905,6 +5947,7 @@ export function snapshot(w: WorldState) {
     hangPeopleHeld: w.hangPeopleHeld,
     restraintPeopleHeld: w.restraintPeopleHeld,
     dodgePeopleHeld: w.dodgePeopleHeld,
+    heavyPeopleHeld: w.heavyPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

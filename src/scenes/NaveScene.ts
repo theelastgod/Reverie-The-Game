@@ -922,8 +922,11 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "Dispatch. Public screening. The Last God is a room, not a stick.";
     } else if (screening) {
       this.prompt = "F — take the public screening. Observer proximity. Not a stick.";
+    } else if (arena && (me.beats.heavyPeople || snap.heavyPeopleHeld)) {
+      this.prompt = me.heard || "Heavy — people. Same number. Telegraph still drops. Not a stick.";
+    } else if (arena && snap.dodgePeopleHeld && !me.guest) {
+      this.prompt = "F — heavy as a house of people. Same number. Telegraph still drops. Not a fetch.";
     } else if (arena && (me.beats.arenaPeople || snap.arenaPeopleHeld)) {
-      this.prompt = me.heard || "Arena — people. Practice still has no spoils. Not a stick.";
     } else if (arena && snap.annexPeopleHeld && !me.guest) {
       this.prompt = "F — the arena as a house of people. Practice still has no spoils. Not a fetch.";
     } else if (arena && (snap.arenaHeld || me.beats.arena)) {

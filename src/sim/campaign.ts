@@ -167,6 +167,7 @@ export type Beats = {
   hangPeople: boolean;
   restraintPeople: boolean;
   dodgePeople: boolean;
+  heavyPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -322,6 +323,7 @@ export type Poi = {
     | "hang-people"
     | "restraint-people"
     | "dodge-people"
+    | "heavy-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -2545,6 +2547,31 @@ export function dodgePeoplePoi(): Poi {
     kind: "dodge-people",
   };
 }
+
+export const HEAVY_PEOPLE_COPY =
+  "Heavy is a house of people, not a bigger stick. Same number. Telegraph still drops. Combat is not. This was not a fetch.";
+export const WINK_HEAVY_PEOPLE = "People, not a heavy stick. The token does not strike.";
+export const HEAVY_PEOPLE_NEED = "Dodge as people first. A heavy of people is not a fetch.";
+export const HEAVY_PEOPLE_HELD = "Heavy already holds as people. Same number. Telegraph still drops.";
+export const HEAVY_PEOPLE_SPECTATOR = "An arena. You do not get a house of people.";
+
+export const HEAVY_PEOPLE_PLAQUE: Sign = {
+  id: "heavy-people",
+  title: "Heavy — people",
+  text: "A house of people. Same number. Telegraph still drops. The number does not strike.",
+  x: GUEST_ARENA.x,
+  y: GUEST_ARENA.y,
+};
+
+export function heavyPeoplePoi(): Poi {
+  return {
+    id: "heavy-people",
+    name: "Heavy — people",
+    x: GUEST_ARENA.x,
+    y: GUEST_ARENA.y,
+    kind: "heavy-people",
+  };
+}
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";
 export const SPECTATE_CAP = 3;
 export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not strike harder.";
@@ -3174,6 +3201,7 @@ export function emptyBeats(): Beats {
     hangPeople: false,
     restraintPeople: false,
     dodgePeople: false,
+    heavyPeople: false,
   };
 }
 
