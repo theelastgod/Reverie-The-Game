@@ -101,6 +101,7 @@ export type Snap = {
   straitPeopleHeld?: boolean;
   cablePeopleHeld?: boolean;
   organsPeopleHeld?: boolean;
+  vesperPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

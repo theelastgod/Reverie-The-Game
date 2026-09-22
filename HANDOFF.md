@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 112** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 113** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -474,7 +474,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After Foundry, Strait, and Cable as people, F at the House hall gathers the organs. Plaque/POI The organs — people. Tithe still costs. Not a fetch.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 112 (do this next)
+## Stage 112 (landed)
+- After the organs as people, F at Vesper's desk: a house of people, not a concentrator. Plaque/POI Vesper — people. She will not sell a god.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 113 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed. Organs as people are in.
 
 ## Rules

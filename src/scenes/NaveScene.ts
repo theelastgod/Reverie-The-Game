@@ -565,6 +565,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "organs-people"
                         ? 0xc9a56a
+                      : poi.kind === "vesper-people"
+                        ? 0xc9a56a
                       : poi.kind === "vesper-gone"
                         ? 0x7a1028
                       : poi.kind === "party-blind"
@@ -1015,6 +1017,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "Nara Vale will not stand in a hole you left as wreckage.";
     } else if (desk && (me.guest || me.locked)) {
       this.prompt = "A woman at a desk. She is not speaking to you.";
+    } else if (desk && (me.beats.vesperPeople || snap.vesperPeopleHeld)) {
+      this.prompt = me.heard || "Vesper — people. She will not sell a god. Not a stick.";
+    } else if (desk && snap.organsPeopleHeld && !me.guest) {
+      this.prompt = "F — Vesper's desk as a house of people. She will not sell a god. Not a fetch.";
     } else if (desk && snap.vesperGone) {
       this.prompt = me.heard || "Vesper Hale is gone. The furnace kept the heat.";
     } else if (desk && (me.beats.vesperNoGod || snap.vesperNoGod)) {

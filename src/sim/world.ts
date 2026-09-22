@@ -269,6 +269,13 @@ import {
   ORGANS_PEOPLE_SPECTATOR,
   ORGANS_PEOPLE_PLAQUE,
   organsPeoplePoi,
+  VESPER_PEOPLE_COPY,
+  WINK_VESPER_PEOPLE,
+  VESPER_PEOPLE_NEED,
+  VESPER_PEOPLE_HELD,
+  VESPER_PEOPLE_SPECTATOR,
+  VESPER_PEOPLE_PLAQUE,
+  vesperPeoplePoi,
   straitPeoplePoi,
   WINK_PARTY_WALK,
   PARTY_NEED,
@@ -949,6 +956,7 @@ export type WorldState = {
   straitPeopleHeld: boolean;
   cablePeopleHeld: boolean;
   organsPeopleHeld: boolean;
+  vesperPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1206,6 +1214,7 @@ export function emptyWorld(): WorldState {
     straitPeopleHeld: false,
     cablePeopleHeld: false,
     organsPeopleHeld: false,
+    vesperPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -2388,7 +2397,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return { ...w, players };
   }
   if (sign.id === CLEARING_RING.id) return applyClearing(w, playerId, "keep");
-  if (sign.id === OPERATOR_DESK.id) {
+  if (sign.id === OPERATOR_DESK.id || sign.id === "vesper-people") {
+    if (w.organsPeopleHeld && !w.vesperPeopleHeld) return applyVesperPeople(w, playerId);
+    if (sign.id === "vesper-people") return applyVesperPeople(w, playerId);
     if (w.lastGodNamed) return applyVesperNoGod(w, playerId);
     return applyOperator(w, playerId, "hear");
   }
@@ -3172,6 +3183,37 @@ export function applyOrgansPeople(w: WorldState, playerId: string): WorldState {
     ? w.signs.map((s) => (s.id === "organs-people" ? { ...ORGANS_PEOPLE_PLAQUE } : s))
     : [...w.signs, { ...ORGANS_PEOPLE_PLAQUE }];
   return { ...w, players, organsPeopleHeld: true, pois, signs };
+}
+
+export function applyVesperPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: VESPER_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_VESPER_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.organsPeopleHeld) {
+    players.set(playerId, { ...p, heard: VESPER_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.vesperPeopleHeld && p.beats.vesperPeople) {
+    players.set(playerId, { ...p, heard: VESPER_PEOPLE_HELD, wink: visibleWink(false, WINK_VESPER_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, vesperPeople: true },
+    heard: VESPER_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_VESPER_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "vesper-people")
+    ? w.pois.map((poi) => (poi.id === "vesper-people" ? vesperPeoplePoi() : poi))
+    : [...w.pois, vesperPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "vesper-people")
+    ? w.signs.map((s) => (s.id === "vesper-people" ? { ...VESPER_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...VESPER_PEOPLE_PLAQUE }];
+  return { ...w, players, vesperPeopleHeld: true, pois, signs };
 }
 
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
@@ -4344,6 +4386,7 @@ export function snapshot(w: WorldState) {
     straitPeopleHeld: w.straitPeopleHeld,
     cablePeopleHeld: w.cablePeopleHeld,
     organsPeopleHeld: w.organsPeopleHeld,
+    vesperPeopleHeld: w.vesperPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

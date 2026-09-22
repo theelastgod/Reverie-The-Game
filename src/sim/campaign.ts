@@ -132,6 +132,7 @@ export type Beats = {
   straitPeople: boolean;
   cablePeople: boolean;
   organsPeople: boolean;
+  vesperPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -252,6 +253,7 @@ export type Poi = {
     | "strait-people"
     | "cable-people"
     | "organs-people"
+    | "vesper-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -1896,6 +1898,31 @@ export function organsPeoplePoi(): Poi {
   };
 }
 
+export const VESPER_PEOPLE_COPY =
+  "Vesper's desk is a house of people, not a concentrator of process. She will not sell a god. Combat is not. This was not a fetch.";
+export const WINK_VESPER_PEOPLE = "People, not yield. The token does not strike.";
+export const VESPER_PEOPLE_NEED = "The organs as people first. A desk of people is not a fetch.";
+export const VESPER_PEOPLE_HELD = "The desk already holds as people. She will not sell a god.";
+export const VESPER_PEOPLE_SPECTATOR = "A desk. You do not get a house of people.";
+
+export const VESPER_PEOPLE_PLAQUE: Sign = {
+  id: "vesper-people",
+  title: "Vesper — people",
+  text: "A house of people. She will not sell a god. The number does not strike.",
+  x: OPERATOR_DESK.x,
+  y: OPERATOR_DESK.y,
+};
+
+export function vesperPeoplePoi(): Poi {
+  return {
+    id: "vesper-people",
+    name: "Vesper — people",
+    x: OPERATOR_DESK.x,
+    y: OPERATOR_DESK.y,
+    kind: "vesper-people",
+  };
+}
+
 export const QUILL_UNFLAG_ASK =
   "The street is still spoils. Unflag it. Cult hangs. Seconds should not. I will keep the kerb.";
 export const QUILL_UNFLAG_WAIT =
@@ -2183,6 +2210,7 @@ export function emptyBeats(): Beats {
     straitPeople: false,
     cablePeople: false,
     organsPeople: false,
+    vesperPeople: false,
   };
 }
 

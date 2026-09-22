@@ -199,6 +199,12 @@ import {
   ORGANS_PEOPLE_HELD,
   ORGANS_PEOPLE_SPECTATOR,
   ORGANS_PEOPLE_PLAQUE,
+  VESPER_PEOPLE_COPY,
+  WINK_VESPER_PEOPLE,
+  VESPER_PEOPLE_NEED,
+  VESPER_PEOPLE_HELD,
+  VESPER_PEOPLE_SPECTATOR,
+  VESPER_PEOPLE_PLAQUE,
   WINK_PARTY_WALK,
   PARTY_NEED,
   PARTY_HELD,
@@ -735,6 +741,7 @@ import {
   applyStraitPeople,
   applyCablePeople,
   applyOrgansPeople,
+  applyVesperPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -2304,6 +2311,44 @@ describe("The organs — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: HOUSE_HALL.x, y: HOUSE_HALL.y, locked: true });
     expect(applyOrgansPeople(gWorld, "g").players.get("g")?.heard).toBe(ORGANS_PEOPLE_SPECTATOR);
     expect(gWorld.organsPeopleHeld).toBe(false);
+  });
+});
+
+describe("Vesper — people", () => {
+  it("names Vesper's desk as people after the organs; she will not sell a god; guests cannot", () => {
+    const w = emptyWorld();
+    w.organsPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), organsPeople: true },
+      x: OPERATOR_DESK.x,
+      y: OPERATOR_DESK.y,
+    });
+    const named = applyRead(w, "a", OPERATOR_DESK.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(VESPER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_VESPER_PEOPLE);
+    expect(p.beats.vesperPeople).toBe(true);
+    expect(named.vesperPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "vesper-people")?.name).toBe("Vesper — people");
+    expect(named.signs.find((s) => s.id === "vesper-people")?.title).toBe(VESPER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("will not sell a god");
+    expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
+    expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyVesperPeople(named, "a").players.get("a")?.heard).toBe(VESPER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: OPERATOR_DESK.x, y: OPERATOR_DESK.y });
+    expect(applyVesperPeople(early, "a").players.get("a")?.heard).toBe(VESPER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.organsPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: OPERATOR_DESK.x, y: OPERATOR_DESK.y, locked: true });
+    expect(applyVesperPeople(gWorld, "g").players.get("g")?.heard).toBe(VESPER_PEOPLE_SPECTATOR);
+    expect(gWorld.vesperPeopleHeld).toBe(false);
   });
 });
 
