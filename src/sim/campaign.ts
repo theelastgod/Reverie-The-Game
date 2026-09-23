@@ -243,6 +243,9 @@ export type Beats = {
   residualPeople: boolean;
   equalPeople: boolean;
   addressedPeople: boolean;
+  backPeople: boolean;
+  seedPeople: boolean;
+  invitePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -474,6 +477,9 @@ export type Poi = {
     | "residual-people"
     | "equal-people"
     | "addressed-people"
+    | "back-people"
+    | "seed-people"
+    | "invite-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4575,6 +4581,81 @@ export function addressedPeoplePoi(): Poi {
   };
 }
 
+export const BACK_PEOPLE_COPY =
+  "The storm at your back is a house of people, not a kit of process. Ruin-angel still names it without burning readiness. Combat is not. This was not a fetch.";
+export const WINK_BACK_PEOPLE = "People, not a back stick. The token does not strike.";
+export const BACK_PEOPLE_NEED = "Addressing as people first. A storm at your back of people is not a fetch.";
+export const BACK_PEOPLE_HELD = "The storm at your back already holds as people. Ruin-angel still names it without burning readiness.";
+export const BACK_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const BACK_PEOPLE_PLAQUE: Sign = {
+  id: "back-people",
+  title: "Back — people",
+  text: "A house of people. Ruin-angel still names the storm at your back without burning readiness. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function backPeoplePoi(): Poi {
+  return {
+    id: "back-people",
+    name: "Back — people",
+    x: 720,
+    y: 520,
+    kind: "back-people",
+  };
+}
+
+export const SEED_PEOPLE_COPY =
+  "The palindrome seed is a house of people, not a serial of process. Palindrome serials still seed a Wink at the prior hour. Then bury. Combat is not. This was not a fetch.";
+export const WINK_SEED_PEOPLE = "People, not a seed stick. The token does not strike.";
+export const SEED_PEOPLE_NEED = "The storm at your back as people first. A palindrome seed of people is not a fetch.";
+export const SEED_PEOPLE_HELD = "The palindrome seed already holds as people. Palindrome serials still seed a Wink at the prior hour. Then bury.";
+export const SEED_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SEED_PEOPLE_PLAQUE: Sign = {
+  id: "seed-people",
+  title: "Seed — people",
+  text: "A house of people. Palindrome serials still seed a Wink at the prior hour. Then bury. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function seedPeoplePoi(): Poi {
+  return {
+    id: "seed-people",
+    name: "Seed — people",
+    x: 720,
+    y: 520,
+    kind: "seed-people",
+  };
+}
+
+export const INVITE_PEOPLE_COPY =
+  "The invite is a house of people, not a party of process. After named weather, F near another Angel still asks them to walk the hour. Combat is not. This was not a fetch.";
+export const WINK_INVITE_PEOPLE = "People, not an invite stick. The token does not strike.";
+export const INVITE_PEOPLE_NEED = "The palindrome seed as people first. An invite of people is not a fetch.";
+export const INVITE_PEOPLE_HELD = "The invite already holds as people. After named weather, F near another Angel still asks them to walk the hour.";
+export const INVITE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const INVITE_PEOPLE_PLAQUE: Sign = {
+  id: "invite-people",
+  title: "Invite — people",
+  text: "A house of people. After named weather, F near another Angel still asks them to walk the hour. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function invitePeoplePoi(): Poi {
+  return {
+    id: "invite-people",
+    name: "Invite — people",
+    x: 720,
+    y: 520,
+    kind: "invite-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5305,6 +5386,9 @@ export function emptyBeats(): Beats {
     residualPeople: false,
     equalPeople: false,
     addressedPeople: false,
+    backPeople: false,
+    seedPeople: false,
+    invitePeople: false,
   };
 }
 

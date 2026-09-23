@@ -868,6 +868,24 @@ import {
   ADDRESSED_PEOPLE_HELD,
   ADDRESSED_PEOPLE_SPECTATOR,
   ADDRESSED_PEOPLE_PLAQUE,
+  BACK_PEOPLE_COPY,
+  WINK_BACK_PEOPLE,
+  BACK_PEOPLE_NEED,
+  BACK_PEOPLE_HELD,
+  BACK_PEOPLE_SPECTATOR,
+  BACK_PEOPLE_PLAQUE,
+  SEED_PEOPLE_COPY,
+  WINK_SEED_PEOPLE,
+  SEED_PEOPLE_NEED,
+  SEED_PEOPLE_HELD,
+  SEED_PEOPLE_SPECTATOR,
+  SEED_PEOPLE_PLAQUE,
+  INVITE_PEOPLE_COPY,
+  WINK_INVITE_PEOPLE,
+  INVITE_PEOPLE_NEED,
+  INVITE_PEOPLE_HELD,
+  INVITE_PEOPLE_SPECTATOR,
+  INVITE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1520,6 +1538,9 @@ import {
   applyResidualPeople,
   applyEqualPeople,
   applyAddressedPeople,
+  applyBackPeople,
+  applySeedPeople,
+  applyInvitePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -7577,6 +7598,123 @@ describe("Addressed — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyAddressedPeople(gWorld, "g").players.get("g")?.heard).toBe(ADDRESSED_PEOPLE_SPECTATOR);
     expect(gWorld.addressedPeopleHeld).toBe(false);
+  });
+});
+
+describe("Back — people", () => {
+  it("names the storm at your back as people after addressing; ruin-angel still names it without burning readiness; guests cannot", () => {
+    const w = emptyWorld();
+    w.addressedPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), addressedPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BACK_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BACK_PEOPLE);
+    expect(p.beats.backPeople).toBe(true);
+    expect(named.backPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "back-people")?.name).toBe("Back — people");
+    expect(named.signs.find((s) => s.id === "back-people")?.title).toBe(BACK_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("without burning readiness");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBackPeople(named, "a").players.get("a")?.heard).toBe(BACK_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyBackPeople(early, "a").players.get("a")?.heard).toBe(BACK_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.addressedPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyBackPeople(gWorld, "g").players.get("g")?.heard).toBe(BACK_PEOPLE_SPECTATOR);
+    expect(gWorld.backPeopleHeld).toBe(false);
+  });
+});
+
+describe("Seed — people", () => {
+  it("names the palindrome seed as people after the storm at your back; then bury; guests cannot", () => {
+    const w = emptyWorld();
+    w.backPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), backPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SEED_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SEED_PEOPLE);
+    expect(p.beats.seedPeople).toBe(true);
+    expect(named.seedPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "seed-people")?.name).toBe("Seed — people");
+    expect(named.signs.find((s) => s.id === "seed-people")?.title).toBe(SEED_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Palindrome serials still seed a Wink at the prior hour");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySeedPeople(named, "a").players.get("a")?.heard).toBe(SEED_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySeedPeople(early, "a").players.get("a")?.heard).toBe(SEED_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.backPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySeedPeople(gWorld, "g").players.get("g")?.heard).toBe(SEED_PEOPLE_SPECTATOR);
+    expect(gWorld.seedPeopleHeld).toBe(false);
+  });
+});
+
+describe("Invite — people", () => {
+  it("names the invite as people after the palindrome seed; F still asks another Angel to walk the hour; guests cannot", () => {
+    const w = emptyWorld();
+    w.seedPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), seedPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(INVITE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_INVITE_PEOPLE);
+    expect(p.beats.invitePeople).toBe(true);
+    expect(named.invitePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "invite-people")?.name).toBe("Invite — people");
+    expect(named.signs.find((s) => s.id === "invite-people")?.title).toBe(INVITE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("asks them to walk the hour");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyInvitePeople(named, "a").players.get("a")?.heard).toBe(INVITE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyInvitePeople(early, "a").players.get("a")?.heard).toBe(INVITE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.seedPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyInvitePeople(gWorld, "g").players.get("g")?.heard).toBe(INVITE_PEOPLE_SPECTATOR);
+    expect(gWorld.invitePeopleHeld).toBe(false);
   });
 });
 

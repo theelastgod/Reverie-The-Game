@@ -740,6 +740,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "addressed-people"
                         ? 0xc9a56a
+                      : poi.kind === "back-people"
+                        ? 0xc9a56a
+                      : poi.kind === "seed-people"
+                        ? 0xc9a56a
+                      : poi.kind === "invite-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1188,6 +1194,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.invitePeople || snap.invitePeopleHeld)) {
+      this.prompt = me.heard || "Invite — people. After named weather, F near another Angel still asks them to walk the hour. Not a stick.";
+    } else if (wet && snap.seedPeopleHeld && !me.guest) {
+      this.prompt = "F — the invite as a house of people. After named weather, F near another Angel still asks them to walk the hour. Not a fetch.";
+    } else if (wet && (me.beats.seedPeople || snap.seedPeopleHeld)) {
+      this.prompt = me.heard || "Seed — people. Palindrome serials still seed a Wink at the prior hour. Then bury. Not a stick.";
+    } else if (wet && snap.backPeopleHeld && !me.guest) {
+      this.prompt = "F — the palindrome seed as a house of people. Palindrome serials still seed a Wink. Then bury. Not a fetch.";
+    } else if (wet && (me.beats.backPeople || snap.backPeopleHeld)) {
+      this.prompt = me.heard || "Back — people. Ruin-angel still names the storm at your back without burning readiness. Not a stick.";
+    } else if (wet && snap.addressedPeopleHeld && !me.guest) {
+      this.prompt = "F — the storm at your back as a house of people. Ruin-angel still names it without burning readiness. Not a fetch.";
     } else if (wet && (me.beats.addressedPeople || snap.addressedPeopleHeld)) {
       this.prompt = me.heard || "Addressed — people. High aura still addresses you after named weather. Low aura stays dark. Not a stick.";
     } else if (wet && snap.equalPeopleHeld && !me.guest) {

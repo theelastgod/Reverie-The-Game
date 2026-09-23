@@ -212,6 +212,9 @@ export type Snap = {
   residualPeopleHeld?: boolean;
   equalPeopleHeld?: boolean;
   addressedPeopleHeld?: boolean;
+  backPeopleHeld?: boolean;
+  seedPeopleHeld?: boolean;
+  invitePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

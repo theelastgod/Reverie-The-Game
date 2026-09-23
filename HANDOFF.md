@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 226** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 229** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -944,7 +944,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the equalized bracket as people, F at the Wet Grid: addressing as people. Plaque/POI **Addressed — people**. High aura still addresses you after named weather. Low aura stays dark.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 226 (do this next)
+## Stage 226 (landed)
+- After addressing as people, F at the Wet Grid: the storm at your back as people. Plaque/POI **Back — people**. Ruin-angel still names it without burning readiness.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 227 (landed)
+- After the storm at your back as people, F at the Wet Grid: the palindrome seed as people. Plaque/POI **Seed — people**. Palindrome serials still seed a Wink at the prior hour. Then bury.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 228 (landed)
+- After the palindrome seed as people, F at the Wet Grid: the invite as people. Plaque/POI **Invite — people**. After named weather, F near another Angel still asks them to walk the hour.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 229 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
