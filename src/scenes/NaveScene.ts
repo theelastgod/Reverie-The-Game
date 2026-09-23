@@ -734,6 +734,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "names-people"
                         ? 0xc9a56a
+                      : poi.kind === "residual-people"
+                        ? 0xc9a56a
+                      : poi.kind === "equal-people"
+                        ? 0xc9a56a
+                      : poi.kind === "addressed-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1182,6 +1188,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.addressedPeople || snap.addressedPeopleHeld)) {
+      this.prompt = me.heard || "Addressed — people. High aura still addresses you after named weather. Low aura stays dark. Not a stick.";
+    } else if (wet && snap.equalPeopleHeld && !me.guest) {
+      this.prompt = "F — addressing as a house of people. High aura still addresses. Low aura stays dark. Not a fetch.";
+    } else if (wet && (me.beats.equalPeople || snap.equalPeopleHeld)) {
+      this.prompt = me.heard || "Equal — people. The equalized bracket still shows serials. Serials do not buy damage. Not a stick.";
+    } else if (wet && snap.residualPeopleHeld && !me.guest) {
+      this.prompt = "F — the equalized bracket as a house of people. Serials stay visible. Serials do not buy damage. Not a fetch.";
+    } else if (wet && (me.beats.residualPeople || snap.residualPeopleHeld)) {
+      this.prompt = me.heard || "Residual — people. The residual season still flags by default. Gestell 91+ still flags the street. Cult still refuses. Not a stick.";
+    } else if (wet && snap.namesPeopleHeld && !me.guest) {
+      this.prompt = "F — the residual season as a house of people. It still flags by default. Cult still refuses. Not a fetch.";
     } else if (wet && (me.beats.namesPeople || snap.namesPeopleHeld)) {
       this.prompt = me.heard || "Names — people. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Not a stick.";
     } else if (wet && snap.hourPeopleHeld && !me.guest) {

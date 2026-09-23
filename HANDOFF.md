@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 223** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 226** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -932,7 +932,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the hour as people, F at the Wet Grid: the names as people. Plaque/POI **Names — people**. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Guests cannot take the names.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 223 (do this next)
+## Stage 223 (landed)
+- After the names as people, F at the Wet Grid: the residual season as people. Plaque/POI **Residual — people**. It still flags by default. Gestell 91+ still flags the street. Cult still refuses.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 224 (landed)
+- After the residual season as people, F at the Wet Grid: the equalized bracket as people. Plaque/POI **Equal — people**. Serials stay visible. Serials do not buy damage.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 225 (landed)
+- After the equalized bracket as people, F at the Wet Grid: addressing as people. Plaque/POI **Addressed — people**. High aura still addresses you after named weather. Low aura stays dark.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 226 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

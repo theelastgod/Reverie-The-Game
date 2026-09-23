@@ -850,6 +850,24 @@ import {
   NAMES_PEOPLE_HELD,
   NAMES_PEOPLE_SPECTATOR,
   NAMES_PEOPLE_PLAQUE,
+  RESIDUAL_PEOPLE_COPY,
+  WINK_RESIDUAL_PEOPLE,
+  RESIDUAL_PEOPLE_NEED,
+  RESIDUAL_PEOPLE_HELD,
+  RESIDUAL_PEOPLE_SPECTATOR,
+  RESIDUAL_PEOPLE_PLAQUE,
+  EQUAL_PEOPLE_COPY,
+  WINK_EQUAL_PEOPLE,
+  EQUAL_PEOPLE_NEED,
+  EQUAL_PEOPLE_HELD,
+  EQUAL_PEOPLE_SPECTATOR,
+  EQUAL_PEOPLE_PLAQUE,
+  ADDRESSED_PEOPLE_COPY,
+  WINK_ADDRESSED_PEOPLE,
+  ADDRESSED_PEOPLE_NEED,
+  ADDRESSED_PEOPLE_HELD,
+  ADDRESSED_PEOPLE_SPECTATOR,
+  ADDRESSED_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1499,6 +1517,9 @@ import {
   applyBlindPeople,
   applyHourPeople,
   applyNamesPeople,
+  applyResidualPeople,
+  applyEqualPeople,
+  applyAddressedPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -7438,6 +7459,124 @@ describe("Names — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyNamesPeople(gWorld, "g").players.get("g")?.heard).toBe(NAMES_PEOPLE_SPECTATOR);
     expect(gWorld.namesPeopleHeld).toBe(false);
+  });
+});
+
+describe("Residual — people", () => {
+  it("names the residual season as people after the names; it still flags by default; cult refuses; guests cannot", () => {
+    const w = emptyWorld();
+    w.namesPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), namesPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(RESIDUAL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_RESIDUAL_PEOPLE);
+    expect(p.beats.residualPeople).toBe(true);
+    expect(named.residualPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "residual-people")?.name).toBe("Residual — people");
+    expect(named.signs.find((s) => s.id === "residual-people")?.title).toBe(RESIDUAL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("still flags by default");
+    expect(p.heard).toContain("Cult still refuses");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyResidualPeople(named, "a").players.get("a")?.heard).toBe(RESIDUAL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyResidualPeople(early, "a").players.get("a")?.heard).toBe(RESIDUAL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.namesPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyResidualPeople(gWorld, "g").players.get("g")?.heard).toBe(RESIDUAL_PEOPLE_SPECTATOR);
+    expect(gWorld.residualPeopleHeld).toBe(false);
+  });
+});
+
+describe("Equal — people", () => {
+  it("names the equalized bracket as people after residual; serials stay visible; guests cannot", () => {
+    const w = emptyWorld();
+    w.residualPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), residualPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(EQUAL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_EQUAL_PEOPLE);
+    expect(p.beats.equalPeople).toBe(true);
+    expect(named.equalPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "equal-people")?.name).toBe("Equal — people");
+    expect(named.signs.find((s) => s.id === "equal-people")?.title).toBe(EQUAL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Serials stay visible");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyEqualPeople(named, "a").players.get("a")?.heard).toBe(EQUAL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyEqualPeople(early, "a").players.get("a")?.heard).toBe(EQUAL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.residualPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyEqualPeople(gWorld, "g").players.get("g")?.heard).toBe(EQUAL_PEOPLE_SPECTATOR);
+    expect(gWorld.equalPeopleHeld).toBe(false);
+  });
+});
+
+describe("Addressed — people", () => {
+  it("names addressing as people after the equalized bracket; high aura still addresses; guests cannot", () => {
+    const w = emptyWorld();
+    w.equalPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), equalPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(ADDRESSED_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_ADDRESSED_PEOPLE);
+    expect(p.beats.addressedPeople).toBe(true);
+    expect(named.addressedPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "addressed-people")?.name).toBe("Addressed — people");
+    expect(named.signs.find((s) => s.id === "addressed-people")?.title).toBe(ADDRESSED_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("High aura still addresses you after named weather");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyAddressedPeople(named, "a").players.get("a")?.heard).toBe(ADDRESSED_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyAddressedPeople(early, "a").players.get("a")?.heard).toBe(ADDRESSED_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.equalPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyAddressedPeople(gWorld, "g").players.get("g")?.heard).toBe(ADDRESSED_PEOPLE_SPECTATOR);
+    expect(gWorld.addressedPeopleHeld).toBe(false);
   });
 });
 

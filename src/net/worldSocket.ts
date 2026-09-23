@@ -209,6 +209,9 @@ export type Snap = {
   blindPeopleHeld?: boolean;
   hourPeopleHeld?: boolean;
   namesPeopleHeld?: boolean;
+  residualPeopleHeld?: boolean;
+  equalPeopleHeld?: boolean;
+  addressedPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

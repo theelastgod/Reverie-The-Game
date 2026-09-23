@@ -240,6 +240,9 @@ export type Beats = {
   blindPeople: boolean;
   hourPeople: boolean;
   namesPeople: boolean;
+  residualPeople: boolean;
+  equalPeople: boolean;
+  addressedPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -468,6 +471,9 @@ export type Poi = {
     | "blind-people"
     | "hour-people"
     | "names-people"
+    | "residual-people"
+    | "equal-people"
+    | "addressed-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4494,6 +4500,81 @@ export function namesPeoplePoi(): Poi {
   };
 }
 
+export const RESIDUAL_PEOPLE_COPY =
+  "The residual season is a house of people, not a flag of process. It still flags by default. Gestell 91+ still flags the street. Cult still refuses. Combat is not. This was not a fetch.";
+export const WINK_RESIDUAL_PEOPLE = "People, not a residual stick. The token does not strike.";
+export const RESIDUAL_PEOPLE_NEED = "The names as people first. A residual season of people is not a fetch.";
+export const RESIDUAL_PEOPLE_HELD = "The residual season already holds as people. It still flags by default. Cult still refuses.";
+export const RESIDUAL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const RESIDUAL_PEOPLE_PLAQUE: Sign = {
+  id: "residual-people",
+  title: "Residual — people",
+  text: "A house of people. The residual season still flags by default. Gestell 91+ still flags the street. Cult still refuses. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function residualPeoplePoi(): Poi {
+  return {
+    id: "residual-people",
+    name: "Residual — people",
+    x: 720,
+    y: 520,
+    kind: "residual-people",
+  };
+}
+
+export const EQUAL_PEOPLE_COPY =
+  "The equalized bracket is a house of people, not a season of process. Serials stay visible. Serials do not buy damage. Combat is not. This was not a fetch.";
+export const WINK_EQUAL_PEOPLE = "People, not an equal stick. The token does not strike.";
+export const EQUAL_PEOPLE_NEED = "The residual season as people first. An equalized bracket of people is not a fetch.";
+export const EQUAL_PEOPLE_HELD = "The equalized bracket already holds as people. Serials stay visible. Serials do not buy damage.";
+export const EQUAL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const EQUAL_PEOPLE_PLAQUE: Sign = {
+  id: "equal-people",
+  title: "Equal — people",
+  text: "A house of people. The equalized bracket still shows serials. Serials do not buy damage. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function equalPeoplePoi(): Poi {
+  return {
+    id: "equal-people",
+    name: "Equal — people",
+    x: 720,
+    y: 520,
+    kind: "equal-people",
+  };
+}
+
+export const ADDRESSED_PEOPLE_COPY =
+  "Addressing is a house of people, not a presence of process. High aura still addresses you after named weather. Low aura stays dark. Combat is not. This was not a fetch.";
+export const WINK_ADDRESSED_PEOPLE = "People, not an addressed stick. The token does not strike.";
+export const ADDRESSED_PEOPLE_NEED = "The equalized bracket as people first. Addressing of people is not a fetch.";
+export const ADDRESSED_PEOPLE_HELD = "Addressing already holds as people. High aura still addresses. Low aura stays dark.";
+export const ADDRESSED_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const ADDRESSED_PEOPLE_PLAQUE: Sign = {
+  id: "addressed-people",
+  title: "Addressed — people",
+  text: "A house of people. High aura still addresses you after named weather. Low aura stays dark. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function addressedPeoplePoi(): Poi {
+  return {
+    id: "addressed-people",
+    name: "Addressed — people",
+    x: 720,
+    y: 520,
+    kind: "addressed-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5221,6 +5302,9 @@ export function emptyBeats(): Beats {
     blindPeople: false,
     hourPeople: false,
     namesPeople: false,
+    residualPeople: false,
+    equalPeople: false,
+    addressedPeople: false,
   };
 }
 
