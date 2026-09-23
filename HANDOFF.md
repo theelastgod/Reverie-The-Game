@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 239** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 242** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -996,7 +996,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Graft missing Imagine stills onto the Nave: burial plot plate (no longer wreckage), Ione last-word hole, Vesper foundry desk, claims floor tile, isolated wreckage marker, HUD icon row.
 - Floors still tile at native grain. Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 239 (do this next)
+## Stage 239 (landed)
+- After Founder proximity as people, F at the Wet Grid: entering as people. Plaque/POI **Enter — people**. After credits, Participant Angels still enter the Founder room. Observer without credits cannot.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 240 (landed)
+- After entering as people, F at the Wet Grid: the refusal as people. Plaque/POI **Refuse — people**. Observer without credits still cannot enter.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 241 (landed)
+- After the refusal as people, F at the Wet Grid: the Collective as people. Plaque/POI **Collective — people**. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 242 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

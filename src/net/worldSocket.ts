@@ -224,6 +224,9 @@ export type Snap = {
   observerPeopleHeld?: boolean;
   participantPeopleHeld?: boolean;
   proximityPeopleHeld?: boolean;
+  enterPeopleHeld?: boolean;
+  refusePeopleHeld?: boolean;
+  collectivePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

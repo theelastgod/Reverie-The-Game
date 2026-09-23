@@ -940,6 +940,24 @@ import {
   PROXIMITY_PEOPLE_HELD,
   PROXIMITY_PEOPLE_SPECTATOR,
   PROXIMITY_PEOPLE_PLAQUE,
+  ENTER_PEOPLE_COPY,
+  WINK_ENTER_PEOPLE,
+  ENTER_PEOPLE_NEED,
+  ENTER_PEOPLE_HELD,
+  ENTER_PEOPLE_SPECTATOR,
+  ENTER_PEOPLE_PLAQUE,
+  REFUSE_PEOPLE_COPY,
+  WINK_REFUSE_PEOPLE,
+  REFUSE_PEOPLE_NEED,
+  REFUSE_PEOPLE_HELD,
+  REFUSE_PEOPLE_SPECTATOR,
+  REFUSE_PEOPLE_PLAQUE,
+  COLLECTIVE_PEOPLE_COPY,
+  WINK_COLLECTIVE_PEOPLE,
+  COLLECTIVE_PEOPLE_NEED,
+  COLLECTIVE_PEOPLE_HELD,
+  COLLECTIVE_PEOPLE_SPECTATOR,
+  COLLECTIVE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1604,6 +1622,9 @@ import {
   applyObserverPeople,
   applyParticipantPeople,
   applyProximityPeople,
+  applyEnterPeople,
+  applyRefusePeople,
+  applyCollectivePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -8129,6 +8150,123 @@ describe("Proximity — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyProximityPeople(gWorld, "g").players.get("g")?.heard).toBe(PROXIMITY_PEOPLE_SPECTATOR);
     expect(gWorld.proximityPeopleHeld).toBe(false);
+  });
+});
+
+describe("Enter — people", () => {
+  it("names entering as people after Founder proximity; Observer without credits cannot; guests cannot", () => {
+    const w = emptyWorld();
+    w.proximityPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), proximityPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(ENTER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_ENTER_PEOPLE);
+    expect(p.beats.enterPeople).toBe(true);
+    expect(named.enterPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "enter-people")?.name).toBe("Enter — people");
+    expect(named.signs.find((s) => s.id === "enter-people")?.title).toBe(ENTER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Observer without credits cannot");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyEnterPeople(named, "a").players.get("a")?.heard).toBe(ENTER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyEnterPeople(early, "a").players.get("a")?.heard).toBe(ENTER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.proximityPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyEnterPeople(gWorld, "g").players.get("g")?.heard).toBe(ENTER_PEOPLE_SPECTATOR);
+    expect(gWorld.enterPeopleHeld).toBe(false);
+  });
+});
+
+describe("Refuse — people", () => {
+  it("names refusal as people after entering; Observer without credits still cannot; guests cannot", () => {
+    const w = emptyWorld();
+    w.enterPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), enterPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(REFUSE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_REFUSE_PEOPLE);
+    expect(p.beats.refusePeople).toBe(true);
+    expect(named.refusePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "refuse-people")?.name).toBe("Refuse — people");
+    expect(named.signs.find((s) => s.id === "refuse-people")?.title).toBe(REFUSE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Observer without credits still cannot");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyRefusePeople(named, "a").players.get("a")?.heard).toBe(REFUSE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyRefusePeople(early, "a").players.get("a")?.heard).toBe(REFUSE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.enterPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyRefusePeople(gWorld, "g").players.get("g")?.heard).toBe(REFUSE_PEOPLE_SPECTATOR);
+    expect(gWorld.refusePeopleHeld).toBe(false);
+  });
+});
+
+describe("Collective — people", () => {
+  it("names the Collective as people after refusal; credits still name them; guests cannot", () => {
+    const w = emptyWorld();
+    w.refusePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), refusePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(COLLECTIVE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_COLLECTIVE_PEOPLE);
+    expect(p.beats.collectivePeople).toBe(true);
+    expect(named.collectivePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "collective-people")?.name).toBe("Collective — people");
+    expect(named.signs.find((s) => s.id === "collective-people")?.title).toBe(COLLECTIVE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Lucah Rosenberg-Lee");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCollectivePeople(named, "a").players.get("a")?.heard).toBe(COLLECTIVE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyCollectivePeople(early, "a").players.get("a")?.heard).toBe(COLLECTIVE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.refusePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyCollectivePeople(gWorld, "g").players.get("g")?.heard).toBe(COLLECTIVE_PEOPLE_SPECTATOR);
+    expect(gWorld.collectivePeopleHeld).toBe(false);
   });
 });
 

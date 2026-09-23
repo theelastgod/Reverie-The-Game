@@ -255,6 +255,9 @@ export type Beats = {
   observerPeople: boolean;
   participantPeople: boolean;
   proximityPeople: boolean;
+  enterPeople: boolean;
+  refusePeople: boolean;
+  collectivePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -498,6 +501,9 @@ export type Poi = {
     | "observer-people"
     | "participant-people"
     | "proximity-people"
+    | "enter-people"
+    | "refuse-people"
+    | "collective-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4899,6 +4905,82 @@ export function proximityPeoplePoi(): Poi {
   };
 }
 
+export const ENTER_PEOPLE_COPY =
+  "Entering is a house of people, not a credit of process. After credits, Participant Angels still enter the Founder room. Observer without credits cannot. Combat is not. This was not a fetch.";
+export const WINK_ENTER_PEOPLE = "People, not an enter stick. The token does not strike.";
+export const ENTER_PEOPLE_NEED = "Founder proximity as people first. Entering as people is not a fetch.";
+export const ENTER_PEOPLE_HELD = "Entering already holds as people. After credits, Participant Angels still enter. Observer without credits cannot.";
+export const ENTER_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const ENTER_PEOPLE_PLAQUE: Sign = {
+  id: "enter-people",
+  title: "Enter — people",
+  text: "A house of people. After credits, Participant Angels still enter the Founder room. Observer without credits cannot. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function enterPeoplePoi(): Poi {
+  return {
+    id: "enter-people",
+    name: "Enter — people",
+    x: 720,
+    y: 520,
+    kind: "enter-people",
+  };
+}
+
+export const REFUSE_PEOPLE_COPY =
+  "Refusal is a house of people, not a lock of process. Observer without credits still cannot enter the Founder room. Combat is not. This was not a fetch.";
+export const WINK_REFUSE_PEOPLE = "People, not a refuse stick. The token does not strike.";
+export const REFUSE_PEOPLE_NEED = "Entering as people first. A refusal of people is not a fetch.";
+export const REFUSE_PEOPLE_HELD = "Refusal already holds as people. Observer without credits still cannot enter.";
+export const REFUSE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const REFUSE_PEOPLE_PLAQUE: Sign = {
+  id: "refuse-people",
+  title: "Refuse — people",
+  text: "A house of people. Observer without credits still cannot enter the Founder room. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function refusePeoplePoi(): Poi {
+  return {
+    id: "refuse-people",
+    name: "Refuse — people",
+    x: 720,
+    y: 520,
+    kind: "refuse-people",
+  };
+}
+
+export const COLLECTIVE_PEOPLE_COPY =
+  "The Collective is a house of people, not a credit of process. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Combat is not. This was not a fetch.";
+export const WINK_COLLECTIVE_PEOPLE = "People, not a Collective stick. The token does not strike.";
+export const COLLECTIVE_PEOPLE_NEED = "The refusal as people first. A Collective of people is not a fetch.";
+export const COLLECTIVE_PEOPLE_HELD =
+  "The Collective already holds as people. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective.";
+export const COLLECTIVE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const COLLECTIVE_PEOPLE_PLAQUE: Sign = {
+  id: "collective-people",
+  title: "Collective — people",
+  text: "A house of people. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function collectivePeoplePoi(): Poi {
+  return {
+    id: "collective-people",
+    name: "Collective — people",
+    x: 720,
+    y: 520,
+    kind: "collective-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5641,6 +5723,9 @@ export function emptyBeats(): Beats {
     observerPeople: false,
     participantPeople: false,
     proximityPeople: false,
+    enterPeople: false,
+    refusePeople: false,
+    collectivePeople: false,
   };
 }
 
