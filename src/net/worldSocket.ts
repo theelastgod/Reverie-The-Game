@@ -239,6 +239,9 @@ export type Snap = {
   messengerPeopleHeld?: boolean;
   linkPeopleHeld?: boolean;
   perceptionPeopleHeld?: boolean;
+  verbPeopleHeld?: boolean;
+  stylePeopleHeld?: boolean;
+  schoolPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

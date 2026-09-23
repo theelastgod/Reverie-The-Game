@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 254** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 257** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1056,7 +1056,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the mock link as people, F at the Wet Grid: perception as people. Plaque/POI **Perception — people**. Traits change verbs and style, not damage.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 254 (do this next)
+## Stage 254 (landed)
+- After perception as people, F at the Wet Grid: the verb as people. Plaque/POI **Verb — people**. Traits change verbs, not damage.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 255 (landed)
+- After the verb as people, F at the Wet Grid: style as people. Plaque/POI **Style — people**. Traits change style, not damage.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 256 (landed)
+- After style as people, F at the Wet Grid: the Wink school as people. Plaque/POI **School — people**. Optional F after Participant still takes a school-specific Wink.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 257 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

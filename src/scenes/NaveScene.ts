@@ -799,6 +799,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "perception-people"
                         ? 0xc9a56a
+                      : poi.kind === "verb-people"
+                        ? 0xc9a56a
+                      : poi.kind === "style-people"
+                        ? 0xc9a56a
+                      : poi.kind === "school-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1261,6 +1267,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.schoolPeople || snap.schoolPeopleHeld)) {
+      this.prompt = me.heard || "School — people. Optional F after Participant still takes a school-specific Wink. Not a stick.";
+    } else if (wet && snap.stylePeopleHeld && !me.guest) {
+      this.prompt = "F — the Wink school as a house of people. Optional F after Participant still takes a school-specific Wink. Not a fetch.";
+    } else if (wet && (me.beats.stylePeople || snap.stylePeopleHeld)) {
+      this.prompt = me.heard || "Style — people. Traits change style, not damage. Not a stick.";
+    } else if (wet && snap.verbPeopleHeld && !me.guest) {
+      this.prompt = "F — style as a house of people. Traits change style, not damage. Not a fetch.";
+    } else if (wet && (me.beats.verbPeople || snap.verbPeopleHeld)) {
+      this.prompt = me.heard || "Verb — people. Traits change verbs, not damage. Not a stick.";
+    } else if (wet && snap.perceptionPeopleHeld && !me.guest) {
+      this.prompt = "F — the verb as a house of people. Traits change verbs, not damage. Not a fetch.";
     } else if (wet && (me.beats.perceptionPeople || snap.perceptionPeopleHeld)) {
       this.prompt = me.heard || "Perception — people. Traits change verbs and style, not damage. Not a stick.";
     } else if (wet && snap.linkPeopleHeld && !me.guest) {

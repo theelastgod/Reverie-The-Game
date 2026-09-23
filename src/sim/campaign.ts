@@ -270,6 +270,9 @@ export type Beats = {
   messengerPeople: boolean;
   linkPeople: boolean;
   perceptionPeople: boolean;
+  verbPeople: boolean;
+  stylePeople: boolean;
+  schoolPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -528,6 +531,9 @@ export type Poi = {
     | "messenger-people"
     | "link-people"
     | "perception-people"
+    | "verb-people"
+    | "style-people"
+    | "school-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -5306,6 +5312,81 @@ export function perceptionPeoplePoi(): Poi {
   };
 }
 
+export const VERB_PEOPLE_COPY =
+  "The verb is a house of people, not a stick of process. Traits change verbs, not damage. Combat is not. This was not a fetch.";
+export const WINK_VERB_PEOPLE = "People, not a verb stick. The token does not strike.";
+export const VERB_PEOPLE_NEED = "Perception as people first. A verb of people is not a fetch.";
+export const VERB_PEOPLE_HELD = "The verb already holds as people. Traits change verbs, not damage.";
+export const VERB_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const VERB_PEOPLE_PLAQUE: Sign = {
+  id: "verb-people",
+  title: "Verb — people",
+  text: "A house of people. Traits change verbs, not damage. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function verbPeoplePoi(): Poi {
+  return {
+    id: "verb-people",
+    name: "Verb — people",
+    x: 720,
+    y: 520,
+    kind: "verb-people",
+  };
+}
+
+export const STYLE_PEOPLE_COPY =
+  "Style is a house of people, not a stick of process. Traits change style, not damage. Combat is not. This was not a fetch.";
+export const WINK_STYLE_PEOPLE = "People, not a style stick. The token does not strike.";
+export const STYLE_PEOPLE_NEED = "The verb as people first. A style of people is not a fetch.";
+export const STYLE_PEOPLE_HELD = "Style already holds as people. Traits change style, not damage.";
+export const STYLE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const STYLE_PEOPLE_PLAQUE: Sign = {
+  id: "style-people",
+  title: "Style — people",
+  text: "A house of people. Traits change style, not damage. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function stylePeoplePoi(): Poi {
+  return {
+    id: "style-people",
+    name: "Style — people",
+    x: 720,
+    y: 520,
+    kind: "style-people",
+  };
+}
+
+export const SCHOOL_PEOPLE_COPY =
+  "The Wink school is a house of people, not a stick of process. Optional F after Participant still takes a school-specific Wink. Combat is not. This was not a fetch.";
+export const WINK_SCHOOL_PEOPLE = "People, not a school stick. The token does not strike.";
+export const SCHOOL_PEOPLE_NEED = "Style as people first. A Wink school of people is not a fetch.";
+export const SCHOOL_PEOPLE_HELD = "The Wink school already holds as people. Optional F after Participant still takes a school-specific Wink.";
+export const SCHOOL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SCHOOL_PEOPLE_PLAQUE: Sign = {
+  id: "school-people",
+  title: "School — people",
+  text: "A house of people. Optional F after Participant still takes a school-specific Wink. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function schoolPeoplePoi(): Poi {
+  return {
+    id: "school-people",
+    name: "School — people",
+    x: 720,
+    y: 520,
+    kind: "school-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -6063,6 +6144,9 @@ export function emptyBeats(): Beats {
     messengerPeople: false,
     linkPeople: false,
     perceptionPeople: false,
+    verbPeople: false,
+    stylePeople: false,
+    schoolPeople: false,
   };
 }
 

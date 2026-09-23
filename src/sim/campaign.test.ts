@@ -1030,6 +1030,24 @@ import {
   PERCEPTION_PEOPLE_HELD,
   PERCEPTION_PEOPLE_SPECTATOR,
   PERCEPTION_PEOPLE_PLAQUE,
+  VERB_PEOPLE_COPY,
+  WINK_VERB_PEOPLE,
+  VERB_PEOPLE_NEED,
+  VERB_PEOPLE_HELD,
+  VERB_PEOPLE_SPECTATOR,
+  VERB_PEOPLE_PLAQUE,
+  STYLE_PEOPLE_COPY,
+  WINK_STYLE_PEOPLE,
+  STYLE_PEOPLE_NEED,
+  STYLE_PEOPLE_HELD,
+  STYLE_PEOPLE_SPECTATOR,
+  STYLE_PEOPLE_PLAQUE,
+  SCHOOL_PEOPLE_COPY,
+  WINK_SCHOOL_PEOPLE,
+  SCHOOL_PEOPLE_NEED,
+  SCHOOL_PEOPLE_HELD,
+  SCHOOL_PEOPLE_SPECTATOR,
+  SCHOOL_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1709,6 +1727,9 @@ import {
   applyMessengerPeople,
   applyLinkPeople,
   applyPerceptionPeople,
+  applyVerbPeople,
+  applyStylePeople,
+  applySchoolPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -8820,6 +8841,123 @@ describe("Perception — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyPerceptionPeople(gWorld, "g").players.get("g")?.heard).toBe(PERCEPTION_PEOPLE_SPECTATOR);
     expect(gWorld.perceptionPeopleHeld).toBe(false);
+  });
+});
+
+describe("Verb — people", () => {
+  it("names the verb as people after perception; traits change verbs not damage; guests cannot", () => {
+    const w = emptyWorld();
+    w.perceptionPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), perceptionPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(VERB_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_VERB_PEOPLE);
+    expect(p.beats.verbPeople).toBe(true);
+    expect(named.verbPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "verb-people")?.name).toBe("Verb — people");
+    expect(named.signs.find((s) => s.id === "verb-people")?.title).toBe(VERB_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("not damage");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyVerbPeople(named, "a").players.get("a")?.heard).toBe(VERB_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyVerbPeople(early, "a").players.get("a")?.heard).toBe(VERB_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.perceptionPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyVerbPeople(gWorld, "g").players.get("g")?.heard).toBe(VERB_PEOPLE_SPECTATOR);
+    expect(gWorld.verbPeopleHeld).toBe(false);
+  });
+});
+
+describe("Style — people", () => {
+  it("names style as people after the verb; traits change style not damage; guests cannot", () => {
+    const w = emptyWorld();
+    w.verbPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), verbPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(STYLE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_STYLE_PEOPLE);
+    expect(p.beats.stylePeople).toBe(true);
+    expect(named.stylePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "style-people")?.name).toBe("Style — people");
+    expect(named.signs.find((s) => s.id === "style-people")?.title).toBe(STYLE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("not damage");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyStylePeople(named, "a").players.get("a")?.heard).toBe(STYLE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyStylePeople(early, "a").players.get("a")?.heard).toBe(STYLE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.verbPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyStylePeople(gWorld, "g").players.get("g")?.heard).toBe(STYLE_PEOPLE_SPECTATOR);
+    expect(gWorld.stylePeopleHeld).toBe(false);
+  });
+});
+
+describe("School — people", () => {
+  it("names the Wink school as people after style; school-specific Wink still optional; guests cannot", () => {
+    const w = emptyWorld();
+    w.stylePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), stylePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SCHOOL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SCHOOL_PEOPLE);
+    expect(p.beats.schoolPeople).toBe(true);
+    expect(named.schoolPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "school-people")?.name).toBe("School — people");
+    expect(named.signs.find((s) => s.id === "school-people")?.title).toBe(SCHOOL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("school-specific Wink");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySchoolPeople(named, "a").players.get("a")?.heard).toBe(SCHOOL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySchoolPeople(early, "a").players.get("a")?.heard).toBe(SCHOOL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.stylePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySchoolPeople(gWorld, "g").players.get("g")?.heard).toBe(SCHOOL_PEOPLE_SPECTATOR);
+    expect(gWorld.schoolPeopleHeld).toBe(false);
   });
 });
 
