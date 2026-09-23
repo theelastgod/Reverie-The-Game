@@ -704,6 +704,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "wait-people"
                         ? 0xc9a56a
+                      : poi.kind === "stay-people"
+                        ? 0xc9a56a
+                      : poi.kind === "willing-people"
+                        ? 0xc9a56a
+                      : poi.kind === "empty-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1152,6 +1158,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.emptyPeople || snap.emptyPeopleHeld)) {
+      this.prompt = me.heard || "Empty — people. If Nara, Ord, or Quill walked, Passing is absence. Not a stick.";
+    } else if (wet && snap.willingPeopleHeld && !me.guest) {
+      this.prompt = "F — the empty party as a house of people. If Nara, Ord, or Quill walked, Passing is absence. Not a fetch.";
+    } else if (wet && (me.beats.willingPeople || snap.willingPeopleHeld)) {
+      this.prompt = me.heard || "Willing — people. Appearance still needs the party willing. Not a stick.";
+    } else if (wet && snap.stayPeopleHeld && !me.guest) {
+      this.prompt = "F — willingness as a house of people. Appearance still needs the party willing. Not a fetch.";
+    } else if (wet && (me.beats.stayPeople || snap.stayPeopleHeld)) {
+      this.prompt = me.heard || "Stay — people. Nara still stays at the hole. Absence still waits. Not a stick.";
+    } else if (wet && snap.waitPeopleHeld && !me.guest) {
+      this.prompt = "F — staying as a house of people. Nara still stays at the hole. Absence still waits. Not a fetch.";
     } else if (wet && (me.beats.waitPeople || snap.waitPeopleHeld)) {
       this.prompt = me.heard || "Wait — people. Absence still waits. Nara still stays at the hole. Not a stick.";
     } else if (wet && snap.absencePeopleHeld && !me.guest) {

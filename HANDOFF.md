@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 208** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 211** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -872,7 +872,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After absence as people, F at the Wet Grid: waiting as people. Plaque/POI **Wait — people**. Absence still waits. Nara still stays at the hole.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 208 (do this next)
+## Stage 208 (landed)
+- After waiting as people, F at the Wet Grid: staying as people. Plaque/POI **Stay — people**. Nara still stays at the hole. Absence still waits.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 209 (landed)
+- After staying as people, F at the Wet Grid: willingness as people. Plaque/POI **Willing — people**. Appearance still needs the party willing.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 210 (landed)
+- After willingness as people, F at the Wet Grid: the empty party as people. Plaque/POI **Empty — people**. If Nara, Ord, or Quill walked, Passing is absence.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 211 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

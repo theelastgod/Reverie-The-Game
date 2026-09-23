@@ -194,6 +194,9 @@ export type Snap = {
   hijackPeopleHeld?: boolean;
   absencePeopleHeld?: boolean;
   waitPeopleHeld?: boolean;
+  stayPeopleHeld?: boolean;
+  willingPeopleHeld?: boolean;
+  emptyPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

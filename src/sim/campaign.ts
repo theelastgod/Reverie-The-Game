@@ -225,6 +225,9 @@ export type Beats = {
   hijackPeople: boolean;
   absencePeople: boolean;
   waitPeople: boolean;
+  stayPeople: boolean;
+  willingPeople: boolean;
+  emptyPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -438,6 +441,9 @@ export type Poi = {
     | "hijack-people"
     | "absence-people"
     | "wait-people"
+    | "stay-people"
+    | "willing-people"
+    | "empty-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4089,6 +4095,81 @@ export function waitPeoplePoi(): Poi {
   };
 }
 
+export const STAY_PEOPLE_COPY =
+  "Staying is a house of people, not a hole of process. Nara still stays at the hole. Absence still waits. Combat is not. This was not a fetch.";
+export const WINK_STAY_PEOPLE = "People, not a stay stick. The token does not strike.";
+export const STAY_PEOPLE_NEED = "Waiting as people first. Staying of people is not a fetch.";
+export const STAY_PEOPLE_HELD = "Staying already holds as people. Nara still stays at the hole. Absence still waits.";
+export const STAY_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const STAY_PEOPLE_PLAQUE: Sign = {
+  id: "stay-people",
+  title: "Stay — people",
+  text: "A house of people. Nara still stays at the hole. Absence still waits. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function stayPeoplePoi(): Poi {
+  return {
+    id: "stay-people",
+    name: "Stay — people",
+    x: 720,
+    y: 520,
+    kind: "stay-people",
+  };
+}
+
+export const WILLING_PEOPLE_COPY =
+  "Willingness is a house of people, not a god of process. Appearance still needs the party willing. Combat is not. This was not a fetch.";
+export const WINK_WILLING_PEOPLE = "People, not a willing stick. The token does not strike.";
+export const WILLING_PEOPLE_NEED = "Staying as people first. Willingness of people is not a fetch.";
+export const WILLING_PEOPLE_HELD = "Willingness already holds as people. Appearance still needs the party willing.";
+export const WILLING_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const WILLING_PEOPLE_PLAQUE: Sign = {
+  id: "willing-people",
+  title: "Willing — people",
+  text: "A house of people. Appearance still needs the party willing. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function willingPeoplePoi(): Poi {
+  return {
+    id: "willing-people",
+    name: "Willing — people",
+    x: 720,
+    y: 520,
+    kind: "willing-people",
+  };
+}
+
+export const EMPTY_PEOPLE_COPY =
+  "The empty party is a house of people, not a hole of process. If Nara, Ord, or Quill walked, Passing is absence. Combat is not. This was not a fetch.";
+export const WINK_EMPTY_PEOPLE = "People, not an empty stick. The token does not strike.";
+export const EMPTY_PEOPLE_NEED = "Willingness as people first. An empty party of people is not a fetch.";
+export const EMPTY_PEOPLE_HELD = "The empty party already holds as people. If Nara, Ord, or Quill walked, Passing is absence.";
+export const EMPTY_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const EMPTY_PEOPLE_PLAQUE: Sign = {
+  id: "empty-people",
+  title: "Empty — people",
+  text: "A house of people. If Nara, Ord, or Quill walked, Passing is absence. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function emptyPeoplePoi(): Poi {
+  return {
+    id: "empty-people",
+    name: "Empty — people",
+    x: 720,
+    y: 520,
+    kind: "empty-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4801,6 +4882,9 @@ export function emptyBeats(): Beats {
     hijackPeople: false,
     absencePeople: false,
     waitPeople: false,
+    stayPeople: false,
+    willingPeople: false,
+    emptyPeople: false,
   };
 }
 
