@@ -787,6 +787,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "supply-people"
                         ? 0xc9a56a
+                      : poi.kind === "combat-people"
+                        ? 0xc9a56a
+                      : poi.kind === "earn-people"
+                        ? 0xc9a56a
+                      : poi.kind === "angel-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1249,6 +1255,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.angelPeople || snap.angelPeopleHeld)) {
+      this.prompt = me.heard || "Angel — people. One of 7,777. Guests cannot claim. Not a stick.";
+    } else if (wet && snap.earnPeopleHeld && !me.guest) {
+      this.prompt = "F — the Angel as a house of people. One of 7,777. Guests cannot claim. Not a fetch.";
+    } else if (wet && (me.beats.earnPeople || snap.earnPeopleHeld)) {
+      this.prompt = me.heard || "Earn — people. Only a linked Angel can file. Guests cannot claim. TAKE stays disarmed. Not a stick.";
+    } else if (wet && snap.combatPeopleHeld && !me.guest) {
+      this.prompt = "F — the earn license as a house of people. Only a linked Angel can file. Guests cannot claim. Not a fetch.";
+    } else if (wet && (me.beats.combatPeople || snap.combatPeopleHeld)) {
+      this.prompt = me.heard || "Combat — people. Damage stays equal. The token does not strike. Not a stick.";
+    } else if (wet && snap.supplyPeopleHeld && !me.guest) {
+      this.prompt = "F — combat as a house of people. Damage stays equal. The token does not strike. Not a fetch.";
     } else if (wet && (me.beats.supplyPeople || snap.supplyPeopleHeld)) {
       this.prompt = me.heard || "Supply — people. Supply is 7,777. The mint stays disarmed. Not a stick.";
     } else if (wet && snap.guestPeopleHeld && !me.guest) {

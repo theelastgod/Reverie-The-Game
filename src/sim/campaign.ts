@@ -264,6 +264,9 @@ export type Beats = {
   disarmedPeople: boolean;
   guestPeople: boolean;
   supplyPeople: boolean;
+  combatPeople: boolean;
+  earnPeople: boolean;
+  angelPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -516,6 +519,9 @@ export type Poi = {
     | "disarmed-people"
     | "guest-people"
     | "supply-people"
+    | "combat-people"
+    | "earn-people"
+    | "angel-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -5144,6 +5150,81 @@ export function supplyPeoplePoi(): Poi {
   };
 }
 
+export const COMBAT_PEOPLE_COPY =
+  "Combat is a house of people, not a stick of process. Damage stays equal. The token does not strike. This was not a fetch.";
+export const WINK_COMBAT_PEOPLE = "People, not a combat stick. The token does not strike.";
+export const COMBAT_PEOPLE_NEED = "Supply as people first. Combat of people is not a fetch.";
+export const COMBAT_PEOPLE_HELD = "Combat already holds as people. Damage stays equal. The token does not strike.";
+export const COMBAT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const COMBAT_PEOPLE_PLAQUE: Sign = {
+  id: "combat-people",
+  title: "Combat — people",
+  text: "A house of people. Damage stays equal. The token does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function combatPeoplePoi(): Poi {
+  return {
+    id: "combat-people",
+    name: "Combat — people",
+    x: 720,
+    y: 520,
+    kind: "combat-people",
+  };
+}
+
+export const EARN_PEOPLE_COPY =
+  "The earn license is a house of people, not a yield of process. Only a linked Angel can file. Guests cannot claim. TAKE stays disarmed. Combat is not. This was not a fetch.";
+export const WINK_EARN_PEOPLE = "People, not an earn stick. The token does not strike.";
+export const EARN_PEOPLE_NEED = "Combat as people first. An earn license of people is not a fetch.";
+export const EARN_PEOPLE_HELD = "The earn license already holds as people. Guests cannot claim. TAKE stays disarmed.";
+export const EARN_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const EARN_PEOPLE_PLAQUE: Sign = {
+  id: "earn-people",
+  title: "Earn — people",
+  text: "A house of people. Only a linked Angel can file. Guests cannot claim. TAKE stays disarmed. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function earnPeoplePoi(): Poi {
+  return {
+    id: "earn-people",
+    name: "Earn — people",
+    x: 720,
+    y: 520,
+    kind: "earn-people",
+  };
+}
+
+export const ANGEL_PEOPLE_COPY =
+  "The Angel is a house of people, not a mint of process. One of 7,777. Guests cannot claim. Combat is not. This was not a fetch.";
+export const WINK_ANGEL_PEOPLE = "People, not an Angel stick. The token does not strike.";
+export const ANGEL_PEOPLE_NEED = "The earn license as people first. An Angel of people is not a fetch.";
+export const ANGEL_PEOPLE_HELD = "The Angel already holds as people. One of 7,777. Guests cannot claim.";
+export const ANGEL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const ANGEL_PEOPLE_PLAQUE: Sign = {
+  id: "angel-people",
+  title: "Angel — people",
+  text: "A house of people. One of 7,777. Guests cannot claim. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function angelPeoplePoi(): Poi {
+  return {
+    id: "angel-people",
+    name: "Angel — people",
+    x: 720,
+    y: 520,
+    kind: "angel-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5895,6 +5976,9 @@ export function emptyBeats(): Beats {
     disarmedPeople: false,
     guestPeople: false,
     supplyPeople: false,
+    combatPeople: false,
+    earnPeople: false,
+    angelPeople: false,
   };
 }
 

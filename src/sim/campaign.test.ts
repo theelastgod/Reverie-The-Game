@@ -994,6 +994,24 @@ import {
   SUPPLY_PEOPLE_HELD,
   SUPPLY_PEOPLE_SPECTATOR,
   SUPPLY_PEOPLE_PLAQUE,
+  COMBAT_PEOPLE_COPY,
+  WINK_COMBAT_PEOPLE,
+  COMBAT_PEOPLE_NEED,
+  COMBAT_PEOPLE_HELD,
+  COMBAT_PEOPLE_SPECTATOR,
+  COMBAT_PEOPLE_PLAQUE,
+  EARN_PEOPLE_COPY,
+  WINK_EARN_PEOPLE,
+  EARN_PEOPLE_NEED,
+  EARN_PEOPLE_HELD,
+  EARN_PEOPLE_SPECTATOR,
+  EARN_PEOPLE_PLAQUE,
+  ANGEL_PEOPLE_COPY,
+  WINK_ANGEL_PEOPLE,
+  ANGEL_PEOPLE_NEED,
+  ANGEL_PEOPLE_HELD,
+  ANGEL_PEOPLE_SPECTATOR,
+  ANGEL_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1667,6 +1685,9 @@ import {
   applyDisarmedPeople,
   applyGuestPeople,
   applySupplyPeople,
+  applyCombatPeople,
+  applyEarnPeople,
+  applyAngelPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -8544,6 +8565,123 @@ describe("Supply — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applySupplyPeople(gWorld, "g").players.get("g")?.heard).toBe(SUPPLY_PEOPLE_SPECTATOR);
     expect(gWorld.supplyPeopleHeld).toBe(false);
+  });
+});
+
+describe("Combat — people", () => {
+  it("names combat as people after supply; damage stays equal; guests cannot", () => {
+    const w = emptyWorld();
+    w.supplyPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), supplyPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(COMBAT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_COMBAT_PEOPLE);
+    expect(p.beats.combatPeople).toBe(true);
+    expect(named.combatPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "combat-people")?.name).toBe("Combat — people");
+    expect(named.signs.find((s) => s.id === "combat-people")?.title).toBe(COMBAT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Damage stays equal");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCombatPeople(named, "a").players.get("a")?.heard).toBe(COMBAT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyCombatPeople(early, "a").players.get("a")?.heard).toBe(COMBAT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.supplyPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyCombatPeople(gWorld, "g").players.get("g")?.heard).toBe(COMBAT_PEOPLE_SPECTATOR);
+    expect(gWorld.combatPeopleHeld).toBe(false);
+  });
+});
+
+describe("Earn — people", () => {
+  it("names the earn license as people after combat; guests cannot claim; TAKE stays disarmed", () => {
+    const w = emptyWorld();
+    w.combatPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), combatPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(EARN_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_EARN_PEOPLE);
+    expect(p.beats.earnPeople).toBe(true);
+    expect(named.earnPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "earn-people")?.name).toBe("Earn — people");
+    expect(named.signs.find((s) => s.id === "earn-people")?.title).toBe(EARN_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Guests cannot claim");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyEarnPeople(named, "a").players.get("a")?.heard).toBe(EARN_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyEarnPeople(early, "a").players.get("a")?.heard).toBe(EARN_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.combatPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyEarnPeople(gWorld, "g").players.get("g")?.heard).toBe(EARN_PEOPLE_SPECTATOR);
+    expect(gWorld.earnPeopleHeld).toBe(false);
+  });
+});
+
+describe("Angel — people", () => {
+  it("names the Angel as people after earn; one of 7,777; guests cannot claim", () => {
+    const w = emptyWorld();
+    w.earnPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), earnPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(ANGEL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_ANGEL_PEOPLE);
+    expect(p.beats.angelPeople).toBe(true);
+    expect(named.angelPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "angel-people")?.name).toBe("Angel — people");
+    expect(named.signs.find((s) => s.id === "angel-people")?.title).toBe(ANGEL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("7,777");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyAngelPeople(named, "a").players.get("a")?.heard).toBe(ANGEL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyAngelPeople(early, "a").players.get("a")?.heard).toBe(ANGEL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.earnPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyAngelPeople(gWorld, "g").players.get("g")?.heard).toBe(ANGEL_PEOPLE_SPECTATOR);
+    expect(gWorld.angelPeopleHeld).toBe(false);
   });
 });
 

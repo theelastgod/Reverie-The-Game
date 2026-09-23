@@ -233,6 +233,9 @@ export type Snap = {
   disarmedPeopleHeld?: boolean;
   guestPeopleHeld?: boolean;
   supplyPeopleHeld?: boolean;
+  combatPeopleHeld?: boolean;
+  earnPeopleHeld?: boolean;
+  angelPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

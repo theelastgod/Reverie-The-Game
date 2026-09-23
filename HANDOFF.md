@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 248** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 251** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1032,7 +1032,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the guest lock as people, F at the Wet Grid: supply as people. Plaque/POI **Supply — people**. Supply is 7,777. The mint stays disarmed.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 248 (do this next)
+## Stage 248 (landed)
+- After supply as people, F at the Wet Grid: combat as people. Plaque/POI **Combat — people**. Damage stays equal. The token does not strike.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 249 (landed)
+- After combat as people, F at the Wet Grid: the earn license as people. Plaque/POI **Earn — people**. Only a linked Angel can file. Guests cannot claim. TAKE stays disarmed.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 250 (landed)
+- After the earn license as people, F at the Wet Grid: the Angel as people. Plaque/POI **Angel — people**. One of 7,777. Guests cannot claim.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 251 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
