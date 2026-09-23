@@ -212,6 +212,7 @@ export type Beats = {
   climatePeople: boolean;
   extractPeople: boolean;
   maxPeople: boolean;
+  heatPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -412,6 +413,7 @@ export type Poi = {
     | "climate-people"
     | "extract-people"
     | "max-people"
+    | "heat-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3738,6 +3740,31 @@ export function maxPeoplePoi(): Poi {
   };
 }
 
+export const HEAT_PEOPLE_COPY =
+  "Heat is a house of people, not a flag of process. Gestell 91 still flags the street. Flag still opts in. Combat is not. This was not a fetch.";
+export const WINK_HEAT_PEOPLE = "People, not a heat stick. The token does not strike.";
+export const HEAT_PEOPLE_NEED = "Max climate as people first. Heat of people is not a fetch.";
+export const HEAT_PEOPLE_HELD = "Heat already holds as people. Gestell 91 still flags the street. Flag still opts in.";
+export const HEAT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const HEAT_PEOPLE_PLAQUE: Sign = {
+  id: "heat-people",
+  title: "Heat — people",
+  text: "A house of people. Gestell 91 still flags the street. Flag still opts in. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function heatPeoplePoi(): Poi {
+  return {
+    id: "heat-people",
+    name: "Heat — people",
+    x: 720,
+    y: 520,
+    kind: "heat-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4437,6 +4464,7 @@ export function emptyBeats(): Beats {
     climatePeople: false,
     extractPeople: false,
     maxPeople: false,
+    heatPeople: false,
   };
 }
 

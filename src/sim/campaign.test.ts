@@ -682,6 +682,12 @@ import {
   MAX_PEOPLE_HELD,
   MAX_PEOPLE_SPECTATOR,
   MAX_PEOPLE_PLAQUE,
+  HEAT_PEOPLE_COPY,
+  WINK_HEAT_PEOPLE,
+  HEAT_PEOPLE_NEED,
+  HEAT_PEOPLE_HELD,
+  HEAT_PEOPLE_SPECTATOR,
+  HEAT_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1303,6 +1309,7 @@ import {
   applyClimatePeople,
   applyExtractPeople,
   applyMaxPeople,
+  applyHeatPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -6135,6 +6142,46 @@ describe("Max — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyMaxPeople(gWorld, "g").players.get("g")?.heard).toBe(MAX_PEOPLE_SPECTATOR);
     expect(gWorld.maxPeopleHeld).toBe(false);
+  });
+});
+
+describe("Heat — people", () => {
+  it("names heat as people after max climate; Gestell 91 still flags; guests cannot", () => {
+    const w = emptyWorld();
+    w.maxPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), maxPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HEAT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HEAT_PEOPLE);
+    expect(p.beats.heatPeople).toBe(true);
+    expect(named.heatPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "heat-people")?.name).toBe("Heat — people");
+    expect(named.signs.find((s) => s.id === "heat-people")?.title).toBe(HEAT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Gestell 91 still flags");
+    expect(p.heard).toContain("Flag still opts in");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHeatPeople(named, "a").players.get("a")?.heard).toBe(HEAT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyHeatPeople(early, "a").players.get("a")?.heard).toBe(HEAT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.maxPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyHeatPeople(gWorld, "g").players.get("g")?.heard).toBe(HEAT_PEOPLE_SPECTATOR);
+    expect(gWorld.heatPeopleHeld).toBe(false);
   });
 });
 

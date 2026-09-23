@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 195** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 196** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -820,7 +820,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After extract as people, F at the Wet Grid: max climate as people. Plaque/POI **Max — people**. Gestell 91 still flags the street. Flag still opts in.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 195 (do this next)
+## Stage 195 (landed)
+- After max climate as people, F at the Wet Grid: heat as people. Plaque/POI **Heat — people**. Gestell 91 still flags the street. Flag still opts in.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 196 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

@@ -181,6 +181,7 @@ export type Snap = {
   climatePeopleHeld?: boolean;
   extractPeopleHeld?: boolean;
   maxPeopleHeld?: boolean;
+  heatPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
