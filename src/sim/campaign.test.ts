@@ -1012,6 +1012,24 @@ import {
   ANGEL_PEOPLE_HELD,
   ANGEL_PEOPLE_SPECTATOR,
   ANGEL_PEOPLE_PLAQUE,
+  MESSENGER_PEOPLE_COPY,
+  WINK_MESSENGER_PEOPLE,
+  MESSENGER_PEOPLE_NEED,
+  MESSENGER_PEOPLE_HELD,
+  MESSENGER_PEOPLE_SPECTATOR,
+  MESSENGER_PEOPLE_PLAQUE,
+  LINK_PEOPLE_COPY,
+  WINK_LINK_PEOPLE,
+  LINK_PEOPLE_NEED,
+  LINK_PEOPLE_HELD,
+  LINK_PEOPLE_SPECTATOR,
+  LINK_PEOPLE_PLAQUE,
+  PERCEPTION_PEOPLE_COPY,
+  WINK_PERCEPTION_PEOPLE,
+  PERCEPTION_PEOPLE_NEED,
+  PERCEPTION_PEOPLE_HELD,
+  PERCEPTION_PEOPLE_SPECTATOR,
+  PERCEPTION_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1688,6 +1706,9 @@ import {
   applyCombatPeople,
   applyEarnPeople,
   applyAngelPeople,
+  applyMessengerPeople,
+  applyLinkPeople,
+  applyPerceptionPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -8682,6 +8703,123 @@ describe("Angel — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyAngelPeople(gWorld, "g").players.get("g")?.heard).toBe(ANGEL_PEOPLE_SPECTATOR);
     expect(gWorld.angelPeopleHeld).toBe(false);
+  });
+});
+
+describe("Messenger — people", () => {
+  it("names the messenger as people after the Angel; perception not combat; guests cannot", () => {
+    const w = emptyWorld();
+    w.angelPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), angelPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(MESSENGER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_MESSENGER_PEOPLE);
+    expect(p.beats.messengerPeople).toBe(true);
+    expect(named.messengerPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "messenger-people")?.name).toBe("Messenger — people");
+    expect(named.signs.find((s) => s.id === "messenger-people")?.title).toBe(MESSENGER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Perception, not combat");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyMessengerPeople(named, "a").players.get("a")?.heard).toBe(MESSENGER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyMessengerPeople(early, "a").players.get("a")?.heard).toBe(MESSENGER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.angelPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyMessengerPeople(gWorld, "g").players.get("g")?.heard).toBe(MESSENGER_PEOPLE_SPECTATOR);
+    expect(gWorld.messengerPeopleHeld).toBe(false);
+  });
+});
+
+describe("Link — people", () => {
+  it("names the mock link as people after the messenger; guests stay aura 0; guests cannot", () => {
+    const w = emptyWorld();
+    w.messengerPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), messengerPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(LINK_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_LINK_PEOPLE);
+    expect(p.beats.linkPeople).toBe(true);
+    expect(named.linkPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "link-people")?.name).toBe("Link — people");
+    expect(named.signs.find((s) => s.id === "link-people")?.title).toBe(LINK_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Guests stay aura 0");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyLinkPeople(named, "a").players.get("a")?.heard).toBe(LINK_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyLinkPeople(early, "a").players.get("a")?.heard).toBe(LINK_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.messengerPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyLinkPeople(gWorld, "g").players.get("g")?.heard).toBe(LINK_PEOPLE_SPECTATOR);
+    expect(gWorld.linkPeopleHeld).toBe(false);
+  });
+});
+
+describe("Perception — people", () => {
+  it("names perception as people after the mock link; traits do not buy damage; guests cannot", () => {
+    const w = emptyWorld();
+    w.linkPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), linkPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PERCEPTION_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PERCEPTION_PEOPLE);
+    expect(p.beats.perceptionPeople).toBe(true);
+    expect(named.perceptionPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "perception-people")?.name).toBe("Perception — people");
+    expect(named.signs.find((s) => s.id === "perception-people")?.title).toBe(PERCEPTION_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("not damage");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPerceptionPeople(named, "a").players.get("a")?.heard).toBe(PERCEPTION_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyPerceptionPeople(early, "a").players.get("a")?.heard).toBe(PERCEPTION_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.linkPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyPerceptionPeople(gWorld, "g").players.get("g")?.heard).toBe(PERCEPTION_PEOPLE_SPECTATOR);
+    expect(gWorld.perceptionPeopleHeld).toBe(false);
   });
 });
 

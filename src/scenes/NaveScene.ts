@@ -793,6 +793,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "angel-people"
                         ? 0xc9a56a
+                      : poi.kind === "messenger-people"
+                        ? 0xc9a56a
+                      : poi.kind === "link-people"
+                        ? 0xc9a56a
+                      : poi.kind === "perception-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1255,6 +1261,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.perceptionPeople || snap.perceptionPeopleHeld)) {
+      this.prompt = me.heard || "Perception — people. Traits change verbs and style, not damage. Not a stick.";
+    } else if (wet && snap.linkPeopleHeld && !me.guest) {
+      this.prompt = "F — perception as a house of people. Traits change verbs and style, not damage. Not a fetch.";
+    } else if (wet && (me.beats.linkPeople || snap.linkPeopleHeld)) {
+      this.prompt = me.heard || "Link — people. Serial still seeds aura. Guests stay aura 0. Not a stick.";
+    } else if (wet && snap.messengerPeopleHeld && !me.guest) {
+      this.prompt = "F — the mock link as a house of people. Serial still seeds aura. Guests stay aura 0. Not a fetch.";
+    } else if (wet && (me.beats.messengerPeople || snap.messengerPeopleHeld)) {
+      this.prompt = me.heard || "Messenger — people. Angels hint. Perception, not combat. Not a stick.";
+    } else if (wet && snap.angelPeopleHeld && !me.guest) {
+      this.prompt = "F — the messenger as a house of people. Angels hint. Perception, not combat. Not a fetch.";
     } else if (wet && (me.beats.angelPeople || snap.angelPeopleHeld)) {
       this.prompt = me.heard || "Angel — people. One of 7,777. Guests cannot claim. Not a stick.";
     } else if (wet && snap.earnPeopleHeld && !me.guest) {

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 251** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 254** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1044,7 +1044,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the earn license as people, F at the Wet Grid: the Angel as people. Plaque/POI **Angel — people**. One of 7,777. Guests cannot claim.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 251 (do this next)
+## Stage 251 (landed)
+- After the Angel as people, F at the Wet Grid: the messenger as people. Plaque/POI **Messenger — people**. Angels hint. Perception, not combat.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 252 (landed)
+- After the messenger as people, F at the Wet Grid: the mock link as people. Plaque/POI **Link — people**. Serial still seeds aura. Guests stay aura 0.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 253 (landed)
+- After the mock link as people, F at the Wet Grid: perception as people. Plaque/POI **Perception — people**. Traits change verbs and style, not damage.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 254 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

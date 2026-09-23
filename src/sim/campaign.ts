@@ -267,6 +267,9 @@ export type Beats = {
   combatPeople: boolean;
   earnPeople: boolean;
   angelPeople: boolean;
+  messengerPeople: boolean;
+  linkPeople: boolean;
+  perceptionPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -522,6 +525,9 @@ export type Poi = {
     | "combat-people"
     | "earn-people"
     | "angel-people"
+    | "messenger-people"
+    | "link-people"
+    | "perception-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -5225,6 +5231,81 @@ export function angelPeoplePoi(): Poi {
   };
 }
 
+export const MESSENGER_PEOPLE_COPY =
+  "The messenger is a house of people, not a stick of process. Angels hint. Perception, not combat. This was not a fetch.";
+export const WINK_MESSENGER_PEOPLE = "People, not a messenger stick. The token does not strike.";
+export const MESSENGER_PEOPLE_NEED = "The Angel as people first. A messenger of people is not a fetch.";
+export const MESSENGER_PEOPLE_HELD = "The messenger already holds as people. Angels hint. Perception, not combat.";
+export const MESSENGER_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const MESSENGER_PEOPLE_PLAQUE: Sign = {
+  id: "messenger-people",
+  title: "Messenger — people",
+  text: "A house of people. Angels hint. Perception, not combat. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function messengerPeoplePoi(): Poi {
+  return {
+    id: "messenger-people",
+    name: "Messenger — people",
+    x: 720,
+    y: 520,
+    kind: "messenger-people",
+  };
+}
+
+export const LINK_PEOPLE_COPY =
+  "The mock link is a house of people, not a mint of process. Serial still seeds aura. Guests stay aura 0. Combat is not. This was not a fetch.";
+export const WINK_LINK_PEOPLE = "People, not a link stick. The token does not strike.";
+export const LINK_PEOPLE_NEED = "The messenger as people first. A link of people is not a fetch.";
+export const LINK_PEOPLE_HELD = "The mock link already holds as people. Serial still seeds aura. Guests stay aura 0.";
+export const LINK_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const LINK_PEOPLE_PLAQUE: Sign = {
+  id: "link-people",
+  title: "Link — people",
+  text: "A house of people. Serial still seeds aura. Guests stay aura 0. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function linkPeoplePoi(): Poi {
+  return {
+    id: "link-people",
+    name: "Link — people",
+    x: 720,
+    y: 520,
+    kind: "link-people",
+  };
+}
+
+export const PERCEPTION_PEOPLE_COPY =
+  "Perception is a house of people, not a stick of process. Traits change verbs and style, not damage. Combat is not. This was not a fetch.";
+export const WINK_PERCEPTION_PEOPLE = "People, not a perception stick. The token does not strike.";
+export const PERCEPTION_PEOPLE_NEED = "The mock link as people first. Perception of people is not a fetch.";
+export const PERCEPTION_PEOPLE_HELD = "Perception already holds as people. Traits change verbs and style, not damage.";
+export const PERCEPTION_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const PERCEPTION_PEOPLE_PLAQUE: Sign = {
+  id: "perception-people",
+  title: "Perception — people",
+  text: "A house of people. Traits change verbs and style, not damage. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function perceptionPeoplePoi(): Poi {
+  return {
+    id: "perception-people",
+    name: "Perception — people",
+    x: 720,
+    y: 520,
+    kind: "perception-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5979,6 +6060,9 @@ export function emptyBeats(): Beats {
     combatPeople: false,
     earnPeople: false,
     angelPeople: false,
+    messengerPeople: false,
+    linkPeople: false,
+    perceptionPeople: false,
   };
 }
 
