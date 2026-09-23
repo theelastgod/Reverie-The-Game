@@ -213,6 +213,9 @@ export type Beats = {
   extractPeople: boolean;
   maxPeople: boolean;
   heatPeople: boolean;
+  fatPeople: boolean;
+  poorPeople: boolean;
+  blockPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -414,6 +417,9 @@ export type Poi = {
     | "extract-people"
     | "max-people"
     | "heat-people"
+    | "fat-people"
+    | "poor-people"
+    | "block-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3765,6 +3771,81 @@ export function heatPeoplePoi(): Poi {
   };
 }
 
+export const FAT_PEOPLE_COPY =
+  "Fat yield is a house of people, not a faucet of process. Fat yield still drinks. Sacred doors still dim. Combat is not. This was not a fetch.";
+export const WINK_FAT_PEOPLE = "People, not a fat stick. The token does not strike.";
+export const FAT_PEOPLE_NEED = "Heat as people first. Fat yield of people is not a fetch.";
+export const FAT_PEOPLE_HELD = "Fat yield already holds as people. Fat yield still drinks. Sacred doors still dim.";
+export const FAT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const FAT_PEOPLE_PLAQUE: Sign = {
+  id: "fat-people",
+  title: "Fat — people",
+  text: "A house of people. Fat yield still drinks. Sacred doors still dim. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function fatPeoplePoi(): Poi {
+  return {
+    id: "fat-people",
+    name: "Fat — people",
+    x: 720,
+    y: 520,
+    kind: "fat-people",
+  };
+}
+
+export const POOR_PEOPLE_COPY =
+  "Poor yield is a house of people, not a hole of process. Low climate still keeps Clearings. Yield still poor. Combat is not. This was not a fetch.";
+export const WINK_POOR_PEOPLE = "People, not a poor stick. The token does not strike.";
+export const POOR_PEOPLE_NEED = "Fat yield as people first. Poor yield of people is not a fetch.";
+export const POOR_PEOPLE_HELD = "Poor yield already holds as people. Low climate still keeps Clearings. Yield still poor.";
+export const POOR_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const POOR_PEOPLE_PLAQUE: Sign = {
+  id: "poor-people",
+  title: "Poor — people",
+  text: "A house of people. Low climate still keeps Clearings. Yield still poor. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function poorPeoplePoi(): Poi {
+  return {
+    id: "poor-people",
+    name: "Poor — people",
+    x: 720,
+    y: 520,
+    kind: "poor-people",
+  };
+}
+
+export const BLOCK_PEOPLE_COPY =
+  "The block is a house of people, not a god of process. Gestell 100 still blocks a Passing without a Clearing. Solo cannot force Appearance. Combat is not. This was not a fetch.";
+export const WINK_BLOCK_PEOPLE = "People, not a block stick. The token does not strike.";
+export const BLOCK_PEOPLE_NEED = "Poor yield as people first. A block of people is not a fetch.";
+export const BLOCK_PEOPLE_HELD = "The block already holds as people. Gestell 100 still blocks a Passing without a Clearing.";
+export const BLOCK_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const BLOCK_PEOPLE_PLAQUE: Sign = {
+  id: "block-people",
+  title: "Block — people",
+  text: "A house of people. Gestell 100 still blocks a Passing without a Clearing. Solo cannot force Appearance. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function blockPeoplePoi(): Poi {
+  return {
+    id: "block-people",
+    name: "Block — people",
+    x: 720,
+    y: 520,
+    kind: "block-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4465,6 +4546,9 @@ export function emptyBeats(): Beats {
     extractPeople: false,
     maxPeople: false,
     heatPeople: false,
+    fatPeople: false,
+    poorPeople: false,
+    blockPeople: false,
   };
 }
 

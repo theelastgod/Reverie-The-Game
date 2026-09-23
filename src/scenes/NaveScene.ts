@@ -680,6 +680,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "heat-people"
                         ? 0xc9a56a
+                      : poi.kind === "fat-people"
+                        ? 0xc9a56a
+                      : poi.kind === "poor-people"
+                        ? 0xc9a56a
+                      : poi.kind === "block-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1128,6 +1134,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.blockPeople || snap.blockPeopleHeld)) {
+      this.prompt = me.heard || "Block — people. Gestell 100 still blocks a Passing without a Clearing. Solo cannot force Appearance. Not a stick.";
+    } else if (wet && snap.poorPeopleHeld && !me.guest) {
+      this.prompt = "F — the block as a house of people. Gestell 100 still blocks a Passing without a Clearing. Not a fetch.";
+    } else if (wet && (me.beats.poorPeople || snap.poorPeopleHeld)) {
+      this.prompt = me.heard || "Poor — people. Low climate still keeps Clearings. Yield still poor. Not a stick.";
+    } else if (wet && snap.fatPeopleHeld && !me.guest) {
+      this.prompt = "F — poor yield as a house of people. Low climate still keeps Clearings. Yield still poor. Not a fetch.";
+    } else if (wet && (me.beats.fatPeople || snap.fatPeopleHeld)) {
+      this.prompt = me.heard || "Fat — people. Fat yield still drinks. Sacred doors still dim. Not a stick.";
+    } else if (wet && snap.heatPeopleHeld && !me.guest) {
+      this.prompt = "F — fat yield as a house of people. Fat yield still drinks. Sacred doors still dim. Not a fetch.";
     } else if (wet && (me.beats.heatPeople || snap.heatPeopleHeld)) {
       this.prompt = me.heard || "Heat — people. Gestell 91 still flags the street. Flag still opts in. Not a stick.";
     } else if (wet && snap.maxPeopleHeld && !me.guest) {

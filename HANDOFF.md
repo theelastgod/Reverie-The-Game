@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 196** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 199** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -824,7 +824,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After max climate as people, F at the Wet Grid: heat as people. Plaque/POI **Heat — people**. Gestell 91 still flags the street. Flag still opts in.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 196 (do this next)
+## Stage 196 (landed)
+- After heat as people, F at the Wet Grid: fat yield as people. Plaque/POI **Fat — people**. Fat yield still drinks. Sacred doors still dim.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 197 (landed)
+- After fat yield as people, F at the Wet Grid: poor yield as people. Plaque/POI **Poor — people**. Low climate still keeps Clearings. Yield still poor.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 198 (landed)
+- After poor yield as people, F at the Wet Grid: the block as people. Plaque/POI **Block — people**. Gestell 100 still blocks a Passing without a Clearing. Solo cannot force Appearance.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 199 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

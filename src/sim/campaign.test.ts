@@ -688,6 +688,24 @@ import {
   HEAT_PEOPLE_HELD,
   HEAT_PEOPLE_SPECTATOR,
   HEAT_PEOPLE_PLAQUE,
+  FAT_PEOPLE_COPY,
+  WINK_FAT_PEOPLE,
+  FAT_PEOPLE_NEED,
+  FAT_PEOPLE_HELD,
+  FAT_PEOPLE_SPECTATOR,
+  FAT_PEOPLE_PLAQUE,
+  POOR_PEOPLE_COPY,
+  WINK_POOR_PEOPLE,
+  POOR_PEOPLE_NEED,
+  POOR_PEOPLE_HELD,
+  POOR_PEOPLE_SPECTATOR,
+  POOR_PEOPLE_PLAQUE,
+  BLOCK_PEOPLE_COPY,
+  WINK_BLOCK_PEOPLE,
+  BLOCK_PEOPLE_NEED,
+  BLOCK_PEOPLE_HELD,
+  BLOCK_PEOPLE_SPECTATOR,
+  BLOCK_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1310,6 +1328,9 @@ import {
   applyExtractPeople,
   applyMaxPeople,
   applyHeatPeople,
+  applyFatPeople,
+  applyPoorPeople,
+  applyBlockPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -6182,6 +6203,126 @@ describe("Heat — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyHeatPeople(gWorld, "g").players.get("g")?.heard).toBe(HEAT_PEOPLE_SPECTATOR);
     expect(gWorld.heatPeopleHeld).toBe(false);
+  });
+});
+
+describe("Fat — people", () => {
+  it("names fat yield as people after heat; fat yield still drinks; sacred doors still dim; guests cannot", () => {
+    const w = emptyWorld();
+    w.heatPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), heatPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FAT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FAT_PEOPLE);
+    expect(p.beats.fatPeople).toBe(true);
+    expect(named.fatPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "fat-people")?.name).toBe("Fat — people");
+    expect(named.signs.find((s) => s.id === "fat-people")?.title).toBe(FAT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Fat yield still drinks");
+    expect(p.heard).toContain("Sacred doors still dim");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFatPeople(named, "a").players.get("a")?.heard).toBe(FAT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyFatPeople(early, "a").players.get("a")?.heard).toBe(FAT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.heatPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyFatPeople(gWorld, "g").players.get("g")?.heard).toBe(FAT_PEOPLE_SPECTATOR);
+    expect(gWorld.fatPeopleHeld).toBe(false);
+  });
+});
+
+describe("Poor — people", () => {
+  it("names poor yield as people after fat; low climate still keeps Clearings; guests cannot", () => {
+    const w = emptyWorld();
+    w.fatPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), fatPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(POOR_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_POOR_PEOPLE);
+    expect(p.beats.poorPeople).toBe(true);
+    expect(named.poorPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "poor-people")?.name).toBe("Poor — people");
+    expect(named.signs.find((s) => s.id === "poor-people")?.title).toBe(POOR_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Low climate still keeps Clearings");
+    expect(p.heard).toContain("Yield still poor");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPoorPeople(named, "a").players.get("a")?.heard).toBe(POOR_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyPoorPeople(early, "a").players.get("a")?.heard).toBe(POOR_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.fatPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyPoorPeople(gWorld, "g").players.get("g")?.heard).toBe(POOR_PEOPLE_SPECTATOR);
+    expect(gWorld.poorPeopleHeld).toBe(false);
+  });
+});
+
+describe("Block — people", () => {
+  it("names the block as people after poor yield; Gestell 100 still blocks a Passing without a Clearing; guests cannot", () => {
+    const w = emptyWorld();
+    w.poorPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), poorPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BLOCK_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BLOCK_PEOPLE);
+    expect(p.beats.blockPeople).toBe(true);
+    expect(named.blockPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "block-people")?.name).toBe("Block — people");
+    expect(named.signs.find((s) => s.id === "block-people")?.title).toBe(BLOCK_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Gestell 100 still blocks");
+    expect(p.heard).toContain("Solo cannot force Appearance");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBlockPeople(named, "a").players.get("a")?.heard).toBe(BLOCK_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyBlockPeople(early, "a").players.get("a")?.heard).toBe(BLOCK_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.poorPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyBlockPeople(gWorld, "g").players.get("g")?.heard).toBe(BLOCK_PEOPLE_SPECTATOR);
+    expect(gWorld.blockPeopleHeld).toBe(false);
   });
 });
 
