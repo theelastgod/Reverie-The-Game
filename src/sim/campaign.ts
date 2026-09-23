@@ -229,6 +229,9 @@ export type Beats = {
   willingPeople: boolean;
   emptyPeople: boolean;
   walkedPeople: boolean;
+  leavePeople: boolean;
+  keptPeople: boolean;
+  holdPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -446,6 +449,9 @@ export type Poi = {
     | "willing-people"
     | "empty-people"
     | "walked-people"
+    | "leave-people"
+    | "kept-people"
+    | "hold-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4197,6 +4203,81 @@ export function walkedPeoplePoi(): Poi {
   };
 }
 
+export const LEAVE_PEOPLE_COPY =
+  "Leaving is a house of people, not a farm of process. Nara still leaves if extract feeds Gestell past 71 without a funeral. Combat is not. This was not a fetch.";
+export const WINK_LEAVE_PEOPLE = "People, not a leave stick. The token does not strike.";
+export const LEAVE_PEOPLE_NEED = "Walking as people first. Leaving of people is not a fetch.";
+export const LEAVE_PEOPLE_HELD = "Leaving already holds as people. Nara still leaves if extract feeds Gestell past 71 without a funeral.";
+export const LEAVE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const LEAVE_PEOPLE_PLAQUE: Sign = {
+  id: "leave-people",
+  title: "Leave — people",
+  text: "A house of people. Nara still leaves if extract feeds Gestell past 71 without a funeral. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function leavePeoplePoi(): Poi {
+  return {
+    id: "leave-people",
+    name: "Leave — people",
+    x: 720,
+    y: 520,
+    kind: "leave-people",
+  };
+}
+
+export const KEPT_PEOPLE_COPY =
+  "Keeping is a house of people, not a farm of process. A paid funeral still keeps Nara. Combat is not. This was not a fetch.";
+export const WINK_KEPT_PEOPLE = "People, not a kept stick. The token does not strike.";
+export const KEPT_PEOPLE_NEED = "Leaving as people first. Keeping of people is not a fetch.";
+export const KEPT_PEOPLE_HELD = "Keeping already holds as people. A paid funeral still keeps Nara.";
+export const KEPT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const KEPT_PEOPLE_PLAQUE: Sign = {
+  id: "kept-people",
+  title: "Kept — people",
+  text: "A house of people. A paid funeral still keeps Nara. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function keptPeoplePoi(): Poi {
+  return {
+    id: "kept-people",
+    name: "Kept — people",
+    x: 720,
+    y: 520,
+    kind: "kept-people",
+  };
+}
+
+export const HOLD_PEOPLE_COPY =
+  "Holding is a house of people, not a farm of process. A freeze still keeps Ord. Combat is not. This was not a fetch.";
+export const WINK_HOLD_PEOPLE = "People, not a hold stick. The token does not strike.";
+export const HOLD_PEOPLE_NEED = "Keeping as people first. Holding of people is not a fetch.";
+export const HOLD_PEOPLE_HELD = "Holding already holds as people. A freeze still keeps Ord.";
+export const HOLD_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const HOLD_PEOPLE_PLAQUE: Sign = {
+  id: "hold-people",
+  title: "Hold — people",
+  text: "A house of people. A freeze still keeps Ord. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function holdPeoplePoi(): Poi {
+  return {
+    id: "hold-people",
+    name: "Hold — people",
+    x: 720,
+    y: 520,
+    kind: "hold-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4913,6 +4994,9 @@ export function emptyBeats(): Beats {
     willingPeople: false,
     emptyPeople: false,
     walkedPeople: false,
+    leavePeople: false,
+    keptPeople: false,
+    holdPeople: false,
   };
 }
 

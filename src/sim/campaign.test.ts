@@ -784,6 +784,24 @@ import {
   WALKED_PEOPLE_HELD,
   WALKED_PEOPLE_SPECTATOR,
   WALKED_PEOPLE_PLAQUE,
+  LEAVE_PEOPLE_COPY,
+  WINK_LEAVE_PEOPLE,
+  LEAVE_PEOPLE_NEED,
+  LEAVE_PEOPLE_HELD,
+  LEAVE_PEOPLE_SPECTATOR,
+  LEAVE_PEOPLE_PLAQUE,
+  KEPT_PEOPLE_COPY,
+  WINK_KEPT_PEOPLE,
+  KEPT_PEOPLE_NEED,
+  KEPT_PEOPLE_HELD,
+  KEPT_PEOPLE_SPECTATOR,
+  KEPT_PEOPLE_PLAQUE,
+  HOLD_PEOPLE_COPY,
+  WINK_HOLD_PEOPLE,
+  HOLD_PEOPLE_NEED,
+  HOLD_PEOPLE_HELD,
+  HOLD_PEOPLE_SPECTATOR,
+  HOLD_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1422,6 +1440,9 @@ import {
   applyWillingPeople,
   applyEmptyPeople,
   applyWalkedPeople,
+  applyLeavePeople,
+  applyKeptPeople,
+  applyHoldPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -6930,6 +6951,124 @@ describe("Walked — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyWalkedPeople(gWorld, "g").players.get("g")?.heard).toBe(WALKED_PEOPLE_SPECTATOR);
     expect(gWorld.walkedPeopleHeld).toBe(false);
+  });
+});
+
+describe("Leave — people", () => {
+  it("names leaving as people after walking; Nara still leaves without a funeral; guests cannot", () => {
+    const w = emptyWorld();
+    w.walkedPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), walkedPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(LEAVE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_LEAVE_PEOPLE);
+    expect(p.beats.leavePeople).toBe(true);
+    expect(named.leavePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "leave-people")?.name).toBe("Leave — people");
+    expect(named.signs.find((s) => s.id === "leave-people")?.title).toBe(LEAVE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Nara still leaves");
+    expect(p.heard).toContain("without a funeral");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyLeavePeople(named, "a").players.get("a")?.heard).toBe(LEAVE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyLeavePeople(early, "a").players.get("a")?.heard).toBe(LEAVE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.walkedPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyLeavePeople(gWorld, "g").players.get("g")?.heard).toBe(LEAVE_PEOPLE_SPECTATOR);
+    expect(gWorld.leavePeopleHeld).toBe(false);
+  });
+});
+
+describe("Kept — people", () => {
+  it("names keeping as people after leaving; a paid funeral still keeps Nara; guests cannot", () => {
+    const w = emptyWorld();
+    w.leavePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), leavePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(KEPT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_KEPT_PEOPLE);
+    expect(p.beats.keptPeople).toBe(true);
+    expect(named.keptPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "kept-people")?.name).toBe("Kept — people");
+    expect(named.signs.find((s) => s.id === "kept-people")?.title).toBe(KEPT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("paid funeral still keeps Nara");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyKeptPeople(named, "a").players.get("a")?.heard).toBe(KEPT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyKeptPeople(early, "a").players.get("a")?.heard).toBe(KEPT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.leavePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyKeptPeople(gWorld, "g").players.get("g")?.heard).toBe(KEPT_PEOPLE_SPECTATOR);
+    expect(gWorld.keptPeopleHeld).toBe(false);
+  });
+});
+
+describe("Hold — people", () => {
+  it("names holding as people after keeping; a freeze still keeps Ord; guests cannot", () => {
+    const w = emptyWorld();
+    w.keptPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), keptPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HOLD_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HOLD_PEOPLE);
+    expect(p.beats.holdPeople).toBe(true);
+    expect(named.holdPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "hold-people")?.name).toBe("Hold — people");
+    expect(named.signs.find((s) => s.id === "hold-people")?.title).toBe(HOLD_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("freeze still keeps Ord");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHoldPeople(named, "a").players.get("a")?.heard).toBe(HOLD_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyHoldPeople(early, "a").players.get("a")?.heard).toBe(HOLD_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.keptPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyHoldPeople(gWorld, "g").players.get("g")?.heard).toBe(HOLD_PEOPLE_SPECTATOR);
+    expect(gWorld.holdPeopleHeld).toBe(false);
   });
 });
 

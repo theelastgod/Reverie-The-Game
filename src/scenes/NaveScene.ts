@@ -712,6 +712,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "walked-people"
                         ? 0xc9a56a
+                      : poi.kind === "leave-people"
+                        ? 0xc9a56a
+                      : poi.kind === "kept-people"
+                        ? 0xc9a56a
+                      : poi.kind === "hold-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1160,6 +1166,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.holdPeople || snap.holdPeopleHeld)) {
+      this.prompt = me.heard || "Hold — people. A freeze still keeps Ord. Not a stick.";
+    } else if (wet && snap.keptPeopleHeld && !me.guest) {
+      this.prompt = "F — holding as a house of people. A freeze still keeps Ord. Not a fetch.";
+    } else if (wet && (me.beats.keptPeople || snap.keptPeopleHeld)) {
+      this.prompt = me.heard || "Kept — people. A paid funeral still keeps Nara. Not a stick.";
+    } else if (wet && snap.leavePeopleHeld && !me.guest) {
+      this.prompt = "F — keeping as a house of people. A paid funeral still keeps Nara. Not a fetch.";
+    } else if (wet && (me.beats.leavePeople || snap.leavePeopleHeld)) {
+      this.prompt = me.heard || "Leave — people. Nara still leaves if extract feeds Gestell past 71 without a funeral. Not a stick.";
+    } else if (wet && snap.walkedPeopleHeld && !me.guest) {
+      this.prompt = "F — leaving as a house of people. Nara still leaves if extract feeds Gestell past 71 without a funeral. Not a fetch.";
     } else if (wet && (me.beats.walkedPeople || snap.walkedPeopleHeld)) {
       this.prompt = me.heard || "Walked — people. If Nara, Ord, or Quill walked, Passing is absence. Not a stick.";
     } else if (wet && snap.emptyPeopleHeld && !me.guest) {
