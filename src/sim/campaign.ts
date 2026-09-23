@@ -221,6 +221,9 @@ export type Beats = {
   tracePeople: boolean;
   failPeople: boolean;
   holePeople: boolean;
+  stipendPeople: boolean;
+  hijackPeople: boolean;
+  absencePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -430,6 +433,9 @@ export type Poi = {
     | "trace-people"
     | "fail-people"
     | "hole-people"
+    | "stipend-people"
+    | "hijack-people"
+    | "absence-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3981,6 +3987,81 @@ export function holePeoplePoi(): Poi {
   };
 }
 
+export const STIPEND_PEOPLE_COPY =
+  "The stipend is a house of people, not a yield of process. Appearance still pays cult upkeep. Absence pays none. Combat is not. This was not a fetch.";
+export const WINK_STIPEND_PEOPLE = "People, not a stipend stick. The token does not strike.";
+export const STIPEND_PEOPLE_NEED = "The hole as people first. A stipend of people is not a fetch.";
+export const STIPEND_PEOPLE_HELD = "The stipend already holds as people. Appearance still pays cult upkeep. Absence pays none.";
+export const STIPEND_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const STIPEND_PEOPLE_PLAQUE: Sign = {
+  id: "stipend-people",
+  title: "Stipend — people",
+  text: "A house of people. Appearance still pays cult upkeep. Absence pays none. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function stipendPeoplePoi(): Poi {
+  return {
+    id: "stipend-people",
+    name: "Stipend — people",
+    x: 720,
+    y: 520,
+    kind: "stipend-people",
+  };
+}
+
+export const HIJACK_PEOPLE_COPY =
+  "Hijack is a house of people, not a god of process. Freeze or Cold still hijacks the Clearing. Combat is not. This was not a fetch.";
+export const WINK_HIJACK_PEOPLE = "People, not a hijack stick. The token does not strike.";
+export const HIJACK_PEOPLE_NEED = "The stipend as people first. Hijack of people is not a fetch.";
+export const HIJACK_PEOPLE_HELD = "Hijack already holds as people. Freeze or Cold still hijacks the Clearing.";
+export const HIJACK_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const HIJACK_PEOPLE_PLAQUE: Sign = {
+  id: "hijack-people",
+  title: "Hijack — people",
+  text: "A house of people. Freeze or Cold still hijacks the Clearing. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function hijackPeoplePoi(): Poi {
+  return {
+    id: "hijack-people",
+    name: "Hijack — people",
+    x: 720,
+    y: 520,
+    kind: "hijack-people",
+  };
+}
+
+export const ABSENCE_PEOPLE_COPY =
+  "Absence is a house of people, not a hole of process. Absence still waits. Nara still stays at the hole. Combat is not. This was not a fetch.";
+export const WINK_ABSENCE_PEOPLE = "People, not an absence stick. The token does not strike.";
+export const ABSENCE_PEOPLE_NEED = "Hijack as people first. Absence of people is not a fetch.";
+export const ABSENCE_PEOPLE_HELD = "Absence already holds as people. Absence still waits. Nara still stays at the hole.";
+export const ABSENCE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const ABSENCE_PEOPLE_PLAQUE: Sign = {
+  id: "absence-people",
+  title: "Absence — people",
+  text: "A house of people. Absence still waits. Nara still stays at the hole. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function absencePeoplePoi(): Poi {
+  return {
+    id: "absence-people",
+    name: "Absence — people",
+    x: 720,
+    y: 520,
+    kind: "absence-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4689,6 +4770,9 @@ export function emptyBeats(): Beats {
     tracePeople: false,
     failPeople: false,
     holePeople: false,
+    stipendPeople: false,
+    hijackPeople: false,
+    absencePeople: false,
   };
 }
 

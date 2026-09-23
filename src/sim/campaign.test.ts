@@ -736,6 +736,24 @@ import {
   HOLE_PEOPLE_HELD,
   HOLE_PEOPLE_SPECTATOR,
   HOLE_PEOPLE_PLAQUE,
+  STIPEND_PEOPLE_COPY,
+  WINK_STIPEND_PEOPLE,
+  STIPEND_PEOPLE_NEED,
+  STIPEND_PEOPLE_HELD,
+  STIPEND_PEOPLE_SPECTATOR,
+  STIPEND_PEOPLE_PLAQUE,
+  HIJACK_PEOPLE_COPY,
+  WINK_HIJACK_PEOPLE,
+  HIJACK_PEOPLE_NEED,
+  HIJACK_PEOPLE_HELD,
+  HIJACK_PEOPLE_SPECTATOR,
+  HIJACK_PEOPLE_PLAQUE,
+  ABSENCE_PEOPLE_COPY,
+  WINK_ABSENCE_PEOPLE,
+  ABSENCE_PEOPLE_NEED,
+  ABSENCE_PEOPLE_HELD,
+  ABSENCE_PEOPLE_SPECTATOR,
+  ABSENCE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1366,6 +1384,9 @@ import {
   applyTracePeople,
   applyFailPeople,
   applyHolePeople,
+  applyStipendPeople,
+  applyHijackPeople,
+  applyAbsencePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -6557,6 +6578,125 @@ describe("Hole — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyHolePeople(gWorld, "g").players.get("g")?.heard).toBe(HOLE_PEOPLE_SPECTATOR);
     expect(gWorld.holePeopleHeld).toBe(false);
+  });
+});
+
+describe("Stipend — people", () => {
+  it("names the stipend as people after the hole; Appearance still pays cult upkeep; guests cannot", () => {
+    const w = emptyWorld();
+    w.holePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), holePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(STIPEND_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_STIPEND_PEOPLE);
+    expect(p.beats.stipendPeople).toBe(true);
+    expect(named.stipendPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "stipend-people")?.name).toBe("Stipend — people");
+    expect(named.signs.find((s) => s.id === "stipend-people")?.title).toBe(STIPEND_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Appearance still pays cult upkeep");
+    expect(p.heard).toContain("Absence pays none");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyStipendPeople(named, "a").players.get("a")?.heard).toBe(STIPEND_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyStipendPeople(early, "a").players.get("a")?.heard).toBe(STIPEND_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.holePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyStipendPeople(gWorld, "g").players.get("g")?.heard).toBe(STIPEND_PEOPLE_SPECTATOR);
+    expect(gWorld.stipendPeopleHeld).toBe(false);
+  });
+});
+
+describe("Hijack — people", () => {
+  it("names hijack as people after the stipend; Freeze or Cold still hijacks; guests cannot", () => {
+    const w = emptyWorld();
+    w.stipendPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), stipendPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HIJACK_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HIJACK_PEOPLE);
+    expect(p.beats.hijackPeople).toBe(true);
+    expect(named.hijackPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "hijack-people")?.name).toBe("Hijack — people");
+    expect(named.signs.find((s) => s.id === "hijack-people")?.title).toBe(HIJACK_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Freeze or Cold still hijacks");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHijackPeople(named, "a").players.get("a")?.heard).toBe(HIJACK_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyHijackPeople(early, "a").players.get("a")?.heard).toBe(HIJACK_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.stipendPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyHijackPeople(gWorld, "g").players.get("g")?.heard).toBe(HIJACK_PEOPLE_SPECTATOR);
+    expect(gWorld.hijackPeopleHeld).toBe(false);
+  });
+});
+
+describe("Absence — people", () => {
+  it("names absence as people after hijack; Absence still waits; Nara still stays; guests cannot", () => {
+    const w = emptyWorld();
+    w.hijackPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), hijackPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(ABSENCE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_ABSENCE_PEOPLE);
+    expect(p.beats.absencePeople).toBe(true);
+    expect(named.absencePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "absence-people")?.name).toBe("Absence — people");
+    expect(named.signs.find((s) => s.id === "absence-people")?.title).toBe(ABSENCE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Absence still waits");
+    expect(p.heard).toContain("Nara still stays");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyAbsencePeople(named, "a").players.get("a")?.heard).toBe(ABSENCE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyAbsencePeople(early, "a").players.get("a")?.heard).toBe(ABSENCE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.hijackPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyAbsencePeople(gWorld, "g").players.get("g")?.heard).toBe(ABSENCE_PEOPLE_SPECTATOR);
+    expect(gWorld.absencePeopleHeld).toBe(false);
   });
 });
 

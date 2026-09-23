@@ -696,6 +696,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "hole-people"
                         ? 0xc9a56a
+                      : poi.kind === "stipend-people"
+                        ? 0xc9a56a
+                      : poi.kind === "hijack-people"
+                        ? 0xc9a56a
+                      : poi.kind === "absence-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1144,6 +1150,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.absencePeople || snap.absencePeopleHeld)) {
+      this.prompt = me.heard || "Absence — people. Absence still waits. Nara still stays at the hole. Not a stick.";
+    } else if (wet && snap.hijackPeopleHeld && !me.guest) {
+      this.prompt = "F — absence as a house of people. Absence still waits. Nara still stays at the hole. Not a fetch.";
+    } else if (wet && (me.beats.hijackPeople || snap.hijackPeopleHeld)) {
+      this.prompt = me.heard || "Hijack — people. Freeze or Cold still hijacks the Clearing. Not a stick.";
+    } else if (wet && snap.stipendPeopleHeld && !me.guest) {
+      this.prompt = "F — hijack as a house of people. Freeze or Cold still hijacks the Clearing. Not a fetch.";
+    } else if (wet && (me.beats.stipendPeople || snap.stipendPeopleHeld)) {
+      this.prompt = me.heard || "Stipend — people. Appearance still pays cult upkeep. Absence pays none. Not a stick.";
+    } else if (wet && snap.holePeopleHeld && !me.guest) {
+      this.prompt = "F — the stipend as a house of people. Appearance still pays cult upkeep. Absence pays none. Not a fetch.";
     } else if (wet && (me.beats.holePeople || snap.holePeopleHeld)) {
       this.prompt = me.heard || "Hole — people. A failed Passing still writes the hole. No stipend. Not a stick.";
     } else if (wet && snap.failPeopleHeld && !me.guest) {

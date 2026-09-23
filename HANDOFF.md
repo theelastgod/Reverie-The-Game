@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 204** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 207** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -856,7 +856,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After failure as people, F at the Wet Grid: the hole as people. Plaque/POI **Hole — people**. A failed Passing still writes the hole. No stipend.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 204 (do this next)
+## Stage 204 (landed)
+- After the hole as people, F at the Wet Grid: the stipend as people. Plaque/POI **Stipend — people**. Appearance still pays cult upkeep. Absence pays none.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 205 (landed)
+- After the stipend as people, F at the Wet Grid: hijack as people. Plaque/POI **Hijack — people**. Freeze or Cold still hijacks the Clearing.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 206 (landed)
+- After hijack as people, F at the Wet Grid: absence as people. Plaque/POI **Absence — people**. Absence still waits. Nara still stays at the hole.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 207 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
