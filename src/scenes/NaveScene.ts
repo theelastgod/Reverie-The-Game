@@ -752,6 +752,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "gather-people"
                         ? 0xc9a56a
+                      : poi.kind === "clinic-people"
+                        ? 0xc9a56a
+                      : poi.kind === "paper-people"
+                        ? 0xc9a56a
+                      : poi.kind === "frame-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1200,6 +1206,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.framePeople || snap.framePeopleHeld)) {
+      this.prompt = me.heard || "Frame — people. Optional F after Participant still takes a school-specific Wink. Not a stick.";
+    } else if (wet && snap.paperPeopleHeld && !me.guest) {
+      this.prompt = "F — the production still as a house of people. Optional F after Participant still takes a school-specific Wink. Not a fetch.";
+    } else if (wet && (me.beats.paperPeople || snap.paperPeopleHeld)) {
+      this.prompt = me.heard || "Paper — people. Insurance paper still costs. Death still walks you. Not a revive. Not a stick.";
+    } else if (wet && snap.clinicPeopleHeld && !me.guest) {
+      this.prompt = "F — insurance paper as a house of people. Paper still costs. Death still walks you. Not a revive. Not a fetch.";
+    } else if (wet && (me.beats.clinicPeople || snap.clinicPeopleHeld)) {
+      this.prompt = me.heard || "Clinic — people. The Care is not a clinic. Restore still costs. Insurance still costs. Not a stick.";
+    } else if (wet && snap.gatherPeopleHeld && !me.guest) {
+      this.prompt = "F — the Care as a house of people, not a clinic. Restore still costs. Insurance still costs. Not a fetch.";
     } else if (wet && (me.beats.gatherPeople || snap.gatherPeopleHeld)) {
       this.prompt = me.heard || "Gather — people. When Nara, Quill, Ord, and Vesper stay as people, Ione's hole is still a gathering. Not a stick.";
     } else if (wet && snap.togetherPeopleHeld && !me.guest) {

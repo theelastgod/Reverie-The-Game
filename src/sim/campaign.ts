@@ -249,6 +249,9 @@ export type Beats = {
   partedPeople: boolean;
   togetherPeople: boolean;
   gatherPeople: boolean;
+  clinicPeople: boolean;
+  paperPeople: boolean;
+  framePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -486,6 +489,9 @@ export type Poi = {
     | "parted-people"
     | "together-people"
     | "gather-people"
+    | "clinic-people"
+    | "paper-people"
+    | "frame-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4737,6 +4743,81 @@ export function gatherPeoplePoi(): Poi {
   };
 }
 
+export const CLINIC_PEOPLE_COPY =
+  "The Care is a house of people, not a clinic of process. Restore still costs. Insurance still costs. Combat is not. This was not a fetch.";
+export const WINK_CLINIC_PEOPLE = "People, not a clinic stick. The token does not strike.";
+export const CLINIC_PEOPLE_NEED = "The gathering as people first. A clinic of people is not a fetch.";
+export const CLINIC_PEOPLE_HELD = "The Care already holds as people, not a clinic. Restore still costs. Insurance still costs.";
+export const CLINIC_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const CLINIC_PEOPLE_PLAQUE: Sign = {
+  id: "clinic-people",
+  title: "Clinic — people",
+  text: "A house of people. The Care is not a clinic. Restore still costs. Insurance still costs. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function clinicPeoplePoi(): Poi {
+  return {
+    id: "clinic-people",
+    name: "Clinic — people",
+    x: 720,
+    y: 520,
+    kind: "clinic-people",
+  };
+}
+
+export const PAPER_PEOPLE_COPY =
+  "Insurance paper is a house of people, not a revive of process. Paper still costs. Death still walks you. Not a revive. Combat is not. This was not a fetch.";
+export const WINK_PAPER_PEOPLE = "People, not a paper stick. The token does not strike.";
+export const PAPER_PEOPLE_NEED = "The Care as people first. Insurance paper of people is not a fetch.";
+export const PAPER_PEOPLE_HELD = "Insurance paper already holds as people. Paper still costs. Death still walks you. Not a revive.";
+export const PAPER_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const PAPER_PEOPLE_PLAQUE: Sign = {
+  id: "paper-people",
+  title: "Paper — people",
+  text: "A house of people. Insurance paper still costs. Death still walks you. Not a revive. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function paperPeoplePoi(): Poi {
+  return {
+    id: "paper-people",
+    name: "Paper — people",
+    x: 720,
+    y: 520,
+    kind: "paper-people",
+  };
+}
+
+export const FRAME_PEOPLE_COPY =
+  "The production still is a house of people, not a frame of process. Optional F after Participant still takes a school-specific Wink. Combat is not. This was not a fetch.";
+export const WINK_FRAME_PEOPLE = "People, not a frame stick. The token does not strike.";
+export const FRAME_PEOPLE_NEED = "Insurance paper as people first. A production still of people is not a fetch.";
+export const FRAME_PEOPLE_HELD = "The production still already holds as people. Optional F after Participant still takes a school-specific Wink.";
+export const FRAME_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const FRAME_PEOPLE_PLAQUE: Sign = {
+  id: "frame-people",
+  title: "Frame — people",
+  text: "A house of people. Optional F after Participant still takes a school-specific Wink. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function framePeoplePoi(): Poi {
+  return {
+    id: "frame-people",
+    name: "Frame — people",
+    x: 720,
+    y: 520,
+    kind: "frame-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5473,6 +5554,9 @@ export function emptyBeats(): Beats {
     partedPeople: false,
     togetherPeople: false,
     gatherPeople: false,
+    clinicPeople: false,
+    paperPeople: false,
+    framePeople: false,
   };
 }
 

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 232** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 235** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -968,7 +968,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After walking together as people, F at the Wet Grid: the gathering as people. Plaque/POI **Gather — people**. When Nara, Quill, Ord, and Vesper stay as people, Ione's hole is still a gathering.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 232 (do this next)
+## Stage 232 (landed)
+- After the gathering as people, F at the Wet Grid: the Care as people, not a clinic. Plaque/POI **Clinic — people**. Restore still costs. Insurance still costs.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 233 (landed)
+- After the Care as people, F at the Wet Grid: insurance paper as people. Plaque/POI **Paper — people**. Paper still costs. Death still walks you. Not a revive.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 234 (landed)
+- After insurance paper as people, F at the Wet Grid: the production still as people. Plaque/POI **Frame — people**. Optional F after Participant still takes a school-specific Wink.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 235 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

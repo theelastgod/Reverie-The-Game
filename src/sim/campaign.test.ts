@@ -904,6 +904,24 @@ import {
   GATHER_PEOPLE_HELD,
   GATHER_PEOPLE_SPECTATOR,
   GATHER_PEOPLE_PLAQUE,
+  CLINIC_PEOPLE_COPY,
+  WINK_CLINIC_PEOPLE,
+  CLINIC_PEOPLE_NEED,
+  CLINIC_PEOPLE_HELD,
+  CLINIC_PEOPLE_SPECTATOR,
+  CLINIC_PEOPLE_PLAQUE,
+  PAPER_PEOPLE_COPY,
+  WINK_PAPER_PEOPLE,
+  PAPER_PEOPLE_NEED,
+  PAPER_PEOPLE_HELD,
+  PAPER_PEOPLE_SPECTATOR,
+  PAPER_PEOPLE_PLAQUE,
+  FRAME_PEOPLE_COPY,
+  WINK_FRAME_PEOPLE,
+  FRAME_PEOPLE_NEED,
+  FRAME_PEOPLE_HELD,
+  FRAME_PEOPLE_SPECTATOR,
+  FRAME_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1562,6 +1580,9 @@ import {
   applyPartedPeople,
   applyTogetherPeople,
   applyGatherPeople,
+  applyClinicPeople,
+  applyPaperPeople,
+  applyFramePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -7853,6 +7874,123 @@ describe("Gather — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyGatherPeople(gWorld, "g").players.get("g")?.heard).toBe(GATHER_PEOPLE_SPECTATOR);
     expect(gWorld.gatherPeopleHeld).toBe(false);
+  });
+});
+
+describe("Clinic — people", () => {
+  it("names the Care as people after the gathering; not a clinic; restore and insurance still cost; guests cannot", () => {
+    const w = emptyWorld();
+    w.gatherPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), gatherPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CLINIC_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CLINIC_PEOPLE);
+    expect(p.beats.clinicPeople).toBe(true);
+    expect(named.clinicPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "clinic-people")?.name).toBe("Clinic — people");
+    expect(named.signs.find((s) => s.id === "clinic-people")?.title).toBe(CLINIC_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("not a clinic of process");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyClinicPeople(named, "a").players.get("a")?.heard).toBe(CLINIC_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyClinicPeople(early, "a").players.get("a")?.heard).toBe(CLINIC_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.gatherPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyClinicPeople(gWorld, "g").players.get("g")?.heard).toBe(CLINIC_PEOPLE_SPECTATOR);
+    expect(gWorld.clinicPeopleHeld).toBe(false);
+  });
+});
+
+describe("Paper — people", () => {
+  it("names insurance paper as people after the Care; death still walks you; not a revive; guests cannot", () => {
+    const w = emptyWorld();
+    w.clinicPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), clinicPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PAPER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PAPER_PEOPLE);
+    expect(p.beats.paperPeople).toBe(true);
+    expect(named.paperPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "paper-people")?.name).toBe("Paper — people");
+    expect(named.signs.find((s) => s.id === "paper-people")?.title).toBe(PAPER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Not a revive");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPaperPeople(named, "a").players.get("a")?.heard).toBe(PAPER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyPaperPeople(early, "a").players.get("a")?.heard).toBe(PAPER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.clinicPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyPaperPeople(gWorld, "g").players.get("g")?.heard).toBe(PAPER_PEOPLE_SPECTATOR);
+    expect(gWorld.paperPeopleHeld).toBe(false);
+  });
+});
+
+describe("Frame — people", () => {
+  it("names the production still as people after insurance paper; optional school-specific Wink; guests cannot", () => {
+    const w = emptyWorld();
+    w.paperPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), paperPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FRAME_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FRAME_PEOPLE);
+    expect(p.beats.framePeople).toBe(true);
+    expect(named.framePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "frame-people")?.name).toBe("Frame — people");
+    expect(named.signs.find((s) => s.id === "frame-people")?.title).toBe(FRAME_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("school-specific Wink");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFramePeople(named, "a").players.get("a")?.heard).toBe(FRAME_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyFramePeople(early, "a").players.get("a")?.heard).toBe(FRAME_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.paperPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyFramePeople(gWorld, "g").players.get("g")?.heard).toBe(FRAME_PEOPLE_SPECTATOR);
+    expect(gWorld.framePeopleHeld).toBe(false);
   });
 });
 
