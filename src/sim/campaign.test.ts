@@ -664,6 +664,24 @@ import {
   GESTELL_PEOPLE_HELD,
   GESTELL_PEOPLE_SPECTATOR,
   GESTELL_PEOPLE_PLAQUE,
+  CLIMATE_PEOPLE_COPY,
+  WINK_CLIMATE_PEOPLE,
+  CLIMATE_PEOPLE_NEED,
+  CLIMATE_PEOPLE_HELD,
+  CLIMATE_PEOPLE_SPECTATOR,
+  CLIMATE_PEOPLE_PLAQUE,
+  EXTRACT_PEOPLE_COPY,
+  WINK_EXTRACT_PEOPLE,
+  EXTRACT_PEOPLE_NEED,
+  EXTRACT_PEOPLE_HELD,
+  EXTRACT_PEOPLE_SPECTATOR,
+  EXTRACT_PEOPLE_PLAQUE,
+  MAX_PEOPLE_COPY,
+  WINK_MAX_PEOPLE,
+  MAX_PEOPLE_NEED,
+  MAX_PEOPLE_HELD,
+  MAX_PEOPLE_SPECTATOR,
+  MAX_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1282,6 +1300,9 @@ import {
   applyYieldPeople,
   applyTaxPeople,
   applyGestellPeople,
+  applyClimatePeople,
+  applyExtractPeople,
+  applyMaxPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5994,6 +6015,126 @@ describe("Gestell — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyGestellPeople(gWorld, "g").players.get("g")?.heard).toBe(GESTELL_PEOPLE_SPECTATOR);
     expect(gWorld.gestellPeopleHeld).toBe(false);
+  });
+});
+
+describe("Climate — people", () => {
+  it("names climate as people after Gestell; climate still ticks; guests cannot", () => {
+    const w = emptyWorld();
+    w.gestellPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), gestellPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CLIMATE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CLIMATE_PEOPLE);
+    expect(p.beats.climatePeople).toBe(true);
+    expect(named.climatePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "climate-people")?.name).toBe("Climate — people");
+    expect(named.signs.find((s) => s.id === "climate-people")?.title).toBe(CLIMATE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Climate still ticks");
+    expect(p.heard).toContain("Yield still drinks Gestell");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyClimatePeople(named, "a").players.get("a")?.heard).toBe(CLIMATE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyClimatePeople(early, "a").players.get("a")?.heard).toBe(CLIMATE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.gestellPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyClimatePeople(gWorld, "g").players.get("g")?.heard).toBe(CLIMATE_PEOPLE_SPECTATOR);
+    expect(gWorld.climatePeopleHeld).toBe(false);
+  });
+});
+
+describe("Extract — people", () => {
+  it("names extract as people after climate; extract still pays; keep still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.climatePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), climatePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(EXTRACT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_EXTRACT_PEOPLE);
+    expect(p.beats.extractPeople).toBe(true);
+    expect(named.extractPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "extract-people")?.name).toBe("Extract — people");
+    expect(named.signs.find((s) => s.id === "extract-people")?.title).toBe(EXTRACT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Extract still pays");
+    expect(p.heard).toContain("Keep still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyExtractPeople(named, "a").players.get("a")?.heard).toBe(EXTRACT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyExtractPeople(early, "a").players.get("a")?.heard).toBe(EXTRACT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.climatePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyExtractPeople(gWorld, "g").players.get("g")?.heard).toBe(EXTRACT_PEOPLE_SPECTATOR);
+    expect(gWorld.extractPeopleHeld).toBe(false);
+  });
+});
+
+describe("Max — people", () => {
+  it("names max climate as people after extract; Gestell 91 still flags; guests cannot", () => {
+    const w = emptyWorld();
+    w.extractPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), extractPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(MAX_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_MAX_PEOPLE);
+    expect(p.beats.maxPeople).toBe(true);
+    expect(named.maxPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "max-people")?.name).toBe("Max — people");
+    expect(named.signs.find((s) => s.id === "max-people")?.title).toBe(MAX_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Gestell 91 still flags");
+    expect(p.heard).toContain("Flag still opts in");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyMaxPeople(named, "a").players.get("a")?.heard).toBe(MAX_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyMaxPeople(early, "a").players.get("a")?.heard).toBe(MAX_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.extractPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyMaxPeople(gWorld, "g").players.get("g")?.heard).toBe(MAX_PEOPLE_SPECTATOR);
+    expect(gWorld.maxPeopleHeld).toBe(false);
   });
 });
 

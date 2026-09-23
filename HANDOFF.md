@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 192** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 195** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -808,7 +808,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After tax as people, F at the Wet Grid: Gestell as people. Plaque/POI **Gestell — people**. Gestell still rises. Yield still drinks Gestell.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 192 (do this next)
+## Stage 192 (landed)
+- After Gestell as people, F at the Wet Grid: climate as people. Plaque/POI **Climate — people**. Climate still ticks. Yield still drinks Gestell.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 193 (landed)
+- After climate as people, F at the Wet Grid: extract as people. Plaque/POI **Extract — people**. Extract still pays. Keep still costs.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 194 (landed)
+- After extract as people, F at the Wet Grid: max climate as people. Plaque/POI **Max — people**. Gestell 91 still flags the street. Flag still opts in.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 195 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

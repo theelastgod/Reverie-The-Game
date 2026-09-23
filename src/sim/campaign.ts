@@ -209,6 +209,9 @@ export type Beats = {
   yieldPeople: boolean;
   taxPeople: boolean;
   gestellPeople: boolean;
+  climatePeople: boolean;
+  extractPeople: boolean;
+  maxPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -406,6 +409,9 @@ export type Poi = {
     | "yield-people"
     | "tax-people"
     | "gestell-people"
+    | "climate-people"
+    | "extract-people"
+    | "max-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3657,6 +3663,81 @@ export function gestellPeoplePoi(): Poi {
   };
 }
 
+export const CLIMATE_PEOPLE_COPY =
+  "Climate is a house of people, not a pie of process. Climate still ticks. Yield still drinks Gestell. Combat is not. This was not a fetch.";
+export const WINK_CLIMATE_PEOPLE = "People, not a climate stick. The token does not strike.";
+export const CLIMATE_PEOPLE_NEED = "Gestell as people first. Climate of people is not a fetch.";
+export const CLIMATE_PEOPLE_HELD = "Climate already holds as people. Climate still ticks. Yield still drinks Gestell.";
+export const CLIMATE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const CLIMATE_PEOPLE_PLAQUE: Sign = {
+  id: "climate-people",
+  title: "Climate — people",
+  text: "A house of people. Climate still ticks. Yield still drinks Gestell. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function climatePeoplePoi(): Poi {
+  return {
+    id: "climate-people",
+    name: "Climate — people",
+    x: 720,
+    y: 520,
+    kind: "climate-people",
+  };
+}
+
+export const EXTRACT_PEOPLE_COPY =
+  "Extract is a house of people, not a faucet of process. Extract still pays. Keep still costs. Combat is not. This was not a fetch.";
+export const WINK_EXTRACT_PEOPLE = "People, not an extract stick. The token does not strike.";
+export const EXTRACT_PEOPLE_NEED = "Climate as people first. Extract of people is not a fetch.";
+export const EXTRACT_PEOPLE_HELD = "Extract already holds as people. Extract still pays. Keep still costs.";
+export const EXTRACT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const EXTRACT_PEOPLE_PLAQUE: Sign = {
+  id: "extract-people",
+  title: "Extract — people",
+  text: "A house of people. Extract still pays. Keep still costs. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function extractPeoplePoi(): Poi {
+  return {
+    id: "extract-people",
+    name: "Extract — people",
+    x: 720,
+    y: 520,
+    kind: "extract-people",
+  };
+}
+
+export const MAX_PEOPLE_COPY =
+  "Max climate is a house of people, not a flag of process. Gestell 91 still flags the street. Flag still opts in. Combat is not. This was not a fetch.";
+export const WINK_MAX_PEOPLE = "People, not a max stick. The token does not strike.";
+export const MAX_PEOPLE_NEED = "Extract as people first. Max climate of people is not a fetch.";
+export const MAX_PEOPLE_HELD = "Max climate already holds as people. Gestell 91 still flags the street. Flag still opts in.";
+export const MAX_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const MAX_PEOPLE_PLAQUE: Sign = {
+  id: "max-people",
+  title: "Max — people",
+  text: "A house of people. Gestell 91 still flags the street. Flag still opts in. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function maxPeoplePoi(): Poi {
+  return {
+    id: "max-people",
+    name: "Max — people",
+    x: 720,
+    y: 520,
+    kind: "max-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4353,6 +4434,9 @@ export function emptyBeats(): Beats {
     yieldPeople: false,
     taxPeople: false,
     gestellPeople: false,
+    climatePeople: false,
+    extractPeople: false,
+    maxPeople: false,
   };
 }
 

@@ -672,6 +672,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "gestell-people"
                         ? 0xc9a56a
+                      : poi.kind === "climate-people"
+                        ? 0xc9a56a
+                      : poi.kind === "extract-people"
+                        ? 0xc9a56a
+                      : poi.kind === "max-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1120,6 +1126,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.maxPeople || snap.maxPeopleHeld)) {
+      this.prompt = me.heard || "Max — people. Gestell 91 still flags the street. Flag still opts in. Not a stick.";
+    } else if (wet && snap.extractPeopleHeld && !me.guest) {
+      this.prompt = "F — max climate as a house of people. Gestell 91 still flags the street. Not a fetch.";
+    } else if (wet && (me.beats.extractPeople || snap.extractPeopleHeld)) {
+      this.prompt = me.heard || "Extract — people. Extract still pays. Keep still costs. Not a stick.";
+    } else if (wet && snap.climatePeopleHeld && !me.guest) {
+      this.prompt = "F — extract as a house of people. Extract still pays. Keep still costs. Not a fetch.";
+    } else if (wet && (me.beats.climatePeople || snap.climatePeopleHeld)) {
+      this.prompt = me.heard || "Climate — people. Climate still ticks. Yield still drinks Gestell. Not a stick.";
+    } else if (wet && snap.gestellPeopleHeld && !me.guest) {
+      this.prompt = "F — climate as a house of people. Climate still ticks. Yield still drinks Gestell. Not a fetch.";
     } else if (wet && (me.beats.gestellPeople || snap.gestellPeopleHeld)) {
       this.prompt = me.heard || "Gestell — people. Gestell still rises. Yield still drinks Gestell. Not a stick.";
     } else if (wet && snap.taxPeopleHeld && !me.guest) {

@@ -178,6 +178,9 @@ export type Snap = {
   yieldPeopleHeld?: boolean;
   taxPeopleHeld?: boolean;
   gestellPeopleHeld?: boolean;
+  climatePeopleHeld?: boolean;
+  extractPeopleHeld?: boolean;
+  maxPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
