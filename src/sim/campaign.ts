@@ -252,6 +252,9 @@ export type Beats = {
   clinicPeople: boolean;
   paperPeople: boolean;
   framePeople: boolean;
+  observerPeople: boolean;
+  participantPeople: boolean;
+  proximityPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -492,6 +495,9 @@ export type Poi = {
     | "clinic-people"
     | "paper-people"
     | "frame-people"
+    | "observer-people"
+    | "participant-people"
+    | "proximity-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4818,6 +4824,81 @@ export function framePeoplePoi(): Poi {
   };
 }
 
+export const OBSERVER_PEOPLE_COPY =
+  "Observer proximity is a house of people, not a dispatch of process. Public screening still takes a dispatch. Proximity, not a stick. Combat is not. This was not a fetch.";
+export const WINK_OBSERVER_PEOPLE = "People, not an observer stick. The token does not strike.";
+export const OBSERVER_PEOPLE_NEED = "The production still as people first. Observer proximity of people is not a fetch.";
+export const OBSERVER_PEOPLE_HELD = "Observer proximity already holds as people. Public screening still takes a dispatch. Proximity, not a stick.";
+export const OBSERVER_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const OBSERVER_PEOPLE_PLAQUE: Sign = {
+  id: "observer-people",
+  title: "Observer — people",
+  text: "A house of people. Public screening still takes a dispatch. Observer proximity, not a stick. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function observerPeoplePoi(): Poi {
+  return {
+    id: "observer-people",
+    name: "Observer — people",
+    x: 720,
+    y: 520,
+    kind: "observer-people",
+  };
+}
+
+export const PARTICIPANT_PEOPLE_COPY =
+  "The Participant room is a house of people, not a dispatch of process. After a dispatch, Angels who went under still enter. Observer stays Observer until under. Combat is not. This was not a fetch.";
+export const WINK_PARTICIPANT_PEOPLE = "People, not a participant stick. The token does not strike.";
+export const PARTICIPANT_PEOPLE_NEED = "Observer proximity as people first. A Participant room of people is not a fetch.";
+export const PARTICIPANT_PEOPLE_HELD = "The Participant room already holds as people. After a dispatch, Angels who went under still enter. Observer stays Observer until under.";
+export const PARTICIPANT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const PARTICIPANT_PEOPLE_PLAQUE: Sign = {
+  id: "participant-people",
+  title: "Participant — people",
+  text: "A house of people. After a dispatch, Angels who went under still enter the Participant room. Observer stays Observer until under. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function participantPeoplePoi(): Poi {
+  return {
+    id: "participant-people",
+    name: "Participant — people",
+    x: 720,
+    y: 520,
+    kind: "participant-people",
+  };
+}
+
+export const PROXIMITY_PEOPLE_COPY =
+  "Founder proximity is a house of people, not a room of process. After credits, Participant Angels still enter the Founder room. Observer without credits cannot. Combat is not. This was not a fetch.";
+export const WINK_PROXIMITY_PEOPLE = "People, not a proximity stick. The token does not strike.";
+export const PROXIMITY_PEOPLE_NEED = "The Participant room as people first. Founder proximity of people is not a fetch.";
+export const PROXIMITY_PEOPLE_HELD = "Founder proximity already holds as people. After credits, Participant Angels still enter. Observer without credits cannot.";
+export const PROXIMITY_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const PROXIMITY_PEOPLE_PLAQUE: Sign = {
+  id: "proximity-people",
+  title: "Proximity — people",
+  text: "A house of people. After credits, Participant Angels still enter the Founder room. Observer without credits cannot. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function proximityPeoplePoi(): Poi {
+  return {
+    id: "proximity-people",
+    name: "Proximity — people",
+    x: 720,
+    y: 520,
+    kind: "proximity-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5557,6 +5638,9 @@ export function emptyBeats(): Beats {
     clinicPeople: false,
     paperPeople: false,
     framePeople: false,
+    observerPeople: false,
+    participantPeople: false,
+    proximityPeople: false,
   };
 }
 

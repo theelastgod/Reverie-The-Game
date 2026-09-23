@@ -221,6 +221,9 @@ export type Snap = {
   clinicPeopleHeld?: boolean;
   paperPeopleHeld?: boolean;
   framePeopleHeld?: boolean;
+  observerPeopleHeld?: boolean;
+  participantPeopleHeld?: boolean;
+  proximityPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

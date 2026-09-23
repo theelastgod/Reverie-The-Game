@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 235** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 238** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -980,7 +980,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After insurance paper as people, F at the Wet Grid: the production still as people. Plaque/POI **Frame — people**. Optional F after Participant still takes a school-specific Wink.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 235 (do this next)
+## Stage 235 (landed)
+- After the production still as people, F at the Wet Grid: Observer proximity as people. Plaque/POI **Observer — people**. Public screening still takes a dispatch. Proximity, not a stick.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 236 (landed)
+- After Observer proximity as people, F at the Wet Grid: the Participant room as people. Plaque/POI **Participant — people**. After a dispatch, Angels who went under still enter. Observer stays Observer until under.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 237 (landed)
+- After the Participant room as people, F at the Wet Grid: Founder proximity as people. Plaque/POI **Proximity — people**. After credits, Participant Angels still enter the Founder room. Observer without credits cannot.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 238 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

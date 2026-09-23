@@ -758,6 +758,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "frame-people"
                         ? 0xc9a56a
+                      : poi.kind === "observer-people"
+                        ? 0xc9a56a
+                      : poi.kind === "participant-people"
+                        ? 0xc9a56a
+                      : poi.kind === "proximity-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1206,6 +1212,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.proximityPeople || snap.proximityPeopleHeld)) {
+      this.prompt = me.heard || "Proximity — people. After credits, Participant Angels still enter the Founder room. Observer without credits cannot. Not a stick.";
+    } else if (wet && snap.participantPeopleHeld && !me.guest) {
+      this.prompt = "F — Founder proximity as a house of people. After credits, Participant Angels still enter. Observer without credits cannot. Not a fetch.";
+    } else if (wet && (me.beats.participantPeople || snap.participantPeopleHeld)) {
+      this.prompt = me.heard || "Participant — people. After a dispatch, Angels who went under still enter. Observer stays Observer until under. Not a stick.";
+    } else if (wet && snap.observerPeopleHeld && !me.guest) {
+      this.prompt = "F — the Participant room as a house of people. After a dispatch, Angels who went under still enter. Not a fetch.";
+    } else if (wet && (me.beats.observerPeople || snap.observerPeopleHeld)) {
+      this.prompt = me.heard || "Observer — people. Public screening still takes a dispatch. Observer proximity, not a stick.";
+    } else if (wet && snap.framePeopleHeld && !me.guest) {
+      this.prompt = "F — Observer proximity as a house of people. Public screening still takes a dispatch. Not a fetch.";
     } else if (wet && (me.beats.framePeople || snap.framePeopleHeld)) {
       this.prompt = me.heard || "Frame — people. Optional F after Participant still takes a school-specific Wink. Not a stick.";
     } else if (wet && snap.paperPeopleHeld && !me.guest) {

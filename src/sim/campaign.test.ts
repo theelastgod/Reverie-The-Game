@@ -922,6 +922,24 @@ import {
   FRAME_PEOPLE_HELD,
   FRAME_PEOPLE_SPECTATOR,
   FRAME_PEOPLE_PLAQUE,
+  OBSERVER_PEOPLE_COPY,
+  WINK_OBSERVER_PEOPLE,
+  OBSERVER_PEOPLE_NEED,
+  OBSERVER_PEOPLE_HELD,
+  OBSERVER_PEOPLE_SPECTATOR,
+  OBSERVER_PEOPLE_PLAQUE,
+  PARTICIPANT_PEOPLE_COPY,
+  WINK_PARTICIPANT_PEOPLE,
+  PARTICIPANT_PEOPLE_NEED,
+  PARTICIPANT_PEOPLE_HELD,
+  PARTICIPANT_PEOPLE_SPECTATOR,
+  PARTICIPANT_PEOPLE_PLAQUE,
+  PROXIMITY_PEOPLE_COPY,
+  WINK_PROXIMITY_PEOPLE,
+  PROXIMITY_PEOPLE_NEED,
+  PROXIMITY_PEOPLE_HELD,
+  PROXIMITY_PEOPLE_SPECTATOR,
+  PROXIMITY_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1583,6 +1601,9 @@ import {
   applyClinicPeople,
   applyPaperPeople,
   applyFramePeople,
+  applyObserverPeople,
+  applyParticipantPeople,
+  applyProximityPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -7991,6 +8012,123 @@ describe("Frame — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyFramePeople(gWorld, "g").players.get("g")?.heard).toBe(FRAME_PEOPLE_SPECTATOR);
     expect(gWorld.framePeopleHeld).toBe(false);
+  });
+});
+
+describe("Observer — people", () => {
+  it("names Observer proximity as people after the production still; dispatch still holds; guests cannot", () => {
+    const w = emptyWorld();
+    w.framePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), framePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(OBSERVER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_OBSERVER_PEOPLE);
+    expect(p.beats.observerPeople).toBe(true);
+    expect(named.observerPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "observer-people")?.name).toBe("Observer — people");
+    expect(named.signs.find((s) => s.id === "observer-people")?.title).toBe(OBSERVER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Public screening still takes a dispatch");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyObserverPeople(named, "a").players.get("a")?.heard).toBe(OBSERVER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyObserverPeople(early, "a").players.get("a")?.heard).toBe(OBSERVER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.framePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyObserverPeople(gWorld, "g").players.get("g")?.heard).toBe(OBSERVER_PEOPLE_SPECTATOR);
+    expect(gWorld.observerPeopleHeld).toBe(false);
+  });
+});
+
+describe("Participant — people", () => {
+  it("names the Participant room as people after Observer; going-under still opens it; guests cannot", () => {
+    const w = emptyWorld();
+    w.observerPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), observerPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PARTICIPANT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PARTICIPANT_PEOPLE);
+    expect(p.beats.participantPeople).toBe(true);
+    expect(named.participantPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "participant-people")?.name).toBe("Participant — people");
+    expect(named.signs.find((s) => s.id === "participant-people")?.title).toBe(PARTICIPANT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Observer stays Observer until under");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyParticipantPeople(named, "a").players.get("a")?.heard).toBe(PARTICIPANT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyParticipantPeople(early, "a").players.get("a")?.heard).toBe(PARTICIPANT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.observerPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyParticipantPeople(gWorld, "g").players.get("g")?.heard).toBe(PARTICIPANT_PEOPLE_SPECTATOR);
+    expect(gWorld.participantPeopleHeld).toBe(false);
+  });
+});
+
+describe("Proximity — people", () => {
+  it("names Founder proximity as people after Participant; Observer without credits cannot; guests cannot", () => {
+    const w = emptyWorld();
+    w.participantPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), participantPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PROXIMITY_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PROXIMITY_PEOPLE);
+    expect(p.beats.proximityPeople).toBe(true);
+    expect(named.proximityPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "proximity-people")?.name).toBe("Proximity — people");
+    expect(named.signs.find((s) => s.id === "proximity-people")?.title).toBe(PROXIMITY_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Observer without credits cannot");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyProximityPeople(named, "a").players.get("a")?.heard).toBe(PROXIMITY_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyProximityPeople(early, "a").players.get("a")?.heard).toBe(PROXIMITY_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.participantPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyProximityPeople(gWorld, "g").players.get("g")?.heard).toBe(PROXIMITY_PEOPLE_SPECTATOR);
+    expect(gWorld.proximityPeopleHeld).toBe(false);
   });
 });
 
