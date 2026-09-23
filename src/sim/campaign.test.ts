@@ -778,6 +778,12 @@ import {
   EMPTY_PEOPLE_HELD,
   EMPTY_PEOPLE_SPECTATOR,
   EMPTY_PEOPLE_PLAQUE,
+  WALKED_PEOPLE_COPY,
+  WINK_WALKED_PEOPLE,
+  WALKED_PEOPLE_NEED,
+  WALKED_PEOPLE_HELD,
+  WALKED_PEOPLE_SPECTATOR,
+  WALKED_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1415,6 +1421,7 @@ import {
   applyStayPeople,
   applyWillingPeople,
   applyEmptyPeople,
+  applyWalkedPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -6884,6 +6891,45 @@ describe("Empty — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyEmptyPeople(gWorld, "g").players.get("g")?.heard).toBe(EMPTY_PEOPLE_SPECTATOR);
     expect(gWorld.emptyPeopleHeld).toBe(false);
+  });
+});
+
+describe("Walked — people", () => {
+  it("names walking as people after the empty party; if they walked Passing is absence; guests cannot", () => {
+    const w = emptyWorld();
+    w.emptyPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), emptyPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(WALKED_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_WALKED_PEOPLE);
+    expect(p.beats.walkedPeople).toBe(true);
+    expect(named.walkedPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "walked-people")?.name).toBe("Walked — people");
+    expect(named.signs.find((s) => s.id === "walked-people")?.title).toBe(WALKED_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("walked, Passing is absence");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyWalkedPeople(named, "a").players.get("a")?.heard).toBe(WALKED_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyWalkedPeople(early, "a").players.get("a")?.heard).toBe(WALKED_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.emptyPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyWalkedPeople(gWorld, "g").players.get("g")?.heard).toBe(WALKED_PEOPLE_SPECTATOR);
+    expect(gWorld.walkedPeopleHeld).toBe(false);
   });
 });
 

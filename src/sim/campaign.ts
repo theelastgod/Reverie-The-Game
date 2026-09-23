@@ -228,6 +228,7 @@ export type Beats = {
   stayPeople: boolean;
   willingPeople: boolean;
   emptyPeople: boolean;
+  walkedPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -444,6 +445,7 @@ export type Poi = {
     | "stay-people"
     | "willing-people"
     | "empty-people"
+    | "walked-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4170,6 +4172,31 @@ export function emptyPeoplePoi(): Poi {
   };
 }
 
+export const WALKED_PEOPLE_COPY =
+  "Walking is a house of people, not a hole of process. If Nara, Ord, or Quill walked, Passing is absence. Combat is not. This was not a fetch.";
+export const WINK_WALKED_PEOPLE = "People, not a walk stick. The token does not strike.";
+export const WALKED_PEOPLE_NEED = "The empty party as people first. Walking of people is not a fetch.";
+export const WALKED_PEOPLE_HELD = "Walking already holds as people. If Nara, Ord, or Quill walked, Passing is absence.";
+export const WALKED_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const WALKED_PEOPLE_PLAQUE: Sign = {
+  id: "walked-people",
+  title: "Walked — people",
+  text: "A house of people. If Nara, Ord, or Quill walked, Passing is absence. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function walkedPeoplePoi(): Poi {
+  return {
+    id: "walked-people",
+    name: "Walked — people",
+    x: 720,
+    y: 520,
+    kind: "walked-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4885,6 +4912,7 @@ export function emptyBeats(): Beats {
     stayPeople: false,
     willingPeople: false,
     emptyPeople: false,
+    walkedPeople: false,
   };
 }
 
