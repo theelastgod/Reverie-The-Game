@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 215** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 220** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -900,7 +900,27 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After keeping as people, F at the Wet Grid: holding as people. Plaque/POI **Hold — people**. A freeze still keeps Ord.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 215 (do this next)
+## Stage 215 (landed)
+- After holding as people, F at the Wet Grid: capping as people. Plaque/POI **Capped — people**. Ord still leaves if extract maxes Gestell at 100 without a freeze.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 216 (landed)
+- After capping as people, F at the Wet Grid: the prayer as people. Plaque/POI **Prayer — people**. Hang still keeps Quill.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 217 (landed)
+- After the prayer as people, F at the Wet Grid: selling as people. Plaque/POI **Sold — people**. Quill still leaves if you sell a copy without hanging the prayer.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 218 (landed)
+- After selling as people, F at the Wet Grid: unlighting as people. Plaque/POI **Unlit — people**. Unlight still keeps Vesper.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 219 (landed)
+- After unlighting as people, F at the Wet Grid: live heat as people. Plaque/POI **Live — people**. Vesper still leaves if you keep a Clearing with Cold heat still live.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 220 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

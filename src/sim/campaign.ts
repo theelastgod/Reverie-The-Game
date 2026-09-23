@@ -232,6 +232,11 @@ export type Beats = {
   leavePeople: boolean;
   keptPeople: boolean;
   holdPeople: boolean;
+  cappedPeople: boolean;
+  prayerPeople: boolean;
+  soldPeople: boolean;
+  unlitPeople: boolean;
+  livePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -452,6 +457,11 @@ export type Poi = {
     | "leave-people"
     | "kept-people"
     | "hold-people"
+    | "capped-people"
+    | "prayer-people"
+    | "sold-people"
+    | "unlit-people"
+    | "live-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4278,6 +4288,131 @@ export function holdPeoplePoi(): Poi {
   };
 }
 
+export const CAPPED_PEOPLE_COPY =
+  "Capping is a house of people, not a farm of process. Ord still leaves if extract maxes Gestell at 100 without a freeze. Combat is not. This was not a fetch.";
+export const WINK_CAPPED_PEOPLE = "People, not a cap stick. The token does not strike.";
+export const CAPPED_PEOPLE_NEED = "Holding as people first. Capping of people is not a fetch.";
+export const CAPPED_PEOPLE_HELD = "Capping already holds as people. Ord still leaves if extract maxes Gestell at 100 without a freeze.";
+export const CAPPED_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const CAPPED_PEOPLE_PLAQUE: Sign = {
+  id: "capped-people",
+  title: "Capped — people",
+  text: "A house of people. Ord still leaves if extract maxes Gestell at 100 without a freeze. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function cappedPeoplePoi(): Poi {
+  return {
+    id: "capped-people",
+    name: "Capped — people",
+    x: 720,
+    y: 520,
+    kind: "capped-people",
+  };
+}
+
+export const PRAYER_PEOPLE_COPY =
+  "The prayer is a house of people, not a listing of process. Hang still keeps Quill. Combat is not. This was not a fetch.";
+export const WINK_PRAYER_PEOPLE = "People, not a prayer stick. The token does not strike.";
+export const PRAYER_PEOPLE_NEED = "Capping as people first. A prayer of people is not a fetch.";
+export const PRAYER_PEOPLE_HELD = "The prayer already holds as people. Hang still keeps Quill.";
+export const PRAYER_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const PRAYER_PEOPLE_PLAQUE: Sign = {
+  id: "prayer-people",
+  title: "Prayer — people",
+  text: "A house of people. Hang still keeps Quill. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function prayerPeoplePoi(): Poi {
+  return {
+    id: "prayer-people",
+    name: "Prayer — people",
+    x: 720,
+    y: 520,
+    kind: "prayer-people",
+  };
+}
+
+export const SOLD_PEOPLE_COPY =
+  "Selling is a house of people, not a farm of process. Quill still leaves if you sell a copy without hanging the prayer. Combat is not. This was not a fetch.";
+export const WINK_SOLD_PEOPLE = "People, not a sold stick. The token does not strike.";
+export const SOLD_PEOPLE_NEED = "The prayer as people first. Selling of people is not a fetch.";
+export const SOLD_PEOPLE_HELD = "Selling already holds as people. Quill still leaves if you sell a copy without hanging the prayer.";
+export const SOLD_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SOLD_PEOPLE_PLAQUE: Sign = {
+  id: "sold-people",
+  title: "Sold — people",
+  text: "A house of people. Quill still leaves if you sell a copy without hanging the prayer. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function soldPeoplePoi(): Poi {
+  return {
+    id: "sold-people",
+    name: "Sold — people",
+    x: 720,
+    y: 520,
+    kind: "sold-people",
+  };
+}
+
+export const UNLIT_PEOPLE_COPY =
+  "Unlighting is a house of people, not a furnace of process. Unlight still keeps Vesper. Combat is not. This was not a fetch.";
+export const WINK_UNLIT_PEOPLE = "People, not an unlit stick. The token does not strike.";
+export const UNLIT_PEOPLE_NEED = "Selling as people first. Unlighting of people is not a fetch.";
+export const UNLIT_PEOPLE_HELD = "Unlighting already holds as people. Unlight still keeps Vesper.";
+export const UNLIT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const UNLIT_PEOPLE_PLAQUE: Sign = {
+  id: "unlit-people",
+  title: "Unlit — people",
+  text: "A house of people. Unlight still keeps Vesper. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function unlitPeoplePoi(): Poi {
+  return {
+    id: "unlit-people",
+    name: "Unlit — people",
+    x: 720,
+    y: 520,
+    kind: "unlit-people",
+  };
+}
+
+export const LIVE_PEOPLE_COPY =
+  "Live heat is a house of people, not a furnace of process. Vesper still leaves if you keep a Clearing with Cold heat still live. Combat is not. This was not a fetch.";
+export const WINK_LIVE_PEOPLE = "People, not a live stick. The token does not strike.";
+export const LIVE_PEOPLE_NEED = "Unlighting as people first. Live heat of people is not a fetch.";
+export const LIVE_PEOPLE_HELD = "Live heat already holds as people. Vesper still leaves if you keep a Clearing with Cold heat still live.";
+export const LIVE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const LIVE_PEOPLE_PLAQUE: Sign = {
+  id: "live-people",
+  title: "Live — people",
+  text: "A house of people. Vesper still leaves if you keep a Clearing with Cold heat still live. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function livePeoplePoi(): Poi {
+  return {
+    id: "live-people",
+    name: "Live — people",
+    x: 720,
+    y: 520,
+    kind: "live-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4997,6 +5132,11 @@ export function emptyBeats(): Beats {
     leavePeople: false,
     keptPeople: false,
     holdPeople: false,
+    cappedPeople: false,
+    prayerPeople: false,
+    soldPeople: false,
+    unlitPeople: false,
+    livePeople: false,
   };
 }
 

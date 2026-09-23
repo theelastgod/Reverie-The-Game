@@ -802,6 +802,36 @@ import {
   HOLD_PEOPLE_HELD,
   HOLD_PEOPLE_SPECTATOR,
   HOLD_PEOPLE_PLAQUE,
+  CAPPED_PEOPLE_COPY,
+  WINK_CAPPED_PEOPLE,
+  CAPPED_PEOPLE_NEED,
+  CAPPED_PEOPLE_HELD,
+  CAPPED_PEOPLE_SPECTATOR,
+  CAPPED_PEOPLE_PLAQUE,
+  PRAYER_PEOPLE_COPY,
+  WINK_PRAYER_PEOPLE,
+  PRAYER_PEOPLE_NEED,
+  PRAYER_PEOPLE_HELD,
+  PRAYER_PEOPLE_SPECTATOR,
+  PRAYER_PEOPLE_PLAQUE,
+  SOLD_PEOPLE_COPY,
+  WINK_SOLD_PEOPLE,
+  SOLD_PEOPLE_NEED,
+  SOLD_PEOPLE_HELD,
+  SOLD_PEOPLE_SPECTATOR,
+  SOLD_PEOPLE_PLAQUE,
+  UNLIT_PEOPLE_COPY,
+  WINK_UNLIT_PEOPLE,
+  UNLIT_PEOPLE_NEED,
+  UNLIT_PEOPLE_HELD,
+  UNLIT_PEOPLE_SPECTATOR,
+  UNLIT_PEOPLE_PLAQUE,
+  LIVE_PEOPLE_COPY,
+  WINK_LIVE_PEOPLE,
+  LIVE_PEOPLE_NEED,
+  LIVE_PEOPLE_HELD,
+  LIVE_PEOPLE_SPECTATOR,
+  LIVE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1443,6 +1473,11 @@ import {
   applyLeavePeople,
   applyKeptPeople,
   applyHoldPeople,
+  applyCappedPeople,
+  applyPrayerPeople,
+  applySoldPeople,
+  applyUnlitPeople,
+  applyLivePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -7069,6 +7104,201 @@ describe("Hold — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyHoldPeople(gWorld, "g").players.get("g")?.heard).toBe(HOLD_PEOPLE_SPECTATOR);
     expect(gWorld.holdPeopleHeld).toBe(false);
+  });
+});
+
+describe("Capped — people", () => {
+  it("names capping as people after holding; Ord still leaves at Gestell 100 without a freeze; guests cannot", () => {
+    const w = emptyWorld();
+    w.holdPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), holdPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(CAPPED_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_CAPPED_PEOPLE);
+    expect(p.beats.cappedPeople).toBe(true);
+    expect(named.cappedPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "capped-people")?.name).toBe("Capped — people");
+    expect(named.signs.find((s) => s.id === "capped-people")?.title).toBe(CAPPED_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Ord still leaves if extract maxes Gestell at 100 without a freeze");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyCappedPeople(named, "a").players.get("a")?.heard).toBe(CAPPED_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyCappedPeople(early, "a").players.get("a")?.heard).toBe(CAPPED_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.holdPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyCappedPeople(gWorld, "g").players.get("g")?.heard).toBe(CAPPED_PEOPLE_SPECTATOR);
+    expect(gWorld.cappedPeopleHeld).toBe(false);
+  });
+});
+
+describe("Prayer — people", () => {
+  it("names the prayer as people after capping; hang still keeps Quill; guests cannot", () => {
+    const w = emptyWorld();
+    w.cappedPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), cappedPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PRAYER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PRAYER_PEOPLE);
+    expect(p.beats.prayerPeople).toBe(true);
+    expect(named.prayerPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "prayer-people")?.name).toBe("Prayer — people");
+    expect(named.signs.find((s) => s.id === "prayer-people")?.title).toBe(PRAYER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Hang still keeps Quill");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPrayerPeople(named, "a").players.get("a")?.heard).toBe(PRAYER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyPrayerPeople(early, "a").players.get("a")?.heard).toBe(PRAYER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.cappedPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyPrayerPeople(gWorld, "g").players.get("g")?.heard).toBe(PRAYER_PEOPLE_SPECTATOR);
+    expect(gWorld.prayerPeopleHeld).toBe(false);
+  });
+});
+
+describe("Sold — people", () => {
+  it("names selling as people after the prayer; Quill still leaves if you sell a copy without hanging; guests cannot", () => {
+    const w = emptyWorld();
+    w.prayerPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), prayerPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SOLD_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SOLD_PEOPLE);
+    expect(p.beats.soldPeople).toBe(true);
+    expect(named.soldPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "sold-people")?.name).toBe("Sold — people");
+    expect(named.signs.find((s) => s.id === "sold-people")?.title).toBe(SOLD_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Quill still leaves if you sell a copy without hanging the prayer");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySoldPeople(named, "a").players.get("a")?.heard).toBe(SOLD_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySoldPeople(early, "a").players.get("a")?.heard).toBe(SOLD_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.prayerPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySoldPeople(gWorld, "g").players.get("g")?.heard).toBe(SOLD_PEOPLE_SPECTATOR);
+    expect(gWorld.soldPeopleHeld).toBe(false);
+  });
+});
+
+describe("Unlit — people", () => {
+  it("names unlighting as people after selling; unlight still keeps Vesper; guests cannot", () => {
+    const w = emptyWorld();
+    w.soldPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), soldPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(UNLIT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_UNLIT_PEOPLE);
+    expect(p.beats.unlitPeople).toBe(true);
+    expect(named.unlitPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "unlit-people")?.name).toBe("Unlit — people");
+    expect(named.signs.find((s) => s.id === "unlit-people")?.title).toBe(UNLIT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Unlight still keeps Vesper");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyUnlitPeople(named, "a").players.get("a")?.heard).toBe(UNLIT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyUnlitPeople(early, "a").players.get("a")?.heard).toBe(UNLIT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.soldPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyUnlitPeople(gWorld, "g").players.get("g")?.heard).toBe(UNLIT_PEOPLE_SPECTATOR);
+    expect(gWorld.unlitPeopleHeld).toBe(false);
+  });
+});
+
+describe("Live — people", () => {
+  it("names live heat as people after unlighting; Vesper still leaves if Cold heat stays live; guests cannot", () => {
+    const w = emptyWorld();
+    w.unlitPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), unlitPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(LIVE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_LIVE_PEOPLE);
+    expect(p.beats.livePeople).toBe(true);
+    expect(named.livePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "live-people")?.name).toBe("Live — people");
+    expect(named.signs.find((s) => s.id === "live-people")?.title).toBe(LIVE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Vesper still leaves if you keep a Clearing with Cold heat still live");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyLivePeople(named, "a").players.get("a")?.heard).toBe(LIVE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyLivePeople(early, "a").players.get("a")?.heard).toBe(LIVE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.unlitPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyLivePeople(gWorld, "g").players.get("g")?.heard).toBe(LIVE_PEOPLE_SPECTATOR);
+    expect(gWorld.livePeopleHeld).toBe(false);
   });
 });
 

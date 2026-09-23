@@ -718,6 +718,16 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "hold-people"
                         ? 0xc9a56a
+                      : poi.kind === "capped-people"
+                        ? 0xc9a56a
+                      : poi.kind === "prayer-people"
+                        ? 0xc9a56a
+                      : poi.kind === "sold-people"
+                        ? 0xc9a56a
+                      : poi.kind === "unlit-people"
+                        ? 0xc9a56a
+                      : poi.kind === "live-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1166,6 +1176,26 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.livePeople || snap.livePeopleHeld)) {
+      this.prompt = me.heard || "Live — people. Vesper still leaves if you keep a Clearing with Cold heat still live. Not a stick.";
+    } else if (wet && snap.unlitPeopleHeld && !me.guest) {
+      this.prompt = "F — live heat as a house of people. Vesper still leaves if you keep a Clearing with Cold heat still live. Not a fetch.";
+    } else if (wet && (me.beats.unlitPeople || snap.unlitPeopleHeld)) {
+      this.prompt = me.heard || "Unlit — people. Unlight still keeps Vesper. Not a stick.";
+    } else if (wet && snap.soldPeopleHeld && !me.guest) {
+      this.prompt = "F — unlighting as a house of people. Unlight still keeps Vesper. Not a fetch.";
+    } else if (wet && (me.beats.soldPeople || snap.soldPeopleHeld)) {
+      this.prompt = me.heard || "Sold — people. Quill still leaves if you sell a copy without hanging the prayer. Not a stick.";
+    } else if (wet && snap.prayerPeopleHeld && !me.guest) {
+      this.prompt = "F — selling as a house of people. Quill still leaves if you sell a copy without hanging the prayer. Not a fetch.";
+    } else if (wet && (me.beats.prayerPeople || snap.prayerPeopleHeld)) {
+      this.prompt = me.heard || "Prayer — people. Hang still keeps Quill. Not a stick.";
+    } else if (wet && snap.cappedPeopleHeld && !me.guest) {
+      this.prompt = "F — the prayer as a house of people. Hang still keeps Quill. Not a fetch.";
+    } else if (wet && (me.beats.cappedPeople || snap.cappedPeopleHeld)) {
+      this.prompt = me.heard || "Capped — people. Ord still leaves if extract maxes Gestell at 100 without a freeze. Not a stick.";
+    } else if (wet && snap.holdPeopleHeld && !me.guest) {
+      this.prompt = "F — capping as a house of people. Ord still leaves if extract maxes Gestell at 100 without a freeze. Not a fetch.";
     } else if (wet && (me.beats.holdPeople || snap.holdPeopleHeld)) {
       this.prompt = me.heard || "Hold — people. A freeze still keeps Ord. Not a stick.";
     } else if (wet && snap.keptPeopleHeld && !me.guest) {
