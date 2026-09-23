@@ -712,6 +712,24 @@ import {
   SOLO_PEOPLE_HELD,
   SOLO_PEOPLE_SPECTATOR,
   SOLO_PEOPLE_PLAQUE,
+  DWELL_PEOPLE_COPY,
+  WINK_DWELL_PEOPLE,
+  DWELL_PEOPLE_NEED,
+  DWELL_PEOPLE_HELD,
+  DWELL_PEOPLE_SPECTATOR,
+  DWELL_PEOPLE_PLAQUE,
+  TRACE_PEOPLE_COPY,
+  WINK_TRACE_PEOPLE,
+  TRACE_PEOPLE_NEED,
+  TRACE_PEOPLE_HELD,
+  TRACE_PEOPLE_SPECTATOR,
+  TRACE_PEOPLE_PLAQUE,
+  FAIL_PEOPLE_COPY,
+  WINK_FAIL_PEOPLE,
+  FAIL_PEOPLE_NEED,
+  FAIL_PEOPLE_HELD,
+  FAIL_PEOPLE_SPECTATOR,
+  FAIL_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1338,6 +1356,9 @@ import {
   applyPoorPeople,
   applyBlockPeople,
   applySoloPeople,
+  applyDwellPeople,
+  applyTracePeople,
+  applyFailPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -6369,6 +6390,126 @@ describe("Solo — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applySoloPeople(gWorld, "g").players.get("g")?.heard).toBe(SOLO_PEOPLE_SPECTATOR);
     expect(gWorld.soloPeopleHeld).toBe(false);
+  });
+});
+
+describe("Dwell — people", () => {
+  it("names dwelling as people after solo; two dwellers still open Appearance; guests cannot", () => {
+    const w = emptyWorld();
+    w.soloPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), soloPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(DWELL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_DWELL_PEOPLE);
+    expect(p.beats.dwellPeople).toBe(true);
+    expect(named.dwellPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "dwell-people")?.name).toBe("Dwell — people");
+    expect(named.signs.find((s) => s.id === "dwell-people")?.title).toBe(DWELL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Two dwellers still open Appearance");
+    expect(p.heard).toContain("Solo cannot force it");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyDwellPeople(named, "a").players.get("a")?.heard).toBe(DWELL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyDwellPeople(early, "a").players.get("a")?.heard).toBe(DWELL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.soloPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyDwellPeople(gWorld, "g").players.get("g")?.heard).toBe(DWELL_PEOPLE_SPECTATOR);
+    expect(gWorld.dwellPeopleHeld).toBe(false);
+  });
+});
+
+describe("Trace — people", () => {
+  it("names the trace as people after dwelling; Appearance is a trace not a model; guests cannot", () => {
+    const w = emptyWorld();
+    w.dwellPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), dwellPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(TRACE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_TRACE_PEOPLE);
+    expect(p.beats.tracePeople).toBe(true);
+    expect(named.tracePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "trace-people")?.name).toBe("Trace — people");
+    expect(named.signs.find((s) => s.id === "trace-people")?.title).toBe(TRACE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Appearance is a trace");
+    expect(p.heard).toContain("Aura still holds");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTracePeople(named, "a").players.get("a")?.heard).toBe(TRACE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyTracePeople(early, "a").players.get("a")?.heard).toBe(TRACE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.dwellPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyTracePeople(gWorld, "g").players.get("g")?.heard).toBe(TRACE_PEOPLE_SPECTATOR);
+    expect(gWorld.tracePeopleHeld).toBe(false);
+  });
+});
+
+describe("Fail — people", () => {
+  it("names failure as people after the trace; failed Passing still writes the hole; no stipend; guests cannot", () => {
+    const w = emptyWorld();
+    w.tracePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), tracePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FAIL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FAIL_PEOPLE);
+    expect(p.beats.failPeople).toBe(true);
+    expect(named.failPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "fail-people")?.name).toBe("Fail — people");
+    expect(named.signs.find((s) => s.id === "fail-people")?.title).toBe(FAIL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("failed Passing still writes the hole");
+    expect(p.heard).toContain("No stipend");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFailPeople(named, "a").players.get("a")?.heard).toBe(FAIL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyFailPeople(early, "a").players.get("a")?.heard).toBe(FAIL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.tracePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyFailPeople(gWorld, "g").players.get("g")?.heard).toBe(FAIL_PEOPLE_SPECTATOR);
+    expect(gWorld.failPeopleHeld).toBe(false);
   });
 });
 

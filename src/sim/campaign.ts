@@ -217,6 +217,9 @@ export type Beats = {
   poorPeople: boolean;
   blockPeople: boolean;
   soloPeople: boolean;
+  dwellPeople: boolean;
+  tracePeople: boolean;
+  failPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -422,6 +425,9 @@ export type Poi = {
     | "poor-people"
     | "block-people"
     | "solo-people"
+    | "dwell-people"
+    | "trace-people"
+    | "fail-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3873,6 +3879,81 @@ export function soloPeoplePoi(): Poi {
   };
 }
 
+export const DWELL_PEOPLE_COPY =
+  "Dwelling is a house of people, not a god of process. Two dwellers still open Appearance. Solo cannot force it. Combat is not. This was not a fetch.";
+export const WINK_DWELL_PEOPLE = "People, not a dwell stick. The token does not strike.";
+export const DWELL_PEOPLE_NEED = "Solo as people first. Dwelling of people is not a fetch.";
+export const DWELL_PEOPLE_HELD = "Dwelling already holds as people. Two dwellers still open Appearance. Solo cannot force it.";
+export const DWELL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const DWELL_PEOPLE_PLAQUE: Sign = {
+  id: "dwell-people",
+  title: "Dwell — people",
+  text: "A house of people. Two dwellers still open Appearance. Solo cannot force it. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function dwellPeoplePoi(): Poi {
+  return {
+    id: "dwell-people",
+    name: "Dwell — people",
+    x: 720,
+    y: 520,
+    kind: "dwell-people",
+  };
+}
+
+export const TRACE_PEOPLE_COPY =
+  "The trace is a house of people, not a character of process. Appearance is a trace, not a model. Aura still holds. Combat is not. This was not a fetch.";
+export const WINK_TRACE_PEOPLE = "People, not a trace stick. The token does not strike.";
+export const TRACE_PEOPLE_NEED = "Dwelling as people first. A trace of people is not a fetch.";
+export const TRACE_PEOPLE_HELD = "The trace already holds as people. Appearance is a trace, not a model. Aura still holds.";
+export const TRACE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const TRACE_PEOPLE_PLAQUE: Sign = {
+  id: "trace-people",
+  title: "Trace — people",
+  text: "A house of people. Appearance is a trace, not a model. Aura still holds. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function tracePeoplePoi(): Poi {
+  return {
+    id: "trace-people",
+    name: "Trace — people",
+    x: 720,
+    y: 520,
+    kind: "trace-people",
+  };
+}
+
+export const FAIL_PEOPLE_COPY =
+  "Failure is a house of people, not a stipend of process. A failed Passing still writes the hole. No stipend. Combat is not. This was not a fetch.";
+export const WINK_FAIL_PEOPLE = "People, not a fail stick. The token does not strike.";
+export const FAIL_PEOPLE_NEED = "The trace as people first. Failure of people is not a fetch.";
+export const FAIL_PEOPLE_HELD = "Failure already holds as people. A failed Passing still writes the hole. No stipend.";
+export const FAIL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const FAIL_PEOPLE_PLAQUE: Sign = {
+  id: "fail-people",
+  title: "Fail — people",
+  text: "A house of people. A failed Passing still writes the hole. No stipend. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function failPeoplePoi(): Poi {
+  return {
+    id: "fail-people",
+    name: "Fail — people",
+    x: 720,
+    y: 520,
+    kind: "fail-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4577,6 +4658,9 @@ export function emptyBeats(): Beats {
     poorPeople: false,
     blockPeople: false,
     soloPeople: false,
+    dwellPeople: false,
+    tracePeople: false,
+    failPeople: false,
   };
 }
 

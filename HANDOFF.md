@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 200** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 203** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -840,7 +840,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the block as people, F at the Wet Grid: solo as people. Plaque/POI **Solo — people**. Solo cannot force Appearance. Gestell 100 still blocks a Passing without a Clearing.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 200 (do this next)
+## Stage 200 (landed)
+- After solo as people, F at the Wet Grid: dwelling as people. Plaque/POI **Dwell — people**. Two dwellers still open Appearance. Solo cannot force it.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 201 (landed)
+- After dwelling as people, F at the Wet Grid: the trace as people. Plaque/POI **Trace — people**. Appearance is a trace, not a model. Aura still holds.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 202 (landed)
+- After the trace as people, F at the Wet Grid: failure as people. Plaque/POI **Fail — people**. A failed Passing still writes the hole. No stipend.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 203 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
