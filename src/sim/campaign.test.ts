@@ -1066,6 +1066,24 @@ import {
   VARIANT_PEOPLE_HELD,
   VARIANT_PEOPLE_SPECTATOR,
   VARIANT_PEOPLE_PLAQUE,
+  OBJECTIVE_PEOPLE_COPY,
+  WINK_OBJECTIVE_PEOPLE,
+  OBJECTIVE_PEOPLE_NEED,
+  OBJECTIVE_PEOPLE_HELD,
+  OBJECTIVE_PEOPLE_SPECTATOR,
+  OBJECTIVE_PEOPLE_PLAQUE,
+  QUEST_PEOPLE_COPY,
+  WINK_QUEST_PEOPLE,
+  QUEST_PEOPLE_NEED,
+  QUEST_PEOPLE_HELD,
+  QUEST_PEOPLE_SPECTATOR,
+  QUEST_PEOPLE_PLAQUE,
+  SPOKEN_PEOPLE_COPY,
+  WINK_SPOKEN_PEOPLE,
+  SPOKEN_PEOPLE_NEED,
+  SPOKEN_PEOPLE_HELD,
+  SPOKEN_PEOPLE_SPECTATOR,
+  SPOKEN_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1751,6 +1769,9 @@ import {
   applyOptionalPeople,
   applyPersonalPeople,
   applyVariantPeople,
+  applyObjectivePeople,
+  applyQuestPeople,
+  applySpokenPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -9096,6 +9117,123 @@ describe("Variant — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyVariantPeople(gWorld, "g").players.get("g")?.heard).toBe(VARIANT_PEOPLE_SPECTATOR);
     expect(gWorld.variantPeopleHeld).toBe(false);
+  });
+});
+
+describe("Objective — people", () => {
+  it("names the objective as people after the variant; same quest, one optional objective; guests cannot", () => {
+    const w = emptyWorld();
+    w.variantPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), variantPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(OBJECTIVE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_OBJECTIVE_PEOPLE);
+    expect(p.beats.objectivePeople).toBe(true);
+    expect(named.objectivePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "objective-people")?.name).toBe("Objective — people");
+    expect(named.signs.find((s) => s.id === "objective-people")?.title).toBe(OBJECTIVE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("one optional objective");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyObjectivePeople(named, "a").players.get("a")?.heard).toBe(OBJECTIVE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyObjectivePeople(early, "a").players.get("a")?.heard).toBe(OBJECTIVE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.variantPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyObjectivePeople(gWorld, "g").players.get("g")?.heard).toBe(OBJECTIVE_PEOPLE_SPECTATOR);
+    expect(gWorld.objectivePeopleHeld).toBe(false);
+  });
+});
+
+describe("Quest — people", () => {
+  it("names the quest as people after the objective; same quest id; guests cannot", () => {
+    const w = emptyWorld();
+    w.objectivePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), objectivePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(QUEST_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_QUEST_PEOPLE);
+    expect(p.beats.questPeople).toBe(true);
+    expect(named.questPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "quest-people")?.name).toBe("Quest — people");
+    expect(named.signs.find((s) => s.id === "quest-people")?.title).toBe(QUEST_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Same quest id");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyQuestPeople(named, "a").players.get("a")?.heard).toBe(QUEST_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyQuestPeople(early, "a").players.get("a")?.heard).toBe(QUEST_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.objectivePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyQuestPeople(gWorld, "g").players.get("g")?.heard).toBe(QUEST_PEOPLE_SPECTATOR);
+    expect(gWorld.questPeopleHeld).toBe(false);
+  });
+});
+
+describe("Spoken — people", () => {
+  it("names the spoken Wink as people after the quest; same quest, different spoken Wink; guests cannot", () => {
+    const w = emptyWorld();
+    w.questPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), questPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SPOKEN_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SPOKEN_PEOPLE);
+    expect(p.beats.spokenPeople).toBe(true);
+    expect(named.spokenPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "spoken-people")?.name).toBe("Spoken — people");
+    expect(named.signs.find((s) => s.id === "spoken-people")?.title).toBe(SPOKEN_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("different spoken Wink");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySpokenPeople(named, "a").players.get("a")?.heard).toBe(SPOKEN_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySpokenPeople(early, "a").players.get("a")?.heard).toBe(SPOKEN_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.questPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySpokenPeople(gWorld, "g").players.get("g")?.heard).toBe(SPOKEN_PEOPLE_SPECTATOR);
+    expect(gWorld.spokenPeopleHeld).toBe(false);
   });
 });
 

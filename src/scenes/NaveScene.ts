@@ -811,6 +811,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "variant-people"
                         ? 0xc9a56a
+                      : poi.kind === "objective-people"
+                        ? 0xc9a56a
+                      : poi.kind === "quest-people"
+                        ? 0xc9a56a
+                      : poi.kind === "spoken-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1273,6 +1279,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.spokenPeople || snap.spokenPeopleHeld)) {
+      this.prompt = me.heard || "Spoken — people. Same quest, different spoken Wink. Not a stick.";
+    } else if (wet && snap.questPeopleHeld && !me.guest) {
+      this.prompt = "F — the spoken Wink as a house of people. Same quest, different spoken Wink. Not a fetch.";
+    } else if (wet && (me.beats.questPeople || snap.questPeopleHeld)) {
+      this.prompt = me.heard || "Quest — people. Same quest id. Not a stick.";
+    } else if (wet && snap.objectivePeopleHeld && !me.guest) {
+      this.prompt = "F — the quest as a house of people. Same quest id. Not a fetch.";
+    } else if (wet && (me.beats.objectivePeople || snap.objectivePeopleHeld)) {
+      this.prompt = me.heard || "Objective — people. Same quest, one optional objective. Not a stick.";
+    } else if (wet && snap.variantPeopleHeld && !me.guest) {
+      this.prompt = "F — the objective as a house of people. Same quest, one optional objective. Not a fetch.";
     } else if (wet && (me.beats.variantPeople || snap.variantPeopleHeld)) {
       this.prompt = me.heard || "Variant — people. Same quest, one optional objective. Not a stick.";
     } else if (wet && snap.personalPeopleHeld && !me.guest) {

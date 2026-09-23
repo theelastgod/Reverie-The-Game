@@ -245,6 +245,9 @@ export type Snap = {
   optionalPeopleHeld?: boolean;
   personalPeopleHeld?: boolean;
   variantPeopleHeld?: boolean;
+  objectivePeopleHeld?: boolean;
+  questPeopleHeld?: boolean;
+  spokenPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

@@ -276,6 +276,9 @@ export type Beats = {
   optionalPeople: boolean;
   personalPeople: boolean;
   variantPeople: boolean;
+  objectivePeople: boolean;
+  questPeople: boolean;
+  spokenPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -540,6 +543,9 @@ export type Poi = {
     | "optional-people"
     | "personal-people"
     | "variant-people"
+    | "objective-people"
+    | "quest-people"
+    | "spoken-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -5468,6 +5474,81 @@ export function variantPeoplePoi(): Poi {
   };
 }
 
+export const OBJECTIVE_PEOPLE_COPY =
+  "The objective is a house of people, not a fetch of process. Same quest, one optional objective. Combat is not. This was not a fetch.";
+export const WINK_OBJECTIVE_PEOPLE = "People, not an objective stick. The token does not strike.";
+export const OBJECTIVE_PEOPLE_NEED = "The variant as people first. An objective of people is not a fetch.";
+export const OBJECTIVE_PEOPLE_HELD = "The objective already holds as people. Same quest, one optional objective.";
+export const OBJECTIVE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const OBJECTIVE_PEOPLE_PLAQUE: Sign = {
+  id: "objective-people",
+  title: "Objective — people",
+  text: "A house of people. Same quest, one optional objective. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function objectivePeoplePoi(): Poi {
+  return {
+    id: "objective-people",
+    name: "Objective — people",
+    x: 720,
+    y: 520,
+    kind: "objective-people",
+  };
+}
+
+export const QUEST_PEOPLE_COPY =
+  "The quest is a house of people, not a dump of process. Same quest id. Combat is not. This was not a fetch.";
+export const WINK_QUEST_PEOPLE = "People, not a quest stick. The token does not strike.";
+export const QUEST_PEOPLE_NEED = "The objective as people first. A quest of people is not a fetch.";
+export const QUEST_PEOPLE_HELD = "The quest already holds as people. Same quest id.";
+export const QUEST_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const QUEST_PEOPLE_PLAQUE: Sign = {
+  id: "quest-people",
+  title: "Quest — people",
+  text: "A house of people. Same quest id. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function questPeoplePoi(): Poi {
+  return {
+    id: "quest-people",
+    name: "Quest — people",
+    x: 720,
+    y: 520,
+    kind: "quest-people",
+  };
+}
+
+export const SPOKEN_PEOPLE_COPY =
+  "The spoken Wink is a house of people, not a lecture of process. Same quest, different spoken Wink. Combat is not. This was not a fetch.";
+export const WINK_SPOKEN_PEOPLE = "People, not a spoken stick. The token does not strike.";
+export const SPOKEN_PEOPLE_NEED = "The quest as people first. A spoken Wink of people is not a fetch.";
+export const SPOKEN_PEOPLE_HELD = "The spoken Wink already holds as people. Same quest, different spoken Wink.";
+export const SPOKEN_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SPOKEN_PEOPLE_PLAQUE: Sign = {
+  id: "spoken-people",
+  title: "Spoken — people",
+  text: "A house of people. Same quest, different spoken Wink. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function spokenPeoplePoi(): Poi {
+  return {
+    id: "spoken-people",
+    name: "Spoken — people",
+    x: 720,
+    y: 520,
+    kind: "spoken-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -6231,6 +6312,9 @@ export function emptyBeats(): Beats {
     optionalPeople: false,
     personalPeople: false,
     variantPeople: false,
+    objectivePeople: false,
+    questPeople: false,
+    spokenPeople: false,
   };
 }
 

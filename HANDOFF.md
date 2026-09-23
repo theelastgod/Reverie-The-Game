@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 260** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 263** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1080,7 +1080,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the personal Wink as people, F at the Wet Grid: the variant as people. Plaque/POI **Variant — people**. Same quest, one optional objective.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 260 (do this next)
+## Stage 260 (landed)
+- After the variant as people, F at the Wet Grid: the objective as people. Plaque/POI **Objective — people**. Same quest, one optional objective.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 261 (landed)
+- After the objective as people, F at the Wet Grid: the quest as people. Plaque/POI **Quest — people**. Same quest id.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 262 (landed)
+- After the quest as people, F at the Wet Grid: the spoken Wink as people. Plaque/POI **Spoken — people**. Same quest, different spoken Wink.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 263 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
