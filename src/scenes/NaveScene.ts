@@ -670,6 +670,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "tax-people"
                         ? 0xc9a56a
+                      : poi.kind === "gestell-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1118,6 +1120,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.gestellPeople || snap.gestellPeopleHeld)) {
+      this.prompt = me.heard || "Gestell — people. Gestell still rises. Yield still drinks Gestell. Not a stick.";
+    } else if (wet && snap.taxPeopleHeld && !me.guest) {
+      this.prompt = "F — Gestell as a house of people. Gestell still rises. Yield still drinks Gestell. Not a fetch.";
     } else if (wet && (me.beats.taxPeople || snap.taxPeopleHeld)) {
       this.prompt = me.heard || "Tax — people. Hall tax still skims. The number does not strike. Not a stick.";
     } else if (wet && snap.yieldPeopleHeld && !me.guest) {

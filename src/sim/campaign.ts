@@ -208,6 +208,7 @@ export type Beats = {
   sinkPeople: boolean;
   yieldPeople: boolean;
   taxPeople: boolean;
+  gestellPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -404,6 +405,7 @@ export type Poi = {
     | "sink-people"
     | "yield-people"
     | "tax-people"
+    | "gestell-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3630,6 +3632,31 @@ export function taxPeoplePoi(): Poi {
   };
 }
 
+export const GESTELL_PEOPLE_COPY =
+  "Gestell is a house of people, not a farm of process. Gestell still rises. Yield still drinks Gestell. Combat is not. This was not a fetch.";
+export const WINK_GESTELL_PEOPLE = "People, not a Gestell stick. The token does not strike.";
+export const GESTELL_PEOPLE_NEED = "Tax as people first. Gestell of people is not a fetch.";
+export const GESTELL_PEOPLE_HELD = "Gestell already holds as people. Gestell still rises. Yield still drinks Gestell.";
+export const GESTELL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const GESTELL_PEOPLE_PLAQUE: Sign = {
+  id: "gestell-people",
+  title: "Gestell — people",
+  text: "A house of people. Gestell still rises. Yield still drinks Gestell. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function gestellPeoplePoi(): Poi {
+  return {
+    id: "gestell-people",
+    name: "Gestell — people",
+    x: 720,
+    y: 520,
+    kind: "gestell-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4325,6 +4352,7 @@ export function emptyBeats(): Beats {
     sinkPeople: false,
     yieldPeople: false,
     taxPeople: false,
+    gestellPeople: false,
   };
 }
 

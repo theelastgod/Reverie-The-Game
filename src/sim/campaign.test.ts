@@ -658,6 +658,12 @@ import {
   TAX_PEOPLE_HELD,
   TAX_PEOPLE_SPECTATOR,
   TAX_PEOPLE_PLAQUE,
+  GESTELL_PEOPLE_COPY,
+  WINK_GESTELL_PEOPLE,
+  GESTELL_PEOPLE_NEED,
+  GESTELL_PEOPLE_HELD,
+  GESTELL_PEOPLE_SPECTATOR,
+  GESTELL_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1275,6 +1281,7 @@ import {
   applySinkPeople,
   applyYieldPeople,
   applyTaxPeople,
+  applyGestellPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5948,6 +5955,45 @@ describe("Tax — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyTaxPeople(gWorld, "g").players.get("g")?.heard).toBe(TAX_PEOPLE_SPECTATOR);
     expect(gWorld.taxPeopleHeld).toBe(false);
+  });
+});
+
+describe("Gestell — people", () => {
+  it("names Gestell as people after tax; Gestell still rises; yield still drinks; guests cannot", () => {
+    const w = emptyWorld();
+    w.taxPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), taxPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(GESTELL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_GESTELL_PEOPLE);
+    expect(p.beats.gestellPeople).toBe(true);
+    expect(named.gestellPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "gestell-people")?.name).toBe("Gestell — people");
+    expect(named.signs.find((s) => s.id === "gestell-people")?.title).toBe(GESTELL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Gestell still rises");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyGestellPeople(named, "a").players.get("a")?.heard).toBe(GESTELL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyGestellPeople(early, "a").players.get("a")?.heard).toBe(GESTELL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.taxPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyGestellPeople(gWorld, "g").players.get("g")?.heard).toBe(GESTELL_PEOPLE_SPECTATOR);
+    expect(gWorld.gestellPeopleHeld).toBe(false);
   });
 });
 
