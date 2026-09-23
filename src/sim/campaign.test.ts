@@ -886,6 +886,24 @@ import {
   INVITE_PEOPLE_HELD,
   INVITE_PEOPLE_SPECTATOR,
   INVITE_PEOPLE_PLAQUE,
+  PARTED_PEOPLE_COPY,
+  WINK_PARTED_PEOPLE,
+  PARTED_PEOPLE_NEED,
+  PARTED_PEOPLE_HELD,
+  PARTED_PEOPLE_SPECTATOR,
+  PARTED_PEOPLE_PLAQUE,
+  TOGETHER_PEOPLE_COPY,
+  WINK_TOGETHER_PEOPLE,
+  TOGETHER_PEOPLE_NEED,
+  TOGETHER_PEOPLE_HELD,
+  TOGETHER_PEOPLE_SPECTATOR,
+  TOGETHER_PEOPLE_PLAQUE,
+  GATHER_PEOPLE_COPY,
+  WINK_GATHER_PEOPLE,
+  GATHER_PEOPLE_NEED,
+  GATHER_PEOPLE_HELD,
+  GATHER_PEOPLE_SPECTATOR,
+  GATHER_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1541,6 +1559,9 @@ import {
   applyBackPeople,
   applySeedPeople,
   applyInvitePeople,
+  applyPartedPeople,
+  applyTogetherPeople,
+  applyGatherPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -7715,6 +7736,123 @@ describe("Invite — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyInvitePeople(gWorld, "g").players.get("g")?.heard).toBe(INVITE_PEOPLE_SPECTATOR);
     expect(gWorld.invitePeopleHeld).toBe(false);
+  });
+});
+
+describe("Parted — people", () => {
+  it("names parting as people after the invite; F still parts the hour; you can walk again; guests cannot", () => {
+    const w = emptyWorld();
+    w.invitePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), invitePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PARTED_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PARTED_PEOPLE);
+    expect(p.beats.partedPeople).toBe(true);
+    expect(named.partedPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "parted-people")?.name).toBe("Parted — people");
+    expect(named.signs.find((s) => s.id === "parted-people")?.title).toBe(PARTED_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("still parts the hour");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPartedPeople(named, "a").players.get("a")?.heard).toBe(PARTED_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyPartedPeople(early, "a").players.get("a")?.heard).toBe(PARTED_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.invitePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyPartedPeople(gWorld, "g").players.get("g")?.heard).toBe(PARTED_PEOPLE_SPECTATOR);
+    expect(gWorld.partedPeopleHeld).toBe(false);
+  });
+});
+
+describe("Together — people", () => {
+  it("names walking together as people after parting; after parting you can walk again; guests cannot", () => {
+    const w = emptyWorld();
+    w.partedPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), partedPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(TOGETHER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_TOGETHER_PEOPLE);
+    expect(p.beats.togetherPeople).toBe(true);
+    expect(named.togetherPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "together-people")?.name).toBe("Together — people");
+    expect(named.signs.find((s) => s.id === "together-people")?.title).toBe(TOGETHER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("After parting you can walk again");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTogetherPeople(named, "a").players.get("a")?.heard).toBe(TOGETHER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyTogetherPeople(early, "a").players.get("a")?.heard).toBe(TOGETHER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.partedPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyTogetherPeople(gWorld, "g").players.get("g")?.heard).toBe(TOGETHER_PEOPLE_SPECTATOR);
+    expect(gWorld.togetherPeopleHeld).toBe(false);
+  });
+});
+
+describe("Gather — people", () => {
+  it("names the gathering as people after walking together; Ione's hole is still a gathering; guests cannot", () => {
+    const w = emptyWorld();
+    w.togetherPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), togetherPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(GATHER_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_GATHER_PEOPLE);
+    expect(p.beats.gatherPeople).toBe(true);
+    expect(named.gatherPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "gather-people")?.name).toBe("Gather — people");
+    expect(named.signs.find((s) => s.id === "gather-people")?.title).toBe(GATHER_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Ione's hole is still a gathering");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyGatherPeople(named, "a").players.get("a")?.heard).toBe(GATHER_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyGatherPeople(early, "a").players.get("a")?.heard).toBe(GATHER_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.togetherPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyGatherPeople(gWorld, "g").players.get("g")?.heard).toBe(GATHER_PEOPLE_SPECTATOR);
+    expect(gWorld.gatherPeopleHeld).toBe(false);
   });
 });
 

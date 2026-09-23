@@ -215,6 +215,9 @@ export type Snap = {
   backPeopleHeld?: boolean;
   seedPeopleHeld?: boolean;
   invitePeopleHeld?: boolean;
+  partedPeopleHeld?: boolean;
+  togetherPeopleHeld?: boolean;
+  gatherPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

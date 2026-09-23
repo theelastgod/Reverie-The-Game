@@ -246,6 +246,9 @@ export type Beats = {
   backPeople: boolean;
   seedPeople: boolean;
   invitePeople: boolean;
+  partedPeople: boolean;
+  togetherPeople: boolean;
+  gatherPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -480,6 +483,9 @@ export type Poi = {
     | "back-people"
     | "seed-people"
     | "invite-people"
+    | "parted-people"
+    | "together-people"
+    | "gather-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4656,6 +4662,81 @@ export function invitePeoplePoi(): Poi {
   };
 }
 
+export const PARTED_PEOPLE_COPY =
+  "Parting is a house of people, not a party of process. F while walking together still parts the hour. You can walk again. Combat is not. This was not a fetch.";
+export const WINK_PARTED_PEOPLE = "People, not a parted stick. The token does not strike.";
+export const PARTED_PEOPLE_NEED = "The invite as people first. Parting of people is not a fetch.";
+export const PARTED_PEOPLE_HELD = "Parting already holds as people. F while walking together still parts the hour. You can walk again.";
+export const PARTED_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const PARTED_PEOPLE_PLAQUE: Sign = {
+  id: "parted-people",
+  title: "Parted — people",
+  text: "A house of people. F while walking together still parts the hour. You can walk again. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function partedPeoplePoi(): Poi {
+  return {
+    id: "parted-people",
+    name: "Parted — people",
+    x: 720,
+    y: 520,
+    kind: "parted-people",
+  };
+}
+
+export const TOGETHER_PEOPLE_COPY =
+  "Walking together is a house of people, not a party of process. After named weather the invite still holds. After parting you can walk again. Combat is not. This was not a fetch.";
+export const WINK_TOGETHER_PEOPLE = "People, not a together stick. The token does not strike.";
+export const TOGETHER_PEOPLE_NEED = "Parting as people first. Walking together of people is not a fetch.";
+export const TOGETHER_PEOPLE_HELD = "Walking together already holds as people. After parting you can walk again.";
+export const TOGETHER_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const TOGETHER_PEOPLE_PLAQUE: Sign = {
+  id: "together-people",
+  title: "Together — people",
+  text: "A house of people. After named weather the invite still holds. After parting you can walk again. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function togetherPeoplePoi(): Poi {
+  return {
+    id: "together-people",
+    name: "Together — people",
+    x: 720,
+    y: 520,
+    kind: "together-people",
+  };
+}
+
+export const GATHER_PEOPLE_COPY =
+  "The gathering is a house of people, not a hole of process. When Nara, Quill, Ord, and Vesper stay as people, Ione's hole is still a gathering. Combat is not. This was not a fetch.";
+export const WINK_GATHER_PEOPLE = "People, not a gather stick. The token does not strike.";
+export const GATHER_PEOPLE_NEED = "Walking together as people first. A gathering of people is not a fetch.";
+export const GATHER_PEOPLE_HELD = "The gathering already holds as people. When they stay as people, Ione's hole is still a gathering.";
+export const GATHER_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const GATHER_PEOPLE_PLAQUE: Sign = {
+  id: "gather-people",
+  title: "Gather — people",
+  text: "A house of people. When Nara, Quill, Ord, and Vesper stay as people, Ione's hole is still a gathering. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function gatherPeoplePoi(): Poi {
+  return {
+    id: "gather-people",
+    name: "Gather — people",
+    x: 720,
+    y: 520,
+    kind: "gather-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5389,6 +5470,9 @@ export function emptyBeats(): Beats {
     backPeople: false,
     seedPeople: false,
     invitePeople: false,
+    partedPeople: false,
+    togetherPeople: false,
+    gatherPeople: false,
   };
 }
 

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 229** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 232** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -956,7 +956,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the palindrome seed as people, F at the Wet Grid: the invite as people. Plaque/POI **Invite — people**. After named weather, F near another Angel still asks them to walk the hour.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 229 (do this next)
+## Stage 229 (landed)
+- After the invite as people, F at the Wet Grid: parting as people. Plaque/POI **Parted — people**. F while walking together still parts the hour. You can walk again.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 230 (landed)
+- After parting as people, F at the Wet Grid: walking together as people. Plaque/POI **Together — people**. After named weather the invite still holds. After parting you can walk again.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 231 (landed)
+- After walking together as people, F at the Wet Grid: the gathering as people. Plaque/POI **Gather — people**. When Nara, Quill, Ord, and Vesper stay as people, Ione's hole is still a gathering.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 232 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

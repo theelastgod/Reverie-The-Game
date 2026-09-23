@@ -746,6 +746,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "invite-people"
                         ? 0xc9a56a
+                      : poi.kind === "parted-people"
+                        ? 0xc9a56a
+                      : poi.kind === "together-people"
+                        ? 0xc9a56a
+                      : poi.kind === "gather-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1194,6 +1200,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.gatherPeople || snap.gatherPeopleHeld)) {
+      this.prompt = me.heard || "Gather — people. When Nara, Quill, Ord, and Vesper stay as people, Ione's hole is still a gathering. Not a stick.";
+    } else if (wet && snap.togetherPeopleHeld && !me.guest) {
+      this.prompt = "F — the gathering as a house of people. When they stay as people, Ione's hole is still a gathering. Not a fetch.";
+    } else if (wet && (me.beats.togetherPeople || snap.togetherPeopleHeld)) {
+      this.prompt = me.heard || "Together — people. After named weather the invite still holds. After parting you can walk again. Not a stick.";
+    } else if (wet && snap.partedPeopleHeld && !me.guest) {
+      this.prompt = "F — walking together as a house of people. After parting you can walk again. Not a fetch.";
+    } else if (wet && (me.beats.partedPeople || snap.partedPeopleHeld)) {
+      this.prompt = me.heard || "Parted — people. F while walking together still parts the hour. You can walk again. Not a stick.";
+    } else if (wet && snap.invitePeopleHeld && !me.guest) {
+      this.prompt = "F — parting as a house of people. F while walking together still parts the hour. You can walk again. Not a fetch.";
     } else if (wet && (me.beats.invitePeople || snap.invitePeopleHeld)) {
       this.prompt = me.heard || "Invite — people. After named weather, F near another Angel still asks them to walk the hour. Not a stick.";
     } else if (wet && snap.seedPeopleHeld && !me.guest) {
