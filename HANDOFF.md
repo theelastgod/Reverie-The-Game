@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 220** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 223** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -920,7 +920,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After unlighting as people, F at the Wet Grid: live heat as people. Plaque/POI **Live — people**. Vesper still leaves if you keep a Clearing with Cold heat still live.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 220 (do this next)
+## Stage 220 (landed)
+- After live heat as people, F at the Wet Grid: the unseen Wink as people. Plaque/POI **Blind — people**. The party still cannot see it.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 221 (landed)
+- After the unseen Wink as people, F at the Wet Grid: the hour as people. Plaque/POI **Hour — people**. Appearance still opens. Credits still run after. Then the MMO.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 222 (landed)
+- After the hour as people, F at the Wet Grid: the names as people. Plaque/POI **Names — people**. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Guests cannot take the names.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 223 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

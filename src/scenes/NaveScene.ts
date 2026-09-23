@@ -728,6 +728,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "live-people"
                         ? 0xc9a56a
+                      : poi.kind === "blind-people"
+                        ? 0xc9a56a
+                      : poi.kind === "hour-people"
+                        ? 0xc9a56a
+                      : poi.kind === "names-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1176,6 +1182,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.namesPeople || snap.namesPeopleHeld)) {
+      this.prompt = me.heard || "Names — people. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Not a stick.";
+    } else if (wet && snap.hourPeopleHeld && !me.guest) {
+      this.prompt = "F — the names as a house of people. Credits still name the studios. Guests cannot take the names. Not a fetch.";
+    } else if (wet && (me.beats.hourPeople || snap.hourPeopleHeld)) {
+      this.prompt = me.heard || "Hour — people. Appearance still opens. Credits still run after. Then the MMO. Not a stick.";
+    } else if (wet && snap.blindPeopleHeld && !me.guest) {
+      this.prompt = "F — the hour as a house of people. Appearance still opens. Credits still run after. Not a fetch.";
+    } else if (wet && (me.beats.blindPeople || snap.blindPeopleHeld)) {
+      this.prompt = me.heard || "Blind — people. The party still cannot see a Wink. Not a stick.";
+    } else if (wet && snap.livePeopleHeld && !me.guest) {
+      this.prompt = "F — the unseen Wink as a house of people. The party still cannot see it. Not a fetch.";
     } else if (wet && (me.beats.livePeople || snap.livePeopleHeld)) {
       this.prompt = me.heard || "Live — people. Vesper still leaves if you keep a Clearing with Cold heat still live. Not a stick.";
     } else if (wet && snap.unlitPeopleHeld && !me.guest) {

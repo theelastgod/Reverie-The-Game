@@ -237,6 +237,9 @@ export type Beats = {
   soldPeople: boolean;
   unlitPeople: boolean;
   livePeople: boolean;
+  blindPeople: boolean;
+  hourPeople: boolean;
+  namesPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -462,6 +465,9 @@ export type Poi = {
     | "sold-people"
     | "unlit-people"
     | "live-people"
+    | "blind-people"
+    | "hour-people"
+    | "names-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4413,6 +4419,81 @@ export function livePeoplePoi(): Poi {
   };
 }
 
+export const BLIND_PEOPLE_COPY =
+  "The unseen Wink is a house of people, not a sight of process. The party still cannot see it. Combat is not. This was not a fetch.";
+export const WINK_BLIND_PEOPLE = "People, not a blind stick. The token does not strike.";
+export const BLIND_PEOPLE_NEED = "Live heat as people first. An unseen Wink of people is not a fetch.";
+export const BLIND_PEOPLE_HELD = "The unseen Wink already holds as people. The party still cannot see it.";
+export const BLIND_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const BLIND_PEOPLE_PLAQUE: Sign = {
+  id: "blind-people",
+  title: "Blind — people",
+  text: "A house of people. The party still cannot see a Wink. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function blindPeoplePoi(): Poi {
+  return {
+    id: "blind-people",
+    name: "Blind — people",
+    x: 720,
+    y: 520,
+    kind: "blind-people",
+  };
+}
+
+export const HOUR_PEOPLE_COPY =
+  "The hour is a house of people, not a credits process. Appearance still opens. Credits still run after. Then the MMO. Combat is not. This was not a fetch.";
+export const WINK_HOUR_PEOPLE = "People, not an hour stick. The token does not strike.";
+export const HOUR_PEOPLE_NEED = "The unseen Wink as people first. An hour of people is not a fetch.";
+export const HOUR_PEOPLE_HELD = "The hour already holds as people. Appearance still opens. Credits still run after.";
+export const HOUR_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const HOUR_PEOPLE_PLAQUE: Sign = {
+  id: "hour-people",
+  title: "Hour — people",
+  text: "A house of people. Appearance still opens. Credits still run after. Then the MMO. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function hourPeoplePoi(): Poi {
+  return {
+    id: "hour-people",
+    name: "Hour — people",
+    x: 720,
+    y: 520,
+    kind: "hour-people",
+  };
+}
+
+export const NAMES_PEOPLE_COPY =
+  "The names are a house of people, not a title of process. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Guests cannot take the names. Combat is not. This was not a fetch.";
+export const WINK_NAMES_PEOPLE = "People, not a names stick. The token does not strike.";
+export const NAMES_PEOPLE_NEED = "The hour as people first. Names of people are not a fetch.";
+export const NAMES_PEOPLE_HELD = "The names already hold as people. Credits still name the studios. Guests cannot take the names.";
+export const NAMES_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const NAMES_PEOPLE_PLAQUE: Sign = {
+  id: "names-people",
+  title: "Names — people",
+  text: "A house of people. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function namesPeoplePoi(): Poi {
+  return {
+    id: "names-people",
+    name: "Names — people",
+    x: 720,
+    y: 520,
+    kind: "names-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5137,6 +5218,9 @@ export function emptyBeats(): Beats {
     soldPeople: false,
     unlitPeople: false,
     livePeople: false,
+    blindPeople: false,
+    hourPeople: false,
+    namesPeople: false,
   };
 }
 

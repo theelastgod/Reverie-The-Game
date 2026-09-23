@@ -832,6 +832,24 @@ import {
   LIVE_PEOPLE_HELD,
   LIVE_PEOPLE_SPECTATOR,
   LIVE_PEOPLE_PLAQUE,
+  BLIND_PEOPLE_COPY,
+  WINK_BLIND_PEOPLE,
+  BLIND_PEOPLE_NEED,
+  BLIND_PEOPLE_HELD,
+  BLIND_PEOPLE_SPECTATOR,
+  BLIND_PEOPLE_PLAQUE,
+  HOUR_PEOPLE_COPY,
+  WINK_HOUR_PEOPLE,
+  HOUR_PEOPLE_NEED,
+  HOUR_PEOPLE_HELD,
+  HOUR_PEOPLE_SPECTATOR,
+  HOUR_PEOPLE_PLAQUE,
+  NAMES_PEOPLE_COPY,
+  WINK_NAMES_PEOPLE,
+  NAMES_PEOPLE_NEED,
+  NAMES_PEOPLE_HELD,
+  NAMES_PEOPLE_SPECTATOR,
+  NAMES_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1478,6 +1496,9 @@ import {
   applySoldPeople,
   applyUnlitPeople,
   applyLivePeople,
+  applyBlindPeople,
+  applyHourPeople,
+  applyNamesPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -7299,6 +7320,124 @@ describe("Live — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyLivePeople(gWorld, "g").players.get("g")?.heard).toBe(LIVE_PEOPLE_SPECTATOR);
     expect(gWorld.livePeopleHeld).toBe(false);
+  });
+});
+
+describe("Blind — people", () => {
+  it("names the unseen Wink as people after live heat; the party still cannot see it; guests cannot", () => {
+    const w = emptyWorld();
+    w.livePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), livePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(BLIND_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_BLIND_PEOPLE);
+    expect(p.beats.blindPeople).toBe(true);
+    expect(named.blindPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "blind-people")?.name).toBe("Blind — people");
+    expect(named.signs.find((s) => s.id === "blind-people")?.title).toBe(BLIND_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("The party still cannot see it");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyBlindPeople(named, "a").players.get("a")?.heard).toBe(BLIND_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyBlindPeople(early, "a").players.get("a")?.heard).toBe(BLIND_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.livePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyBlindPeople(gWorld, "g").players.get("g")?.heard).toBe(BLIND_PEOPLE_SPECTATOR);
+    expect(gWorld.blindPeopleHeld).toBe(false);
+  });
+});
+
+describe("Hour — people", () => {
+  it("names the hour as people after the unseen Wink; Appearance still opens; credits still run after; guests cannot", () => {
+    const w = emptyWorld();
+    w.blindPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), blindPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HOUR_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HOUR_PEOPLE);
+    expect(p.beats.hourPeople).toBe(true);
+    expect(named.hourPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "hour-people")?.name).toBe("Hour — people");
+    expect(named.signs.find((s) => s.id === "hour-people")?.title).toBe(HOUR_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Credits still run after");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHourPeople(named, "a").players.get("a")?.heard).toBe(HOUR_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyHourPeople(early, "a").players.get("a")?.heard).toBe(HOUR_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.blindPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyHourPeople(gWorld, "g").players.get("g")?.heard).toBe(HOUR_PEOPLE_SPECTATOR);
+    expect(gWorld.hourPeopleHeld).toBe(false);
+  });
+});
+
+describe("Names — people", () => {
+  it("names the credits names as people after the hour; guests cannot take the names", () => {
+    const w = emptyWorld();
+    w.hourPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), hourPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(NAMES_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_NAMES_PEOPLE);
+    expect(p.beats.namesPeople).toBe(true);
+    expect(named.namesPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "names-people")?.name).toBe("Names — people");
+    expect(named.signs.find((s) => s.id === "names-people")?.title).toBe(NAMES_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Guests cannot take the names");
+    expect(p.heard).toContain("Reverie Studios");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyNamesPeople(named, "a").players.get("a")?.heard).toBe(NAMES_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyNamesPeople(early, "a").players.get("a")?.heard).toBe(NAMES_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.hourPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyNamesPeople(gWorld, "g").players.get("g")?.heard).toBe(NAMES_PEOPLE_SPECTATOR);
+    expect(gWorld.namesPeopleHeld).toBe(false);
   });
 });
 
