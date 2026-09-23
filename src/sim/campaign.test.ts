@@ -706,6 +706,12 @@ import {
   BLOCK_PEOPLE_HELD,
   BLOCK_PEOPLE_SPECTATOR,
   BLOCK_PEOPLE_PLAQUE,
+  SOLO_PEOPLE_COPY,
+  WINK_SOLO_PEOPLE,
+  SOLO_PEOPLE_NEED,
+  SOLO_PEOPLE_HELD,
+  SOLO_PEOPLE_SPECTATOR,
+  SOLO_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1331,6 +1337,7 @@ import {
   applyFatPeople,
   applyPoorPeople,
   applyBlockPeople,
+  applySoloPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -6323,6 +6330,45 @@ describe("Block — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyBlockPeople(gWorld, "g").players.get("g")?.heard).toBe(BLOCK_PEOPLE_SPECTATOR);
     expect(gWorld.blockPeopleHeld).toBe(false);
+  });
+});
+
+describe("Solo — people", () => {
+  it("names solo as people after the block; solo cannot force Appearance; guests cannot", () => {
+    const w = emptyWorld();
+    w.blockPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), blockPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SOLO_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SOLO_PEOPLE);
+    expect(p.beats.soloPeople).toBe(true);
+    expect(named.soloPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "solo-people")?.name).toBe("Solo — people");
+    expect(named.signs.find((s) => s.id === "solo-people")?.title).toBe(SOLO_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Solo cannot force Appearance");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySoloPeople(named, "a").players.get("a")?.heard).toBe(SOLO_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySoloPeople(early, "a").players.get("a")?.heard).toBe(SOLO_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.blockPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySoloPeople(gWorld, "g").players.get("g")?.heard).toBe(SOLO_PEOPLE_SPECTATOR);
+    expect(gWorld.soloPeopleHeld).toBe(false);
   });
 });
 

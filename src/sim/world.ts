@@ -847,6 +847,13 @@ import {
   BLOCK_PEOPLE_SPECTATOR,
   BLOCK_PEOPLE_PLAQUE,
   blockPeoplePoi,
+  SOLO_PEOPLE_COPY,
+  WINK_SOLO_PEOPLE,
+  SOLO_PEOPLE_NEED,
+  SOLO_PEOPLE_HELD,
+  SOLO_PEOPLE_SPECTATOR,
+  SOLO_PEOPLE_PLAQUE,
+  soloPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1628,6 +1635,7 @@ export type WorldState = {
   fatPeopleHeld: boolean;
   poorPeopleHeld: boolean;
   blockPeopleHeld: boolean;
+  soloPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -1969,6 +1977,7 @@ export function emptyWorld(): WorldState {
     fatPeopleHeld: false,
     poorPeopleHeld: false,
     blockPeopleHeld: false,
+    soloPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3193,7 +3202,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people" || sign.id === "aura-people" || sign.id === "presence-people" || sign.id === "wink-people" || sign.id === "bestand-people" || sign.id === "cult-people" || sign.id === "copy-people" || sign.id === "banked-people" || sign.id === "unbanked-people" || sign.id === "sink-people" || sign.id === "yield-people" || sign.id === "tax-people" || sign.id === "gestell-people" || sign.id === "climate-people" || sign.id === "extract-people" || sign.id === "max-people" || sign.id === "heat-people" || sign.id === "fat-people" || sign.id === "poor-people" || sign.id === "block-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people" || sign.id === "aura-people" || sign.id === "presence-people" || sign.id === "wink-people" || sign.id === "bestand-people" || sign.id === "cult-people" || sign.id === "copy-people" || sign.id === "banked-people" || sign.id === "unbanked-people" || sign.id === "sink-people" || sign.id === "yield-people" || sign.id === "tax-people" || sign.id === "gestell-people" || sign.id === "climate-people" || sign.id === "extract-people" || sign.id === "max-people" || sign.id === "heat-people" || sign.id === "fat-people" || sign.id === "poor-people" || sign.id === "block-people" || sign.id === "solo-people") {
+    if (w.blockPeopleHeld && !w.soloPeopleHeld) return applySoloPeople(w, playerId);
+    if (sign.id === "solo-people") return applySoloPeople(w, playerId);
     if (w.poorPeopleHeld && !w.blockPeopleHeld) return applyBlockPeople(w, playerId);
     if (sign.id === "block-people") return applyBlockPeople(w, playerId);
     if (w.fatPeopleHeld && !w.poorPeopleHeld) return applyPoorPeople(w, playerId);
@@ -6770,6 +6781,37 @@ export function applyBlockPeople(w: WorldState, playerId: string): WorldState {
   return { ...w, players, blockPeopleHeld: true, pois, signs };
 }
 
+export function applySoloPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: SOLO_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_SOLO_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.blockPeopleHeld) {
+    players.set(playerId, { ...p, heard: SOLO_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.soloPeopleHeld && p.beats.soloPeople) {
+    players.set(playerId, { ...p, heard: SOLO_PEOPLE_HELD, wink: visibleWink(false, WINK_SOLO_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, soloPeople: true },
+    heard: SOLO_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_SOLO_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "solo-people")
+    ? w.pois.map((poi) => (poi.id === "solo-people" ? soloPeoplePoi() : poi))
+    : [...w.pois, soloPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "solo-people")
+    ? w.signs.map((s) => (s.id === "solo-people" ? { ...SOLO_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...SOLO_PEOPLE_PLAQUE }];
+  return { ...w, players, soloPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -8028,6 +8070,7 @@ export function snapshot(w: WorldState) {
     fatPeopleHeld: w.fatPeopleHeld,
     poorPeopleHeld: w.poorPeopleHeld,
     blockPeopleHeld: w.blockPeopleHeld,
+    soloPeopleHeld: w.soloPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

@@ -686,6 +686,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "block-people"
                         ? 0xc9a56a
+                      : poi.kind === "solo-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1134,6 +1136,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.soloPeople || snap.soloPeopleHeld)) {
+      this.prompt = me.heard || "Solo — people. Solo cannot force Appearance. Gestell 100 still blocks a Passing without a Clearing. Not a stick.";
+    } else if (wet && snap.blockPeopleHeld && !me.guest) {
+      this.prompt = "F — solo as a house of people. Solo cannot force Appearance. Gestell 100 still blocks a Passing without a Clearing. Not a fetch.";
     } else if (wet && (me.beats.blockPeople || snap.blockPeopleHeld)) {
       this.prompt = me.heard || "Block — people. Gestell 100 still blocks a Passing without a Clearing. Solo cannot force Appearance. Not a stick.";
     } else if (wet && snap.poorPeopleHeld && !me.guest) {

@@ -216,6 +216,7 @@ export type Beats = {
   fatPeople: boolean;
   poorPeople: boolean;
   blockPeople: boolean;
+  soloPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -420,6 +421,7 @@ export type Poi = {
     | "fat-people"
     | "poor-people"
     | "block-people"
+    | "solo-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3846,6 +3848,31 @@ export function blockPeoplePoi(): Poi {
   };
 }
 
+export const SOLO_PEOPLE_COPY =
+  "Solo is a house of people, not a god of process. Solo cannot force Appearance. Gestell 100 still blocks a Passing without a Clearing. Combat is not. This was not a fetch.";
+export const WINK_SOLO_PEOPLE = "People, not a solo stick. The token does not strike.";
+export const SOLO_PEOPLE_NEED = "The block as people first. Solo of people is not a fetch.";
+export const SOLO_PEOPLE_HELD = "Solo already holds as people. Solo cannot force Appearance. Gestell 100 still blocks a Passing without a Clearing.";
+export const SOLO_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SOLO_PEOPLE_PLAQUE: Sign = {
+  id: "solo-people",
+  title: "Solo — people",
+  text: "A house of people. Solo cannot force Appearance. Gestell 100 still blocks a Passing without a Clearing. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function soloPeoplePoi(): Poi {
+  return {
+    id: "solo-people",
+    name: "Solo — people",
+    x: 720,
+    y: 520,
+    kind: "solo-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4549,6 +4576,7 @@ export function emptyBeats(): Beats {
     fatPeople: false,
     poorPeople: false,
     blockPeople: false,
+    soloPeople: false,
   };
 }
 

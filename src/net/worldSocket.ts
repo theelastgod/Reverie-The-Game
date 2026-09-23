@@ -185,6 +185,7 @@ export type Snap = {
   fatPeopleHeld?: boolean;
   poorPeopleHeld?: boolean;
   blockPeopleHeld?: boolean;
+  soloPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
