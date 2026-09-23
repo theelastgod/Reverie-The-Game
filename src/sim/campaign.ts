@@ -220,6 +220,7 @@ export type Beats = {
   dwellPeople: boolean;
   tracePeople: boolean;
   failPeople: boolean;
+  holePeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -428,6 +429,7 @@ export type Poi = {
     | "dwell-people"
     | "trace-people"
     | "fail-people"
+    | "hole-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3954,6 +3956,31 @@ export function failPeoplePoi(): Poi {
   };
 }
 
+export const HOLE_PEOPLE_COPY =
+  "The hole is a house of people, not a stipend of process. A failed Passing still writes the hole. No stipend. Combat is not. This was not a fetch.";
+export const WINK_HOLE_PEOPLE = "People, not a hole stick. The token does not strike.";
+export const HOLE_PEOPLE_NEED = "Failure as people first. A hole of people is not a fetch.";
+export const HOLE_PEOPLE_HELD = "The hole already holds as people. A failed Passing still writes the hole. No stipend.";
+export const HOLE_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const HOLE_PEOPLE_PLAQUE: Sign = {
+  id: "hole-people",
+  title: "Hole — people",
+  text: "A house of people. A failed Passing still writes the hole. No stipend. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function holePeoplePoi(): Poi {
+  return {
+    id: "hole-people",
+    name: "Hole — people",
+    x: 720,
+    y: 520,
+    kind: "hole-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4661,6 +4688,7 @@ export function emptyBeats(): Beats {
     dwellPeople: false,
     tracePeople: false,
     failPeople: false,
+    holePeople: false,
   };
 }
 

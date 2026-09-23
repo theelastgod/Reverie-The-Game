@@ -694,6 +694,8 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "fail-people"
                         ? 0xc9a56a
+                      : poi.kind === "hole-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1142,6 +1144,10 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.holePeople || snap.holePeopleHeld)) {
+      this.prompt = me.heard || "Hole — people. A failed Passing still writes the hole. No stipend. Not a stick.";
+    } else if (wet && snap.failPeopleHeld && !me.guest) {
+      this.prompt = "F — the hole as a house of people. A failed Passing still writes the hole. No stipend. Not a fetch.";
     } else if (wet && (me.beats.failPeople || snap.failPeopleHeld)) {
       this.prompt = me.heard || "Fail — people. A failed Passing still writes the hole. No stipend. Not a stick.";
     } else if (wet && snap.tracePeopleHeld && !me.guest) {

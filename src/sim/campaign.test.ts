@@ -730,6 +730,12 @@ import {
   FAIL_PEOPLE_HELD,
   FAIL_PEOPLE_SPECTATOR,
   FAIL_PEOPLE_PLAQUE,
+  HOLE_PEOPLE_COPY,
+  WINK_HOLE_PEOPLE,
+  HOLE_PEOPLE_NEED,
+  HOLE_PEOPLE_HELD,
+  HOLE_PEOPLE_SPECTATOR,
+  HOLE_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1359,6 +1365,7 @@ import {
   applyDwellPeople,
   applyTracePeople,
   applyFailPeople,
+  applyHolePeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -6510,6 +6517,46 @@ describe("Fail — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyFailPeople(gWorld, "g").players.get("g")?.heard).toBe(FAIL_PEOPLE_SPECTATOR);
     expect(gWorld.failPeopleHeld).toBe(false);
+  });
+});
+
+describe("Hole — people", () => {
+  it("names the hole as people after failure; a failed Passing still writes the hole; guests cannot", () => {
+    const w = emptyWorld();
+    w.failPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), failPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(HOLE_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_HOLE_PEOPLE);
+    expect(p.beats.holePeople).toBe(true);
+    expect(named.holePeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "hole-people")?.name).toBe("Hole — people");
+    expect(named.signs.find((s) => s.id === "hole-people")?.title).toBe(HOLE_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("writes the hole");
+    expect(p.heard).toContain("No stipend");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyHolePeople(named, "a").players.get("a")?.heard).toBe(HOLE_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyHolePeople(early, "a").players.get("a")?.heard).toBe(HOLE_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.failPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyHolePeople(gWorld, "g").players.get("g")?.heard).toBe(HOLE_PEOPLE_SPECTATOR);
+    expect(gWorld.holePeopleHeld).toBe(false);
   });
 });
 

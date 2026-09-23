@@ -189,6 +189,7 @@ export type Snap = {
   dwellPeopleHeld?: boolean;
   tracePeopleHeld?: boolean;
   failPeopleHeld?: boolean;
+  holePeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;
