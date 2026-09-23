@@ -805,6 +805,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "school-people"
                         ? 0xc9a56a
+                      : poi.kind === "optional-people"
+                        ? 0xc9a56a
+                      : poi.kind === "personal-people"
+                        ? 0xc9a56a
+                      : poi.kind === "variant-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1267,6 +1273,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.variantPeople || snap.variantPeopleHeld)) {
+      this.prompt = me.heard || "Variant — people. Same quest, one optional objective. Not a stick.";
+    } else if (wet && snap.personalPeopleHeld && !me.guest) {
+      this.prompt = "F — the variant as a house of people. Same quest, one optional objective. Not a fetch.";
+    } else if (wet && (me.beats.personalPeople || snap.personalPeopleHeld)) {
+      this.prompt = me.heard || "Personal — people. Same quest, different spoken Wink. Not a stick.";
+    } else if (wet && snap.optionalPeopleHeld && !me.guest) {
+      this.prompt = "F — the personal Wink as a house of people. Same quest, different spoken Wink. Not a fetch.";
+    } else if (wet && (me.beats.optionalPeople || snap.optionalPeopleHeld)) {
+      this.prompt = me.heard || "Optional — people. Optional F after Participant still takes a school-specific Wink. Not a stick.";
+    } else if (wet && snap.schoolPeopleHeld && !me.guest) {
+      this.prompt = "F — the optional still as a house of people. Optional F after Participant still takes a school-specific Wink. Not a fetch.";
     } else if (wet && (me.beats.schoolPeople || snap.schoolPeopleHeld)) {
       this.prompt = me.heard || "School — people. Optional F after Participant still takes a school-specific Wink. Not a stick.";
     } else if (wet && snap.stylePeopleHeld && !me.guest) {

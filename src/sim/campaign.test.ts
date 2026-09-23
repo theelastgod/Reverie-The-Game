@@ -1048,6 +1048,24 @@ import {
   SCHOOL_PEOPLE_HELD,
   SCHOOL_PEOPLE_SPECTATOR,
   SCHOOL_PEOPLE_PLAQUE,
+  OPTIONAL_PEOPLE_COPY,
+  WINK_OPTIONAL_PEOPLE,
+  OPTIONAL_PEOPLE_NEED,
+  OPTIONAL_PEOPLE_HELD,
+  OPTIONAL_PEOPLE_SPECTATOR,
+  OPTIONAL_PEOPLE_PLAQUE,
+  PERSONAL_PEOPLE_COPY,
+  WINK_PERSONAL_PEOPLE,
+  PERSONAL_PEOPLE_NEED,
+  PERSONAL_PEOPLE_HELD,
+  PERSONAL_PEOPLE_SPECTATOR,
+  PERSONAL_PEOPLE_PLAQUE,
+  VARIANT_PEOPLE_COPY,
+  WINK_VARIANT_PEOPLE,
+  VARIANT_PEOPLE_NEED,
+  VARIANT_PEOPLE_HELD,
+  VARIANT_PEOPLE_SPECTATOR,
+  VARIANT_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1730,6 +1748,9 @@ import {
   applyVerbPeople,
   applyStylePeople,
   applySchoolPeople,
+  applyOptionalPeople,
+  applyPersonalPeople,
+  applyVariantPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -8958,6 +8979,123 @@ describe("School — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applySchoolPeople(gWorld, "g").players.get("g")?.heard).toBe(SCHOOL_PEOPLE_SPECTATOR);
     expect(gWorld.schoolPeopleHeld).toBe(false);
+  });
+});
+
+describe("Optional — people", () => {
+  it("names the optional still as people after the Wink school; school-specific Wink still optional; guests cannot", () => {
+    const w = emptyWorld();
+    w.schoolPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), schoolPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(OPTIONAL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_OPTIONAL_PEOPLE);
+    expect(p.beats.optionalPeople).toBe(true);
+    expect(named.optionalPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "optional-people")?.name).toBe("Optional — people");
+    expect(named.signs.find((s) => s.id === "optional-people")?.title).toBe(OPTIONAL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("school-specific Wink");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyOptionalPeople(named, "a").players.get("a")?.heard).toBe(OPTIONAL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyOptionalPeople(early, "a").players.get("a")?.heard).toBe(OPTIONAL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.schoolPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyOptionalPeople(gWorld, "g").players.get("g")?.heard).toBe(OPTIONAL_PEOPLE_SPECTATOR);
+    expect(gWorld.optionalPeopleHeld).toBe(false);
+  });
+});
+
+describe("Personal — people", () => {
+  it("names the personal Wink as people after optional; same quest, different spoken Wink; guests cannot", () => {
+    const w = emptyWorld();
+    w.optionalPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), optionalPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(PERSONAL_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_PERSONAL_PEOPLE);
+    expect(p.beats.personalPeople).toBe(true);
+    expect(named.personalPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "personal-people")?.name).toBe("Personal — people");
+    expect(named.signs.find((s) => s.id === "personal-people")?.title).toBe(PERSONAL_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("different spoken Wink");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyPersonalPeople(named, "a").players.get("a")?.heard).toBe(PERSONAL_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyPersonalPeople(early, "a").players.get("a")?.heard).toBe(PERSONAL_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.optionalPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyPersonalPeople(gWorld, "g").players.get("g")?.heard).toBe(PERSONAL_PEOPLE_SPECTATOR);
+    expect(gWorld.personalPeopleHeld).toBe(false);
+  });
+});
+
+describe("Variant — people", () => {
+  it("names the variant as people after personal; same quest, one optional objective; guests cannot", () => {
+    const w = emptyWorld();
+    w.personalPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), personalPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(VARIANT_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_VARIANT_PEOPLE);
+    expect(p.beats.variantPeople).toBe(true);
+    expect(named.variantPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "variant-people")?.name).toBe("Variant — people");
+    expect(named.signs.find((s) => s.id === "variant-people")?.title).toBe(VARIANT_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("one optional objective");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyVariantPeople(named, "a").players.get("a")?.heard).toBe(VARIANT_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyVariantPeople(early, "a").players.get("a")?.heard).toBe(VARIANT_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.personalPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyVariantPeople(gWorld, "g").players.get("g")?.heard).toBe(VARIANT_PEOPLE_SPECTATOR);
+    expect(gWorld.variantPeopleHeld).toBe(false);
   });
 });
 

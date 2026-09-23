@@ -242,6 +242,9 @@ export type Snap = {
   verbPeopleHeld?: boolean;
   stylePeopleHeld?: boolean;
   schoolPeopleHeld?: boolean;
+  optionalPeopleHeld?: boolean;
+  personalPeopleHeld?: boolean;
+  variantPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

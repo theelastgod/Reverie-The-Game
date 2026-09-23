@@ -273,6 +273,9 @@ export type Beats = {
   verbPeople: boolean;
   stylePeople: boolean;
   schoolPeople: boolean;
+  optionalPeople: boolean;
+  personalPeople: boolean;
+  variantPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -534,6 +537,9 @@ export type Poi = {
     | "verb-people"
     | "style-people"
     | "school-people"
+    | "optional-people"
+    | "personal-people"
+    | "variant-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -5387,6 +5393,81 @@ export function schoolPeoplePoi(): Poi {
   };
 }
 
+export const OPTIONAL_PEOPLE_COPY =
+  "The optional still is a house of people, not a stick of process. Optional F after Participant still takes a school-specific Wink. Combat is not. This was not a fetch.";
+export const WINK_OPTIONAL_PEOPLE = "People, not an optional stick. The token does not strike.";
+export const OPTIONAL_PEOPLE_NEED = "The Wink school as people first. An optional still of people is not a fetch.";
+export const OPTIONAL_PEOPLE_HELD = "The optional still already holds as people. Optional F after Participant still takes a school-specific Wink.";
+export const OPTIONAL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const OPTIONAL_PEOPLE_PLAQUE: Sign = {
+  id: "optional-people",
+  title: "Optional — people",
+  text: "A house of people. Optional F after Participant still takes a school-specific Wink. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function optionalPeoplePoi(): Poi {
+  return {
+    id: "optional-people",
+    name: "Optional — people",
+    x: 720,
+    y: 520,
+    kind: "optional-people",
+  };
+}
+
+export const PERSONAL_PEOPLE_COPY =
+  "The personal Wink is a house of people, not a dump of process. Same quest, different spoken Wink. Combat is not. This was not a fetch.";
+export const WINK_PERSONAL_PEOPLE = "People, not a personal stick. The token does not strike.";
+export const PERSONAL_PEOPLE_NEED = "The optional still as people first. A personal Wink of people is not a fetch.";
+export const PERSONAL_PEOPLE_HELD = "The personal Wink already holds as people. Same quest, different spoken Wink.";
+export const PERSONAL_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const PERSONAL_PEOPLE_PLAQUE: Sign = {
+  id: "personal-people",
+  title: "Personal — people",
+  text: "A house of people. Same quest, different spoken Wink. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function personalPeoplePoi(): Poi {
+  return {
+    id: "personal-people",
+    name: "Personal — people",
+    x: 720,
+    y: 520,
+    kind: "personal-people",
+  };
+}
+
+export const VARIANT_PEOPLE_COPY =
+  "The variant is a house of people, not a fetch of process. Same quest, one optional objective. Combat is not. This was not a fetch.";
+export const WINK_VARIANT_PEOPLE = "People, not a variant stick. The token does not strike.";
+export const VARIANT_PEOPLE_NEED = "The personal Wink as people first. A variant of people is not a fetch.";
+export const VARIANT_PEOPLE_HELD = "The variant already holds as people. Same quest, one optional objective.";
+export const VARIANT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const VARIANT_PEOPLE_PLAQUE: Sign = {
+  id: "variant-people",
+  title: "Variant — people",
+  text: "A house of people. Same quest, one optional objective. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function variantPeoplePoi(): Poi {
+  return {
+    id: "variant-people",
+    name: "Variant — people",
+    x: 720,
+    y: 520,
+    kind: "variant-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -6147,6 +6228,9 @@ export function emptyBeats(): Beats {
     verbPeople: false,
     stylePeople: false,
     schoolPeople: false,
+    optionalPeople: false,
+    personalPeople: false,
+    variantPeople: false,
   };
 }
 
