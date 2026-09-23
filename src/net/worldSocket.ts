@@ -174,6 +174,9 @@ export type Snap = {
   copyPeopleHeld?: boolean;
   bankedPeopleHeld?: boolean;
   unbankedPeopleHeld?: boolean;
+  sinkPeopleHeld?: boolean;
+  yieldPeopleHeld?: boolean;
+  taxPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

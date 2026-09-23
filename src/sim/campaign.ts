@@ -205,6 +205,9 @@ export type Beats = {
   copyPeople: boolean;
   bankedPeople: boolean;
   unbankedPeople: boolean;
+  sinkPeople: boolean;
+  yieldPeople: boolean;
+  taxPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -398,6 +401,9 @@ export type Poi = {
     | "copy-people"
     | "banked-people"
     | "unbanked-people"
+    | "sink-people"
+    | "yield-people"
+    | "tax-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -3549,6 +3555,81 @@ export function unbankedPeoplePoi(): Poi {
   };
 }
 
+export const SINK_PEOPLE_COPY =
+  "A sink is a house of people, not a faucet of process. Every earner still spends. Banked is a sink, not a stick. Combat is not. This was not a fetch.";
+export const WINK_SINK_PEOPLE = "People, not a sink stick. The token does not strike.";
+export const SINK_PEOPLE_NEED = "Unbanked as people first. A sink of people is not a fetch.";
+export const SINK_PEOPLE_HELD = "The sink already holds as people. Every earner still spends. Banked is a sink, not a stick.";
+export const SINK_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SINK_PEOPLE_PLAQUE: Sign = {
+  id: "sink-people",
+  title: "Sink — people",
+  text: "A house of people. Every earner still spends. Banked is a sink, not a stick. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function sinkPeoplePoi(): Poi {
+  return {
+    id: "sink-people",
+    name: "Sink — people",
+    x: 720,
+    y: 520,
+    kind: "sink-people",
+  };
+}
+
+export const YIELD_PEOPLE_COPY =
+  "Yield is a house of people, not a stick of process. Yield still drinks Gestell. Keep still costs. Combat is not. This was not a fetch.";
+export const WINK_YIELD_PEOPLE = "People, not a yield stick. The token does not strike.";
+export const YIELD_PEOPLE_NEED = "The sink as people first. Yield of people is not a fetch.";
+export const YIELD_PEOPLE_HELD = "Yield already holds as people. Yield still drinks Gestell. Keep still costs.";
+export const YIELD_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const YIELD_PEOPLE_PLAQUE: Sign = {
+  id: "yield-people",
+  title: "Yield — people",
+  text: "A house of people. Yield still drinks Gestell. Keep still costs. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function yieldPeoplePoi(): Poi {
+  return {
+    id: "yield-people",
+    name: "Yield — people",
+    x: 720,
+    y: 520,
+    kind: "yield-people",
+  };
+}
+
+export const TAX_PEOPLE_COPY =
+  "Tax is a house of people, not a stick of process. Hall tax still skims. The number does not strike. Combat is not. This was not a fetch.";
+export const WINK_TAX_PEOPLE = "People, not a tax stick. The token does not strike.";
+export const TAX_PEOPLE_NEED = "Yield as people first. Tax of people is not a fetch.";
+export const TAX_PEOPLE_HELD = "Tax already holds as people. Hall tax still skims. The number does not strike.";
+export const TAX_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const TAX_PEOPLE_PLAQUE: Sign = {
+  id: "tax-people",
+  title: "Tax — people",
+  text: "A house of people. Hall tax still skims. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function taxPeoplePoi(): Poi {
+  return {
+    id: "tax-people",
+    name: "Tax — people",
+    x: 720,
+    y: 520,
+    kind: "tax-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4241,6 +4322,9 @@ export function emptyBeats(): Beats {
     copyPeople: false,
     bankedPeople: false,
     unbankedPeople: false,
+    sinkPeople: false,
+    yieldPeople: false,
+    taxPeople: false,
   };
 }
 

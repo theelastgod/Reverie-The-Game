@@ -640,6 +640,24 @@ import {
   UNBANKED_PEOPLE_HELD,
   UNBANKED_PEOPLE_SPECTATOR,
   UNBANKED_PEOPLE_PLAQUE,
+  SINK_PEOPLE_COPY,
+  WINK_SINK_PEOPLE,
+  SINK_PEOPLE_NEED,
+  SINK_PEOPLE_HELD,
+  SINK_PEOPLE_SPECTATOR,
+  SINK_PEOPLE_PLAQUE,
+  YIELD_PEOPLE_COPY,
+  WINK_YIELD_PEOPLE,
+  YIELD_PEOPLE_NEED,
+  YIELD_PEOPLE_HELD,
+  YIELD_PEOPLE_SPECTATOR,
+  YIELD_PEOPLE_PLAQUE,
+  TAX_PEOPLE_COPY,
+  WINK_TAX_PEOPLE,
+  TAX_PEOPLE_NEED,
+  TAX_PEOPLE_HELD,
+  TAX_PEOPLE_SPECTATOR,
+  TAX_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1254,6 +1272,9 @@ import {
   applyCopyPeople,
   applyBankedPeople,
   applyUnbankedPeople,
+  applySinkPeople,
+  applyYieldPeople,
+  applyTaxPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -5808,6 +5829,125 @@ describe("Unbanked — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyUnbankedPeople(gWorld, "g").players.get("g")?.heard).toBe(UNBANKED_PEOPLE_SPECTATOR);
     expect(gWorld.unbankedPeopleHeld).toBe(false);
+  });
+});
+
+describe("Sink — people", () => {
+  it("names the sink as people after unbanked; every earner still spends; guests cannot", () => {
+    const w = emptyWorld();
+    w.unbankedPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), unbankedPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SINK_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SINK_PEOPLE);
+    expect(p.beats.sinkPeople).toBe(true);
+    expect(named.sinkPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "sink-people")?.name).toBe("Sink — people");
+    expect(named.signs.find((s) => s.id === "sink-people")?.title).toBe(SINK_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Every earner still spends");
+    expect(p.heard).toContain("Banked is a sink");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySinkPeople(named, "a").players.get("a")?.heard).toBe(SINK_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySinkPeople(early, "a").players.get("a")?.heard).toBe(SINK_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.unbankedPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySinkPeople(gWorld, "g").players.get("g")?.heard).toBe(SINK_PEOPLE_SPECTATOR);
+    expect(gWorld.sinkPeopleHeld).toBe(false);
+  });
+});
+
+describe("Yield — people", () => {
+  it("names yield as people after the sink; yield still drinks Gestell; keep still costs; guests cannot", () => {
+    const w = emptyWorld();
+    w.sinkPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), sinkPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(YIELD_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_YIELD_PEOPLE);
+    expect(p.beats.yieldPeople).toBe(true);
+    expect(named.yieldPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "yield-people")?.name).toBe("Yield — people");
+    expect(named.signs.find((s) => s.id === "yield-people")?.title).toBe(YIELD_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Yield still drinks Gestell");
+    expect(p.heard).toContain("Keep still costs");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyYieldPeople(named, "a").players.get("a")?.heard).toBe(YIELD_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyYieldPeople(early, "a").players.get("a")?.heard).toBe(YIELD_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.sinkPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyYieldPeople(gWorld, "g").players.get("g")?.heard).toBe(YIELD_PEOPLE_SPECTATOR);
+    expect(gWorld.yieldPeopleHeld).toBe(false);
+  });
+});
+
+describe("Tax — people", () => {
+  it("names tax as people after yield; hall tax still skims; guests cannot", () => {
+    const w = emptyWorld();
+    w.yieldPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), yieldPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(TAX_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_TAX_PEOPLE);
+    expect(p.beats.taxPeople).toBe(true);
+    expect(named.taxPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "tax-people")?.name).toBe("Tax — people");
+    expect(named.signs.find((s) => s.id === "tax-people")?.title).toBe(TAX_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Hall tax still skims");
+    expect(p.heard).not.toMatch(/heidegger|midgar/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyTaxPeople(named, "a").players.get("a")?.heard).toBe(TAX_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyTaxPeople(early, "a").players.get("a")?.heard).toBe(TAX_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.yieldPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyTaxPeople(gWorld, "g").players.get("g")?.heard).toBe(TAX_PEOPLE_SPECTATOR);
+    expect(gWorld.taxPeopleHeld).toBe(false);
   });
 });
 

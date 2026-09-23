@@ -664,6 +664,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "unbanked-people"
                         ? 0xc9a56a
+                      : poi.kind === "sink-people"
+                        ? 0xc9a56a
+                      : poi.kind === "yield-people"
+                        ? 0xc9a56a
+                      : poi.kind === "tax-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1112,6 +1118,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.taxPeople || snap.taxPeopleHeld)) {
+      this.prompt = me.heard || "Tax — people. Hall tax still skims. The number does not strike. Not a stick.";
+    } else if (wet && snap.yieldPeopleHeld && !me.guest) {
+      this.prompt = "F — tax as a house of people. Hall tax still skims. The number does not strike. Not a fetch.";
+    } else if (wet && (me.beats.yieldPeople || snap.yieldPeopleHeld)) {
+      this.prompt = me.heard || "Yield — people. Yield still drinks Gestell. Keep still costs. Not a stick.";
+    } else if (wet && snap.sinkPeopleHeld && !me.guest) {
+      this.prompt = "F — yield as a house of people. Yield still drinks Gestell. Keep still costs. Not a fetch.";
+    } else if (wet && (me.beats.sinkPeople || snap.sinkPeopleHeld)) {
+      this.prompt = me.heard || "Sink — people. Every earner still spends. Banked is a sink, not a stick.";
+    } else if (wet && snap.unbankedPeopleHeld && !me.guest) {
+      this.prompt = "F — the sink as a house of people. Every earner still spends. Not a fetch.";
     } else if (wet && (me.beats.unbankedPeople || snap.unbankedPeopleHeld)) {
       this.prompt = me.heard || "Unbanked — people. Unbanked still drops. Guests are not loot. Not a stick.";
     } else if (wet && snap.bankedPeopleHeld && !me.guest) {
