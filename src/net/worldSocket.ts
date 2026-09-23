@@ -227,6 +227,9 @@ export type Snap = {
   enterPeopleHeld?: boolean;
   refusePeopleHeld?: boolean;
   collectivePeopleHeld?: boolean;
+  studiosPeopleHeld?: boolean;
+  filmPeopleHeld?: boolean;
+  directorPeopleHeld?: boolean;
   vesperPersonHeld?: boolean;
   ordGone?: boolean;
   quillGone?: boolean;

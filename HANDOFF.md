@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 242** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 245** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1008,7 +1008,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the refusal as people, F at the Wet Grid: the Collective as people. Plaque/POI **Collective — people**. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 242 (do this next)
+## Stage 242 (landed)
+- After the Collective as people, F at the Wet Grid: Reverie Studios as people. Plaque/POI **Studios — people**. Credits still name Reverie Studios.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 243 (landed)
+- After Studios as people, F at the Wet Grid: the film as people. Plaque/POI **Film — people**. Credits still name The Last God.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 244 (landed)
+- After the film as people, F at the Wet Grid: the director as people. Plaque/POI **Director — people**. Credits still name Lucah Rosenberg-Lee.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 245 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

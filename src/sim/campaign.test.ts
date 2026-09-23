@@ -958,6 +958,24 @@ import {
   COLLECTIVE_PEOPLE_HELD,
   COLLECTIVE_PEOPLE_SPECTATOR,
   COLLECTIVE_PEOPLE_PLAQUE,
+  STUDIOS_PEOPLE_COPY,
+  WINK_STUDIOS_PEOPLE,
+  STUDIOS_PEOPLE_NEED,
+  STUDIOS_PEOPLE_HELD,
+  STUDIOS_PEOPLE_SPECTATOR,
+  STUDIOS_PEOPLE_PLAQUE,
+  FILM_PEOPLE_COPY,
+  WINK_FILM_PEOPLE,
+  FILM_PEOPLE_NEED,
+  FILM_PEOPLE_HELD,
+  FILM_PEOPLE_SPECTATOR,
+  FILM_PEOPLE_PLAQUE,
+  DIRECTOR_PEOPLE_COPY,
+  WINK_DIRECTOR_PEOPLE,
+  DIRECTOR_PEOPLE_NEED,
+  DIRECTOR_PEOPLE_HELD,
+  DIRECTOR_PEOPLE_SPECTATOR,
+  DIRECTOR_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1625,6 +1643,9 @@ import {
   applyEnterPeople,
   applyRefusePeople,
   applyCollectivePeople,
+  applyStudiosPeople,
+  applyFilmPeople,
+  applyDirectorPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -8267,6 +8288,123 @@ describe("Collective — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyCollectivePeople(gWorld, "g").players.get("g")?.heard).toBe(COLLECTIVE_PEOPLE_SPECTATOR);
     expect(gWorld.collectivePeopleHeld).toBe(false);
+  });
+});
+
+describe("Studios — people", () => {
+  it("names Reverie Studios as people after the Collective; credits still name them; guests cannot", () => {
+    const w = emptyWorld();
+    w.collectivePeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), collectivePeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(STUDIOS_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_STUDIOS_PEOPLE);
+    expect(p.beats.studiosPeople).toBe(true);
+    expect(named.studiosPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "studios-people")?.name).toBe("Studios — people");
+    expect(named.signs.find((s) => s.id === "studios-people")?.title).toBe(STUDIOS_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Reverie Studios");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyStudiosPeople(named, "a").players.get("a")?.heard).toBe(STUDIOS_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyStudiosPeople(early, "a").players.get("a")?.heard).toBe(STUDIOS_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.collectivePeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyStudiosPeople(gWorld, "g").players.get("g")?.heard).toBe(STUDIOS_PEOPLE_SPECTATOR);
+    expect(gWorld.studiosPeopleHeld).toBe(false);
+  });
+});
+
+describe("Film — people", () => {
+  it("names The Last God as people after Studios; credits still name the film; guests cannot", () => {
+    const w = emptyWorld();
+    w.studiosPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), studiosPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(FILM_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_FILM_PEOPLE);
+    expect(p.beats.filmPeople).toBe(true);
+    expect(named.filmPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "film-people")?.name).toBe("Film — people");
+    expect(named.signs.find((s) => s.id === "film-people")?.title).toBe(FILM_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("The Last God");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyFilmPeople(named, "a").players.get("a")?.heard).toBe(FILM_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyFilmPeople(early, "a").players.get("a")?.heard).toBe(FILM_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.studiosPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyFilmPeople(gWorld, "g").players.get("g")?.heard).toBe(FILM_PEOPLE_SPECTATOR);
+    expect(gWorld.filmPeopleHeld).toBe(false);
+  });
+});
+
+describe("Director — people", () => {
+  it("names the director as people after the film; credits still name Lucah Rosenberg-Lee; guests cannot", () => {
+    const w = emptyWorld();
+    w.filmPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), filmPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(DIRECTOR_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_DIRECTOR_PEOPLE);
+    expect(p.beats.directorPeople).toBe(true);
+    expect(named.directorPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "director-people")?.name).toBe("Director — people");
+    expect(named.signs.find((s) => s.id === "director-people")?.title).toBe(DIRECTOR_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("Lucah Rosenberg-Lee");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyDirectorPeople(named, "a").players.get("a")?.heard).toBe(DIRECTOR_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyDirectorPeople(early, "a").players.get("a")?.heard).toBe(DIRECTOR_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.filmPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyDirectorPeople(gWorld, "g").players.get("g")?.heard).toBe(DIRECTOR_PEOPLE_SPECTATOR);
+    expect(gWorld.directorPeopleHeld).toBe(false);
   });
 });
 

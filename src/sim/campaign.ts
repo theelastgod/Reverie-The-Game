@@ -258,6 +258,9 @@ export type Beats = {
   enterPeople: boolean;
   refusePeople: boolean;
   collectivePeople: boolean;
+  studiosPeople: boolean;
+  filmPeople: boolean;
+  directorPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -504,6 +507,9 @@ export type Poi = {
     | "enter-people"
     | "refuse-people"
     | "collective-people"
+    | "studios-people"
+    | "film-people"
+    | "director-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4981,6 +4987,82 @@ export function collectivePeoplePoi(): Poi {
   };
 }
 
+export const STUDIOS_PEOPLE_COPY =
+  "Reverie Studios is a house of people, not a credit of process. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Combat is not. This was not a fetch.";
+export const WINK_STUDIOS_PEOPLE = "People, not a studio stick. The token does not strike.";
+export const STUDIOS_PEOPLE_NEED = "The Collective as people first. Studios of people is not a fetch.";
+export const STUDIOS_PEOPLE_HELD =
+  "Reverie Studios already holds as people. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective.";
+export const STUDIOS_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const STUDIOS_PEOPLE_PLAQUE: Sign = {
+  id: "studios-people",
+  title: "Studios — people",
+  text: "A house of people. Credits still name Reverie Studios. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function studiosPeoplePoi(): Poi {
+  return {
+    id: "studios-people",
+    name: "Studios — people",
+    x: 720,
+    y: 520,
+    kind: "studios-people",
+  };
+}
+
+export const FILM_PEOPLE_COPY =
+  "The Last God is a house of people, not a credit of process. Credits still name The Last God. Combat is not. This was not a fetch.";
+export const WINK_FILM_PEOPLE = "People, not a film stick. The token does not strike.";
+export const FILM_PEOPLE_NEED = "Studios as people first. A film of people is not a fetch.";
+export const FILM_PEOPLE_HELD = "The Last God already holds as people. Credits still name The Last God.";
+export const FILM_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const FILM_PEOPLE_PLAQUE: Sign = {
+  id: "film-people",
+  title: "Film — people",
+  text: "A house of people. Credits still name The Last God. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function filmPeoplePoi(): Poi {
+  return {
+    id: "film-people",
+    name: "Film — people",
+    x: 720,
+    y: 520,
+    kind: "film-people",
+  };
+}
+
+export const DIRECTOR_PEOPLE_COPY =
+  "The director is a house of people, not a credit of process. Credits still name Lucah Rosenberg-Lee. Combat is not. This was not a fetch.";
+export const WINK_DIRECTOR_PEOPLE = "People, not a director stick. The token does not strike.";
+export const DIRECTOR_PEOPLE_NEED = "The film as people first. A director of people is not a fetch.";
+export const DIRECTOR_PEOPLE_HELD = "The director already holds as people. Credits still name Lucah Rosenberg-Lee.";
+export const DIRECTOR_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const DIRECTOR_PEOPLE_PLAQUE: Sign = {
+  id: "director-people",
+  title: "Director — people",
+  text: "A house of people. Credits still name Lucah Rosenberg-Lee. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function directorPeoplePoi(): Poi {
+  return {
+    id: "director-people",
+    name: "Director — people",
+    x: 720,
+    y: 520,
+    kind: "director-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5726,6 +5808,9 @@ export function emptyBeats(): Beats {
     enterPeople: false,
     refusePeople: false,
     collectivePeople: false,
+    studiosPeople: false,
+    filmPeople: false,
+    directorPeople: false,
   };
 }
 

@@ -775,6 +775,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "collective-people"
                         ? 0xc9a56a
+                      : poi.kind === "studios-people"
+                        ? 0xc9a56a
+                      : poi.kind === "film-people"
+                        ? 0xc9a56a
+                      : poi.kind === "director-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1237,6 +1243,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.directorPeople || snap.directorPeopleHeld)) {
+      this.prompt = me.heard || "Director — people. Credits still name Lucah Rosenberg-Lee. Not a stick.";
+    } else if (wet && snap.filmPeopleHeld && !me.guest) {
+      this.prompt = "F — the director as a house of people. Credits still name Lucah Rosenberg-Lee. Not a fetch.";
+    } else if (wet && (me.beats.filmPeople || snap.filmPeopleHeld)) {
+      this.prompt = me.heard || "Film — people. Credits still name The Last God. Not a stick.";
+    } else if (wet && snap.studiosPeopleHeld && !me.guest) {
+      this.prompt = "F — the film as a house of people. Credits still name The Last God. Not a fetch.";
+    } else if (wet && (me.beats.studiosPeople || snap.studiosPeopleHeld)) {
+      this.prompt = me.heard || "Studios — people. Credits still name Reverie Studios. Not a stick.";
+    } else if (wet && snap.collectivePeopleHeld && !me.guest) {
+      this.prompt = "F — Reverie Studios as a house of people. Credits still name Reverie Studios. Not a fetch.";
     } else if (wet && (me.beats.collectivePeople || snap.collectivePeopleHeld)) {
       this.prompt = me.heard || "Collective — people. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Not a stick.";
     } else if (wet && snap.refusePeopleHeld && !me.guest) {
