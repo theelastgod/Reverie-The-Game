@@ -903,6 +903,13 @@ import {
   ABSENCE_PEOPLE_SPECTATOR,
   ABSENCE_PEOPLE_PLAQUE,
   absencePeoplePoi,
+  WAIT_PEOPLE_COPY,
+  WINK_WAIT_PEOPLE,
+  WAIT_PEOPLE_NEED,
+  WAIT_PEOPLE_HELD,
+  WAIT_PEOPLE_SPECTATOR,
+  WAIT_PEOPLE_PLAQUE,
+  waitPeoplePoi,
   CAMP_PEOPLE_COPY,
   WINK_CAMP_PEOPLE,
   CAMP_PEOPLE_NEED,
@@ -1692,6 +1699,7 @@ export type WorldState = {
   stipendPeopleHeld: boolean;
   hijackPeopleHeld: boolean;
   absencePeopleHeld: boolean;
+  waitPeopleHeld: boolean;
   vesperPersonHeld: boolean;
   ordGone: boolean;
   quillGone: boolean;
@@ -2041,6 +2049,7 @@ export function emptyWorld(): WorldState {
     stipendPeopleHeld: false,
     hijackPeopleHeld: false,
     absencePeopleHeld: false,
+    waitPeopleHeld: false,
     vesperPersonHeld: false,
     ordGone: false,
     quillGone: false,
@@ -3265,7 +3274,9 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     if (w.handoffPeopleHeld) return applyHandoff(w, playerId);
     return applyHandoffPeople(w, playerId);
   }
-  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people" || sign.id === "aura-people" || sign.id === "presence-people" || sign.id === "wink-people" || sign.id === "bestand-people" || sign.id === "cult-people" || sign.id === "copy-people" || sign.id === "banked-people" || sign.id === "unbanked-people" || sign.id === "sink-people" || sign.id === "yield-people" || sign.id === "tax-people" || sign.id === "gestell-people" || sign.id === "climate-people" || sign.id === "extract-people" || sign.id === "max-people" || sign.id === "heat-people" || sign.id === "fat-people" || sign.id === "poor-people" || sign.id === "block-people" || sign.id === "solo-people" || sign.id === "dwell-people" || sign.id === "trace-people" || sign.id === "fail-people" || sign.id === "hole-people" || sign.id === "stipend-people" || sign.id === "hijack-people" || sign.id === "absence-people") {
+  if (sign.id === WET_GRID.id || sign.id === "stormpress-people" || sign.id === "fallen-people" || sign.id === "spoils-people" || sign.id === "unflag-people" || sign.id === "seconds-people" || sign.id === "street-people" || sign.id === "geared-people" || sign.id === "serial-people" || sign.id === "band-people" || sign.id === "number-people" || sign.id === "skill-people" || sign.id === "trait-people" || sign.id === "token-people" || sign.id === "fair-people" || sign.id === "visible-people" || sign.id === "aura-people" || sign.id === "presence-people" || sign.id === "wink-people" || sign.id === "bestand-people" || sign.id === "cult-people" || sign.id === "copy-people" || sign.id === "banked-people" || sign.id === "unbanked-people" || sign.id === "sink-people" || sign.id === "yield-people" || sign.id === "tax-people" || sign.id === "gestell-people" || sign.id === "climate-people" || sign.id === "extract-people" || sign.id === "max-people" || sign.id === "heat-people" || sign.id === "fat-people" || sign.id === "poor-people" || sign.id === "block-people" || sign.id === "solo-people" || sign.id === "dwell-people" || sign.id === "trace-people" || sign.id === "fail-people" || sign.id === "hole-people" || sign.id === "stipend-people" || sign.id === "hijack-people" || sign.id === "absence-people" || sign.id === "wait-people") {
+    if (w.absencePeopleHeld && !w.waitPeopleHeld) return applyWaitPeople(w, playerId);
+    if (sign.id === "wait-people") return applyWaitPeople(w, playerId);
     if (w.hijackPeopleHeld && !w.absencePeopleHeld) return applyAbsencePeople(w, playerId);
     if (sign.id === "absence-people") return applyAbsencePeople(w, playerId);
     if (w.stipendPeopleHeld && !w.hijackPeopleHeld) return applyHijackPeople(w, playerId);
@@ -7106,6 +7117,37 @@ export function applyAbsencePeople(w: WorldState, playerId: string): WorldState 
   return { ...w, players, absencePeopleHeld: true, pois, signs };
 }
 
+export function applyWaitPeople(w: WorldState, playerId: string): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || !inWetGrid(p.x, p.y)) return w;
+  const players = new Map(w.players);
+  if (p.guest || p.locked) {
+    players.set(playerId, { ...p, heard: WAIT_PEOPLE_SPECTATOR, wink: visibleWink(true, WINK_WAIT_PEOPLE) });
+    return { ...w, players };
+  }
+  if (!w.absencePeopleHeld) {
+    players.set(playerId, { ...p, heard: WAIT_PEOPLE_NEED });
+    return { ...w, players };
+  }
+  if (w.waitPeopleHeld && p.beats.waitPeople) {
+    players.set(playerId, { ...p, heard: WAIT_PEOPLE_HELD, wink: visibleWink(false, WINK_WAIT_PEOPLE) });
+    return { ...w, players };
+  }
+  players.set(playerId, {
+    ...p,
+    beats: { ...p.beats, waitPeople: true },
+    heard: WAIT_PEOPLE_COPY,
+    wink: visibleWink(false, WINK_WAIT_PEOPLE),
+  });
+  const pois = w.pois.some((poi) => poi.id === "wait-people")
+    ? w.pois.map((poi) => (poi.id === "wait-people" ? waitPeoplePoi() : poi))
+    : [...w.pois, waitPeoplePoi()];
+  const signs = w.signs.some((s) => s.id === "wait-people")
+    ? w.signs.map((s) => (s.id === "wait-people" ? { ...WAIT_PEOPLE_PLAQUE } : s))
+    : [...w.signs, { ...WAIT_PEOPLE_PLAQUE }];
+  return { ...w, players, waitPeopleHeld: true, pois, signs };
+}
+
 export function applyLastGod(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
@@ -8372,6 +8414,7 @@ export function snapshot(w: WorldState) {
     stipendPeopleHeld: w.stipendPeopleHeld,
     hijackPeopleHeld: w.hijackPeopleHeld,
     absencePeopleHeld: w.absencePeopleHeld,
+    waitPeopleHeld: w.waitPeopleHeld,
     vesperPersonHeld: w.vesperPersonHeld,
     ordGone: w.ordGone,
     quillGone: w.quillGone,

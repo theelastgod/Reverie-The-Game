@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 207** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 208** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -868,7 +868,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After hijack as people, F at the Wet Grid: absence as people. Plaque/POI **Absence — people**. Absence still waits. Nara still stays at the hole.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 207 (do this next)
+## Stage 207 (landed)
+- After absence as people, F at the Wet Grid: waiting as people. Plaque/POI **Wait — people**. Absence still waits. Nara still stays at the hole.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 208 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

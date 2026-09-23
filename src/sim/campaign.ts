@@ -224,6 +224,7 @@ export type Beats = {
   stipendPeople: boolean;
   hijackPeople: boolean;
   absencePeople: boolean;
+  waitPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -436,6 +437,7 @@ export type Poi = {
     | "stipend-people"
     | "hijack-people"
     | "absence-people"
+    | "wait-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -4062,6 +4064,31 @@ export function absencePeoplePoi(): Poi {
   };
 }
 
+export const WAIT_PEOPLE_COPY =
+  "Waiting is a house of people, not a hole of process. Absence still waits. Nara still stays at the hole. Combat is not. This was not a fetch.";
+export const WINK_WAIT_PEOPLE = "People, not a wait stick. The token does not strike.";
+export const WAIT_PEOPLE_NEED = "Absence as people first. Waiting of people is not a fetch.";
+export const WAIT_PEOPLE_HELD = "Waiting already holds as people. Absence still waits. Nara still stays at the hole.";
+export const WAIT_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const WAIT_PEOPLE_PLAQUE: Sign = {
+  id: "wait-people",
+  title: "Wait — people",
+  text: "A house of people. Absence still waits. Nara still stays at the hole. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function waitPeoplePoi(): Poi {
+  return {
+    id: "wait-people",
+    name: "Wait — people",
+    x: 720,
+    y: 520,
+    kind: "wait-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -4773,6 +4800,7 @@ export function emptyBeats(): Beats {
     stipendPeople: false,
     hijackPeople: false,
     absencePeople: false,
+    waitPeople: false,
   };
 }
 
