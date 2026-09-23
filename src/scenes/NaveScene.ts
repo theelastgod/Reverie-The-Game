@@ -781,6 +781,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "director-people"
                         ? 0xc9a56a
+                      : poi.kind === "disarmed-people"
+                        ? 0xc9a56a
+                      : poi.kind === "guest-people"
+                        ? 0xc9a56a
+                      : poi.kind === "supply-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -1243,6 +1249,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.supplyPeople || snap.supplyPeopleHeld)) {
+      this.prompt = me.heard || "Supply — people. Supply is 7,777. The mint stays disarmed. Not a stick.";
+    } else if (wet && snap.guestPeopleHeld && !me.guest) {
+      this.prompt = "F — supply as a house of people. Supply is 7,777. The mint stays disarmed. Not a fetch.";
+    } else if (wet && (me.beats.guestPeople || snap.guestPeopleHeld)) {
+      this.prompt = me.heard || "Guest — people. A guest cannot prepare the ground. Not a stick.";
+    } else if (wet && snap.disarmedPeopleHeld && !me.guest) {
+      this.prompt = "F — the guest lock as a house of people. A guest cannot prepare the ground. Not a fetch.";
+    } else if (wet && (me.beats.disarmedPeople || snap.disarmedPeopleHeld)) {
+      this.prompt = me.heard || "Disarmed — people. The mint stays disarmed. TAKE stays disarmed. No Base. Not a stick.";
+    } else if (wet && snap.directorPeopleHeld && !me.guest) {
+      this.prompt = "F — the mint as a house of people. The mint stays disarmed. TAKE stays disarmed. No Base. Not a fetch.";
     } else if (wet && (me.beats.directorPeople || snap.directorPeopleHeld)) {
       this.prompt = me.heard || "Director — people. Credits still name Lucah Rosenberg-Lee. Not a stick.";
     } else if (wet && snap.filmPeopleHeld && !me.guest) {

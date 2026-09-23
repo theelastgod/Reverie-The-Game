@@ -976,6 +976,24 @@ import {
   DIRECTOR_PEOPLE_HELD,
   DIRECTOR_PEOPLE_SPECTATOR,
   DIRECTOR_PEOPLE_PLAQUE,
+  DISARMED_PEOPLE_COPY,
+  WINK_DISARMED_PEOPLE,
+  DISARMED_PEOPLE_NEED,
+  DISARMED_PEOPLE_HELD,
+  DISARMED_PEOPLE_SPECTATOR,
+  DISARMED_PEOPLE_PLAQUE,
+  GUEST_PEOPLE_COPY,
+  WINK_GUEST_PEOPLE,
+  GUEST_PEOPLE_NEED,
+  GUEST_PEOPLE_HELD,
+  GUEST_PEOPLE_SPECTATOR,
+  GUEST_PEOPLE_PLAQUE,
+  SUPPLY_PEOPLE_COPY,
+  WINK_SUPPLY_PEOPLE,
+  SUPPLY_PEOPLE_NEED,
+  SUPPLY_PEOPLE_HELD,
+  SUPPLY_PEOPLE_SPECTATOR,
+  SUPPLY_PEOPLE_PLAQUE,
   WEATHER_PEOPLE_NEED,
   WEATHER_PEOPLE_HELD,
   WEATHER_PEOPLE_SPECTATOR,
@@ -1646,6 +1664,9 @@ import {
   applyStudiosPeople,
   applyFilmPeople,
   applyDirectorPeople,
+  applyDisarmedPeople,
+  applyGuestPeople,
+  applySupplyPeople,
   STRIKE_COOLDOWN,
   applyTalk,
   applyNaraPerson,
@@ -8405,6 +8426,124 @@ describe("Director — people", () => {
     gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
     expect(applyDirectorPeople(gWorld, "g").players.get("g")?.heard).toBe(DIRECTOR_PEOPLE_SPECTATOR);
     expect(gWorld.directorPeopleHeld).toBe(false);
+  });
+});
+
+describe("Disarmed — people", () => {
+  it("names the mint as people after the director; mint and TAKE stay disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.directorPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), directorPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(DISARMED_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_DISARMED_PEOPLE);
+    expect(p.beats.disarmedPeople).toBe(true);
+    expect(named.disarmedPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "disarmed-people")?.name).toBe("Disarmed — people");
+    expect(named.signs.find((s) => s.id === "disarmed-people")?.title).toBe(DISARMED_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("The mint stays disarmed");
+    expect(p.heard).toContain("No Base");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyDisarmedPeople(named, "a").players.get("a")?.heard).toBe(DISARMED_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyDisarmedPeople(early, "a").players.get("a")?.heard).toBe(DISARMED_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.directorPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyDisarmedPeople(gWorld, "g").players.get("g")?.heard).toBe(DISARMED_PEOPLE_SPECTATOR);
+    expect(gWorld.disarmedPeopleHeld).toBe(false);
+  });
+});
+
+describe("Guest — people", () => {
+  it("names the guest lock as people after the mint; a guest cannot prepare the ground; guests cannot", () => {
+    const w = emptyWorld();
+    w.disarmedPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), disarmedPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(GUEST_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_GUEST_PEOPLE);
+    expect(p.beats.guestPeople).toBe(true);
+    expect(named.guestPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "guest-people")?.name).toBe("Guest — people");
+    expect(named.signs.find((s) => s.id === "guest-people")?.title).toBe(GUEST_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("A guest cannot prepare the ground");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applyGuestPeople(named, "a").players.get("a")?.heard).toBe(GUEST_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applyGuestPeople(early, "a").players.get("a")?.heard).toBe(GUEST_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.disarmedPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applyGuestPeople(gWorld, "g").players.get("g")?.heard).toBe(GUEST_PEOPLE_SPECTATOR);
+    expect(gWorld.guestPeopleHeld).toBe(false);
+  });
+});
+
+describe("Supply — people", () => {
+  it("names 7,777 as people after the guest lock; mint stays disarmed; guests cannot", () => {
+    const w = emptyWorld();
+    w.guestPeopleHeld = true;
+    w.players.set("a", {
+      ...spawnGuest("a"),
+      guest: false,
+      serial: TEST_SERIAL,
+      beats: { ...emptyBeats(), guestPeople: true },
+      x: WET_GRID.x,
+      y: WET_GRID.y,
+    });
+    const named = applyRead(w, "a", WET_GRID.id);
+    const p = named.players.get("a")!;
+    expect(p.heard).toBe(SUPPLY_PEOPLE_COPY);
+    expect(p.wink).toBe(WINK_SUPPLY_PEOPLE);
+    expect(p.beats.supplyPeople).toBe(true);
+    expect(named.supplyPeopleHeld).toBe(true);
+    expect(named.pois.find((poi) => poi.kind === "supply-people")?.name).toBe("Supply — people");
+    expect(named.signs.find((s) => s.id === "supply-people")?.title).toBe(SUPPLY_PEOPLE_PLAQUE.title);
+    expect(p.heard).toContain("7,777");
+    expect(p.heard).not.toMatch(/heidegger|midgar|meltdown/i);
+    const other = { ...spawnGuest("b"), guest: false, serial: 2222 };
+    expect(damageFor(p)).toBe(damageFor(other));
+    expect(guestCanClaim(p)).toBe(false);
+    expect(applySupplyPeople(named, "a").players.get("a")?.heard).toBe(SUPPLY_PEOPLE_HELD);
+
+    const early = emptyWorld();
+    early.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    expect(applySupplyPeople(early, "a").players.get("a")?.heard).toBe(SUPPLY_PEOPLE_NEED);
+
+    const gWorld = emptyWorld();
+    gWorld.guestPeopleHeld = true;
+    gWorld.players.set("g", { ...spawnGuest("g"), x: WET_GRID.x, y: WET_GRID.y, locked: true });
+    expect(applySupplyPeople(gWorld, "g").players.get("g")?.heard).toBe(SUPPLY_PEOPLE_SPECTATOR);
+    expect(gWorld.supplyPeopleHeld).toBe(false);
   });
 });
 

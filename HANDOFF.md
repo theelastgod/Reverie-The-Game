@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 245** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 248** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1020,7 +1020,19 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the film as people, F at the Wet Grid: the director as people. Plaque/POI **Director — people**. Credits still name Lucah Rosenberg-Lee.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 245 (do this next)
+## Stage 245 (landed)
+- After the director as people, F at the Wet Grid: the mint as people. Plaque/POI **Disarmed — people**. The mint stays disarmed. TAKE stays disarmed. No Base.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 246 (landed)
+- After the mint as people, F at the Wet Grid: the guest lock as people. Plaque/POI **Guest — people**. A guest cannot prepare the ground.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 247 (landed)
+- After the guest lock as people, F at the Wet Grid: supply as people. Plaque/POI **Supply — people**. Supply is 7,777. The mint stays disarmed.
+- Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 248 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules

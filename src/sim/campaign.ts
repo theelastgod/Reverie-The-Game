@@ -261,6 +261,9 @@ export type Beats = {
   studiosPeople: boolean;
   filmPeople: boolean;
   directorPeople: boolean;
+  disarmedPeople: boolean;
+  guestPeople: boolean;
+  supplyPeople: boolean;
 };
 
 export type WeatherHeard = {
@@ -510,6 +513,9 @@ export type Poi = {
     | "studios-people"
     | "film-people"
     | "director-people"
+    | "disarmed-people"
+    | "guest-people"
+    | "supply-people"
     | "ione-people"
     | "hit-stop"
     | "addressed";
@@ -5063,6 +5069,81 @@ export function directorPeoplePoi(): Poi {
   };
 }
 
+export const DISARMED_PEOPLE_COPY =
+  "The mint is a house of people, not a drop of process. The mint stays disarmed. TAKE stays disarmed. No Base. Combat is not. This was not a fetch.";
+export const WINK_DISARMED_PEOPLE = "People, not a mint stick. The token does not strike.";
+export const DISARMED_PEOPLE_NEED = "The director as people first. A disarmed mint of people is not a fetch.";
+export const DISARMED_PEOPLE_HELD = "The mint already holds as people. The mint stays disarmed. TAKE stays disarmed. No Base.";
+export const DISARMED_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const DISARMED_PEOPLE_PLAQUE: Sign = {
+  id: "disarmed-people",
+  title: "Disarmed — people",
+  text: "A house of people. The mint stays disarmed. TAKE stays disarmed. No Base. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function disarmedPeoplePoi(): Poi {
+  return {
+    id: "disarmed-people",
+    name: "Disarmed — people",
+    x: 720,
+    y: 520,
+    kind: "disarmed-people",
+  };
+}
+
+export const GUEST_PEOPLE_COPY =
+  "The guest lock is a house of people, not a gate of process. A guest cannot prepare the ground. Combat is not. This was not a fetch.";
+export const WINK_GUEST_PEOPLE = "People, not a guest stick. The token does not strike.";
+export const GUEST_PEOPLE_NEED = "The mint as people first. A guest lock of people is not a fetch.";
+export const GUEST_PEOPLE_HELD = "The guest lock already holds as people. A guest cannot prepare the ground.";
+export const GUEST_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const GUEST_PEOPLE_PLAQUE: Sign = {
+  id: "guest-people",
+  title: "Guest — people",
+  text: "A house of people. A guest cannot prepare the ground. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function guestPeoplePoi(): Poi {
+  return {
+    id: "guest-people",
+    name: "Guest — people",
+    x: 720,
+    y: 520,
+    kind: "guest-people",
+  };
+}
+
+export const SUPPLY_PEOPLE_COPY =
+  "Seven thousand seven hundred seventy-seven is a house of people, not a mint of process. Supply is 7,777. The mint stays disarmed. Combat is not. This was not a fetch.";
+export const WINK_SUPPLY_PEOPLE = "People, not a supply stick. The token does not strike.";
+export const SUPPLY_PEOPLE_NEED = "The guest lock as people first. A supply of people is not a fetch.";
+export const SUPPLY_PEOPLE_HELD = "Supply already holds as people. Supply is 7,777. The mint stays disarmed.";
+export const SUPPLY_PEOPLE_SPECTATOR = "A wet street. You do not get a house of people.";
+
+export const SUPPLY_PEOPLE_PLAQUE: Sign = {
+  id: "supply-people",
+  title: "Supply — people",
+  text: "A house of people. Supply is 7,777. The mint stays disarmed. The number does not strike.",
+  x: 720,
+  y: 520,
+};
+
+export function supplyPeoplePoi(): Poi {
+  return {
+    id: "supply-people",
+    name: "Supply — people",
+    x: 720,
+    y: 520,
+    kind: "supply-people",
+  };
+}
+
 export const CAMP_PEOPLE_COPY =
   "Camping is a house of people, not a farm of process. Gestell still rises. Aura still thins. Combat is not. This was not a fetch.";
 export const WINK_CAMP_PEOPLE = "People, not a camp stick. The token does not strike.";
@@ -5811,6 +5892,9 @@ export function emptyBeats(): Beats {
     studiosPeople: false,
     filmPeople: false,
     directorPeople: false,
+    disarmedPeople: false,
+    guestPeople: false,
+    supplyPeople: false,
   };
 }
 
