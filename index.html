@@ -18,6 +18,10 @@
         pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start;
         padding: 12px;
       }
+      #hud-icons {
+        position: absolute; top: 52px; left: 12px; display: flex; gap: 4px;
+      }
+      #hud-icons img { width: 28px; height: 28px; image-rendering: pixelated; border: 2px solid #0a0a0a; background: #fff; }
       .chip {
         border: 3px solid #0a0a0a; background: #fff; box-shadow: 4px 4px 0 #0a0a0a;
         padding: 8px 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
@@ -62,7 +66,17 @@
         <div class="chip acid" id="zone-chip">Nave of Tubes</div>
         <div class="chip" id="stat-chip">Bestand 0 · Winke 0</div>
       </div>
-      <div class="chip" id="wink-chip" hidden style="position:absolute;top:56px;left:12px;max-width:36rem;background:#0a0a0a;color:#c9a56a;border-color:#c9a56a;"></div>
+      <div id="hud-icons">
+        <img src="./assets/hud/wing.png" alt="" />
+        <img src="./assets/hud/coin.png" alt="" />
+        <img src="./assets/hud/eye.png" alt="" />
+        <img src="./assets/hud/lamp.png" alt="" />
+        <img src="./assets/hud/grave.png" alt="" />
+        <img src="./assets/hud/flag.png" alt="" />
+        <img src="./assets/hud/care.png" alt="" />
+        <img src="./assets/hud/claims.png" alt="" />
+      </div>
+      <div class="chip" id="wink-chip" hidden style="position:absolute;top:88px;left:12px;max-width:36rem;background:#0a0a0a;color:#c9a56a;border-color:#c9a56a;"></div>
       <div class="chip" id="prompt-chip" style="position:absolute;bottom:16px;left:12px;right:12px;max-width:42rem;">
         Connecting to the Nave…
       </div>

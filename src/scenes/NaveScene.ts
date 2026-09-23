@@ -37,6 +37,7 @@ import {
   REPAIR_COST,
   inWetGrid,
   IONE,
+  VESPER,
   movementReady,
   NAVE_NPCS,
   NAVE_SIGNS,
@@ -62,6 +63,7 @@ export class NaveScene extends Phaser.Scene {
   private bodies = new Map<string, Phaser.GameObjects.Image>();
   private nodeMarks = new Map<string, Phaser.GameObjects.Arc>();
   private wreckMarks = new Map<string, Phaser.GameObjects.Arc>();
+  private wreckImgs = new Map<string, Phaser.GameObjects.Image>();
   private npcMarks = new Map<string, Phaser.GameObjects.Image>();
   private npcNames = new Map<string, Phaser.GameObjects.Text>();
   private riteMarks = new Map<string, Phaser.GameObjects.Arc>();
@@ -161,6 +163,7 @@ export class NaveScene extends Phaser.Scene {
     if (nearPoint(cx, cy, WRECK_GARDEN.x, WRECK_GARDEN.y, 90)) return "tile-garden";
     if (nearPoint(cx, cy, SAFETY_ANNEX.x, SAFETY_ANNEX.y, 90)) return "tile-annex";
     if (nearPoint(cx, cy, SCREENING.x, SCREENING.y, 90)) return "tile-screening";
+    if (nearPoint(cx, cy, CLAIMS_DESK.x, CLAIMS_DESK.y, 90)) return "tile-claims";
     return "tile-nave";
   }
 
@@ -208,8 +211,10 @@ export class NaveScene extends Phaser.Scene {
     this.plate(OPERATOR_DESK.x, OPERATOR_DESK.y - 38, "plate-operator", 132, 74);
     this.plate(GOING_UNDER.x, GOING_UNDER.y + 30, "plate-under", 132, 74);
     this.plate(CLAIMS_DESK.x, CLAIMS_DESK.y - 38, "plate-claims", 140, 80);
-    this.plate(BURIAL_PLOT.x, BURIAL_PLOT.y - 38, "serial-wreckage", 148, 84);
+    this.plate(BURIAL_PLOT.x, BURIAL_PLOT.y - 38, "plate-burial", 148, 84);
     this.plate(HOUSE_HALL.x + 180, HOUSE_HALL.y + 70, "house-war", 140, 80);
+    this.plate(IONE.x - 120, IONE.y - 8, "plate-ione", 140, 80);
+    this.plate(VESPER.x + 88, VESPER.y, "plate-vesper", 132, 74);
   }
 
   private drawSign(s: Sign) {
@@ -764,6 +769,12 @@ export class NaveScene extends Phaser.Scene {
                         ? 0xc9a56a
                       : poi.kind === "proximity-people"
                         ? 0xc9a56a
+                      : poi.kind === "enter-people"
+                        ? 0xc9a56a
+                      : poi.kind === "refuse-people"
+                        ? 0xc9a56a
+                      : poi.kind === "collective-people"
+                        ? 0xc9a56a
                       : poi.kind === "nara-gone"
                         ? 0x7a1028
                       : poi.kind === "nara-person"
@@ -980,10 +991,18 @@ export class NaveScene extends Phaser.Scene {
     const wreckSeen = new Set<string>();
     for (const r of snap.wreckage) {
       wreckSeen.add(r.id);
-      let m = this.wreckMarks.get(r.id);
-      if (!m) {
-        m = this.add.circle(r.x, r.y, 10, 0xff2d6b, 0.7).setDepth(6);
-        this.wreckMarks.set(r.id, m);
+      if (this.textures.exists("fx-wreckage")) {
+        let img = this.wreckImgs.get(r.id);
+        if (!img) {
+          img = this.add.image(r.x, r.y, "fx-wreckage").setDisplaySize(36, 44).setDepth(6);
+          this.wreckImgs.set(r.id, img);
+        } else img.setPosition(r.x, r.y);
+      } else {
+        let m = this.wreckMarks.get(r.id);
+        if (!m) {
+          m = this.add.circle(r.x, r.y, 10, 0xff2d6b, 0.7).setDepth(6);
+          this.wreckMarks.set(r.id, m);
+        }
       }
     }
     if (me.messenger === "witness" || me.beats.blitz) {
@@ -1000,6 +1019,12 @@ export class NaveScene extends Phaser.Scene {
       if (!wreckSeen.has(id)) {
         m.destroy();
         this.wreckMarks.delete(id);
+      }
+    }
+    for (const [id, img] of this.wreckImgs) {
+      if (!wreckSeen.has(id)) {
+        img.destroy();
+        this.wreckImgs.delete(id);
       }
     }
     const histSeen = new Set<string>();
@@ -1212,6 +1237,18 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && (me.beats.collectivePeople || snap.collectivePeopleHeld)) {
+      this.prompt = me.heard || "Collective — people. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Not a stick.";
+    } else if (wet && snap.refusePeopleHeld && !me.guest) {
+      this.prompt = "F — the Collective as a house of people. Credits still name Reverie Studios, The Last God, Lucah Rosenberg-Lee, Collective. Not a fetch.";
+    } else if (wet && (me.beats.refusePeople || snap.refusePeopleHeld)) {
+      this.prompt = me.heard || "Refuse — people. Observer without credits still cannot enter the Founder room. Not a stick.";
+    } else if (wet && snap.enterPeopleHeld && !me.guest) {
+      this.prompt = "F — the refusal as a house of people. Observer without credits still cannot enter. Not a fetch.";
+    } else if (wet && (me.beats.enterPeople || snap.enterPeopleHeld)) {
+      this.prompt = me.heard || "Enter — people. After credits, Participant Angels still enter the Founder room. Observer without credits cannot. Not a stick.";
+    } else if (wet && snap.proximityPeopleHeld && !me.guest) {
+      this.prompt = "F — entering as a house of people. After credits, Participant Angels still enter. Observer without credits cannot. Not a fetch.";
     } else if (wet && (me.beats.proximityPeople || snap.proximityPeopleHeld)) {
       this.prompt = me.heard || "Proximity — people. After credits, Participant Angels still enter the Founder room. Observer without credits cannot. Not a stick.";
     } else if (wet && snap.participantPeopleHeld && !me.guest) {

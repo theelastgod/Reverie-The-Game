@@ -80,6 +80,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("tile-garden", asset("tiles/garden.jpg"));
     this.load.image("tile-annex", asset("tiles/annex.jpg"));
     this.load.image("tile-screening", asset("tiles/screening.jpg"));
+    this.load.image("tile-claims", asset("tiles/claims.jpg"));
     this.load.image("prop-crt", asset("tiles/crt.jpg"));
     this.load.image("guest", asset("guest.jpg"));
     this.load.image("nara", asset("nara.jpg"));
@@ -109,6 +110,9 @@ export class BootScene extends Phaser.Scene {
     this.load.image("plate-arena", asset("plate-arena.jpg"));
     this.load.image("plate-screening", asset("plate-screening.jpg"));
     this.load.image("plate-claims", asset("plate-claims.jpg"));
+    this.load.image("plate-burial", asset("plate-burial.jpg"));
+    this.load.image("plate-ione", asset("plate-ione.jpg"));
+    this.load.image("plate-vesper", asset("plate-vesper.jpg"));
     this.load.image("guest", asset("sprites/guest.png"));
     this.load.image("nara", asset("sprites/nara.png"));
     this.load.image("quill", asset("sprites/quill.png"));
@@ -119,6 +123,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("angel", asset("sprites/angel.png"));
     this.load.image("fx-strike", asset("sprites/fx-strike.png"));
     this.load.image("fx-aura", asset("sprites/fx-aura.png"));
+    this.load.image("fx-wreckage", asset("sprites/fx-wreckage.png"));
   }
 
   create() {

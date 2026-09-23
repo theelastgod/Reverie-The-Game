@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 238** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 239** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -992,7 +992,11 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the Participant room as people, F at the Wet Grid: Founder proximity as people. Plaque/POI **Proximity — people**. After credits, Participant Angels still enter the Founder room. Observer without credits cannot.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 238 (do this next)
+## Stage 238 (landed)
+- Graft missing Imagine stills onto the Nave: burial plot plate (no longer wreckage), Ione last-word hole, Vesper foundry desk, claims floor tile, isolated wreckage marker, HUD icon row.
+- Floors still tile at native grain. Guests cannot. `damageFor` unchanged. Claims stay disarmed.
+
+## Stage 239 (do this next)
 Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
 
 ## Rules
