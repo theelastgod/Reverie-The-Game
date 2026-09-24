@@ -9,6 +9,7 @@ export default defineConfig({
     host: "127.0.0.1",
     proxy: {
       "/ws": { target: "http://127.0.0.1:8788", ws: true },
+      "/session": { target: "http://127.0.0.1:8788" },
       "/world": { target: "http://127.0.0.1:8788" },
     },
   },

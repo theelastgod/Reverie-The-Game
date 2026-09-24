@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 263** — Campaign / PvP / economy polish. 24 authored hours are in. No mint.
+**Next stage: 266** — Complete a browser playtest of the opening and newly unblocked art; then audit repeatable economy actions and the refusal path into Movement III. No more repeated “as people” plaques. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -11,7 +11,7 @@ Execute `PROMPT.md`. Do not wait for a new user prompt.
 - Prompt: https://reverie-the-game.wendellphillips.workers.dev/prompt.html
 - Local client: `npm run dev` → http://127.0.0.1:5175
 - Deploy: `npm run deploy` (Vite `/play` + Worker `reverie-the-game`)
-- Durable builder: scheduled every 30m (do not create a second one)
+- Continued execution: one task heartbeat checks every 30m. An earlier builder was recorded here but could not be located in the available scheduler. The heartbeat defers when another writer has recent meaningful progress or unexplained local edits; do not create additional schedules.
 
 ## Done
 - Master prompt written (`PROMPT.md`). Art pack is **influence**, not official.
@@ -1092,12 +1092,33 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - After the quest as people, F at the Wet Grid: the spoken Wink as people. Plaque/POI **Spoken — people**. Same quest, different spoken Wink.
 - Guests cannot. `damageFor` unchanged. Claims stay disarmed.
 
-## Stage 263 (do this next)
-Campaign / PvP / economy polish. Fetch-only forbidden. No mint. No Base. 24 named hours are in; more hours still allowed.
+## Stage 263 (landed)
+- Verified local HEAD against GitHub main (`7868e3b`) and reproduced the deployed `/play/assets/index-C4wFgcDV.js` byte-for-byte from that commit. Cloudflare deployment at audit: `99fc25bd-625d-4947-84e5-8405ae629edf`. Existing host is a Worker, not Pages; there is no `reverie-the-game` Pages project.
+- Corrected alarm calls to Durable Object storage; added server type-checking to build/deploy.
+- Server-owned browser sessions, saved world and character state, recovery of hibernating sockets, single-tab ownership, automatic reconnect and stale-input expiry. Actions checkpoint before broadcast; passive simulation checkpoints every simulation second. Cookie loss creates a fresh guest; this is not wallet authentication.
+- Claims, mint and Base remain disarmed. Legacy in-memory progress cannot be retroactively recovered on this first persistence deployment.
+- Gates: recovery and transport unit tests, actual local WebSocket movement/reconnect/ownership smoke test. Deployment builds expose `/play/release.json` with their source revision.
+
+## Stage 264 (landed)
+- Opening field notes show the next meaningful beat, direction and distance, with a world marker following the server's live NPC positions. Covers Movement I through the Care and House hall. Collapsible paper/ink/acid panel; no client-side progression awards.
+- Fixed shared burial/garden completion softlocks: each character can mourn once even after the world grave is already buried. Repeating the rite grants no extra readiness. Guests still cannot take the garden rite.
+- Fixed duplicate game startup when clicking the title and then pressing a key.
+- Gates: opening progression guidance, moved NPC targeting, two-player burial and repeat-reward tests; existing campaign/fairness tests pass.
+
+## Stage 265 (landed)
+- Fixed the art loader: placeholder textures and duplicate portrait keys prevented the authored sprite/floor images from loading. Each key is now registered exactly once; all 56 referenced images exist.
+- Owner authorized additional built-in generated art. Added a dark Nave floor variation at `public/assets/tiles/nave-v2.png`, preserving its Imagine source. Prompt/provenance in `brand/nave-floor-v2.md`.
+- The browser automation surface was unavailable during this session. Image inspected directly, loader verified against Phaser source, build/assets checked. Full in-browser visual and performance acceptance remains outstanding; do not claim the five-hour/60fps master gate is satisfied.
+
+## Stage 266 (do this next)
+- Obtain a browser playtest of the actual deployed client: boot once, visible authored sprites, readable dark floor, field notes, movement and reconnect; inspect UI overlap at laptop sizes.
+- Audit repeatable earners (Clearing extract and repeated Passing) for unbounded rewards. Make source/sink and idempotency tests meaningful.
+- Audit the Readiness/refusal route into Movement III; it must be completable without taking Cold yield.
+- Continue substantive playability work toward PROMPT.md. The long historical stage count is not evidence of a five-hour finished campaign. No mint, Base or real-value settlement.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
 - Do not arm Base, treasury, or `$REVERIE`.
-- Imagine for art (`image_edit` from `brand/reference/`). No Higgsfield until owner confirms credits.
+- Reuse Imagine art; additional built-in image generation was authorized by the owner on 2026-09-24. Keep the master visual synthesis and reference existing assets. No Higgsfield until owner confirms credits.
 - Co-Authored-By: Grok <noreply@x.ai>. No other model names in the repo.
 - Never write WALL STREET / Meltdown / METROPHAGE / Mafia / Solana Seas repos.

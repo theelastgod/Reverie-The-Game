@@ -5,7 +5,10 @@ import { NaveScene } from "./scenes/NaveScene";
 const boot = document.getElementById("boot-title");
 const hud = document.getElementById("hud");
 
+let started = false;
 function start() {
+  if (started) return;
+  started = true;
   boot?.remove();
   if (hud) hud.hidden = false;
   new Phaser.Game({

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { circleHitsWalls, isWallTile, nearNode } from "./nave";
 import {
+  applyBury,
   applyStrike,
   applyUse,
   damageFor,
@@ -87,5 +88,36 @@ describe("world", () => {
     const after = tickWorld(w, 0.05);
     expect(after.now).toBeCloseTo(0.05);
     expect(after.wreckage.length).toBe(0);
+  });
+});
+
+
+describe("personal rites in a shared world", () => {
+  it("lets a second guest mourn at the shared grave without duplicating its reward", () => {
+    let w = emptyWorld();
+    const plot = w.rites.find(r => r.kind === "burial")!;
+    for (const id of ["first", "second"]) w.players.set(id, { ...spawnGuest(id), x: plot.x, y: plot.y });
+    w = applyBury(w, "first");
+    expect(w.rites.find(r => r.id === plot.id)?.done).toBe(true);
+    w = applyBury(w, "second");
+    expect(w.players.get("second")?.beats.burial).toBe(true);
+    expect(w.players.get("second")?.aura).toBe(0);
+    const readiness = w.players.get("second")!.readiness;
+    w = applyBury(w, "second");
+    expect(w.players.get("second")?.readiness).toBe(readiness);
+  });
+
+  it("lets each Angel mourn the garden while keeping guests outside that rite", () => {
+    let w = emptyWorld();
+    w.rites.push({ id: "garden", kind: "garden", x: 600, y: 600, done: true });
+    w.players.set("angel", { ...spawnGuest("angel"), guest: false, x: 600, y: 600 });
+    w.players.set("guest", { ...spawnGuest("guest"), x: 600, y: 600 });
+    w = applyBury(w, "angel");
+    expect(w.players.get("angel")?.beats.garden).toBe(true);
+    w = applyBury(w, "guest");
+    expect(w.players.get("guest")?.beats.garden).toBe(false);
+    const readiness = w.players.get("angel")!.readiness;
+    w = applyBury(w, "angel");
+    expect(w.players.get("angel")?.readiness).toBe(readiness);
   });
 });

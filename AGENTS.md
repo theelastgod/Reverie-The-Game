@@ -6,7 +6,7 @@ Read `PROMPT.md` and `HANDOFF.md` before editing. Implement the next stage in HA
 
 - Title: Reverie: The Game. Token `$REVERIE` on Base, disarmed. 7777 Angels.
 - Art references are influence, not official. Synthesis in PROMPT §3.
-- Imagine first. No Higgsfield until the owner confirms credits.
+- Reuse Imagine assets. Owner also authorized built-in image generation on 2026-09-24. No Higgsfield until the owner confirms credits.
 - Server owns numbers. `$REVERIE` never buys combat.
 - Do not touch WALL STREET, Meltdown, METROPHAGE, Mafia, Solana Seas.
 - Co-Authored-By: Grok <noreply@x.ai>. No other lab names in the repo.

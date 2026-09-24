@@ -263,29 +263,80 @@ export class WorldSocket {
   snap: Snap | null = null;
   you: Player | null = null;
   lastIntent = "";
+  status: "connecting" | "online" | "reconnecting" | "elsewhere" | "closed" = "connecting";
+  private retry: ReturnType<typeof setTimeout> | null = null;
+  private attempts = 0;
+  private stopped = false;
+  private sentAt = 0;
 
-  connect() {
-    const proto = location.protocol === "https:" ? "wss" : "ws";
-    const url = `${proto}://${location.host}/ws`;
-    const ws = new WebSocket(url);
-    this.ws = ws;
-    ws.onmessage = (ev) => {
-      const data = JSON.parse(String(ev.data)) as Hello | Snap;
-      if (data.t === "hello") {
-        this.id = data.id;
-        this.you = data.you;
-      } else if (data.t === "snap") {
-        this.snap = data;
-        if (this.id) this.you = data.players.find((p) => p.id === this.id) ?? this.you;
-      }
-    };
+  async connect() {
+    if (this.stopped || this.ws) return;
+    try {
+      const session = await fetch("/session", { method: "POST", credentials: "same-origin" });
+      if (!session.ok) throw new Error("Session unavailable");
+      if (this.stopped) return;
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const ws = new WebSocket(`${proto}://${location.host}/ws`);
+      this.ws = ws;
+      this.lastIntent = "";
+      ws.onmessage = (ev) => {
+        if (this.ws !== ws) return;
+        let data: Hello | Snap;
+        try { data = JSON.parse(String(ev.data)); } catch { return; }
+        if (!data) return;
+        if (data.t === "hello") {
+          this.id = data.id;
+          this.you = data.you;
+          this.status = "online";
+          this.attempts = 0;
+        } else if (data.t === "snap") {
+          this.snap = data;
+          if (this.id) this.you = data.players.find((p) => p.id === this.id) ?? this.you;
+        }
+      };
+      ws.onerror = () => ws.close();
+      ws.onclose = (event) => {
+        if (this.ws !== ws) return;
+        this.ws = null;
+        this.lastIntent = "";
+        if (event.code === 4001) {
+          this.status = "elsewhere";
+          return;
+        }
+        this.reconnect();
+      };
+    } catch {
+      this.reconnect();
+    }
+  }
+
+  private reconnect() {
+    if (this.stopped || this.retry) return;
+    this.status = "reconnecting";
+    const delay = Math.min(1000 * 2 ** this.attempts++, 10000);
+    this.retry = setTimeout(() => {
+      this.retry = null;
+      void this.connect();
+    }, delay);
+  }
+
+  disconnect() {
+    this.stopped = true;
+    this.status = "closed";
+    if (this.retry) clearTimeout(this.retry);
+    this.retry = null;
+    this.ws?.close();
+    this.ws = null;
   }
 
   sendIntent(intent: Intent) {
     const key = `${+intent.up}${+intent.down}${+intent.left}${+intent.right}`;
-    if (key === this.lastIntent) return;
-    this.lastIntent = key;
-    this.send({ t: "intent", intent });
+    const now = Date.now();
+    if (key === this.lastIntent && now - this.sentAt < 250) return;
+    if (this.send({ t: "intent", intent })) {
+      this.lastIntent = key;
+      this.sentAt = now;
+    }
   }
 
   strike() {
@@ -393,6 +444,8 @@ export class WorldSocket {
   }
 
   private send(msg: unknown) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(msg));
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN || this.status !== "online") return false;
+    this.ws.send(JSON.stringify(msg));
+    return true;
   }
 }

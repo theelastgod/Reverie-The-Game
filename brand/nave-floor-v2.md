@@ -1,0 +1,9 @@
+# Nave floor — second pass
+
+Owner authorized additional generated art on 2026-09-24. Created with the built-in image generation tool, using `public/assets/tiles/nave.jpg` as the edit reference. The original Imagine texture remains intact. Consumed by BootScene as `tile-nave`; output is `public/assets/tiles/nave-v2.png`.
+
+Art direction: dark walkable ground, readable paper-white character silhouettes, restrained champagne seams and lavender reflections. No gameplay numbers or collision geometry change. Inspect in the live renderer before claiming the full visual quality gate.
+
+## Generation prompt
+
+Use case: style-transfer. Asset type: a production-ready seamless square ground texture for Reverie: The Game, a top-down 2D sacred HD-pixel action RPG. Image 1 is the existing Imagine Nave floor, a style/material reference and edit target; preserve its function as unobstructed walkable ground, but improve its visual coherence and contrast. Create a darker and more carefully art-directed sibling version: straight-down orthographic wet charcoal basalt paving in a ruined brutalist cathedral of obsolete electronics. Large irregular rectangular stone slabs with hairline cracks, tiny restrained e-waste fragments, sparse desaturated lavender reflections, a few delicate champagne-gold seams, faint damp blue-black puddles. Painterly high-resolution pixel art, visible deliberate 2–3 px pixel clusters rather than photoreal noise. Low-contrast ground, mostly dark charcoal (#191820 to #34303f), to make a paper-white 64px character and champagne sacred effects readable. Uniform lighting across the tile, absolutely no central focal point or vignette, no furniture, walls, statues, characters, symbols, lettering, UI or logo. No acid green or yellow-green. Seamless repeat on all four edges. Entire image is flat ground texture. Square 1024 by 1024.

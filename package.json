@@ -3,26 +3,29 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Reverie: The Game — top-down 2D MMO RPG",
+  "description": "Reverie: The Game \u2014 top-down 2D MMO RPG",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5175",
     "dev:world": "wrangler dev --port 8788",
     "dev:online": "wrangler dev --port 8788",
-    "build": "tsc --noEmit && vite build",
-    "build:play": "tsc --noEmit && VITE_BASE=/play/ vite build",
-    "deploy": "tsc --noEmit && VITE_BASE=/play/ vite build && rm -rf site/play && mkdir -p site/play && cp -R dist/. site/play/ && npx wrangler deploy",
+    "build": "npm run typecheck && vite build",
+    "build:play": "npm run typecheck && VITE_BASE=/play/ vite build",
+    "deploy": "npm run build:play && node scripts/stage-play.mjs && npx wrangler deploy",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json",
     "test": "vitest run",
-    "deploy:site": "npx wrangler deploy"
+    "deploy:site": "npx wrangler deploy",
+    "test:smoke": "node scripts/smoke-world.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260924.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
     "vitest": "^2.1.9",
-    "wrangler": "^4.125.0"
+    "wrangler": "^4.125.0",
+    "ws": "^8.21.3"
   }
 }

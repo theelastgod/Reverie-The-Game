@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { nextObjective, bearing } from "../sim/journal";
 import {
   CARE_DOOR,
   formatSerial,
@@ -78,6 +79,7 @@ export class NaveScene extends Phaser.Scene {
   private wasd!: Record<"W" | "A" | "S" | "D", Phaser.Input.Keyboard.Key>;
   private prompt = "";
   private following = false;
+  private objectiveMark: Phaser.GameObjects.Arc | null = null;
   private signsDrawn = false;
   private stallStill: Phaser.GameObjects.Image | null = null;
   private auraImg: Phaser.GameObjects.Image | null = null;
@@ -142,7 +144,8 @@ export class NaveScene extends Phaser.Scene {
     });
     hud("mock-link")?.addEventListener("click", () => this.net.link(TEST_SERIAL));
 
-    this.net.connect();
+    void this.net.connect();
+    this.events.once("shutdown", () => this.net.disconnect());
   }
 
   private floorKey(cx: number, cy: number, wall: boolean): string {
@@ -355,7 +358,7 @@ export class NaveScene extends Phaser.Scene {
     }
     if (me.locked) return;
     const rites = this.net.snap?.rites ?? [];
-    const burial = rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
+    const burial = rites.find((r) => r.kind === "burial" && !me.beats.burial && nearPoint(me.x, me.y, r.x, r.y));
     const wreck = this.net.snap?.wreckage.find((r) => nearPoint(me.x, me.y, r.x, r.y, 56));
     if (wreck && me.messenger === "witness" && !me.beats.blitz) {
       this.net.blitz();
@@ -368,7 +371,7 @@ export class NaveScene extends Phaser.Scene {
     const hist = visibleHistory(me.guest, me.serial, this.net.snap?.history ?? [], me.storm || me.ruinBack).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
-    const garden = rites.find((r) => r.kind === "garden" && !r.done && nearPoint(me.x, me.y, r.x, r.y, 56));
+    const garden = rites.find((r) => r.kind === "garden" && !me.beats.garden && nearPoint(me.x, me.y, r.x, r.y, 56));
     const failed = visibleFailed(me.guest, me.serial, this.net.snap?.failed ?? [], me.house, me.storm || me.ruinBack).find((h) =>
       nearPoint(me.x, me.y, h.x, h.y, 56),
     );
@@ -989,11 +992,29 @@ export class NaveScene extends Phaser.Scene {
       left: this.cursors.left.isDown || this.wasd.A.isDown,
       right: this.cursors.right.isDown || this.wasd.D.isDown,
     };
-    this.net.sendIntent(intent);
+    this.net.sendIntent(document.hasFocus() ? intent : { up: false, down: false, left: false, right: false });
+    const connection = hud("connection-chip");
+    if (connection) {
+      connection.hidden = this.net.status === "online";
+      connection.textContent = this.net.status === "elsewhere"
+        ? "Active in another tab · reload here to return"
+        : this.net.status === "connecting" ? "Entering the Nave…" : "Connection interrupted · returning to your place…";
+    }
 
     const snap = this.net.snap;
     const me = this.net.you;
     if (!snap || !me) return;
+    const objective = nextObjective(me, snap.npcs);
+    const title = hud("journal-title");
+    const detail = hud("journal-detail");
+    const direction = hud("journal-bearing");
+    if (title && title.textContent !== objective.title) title.textContent = objective.title;
+    if (detail && detail.textContent !== objective.detail) detail.textContent = objective.detail;
+    const bearingText = objective.target ? bearing(me.x, me.y, objective.target) : me.locked ? "MOVEMENT I · COMPLETE" : "ENFRAMED CITY";
+    if (direction && direction.textContent !== bearingText) direction.textContent = bearingText;
+    if (!this.objectiveMark) this.objectiveMark = this.add.circle(0, 0, 26).setStrokeStyle(2, 0xe8d5a3, 0.8).setDepth(7);
+    this.objectiveMark.setVisible(!!objective.target);
+    if (objective.target) this.objectiveMark.setPosition(objective.target.x, objective.target.y);
 
     const seen = new Set<string>();
     for (const p of snap.players) {
@@ -1101,7 +1122,7 @@ export class NaveScene extends Phaser.Scene {
     }
 
     const npcNear = (snap.npcs ?? [...NAVE_NPCS, IONE]).find((n) => nearPoint(me.x, me.y, n.x, n.y));
-    const burial = snap.rites.find((r) => r.kind === "burial" && !r.done && nearPoint(me.x, me.y, r.x, r.y));
+    const burial = snap.rites.find((r) => r.kind === "burial" && !me.beats.burial && nearPoint(me.x, me.y, r.x, r.y));
     const sign = (snap.signs ?? NAVE_SIGNS).find((s) => nearPoint(me.x, me.y, s.x, s.y, 56));
     const clerkNear = snap.clerks.find((c) => nearPoint(me.x, me.y, c.x, c.y, 70));
     const under = nearPoint(me.x, me.y, GOING_UNDER.x, GOING_UNDER.y, 56);
@@ -1938,7 +1959,7 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = me.heard || "Garden — people. Bury still works. Not a stick.";
     } else if (gardenNear && snap.underPeopleHeld && !me.guest) {
       this.prompt = "F — the wreckage garden as a house of people. Bury still works. Not a fetch.";
-    } else if (gardenNear && !gardenNear.done && !me.guest) {
+    } else if (gardenNear && !me.beats.garden && !me.guest) {
       this.prompt = "F bury the Clearing that Movement I over-extracted. Nara Vale will not speak until you do.";
     } else if (npcNear?.id === "nara" && (me.beats.naraPerson || snap.naraPersonHeld)) {
       this.prompt = me.heard || "Nara Vale stays. A person, not a function.";

@@ -4032,7 +4032,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || p.locked) return w;
   const players = new Map(w.players);
-  const plot = w.rites.find((r) => r.kind === "burial" && !r.done);
+  const plot = w.rites.find((r) => r.kind === "burial" && !p.beats.burial);
   if (plot && nearPoint(p.x, p.y, plot.x, plot.y)) {
     if (!p.guest && w.gardenPeopleHeld && !w.burialPeopleHeld) return applyBurialPeople(w, playerId);
     const rites = w.rites.map((r) => (r.id === plot.id ? { ...r, done: true } : r));
@@ -4040,11 +4040,11 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
       ...p,
       beats: { ...p.beats, nara: true, burial: true },
       readiness: p.readiness + (p.house === "earth" ? 2 : 1),
-      heard: lineFor("nara", { ...p.beats, nara: true, burial: true }),
+      heard: plot.done ? "Someone closed the earth before you. Nara makes room beside the name. The watch is still yours to keep." : lineFor("nara", { ...p.beats, nara: true, burial: true }),
     });
     return { ...w, players, rites };
   }
-  const garden = w.rites.find((r) => r.kind === "garden" && !r.done);
+  const garden = w.rites.find((r) => r.kind === "garden" && !p.beats.garden);
   if (garden && nearPoint(p.x, p.y, garden.x, garden.y, 56)) {
     if (p.guest) return w;
     if (w.underPeopleHeld && !w.gardenPeopleHeld) return applyGardenPeople(w, playerId);
@@ -4053,7 +4053,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
       ...p,
       beats: { ...p.beats, garden: true },
       readiness: p.readiness + 1,
-      heard: GARDEN_BURY,
+      heard: garden.done ? "The garden has been buried. You stay beside it until the city stops counting your time." : GARDEN_BURY,
       wink: visibleWink(false, WINK_GARDEN),
     });
     return {
