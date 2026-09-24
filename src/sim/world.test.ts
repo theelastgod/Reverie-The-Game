@@ -58,8 +58,8 @@ describe("world", () => {
 
   it("strike drops a wreckage when hp hits 0", () => {
     const w = emptyWorld();
-    const a = { ...spawnGuest("a"), x: 200, y: 480 };
-    const b = { ...spawnGuest("b"), x: 220, y: 480, hp: 20 };
+    const a = { ...spawnGuest("a"), guest: false, x: 200, y: 480 };
+    const b = { ...spawnGuest("b"), guest: false, x: 220, y: 480, hp: 20 };
     w.players.set("a", a);
     w.players.set("b", b);
     const after = applyStrike(w, "a");

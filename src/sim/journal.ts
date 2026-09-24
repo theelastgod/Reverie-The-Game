@@ -1,3 +1,4 @@
+import { INTAKE } from "./encounters";
 import { BURIAL_PLOT, GOING_UNDER, NAVE_NPCS, NAVE_SIGNS, CARE_DOOR, HOUSE_HALL, OPERATOR_DESK, WRECK_GARDEN, M3_DOOR } from "./campaign";
 import type { Player } from "./world";
 
@@ -8,6 +9,7 @@ const person = (id: string) => NAVE_NPCS.find(n => n.id === id)!;
 export function nextObjective(p: Player, npcs = NAVE_NPCS): Objective {
   const npc = (id: string) => npcs.find(n => n.id === id) ?? person(id);
   if (p.locked) return { id: "guest-lock", title: "The first threshold", detail: "Movement I is complete. Link the test Angel to go under, or remain in the Nave." };
+  if (!p.beats.nara && !p.openingCombat && !p.beats.under) return { id: "intake-clerk", title: "Your name in the ledger", detail: "The intake clerk bars the southern aisle. Click to strike. Shift + move evades the red warning; R interrupts it. Each relief shift returns after a short pause.", target: INTAKE };
   if (!p.beats.nara) return { id: "meet-nara", title: "A name for the dead", detail: "Find Nara Vale in the southern funeral street. Press F to listen.", target: npc("nara") };
   if (!p.beats.burial) return { id: "first-burial", title: "Leave something unspent", detail: "Stand beside Nara’s burial plot. Press F to bury what the city would count.", target: BURIAL_PLOT };
   if (!p.weather.safety) return { id: "safety-weather", title: "The official weather", detail: "Read the Office of Safety plaque with F. Someone has called this stability.", target: NAVE_SIGNS[0] };

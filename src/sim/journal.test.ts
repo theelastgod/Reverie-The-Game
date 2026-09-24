@@ -5,6 +5,9 @@ import { spawnGuest } from "./world";
 describe("opening journal", () => {
   it("guides the opening from Nara to the guest threshold without mutating progress", () => {
     const p = spawnGuest("guest");
+    expect(nextObjective(p).id).toBe("intake-clerk");
+    expect(p.openingCombat).toBeUndefined();
+    p.openingCombat = true;
     expect(nextObjective(p).id).toBe("meet-nara");
     expect(p.beats.nara).toBe(false);
     p.beats.nara = true;
@@ -25,6 +28,7 @@ describe("opening journal", () => {
   });
   it("follows NPCs when the shared world changes their location", () => {
     const p = spawnGuest("guest");
+    p.openingCombat = true;
     const target = { id: "nara", name: "Nara Vale", role: "Sexton", x: 100, y: 200 };
     expect(nextObjective(p, [target]).target).toEqual(target);
   });

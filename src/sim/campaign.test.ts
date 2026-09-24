@@ -2517,7 +2517,7 @@ describe("Hit-stop", () => {
 
     const gWorld = emptyWorld();
     gWorld.players.set("g", { ...spawnGuest("g"), x: 200, y: 480 });
-    gWorld.players.set("b", { ...spawnGuest("b"), hp: 80, x: 220, y: 480 });
+    gWorld.clerks = [{ id: "practice", name: "Practice", hp: 80, x: 220, y: 480, telegraph: 0, dummy: true }];
     const guestHit = applyStrike(gWorld, "g");
     expect(guestHit.hitStopHeld).toBe(true);
     expect(guestHit.players.get("g")?.heard).toBe(HIT_STOP_COPY);
@@ -13257,4 +13257,3 @@ describe("Palindrome Wink seed", () => {
     expect(buried.history).toEqual([]);
   });
 });
-

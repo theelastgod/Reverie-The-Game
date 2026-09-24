@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 270** — Execute the playable chapter redesign in `DESIGN.md`: reusable clerk encounters, a consequential first node choice, and measured opening playthrough. No more repeated “as people” plaques. No mint.
+**Next stage: 271** — Follow `DESIGN.md`: make the first node decision consequential, available to every new arrival, and part of Nara's burial story. Measure the opening playthrough. No more repeated “as people” plaques. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1138,14 +1138,22 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Validation: 330 tests across the full suite and updated campaign, dodge and transport regressions. Tests cover timed evasion, ordinary movement vulnerability, cooldown spam, malformed directions, diagonal normalization, wall tunneling, attack lockout and guest fairness.
 - Browser capture briefly worked for the title and old loading screen, then the preview service became unavailable. The redesigned world still needs rendered visual/performance acceptance; simulation and build checks do not establish that gate.
 
-## Stage 270 (do this next)
+## Stage 270 (landed)
+- A single reusable Intake Clerk appears near new arrivals, even after the two named clerks are gone. It has 88 health, a 12-second relief-shift delay and resets abandoned fights. Named clerks stay dead. Each connected participant who struck the clerk gets personal opening credit; spectators and practice dummies do not. Credit survives death and saved-world restoration. No currency or readiness reward is added.
+- Clerk attacks hold their original target, complete their warning even if the target leaves, and recover for 0.85 seconds after a hit, miss or heavy interruption. They cannot redirect the finishing blow onto a new bystander. Recovery has an explicit label and sky tint. Field notes lead fresh arrivals to the encounter, then to Nara.
+- Guests cannot hurt other players or be hurt by them. Locked characters cannot strike or draw clerk attacks. A missed heavy no longer borrows an earlier hit's connection state.
+- Added nine encounter/fairness regressions; all 339 tests passed, as did client/server type-checks and the production build. Both WebSocket smoke tests passed against local Wrangler. `scripts/smoke-intake.mjs` walks a real guest to the clerk, interrupts, finishes combat, verifies no numeric reward, and reconnects with saved credit. It uses only public guest inputs.
+- For release verification, run both `scripts/smoke-world.mjs` and `scripts/smoke-intake.mjs` against the live host and compare `/play/release.json` and the served bundle with the committed build. Do not infer rendered quality from protocol checks.
+- Browser preview loaded the title, but both screenshot methods failed and subsequent state inspection timed out. Rendered acceptance remains open.
+
+## Stage 271 (do this next)
 - Complete rendered visual/performance acceptance when screenshot capture works; inspect restored WebGL behavior and laptop HUD overlap. Do not claim the full visual gate from DOM checks alone.
-- Follow `DESIGN.md`. Make clerk encounters replayable for new arrivals, teach dodge/heavy through play, and guide a meaningful first extract/keep choice before the guest threshold. Shared clerks and nodes are currently one-shot resources; this is the next campaign blocker. Audit organ interactions for personal Movement III requirements and later party availability.
+- Follow `DESIGN.md`. Guide a meaningful first extract/keep choice before the guest threshold and tie it to Nara's burial. Shared nodes are currently one-shot resources; this is the next campaign blocker. Audit organ interactions for personal Movement III requirements and later party availability. Audit Angel PvP eligibility against flag, truce and arena rules before broadening combat.
 - Audit other earners and define event identity before adding seasonal Passing rewards. Preserve named interactions but prioritize playable consequences and bounded resources over additional plaques.
 - Continue toward PROMPT.md. No mint, Base or real-value settlement.
 
 ## Rules
-- Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.
+- Branch: `main` until told otherwise. Commit, push, deploy the existing Worker (`site/`) as you go; there is no Pages project.
 - Do not arm Base, treasury, or `$REVERIE`.
 - Reuse Imagine art; additional built-in image generation was authorized by the owner on 2026-09-24. Keep the master visual synthesis and reference existing assets. No Higgsfield until owner confirms credits.
 - Co-Authored-By: Grok <noreply@x.ai>. No other model names in the repo.

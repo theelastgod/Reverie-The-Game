@@ -1,3 +1,4 @@
+import { CLERK_RECOVERY, INTAKE, INTAKE_RECOVERY, refreshIntake } from "./encounters";
 import {
   ANGEL_UNDER,
   Beats,
@@ -1856,6 +1857,7 @@ export type Player = {
   winke: number;
   hp: number;
   strikeCd: number;
+  openingCombat?: boolean;
   dodgeT?: number;
   dodgeCd?: number;
   dodgeX?: number;
@@ -1899,6 +1901,7 @@ export type Player = {
 };
 
 export type WorldState = {
+  intakeReadyAt?: number;
   players: Map<string, Player>;
   intents: Map<string, Intent>;
   nodes: YieldNode[];
@@ -2262,6 +2265,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     surface: p.surface,
     filmRoom: p.filmRoom,
     winkSchool: p.winkSchool,
+    openingCombat: p.openingCombat,
     historyLog: { ...p.historyLog, houses: [...p.historyLog.houses] },
     partyOf: p.partyOf,
     x,
@@ -2575,7 +2579,7 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
     const intent = w.intents.get(id) ?? { up: false, down: false, left: false, right: false };
     players.set(id, stepPlayer(p, intent, dt));
   }
-  const afterClerks = tickClerks({ ...w, now, players }, dt);
+  const afterClerks = tickClerks(refreshIntake({ ...w, now, players }), dt);
   const afterWar = tickHouseWar(afterClerks, dt);
   const afterDecay = tickExhibit(afterWar, dt);
   const afterAura = tickAura(afterDecay, dt);
@@ -2651,43 +2655,44 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
   let wreckage = w.wreckage;
   for (const c of w.clerks) {
     if (c.hp <= 0) continue;
-    const living = [...players.values()].filter((p) => p.hp > 0);
-    const target = living.find((p) => nearPoint(p.x, p.y, c.x, c.y, CLERK_AGGRO));
+    const living = [...players.values()].filter(p => p.hp > 0 && !p.locked);
+    if (c.id === INTAKE.id && !living.some(p => nearPoint(p.x, p.y, c.x, c.y, 200))) {
+      clerks.push({ ...c, hp: c.maxHp ?? CLERK_HP, recovery: 0, telegraph: 0, targetId: undefined, participants: [] });
+      continue;
+    }
+    if ((c.recovery ?? 0) > 0) {
+      clerks.push({ ...c, recovery: Math.max(0, c.recovery! - dt) });
+      continue;
+    }
+    const nearby = living.filter(p => nearPoint(p.x, p.y, c.x, c.y, CLERK_AGGRO))
+      .sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y));
     if (c.telegraph > 0) {
       const next = c.telegraph - dt;
-      if (next <= 0 && target) {
-        const hit = players.get(target.id)!;
-        if ((hit.dodgeT ?? 0) > 0) {
-          players.set(hit.id, { ...hit, heard: DODGE_COPY });
-          clerks.push({ ...c, telegraph: 0 });
-          continue;
+      // Old saved telegraphs have no target id; new attacks never jump to a bystander.
+      const target = c.targetId ? nearby.find(p => p.id === c.targetId) : nearby[0];
+      if (next <= 0) {
+        if (target) {
+          const hit = players.get(target.id)!;
+          if ((hit.dodgeT ?? 0) > 0) players.set(hit.id, { ...hit, heard: DODGE_COPY });
+          else {
+            const hp = hit.hp - CLERK_DAMAGE;
+            if (hp <= 0) {
+              wreckage = [...wreckage, { id: `w-${hit.id}-${w.now}`, x: hit.x, y: hit.y, fromId: hit.id, fromName: hit.guest ? "Guest" : "Angel", until: w.now + 45 }];
+              players.set(hit.id, continueAfterDeath(hit, { heard: `${c.name} did their job.` }));
+            } else players.set(hit.id, { ...hit, hp });
+          }
         }
-        const hp = hit.hp - CLERK_DAMAGE;
-        if (hp <= 0) {
-          wreckage = [
-            ...wreckage,
-            { id: `w-${hit.id}-${w.now}`, x: hit.x, y: hit.y, fromId: hit.id, fromName: "Guest", until: w.now + 45 },
-          ];
-          players.set(hit.id, continueAfterDeath(hit, { heard: `${c.name} did their job.` }));
-        } else {
-          players.set(hit.id, { ...hit, hp });
-        }
-        clerks.push({ ...c, telegraph: 0 });
-      } else {
-        clerks.push({ ...c, telegraph: target ? Math.max(0, next) : 0 });
-      }
-    } else if (target) {
-      clerks.push({ ...c, telegraph: CLERK_TELEGRAPH });
-    } else {
-      clerks.push({ ...c, telegraph: 0 });
-    }
+        clerks.push({ ...c, telegraph: 0, targetId: undefined, recovery: CLERK_RECOVERY });
+      } else clerks.push({ ...c, telegraph: next });
+    } else if (nearby[0]) clerks.push({ ...c, telegraph: CLERK_TELEGRAPH, targetId: nearby[0].id });
+    else clerks.push({ ...c, telegraph: 0 });
   }
   return { ...w, players, clerks, wreckage };
 }
 
 export function applyStrike(w: WorldState, attackerId: string): WorldState {
   const a = w.players.get(attackerId);
-  if (!a || a.hp <= 0 || a.strikeCd > 0 || (a.dodgeT ?? 0) > 0) return w;
+  if (!a || a.hp <= 0 || a.locked || a.strikeCd > 0 || (a.dodgeT ?? 0) > 0) return w;
   const players = new Map(w.players);
   const attacker = { ...a, strikeCd: STRIKE_COOLDOWN };
   players.set(attackerId, attacker);
@@ -2704,7 +2709,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     if (dx * dx + dy * dy > STRIKE_RANGE * STRIKE_RANGE) continue;
-    if (!a.guest && (b.guest || b.locked)) {
+    if (a.guest || a.locked || b.guest || b.locked) {
       const k = players.get(attackerId)!;
       if (k.heard === priorHeard || k.heard === GUEST_GRIEF) {
         players.set(attackerId, { ...k, heard: GUEST_GRIEF });
@@ -2822,6 +2827,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       if (c.hp > 0) clerks.push(c);
       continue;
     }
+    const participants = [...new Set([...(c.participants ?? []).filter(id => players.has(id)), attackerId])];
     const hp = c.hp - dmg;
     hitMark = { x: c.x, y: c.y };
     if (hp <= 0) {
@@ -2834,9 +2840,14 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
         ...wreckage,
         { id: `w-${c.id}-${w.now}`, x: c.x, y: c.y, fromId: c.id, fromName: c.name, until: w.now + 45 },
       ];
+      for (const id of participants) {
+        const participant = players.get(id);
+        if (participant) players.set(id, { ...participant, openingCombat: true });
+      }
+      if (c.id === INTAKE.id) w = { ...w, intakeReadyAt: w.now + INTAKE_RECOVERY };
       players.set(attackerId, { ...players.get(attackerId)!, heard: `${c.name} falls. They were doing a job.` });
     } else {
-      clerks.push({ ...c, hp });
+      clerks.push({ ...c, hp, participants });
     }
   }
   if (hitMark) {
@@ -3013,7 +3024,7 @@ export function applyHeavy(w: WorldState, playerId: string): WorldState {
   if (before === w) return w;
   const p = before.players.get(playerId);
   if (!p) return before;
-  const connected = p.beats.hitStop || before.hitStopHeld;
+  const connected = p.strikeCd > STRIKE_COOLDOWN;
   const players = new Map(before.players);
   const first = !w.heavyHeld && connected;
   players.set(playerId, {
@@ -3026,7 +3037,7 @@ export function applyHeavy(w: WorldState, playerId: string): WorldState {
   const clerks = before.clerks.map((c) => {
     if (c.hp <= 0 || c.telegraph <= 0) return c;
     if (!nearPoint(p.x, p.y, c.x, c.y, STRIKE_RANGE + 8)) return c;
-    return { ...c, telegraph: 0 };
+    return { ...c, telegraph: 0, targetId: undefined, recovery: CLERK_RECOVERY };
   });
   if (!first) return { ...before, players, clerks };
   const pois = before.pois.some((poi) => poi.id === "heavy")

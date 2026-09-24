@@ -481,8 +481,8 @@ export class NaveScene extends Phaser.Scene {
         this.clerkMarks.set(c.id, img);
         this.clerkNames.set(c.id, nm);
       }
-      img.setTint(c.hp < 20 ? 0xff2d6b : 0xffffff);
-      this.clerkNames.get(c.id)?.setText(`${c.name} · ${Math.max(0, Math.ceil(c.hp))}/${CLERK_HP}`);
+      img.setTint((c.recovery ?? 0) > 0 ? 0x7eb6ff : c.hp < 20 ? 0xff2d6b : 0xffffff);
+      this.clerkNames.get(c.id)?.setText(`${c.name} · ${Math.max(0, Math.ceil(c.hp))}/${c.maxHp ?? CLERK_HP}${(c.recovery ?? 0) > 0 ? " · RECOVERING" : ""}`);
       let ring = this.clerkTele.get(c.id);
       if (c.telegraph > 0) {
         if (!ring) {
@@ -990,7 +990,7 @@ export class NaveScene extends Phaser.Scene {
     const objective = nextObjective(me, snap.npcs);
     const art = hud("journal-art") as HTMLImageElement | null;
     if (art) {
-      const pictures: Record<string, string> = { "meet-nara": "plate-burial.jpg", "first-burial": "plate-burial.jpg", "safety-weather": "safety-annex.jpg", "meet-ord": "organ-strait.jpg", "meet-quill": "clearing-stall.jpg", "name-weather": "plate-burial.jpg", "going-under": "plate-under.jpg", "guest-lock": "plate-under.jpg", "enter-care": "plate-care.jpg", "house-hall": "house-hall.jpg", "operator-offer": "plate-operator.jpg", "operator-choice": "plate-operator.jpg", "wreckage-garden": "wreckage-garden.jpg", "third-movement": "plate-m3.jpg" };
+      const pictures: Record<string, string> = { "intake-clerk": "safety-annex.jpg", "meet-nara": "plate-burial.jpg", "first-burial": "plate-burial.jpg", "safety-weather": "safety-annex.jpg", "meet-ord": "organ-strait.jpg", "meet-quill": "clearing-stall.jpg", "name-weather": "plate-burial.jpg", "going-under": "plate-under.jpg", "guest-lock": "plate-under.jpg", "enter-care": "plate-care.jpg", "house-hall": "house-hall.jpg", "operator-offer": "plate-operator.jpg", "operator-choice": "plate-operator.jpg", "wreckage-garden": "wreckage-garden.jpg", "third-movement": "plate-m3.jpg" };
       const file = pictures[objective.id] ?? "clearing-ring.jpg";
       if (art.dataset.file !== file) { art.src = `${import.meta.env.BASE_URL}assets/${file}`; art.dataset.file = file; }
     }
@@ -999,7 +999,7 @@ export class NaveScene extends Phaser.Scene {
     const direction = hud("journal-bearing");
     if (title && title.textContent !== objective.title) title.textContent = objective.title;
     if (detail && detail.textContent !== objective.detail) detail.textContent = objective.detail;
-    const bearingText = objective.target ? bearing(me.x, me.y, objective.target) : me.locked ? "MOVEMENT I · COMPLETE" : "ENFRAMED CITY";
+    const bearingText = objective.target ? (objective.id === "intake-clerk" && nearPoint(me.x, me.y, objective.target.x, objective.target.y, 70) ? "CLICK STRIKE · SHIFT DODGE · R INTERRUPT" : bearing(me.x, me.y, objective.target)) : me.locked ? "MOVEMENT I · COMPLETE" : "ENFRAMED CITY";
     if (direction && direction.textContent !== bearingText) direction.textContent = bearingText;
     if (!this.objectiveMark) this.objectiveMark = this.add.circle(0, 0, 26).setStrokeStyle(2, 0xe8d5a3, 0.8).setDepth(7);
     this.objectiveMark.setVisible(!!objective.target);

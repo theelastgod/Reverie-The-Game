@@ -295,6 +295,10 @@ export type Clerk = {
   hp: number;
   telegraph: number;
   dummy?: boolean;
+  maxHp?: number;
+  recovery?: number;
+  targetId?: string;
+  participants?: string[];
 };
 
 export type Poi = {
