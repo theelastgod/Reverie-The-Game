@@ -3390,7 +3390,7 @@ describe("M3 — people", () => {
       ...spawnGuest("a"),
       guest: false,
       serial: TEST_SERIAL,
-      beats: { ...emptyBeats(), vesperPeople: true },
+      beats: { ...emptyBeats(), vesperPeople: true, hall: true, cold: true },
       x: M3_DOOR.x,
       y: M3_DOOR.y,
     });

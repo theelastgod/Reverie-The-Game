@@ -85,3 +85,54 @@ describe("Readiness route into Movement III", () => {
     expect(w.signs.some(sign => sign.id === "organ-strait")).toBe(true);
   });
 });
+
+describe("personal gates in an advanced shared world", () => {
+  it("an open door cannot advance a newcomer or an unfinished refusal", () => {
+    for (const beats of [{}, { hall: true }, { hall: true, refuse: true }]) {
+      const w = emptyWorld(); w.m3Open = true; w.vesperPeopleHeld = true;
+      const p = spawnGuest("new");
+      w.players.set("new", { ...p, guest: false, x: M3_DOOR.x, y: M3_DOOR.y,
+        beats: { ...p.beats, ...beats } });
+      const after = applyM3(w, "new");
+      const newcomer = after.players.get("new")!;
+      expect(newcomer.inM3).toBe(false);
+      expect(newcomer.beats.m3).toBe(false);
+      expect(newcomer.beats.m3People).toBe(false);
+      expect(newcomer.readiness).toBe(p.readiness);
+      expect(newcomer.x).toBe(M3_DOOR.x);
+      expect(after.m3Open).toBe(true);
+    }
+  });
+  it("admits both qualified routes and preserves saved completion without repeat rewards", () => {
+    for (const beats of [{ hall: true, cold: true }, { hall: true, refuse: true, garden: true }, { m3: true }]) {
+      let w = emptyWorld(); w.m3Open = true;
+      const p = spawnGuest("a");
+      w.players.set("a", { ...p, guest: false, x: M3_DOOR.x, y: M3_DOOR.y,
+        beats: { ...p.beats, ...beats } });
+      w = applyM3(w, "a");
+      expect(w.players.get("a")!.inM3).toBe(true);
+      const readiness = w.players.get("a")!.readiness;
+      w.players.set("a", { ...w.players.get("a")!, x: M3_DOOR.x, y: M3_DOOR.y });
+      for (let i = 0; i < 10; i++) w = applyM3(w, "a");
+      expect(w.players.get("a")!.readiness).toBe(readiness);
+    }
+  });
+});
+
+describe("Passing participation is a campaign record", () => {
+  it.each(["absence", "hijack", "failed"])("repeated %s intents record participation once", outcome => {
+    let w = emptyWorld();
+    const p = angel("a");
+    w.players.set("a", { ...p, current: outcome === "hijack" ? "cold" : "readiness",
+      beats: { ...p.beats, clearing: true } });
+    w.clearingOpen = outcome !== "failed";
+    if (outcome === "absence") w.naraGone = true;
+    if (outcome === "hijack") w.gestell = 71;
+    w = applyPassing(w, "a");
+    expect(w.passing.outcome).toBe(outcome);
+    expect(w.players.get("a")!.historyLog.passings).toBe(1);
+    for (let i = 0; i < 100; i++) w = applyPassing(w, "a");
+    expect(w.players.get("a")!.historyLog.passings).toBe(1);
+    expect(w.players.get("a")!.stipend).toBe(0);
+  });
+});

@@ -10056,6 +10056,12 @@ export function applyM3(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: M3_SPECTATOR, wink: "" });
     return { ...w, players };
   }
+  // Shared infrastructure never substitutes for this character's campaign choices.
+  const qualified = p.beats.m3 || (p.beats.hall && (p.beats.cold || (p.beats.refuse && p.beats.garden)));
+  if (!qualified) {
+    players.set(playerId, { ...p, heard: ORGAN_NEED_M3, wink: "" });
+    return { ...w, players };
+  }
   if (w.vesperPeopleHeld && !w.m3PeopleHeld) return applyM3People(w, playerId);
   if (!w.m3Open && p.beats.hall && p.beats.refuse && p.beats.garden) {
     const pois = w.pois.map(poi => poi.id === M3_DOOR.id ? m3Poi(true) : poi);
@@ -11576,12 +11582,12 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
       return { ...w, players };
     }
     if (w.clearingFailed && p.beats.passing) return applyStorm(w, playerId);
-    players.set(playerId, {
+    players.set(playerId, bumpLog({
       ...p,
       beats: { ...p.beats, passing: true },
       heard: passingCopy("failed"),
       wink: visibleWink(false, WINK_PASS_FAIL),
-    });
+    }, { passings: p.beats.passing ? 0 : 1 }));
     const failedMarks = w.failed.some((f) => f.id === FAILED_PASSING.id) ? w.failed : [...w.failed, { ...FAILED_PASSING }];
     return {
       ...w,
@@ -11632,7 +11638,7 @@ export function applyPassing(w: WorldState, playerId: string): WorldState {
     ),
     readiness: p.readiness + (outcome === "appearance" && !p.beats.passing ? 2 : 0),
     stipend: outcome === "appearance" ? p.stipend + STIPEND : p.stipend,
-  }, { passings: 1 }));
+  }, { passings: p.beats.passing ? 0 : 1 }));
   const absent = outcome === "absence";
   const plaque = hijacked && by ? hijackPlaque(by) : null;
   const mark = hijacked && p.serial != null ? hijackMark(p.serial) : null;

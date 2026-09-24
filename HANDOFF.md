@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 267** — Finish visual/performance acceptance and audit personal campaign gates on the shared world. No more repeated “as people” plaques. No mint.
+**Next stage: 268** — Preserve opening NPC access on an advanced shared world and finish visual/performance acceptance. No more repeated “as people” plaques. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1117,10 +1117,17 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Tests cover 100 duplicate extraction intents, repeated keep/extract cycles across two players, guest exclusion, persisted exhausted reserve, Appearance stipend replay after shrine spending, and the refusal route. Updated the old House-war test that had incorrectly rewarded extracting already-closed ground.
 - Browser acceptance was partial: live HUD connected, exactly one canvas after boot and keyboard input, field notes visible. The browser reported a WebGL context loss followed by restoration. Both screenshot APIs failed, so sprite/floor legibility and laptop layout remain unverified. Protocol smoke tests remain the movement/reconnect gate.
 
-## Stage 267 (do this next)
+## Stage 267 (landed)
+- Movement III entry now checks the character's own hall and Cold choice, or hall/refusal/garden rite. A door opened by another Angel no longer grants entry, teleportation, readiness, or the legacy door interaction to unqualified arrivals. Saved Movement III completion remains valid.
+- Door guidance describes both routes instead of claiming that funding is the only route. Existing guest and locked-character exclusion remains.
+- Passing participation history records the campaign rite once, including a failed first attempt. Repeated absence/hijack interactions and changed outcomes no longer inflate the participation count. This is a single campaign record; future seasons need explicit event identities. Existing inflated history is not rewritten.
+- Gates: 320 tests passed across the full suite and corrected new regression fixtures; client/server type-checks and production build. Tests cover advanced shared doors, incomplete refusal, both qualified routes, saved completion, repeat readiness, and 100 repeats of each non-Appearance outcome.
+- Screenshot capture retried against the connected live game and still failed. Visual/performance acceptance remains open.
+
+## Stage 268 (do this next)
 - Complete rendered visual/performance acceptance when screenshot capture works; inspect restored WebGL behavior and laptop HUD overlap. Do not claim the full visual gate from DOM checks alone.
-- Audit personal campaign gates when another player has advanced the shared world: Movement III should not open for an unqualified new arrival, NPC departures should not permanently block a new player's opening.
-- Audit other earners and repeated failed/absent Passing history writes. Preserve named interactions but prioritize playable consequences and bounded resources over additional plaques.
+- Preserve personal opening NPC access when another player has moved or dismissed the shared party. Server snapshots currently broadcast one NPC list to everyone; dialogue also branches on global late-story flags. Coordinate rendering, interaction distance and dialogue rather than adding invisible fallback interactions. Audit organ interactions for personal Movement III requirements.
+- Audit other earners and define event identity before adding seasonal Passing rewards. Preserve named interactions but prioritize playable consequences and bounded resources over additional plaques.
 - Continue toward PROMPT.md. No mint, Base or real-value settlement.
 
 ## Rules
