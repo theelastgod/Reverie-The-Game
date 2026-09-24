@@ -1126,7 +1126,7 @@ export const WINK_OPERATOR =
 export const OPERATOR_TAKE =
   "You took the private yield. Cold is a current, not a costume. Movement III is funded. The number does not strike harder.";
 export const OPERATOR_REFUSE =
-  "You refused. Readiness is slower. The door stays shut until the work is mortal.";
+  "You refused. Go back to the wreckage garden and bury what our work destroyed. Then take the Third Movement door. There is another way through.";
 export const OPERATOR_SPECTATOR = "A woman at a desk. She is not speaking to you.";
 export const OPERATOR_NEED_HALL = "Vesper Hale will not quote a private node to someone who has not read who owns the public ones.";
 

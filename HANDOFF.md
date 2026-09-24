@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 266** — Complete a browser playtest of the opening and newly unblocked art; then audit repeatable economy actions and the refusal path into Movement III. No more repeated “as people” plaques. No mint.
+**Next stage: 267** — Finish visual/performance acceptance and audit personal campaign gates on the shared world. No more repeated “as people” plaques. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1110,11 +1110,18 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Owner authorized additional built-in generated art. Added a dark Nave floor variation at `public/assets/tiles/nave-v2.png`, preserving its Imagine source. Prompt/provenance in `brand/nave-floor-v2.md`.
 - The browser automation surface was unavailable during this session. Image inspected directly, loader verified against Phaser source, build/assets checked. Full in-browser visual and performance acceptance remains outstanding; do not claim the five-hour/60fps master gate is satisfied.
 
-## Stage 266 (do this next)
-- Obtain a browser playtest of the actual deployed client: boot once, visible authored sprites, readable dark floor, field notes, movement and reconnect; inspect UI overlap at laptop sizes.
-- Audit repeatable earners (Clearing extract and repeated Passing) for unbounded rewards. Make source/sink and idempotency tests meaningful.
-- Audit the Readiness/refusal route into Movement III; it must be completable without taking Cold yield.
-- Continue substantive playability work toward PROMPT.md. The long historical stage count is not evidence of a five-hour finished campaign. No mint, Base or real-value settlement.
+## Stage 266 (landed)
+- Closed Clearings no longer pay Bestand, wound aura, change climate or score House war. An open Clearing draws from a finite shared 40-Bestand reserve; keeping it does not refill that reserve. Subsequent contests still close the ground but explain that the reserve is spent. The existing aura wound and climate/content cost remain.
+- The reserve persists with world state. Worlds saved before this stage receive the initial reserve through the existing default-state merge. No replenishment mechanism is implemented; a future seasonal reserve must have an explicit funding source.
+- Refusing Vesper now has a complete entry route into Movement III: read the hall, refuse, mourn the wreckage garden, then use the Third Movement door. No private yield, currency cost or extra Gestell. Cold entry remains available. Field notes guide both choices.
+- Tests cover 100 duplicate extraction intents, repeated keep/extract cycles across two players, guest exclusion, persisted exhausted reserve, Appearance stipend replay after shrine spending, and the refusal route. Updated the old House-war test that had incorrectly rewarded extracting already-closed ground.
+- Browser acceptance was partial: live HUD connected, exactly one canvas after boot and keyboard input, field notes visible. The browser reported a WebGL context loss followed by restoration. Both screenshot APIs failed, so sprite/floor legibility and laptop layout remain unverified. Protocol smoke tests remain the movement/reconnect gate.
+
+## Stage 267 (do this next)
+- Complete rendered visual/performance acceptance when screenshot capture works; inspect restored WebGL behavior and laptop HUD overlap. Do not claim the full visual gate from DOM checks alone.
+- Audit personal campaign gates when another player has advanced the shared world: Movement III should not open for an unqualified new arrival, NPC departures should not permanently block a new player's opening.
+- Audit other earners and repeated failed/absent Passing history writes. Preserve named interactions but prioritize playable consequences and bounded resources over additional plaques.
+- Continue toward PROMPT.md. No mint, Base or real-value settlement.
 
 ## Rules
 - Branch: `main` until told otherwise. Commit, push, deploy Pages (`site/`) as you go.

@@ -34,3 +34,18 @@ describe("opening journal", () => {
     expect(bearing(0, 0, { x: 20, y: 20 })).toBe("HERE · F TO INTERACT");
   });
 });
+
+it("guides refusal through the garden to the Third Movement door", () => {
+  const p = spawnGuest("a");
+  p.guest = false;
+  p.namedWeather = true;
+  p.weather.safety = p.weather.ord = true;
+  Object.assign(p.beats, { nara: true, burial: true, ord: true, quill: true, under: true, care: true, hall: true });
+  expect(nextObjective(p).id).toBe("operator-offer");
+  p.beats.yield = true;
+  expect(nextObjective(p).id).toBe("operator-choice");
+  p.beats.refuse = true;
+  expect(nextObjective(p).id).toBe("wreckage-garden");
+  p.beats.garden = true;
+  expect(nextObjective(p).id).toBe("third-movement");
+});

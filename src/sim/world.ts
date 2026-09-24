@@ -1905,6 +1905,7 @@ export type WorldState = {
   history: HistoryMark[];
   failed: FailedPassing[];
   clearingOpen: boolean;
+  clearingReserve: number;
   m3Open: boolean;
   forgedSold: boolean;
   ioneGone: boolean;
@@ -2309,6 +2310,7 @@ export function emptyWorld(): WorldState {
     history: [],
     failed: [],
     clearingOpen: false,
+    clearingReserve: CONTEST_PAY,
     m3Open: false,
     forgedSold: false,
     ioneGone: false,
@@ -10055,6 +10057,12 @@ export function applyM3(w: WorldState, playerId: string): WorldState {
     return { ...w, players };
   }
   if (w.vesperPeopleHeld && !w.m3PeopleHeld) return applyM3People(w, playerId);
+  if (!w.m3Open && p.beats.hall && p.beats.refuse && p.beats.garden) {
+    const pois = w.pois.map(poi => poi.id === M3_DOOR.id ? m3Poi(true) : poi);
+    if (!pois.some(poi => poi.id === M3_DOOR.id)) pois.push(m3Poi(true));
+    const organs = openOrgans({ ...w, pois });
+    w = { ...w, ...organs, m3Open: true };
+  }
   if (!w.m3Open) {
     players.set(playerId, { ...p, heard: ORGAN_NEED_M3 });
     return { ...w, players };
@@ -11408,13 +11416,20 @@ export function applyClearing(
   if (choice !== "extract" && w.roomsPeopleHeld && !w.stormPeopleHeld) return applyStormPeople(w, playerId);
   if (choice !== "extract" && w.campPeopleHeld && !w.passingPeopleHeld) return applyPassingPeople(w, playerId);
   if (choice === "extract") {
+    if (!w.clearingOpen) {
+      players.set(playerId, { ...p, heard: "The Clearing is already closed. There is nothing left to extract." });
+      return { ...w, players };
+    }
+    // One finite shared reserve. Keeping the ground does not print new Bestand.
+    const reserve = Math.max(0, w.clearingReserve ?? CONTEST_PAY);
+    const payout = Math.min(CONTEST_PAY, reserve);
     const war = scoreWar(w.war, p.house, "extract");
     players.set(playerId, {
       ...p,
-      bestand: p.bestand + CONTEST_PAY,
+      bestand: p.bestand + payout,
       aura: Math.max(0, p.aura - 2),
       current: p.current || "cold",
-      heard: war.winner && !w.war.winner ? war.omen : CLEARING_CONTEST,
+      heard: war.winner && !w.war.winner ? war.omen : payout > 0 ? CLEARING_CONTEST : "You closed the Clearing. Its reserve is spent; the loss pays nothing.",
       wink: visibleWink(false, war.winner ? WINK_WAR : WINK_TURN),
     });
     return {
@@ -11422,6 +11437,7 @@ export function applyClearing(
       players,
       war,
       clearingOpen: false,
+      clearingReserve: reserve - payout,
       gestell: Math.min(100, w.gestell + 8),
       pois: w.pois.map((poi) => (poi.id === CLEARING_RING.id ? clearingPoi(false) : poi)),
     };

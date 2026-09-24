@@ -10518,7 +10518,7 @@ describe("House war on the Clearing", () => {
     expect(guestCanClaim(won.players.get("a")!)).toBe(false);
   });
 
-  it("two extracts win the Cold omen; guests do not score", () => {
+  it("two contested openings win the Cold omen; closed ground and guests do not score", () => {
     const w = emptyWorld();
     w.players.set("e", {
       ...spawnGuest("e"),
@@ -10527,9 +10527,12 @@ describe("House war on the Clearing", () => {
       x: CLEARING_RING.x,
       y: CLEARING_RING.y,
     });
+    w.clearingOpen = true;
     const one = applyClearing(w, "e", "extract");
     expect(one.war.winner).toBe("");
-    const two = applyClearing(one, "e", "extract");
+    const duplicate = applyClearing(one, "e", "extract");
+    expect(duplicate.war.extract.earth).toBe(1);
+    const two = applyClearing({ ...duplicate, clearingOpen: true }, "e", "extract");
     expect(two.war.winner).toBe("earth");
     expect(two.war.omen).toBe(WAR_OMEN_EXTRACT);
     expect(two.war.titheCut).toBe(WAR_TITHE);
