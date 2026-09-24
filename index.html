@@ -21,6 +21,9 @@
       #hud-icons {
         position: absolute; top: 52px; left: 12px; display: flex; gap: 4px;
       }
+      #hud-icons { display: none; }
+      #dodge-chip { position: absolute; left: 12px; top: 58px; font-size: 10px; }
+      #journal-art { display: block; width: 100%; height: 108px; object-fit: cover; filter: saturate(.72); border-bottom: 3px solid #0a0a0a; }
       #hud-icons img { width: 28px; height: 28px; image-rendering: pixelated; border: 2px solid #0a0a0a; background: #fff; }
       .chip {
         border: 3px solid #0a0a0a; background: #fff; box-shadow: 4px 4px 0 #0a0a0a;
@@ -73,6 +76,7 @@
         <div class="chip" id="stat-chip">Bestand 0 · Winke 0</div>
       </div>
       <div class="chip acid" id="connection-chip" role="status" style="position:absolute;top:88px;right:12px;max-width:24rem;">Entering the Nave…</div>
+      <div class="chip" id="dodge-chip">SHIFT + MOVE · DODGE</div>
       <div id="hud-icons">
         <img src="./assets/hud/wing.png" alt="" />
         <img src="./assets/hud/coin.png" alt="" />
@@ -89,6 +93,7 @@
       </div>
       <details id="journal" open>
         <summary>01 / FIELD NOTES</summary>
+        <img id="journal-art" src="./assets/plate-burial.jpg" alt="" />
         <h2 id="journal-title">A name for the dead</h2>
         <p id="journal-detail">Your place in the city will appear here.</p>
         <div id="journal-bearing">NAVE OF TUBES</div>

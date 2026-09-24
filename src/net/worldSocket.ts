@@ -339,6 +339,10 @@ export class WorldSocket {
     }
   }
 
+  dodge(dx: number, dy: number) {
+    this.send({ t: "dodge", dx, dy });
+  }
+
   strike() {
     this.send({ t: "strike" });
   }

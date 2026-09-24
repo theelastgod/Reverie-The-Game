@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 268** — Preserve opening NPC access on an advanced shared world and finish visual/performance acceptance. No more repeated “as people” plaques. No mint.
+**Next stage: 270** — Execute the playable chapter redesign in `DESIGN.md`: reusable clerk encounters, a consequential first node choice, and measured opening playthrough. No more repeated “as people” plaques. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1124,9 +1124,23 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Gates: 320 tests passed across the full suite and corrected new regression fixtures; client/server type-checks and production build. Tests cover advanced shared doors, incomplete refusal, both qualified routes, saved completion, repeat readiness, and 100 repeats of each non-Appearance outcome.
 - Screenshot capture retried against the connected live game and still failed. Visual/performance acceptance remains open.
 
-## Stage 268 (do this next)
+## Stage 268 (landed)
+- Opening Nara, Ord and Quill are presented at their introductory locations for each new arrival. The server uses the same personal list for distance checks and sends separate opening/veteran snapshots; shared departures remain intact for veterans. Initial dialogue no longer diverts into global late-story branches.
+- The first Safety reading always contributes to the character's weather account. Opening burial and going-under take priority over legacy plaques. First going-under rewards are idempotent; subsequent use does not mint Winke or readiness.
+- Regression coverage includes guests and Angels completing the opening in a world with departed party, named weather, an open Movement III, and active legacy flags; different snapshots for two simultaneous sessions; range checks and repeated rites.
+
+## Stage 269 (landed)
+- Owner explicitly authorized a broad artistic/gameplay redesign on 2026-09-24 and reiterated autonomous continuation. Read `DESIGN.md` alongside the original master prompt. The prototype has not met the five-hour campaign or near-AAA gate; prioritize a measured, compelling first chapter over more plaques.
+- Deliberate Shift + movement dodge: server chooses distance, duration, normalized direction, cooldown and collision. Guests can use it; locked players cannot. Restraint extends the brief window by 60ms. Ordinary movement no longer grants indefinite immunity. Attacks cannot fire during the dodge.
+- Collision substeps prevent a fast step crossing walls. Enemy danger rings now show the actual strike radius and brighten toward impact; clerk labels show remaining health. Dodge cooldown appears in the HUD. Linked bodies update from guest to Angel art.
+- Removed framed illustration tiles from the walking surface, reduced floor materials to four, and aligned drawn walls with collision geometry. Nearby signs appear only in proximity. Preserved Imagine stills as location portraits in field notes. Existing art files remain available.
+- Boot now preloads 18 used textures instead of 56 and reports art-loading progress. No new image generation was needed for this pass.
+- Validation: 330 tests across the full suite and updated campaign, dodge and transport regressions. Tests cover timed evasion, ordinary movement vulnerability, cooldown spam, malformed directions, diagonal normalization, wall tunneling, attack lockout and guest fairness.
+- Browser capture briefly worked for the title and old loading screen, then the preview service became unavailable. The redesigned world still needs rendered visual/performance acceptance; simulation and build checks do not establish that gate.
+
+## Stage 270 (do this next)
 - Complete rendered visual/performance acceptance when screenshot capture works; inspect restored WebGL behavior and laptop HUD overlap. Do not claim the full visual gate from DOM checks alone.
-- Preserve personal opening NPC access when another player has moved or dismissed the shared party. Server snapshots currently broadcast one NPC list to everyone; dialogue also branches on global late-story flags. Coordinate rendering, interaction distance and dialogue rather than adding invisible fallback interactions. Audit organ interactions for personal Movement III requirements.
+- Follow `DESIGN.md`. Make clerk encounters replayable for new arrivals, teach dodge/heavy through play, and guide a meaningful first extract/keep choice before the guest threshold. Shared clerks and nodes are currently one-shot resources; this is the next campaign blocker. Audit organ interactions for personal Movement III requirements and later party availability.
 - Audit other earners and define event identity before adding seasonal Passing rewards. Preserve named interactions but prioritize playable consequences and bounded resources over additional plaques.
 - Continue toward PROMPT.md. No mint, Base or real-value settlement.
 

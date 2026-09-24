@@ -82,6 +82,37 @@ describe("durable world sessions", () => {
     } finally { date.mockRestore(); }
   });
 
+  it("broadcasts opening encounters to newcomers while veterans see shared departures", async () => {
+    const saved = emptyWorld();
+    saved.naraGone = true; saved.ordGone = true; saved.quillGone = true;
+    saved.players.set("new", spawnGuest("new"));
+    const veteran = spawnGuest("old");
+    saved.players.set("old", { ...veteran, guest: false, beats: { ...veteran.beats, under: true } });
+    const newcomerSocket = socket("new"); const veteranSocket = socket("old");
+    const { world } = await worldHarness(new Map([["world:v1", saved]]), [newcomerSocket, veteranSocket]);
+    await world.alarm();
+    const fresh = JSON.parse(newcomerSocket.send.mock.calls.at(-1)![0]);
+    const old = JSON.parse(veteranSocket.send.mock.calls.at(-1)![0]);
+    expect(fresh.npcs.map((n: { id: string }) => n.id)).toEqual(expect.arrayContaining(["nara", "quill", "ord"]));
+    expect(old.npcs.map((n: { id: string }) => n.id)).not.toContain("nara");
+    expect(old.players).toEqual(fresh.players);
+    expect(old.gestell).toBe(fresh.gestell);
+  });
+
+  it("accepts only a direction for dodge and persists the bounded server result", async () => {
+    const saved = emptyWorld(); saved.players.set("a", spawnGuest("a"));
+    const ws = socket();
+    const { world, data } = await worldHarness(new Map([["world:v1", saved]]), [ws]);
+    await world.webSocketMessage(ws as never, JSON.stringify({ t: "dodge", dx: "fast", dy: 0 }));
+    expect(ws.send).not.toHaveBeenCalled();
+    await world.webSocketMessage(ws as never, JSON.stringify({ t: "dodge", dx: 90000, dy: 0, dodgeT: 999 }));
+    const p = data.get(`player:${token}`) as ReturnType<typeof spawnGuest>;
+    expect(p.dodgeT).toBe(.18);
+    expect(p.dodgeX).toBe(1);
+    expect(p.dodgeCd).toBe(.95);
+    expect(p.guest).toBe(true);
+  });
+
   it("closes legacy sockets that cannot be recovered", async () => {
     const ws = socket();
     await worldHarness(new Map(), [ws]);

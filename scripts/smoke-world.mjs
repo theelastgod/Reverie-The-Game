@@ -34,6 +34,10 @@ const moved = snapshot(first.ws, snap => snap.players.find(p => p.id === id)?.x 
 first.ws.send(JSON.stringify({ t: 'intent', intent: { right: true } }));
 const after = await moved;
 first.ws.send(JSON.stringify({ t: 'intent', intent: {} }));
+const dodged = snapshot(first.ws, snap => (snap.players.find(p => p.id === id)?.dodgeT ?? 0) > 0);
+first.ws.send(JSON.stringify({ t: 'dodge', dx: 1, dy: 0 }));
+const dodgeSnap = await dodged;
+assert.ok(dodgeSnap.players.find(p => p.id === id).dodgeCd > 0, 'server-owned dodge recovery');
 const closed = new Promise(resolve => first.ws.once('close', resolve));
 first.ws.close(); await closed;
 const second = await connect();
@@ -48,4 +52,4 @@ const snap = await snapshot(third.ws, state => state.now > after.now);
 assert.equal(snap.players.filter(p => p.id === id).length, 1, 'only one body');
 third.ws.close();
 clearTimeout(deadline);
-console.log('PASS: live ticks, movement, saved reconnect, guest identity, single-tab ownership');
+console.log('PASS: live ticks, movement, timed dodge, saved reconnect, guest identity, single-tab ownership');

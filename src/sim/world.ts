@@ -21,6 +21,8 @@ import {
   naveSigns,
   nearPoint,
   NpcId,
+  NAVE_NPCS,
+  NAVE_SIGNS,
   npcById,
   Poi,
   Rite,
@@ -1823,6 +1825,9 @@ import { BODY_R, circleHitsWalls, nearNode, naveNodes, YieldNode } from "./nave"
 export const TICK_HZ = 20;
 export const DT = 1 / TICK_HZ;
 export const SPEED = 160;
+export const DODGE_SPEED = 430;
+export const DODGE_DURATION = 0.18;
+export const DODGE_COOLDOWN = 0.95;
 export const STRIKE_RANGE = 52;
 export const STRIKE_DAMAGE = 22;
 export const STRIKE_COOLDOWN = 0.45;
@@ -1851,6 +1856,10 @@ export type Player = {
   winke: number;
   hp: number;
   strikeCd: number;
+  dodgeT?: number;
+  dodgeCd?: number;
+  dodgeX?: number;
+  dodgeY?: number;
   readiness: number;
   beats: Beats;
   weather: WeatherHeard;
@@ -2270,27 +2279,36 @@ export function damageFor(_p: Player): number {
   return STRIKE_DAMAGE;
 }
 
+export function applyDodge(w: WorldState, playerId: string, dx: number, dy: number): WorldState {
+  const p = w.players.get(playerId);
+  if (!p || p.hp <= 0 || p.locked || (p.dodgeCd ?? 0) > 0 || !Number.isFinite(dx) || !Number.isFinite(dy)) return w;
+  // Only a direction is accepted. Distance, timing and collision belong to the server.
+  dx = Math.sign(dx); dy = Math.sign(dy);
+  const length = Math.hypot(dx, dy);
+  if (!length) return w;
+  const players = new Map(w.players);
+  players.set(playerId, { ...p, dodgeX: dx / length, dodgeY: dy / length,
+    dodgeT: DODGE_DURATION + (p.restraint ? 0.06 : 0), dodgeCd: DODGE_COOLDOWN });
+  return { ...w, players };
+}
+
 export function stepPlayer(p: Player, intent: Intent, dt: number): Player {
-  let vx = (intent.right ? 1 : 0) - (intent.left ? 1 : 0);
-  let vy = (intent.down ? 1 : 0) - (intent.up ? 1 : 0);
-  const len = Math.hypot(vx, vy) || 1;
-  vx = (vx / len) * SPEED * dt;
-  vy = (vy / len) * SPEED * dt;
-  let x = p.x + vx;
-  let y = p.y + vy;
-  if (circleHitsWalls(x, y, BODY_R)) {
-    if (!circleHitsWalls(p.x + vx, p.y, BODY_R)) {
-      x = p.x + vx;
-      y = p.y;
-    } else if (!circleHitsWalls(p.x, p.y + vy, BODY_R)) {
-      x = p.x;
-      y = p.y + vy;
-    } else {
-      x = p.x;
-      y = p.y;
-    }
+  const mx = Number(intent.right) - Number(intent.left);
+  const my = Number(intent.down) - Number(intent.up);
+  const len = Math.hypot(mx, my) || 1;
+  const dashTime = Math.min(dt, p.dodgeT ?? 0);
+  const walkTime = dt - dashTime;
+  const vx = mx / len * SPEED * walkTime + (p.dodgeX ?? 0) * DODGE_SPEED * dashTime;
+  const vy = my / len * SPEED * walkTime + (p.dodgeY ?? 0) * DODGE_SPEED * dashTime;
+  // Substeps prevent a dash or a delayed tick from crossing a narrow wall.
+  const steps = Math.max(1, Math.ceil(Math.hypot(vx, vy) / (BODY_R / 2)));
+  let x = p.x; let y = p.y;
+  for (let i = 0; i < steps; i++) {
+    if (!circleHitsWalls(x + vx / steps, y, BODY_R)) x += vx / steps;
+    if (!circleHitsWalls(x, y + vy / steps, BODY_R)) y += vy / steps;
   }
-  return { ...p, x, y, strikeCd: Math.max(0, p.strikeCd - dt) };
+  return { ...p, x, y, strikeCd: Math.max(0, p.strikeCd - dt),
+    dodgeT: Math.max(0, (p.dodgeT ?? 0) - dt), dodgeCd: Math.max(0, (p.dodgeCd ?? 0) - dt) };
 }
 
 export function emptyWorld(): WorldState {
@@ -2639,7 +2657,7 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
       const next = c.telegraph - dt;
       if (next <= 0 && target) {
         const hit = players.get(target.id)!;
-        if (hit.restraint && intentMoving(w.intents.get(hit.id))) {
+        if ((hit.dodgeT ?? 0) > 0) {
           players.set(hit.id, { ...hit, heard: DODGE_COPY });
           clerks.push({ ...c, telegraph: 0 });
           continue;
@@ -2669,7 +2687,7 @@ export function tickClerks(w: WorldState, dt: number): WorldState {
 
 export function applyStrike(w: WorldState, attackerId: string): WorldState {
   const a = w.players.get(attackerId);
-  if (!a || a.hp <= 0 || a.strikeCd > 0) return w;
+  if (!a || a.hp <= 0 || a.strikeCd > 0 || (a.dodgeT ?? 0) > 0) return w;
   const players = new Map(w.players);
   const attacker = { ...a, strikeCd: STRIKE_COOLDOWN };
   players.set(attackerId, attacker);
@@ -2693,7 +2711,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       }
       continue;
     }
-    if (b.restraint && intentMoving(w.intents.get(id))) {
+    if ((b.dodgeT ?? 0) > 0) {
       players.set(id, { ...b, heard: DODGE_COPY });
       const k = players.get(attackerId)!;
       players.set(attackerId, { ...k, heard: DODGE_WHIFF });
@@ -3348,13 +3366,33 @@ function withNamedWeather(w: WorldState, playerId: string, p: Player): WorldStat
   };
 }
 
+// Later milestones also recognize characters saved before the opening was required.
+export function inOpening(p: Player): boolean {
+  return !p.beats.under && !p.beats.hall && !p.beats.garden && !p.beats.m3 && !p.beats.passing && !p.inCare && !p.inM3;
+}
+
+export function campaignNpcs(w: WorldState, p?: Player) {
+  const shared = liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone, w.naraPersonHeld, w.quillPersonHeld, w.ordPersonHeld, w.vesperPersonHeld);
+  if (!p || !inOpening(p)) return shared;
+  // The three opening encounters belong to each arrival, even after shared departures.
+  return [...shared.filter(n => !NAVE_NPCS.some(first => first.id === n.id)), ...NAVE_NPCS];
+}
+
+function openingTalk(w: WorldState, p: Player, id: NpcId): WorldState {
+  const heard = lineFor(id, p.beats);
+  const beats = { ...p.beats, [id]: true };
+  const weather = { ...p.weather, nara: p.weather.nara || id === "nara", ord: p.weather.ord || id === "ord" };
+  return withNamedWeather(w, p.id, { ...p, beats, weather, heard, wink: "" });
+}
+
 export function applyTalk(w: WorldState, playerId: string, npcId: string): WorldState {
   const p = w.players.get(playerId);
   const npc =
-    liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone, w.naraPersonHeld, w.quillPersonHeld, w.ordPersonHeld, w.vesperPersonHeld).find((n) => n.id === npcId) ??
+    campaignNpcs(w, p).find((n) => n.id === npcId) ??
     npcById(npcId);
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
+  if (inOpening(p) && NAVE_NPCS.some(n => n.id === id)) return openingTalk(w, p, id);
   const players = new Map(w.players);
   const gardenOpen = w.rites.some((r) => r.kind === "garden" && !r.done);
   if (id === "nara" && (p.beats.funeral || w.naraPersonHeld) && !w.naraGone) {
@@ -3648,6 +3686,10 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   const p = w.players.get(playerId);
   const sign = w.signs.find((s) => s.id === signId);
   if (!p || p.hp <= 0 || !sign || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
+  if (sign.id === "safety-plaque" && !p.weather.safety) {
+    const original = NAVE_SIGNS.find(s => s.id === sign.id)!;
+    return withNamedWeather(w, playerId, { ...p, weather: { ...p.weather, safety: true }, heard: `${original.title}: ${original.text}` });
+  }
   if (sign.id === "weather" || sign.id === "nave-people") {
     if (w.weatherPeopleHeld && !w.navePeopleHeld) return applyNavePeople(w, playerId);
     if (sign.id === "nave-people") return applyNavePeople(w, playerId);
@@ -4036,7 +4078,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   const players = new Map(w.players);
   const plot = w.rites.find((r) => r.kind === "burial" && !p.beats.burial);
   if (plot && nearPoint(p.x, p.y, plot.x, plot.y)) {
-    if (!p.guest && w.gardenPeopleHeld && !w.burialPeopleHeld) return applyBurialPeople(w, playerId);
+    if (!p.guest && !inOpening(p) && w.gardenPeopleHeld && !w.burialPeopleHeld) return applyBurialPeople(w, playerId);
     const rites = w.rites.map((r) => (r.id === plot.id ? { ...r, done: true } : r));
     players.set(playerId, {
       ...p,
@@ -4347,7 +4389,11 @@ export function applyGoingUnder(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, locked: true, heard: GUEST_LOCK });
     return { ...w, players };
   }
-  if (w.arenaPeopleHeld && !w.underPeopleHeld) return applyUnderPeople(w, playerId);
+  if (p.beats.under) {
+    if (w.arenaPeopleHeld && !w.underPeopleHeld) return applyUnderPeople(w, playerId);
+    players.set(playerId, { ...p, heard: ANGEL_UNDER });
+    return { ...w, players };
+  }
   const rites = w.rites.map((r) => (r.kind === "going-under" ? { ...r, done: true } : r));
   players.set(playerId, {
     ...p,
@@ -10520,7 +10566,7 @@ export function applyLink(w: WorldState, playerId: string, serial: number, sig: 
   return { ...w, players, history };
 }
 
-export function snapshot(w: WorldState) {
+export function snapshot(w: WorldState, viewerId?: string) {
   return {
     t: "snap" as const,
     now: w.now,
@@ -10530,7 +10576,7 @@ export function snapshot(w: WorldState) {
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,
-    npcs: liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone, w.naraPersonHeld, w.quillPersonHeld, w.ordPersonHeld, w.vesperPersonHeld),
+    npcs: campaignNpcs(w, viewerId ? w.players.get(viewerId) : undefined),
     stallDark: w.stallDark,
     wetCult: w.wetCult,
     vesperAtFoundry: w.vesperAtFoundry,

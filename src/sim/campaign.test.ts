@@ -2214,7 +2214,8 @@ describe("Ord will not number the last god", () => {
     gWorld.lastGodNamed = true;
     gWorld.players.set("g", { ...spawnGuest("g"), x: ord.x, y: ord.y, locked: true });
     const g = applyTalk(gWorld, "g", "ord");
-    expect(g.players.get("g")?.heard).toBe(ORD_LAST_SPECTATOR);
+    expect(g.players.get("g")?.beats.ord).toBe(true);
+    expect(g.players.get("g")?.wink).toBe("");
     expect(g.ordAtCare).toBe(false);
   });
 });
@@ -2259,7 +2260,8 @@ describe("Quill will not print the last god", () => {
       beats: { ...emptyBeats(), market: true, spot: true },
     });
     const g = applyTalk(gWorld, "g", "quill");
-    expect(g.players.get("g")?.heard).toBe(QUILL_NOPRINT_SPECTATOR);
+    expect(g.players.get("g")?.beats.quill).toBe(true);
+    expect(g.players.get("g")?.wink).toBe("");
     expect(g.quillNoPrint).toBe(false);
   });
 });
@@ -2436,7 +2438,7 @@ describe("Restraint stance", () => {
 });
 
 describe("Restraint dodge window", () => {
-  it("moving Restraint skips a strike; standing still does not; damageFor is unchanged", () => {
+  it("a timed dodge skips a strike; standing still does not; damageFor is unchanged", () => {
     expect(intentMoving({ up: true, down: false, left: false, right: false })).toBe(true);
     expect(intentMoving({ up: false, down: false, left: false, right: false })).toBe(false);
     const w = emptyWorld();
@@ -2446,6 +2448,7 @@ describe("Restraint dodge window", () => {
       guest: false,
       serial: TEST_SERIAL,
       restraint: true,
+      dodgeT: 0.18,
       hp: 20,
       x: 220,
       y: 480,
@@ -2501,6 +2504,7 @@ describe("Hit-stop", () => {
       ...spawnGuest("b"),
       guest: false,
       restraint: true,
+      dodgeT: 0.18,
       hp: 80,
       x: 220,
       y: 480,
@@ -2528,6 +2532,7 @@ describe("High aura address", () => {
     w.weatherNamed = true;
     w.players.set("a", {
       ...spawnGuest("a"),
+      weather: { ...spawnGuest("a").weather, safety: true },
       guest: false,
       serial: TEST_SERIAL,
       aura: 17,
@@ -2666,6 +2671,7 @@ describe("Heavy strike", () => {
       ...spawnGuest("b"),
       guest: false,
       restraint: true,
+      dodgeT: 0.18,
       hp: 80,
       x: 220,
       y: 480,
@@ -2952,6 +2958,7 @@ describe("Safety — people", () => {
     w.shrinePeopleHeld = true;
     w.players.set("a", {
       ...spawnGuest("a"),
+      weather: { ...spawnGuest("a").weather, safety: true },
       guest: false,
       serial: TEST_SERIAL,
       beats: { ...emptyBeats(), shrinePeople: true },
@@ -3619,7 +3626,7 @@ describe("The plot — people", () => {
       ...spawnGuest("a"),
       guest: false,
       serial: TEST_SERIAL,
-      beats: { ...emptyBeats(), gardenPeople: true },
+      beats: { ...emptyBeats(), gardenPeople: true, under: true },
       x: BURIAL_PLOT.x,
       y: BURIAL_PLOT.y,
     });
@@ -4791,7 +4798,7 @@ describe("Dodge — people", () => {
     expect(named.dodgePeopleHeld).toBe(true);
     expect(named.pois.find((poi) => poi.kind === "dodge-people")?.name).toBe("Dodge — people");
     expect(named.signs.find((s) => s.id === "dodge-people")?.title).toBe(DODGE_PEOPLE_PLAQUE.title);
-    expect(p.heard).toContain("Moving still skips");
+    expect(p.heard).toContain("A timed step evades");
     expect(p.heard).not.toMatch(/heidegger|midgar|\$REVERIE/i);
     expect(damageFor(p)).toBe(damageFor(spawnGuest("g")));
     expect(guestCanClaim(p)).toBe(false);
@@ -10403,7 +10410,7 @@ describe("Movement IV Clearing and Passing", () => {
       guest: false,
       serial: TEST_SERIAL,
       wink: WINK_CREDITS,
-      beats: { ...emptyBeats(), nara: true, quill: true, ord: true },
+      beats: { ...emptyBeats(), under: true, nara: true, quill: true, ord: true },
       x: nara.x,
       y: nara.y,
     });
@@ -10430,7 +10437,7 @@ describe("Movement IV Clearing and Passing", () => {
       x: nara.x,
       y: nara.y,
     });
-    expect(applyTalk(early, "a", "nara").players.get("a")?.heard).toBe(PARTY_BLIND_NEED);
+    expect(applyTalk(early, "a", "nara").players.get("a")?.wink).toBe("");
     expect(applyTalk(early, "a", "nara").winkBlindHeld).toBe(false);
 
     const gWorld = emptyWorld();
@@ -10441,7 +10448,7 @@ describe("Movement IV Clearing and Passing", () => {
       x: nara.x,
       y: nara.y,
     });
-    expect(applyTalk(gWorld, "g", "nara").players.get("g")?.heard).toBe(PARTY_BLIND_SPECTATOR);
+    expect(applyTalk(gWorld, "g", "nara").players.get("g")?.wink).toBe("");
     expect(gWorld.winkBlindHeld).toBe(false);
   });
 
@@ -11432,7 +11439,7 @@ describe("Nara stays as a person", () => {
       ...spawnGuest("a"),
       guest: false,
       serial: TEST_SERIAL,
-      beats: { ...emptyBeats(), funeral: true },
+      beats: { ...emptyBeats(), under: true, funeral: true },
       x: nara.x,
       y: nara.y,
     });
@@ -11461,7 +11468,7 @@ describe("Nara stays as a person", () => {
 
     const gWorld = emptyWorld();
     gWorld.players.set("g", { ...spawnGuest("g"), x: nara.x, y: nara.y, locked: true, beats: { ...emptyBeats(), funeral: true } });
-    expect(applyTalk(gWorld, "g", "nara").players.get("g")?.heard).toBe(NARA_PERSON_SPECTATOR);
+    expect(applyTalk(gWorld, "g", "nara").players.get("g")?.beats.nara).toBe(true);
     expect(gWorld.naraPersonHeld).toBe(false);
   });
 });
@@ -11476,7 +11483,7 @@ describe("Quill stays as a person", () => {
       ...spawnGuest("a"),
       guest: false,
       serial: TEST_SERIAL,
-      beats: { ...emptyBeats(), unflag: true, hang: true, market: true },
+      beats: { ...emptyBeats(), under: true, unflag: true, hang: true, market: true },
       x: WET_GRID.x + 48,
       y: WET_GRID.y,
     });
@@ -11506,7 +11513,7 @@ describe("Quill stays as a person", () => {
     const gWorld = emptyWorld();
     gWorld.wetCult = true;
     gWorld.players.set("g", { ...spawnGuest("g"), x: quill.x, y: quill.y, locked: true, beats: { ...emptyBeats(), unflag: true } });
-    expect(applyTalk(gWorld, "g", "quill").players.get("g")?.heard).toBe(QUILL_PERSON_SPECTATOR);
+    expect(applyTalk(gWorld, "g", "quill").players.get("g")?.beats.quill).toBe(true);
     expect(gWorld.quillPersonHeld).toBe(false);
   });
 });
@@ -11520,7 +11527,7 @@ describe("Ord stays as a person", () => {
       ...spawnGuest("a"),
       guest: false,
       serial: TEST_SERIAL,
-      beats: { ...emptyBeats(), freeze: true },
+      beats: { ...emptyBeats(), under: true, freeze: true },
       x: ord.x,
       y: ord.y,
     });
@@ -11550,7 +11557,7 @@ describe("Ord stays as a person", () => {
     const gWorld = emptyWorld();
     gWorld.frozen = true;
     gWorld.players.set("g", { ...spawnGuest("g"), x: ord.x, y: ord.y, locked: true, beats: { ...emptyBeats(), freeze: true } });
-    expect(applyTalk(gWorld, "g", "ord").players.get("g")?.heard).toBe(ORD_PERSON_SPECTATOR);
+    expect(applyTalk(gWorld, "g", "ord").players.get("g")?.beats.ord).toBe(true);
     expect(gWorld.ordPersonHeld).toBe(false);
   });
 });
@@ -12278,6 +12285,7 @@ describe("unmanned yield", () => {
     w.clerks = w.clerks.filter((c) => c.id !== "clerk-desk-three" && c.id !== "clerk-annex");
     w.players.set("a", {
       ...spawnGuest("a"),
+      weather: { ...spawnGuest("a").weather, safety: true },
       guest: false,
       serial: TEST_SERIAL,
       aura: auraSeed(TEST_SERIAL),
@@ -12796,7 +12804,7 @@ describe("Ord witnesses the refused Strait", () => {
       guest: false,
       serial: TEST_SERIAL,
       aura: auraSeed(TEST_SERIAL),
-      beats: { ...emptyBeats(), straitRefuse: true, map: true },
+      beats: { ...emptyBeats(), under: true, straitRefuse: true, map: true },
       x: ord.x,
       y: ord.y,
     });
@@ -12818,7 +12826,8 @@ describe("Ord witnesses the refused Strait", () => {
     gWorld.straitRefused = true;
     gWorld.players.set("g", { ...spawnGuest("g"), x: ord.x, y: ord.y, locked: true });
     const g = applyTalk(gWorld, "g", "ord");
-    expect(g.players.get("g")?.heard).toBe(ORD_WITNESS_SPECTATOR);
+    expect(g.players.get("g")?.beats.ord).toBe(true);
+    expect(g.players.get("g")?.wink).toBe("");
     expect(g.ordAtStrait).toBe(false);
   });
 });

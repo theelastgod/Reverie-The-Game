@@ -1,5 +1,6 @@
 import {
   applyBury,
+  applyDodge,
   applyCare,
   applyGoingUnder,
   applyLink,
@@ -29,6 +30,7 @@ import {
   emptyWorld,
   Intent,
   snapshot,
+  inOpening,
   spawnGuest,
   tickWorld,
   WorldState,
@@ -141,6 +143,8 @@ export class ReverieWorld {
     let data: {
       t?: string;
       intent?: Intent;
+      dx?: number;
+      dy?: number;
       nodeId?: string;
       npcId?: string;
       signId?: string;
@@ -162,6 +166,10 @@ export class ReverieWorld {
         left: !!data.intent.left,
         right: !!data.intent.right,
       });
+    } else if (data.t === "dodge" && typeof data.dx === "number" && typeof data.dy === "number") {
+      this.w = applyDodge(this.w, id, data.dx, data.dy);
+      await this.checkpoint();
+      this.broadcast();
     } else if (data.t === "strike") {
       this.w = applyStrike(this.w, id);
       await this.checkpoint();
@@ -309,9 +317,14 @@ export class ReverieWorld {
 
   private broadcast() {
     const raw = JSON.stringify(snapshot(this.w));
-    for (const ws of this.sessions.keys()) {
+    let openingRaw: string | undefined;
+    for (const [ws, session] of this.sessions) {
       try {
-        ws.send(raw);
+        const p = this.w.players.get(session.id);
+        if (p && inOpening(p)) {
+          openingRaw ??= JSON.stringify(snapshot(this.w, session.id));
+          ws.send(openingRaw);
+        } else ws.send(raw);
       } catch {
         this.ctx.waitUntil(this.webSocketClose(ws));
       }

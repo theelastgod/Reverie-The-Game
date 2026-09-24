@@ -1967,8 +1967,8 @@ export const STANCE_SPECTATOR = "A stance you cannot hold.";
 export const STORM_BURNS =
   "Storm burns holding-back. Wreckage vision. Readiness thins. Restraint is gone. Combat is not.";
 export const RESTRAINT_YIELD = "Restraint. You took less. The Wink is not a stick.";
-export const DODGE_COPY = "Restraint. You moved through the window. Combat is not.";
-export const DODGE_WHIFF = "They moved. Restraint is a window. Combat is not.";
+export const DODGE_COPY = "You stepped through the strike.";
+export const DODGE_WHIFF = "Your strike crossed an empty space.";
 
 export function intentMoving(intent: { up: boolean; down: boolean; left: boolean; right: boolean } | undefined): boolean {
   return !!(intent && (intent.up || intent.down || intent.left || intent.right));
@@ -2746,16 +2746,16 @@ export function restraintPeoplePoi(): Poi {
 }
 
 export const DODGE_PEOPLE_COPY =
-  "Dodge is a house of people, not a window of process. Moving still skips. Standing still does not. Combat is not. This was not a fetch.";
+  "Dodge is a house of people, not a window of process. A timed step evades. Standing still does not. Combat is not. This was not a fetch.";
 export const WINK_DODGE_PEOPLE = "People, not a dodge stick. The token does not strike.";
 export const DODGE_PEOPLE_NEED = "Restraint as people first. A dodge of people is not a fetch.";
-export const DODGE_PEOPLE_HELD = "Dodge already holds as people. Moving still skips.";
+export const DODGE_PEOPLE_HELD = "Dodge already holds as people. A timed step evades.";
 export const DODGE_PEOPLE_SPECTATOR = "A shrine. You do not get a house of people.";
 
 export const DODGE_PEOPLE_PLAQUE: Sign = {
   id: "dodge-people",
   title: "Dodge — people",
-  text: "A house of people. Moving still skips. Standing still does not. The number does not strike.",
+  text: "A house of people. A timed step evades. Standing still does not. The number does not strike.",
   x: SHRINE.x,
   y: SHRINE.y,
 };
