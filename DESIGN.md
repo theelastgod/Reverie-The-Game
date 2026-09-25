@@ -20,11 +20,13 @@ Dodge is a deliberate input with a brief window and a recovery period. Walking i
 - The first Safety reading always contributes to that character's weather account.
 - Shift plus movement requests a server-controlled dodge with collision, duration and cooldown. Restraint modestly extends its window. No token or serial damage modifier.
 - Reduce floor materials and floating plaques. Reuse authored stills in field notes.
+- A reusable intake shift gives every arrival access to a readable first fight. Hits, misses and interrupts all recover; participation belongs to each character.
+- Nara's recorder makes the first resource decision part of a burial: preserve a voice and use cloth, or dismantle copper for coffin bindings. Personal decisions persist while the public memorial changes. No additional numeric reward is created; the original finite yield economy remains separate.
 
 ## Next acceptance gates
 
 1. Instrument and play the opening from a fresh session. Combat and the node choice must occur naturally before the guest threshold; neither should depend on another player leaving shared enemies or resources intact.
-2. Give clerks authored anticipation, recovery, health feedback and reusable encounters. Record personal participation without adding money faucets.
-3. Tie the first node decision to Nara's burial and an observable district consequence. Preserve alternatives; do not require extraction to unlock the story.
+2. Clerk anticipation, recovery, health feedback and reusable encounters are implemented and tested. Verify their timing and legibility in rendered play.
+3. The first memorial decision now changes Nara's burial and the shared recorder. Extend its consequences into later party choices; preserve both routes and do not require extraction to unlock the story.
 4. Test the chapter at laptop size with readable sprites, controls, near-object labels, dialogue and stable frame pacing. A screenshot alone does not establish 60fps.
 5. Extend this chapter structure to the other movements only after the opening is playable without a wiki and its duration is measured.

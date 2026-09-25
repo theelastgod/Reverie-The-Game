@@ -96,7 +96,10 @@ describe("personal rites in a shared world", () => {
   it("lets a second guest mourn at the shared grave without duplicating its reward", () => {
     let w = emptyWorld();
     const plot = w.rites.find(r => r.kind === "burial")!;
-    for (const id of ["first", "second"]) w.players.set(id, { ...spawnGuest(id), x: plot.x, y: plot.y });
+    for (const id of ["first", "second"]) {
+      const p = spawnGuest(id);
+      w.players.set(id, { ...p, openingChoice: "keep", beats: { ...p.beats, nara: true }, x: plot.x, y: plot.y });
+    }
     w = applyBury(w, "first");
     expect(w.rites.find(r => r.id === plot.id)?.done).toBe(true);
     w = applyBury(w, "second");

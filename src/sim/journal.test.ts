@@ -11,6 +11,8 @@ describe("opening journal", () => {
     expect(nextObjective(p).id).toBe("meet-nara");
     expect(p.beats.nara).toBe(false);
     p.beats.nara = true;
+    expect(nextObjective(p).id).toBe("memorial-choice");
+    p.openingChoice = "keep";
     expect(nextObjective(p).id).toBe("first-burial");
     p.beats.burial = true;
     expect(nextObjective(p).id).toBe("safety-weather");

@@ -1,3 +1,5 @@
+import { MEMORIAL_ASK } from "./memorial";
+
 export type NpcId = "nara" | "quill" | "ord" | "ione" | "vesper";
 
 export type Npc = {
@@ -838,8 +840,7 @@ export function underPeoplePoi(): Poi {
 
 export const NPC_LINES: Record<Exclude<NpcId, "ione" | "vesper">, { first: string; later: string }> = {
   nara: {
-    first:
-      "I don't need you to believe. I need the body in the ground. The weather is the end of world as world, and you are walking in it.",
+    first: MEMORIAL_ASK,
     later:
       "It's in the earth. Don't thank me. The weather is the end of world as world — remember that when Ord shows you a number.",
   },

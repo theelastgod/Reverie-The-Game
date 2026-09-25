@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { applyBury, applyGoingUnder, applyRead, applyTalk, emptyWorld, snapshot, spawnGuest } from "./world";
+import { applyBury, applyGoingUnder, applyRead, applyTalk, applyUse, emptyWorld, snapshot, spawnGuest } from "./world";
+import { MEMORIAL } from "./memorial";
 import { BURIAL_PLOT, GOING_UNDER, NAVE_NPCS, NAVE_SIGNS, WRECK_GARDEN } from "./campaign";
 
 function advancedWorld() {
@@ -27,6 +28,8 @@ describe("personal opening in a shared city", () => {
       expect(w.players.get("new")!.beats[n.id as "nara" | "quill" | "ord"]).toBe(true);
     }
     expect(w.players.get("new")!.namedWeather).toBe(true);
+    w.players.set("new", { ...w.players.get("new")!, x: MEMORIAL.x, y: MEMORIAL.y });
+    w = applyUse(w, "new", MEMORIAL.id, "keep");
     w.players.set("new", { ...w.players.get("new")!, x: BURIAL_PLOT.x, y: BURIAL_PLOT.y });
     w = applyBury(w, "new");
     expect(w.players.get("new")!.beats.burial).toBe(true);

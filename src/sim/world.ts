@@ -1,4 +1,5 @@
 import { CLERK_RECOVERY, INTAKE, INTAKE_RECOVERY, refreshIntake } from "./encounters";
+import { MEMORIAL, MEMORIAL_ASK, MEMORIAL_NEED, MEMORIAL_CHOICE, MEMORIAL_BURIAL, memorialNode } from "./memorial";
 import {
   ANGEL_UNDER,
   Beats,
@@ -1858,6 +1859,7 @@ export type Player = {
   hp: number;
   strikeCd: number;
   openingCombat?: boolean;
+  openingChoice?: "extract" | "keep";
   dodgeT?: number;
   dodgeCd?: number;
   dodgeX?: number;
@@ -1902,6 +1904,7 @@ export type Player = {
 
 export type WorldState = {
   intakeReadyAt?: number;
+  memorialKept?: boolean;
   players: Map<string, Player>;
   intents: Map<string, Intent>;
   nodes: YieldNode[];
@@ -2266,6 +2269,7 @@ function continueAfterDeath(p: Player, patch: Partial<Player> = {}): Player {
     filmRoom: p.filmRoom,
     winkSchool: p.winkSchool,
     openingCombat: p.openingCombat,
+    openingChoice: p.openingChoice,
     historyLog: { ...p.historyLog, houses: [...p.historyLog.houses] },
     partyOf: p.partyOf,
     x,
@@ -3307,6 +3311,12 @@ export function applyUse(
 ): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0 || p.locked) return w;
+  if (nodeId === MEMORIAL.id) {
+    if (!inOpening(p) || !p.beats.nara || p.beats.burial || p.openingChoice || !nearPoint(p.x, p.y, MEMORIAL.x, MEMORIAL.y, 40)) return w;
+    const players = new Map(w.players);
+    players.set(playerId, { ...p, openingChoice: choice, heard: MEMORIAL_CHOICE[choice] });
+    return { ...w, players, memorialKept: choice === "keep" };
+  }
   const idx = w.nodes.findIndex((n) => n.id === nodeId);
   if (idx < 0) return w;
   const node = w.nodes[idx];
@@ -3390,7 +3400,9 @@ export function campaignNpcs(w: WorldState, p?: Player) {
 }
 
 function openingTalk(w: WorldState, p: Player, id: NpcId): WorldState {
-  const heard = lineFor(id, p.beats);
+  const heard = id === "nara" && !p.beats.burial
+    ? p.openingChoice ? MEMORIAL_CHOICE[p.openingChoice] : MEMORIAL_ASK
+    : lineFor(id, p.beats);
   const beats = { ...p.beats, [id]: true };
   const weather = { ...p.weather, nara: p.weather.nara || id === "nara", ord: p.weather.ord || id === "ord" };
   return withNamedWeather(w, p.id, { ...p, beats, weather, heard, wink: "" });
@@ -4089,13 +4101,17 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   const players = new Map(w.players);
   const plot = w.rites.find((r) => r.kind === "burial" && !p.beats.burial);
   if (plot && nearPoint(p.x, p.y, plot.x, plot.y)) {
+    if (inOpening(p) && (!p.beats.nara || !p.openingChoice)) {
+      players.set(playerId, { ...p, heard: MEMORIAL_NEED });
+      return { ...w, players };
+    }
     if (!p.guest && !inOpening(p) && w.gardenPeopleHeld && !w.burialPeopleHeld) return applyBurialPeople(w, playerId);
     const rites = w.rites.map((r) => (r.id === plot.id ? { ...r, done: true } : r));
     players.set(playerId, {
       ...p,
       beats: { ...p.beats, nara: true, burial: true },
       readiness: p.readiness + (p.house === "earth" ? 2 : 1),
-      heard: plot.done ? "Someone closed the earth before you. Nara makes room beside the name. The watch is still yours to keep." : lineFor("nara", { ...p.beats, nara: true, burial: true }),
+      heard: p.openingChoice ? MEMORIAL_BURIAL[p.openingChoice] : plot.done ? "Someone closed the earth before you. Nara makes room beside the name. The watch is still yours to keep." : lineFor("nara", { ...p.beats, nara: true, burial: true }),
     });
     return { ...w, players, rites };
   }
@@ -10583,7 +10599,7 @@ export function snapshot(w: WorldState, viewerId?: string) {
     now: w.now,
     gestell: w.gestell,
     players: [...w.players.values()],
-    nodes: w.nodes,
+    nodes: [...w.nodes, memorialNode(w.memorialKept)],
     wreckage: w.wreckage,
     rites: w.rites,
     clerks: w.clerks,

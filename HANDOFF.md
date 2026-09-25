@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 271** — Follow `DESIGN.md`: make the first node decision consequential, available to every new arrival, and part of Nara's burial story. Measure the opening playthrough. No more repeated “as people” plaques. No mint.
+**Next stage: 272** — Follow `DESIGN.md`: verify and measure the rendered opening, carry the memorial decision into later consequences, and audit personal Movement III requirements. No more repeated “as people” plaques. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1146,9 +1146,18 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - For release verification, run both `scripts/smoke-world.mjs` and `scripts/smoke-intake.mjs` against the live host and compare `/play/release.json` and the served bundle with the committed build. Do not infer rendered quality from protocol checks.
 - Browser preview loaded the title, but both screenshot methods failed and subsequent state inspection timed out. Rendered acceptance remains open.
 
-## Stage 271 (do this next)
+## Stage 271 (landed)
+- Nara's opening now asks for a material decision at a memorial recorder. E dismantles its copper for coffin bindings; Q preserves the voice while Nara supplies cloth. Both lead to the existing burial rite. The server checks proximity, Nara's introduction, opening eligibility and a single immutable personal choice before allowing the new burial path.
+- The shared recorder changes its light and label, while each arrival retains their own choice and burial dialogue. New arrivals can choose even after others used the memorial, exhausted the three ordinary yield nodes, buried the shared plot, froze the district, or lost the shared party. Existing completed burials and later characters remain valid. The choice survives death and saved-world restoration.
+- No extra Bestand, Winke, readiness, aura or climate changes are awarded by the memorial. Its materials go directly to the burial. Ordinary finite yield nodes remain unchanged. Replaying or reversing the recorded decision grants nothing.
+- Field notes guide Nara → recorder → burial, with contextual E/Q controls. First contact with Nara takes priority over the nearby grave so the two interaction radii cannot trap a newcomer.
+- Added original built-in-generated companion art at `public/assets/memorial-recorder-v1.jpg`, guided by the existing Imagine burial image. Source preserved; exact prompt and provenance in `brand/memorial-recorder-v1.md`. Displayed only in the journal, loaded on demand.
+- Validation: 346 tests covered across the full suite and corrected campaign regression run; client/server type-checks and production build passed. `scripts/smoke-memorial.mjs` passed against local Wrangler for both choices, shared display changes, repeat protection, burial consequences and saved reconnect. Run it alongside the world and intake smoke checks after deployment.
+- Rendered visual/performance acceptance remains open: the browser service exposed no available surface during this pass. The generated asset was inspected directly; no frame-rate or campaign-duration claim is established.
+
+## Stage 272 (do this next)
 - Complete rendered visual/performance acceptance when screenshot capture works; inspect restored WebGL behavior and laptop HUD overlap. Do not claim the full visual gate from DOM checks alone.
-- Follow `DESIGN.md`. Guide a meaningful first extract/keep choice before the guest threshold and tie it to Nara's burial. Shared nodes are currently one-shot resources; this is the next campaign blocker. Audit organ interactions for personal Movement III requirements and later party availability. Audit Angel PvP eligibility against flag, truce and arena rules before broadening combat.
+- Follow `DESIGN.md`. Measure the complete opening and carry the memorial decision into later party consequences. The memorial is a narrative material choice; it does not replace the finite shared node economy. Audit organ interactions for personal Movement III requirements and later party availability. Audit Angel PvP eligibility against flag, truce and arena rules before broadening combat.
 - Audit other earners and define event identity before adding seasonal Passing rewards. Preserve named interactions but prioritize playable consequences and bounded resources over additional plaques.
 - Continue toward PROMPT.md. No mint, Base or real-value settlement.
 

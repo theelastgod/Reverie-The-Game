@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { nextObjective, bearing } from "../sim/journal";
+import { MEMORIAL } from "../sim/memorial";
 import {
   CARE_DOOR,
   CLERK_AGGRO,
@@ -66,6 +67,8 @@ export class NaveScene extends Phaser.Scene {
   private net = new WorldSocket();
   private bodies = new Map<string, Phaser.GameObjects.Image>();
   private nodeMarks = new Map<string, Phaser.GameObjects.Arc>();
+  private nodeProps = new Map<string, Phaser.GameObjects.Image>();
+  private memorialLabel?: Phaser.GameObjects.Text;
   private wreckMarks = new Map<string, Phaser.GameObjects.Arc>();
   private wreckImgs = new Map<string, Phaser.GameObjects.Image>();
   private npcMarks = new Map<string, Phaser.GameObjects.Image>();
@@ -265,6 +268,9 @@ export class NaveScene extends Phaser.Scene {
     const me = this.net.you;
     const nodes = this.net.snap?.nodes ?? [];
     if (!me || me.locked) return;
+    if (nearPoint(me.x, me.y, MEMORIAL.x, MEMORIAL.y, 40)) {
+      this.net.use(MEMORIAL.id, choice); return;
+    }
     if (nearPoint(me.x, me.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56) && me.beats.yield) {
       this.net.operator(choice === "extract" ? "take" : "refuse");
       return;
@@ -299,6 +305,10 @@ export class NaveScene extends Phaser.Scene {
   private interact() {
     const me = this.net.you;
     if (!me) return;
+    const firstNara = this.net.snap?.npcs.find(n => n.id === "nara");
+    if (!me.beats.nara && firstNara && nearPoint(me.x, me.y, firstNara.x, firstNara.y)) {
+      this.net.talk("nara"); return;
+    }
     if (!me.locked && !me.beats.burial && nearPoint(me.x, me.y, BURIAL_PLOT.x, BURIAL_PLOT.y)) {
       this.net.bury(); return;
     }
@@ -431,8 +441,16 @@ export class NaveScene extends Phaser.Scene {
       let g = this.nodeMarks.get(n.id);
       if (!g) {
         g = this.add.circle(n.x, n.y, 14, 0x88a0c8, 0.28).setDepth(3);
-        this.add.image(n.x, n.y - 6, "prop-crt").setDisplaySize(44, 48).setDepth(4);
+        this.nodeProps.set(n.id, this.add.image(n.x, n.y - 6, "prop-crt").setDisplaySize(44, 48).setDepth(4));
         this.nodeMarks.set(n.id, g);
+      }
+      if (n.id === MEMORIAL.id) {
+        const color = n.kept ? 0x7eb6ff : n.depleted ? 0x45404b : 0xe8d5a3;
+        g.setRadius(28).setFillStyle(color, .7);
+        this.nodeProps.get(n.id)?.setTint(color);
+        this.memorialLabel ??= this.add.text(n.x, n.y - 44, "", { fontFamily: "Space Grotesk, sans-serif", fontSize: "10px", color: "#e8d5a3", backgroundColor: "#101016", padding: { x: 5, y: 3 } }).setOrigin(.5).setDepth(8);
+        this.memorialLabel.setText(n.kept ? "MEMORIAL · VOICE KEPT" : n.depleted ? "MEMORIAL · COPPER GIVEN" : "MEMORIAL RECORDER");
+        continue;
       }
       const announced = this.net.snap?.announced === n.id;
       g.setFillStyle(announced ? 0x7eb6ff : n.kept ? 0xc9a56a : n.depleted ? 0x3a3a3a : 0x88a0c8, 0.9);
@@ -990,7 +1008,7 @@ export class NaveScene extends Phaser.Scene {
     const objective = nextObjective(me, snap.npcs);
     const art = hud("journal-art") as HTMLImageElement | null;
     if (art) {
-      const pictures: Record<string, string> = { "intake-clerk": "safety-annex.jpg", "meet-nara": "plate-burial.jpg", "first-burial": "plate-burial.jpg", "safety-weather": "safety-annex.jpg", "meet-ord": "organ-strait.jpg", "meet-quill": "clearing-stall.jpg", "name-weather": "plate-burial.jpg", "going-under": "plate-under.jpg", "guest-lock": "plate-under.jpg", "enter-care": "plate-care.jpg", "house-hall": "house-hall.jpg", "operator-offer": "plate-operator.jpg", "operator-choice": "plate-operator.jpg", "wreckage-garden": "wreckage-garden.jpg", "third-movement": "plate-m3.jpg" };
+      const pictures: Record<string, string> = { "memorial-choice": "memorial-recorder-v1.jpg", "intake-clerk": "safety-annex.jpg", "meet-nara": "plate-burial.jpg", "first-burial": "plate-burial.jpg", "safety-weather": "safety-annex.jpg", "meet-ord": "organ-strait.jpg", "meet-quill": "clearing-stall.jpg", "name-weather": "plate-burial.jpg", "going-under": "plate-under.jpg", "guest-lock": "plate-under.jpg", "enter-care": "plate-care.jpg", "house-hall": "house-hall.jpg", "operator-offer": "plate-operator.jpg", "operator-choice": "plate-operator.jpg", "wreckage-garden": "wreckage-garden.jpg", "third-movement": "plate-m3.jpg" };
       const file = pictures[objective.id] ?? "clearing-ring.jpg";
       if (art.dataset.file !== file) { art.src = `${import.meta.env.BASE_URL}assets/${file}`; art.dataset.file = file; }
     }
@@ -999,7 +1017,7 @@ export class NaveScene extends Phaser.Scene {
     const direction = hud("journal-bearing");
     if (title && title.textContent !== objective.title) title.textContent = objective.title;
     if (detail && detail.textContent !== objective.detail) detail.textContent = objective.detail;
-    const bearingText = objective.target ? (objective.id === "intake-clerk" && nearPoint(me.x, me.y, objective.target.x, objective.target.y, 70) ? "CLICK STRIKE · SHIFT DODGE · R INTERRUPT" : bearing(me.x, me.y, objective.target)) : me.locked ? "MOVEMENT I · COMPLETE" : "ENFRAMED CITY";
+    const bearingText = objective.target ? (objective.id === "memorial-choice" && nearPoint(me.x, me.y, MEMORIAL.x, MEMORIAL.y, 40) ? "E DISMANTLE · Q PRESERVE VOICE" : objective.id === "intake-clerk" && nearPoint(me.x, me.y, objective.target.x, objective.target.y, 70) ? "CLICK STRIKE · SHIFT DODGE · R INTERRUPT" : bearing(me.x, me.y, objective.target)) : me.locked ? "MOVEMENT I · COMPLETE" : "ENFRAMED CITY";
     if (direction && direction.textContent !== bearingText) direction.textContent = bearingText;
     if (!this.objectiveMark) this.objectiveMark = this.add.circle(0, 0, 26).setStrokeStyle(2, 0xe8d5a3, 0.8).setDepth(7);
     this.objectiveMark.setVisible(!!objective.target);
@@ -1155,7 +1173,9 @@ export class NaveScene extends Phaser.Scene {
     const mateNear = snap.players.find(
       (o) => o.id !== me.id && !o.guest && nearPoint(me.x, me.y, o.x, o.y, 56),
     );
-    if (weatherPlaque && (me.beats.navePeople || snap.navePeopleHeld)) {
+    if (nearPoint(me.x, me.y, MEMORIAL.x, MEMORIAL.y, 48)) {
+      this.prompt = me.openingChoice ? "Your choice is held. Return to Nara’s burial plot." : me.beats.nara ? "E — copper for the coffin · Q — preserve the voice. No part goes to market." : "Speak with Nara before touching the recorder.";
+    } else if (weatherPlaque && (me.beats.navePeople || snap.navePeopleHeld)) {
       this.prompt = me.heard || "The Nave — people. Extract still costs. Not a stick.";
     } else if (weatherPlaque && snap.weatherPeopleHeld && !me.guest) {
       this.prompt = "F — gather the Nave as people. Extract still costs. Not a fetch.";

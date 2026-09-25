@@ -1801,7 +1801,7 @@ describe("Movement I beats", () => {
     expect(displayName("quill")).toBe("Quill");
     expect(displayName("ord")).toBe("Ord");
     expect(NAVE_NPCS.every((n) => !n.name.includes("_"))).toBe(true);
-    expect(NPC_LINES.nara.first).toContain("body in the ground");
+    expect(NPC_LINES.nara.first).toContain("copper would close the coffin");
     expect(NPC_LINES.quill.first).toContain("Copies travel");
     expect(NPC_LINES.ord.first).toContain("the process");
   });
@@ -1824,7 +1824,7 @@ describe("Movement I beats", () => {
 
   it("Nara burial completes the plot and raises readiness", () => {
     const plot = emptyWorld().rites.find((r) => r.kind === "burial")!;
-    const w = placeNear("a", plot.x, plot.y);
+    const w = placeNear("a", plot.x, plot.y, { openingChoice: "keep", beats: { nara: true } });
     const after = applyBury(w, "a");
     expect(after.rites.find((r) => r.kind === "burial")?.done).toBe(true);
     expect(after.players.get("a")?.beats.burial).toBe(true);
@@ -12013,7 +12013,8 @@ describe("Bestand sinks", () => {
   it("funeral on wreckage costs Bestand; the plot stays free", () => {
     const plot = emptyWorld().rites.find((r) => r.kind === "burial")!;
     const free = emptyWorld();
-    free.players.set("a", { ...spawnGuest("a"), x: plot.x, y: plot.y, bestand: 0 });
+    const mourner = spawnGuest("a");
+    free.players.set("a", { ...mourner, openingChoice: "keep", beats: { ...mourner.beats, nara: true }, x: plot.x, y: plot.y, bestand: 0 });
     const buried = applyBury(free, "a");
     expect(buried.rites.find((r) => r.kind === "burial")?.done).toBe(true);
     expect(buried.players.get("a")?.bestand).toBe(0);
