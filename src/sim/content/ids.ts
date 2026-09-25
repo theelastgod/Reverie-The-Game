@@ -11,6 +11,7 @@ export const F = {
   DESK_THREE: "desk-three", // took part in Desk Three's fall
   SECOND_NODE: "node:second", // decided the second node
   HEARD_RECORDER: "heard:recorder", // listened to the recorder after meeting Nara
+  ORD_PAIR: "ord:pair", // heard Ord read the pair the second node made
   TALKED_QUILL: "talked:quill",
   TALKED_ORD: "talked:ord",
   TALKED_NARA: "talked:nara",

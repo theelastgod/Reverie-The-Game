@@ -250,6 +250,7 @@ try {
   await converse(me, 'ord', 'weather:ord');
   read.decisions++; // the honest ledger
   assert.ok(you(me).choices['ord:ledger'], 'Ord\'s ledger was answered');
+  if (you(me).flags['node:second']) await converse(me, 'ord', 'ord:pair');
   phase('walk: quill');
   await walk(me, ROUTE.toQuill);
   phase('talk: quill');

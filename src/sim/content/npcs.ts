@@ -137,7 +137,12 @@ const NARA_NODES: Record<string, DialogueNode> = {
   },
   weather: {
     id: "weather",
-    text: "It's in the earth. Don't thank me. You want a name for the weather. Safety calls it stability. Ord will call it the process. I call it the end of world as world. Remember that when he shows you a number.",
+    text: (ctx) => {
+      const print = ctx.p.items.some(i => i.id === "copy:face")
+        ? "There is a print of you in your coat. She does not ask to see it. \"Paper. It will go grey before the earth does.\" "
+        : ctx.p.choices[C.QUILL_PRINT] === "kept" ? "\"You kept your name off Quill's plate.\" She notices it the way she notices a body without a number. \"Good. The earth does not take prints.\" " : "";
+      return print + "It's in the earth. Don't thank me. You want a name for the weather. Safety calls it stability. Ord will call it the process. I call it the end of world as world. Remember that when he shows you a number.";
+    },
     wink: "Three names. Only one of them has a body under it.",
     effects: [{ kind: "flag", key: F.WEATHER_NARA }],
   },
@@ -479,9 +484,20 @@ const ORD_NODES: Record<string, DialogueNode> = {
         : "Grief is not a ledger item. The process continues whether you keep the node or not. I am here so the number stays honest. Go and hear the other two names.");
     },
     choices: [
+      { id: "pair", label: "The second node.", when: ctx => has(ctx, F.SECOND_NODE) && !has(ctx, F.ORD_PAIR), next: "pair" },
       { id: "number", label: "Give me the number.", next: "number" },
       { id: "leave", label: "That is enough." },
     ],
+  },
+  pair: {
+    id: "pair",
+    text: (ctx) => ctx.p.choices[C.SECOND_NODE] === "keep"
+      ? "\"Two kept.\" He writes it. \"The number eased twice. On Safety's books that is a loss. On mine it is the only kind of line I like writing. Do not expect it to be paid.\""
+      : ctx.p.choices[C.SECOND_NODE] === "extract"
+        ? "\"Two extracted.\" He writes it. \"Up two. Honest. It will come back as earth, and I will write that down too, when it does.\""
+        : "\"One and one.\" He writes it. \"Most people. The number does not care that you tried both. It counts both. So do I.\"",
+    wink: "He counts the pair. Safety counts the extraction. Only one of them counts you.",
+    effects: [{ kind: "flag", key: F.ORD_PAIR }],
   },
   number: {
     id: "number",
