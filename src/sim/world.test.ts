@@ -113,7 +113,8 @@ describe("personal rites in a shared world", () => {
   it("lets each Angel mourn the garden while keeping guests outside that rite", () => {
     let w = emptyWorld();
     w.rites.push({ id: "garden", kind: "garden", x: 600, y: 600, done: true });
-    w.players.set("angel", { ...spawnGuest("angel"), guest: false, x: 600, y: 600 });
+    const angel = spawnGuest("angel");
+    w.players.set("angel", { ...angel, guest: false, beats: { ...angel.beats, under: true }, x: 600, y: 600 });
     w.players.set("guest", { ...spawnGuest("guest"), x: 600, y: 600 });
     w = applyBury(w, "angel");
     expect(w.players.get("angel")?.beats.garden).toBe(true);

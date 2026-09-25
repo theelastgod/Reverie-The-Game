@@ -1,8 +1,8 @@
 # HANDOFF — Reverie: The Game
 
-Execute `PROMPT.md`. Do not wait for a new user prompt.
+**Stopped by the owner on 2026-09-24.** Ship the pending changes as requested, then do not resume development without a new explicit instruction. The recurring development heartbeat has been deleted.
 
-**Next stage: 275** — Follow `DESIGN.md`: preserve each arrival’s Movement II encounters after shared departures (Care, House hall, Vesper and the wreckage garden), then carry the memorial decision into later consequences. Rendered opening measurement remains pending. No more repeated “as people” plaques. No mint.
+**Next stage if resumed: 276** — Follow `DESIGN.md`: carry the memorial decision into later consequences and measure the rendered opening. No more repeated “as people” plaques. No mint. Development is stopped until the owner resumes it.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -11,7 +11,7 @@ Execute `PROMPT.md`. Do not wait for a new user prompt.
 - Prompt: https://reverie-the-game.wendellphillips.workers.dev/prompt.html
 - Local client: `npm run dev` → http://127.0.0.1:5175
 - Deploy: `npm run deploy` (Vite `/play` + Worker `reverie-the-game`)
-- Continued execution: one task heartbeat checks every 30m. An earlier builder was recorded here but could not be located in the available scheduler. The heartbeat defers when another writer has recent meaningful progress or unexplained local edits; do not create additional schedules.
+- Continued execution: stopped by the owner. The `continue-reverie-development` heartbeat was deleted. An earlier builder was recorded here but could not be located in the available scheduler; do not create additional schedules or resume work without the owner.
 
 ## Done
 - Master prompt written (`PROMPT.md`). Art pack is **influence**, not official.
@@ -1195,3 +1195,12 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Remaining scope: legacy Movement II shared branches can still intercept newcomers after later world milestones. The next stage should protect those encounters before extending later campaign consequences. Token, mint and real-value claims remain disarmed.
 
 - Stage 275 investigation: `applyCare` dispatches global late branches before the personal first entry; `applyRead` has one House hall tithe branch without the existing `beats.hall` guard; `applyOperator` checks global Vesper departure/dark Foundry before the personal offer; and garden F can hit a changed sign before personal mourning. Protect the first encounter at each location, preserve subsequent shared states, and cover both refusal and Cold paths in an advanced-world regression. The public campaign smoke is now available for release verification.
+
+
+## Stage 275 — preserve each arrival’s Care path
+- First Care entry and the first House hall reading take precedence over late shared milestones. Guests and characters who have not gone under cannot borrow another character’s access.
+- Vesper’s first offer remains available at her desk for each character, even after shared departures or the Foundry going dark. Either personal choice can be made once; later input cannot switch the choice or repeat its reward. Existing organ landmarks are preserved.
+- Personal garden mourning works after another character has buried or renamed the garden. It requires going under and preserves already changed shared landmarks.
+- F interaction priority and nearby prompts match these personal encounters rather than allowing a nearby NPC or changed sign to intercept them.
+- Validation: 380 tests pass, including six new advanced-world checks. The local public campaign smoke passes through the guest threshold, refusal route, all three organs, Ord’s map and saved reconnect, and rejects a new arrival’s organ shortcut. Client/server type-checks and the production build pass. Run the public campaign and release checks against the deployed Worker to complete final verification.
+- Owner requested a stop and final deployment. The recurring development task was deleted. Do not start another stage or recreate the schedule without an explicit request to resume.

@@ -3389,6 +3389,10 @@ export function inOpening(p: Player): boolean {
 export function campaignNpcs(w: WorldState, p?: Player) {
   const shared = liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone, w.naraPersonHeld, w.quillPersonHeld, w.ordPersonHeld, w.vesperPersonHeld);
   if (!p) return shared;
+  if (p.beats.under && !p.beats.m3 && !p.beats.cold && !p.beats.refuse && !p.guest && !p.locked) {
+    return [...shared.filter(n => n.id !== "vesper"), { ...VESPER,
+      x: OPERATOR_DESK.x, y: OPERATOR_DESK.y, role: "Concentrator" }];
+  }
   if (p.beats.m3 && !p.beats.map && !p.guest && !p.locked) {
     // Each arrival can finish Ord's map even if shared events moved him away.
     return [...shared.filter(n => n.id !== "ord"), NAVE_NPCS.find(n => n.id === "ord")!];
@@ -3415,6 +3419,9 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   if (!p || p.hp <= 0 || !npc || !nearPoint(p.x, p.y, npc.x, npc.y)) return w;
   const id = npc.id as NpcId;
   if (inOpening(p) && NAVE_NPCS.some(n => n.id === id)) return openingTalk(w, p, id);
+  if (id === "vesper" && p.beats.under && !p.beats.m3 && !p.beats.cold && !p.beats.refuse) {
+    return applyOperator(w, playerId, "hear");
+  }
   const players = new Map(w.players);
   if (id === "ord" && !p.guest && !p.locked && !p.beats.map && w.m3Open) {
     if (!p.beats.m3 || !organsComplete(p.beats)) {
@@ -3728,12 +3735,16 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
   }
   if (sign.id === CARE_DOOR.id) return applyCare(w, playerId);
   if (sign.id === M3_DOOR.id) return applyM3(w, playerId);
+  if (sign.id === WRECK_GARDEN.id && !p.beats.garden) return applyBury(w, playerId);
+  if ((sign.id === OPERATOR_DESK.id || sign.id === "vesper-gone" || sign.id === "vesper-people") && !p.beats.cold && !p.beats.refuse) {
+    return applyOperator(w, playerId, "hear");
+  }
   if (sign.id === "organs-people") return applyOrgansPeople(w, playerId);
   if (sign.id === "bounty-people") return applyBountyPeople(w, playerId);
   if (sign.id === "tithe-people") return applyTithePeople(w, playerId);
   if (sign.id === HOUSE_HALL.id) {
     if (!p.inCare || p.guest || p.locked) return w;
-    if (w.keepPeopleHeld && !w.tithePeopleHeld) return applyTithePeople(w, playerId);
+    if (p.beats.hall && w.keepPeopleHeld && !w.tithePeopleHeld) return applyTithePeople(w, playerId);
     if (p.beats.hall && w.stormPeopleHeld && !w.bountyPeopleHeld) return applyBountyPeople(w, playerId);
     if (p.beats.hall && w.deskPeopleHeld && !w.hallPeopleHeld) return applyHallPeople(w, playerId);
     if (p.beats.hall && organsPeopleReady(w) && !w.organsPeopleHeld) return applyOrgansPeople(w, playerId);
@@ -4126,8 +4137,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
   }
   const garden = w.rites.find((r) => r.kind === "garden" && !p.beats.garden);
   if (garden && nearPoint(p.x, p.y, garden.x, garden.y, 56)) {
-    if (p.guest) return w;
-    if (w.underPeopleHeld && !w.gardenPeopleHeld) return applyGardenPeople(w, playerId);
+    if (p.guest || !p.beats.under) return w;
     const rites = w.rites.map((r) => (r.id === garden.id ? { ...r, done: true } : r));
     players.set(playerId, {
       ...p,
@@ -4140,7 +4150,7 @@ export function applyBury(w: WorldState, playerId: string): WorldState {
       ...w,
       players,
       rites,
-      pois: w.pois.map((poi) => (poi.id === WRECK_GARDEN.id ? gardenPoi(true) : poi)),
+      pois: garden.done ? w.pois : w.pois.map((poi) => (poi.id === WRECK_GARDEN.id ? gardenPoi(true) : poi)),
     };
   }
   const wreck = w.wreckage.find((r) => nearPoint(p.x, p.y, r.x, r.y, 56));
@@ -4481,13 +4491,13 @@ export function applyCare(w: WorldState, playerId: string): WorldState {
   const p = w.players.get(playerId);
   if (!p || p.hp <= 0) return w;
   if (!nearPoint(p.x, p.y, CARE_DOOR.x, CARE_DOOR.y, 56)) return w;
-  if (w.peopleHeld && w.careOpen && (w.lastGodNamed || w.lastGodBuried)) return applyCarePeople(w, playerId);
-  if (w.fourfoldHeld && w.careOpen) return applyLastGod(w, playerId);
   const players = new Map(w.players);
   if (p.guest || p.locked || !w.careOpen || !p.beats.under) {
     players.set(playerId, { ...p, heard: p.guest || p.locked ? CARE_SPECTATOR : p.heard, wink: visibleWink(true, WINK_CARE) });
     return { ...w, players };
   }
+  if (p.beats.care && w.peopleHeld && (w.lastGodNamed || w.lastGodBuried)) return applyCarePeople(w, playerId);
+  if (p.beats.care && w.fourfoldHeld) return applyLastGod(w, playerId);
   const first = !p.beats.care;
   players.set(playerId, {
     ...p,
@@ -9753,7 +9763,8 @@ export function applyOperator(
     players.set(playerId, { ...p, heard: OPERATOR_SPECTATOR, wink: visibleWink(true, WINK_OPERATOR) });
     return { ...w, players };
   }
-  if (w.vesperGone) {
+  const chosen = p.beats.cold || p.beats.refuse;
+  if (chosen && w.vesperGone) {
     players.set(playerId, { ...p, heard: VESPER_LEAVE_HELD, wink: visibleWink(false, WINK_VESPER_LEAVE) });
     return { ...w, players };
   }
@@ -9761,7 +9772,7 @@ export function applyOperator(
     players.set(playerId, { ...p, heard: OPERATOR_NEED_HALL });
     return { ...w, players };
   }
-  if (w.vesperAtFoundry || w.foundryDark || p.beats.foundryDark) {
+  if (chosen && (w.vesperAtFoundry || w.foundryDark || p.beats.foundryDark)) {
     players.set(playerId, { ...p, heard: OPERATOR_VACANT, wink: visibleWink(false, WINK_FOUNDRY_DARK) });
     return { ...w, players };
   }
@@ -9806,7 +9817,7 @@ export function applyOperator(
       heard: OPERATOR_TAKE,
       wink: visibleWink(false, WINK_OPERATOR),
     });
-    let pois = w.pois.map((poi) => (poi.id === "m3-door" ? m3Poi(true) : poi));
+    let pois = w.m3Open ? [...w.pois] : w.pois.map((poi) => (poi.id === "m3-door" ? m3Poi(true) : poi));
     if (!pois.some((poi) => poi.id === "m3-door")) pois.push(m3Poi(true));
     const organs = openOrgans({ ...w, pois });
     return {

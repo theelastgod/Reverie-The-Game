@@ -326,6 +326,20 @@ export class NaveScene extends Phaser.Scene {
     if (!me.beats.m3 && nearPoint(me.x, me.y, M3_DOOR.x, M3_DOOR.y, 56)) {
       this.net.m3(); return;
     }
+    if (!me.guest && !me.locked && me.beats.under) {
+      if (!me.beats.care && nearPoint(me.x, me.y, CARE_DOOR.x, CARE_DOOR.y, 56)) {
+        this.net.care(); return;
+      }
+      if (!me.beats.hall && me.inCare && nearPoint(me.x, me.y, HOUSE_HALL.x, HOUSE_HALL.y, 56)) {
+        this.net.read(HOUSE_HALL.id); return;
+      }
+      if (!me.beats.cold && !me.beats.refuse && nearPoint(me.x, me.y, OPERATOR_DESK.x, OPERATOR_DESK.y, 56)) {
+        this.net.operator("hear"); return;
+      }
+      if (!me.beats.garden && nearPoint(me.x, me.y, WRECK_GARDEN.x, WRECK_GARDEN.y, 56)) {
+        this.net.bury(); return;
+      }
+    }
     const npc = (this.net.snap?.npcs ?? [...NAVE_NPCS, IONE]).find((n) => nearPoint(me.x, me.y, n.x, n.y));
     if (npc) {
       this.net.talk(npc.id);
@@ -1190,6 +1204,16 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = `F — study the ${strait ? "Strait" : foundry ? "Foundry" : "Cable"}. Trace what it feeds.`;
     } else if (npcNear?.id === "ord" && me.beats.m3 && !me.beats.map && !me.guest && !me.locked) {
       this.prompt = organsComplete(me.beats) ? "F — put the three organs together with Ord." : "F — ask Ord about the three organs. Visit each one to complete his map.";
+    } else if (care && me.beats.under && !me.beats.care && !me.guest && !me.locked) {
+      this.prompt = "F — enter the Care. There is a place for your dead.";
+    } else if (hall && me.inCare && !me.beats.hall && !me.guest && !me.locked) {
+      this.prompt = "F — read the House hall. Learn who takes the tax.";
+    } else if (desk && !me.beats.cold && !me.beats.refuse && !me.guest && !me.locked) {
+      this.prompt = !me.beats.hall ? "Read the House hall before Vesper will quote." : me.beats.yield
+        ? `E — take ${PRIVATE_YIELD} Bestand. Q — refuse; mourn the garden to open the other way.`
+        : "F — hear Vesper’s private offer.";
+    } else if (gardenNear && me.beats.under && !me.beats.garden && !me.guest && !me.locked) {
+      this.prompt = "F — mourn the wreckage garden. Someone else’s watch cannot stand in for yours.";
     } else if (nearPoint(me.x, me.y, MEMORIAL.x, MEMORIAL.y, 48)) {
       this.prompt = me.openingChoice ? "Your choice is held. Return to Nara’s burial plot." : me.beats.nara ? "E — copper for the coffin · Q — preserve the voice. No part goes to market." : "Speak with Nara before touching the recorder.";
     } else if (weatherPlaque && (me.beats.navePeople || snap.navePeopleHeld)) {

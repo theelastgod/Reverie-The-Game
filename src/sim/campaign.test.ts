@@ -3364,7 +3364,7 @@ describe("Vesper — people", () => {
       ...spawnGuest("a"),
       guest: false,
       serial: TEST_SERIAL,
-      beats: { ...emptyBeats(), organsPeople: true },
+      beats: { ...emptyBeats(), organsPeople: true, refuse: true },
       x: OPERATOR_DESK.x,
       y: OPERATOR_DESK.y,
     });
