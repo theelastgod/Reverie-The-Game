@@ -16,6 +16,7 @@ export type SceneActions = {
   flag: () => void;
   truce: () => void;
   use: () => void;
+  market: (op: "list" | "buy" | "cancel", args: { itemId?: string; listingId?: string; price?: number }) => void;
 };
 
 export const bus: {

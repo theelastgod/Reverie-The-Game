@@ -22,6 +22,7 @@ const callbacks: HudCallbacks = {
   flag: () => bus.actions?.flag(),
   truce: () => bus.actions?.truce(),
   use: () => bus.actions?.use(),
+  market: (op, args) => bus.actions?.market(op, args),
 };
 
 function hudRoot(): HTMLElement {

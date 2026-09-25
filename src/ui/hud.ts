@@ -17,6 +17,7 @@ import { mountJournal, type JournalPanel } from "./journal";
 import { mountMinimap, type MinimapPanel } from "./minimap";
 import { mountLock, type LockPanel } from "./lock";
 import { eventRows, mountEvents, type EventsPanel } from "./events";
+import { ledgerModel, mountLedger, type LedgerPanel } from "./ledger";
 
 export type HudCallbacks = {
   choose: (choiceId: string) => void; // dialogue choice clicked
@@ -24,6 +25,7 @@ export type HudCallbacks = {
   link: (serial: number) => void; // mock Angel link from the lock panel or the title
   interact: (targetId: string, choice: string) => void; // prompt verb clicked (touch/mouse)
   stance: () => void; kit: () => void; flag: () => void; truce: () => void; use: () => void;
+  market: (op: "list" | "buy" | "cancel", args: { itemId?: string; listingId?: string; price?: number }) => void;
 };
 
 export type HudStatus = "connecting" | "online" | "reconnecting" | "elsewhere" | "closed";
@@ -51,6 +53,8 @@ export class Hud {
   private readonly minimap: MinimapPanel;
   private readonly lock: LockPanel;
   private readonly events: EventsPanel;
+  private readonly ledger: LedgerPanel;
+  private ledgerAuto = false;
 
   // elements
   private readonly identity: HTMLElement | null;
@@ -171,6 +175,7 @@ export class Hud {
     this.minimap = mountMinimap(root);
     this.lock = mountLock(root, serial => this.cb.link(serial));
     this.events = mountEvents(q(root, "#hud-events"));
+    this.ledger = mountLedger(q(root, "#hud-ledger"), { market: (op, args) => this.cb.market(op, args) });
 
     this.stance?.addEventListener("click", this.onStance);
     this.kit?.addEventListener("click", this.onKit);
@@ -226,6 +231,7 @@ export class Hud {
     this.updateLock(snap);
     this.updateCredits(snap);
     this.events.set(eventRows(snap));
+    this.updateLedger(snap);
     this.dialogue.set(you.dialogue);
     this.journal.set(snap.objective, you);
     this.minimap.update(snap);
@@ -244,6 +250,16 @@ export class Hud {
   }
 
   toggleJournal(): void { this.journal.toggle(); }
+  toggleLedger(): void { this.ledgerAuto = false; this.ledger.toggle(); }
+
+  /** The ledger opens itself at the claims desk and the listing board, and closes again when you walk away. */
+  private updateLedgerPanel(snap: Snap): void {
+    const target = snap.prompt?.targetId;
+    const atDesk = target === "claims-desk" || target === "listing-board";
+    if (atDesk && !this.ledger.isOpen()) { this.ledger.open(true); this.ledgerAuto = true; }
+    else if (!atDesk && this.ledgerAuto && this.ledger.isOpen()) { this.ledger.open(false); this.ledgerAuto = false; }
+    if (this.ledger.isOpen()) this.ledger.set(ledgerModel(snap));
+  }
   toggleMinimap(): void { this.minimap.toggle(); }
 
   destroy(): void {

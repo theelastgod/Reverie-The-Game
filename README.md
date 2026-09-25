@@ -29,7 +29,7 @@ satisfies it; `.rebuild/CONTRACTS.md` holds the shared-sim module signatures and
 | 1–4 / Esc | `choose` / `close` | dialogue |
 | V / T | `flag` / `truce` | Angels only, in flag-legal districts |
 | I | `use` | first paper item (insurance / repair) |
-| J / M | client | journal / minimap |
+| J / M / L | client | journal / minimap / ledger (holdings, claims, the Grid) |
 
 ## Shape
 

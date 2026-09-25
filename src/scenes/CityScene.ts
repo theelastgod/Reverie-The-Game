@@ -135,6 +135,7 @@ export class CityScene extends Phaser.Scene {
       flag: () => this.net.flag(),
       truce: () => this.net.truce(),
       use: () => this.useFirstPaper(),
+      market: (op, args) => this.net.market(op, args),
     };
   }
 
@@ -237,6 +238,9 @@ export class CityScene extends Phaser.Scene {
         break;
       case "KeyM":
         bus.hud?.toggleMinimap();
+        break;
+      case "KeyL":
+        bus.hud?.toggleLedger();
         break;
     }
   }
