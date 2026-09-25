@@ -13,3 +13,10 @@ bindings = [{ name = "WORLD", class_name = "ReverieWorld" }]
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["ReverieWorld"]
+
+# The test link (serial + mock signature) is a development convenience.
+# `.dev.vars` turns it on for `wrangler dev`; a deployed city keeps it off and
+# links Angels through /wallet with the holders map below until the contract exists.
+[vars]
+MOCK_LINK = "0"
+ANGEL_HOLDERS = "{}"

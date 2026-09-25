@@ -6,6 +6,7 @@ import Phaser from "phaser";
 import { getPreselectedSerial, mountTitle } from "./ui/title";
 import { Hud, type HudCallbacks } from "./ui/hud";
 import { bus } from "./render/bus";
+import { linkWallet } from "./net/wallet";
 import { BootScene } from "./scenes/BootScene";
 import { CityScene } from "./scenes/CityScene";
 
@@ -16,6 +17,7 @@ const callbacks: HudCallbacks = {
     if (bus.actions) bus.actions.link(serial);
     else bus.pendingSerial = serial;
   },
+  wallet: () => linkWallet(),
   interact: (targetId, choice) => bus.actions?.interact(targetId, choice),
   stance: () => bus.actions?.stance(),
   kit: () => bus.actions?.kit(),

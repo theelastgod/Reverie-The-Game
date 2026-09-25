@@ -88,7 +88,8 @@ export class CityScene extends Phaser.Scene {
     bus.net = this.net;
     bus.actions = this.actions();
     this.net.onStatus = (s: SocketStatus) => bus.hud?.setStatus(s);
-    this.net.onHello = () => {
+    this.net.onHello = hello => {
+      bus.hud?.setMockLink(hello.mockLink === true);
       if (bus.pendingSerial !== null) {
         this.net.link(bus.pendingSerial);
         bus.pendingSerial = null;

@@ -8,7 +8,9 @@ computes a number that matters; it may use `src/sim/map.ts` for the level and
 ## Files and owners
 - **scenes/render/net** (owner D1): `src/main.ts`, `src/scenes/BootScene.ts`,
   `src/scenes/CityScene.ts`, `src/render/floors.ts`, `src/render/entities.ts`,
-  `src/render/fx.ts`, `src/net/worldSocket.ts`, `src/net/worldSocket.test.ts`.
+  `src/render/fx.ts`, `src/net/worldSocket.ts`, `src/net/worldSocket.test.ts`,
+`src/net/wallet.ts` (EIP-6963 discovery, the challenge/sign/link handshake over
+`/wallet/challenge` and `/wallet/link`, the outcome line), `src/net/wallet.test.ts`.
 - **HUD** (owner D2): `index.html`, `src/ui/hud.css`, `src/ui/hud.ts`,
   `src/ui/dialogue.ts`, `src/ui/journal.ts`, `src/ui/minimap.ts`, `src/ui/lock.ts`,
   `src/ui/title.ts`, `src/ui/hud.test.ts` (pure formatting helpers only).

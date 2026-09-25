@@ -10,7 +10,9 @@
 import { emptyWorld, spawnGuest, tickWorld } from "../../src/sim/world.ts";
 import { migratePlayer, migrateWorld, SHAPE } from "../../src/sim/migrate.ts";
 import { DT } from "../../src/sim/constants.ts";
-import { applyAction } from "../../src/sim/actions.ts";
+import { applyAction, applyLink, applyWallet } from "../../src/sim/actions.ts";
+import { LINES } from "../../src/sim/content/index.ts";
+import { CHALLENGE_TTL_MS, challengeMessage, isAddress, normalizeAddress, parseHolders, recoverAddress } from "./wallet.ts";
 import { snapshotFor } from "../../src/sim/snapshot.ts";
 import { isClientMsg, PROTOCOL_VERSION } from "../../src/sim/protocol.ts";
 import type { Hello } from "../../src/sim/protocol.ts";
@@ -20,6 +22,8 @@ import { SimulationClock, STEP_MS } from "./clock";
 type Env = {
   ASSETS: { fetch: (req: Request) => Promise<Response> };
   WORLD: DurableObjectNamespace;
+  MOCK_LINK?: string; // "1" accepts the test link (serial + mock signature); unset or "0" refuses it
+  ANGEL_HOLDERS?: string; // JSON { "0xaddress": serial } until the contract exists
 };
 
 // workerd accepts only functions and handlers as named exports of the entry module, so these stay module-private.
@@ -28,6 +32,7 @@ const WORLD_KEY = "world:v2";
 const PLAYER_PREFIX = "player:v2:";
 const WORLD_NAME = "city-v2";
 const MAX_MESSAGE = 4096;
+const CHALLENGE_PREFIX = "challenge:v1:";
 const INTENT_TTL_MS = 1000;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -78,7 +83,7 @@ export class ReverieWorld {
   private ticking = false;
   private clock = new SimulationClock();
 
-  constructor(private readonly ctx: DurableObjectState, _env: Env) {
+  constructor(private readonly ctx: DurableObjectState, private readonly env: Env) {
     this.w = emptyWorld();
     this.ctx.blockConcurrencyWhile(async () => {
       const saved = await this.ctx.storage.get<SavedWorld>(WORLD_KEY);
@@ -112,7 +117,60 @@ export class ReverieWorld {
     this.checkpointAt = this.w.now;
   }
 
+  /** The test link is a development convenience: on only when the environment says so. */
+  private get mockLink(): boolean {
+    return (this.env?.MOCK_LINK ?? "0") === "1";
+  }
+
+  /**
+   * Wallet login, disarmed. POST /wallet/challenge issues a nonce to this
+   * session; POST /wallet/link takes { address, signature } over that nonce,
+   * recovers the signer, and seals the live body with the serial the holders
+   * map assigns, or binds the address to the guest when it holds no Angel.
+   * The nonce is spent on first use and expires on its own.
+   */
+  private async wallet(req: Request, path: string): Promise<Response> {
+    const headers = { "Cache-Control": "no-store" };
+    const refuse = (status: number, reason: string) => Response.json({ ok: false, reason }, { status, headers });
+    if (req.method !== "POST") return refuse(405, "post-required");
+    if (!sameOrigin(req)) return refuse(403, "same-origin");
+    const token = sessionToken(req);
+    const live = token ? [...this.sessions.values()].find(s => s.token === token) : undefined;
+    if (!token || !live || !this.w.players.has(live.id)) return refuse(409, "no-session");
+    const key = `${CHALLENGE_PREFIX}${token}`;
+    if (path === "/wallet/challenge") {
+      const nonce = crypto.randomUUID();
+      const at = Date.now();
+      await this.ctx.storage.put({ [key]: { nonce, at } });
+      return Response.json({ ok: true, message: challengeMessage(nonce, at) }, { headers });
+    }
+    let body: { address?: unknown; signature?: unknown } = {};
+    try {
+      body = (await req.json()) as typeof body;
+    } catch {
+      return refuse(400, "bad-json");
+    }
+    const challenge = await this.ctx.storage.get<{ nonce: string; at: number }>(key);
+    await this.ctx.storage.delete(key);
+    if (!challenge || Date.now() - challenge.at > CHALLENGE_TTL_MS) return refuse(409, "no-challenge");
+    if (!isAddress(body.address)) return refuse(400, "bad-address");
+    const address = normalizeAddress(body.address);
+    const signer = recoverAddress(challengeMessage(challenge.nonce, challenge.at), body.signature);
+    if (!signer || signer !== address) return refuse(403, "bad-signature");
+    const serial = parseHolders(this.env?.ANGEL_HOLDERS).get(address) ?? null;
+    this.advanceWorld(Date.now());
+    this.w = serial === null
+      ? applyWallet(this.w, live.id, address, LINES.LINK_NO_ANGEL)
+      : applyLink(applyWallet(this.w, live.id, address), live.id, serial, { kind: "wallet", address });
+    await this.checkpoint();
+    this.broadcast();
+    const me = this.w.players.get(live.id);
+    return Response.json({ ok: true, address, serial: me && !me.guest ? me.serial : null }, { headers });
+  }
+
   async fetch(req: Request): Promise<Response> {
+    const path = new URL(req.url).pathname;
+    if (path === "/wallet/challenge" || path === "/wallet/link") return this.wallet(req, path);
     if (req.headers.get("Upgrade") !== "websocket") {
       return Response.json({ ok: true, v: PROTOCOL_VERSION, players: this.w.players.size });
     }
@@ -145,7 +203,7 @@ export class ReverieWorld {
       this.sessions.set(server, session);
       server.serializeAttachment(session);
       await this.checkpoint();
-      const hello: Hello = { t: "hello", v: PROTOCOL_VERSION, id, guest: player.guest, you: snapshotFor(this.w, id).you };
+      const hello: Hello = { t: "hello", v: PROTOCOL_VERSION, id, guest: player.guest, mockLink: this.mockLink, you: snapshotFor(this.w, id).you };
       server.send(JSON.stringify(hello));
       this.broadcast();
       await this.ensureTick();
@@ -164,6 +222,7 @@ export class ReverieWorld {
     }
     if (!isClientMsg(data)) return;
     if (!this.w.players.has(id)) return;
+    if (data.t === "link" && !this.mockLink) return; // the test link is off; wallets go through /wallet
     // Settle elapsed time before a new input; it must not act retroactively during catch-up.
     this.advanceWorld(Date.now());
     this.w = applyAction(this.w, id, data);
@@ -252,7 +311,7 @@ export default {
         "Set-Cookie": `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000${url.protocol === "https:" ? "; Secure" : ""}`,
       } });
     }
-    if (url.pathname === "/ws" || url.pathname === "/world") {
+    if (url.pathname === "/ws" || url.pathname === "/world" || url.pathname === "/wallet/challenge" || url.pathname === "/wallet/link") {
       const id = env.WORLD.idFromName(WORLD_NAME);
       return env.WORLD.get(id).fetch(req);
     }

@@ -110,6 +110,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   takes the second node (or the third when the second is spent), answers both
   offers, and listens before deciding. Ord reads the pair back once from his
   later line; Nara notices the print in your coat, or the name you kept.
+- Wallet login (2026-09-25, disarmed): the lock panel offers LINK A WALLET.
+  The client discovers wallets by EIP-6963 (`window.ethereum` as fallback),
+  asks for an account, fetches a nonce from `POST /wallet/challenge`, has the
+  wallet `personal_sign` the challenge text (hex-encoded), and posts the
+  signature to `POST /wallet/link`. The Durable Object recovers the signer
+  (EIP-191 hash, secp256k1 recovery through `@noble/curves`), spends the
+  nonce (ten-minute life), and either seals the live body with the serial the
+  `ANGEL_HOLDERS` map assigns (a wallet proof through `applyLink`) or binds
+  the address to the guest and says so. The test link (serial + `mock`) is
+  accepted only when `MOCK_LINK` is `1`; `.dev.vars` sets that for
+  `wrangler dev`, `wrangler.toml` deploys it off; `hello.mockLink` tells the
+  lock panel whether to offer it, and the title offers it only on localhost.
+  Never a seed, never a transaction, never a chain call.
 
 ## Verified (2026-09-25, integration)
 
@@ -129,6 +142,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   latest measure (after the opening beats, fresh world and reused world):
   bot 59 s (walk 49 s, two fights 8 s, talk 1.8 s), 1393 words shown, 7
   decisions, first playthrough estimate 15.0 min.
+- Wallet login: 6 session tests drive the object with real secp256k1
+  signatures (holder sealed, stranger bound, forged signature refused, nonce
+  spent and expired, mock link on/off by environment, worker routing); the
+  handshake's client side is tested with fake EIP-6963 wallets; the local
+  Worker answers `/wallet/challenge` (409 without a live session). A real
+  wallet in a browser is not verified from this container.
 - `scripts/render-check.mjs` PASS: title, Nave with HUD, dialogue screenshots
   in `.rebuild/shots/`; 14.9 fps under this sandbox's software WebGL
   (SwiftShader), so frame pacing on a GPU-backed laptop is still unmeasured.
@@ -166,8 +185,12 @@ they are discovered; keep this list honest.
    trailer: about 255 credits, for replacements only.
 2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
    (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
-3. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
-   the cookie session stays as the guest identity.
+3. **Angel holders from the contract.** `ANGEL_HOLDERS` is a map in the
+   environment until the ERC-721 exists; then `/wallet/link` should read
+   ownership from the chain (an RPC binding, cached per address for a few
+   minutes) and the map becomes an override for test serials only. One Angel
+   active per body stays the rule (`applyLink` already refuses a serial that
+   is walking).
 4. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
    (history, passings, claims) with additive migrations.
 5. **Opening density, the last stretch.** Measured 2026-09-25 after the

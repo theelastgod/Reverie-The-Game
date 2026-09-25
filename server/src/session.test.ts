@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import worker, { ReverieWorld, restoreWorld, sameOrigin, serializeWorld, sessionToken } from "./index";
+import { secp256k1 } from "@noble/curves/secp256k1.js";
+import { addressOfPublicKey, personalMessageHash, recoverAddress } from "./wallet";
+import { LINES } from "../../src/sim/content";
 
 const WORLD_KEY = "world:v2";
 const PLAYER_PREFIX = "player:v2:";
@@ -33,7 +36,10 @@ function angel(id: string, extra: Partial<Player> = {}): Player {
   };
 }
 
-async function worldHarness(world: WorldState | null, sockets: Sock[] = [], extra: [string, unknown][] = []) {
+/** The object under test runs like `wrangler dev`: the test link on, one known holder. Pass env to change that. */
+const DEV_ENV = { MOCK_LINK: "1", ANGEL_HOLDERS: JSON.stringify({ "0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf": 42 }) };
+
+async function worldHarness(world: WorldState | null, sockets: Sock[] = [], extra: [string, unknown][] = [], env: Record<string, string> = DEV_ENV) {
   const data = new Map<string, unknown>(extra);
   if (world) data.set(WORLD_KEY, serializeWorld(world));
   let ready: Promise<unknown>;
@@ -44,12 +50,13 @@ async function worldHarness(world: WorldState | null, sockets: Sock[] = [], extr
     }),
     setAlarm: vi.fn(async () => {}),
     getAlarm: vi.fn(async () => data.get("scheduled") ?? null),
+    delete: vi.fn(async (key: string) => data.delete(key)),
   };
   const ctx = {
     storage, getWebSockets: () => sockets, waitUntil: vi.fn(), acceptWebSocket: vi.fn(),
     blockConcurrencyWhile: (fn: () => Promise<unknown>) => (ready = fn()),
   };
-  const dobj = new ReverieWorld(ctx as never, {} as never);
+  const dobj = new ReverieWorld(ctx as never, env as never);
   await ready!;
   return { world: dobj, storage, data, ctx };
 }
@@ -333,5 +340,125 @@ describe("browser session boundary", () => {
     expect(await (await worker.fetch(new Request("https://game.example/ws"), env as never)).text()).toBe("world");
     expect(names).toEqual(["city-v2"]);
     expect(await (await worker.fetch(new Request("https://game.example/play/"), env as never)).text()).toBe("asset");
+  });
+});
+
+// ---------------------------------------------------------------- wallet login, disarmed
+
+const hexOf = (b: Uint8Array) => [...b].map(x => x.toString(16).padStart(2, "0")).join("");
+const keyOf = (n: number): Uint8Array => { const k = new Uint8Array(32); k[31] = n; return k; };
+const addressOf = (priv: Uint8Array) => addressOfPublicKey(secp256k1.getPublicKey(priv, false));
+/** What a wallet returns from personal_sign over the message: r||s||v, v in {27, 28}. */
+function ethSign(message: string, priv: Uint8Array): string {
+  const compact = secp256k1.sign(personalMessageHash(message), priv, { prehash: false });
+  for (const v of [27, 28]) {
+    const sig = "0x" + hexOf(compact) + v.toString(16);
+    if (recoverAddress(message, sig) === addressOf(priv)) return sig;
+  }
+  throw new Error("no recovery bit matched");
+}
+const ORIGIN = "https://game.example";
+const post = (path: string, t: string, body?: unknown, origin = ORIGIN) =>
+  new Request(`${ORIGIN}${path}`, {
+    method: "POST",
+    headers: { Origin: origin, Cookie: `reverie_session=${t}`, ...(body ? { "Content-Type": "application/json" } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+describe("wallet login", () => {
+  const HOLDER = keyOf(1); // 0x7e5f…5bdf, serial 42 in DEV_ENV
+  const STRANGER = keyOf(9);
+
+  async function challenge(world: ReverieWorld, t = token): Promise<string> {
+    const res = await world.fetch(post("/wallet/challenge", t));
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { ok: boolean; message: string };
+    expect(body.message).toContain("Nonce:");
+    expect(body.message).toContain("costs nothing");
+    return body.message;
+  }
+
+  it("issues a challenge only to a live same-origin session, by POST", async () => {
+    const { world } = await worldHarness(null);
+    expect((await world.fetch(post("/wallet/challenge", token))).status).toBe(409);
+    await world.join(token, socket() as never);
+    expect((await world.fetch(new Request(`${ORIGIN}/wallet/challenge`, { headers: { Cookie: `reverie_session=${token}` } }))).status).toBe(405);
+    expect((await world.fetch(post("/wallet/challenge", token, undefined, "https://elsewhere.example"))).status).toBe(403);
+    await challenge(world);
+  });
+
+  it("seals the body with the holder's serial after a valid signature, and spends the nonce", async () => {
+    const { world, data } = await worldHarness(null);
+    const ws = socket();
+    const hello = await world.join(token, ws as never);
+    expect(hello.mockLink).toBe(true);
+    const message = await challenge(world);
+    const res = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER).toUpperCase().replace("0X", "0x"), signature: ethSign(message, HOLDER) }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true, address: addressOf(HOLDER), serial: 42 });
+    const you = last(ws).you;
+    expect(you).toMatchObject({ guest: false, serial: 42, name: "#0042", wallet: addressOf(HOLDER) });
+    expect(you.flags.angel).toBe(1);
+    expect(savedWorld(data).players[0][1]).toMatchObject({ serial: 42, wallet: addressOf(HOLDER) });
+    // the nonce was spent
+    const again = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    expect(again.status).toBe(409);
+    expect(await again.json()).toEqual({ ok: false, reason: "no-challenge" });
+  });
+
+  it("binds a wallet that holds no Angel without sealing it, and says so", async () => {
+    const { world } = await worldHarness(null);
+    const ws = socket();
+    await world.join(token, ws as never);
+    const message = await challenge(world);
+    const res = await world.fetch(post("/wallet/link", token, { address: addressOf(STRANGER), signature: ethSign(message, STRANGER) }));
+    expect(await res.json()).toEqual({ ok: true, address: addressOf(STRANGER), serial: null });
+    const you = last(ws).you;
+    expect(you).toMatchObject({ guest: true, serial: null, wallet: addressOf(STRANGER), heard: LINES.LINK_NO_ANGEL });
+  });
+
+  it("refuses a signature that does not match the address, an expired nonce and a malformed body", async () => {
+    const { world } = await worldHarness(null);
+    const ws = socket();
+    await world.join(token, ws as never);
+    let message = await challenge(world);
+    const forged = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, STRANGER) }));
+    expect(forged.status).toBe(403);
+    expect(await forged.json()).toEqual({ ok: false, reason: "bad-signature" });
+    expect(last(ws).you).toMatchObject({ guest: true, wallet: "" });
+    message = await challenge(world);
+    expect((await world.fetch(post("/wallet/link", token, { address: "0x1234", signature: ethSign(message, HOLDER) }))).status).toBe(400);
+    message = await challenge(world);
+    vi.setSystemTime(11 * 60 * 1000);
+    const stale = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    expect(stale.status).toBe(409);
+    const junk = await world.fetch(new Request(`${ORIGIN}/wallet/link`, { method: "POST", headers: { Origin: ORIGIN, Cookie: `reverie_session=${token}` }, body: "{" }));
+    expect(junk.status).toBe(400);
+  });
+
+  it("accepts the test link only where the environment turns it on", async () => {
+    const off = await worldHarness(null, [], [], { ANGEL_HOLDERS: "{}" });
+    const ws = socket();
+    const hello = await off.world.join(token, ws as never);
+    expect(hello.mockLink).toBe(false);
+    await off.world.webSocketMessage(ws as never, JSON.stringify({ t: "link", serial: TEST_SERIAL, sig: "mock" }));
+    expect(off.world["w"].players.get(hello.id)?.guest).toBe(true);
+
+    const on = await worldHarness(null);
+    const ws2 = socket();
+    const hello2 = await on.world.join(token, ws2 as never);
+    await on.world.webSocketMessage(ws2 as never, JSON.stringify({ t: "link", serial: TEST_SERIAL, sig: "mock" }));
+    expect(on.world["w"].players.get(hello2.id)).toMatchObject({ guest: false, serial: TEST_SERIAL });
+  });
+
+  it("routes the wallet endpoints to the city", async () => {
+    const names: string[] = [];
+    const env = {
+      ASSETS: { fetch: async () => new Response("asset") },
+      WORLD: { idFromName: (n: string) => { names.push(n); return n; }, get: () => ({ fetch: async () => new Response("world") }) },
+    };
+    expect(await (await worker.fetch(new Request(`${ORIGIN}/wallet/challenge`, { method: "POST" }), env as never)).text()).toBe("world");
+    expect(await (await worker.fetch(new Request(`${ORIGIN}/wallet/link`, { method: "POST" }), env as never)).text()).toBe("world");
+    expect(names).toEqual(["city-v2", "city-v2"]);
   });
 });

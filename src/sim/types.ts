@@ -83,6 +83,7 @@ export type Player = {
   messenger: Messenger;
   winkSchool: WinkSchool;
   locked: boolean; // guest reached the going-under threshold
+  wallet: string; // lowercase address bound by a signature the server verified; "" for none
 
   // body
   hp: number;
@@ -154,6 +155,9 @@ export type Player = {
 };
 
 // ---------------------------------------------------------------- world entities
+
+/** How a serial was proven: the disarmed mock, or a wallet signature the server verified before calling the sim. */
+export type LinkProof = { kind: "mock" } | { kind: "wallet"; address: string };
 
 export type EnemyKind = "clerk" | "intake" | "warden" | "enforcer" | "dummy";
 export type EnemyState = "idle" | "aggro" | "telegraph" | "recover" | "return" | "dead";

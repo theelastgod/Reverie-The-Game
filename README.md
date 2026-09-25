@@ -54,7 +54,13 @@ npm run dev                      # Vite client on http://127.0.0.1:5175 (proxies
 ```
 
 Play at http://127.0.0.1:5175. Link the test Angel from the title or the lock
-panel (serial 7777, mock signature). Clearing cookies starts a new guest.
+panel (serial 7777, mock signature; offered only while `MOCK_LINK=1`, which
+`.dev.vars` sets for `wrangler dev`). A deployed city links Angels through a
+wallet instead: the lock panel's LINK A WALLET asks an EIP-6963 wallet for one
+`personal_sign` over a server nonce, the Worker recovers the signer, and the
+serial comes from the `ANGEL_HOLDERS` map in `wrangler.toml` until the
+contract exists. Never a seed, never a transaction. Clearing cookies starts a
+new guest.
 
 ## Release checks
 

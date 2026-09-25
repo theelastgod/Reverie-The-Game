@@ -18,6 +18,9 @@ export function clearPreselectedSerial(): void {
   preselected = null;
 }
 
+/** True on a developer's machine, where the test link is offered. */
+export const isLocalCity = (host: string = location.hostname): boolean => host === "localhost" || host === "127.0.0.1";
+
 export function mountTitle(onEnter: () => void): void {
   const title = document.getElementById("title");
   const hud = document.getElementById("hud");
@@ -31,6 +34,9 @@ export function mountTitle(onEnter: () => void): void {
 
   const enterBtn = title.querySelector<HTMLButtonElement>("#title-enter");
   const linkBtn = title.querySelector<HTMLButtonElement>("#title-link");
+  // The test link is a development convenience; a deployed city offers wallets at the threshold instead.
+  const testLink = title.querySelector<HTMLElement>(".title-link");
+  if (testLink && !isLocalCity()) testLink.hidden = true;
   const serialInput = title.querySelector<HTMLInputElement>("#title-serial");
 
   let entered = false;

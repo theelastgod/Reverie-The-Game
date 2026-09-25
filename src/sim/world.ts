@@ -91,6 +91,7 @@ export function spawnGuest(id: string, now = 0): Player {
     messenger: "",
     winkSchool: "",
     locked: false,
+    wallet: "",
 
     hp: MAX_HP,
     dead: false,

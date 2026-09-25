@@ -16,6 +16,7 @@ import { mountDialogue, type DialoguePanel } from "./dialogue";
 import { mountJournal, type JournalPanel } from "./journal";
 import { mountMinimap, type MinimapPanel } from "./minimap";
 import { mountLock, type LockPanel } from "./lock";
+import type { WalletOutcome } from "../net/wallet";
 import { eventRows, mountEvents, type EventsPanel } from "./events";
 import { ledgerModel, mountLedger, type LedgerPanel } from "./ledger";
 
@@ -23,6 +24,7 @@ export type HudCallbacks = {
   choose: (choiceId: string) => void; // dialogue choice clicked
   close: () => void; // dialogue closed / Esc
   link: (serial: number) => void; // mock Angel link from the lock panel or the title
+  wallet: () => Promise<WalletOutcome>; // the wallet handshake; the lock panel shows the outcome line
   interact: (targetId: string, choice: string) => void; // prompt verb clicked (touch/mouse)
   stance: () => void; kit: () => void; flag: () => void; truce: () => void; use: () => void;
   market: (op: "list" | "buy" | "cancel", args: { itemId?: string; listingId?: string; price?: number }) => void;
@@ -173,7 +175,7 @@ export class Hud {
     this.dialogue = mountDialogue(root, { choose: id => this.cb.choose(id), close: () => this.cb.close() });
     this.journal = mountJournal(root);
     this.minimap = mountMinimap(root);
-    this.lock = mountLock(root, serial => this.cb.link(serial));
+    this.lock = mountLock(root, serial => this.cb.link(serial), () => this.cb.wallet());
     this.events = mountEvents(q(root, "#hud-events"));
     this.ledger = mountLedger(q(root, "#hud-ledger-panel"), { market: (op, args) => this.cb.market(op, args) });
 
@@ -251,6 +253,8 @@ export class Hud {
 
   toggleJournal(): void { this.journal.toggle(); }
   toggleLedger(): void { this.ledgerAuto = false; this.ledger.toggle(); }
+  /** From hello: whether this city accepts the test link; the lock panel offers it only then. */
+  setMockLink(on: boolean): void { this.lock.setMockLink(on); }
 
   /** The ledger opens itself at the claims desk and the listing board, and closes again when you walk away. */
   private updateLedgerPanel(snap: Snap): void {

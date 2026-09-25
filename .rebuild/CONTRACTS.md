@@ -29,7 +29,9 @@ export function houseName(h: House): string;               // "House of Mortals"
 export function messengerName(m: Messenger): string;       // "Ruin-angel" etc | "Unsealed"
 export function kitVerb(m: Messenger): string;             // "Announce" | "Blitz" | "Face the wreckage" | "Keep" | "Read the Gestell" | "Glamour" | ""
 export function schoolName(s: WinkSchool): string;
-export function validLink(serial: number, sig: string): boolean; // Number.isInteger, 1..ANGEL_SUPPLY, sig === MOCK_SIG
+export type LinkProof = { kind: "mock" } | { kind: "wallet"; address: string }; // in types.ts; the server builds a wallet proof only after verifying the signature
+export function proofOf(sig: unknown): LinkProof | null;                // sig === MOCK_SIG → mock; anything else null (clients never carry wallet proofs)
+export function validLink(serial: number, proof: LinkProof | string): boolean; // Number.isInteger, 1..ANGEL_SUPPLY, mock or a lowercase 0x address
 export function serialHistoryMark(serial: number): HistoryMark | null; // 7777 -> mark at POSITIONS["history:7777"], else null
 export function historyMarkFor(serial: number, log: HistoryLog, deaths?: number): HistoryMark | null; // the serial's written-back log as a mark at POSITIONS["history:mark"]: null when passings+buried+looted+deaths is 0; line from the last outcome, else what the hands did
 ```
@@ -176,7 +178,8 @@ export function npcView(ctx, npc: NpcState): NpcView | null; // apply NPCS[id].p
 ## actions.ts
 ```ts
 export function applyAction(w: WorldState, id: string, msg: ClientMsg): WorldState; // validate every field (finite numbers, string length <= 64, enums), then dispatch: intent -> w.intents; dodge; strike; heavy; stance; kit; interact; talk; choose; close; link -> applyLink; flag; truce; use; market
-export function applyLink(w, id, serial: number, sig: string): WorldState; // validLink; refuse if another connected player has the serial (say LINES.LINK_ELSEWHERE); guest=false, serial, name formatSerial, house/messenger/winkSchool, auraSeed, aura = max(aura, seed), flags[F.ANGEL]=1, locked=false, linkedAt, history mark push: serialHistoryMark(serial) ?? historyMarkFor(serial, p.history, p.deaths); if locked at the threshold, the "under" effect is NOT applied automatically (player uses the threshold again)
+export function applyWallet(w, id, address: string, line?: string): WorldState; // binds a verified lowercase address to a body without sealing it; says `line` when given
+export function applyLink(w, id, serial: number, proof: LinkProof | string): WorldState; // validLink; a wallet proof also sets player.wallet; refuse if another connected player has the serial (say LINES.LINK_ELSEWHERE); guest=false, serial, name formatSerial, house/messenger/winkSchool, auraSeed, aura = max(aura, seed), flags[F.ANGEL]=1, locked=false, linkedAt, history mark push: serialHistoryMark(serial) ?? historyMarkFor(serial, p.history, p.deaths); if locked at the threshold, the "under" effect is NOT applied automatically (player uses the threshold again)
 ```
 
 ## content/index.ts (owned by the integrator)

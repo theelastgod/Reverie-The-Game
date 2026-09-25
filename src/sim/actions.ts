@@ -5,10 +5,10 @@
  * rest are ids.
  */
 import { CLIENT_MSG_TYPES, type ClientMsg } from "./protocol";
-import type { Intent, Player, WorldState } from "./types";
+import type { Intent, LinkProof, Player, WorldState } from "./types";
 import { F } from "./content/ids";
 import { LINES } from "./content";
-import { auraSeed, formatSerial, historyMarkFor, houseFor, messengerFor, serialHistoryMark, validLink, winkSchoolFor } from "./identity";
+import { auraSeed, formatSerial, historyMarkFor, houseFor, messengerFor, proofOf, serialHistoryMark, validLink, winkSchoolFor } from "./identity";
 import { say } from "./world";
 import { applyDodge, applyFlag, applyHeavy, applyKit, applyStance, applyStrike, applyTruce } from "./combat";
 import { applyMarket, applyUse } from "./economy";
@@ -98,10 +98,19 @@ function setPlayer(w: WorldState, p: Player): WorldState {
  * Angel. A serial held by another connected body is refused. A body locked at
  * the threshold is unlocked but not sent under; it uses the threshold again.
  */
-export function applyLink(w: WorldState, id: string, serial: number, sig: string): WorldState {
+/** Binds a verified wallet address to a body without sealing it; the optional line is what the body hears. */
+export function applyWallet(w: WorldState, id: string, address: string, line?: string): WorldState {
+  const p = w.players.get(id);
+  if (!p || !/^0x[0-9a-f]{40}$/.test(address)) return w;
+  const bound: Player = { ...p, wallet: address };
+  return setPlayer(w, line ? say(bound, line, w.now) : bound);
+}
+
+export function applyLink(w: WorldState, id: string, serial: number, proof: LinkProof | string): WorldState {
   const p = w.players.get(id);
   if (!p) return w;
-  if (!validLink(serial, sig)) return w;
+  const how = typeof proof === "string" ? proofOf(proof) : proof;
+  if (!how || !validLink(serial, how)) return w;
   if (!p.guest && p.serial === serial) return w;
   if (!p.guest) return w; // one body, one serial
   for (const o of w.players.values()) {
@@ -123,6 +132,7 @@ export function applyLink(w: WorldState, id: string, serial: number, sig: string
     aura: Math.max(p.aura, seed),
     flags: { ...p.flags, [F.ANGEL]: 1 },
     locked: false,
+    wallet: how.kind === "wallet" ? how.address : p.wallet,
     linkedAt: w.now,
     history: { ...p.history, houses },
   };

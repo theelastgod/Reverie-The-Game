@@ -95,7 +95,8 @@ export type Snap = {
   notices: Notice[];
 };
 
-export type Hello = { t: "hello"; v: typeof PROTOCOL_VERSION; id: string; guest: boolean; you: YouView };
+/** `mockLink`: the test link (serial + mock signature) is accepted by this city; off in production, where wallets go through /wallet. */
+export type Hello = { t: "hello"; v: typeof PROTOCOL_VERSION; id: string; guest: boolean; mockLink: boolean; you: YouView };
 export type ServerMsg = Hello | Snap;
 
 export function isClientMsg(data: unknown): data is ClientMsg {

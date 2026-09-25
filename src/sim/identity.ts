@@ -5,7 +5,7 @@
  */
 import { ANGEL_SUPPLY, MOCK_SIG, TEST_SERIAL } from "./constants";
 import { POSITIONS } from "./map";
-import type { Fourfold, HistoryLog, HistoryMark, House, Messenger, WinkSchool } from "./types";
+import type { LinkProof, Fourfold, HistoryLog, HistoryMark, House, Messenger, WinkSchool } from "./types";
 
 export const HOUSES: readonly Fourfold[] = ["earth", "sky", "mortals", "divinities"];
 export const MESSENGERS: readonly Exclude<Messenger, "">[] = ["herald", "witness", "ruin", "dweller", "cybernetic", "iridescent"];
@@ -103,11 +103,18 @@ export function schoolName(s: WinkSchool): string {
   return s ? SCHOOL_NAME[s] : "Unsealed";
 }
 
-/** The only link the disarmed desk accepts: an integer serial inside the supply and the mock signature. */
-export function validLink(serial: number, sig: string): boolean {
+/** The proof a client's own link message can carry: only the mock signature. Wallet proofs are built by the server after it verified the signature. */
+export function proofOf(sig: unknown): LinkProof | null {
+  return typeof sig === "string" && sig === MOCK_SIG ? { kind: "mock" } : null;
+}
+
+/** The disarmed desk accepts an integer serial inside the supply with the mock proof, or a wallet proof with a well-formed lowercase address. */
+export function validLink(serial: number, proof: LinkProof | string): boolean {
   if (typeof serial !== "number" || !Number.isInteger(serial)) return false;
   if (serial < 1 || serial > ANGEL_SUPPLY) return false;
-  return typeof sig === "string" && sig === MOCK_SIG;
+  const p = typeof proof === "string" ? proofOf(proof) : proof;
+  if (!p) return false;
+  return p.kind === "mock" || (p.kind === "wallet" && /^0x[0-9a-f]{40}$/.test(p.address));
 }
 
 const HISTORY_LINE = "A prior hour. You stood here and left the body in the weather.";
