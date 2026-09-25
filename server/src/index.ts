@@ -8,6 +8,7 @@
  * viewer their own `snapshotFor` view. The client never computes a number.
  */
 import { emptyWorld, spawnGuest, tickWorld } from "../../src/sim/world.ts";
+import { migratePlayer, migrateWorld, SHAPE } from "../../src/sim/migrate.ts";
 import { DT } from "../../src/sim/constants.ts";
 import { applyAction } from "../../src/sim/actions.ts";
 import { snapshotFor } from "../../src/sim/snapshot.ts";
@@ -45,24 +46,21 @@ export function sameOrigin(req: Request): boolean {
   return url.hostname === "127.0.0.1" && origin === "http://127.0.0.1:5175";
 }
 
-/** The checkpointed form of the world: Maps become arrays, intents are never saved. */
-export type SavedWorld = Omit<WorldState, "players" | "intents"> & { players: [string, Player][] };
+/** The checkpointed form of the world: Maps become arrays, intents are never saved, the shape is stamped. */
+export type SavedWorld = Omit<WorldState, "players" | "intents"> & { players: [string, Player][]; shape: number };
 
 export function serializeWorld(w: WorldState): SavedWorld {
   const { players, intents: _intents, ...rest } = w;
-  return { ...rest, players: [...players] };
+  return { ...rest, players: [...players], shape: SHAPE };
 }
 
-export function restoreWorld(saved: Partial<SavedWorld> | undefined): WorldState {
-  const base = emptyWorld();
-  if (!saved) return base;
-  const { players, ...rest } = saved;
-  const entries: [string, Player][] = Array.isArray(players)
-    ? players
-    : players && typeof players === "object"
-      ? (Object.entries(players as unknown as Record<string, Player>))
-      : [];
-  return { ...base, ...rest, players: new Map(entries), intents: new Map() };
+/**
+ * A checkpoint from any earlier build restores through the shape migration:
+ * level and content collections come from the current defaults with the saved
+ * progress merged back, players are normalized, transient state is dropped.
+ */
+export function restoreWorld(saved: unknown): WorldState {
+  return migrateWorld(saved);
 }
 
 type Session = { id: string; token: string };

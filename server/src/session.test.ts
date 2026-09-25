@@ -100,6 +100,40 @@ describe("durable world sessions", () => {
     expect(last(ws).gestell).not.toBe(99);
   });
 
+  it("restores a checkpoint from an older build through the shape migration", async () => {
+    // An old checkpoint: a retired node and POI, a stale enemy, a moved NPC, a player missing newer fields.
+    const oldPlayer = { ...spawnGuest("a"), bestand: 77, flags: { under: 1 }, party: { nara: "with" }, hp: 40 } as Record<string, unknown>;
+    delete oldPlayer.history;
+    delete oldPlayer.respawn;
+    const old = {
+      gestell: 58,
+      now: 900,
+      nodes: [{ id: "nave-node-1", x: 0, y: 0, charges: 0, kept: true }, { id: "retired", x: 1, y: 1, charges: 3 }],
+      enemies: [{ id: "stale", kind: "clerk", hp: 1 }],
+      pois: { "safety-plaque": { state: "named", by: "a", at: 1, count: 1 }, retired: { state: "x" } },
+      npcs: { nara: { x: 999, y: 999, district: "care", present: true, state: "garden" } },
+      players: [["a", oldPlayer]],
+    };
+    const ws = socket();
+    const { world, data } = await worldHarness(old as never, [ws]);
+    await world.alarm();
+    const snap = last(ws);
+    expect(snap.gestell).toBe(58);
+    expect(snap.you.bestand).toBe(77);
+    expect(snap.you.hp).toBe(40);
+    expect(snap.you.flags.under).toBe(1);
+    expect(snap.you.party).toEqual({ nara: "with", quill: "none", ord: "none" });
+    expect(snap.you.history).toEqual({ passings: 0, buried: 0, looted: 0, houses: [], outcomes: [] });
+    const node = snap.nodes.find((n: { id: string }) => n.id === "nave-node-1");
+    expect(node?.kept).toBe(true);
+    expect(snap.nodes.some((n: { id: string }) => n.id === "retired")).toBe(false);
+    expect(snap.enemies.some((e: { id: string }) => e.id === "stale")).toBe(false);
+    expect(snap.enemies.length).toBeGreaterThan(0);
+    // The next checkpoint is stamped with the current shape.
+    const stored = data.get("world:v2") as { shape?: number } | undefined;
+    expect(stored?.shape).toBe(2);
+  });
+
   it("persists an action before broadcasting it and rejects malformed packets", async () => {
     const ws = socket();
     const { world, data, storage } = await worldHarness(saved(spawnGuest("a")), [ws]);

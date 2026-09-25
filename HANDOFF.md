@@ -47,6 +47,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   at a wreckage and close the ring to third bodies; the Officer stays reachable
   for guests; side-hour verbs win their key while live; the desk and stipend
   copy speak the city's register.
+- World surface (2026-09-25): wall faces from the wall texture over a
+  rectangle cover of the wall tiles (no per-frame masks), rain on the Wet Grid
+  by weather band, shrine light pools, walk bob and lean, idle breath, hit-stop
+  squash and a shadow under every body.
+- Shape migration (2026-09-25): `src/sim/migrate.ts` rebuilds a checkpoint
+  from any earlier build over the current defaults (nodes, npcs, pois merged
+  by id; enemies and transient player state rebuilt; every scalar type-checked;
+  unknown keys and ids dropped) and stamps `shape` on every checkpoint; the
+  server restores worlds and players through it. Verified live against the
+  oldest local checkpoint.
 
 ## Verified (2026-09-25, integration)
 
@@ -92,33 +102,23 @@ they are discovered; keep this list honest.
    Higgsfield budget after this session: about 170 credits, for replacements only.
 2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
    (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
-3. **World surface without new art.** Wall faces from `tiles/wall.jpg` instead
-   of flat blocks; light pools at halls and shrines; lamp glows; rain particles
-   on the Wet Grid; scanline overlay for frozen districts and meltdown weather;
-   district ambient tints by weather band.
-4. **Body motion.** Walk bob and lean, facing flip, squash on hit-stop, a
-   two-frame idle breath; dodge afterimages exist.
-5. **Measure the opening.** Script a bot through Movement I over the wire
+3. **Measure the opening.** Script a bot through Movement I over the wire
    (extend `scripts/smoke-campaign.mjs` with real walking) and time it; tune
    distances and copy toward a 15–20 minute first playthrough.
-6. **Combat readability.** Directional telegraph arcs, cold ledger damage
+4. **Combat readability.** Directional telegraph arcs, cold ledger damage
    ticks (no coin shower), enemy variety in feel (warden slow and heavy,
    enforcer fast), heavy interrupt feedback.
-7. **PvP surfaces.** Hot-street flag zone visuals, ruin-duel spectator
+5. **PvP surfaces.** Hot-street flag zone visuals, ruin-duel spectator
    readout, House war countdown in the HUD, Clearing contest keep/extract bar.
-8. **Economy panels.** Claims desk (file / bank / take with the hold timer),
+6. **Economy panels.** Claims desk (file / bank / take with the hold timer),
    market (list / buy / cancel), inventory grouped cult / exhibition / paper.
-9. **Side quest surfaces.** Active side quests with bearings in the journal;
+7. **Side quest surfaces.** Active side quests with bearings in the journal;
    quest givers marked in the world.
-10. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
+8. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
     the cookie session stays as the guest identity.
-11. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
+9. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
     (history, passings, claims) with additive migrations.
-12. **Saved-world shape migration.** A world checkpointed by an older build
-    can carry stale enemy/node/POI shapes; on restore, rebuild those
-    collections from defaults while keeping player progress, and version the
-    checkpoint. (A stale local checkpoint made the campaign smoke fail once.)
-13. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+10. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
     into `banked` only. Keep the fairness tests green.
 
 ## Rules
