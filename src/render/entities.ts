@@ -49,7 +49,25 @@ type Body = {
   seen: number;
   frozen: boolean;
   aura: Phaser.GameObjects.Image | null;
+  /** Scale that fits the texture to BODY_W × BODY_H. */
+  baseSX: number;
+  baseSY: number;
+  /** State-driven size (heavy wind-up, telegraph). */
+  size: number;
+  /** Walk cycle phase and the breath offset so bodies do not breathe in unison. */
+  phase: number;
+  seed: number;
+  /** Smoothed speed in px/s from the lerp, for the walk bob. */
+  speed: number;
+  visible: boolean;
 };
+
+const WALK_SPEED_MIN = 14; // px/s; below this the body idles
+const BOB_PX = 3;
+const LEAN_DEG = 1.6;
+const BREATH = 0.012;
+const SQUASH_X = 1.08;
+const SQUASH_Y = 0.92;
 
 type Mark = { img: Phaser.GameObjects.Image; seen: number };
 
@@ -183,7 +201,19 @@ export class Entities {
 
   private newBody(x: number, y: number, key: string): Body {
     const img = this.scene.add.image(x, y, key).setDisplaySize(BODY_W, BODY_H).setOrigin(0.5, 0.86);
-    return { img, x, y, tx: x, ty: y, seen: this.tick, frozen: false, aura: null };
+    const b: Body = {
+      img, x, y, tx: x, ty: y, seen: this.tick, frozen: false, aura: null,
+      baseSX: img.scaleX, baseSY: img.scaleY, size: 1, phase: 0, seed: Math.random() * Math.PI * 2, speed: 0, visible: true,
+    };
+    return b;
+  }
+
+  /** Swap the texture and refit the base scale (guest → Angel, NPC sprite changes). */
+  private retexture(b: Body, key: string): void {
+    if (b.img.texture.key === key) return;
+    b.img.setTexture(key).setDisplaySize(BODY_W, BODY_H);
+    b.baseSX = b.img.scaleX;
+    b.baseSY = b.img.scaleY;
   }
 
   private syncPlayer(p: PlayerLike, isYou: boolean): void {
@@ -194,7 +224,7 @@ export class Entities {
       this.players.set(p.id, b);
     }
     b.seen = this.tick;
-    if (b.img.texture.key !== key) b.img.setTexture(key).setDisplaySize(BODY_W, BODY_H);
+    this.retexture(b, key);
     b.frozen = p.hitStop > 0;
     if (!b.frozen) {
       b.tx = p.x;
@@ -205,8 +235,8 @@ export class Entities {
     img.setFlipX(p.dx < 0);
     img.setAlpha(p.dead ? 0.2 : p.dodgeT > 0 ? 0.4 : 1);
     img.setTint(p.hpFrac < LOW_HP ? LOW_HP_TINT : 0xffffff);
-    const scale = p.heavyWindup > 0 ? 1.1 : 1;
-    img.setDisplaySize(BODY_W * scale, BODY_H * scale);
+    b.size = p.heavyWindup > 0 ? 1.1 : 1;
+    b.visible = !p.dead;
     // Aura ring under Angels, sized by tier.
     const size = AURA_SIZE[p.auraTier];
     if (size && !p.dead) {
@@ -229,10 +259,11 @@ export class Entities {
     b.ty = e.y;
     const dead = e.state === "dead";
     b.img.setVisible(!dead);
+    b.visible = !dead;
     if (!dead) {
       b.img.setTint(e.hp / e.maxHp < LOW_HP ? 0xff9ab0 : ENEMY_TINT[e.tint]);
-      const scale = e.state === "telegraph" ? 1.08 : 1;
-      b.img.setDisplaySize(BODY_W * scale, BODY_H * scale);
+      b.size = e.state === "telegraph" ? 1.08 : 1;
+      b.frozen = e.state === "recover" && e.t > 0.7;
     }
   }
 
@@ -244,10 +275,11 @@ export class Entities {
       this.npcs.set(n.id, b);
     }
     b.seen = this.tick;
-    if (b.img.texture.key !== key) b.img.setTexture(key).setDisplaySize(BODY_W, BODY_H);
+    this.retexture(b, key);
     b.tx = n.x;
     b.ty = n.y;
     b.img.setVisible(n.present);
+    b.visible = n.present;
   }
 
   private syncWreckage(w: WreckageView): void {
@@ -300,14 +332,21 @@ export class Entities {
   /** Per frame: lerp bodies, redraw the ground marks, cull labels. */
   frame(dtMs: number): void {
     this.time += dtMs;
-    for (const b of this.players.values()) this.move(b);
-    for (const b of this.enemies.values()) this.move(b);
-    for (const b of this.npcs.values()) this.move(b);
+    const dt = Math.min(dtMs, 100);
+    for (const b of this.players.values()) this.move(b, dt);
+    for (const b of this.enemies.values()) this.move(b, dt);
+    for (const b of this.npcs.values()) this.move(b, dt);
     this.drawGround();
     this.placeLabels();
   }
 
-  private move(b: Body): void {
+  /**
+   * Lerp toward the snapshot, then dress the body: a walk bob and lean while
+   * moving, a slow breath while idle, a squash during hit-stop, all cosmetic.
+   */
+  private move(b: Body, dtMs: number): void {
+    const px = b.x;
+    const py = b.y;
     if (!b.frozen) {
       const dx = b.tx - b.x;
       const dy = b.ty - b.y;
@@ -319,11 +358,44 @@ export class Entities {
         b.y += dy * LERP;
       }
     }
-    b.img.setPosition(b.x, b.y).setDepth(bodyDepth(b.y));
+    const step = Math.hypot(b.x - px, b.y - py);
+    const instant = dtMs > 0 ? (step / dtMs) * 1000 : 0;
+    b.speed += (instant - b.speed) * 0.25;
+    const moving = !b.frozen && b.speed > WALK_SPEED_MIN;
+
+    let bob = 0;
+    let lean = 0;
+    let sx = 1;
+    let sy = 1;
+    if (moving) {
+      const rate = Math.min(1.5, Math.max(0.6, b.speed / 170));
+      b.phase += dtMs * 0.0125 * rate;
+      bob = Math.abs(Math.sin(b.phase)) * BOB_PX;
+      lean = Math.sin(b.phase) * LEAN_DEG * (b.img.flipX ? -1 : 1);
+    } else {
+      // Settle the walk cycle so the next step starts from the ground.
+      b.phase = 0;
+      sy = 1 + BREATH * Math.sin(this.time * 0.0022 + b.seed);
+    }
+    if (b.frozen) {
+      sx *= SQUASH_X;
+      sy *= SQUASH_Y;
+    }
+    const img = b.img;
+    img.setPosition(b.x, b.y - bob).setDepth(bodyDepth(b.y));
+    img.setScale(b.baseSX * b.size * sx, b.baseSY * b.size * sy);
+    img.setAngle(lean);
     if (b.aura) {
       b.aura.setPosition(b.x, b.y - 2);
       b.aura.angle = (this.time * 0.012) % 360;
     }
+  }
+
+  /** A soft shadow under a standing body. */
+  private drawShadow(g: Phaser.GameObjects.Graphics, b: Body): void {
+    if (!b.visible) return;
+    g.fillStyle(COLOR.void, 0.36);
+    g.fillEllipse(b.x, b.y + 3, 30, 11);
   }
 
   private drawGround(): void {
@@ -334,6 +406,11 @@ export class Entities {
     const t = this.time / 1000;
     const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 1.6);
     const you = this.youLike;
+
+    // Shadows first, under everything else on the ground layer.
+    for (const b of this.players.values()) this.drawShadow(g, b);
+    for (const b of this.enemies.values()) this.drawShadow(g, b);
+    for (const b of this.npcs.values()) this.drawShadow(g, b);
 
     // Nodes: a light under each altar. kept = sky, empty = dark, announced = gold pulse.
     for (const n of snap.nodes) this.drawNode(g, n, snap.now, pulse);

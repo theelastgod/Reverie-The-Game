@@ -6,7 +6,7 @@
 import Phaser from "phaser";
 import { FLOOR_FILES, type FloorKey } from "../sim/map";
 import { bus } from "../render/bus";
-import { NPC_SPRITES, TEX, ensureScanlineTexture } from "../render/floors";
+import { NPC_SPRITES, TEX, ensureRainTexture, ensureScanlineTexture } from "../render/floors";
 
 export function assetUrl(path: string): string {
   const base = import.meta.env.BASE_URL || "/";
@@ -40,6 +40,7 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     ensureScanlineTexture(this);
+    ensureRainTexture(this);
     bus.hud?.setLoading("Entering the Nave", 1);
     this.scene.start("city");
   }

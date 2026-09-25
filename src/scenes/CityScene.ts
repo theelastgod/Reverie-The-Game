@@ -53,6 +53,7 @@ export class CityScene extends Phaser.Scene {
   private readonly intent: Intent = { up: false, down: false, left: false, right: false };
   private lastSeq = -1;
   private lastBand: WeatherBand | null = null;
+  private lastRain = "";
   private lastFrozen = "";
   private lastPois = "";
   private lastGates = "";
@@ -320,6 +321,11 @@ export class CityScene extends Phaser.Scene {
     if (band !== this.lastBand) {
       this.lastBand = band;
       this.floors.setWeather(band);
+    }
+    const rainKey = `${snap.district}|${band}`;
+    if (rainKey !== this.lastRain) {
+      this.lastRain = rainKey;
+      this.floors.setRain(snap.district, band);
     }
     const frozen = snap.frozen.join(",");
     if (frozen !== this.lastFrozen) {

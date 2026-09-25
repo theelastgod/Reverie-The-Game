@@ -33,6 +33,7 @@ export const COLOR = {
   lavender: 0xb9b0d8,
   wallBlock: 0x15141d,
   wallEdge: 0x2a2734,
+  wallFace: 0x8a84a6,
 } as const;
 
 /** Texture keys registered by BootScene. */
@@ -40,6 +41,7 @@ export const TEX = {
   floor: (k: FloorKey) => `floor-${k}`,
   crt: "prop-crt",
   scanline: "scanline",
+  rain: "rain",
   wingStar: "wing-star",
   history: "serial-wreckage",
   failed: "failed-passing",
@@ -79,29 +81,49 @@ export function ensureScanlineTexture(scene: Phaser.Scene): void {
   tex.refresh();
 }
 
+/** Makes the 2×14 rain streak texture (a vertical fade) if it does not exist yet. */
+export function ensureRainTexture(scene: Phaser.Scene): void {
+  if (scene.textures.exists(TEX.rain)) return;
+  const tex = scene.textures.createCanvas(TEX.rain, 2, 14);
+  if (!tex) return;
+  const ctx = tex.getContext();
+  ctx.clearRect(0, 0, 2, 14);
+  const grad = ctx.createLinearGradient(0, 0, 0, 14);
+  grad.addColorStop(0, "rgba(255,255,255,0)");
+  grad.addColorStop(1, "rgba(255,255,255,1)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 2, 14);
+  tex.refresh();
+}
+
 // ---------------------------------------------------------------- geometry helpers
 
 const px = (tiles: number) => tiles * TILE;
 
-/** Horizontal runs of solid tiles inside a rect, merged so the Graphics draws few rects. */
-function runsIn(rect: Rect, solid: (tx: number, ty: number) => boolean): Rect[] {
+/**
+ * Greedy rectangle cover of the solid tiles inside an area: top-left first,
+ * widen along the row, then deepen while every row below matches. Yields a
+ * few dozen rects for the outer band instead of hundreds of row runs.
+ */
+function coverRects(area: Rect, solid: (tx: number, ty: number) => boolean): Rect[] {
+  const used = new Uint8Array(COLS * ROWS);
+  const free = (tx: number, ty: number) => solid(tx, ty) && used[ty * COLS + tx] === 0;
   const out: Rect[] = [];
-  for (let ty = rect.y; ty < rect.y + rect.h; ty++) {
-    let start = -1;
-    for (let tx = rect.x; tx <= rect.x + rect.w; tx++) {
-      const s = tx < rect.x + rect.w && solid(tx, ty);
-      if (s && start < 0) start = tx;
-      if (!s && start >= 0) {
-        out.push({ x: start, y: ty, w: tx - start, h: 1 });
-        start = -1;
+  for (let ty = area.y; ty < area.y + area.h; ty++) {
+    for (let tx = area.x; tx < area.x + area.w; tx++) {
+      if (!free(tx, ty)) continue;
+      let w = 1;
+      while (tx + w < area.x + area.w && free(tx + w, ty)) w++;
+      let h = 1;
+      deepen: while (ty + h < area.y + area.h) {
+        for (let i = 0; i < w; i++) if (!free(tx + i, ty + h)) break deepen;
+        h++;
       }
+      for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) used[(ty + j) * COLS + tx + i] = 1;
+      out.push({ x: tx, y: ty, w, h });
     }
   }
   return out;
-}
-
-function inRect(r: Rect, tx: number, ty: number): boolean {
-  return tx >= r.x && tx < r.x + r.w && ty >= r.y && ty < r.y + r.h;
 }
 
 /** Texture scale so a floor texture covers about eight tiles. */
@@ -136,6 +158,7 @@ export class Floors {
   private readonly gateFields: GateField[] = [];
   private readonly hallLamps = new Map<string, Phaser.GameObjects.Arc>();
   private readonly altars = new Map<string, Phaser.GameObjects.Image>();
+  private rain: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private hotStreet: Phaser.GameObjects.TileSprite | null = null;
   private band: WeatherBand = "mixed";
   private hot = false;
@@ -143,10 +166,12 @@ export class Floors {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     ensureScanlineTexture(scene);
+    ensureRainTexture(scene);
     this.buildFloors();
     this.buildWalls();
     this.buildGates();
     this.buildProps();
+    this.buildRain();
     this.meltdownOverlay = scene.add
       .tileSprite(0, 0, WORLD_W, WORLD_H, TEX.scanline)
       .setOrigin(0, 0)
@@ -203,12 +228,13 @@ export class Floors {
 
   private buildWalls(): void {
     const s = this.scene;
-    // Interior walls, one Graphics per district.
+    // Interior walls: one wall-face TileSprite per covered rect and one seam Graphics per district.
     for (const d of DISTRICTS) {
-      const runs = runsIn(d.rect, (tx, ty) => isWall(tx, ty));
-      if (!runs.length) continue;
-      const g = s.add.graphics().setDepth(DEPTH.wall);
-      this.drawBlocks(g, runs, true);
+      const rects = coverRects(d.rect, (tx, ty) => isWall(tx, ty));
+      if (!rects.length) continue;
+      this.wallFaces(rects, 0.9);
+      const seams = s.add.graphics().setDepth(DEPTH.wall + 0.04);
+      this.drawSeams(seams, rects);
     }
     // The outer band: every tile outside every district and gate.
     const floorArea = new Uint8Array(COLS * ROWS);
@@ -217,24 +243,43 @@ export class Floors {
     };
     DISTRICTS.forEach((d) => mark(d.rect));
     GATES.forEach((g) => mark(g.rect));
-    const bandRuns = runsIn({ x: 0, y: 0, w: COLS, h: ROWS }, (tx, ty) => floorArea[ty * COLS + tx] === 0);
-    const band = s.add.graphics().setDepth(DEPTH.wall);
-    this.drawBlocks(band, bandRuns, false);
+    const bandRects = coverRects({ x: 0, y: 0, w: COLS, h: ROWS }, (tx, ty) => floorArea[ty * COLS + tx] === 0);
+    this.wallFaces(bandRects, 0.72);
     // Champagne seam along the inner edge of the band (the lit edge of every district).
-    band.lineStyle(2, COLOR.champagne, 0.45);
-    for (const d of DISTRICTS) band.strokeRect(px(d.rect.x) - 1, px(d.rect.y) - 1, px(d.rect.w) + 2, px(d.rect.h) + 2);
-    band.lineStyle(1, COLOR.champagne, 0.3);
-    for (const g of GATES) band.strokeRect(px(g.rect.x) - 0.5, px(g.rect.y) - 0.5, px(g.rect.w) + 1, px(g.rect.h) + 1);
+    const edge = s.add.graphics().setDepth(DEPTH.wall + 0.04);
+    edge.lineStyle(2, COLOR.champagne, 0.45);
+    for (const d of DISTRICTS) edge.strokeRect(px(d.rect.x) - 1, px(d.rect.y) - 1, px(d.rect.w) + 2, px(d.rect.h) + 2);
+    edge.lineStyle(1, COLOR.champagne, 0.3);
+    for (const g of GATES) edge.strokeRect(px(g.rect.x) - 0.5, px(g.rect.y) - 0.5, px(g.rect.w) + 1, px(g.rect.h) + 1);
   }
 
-  private drawBlocks(g: Phaser.GameObjects.Graphics, runs: Rect[], seams: boolean): void {
-    g.fillStyle(COLOR.wallBlock, 1);
-    for (const r of runs) g.fillRect(px(r.x), px(r.y), px(r.w), px(r.h));
-    // A faint lower edge for volume.
+  /**
+   * One wall-face TileSprite per rect over a dark block base. The texture is
+   * offset by world position so the pattern runs continuously across rects.
+   * Off-screen sprites are culled by the camera; nothing here is per frame.
+   */
+  private wallFaces(rects: Rect[], alpha: number): void {
+    const s = this.scene;
+    const scale = floorScale(s, "wall") * 0.5;
+    const base = s.add.graphics().setDepth(DEPTH.wall);
+    base.fillStyle(COLOR.wallBlock, 1);
+    for (const r of rects) {
+      base.fillRect(px(r.x), px(r.y), px(r.w), px(r.h));
+      const face = s.add
+        .tileSprite(px(r.x), px(r.y), px(r.w), px(r.h), TEX.floor("wall"))
+        .setOrigin(0, 0)
+        .setDepth(DEPTH.wall + 0.02)
+        .setTint(COLOR.wallFace)
+        .setAlpha(alpha);
+      face.setTileScale(scale);
+      face.setTilePosition(px(r.x), px(r.y));
+    }
+  }
+
+  /** Volume for a block: a void lower edge and a champagne seam on the lit (top/left) edge. */
+  private drawSeams(g: Phaser.GameObjects.Graphics, runs: Rect[]): void {
     g.fillStyle(COLOR.void, 0.55);
     for (const r of runs) g.fillRect(px(r.x), px(r.y + r.h) - 4, px(r.w), 4);
-    if (!seams) return;
-    // Champagne seam on the lit (top/left) edge of every interior block.
     g.fillStyle(COLOR.champagne, 0.42);
     for (const r of runs) {
       g.fillRect(px(r.x), px(r.y), px(r.w), 2);
@@ -242,6 +287,28 @@ export class Floors {
     }
     g.fillStyle(COLOR.wallEdge, 1);
     for (const r of runs) g.fillRect(px(r.x) + 2, px(r.y) + 2, px(r.w) - 4, 1);
+  }
+
+  /** Rain over the Wet Grid, emitting only while the viewer is there. */
+  private buildRain(): void {
+    const r = DISTRICT_BY_ID.wet.rect;
+    const zone = new Phaser.Geom.Rectangle(px(r.x) - 48, px(r.y) - 160, px(r.w) + 96, px(r.h) + 160);
+    this.rain = this.scene.add
+      .particles(0, 0, TEX.rain, {
+        emitZone: { type: "random", source: zone, quantity: 1 },
+        speedY: { min: 460, max: 640 },
+        speedX: { min: -46, max: -18 },
+        lifespan: 720,
+        alpha: { start: 0.5, end: 0.04 },
+        scaleY: { min: 0.9, max: 1.7 },
+        scaleX: 1,
+        quantity: 3,
+        frequency: 14,
+        blendMode: Phaser.BlendModes.ADD,
+        emitting: false,
+      })
+      .setDepth(DEPTH.fx - 1);
+    this.rain.setParticleTint(0xcfe0ff);
   }
 
   private buildGates(): void {
@@ -282,11 +349,20 @@ export class Floors {
     for (const p of POI_LIST) if (p.id.startsWith("crt-altar")) altarAt(p.id, p.x, p.y);
     for (const n of NODE_LIST) altarAt(n.id, n.x, n.y);
 
-    // Glows: oval light pools in the Kerb and the Ring, drawn additively.
+    // Glows: oval light pools in the Kerb and the Ring, drawn additively; a pool at every shrine.
     const glow = s.add.graphics().setDepth(DEPTH.prop).setBlendMode(Phaser.BlendModes.ADD);
     for (const id of ["kerb", "ring"] as const) {
       const d = DISTRICT_BY_ID[id];
       this.drawOvals(glow, d);
+    }
+    for (const p of POI_LIST) {
+      if (p.kind !== "shrine") continue;
+      glow.fillStyle(COLOR.champagneLight, 0.14);
+      glow.fillEllipse(p.x, p.y + 4, 116, 62);
+      glow.fillStyle(COLOR.champagneLight, 0.12);
+      glow.fillEllipse(p.x, p.y + 4, 64, 34);
+      glow.lineStyle(1, COLOR.champagne, 0.3);
+      glow.strokeEllipse(p.x, p.y + 4, 116, 62);
     }
     // Bell posts.
     const solid = s.add.graphics().setDepth(DEPTH.prop);
@@ -364,6 +440,17 @@ export class Floors {
   /** Lavender scanlines over every frozen district. */
   setFrozen(ids: readonly string[]): void {
     for (const [id, overlay] of this.frozenOverlays) overlay.setVisible(ids.includes(id));
+  }
+
+  /** Rain falls on the Wet Grid while you are in it; heavier and wine-lit in meltdown weather. */
+  setRain(district: DistrictId, band: WeatherBand): void {
+    const rain = this.rain;
+    if (!rain) return;
+    const on = district === "wet";
+    rain.emitting = on;
+    if (!on) return;
+    rain.frequency = band === "meltdown" ? 6 : band === "clear" ? 36 : 14;
+    rain.setParticleTint(band === "meltdown" ? 0xffb3c6 : band === "fat" ? 0xd9d0f2 : 0xcfe0ff);
   }
 
   /** POI-driven props: hall lamps, altar brightness, the hot street. */
