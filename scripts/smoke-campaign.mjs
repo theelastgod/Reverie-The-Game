@@ -41,6 +41,27 @@ const ROUTE = {
 };
 
 const sockets = [];
+
+// ---- measurement: how long the opening takes a bot, and how much a person reads on the way.
+const T0 = Date.now();
+const phases = [];
+let phaseStart = T0;
+let phaseLabel = 'connect';
+function phase(label) {
+  const now = Date.now();
+  phases.push({ label: phaseLabel, ms: now - phaseStart });
+  phaseLabel = label;
+  phaseStart = now;
+}
+const words = text => (typeof text === 'string' && text.trim() ? text.trim().split(/\s+/).length : 0);
+const read = { dialogue: 0, spoken: 0, journal: 0, notices: 0, decisions: 0 };
+const seenText = new Set();
+function readOnce(bucket, text) {
+  if (!text || seenText.has(text)) return;
+  seenText.add(text);
+  read[bucket] += words(text);
+}
+
 function wait(state, predicate, label, ms = 20000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
@@ -65,7 +86,15 @@ async function connect(cookie) {
   ws.on('message', raw => {
     const data = JSON.parse(raw.toString());
     if (data.t === 'hello') state.hello = data;
-    if (data.t === 'snap') state.snap = data;
+    if (data.t === 'snap') {
+      state.snap = data;
+      const y = data.you;
+      readOnce('spoken', y.heard);
+      readOnce('spoken', y.wink);
+      for (const n of y.notices ?? []) readOnce('notices', n.text);
+      if (data.objective) { readOnce('journal', data.objective.title); readOnce('journal', data.objective.detail); }
+      if (y.dialogue) { readOnce('dialogue', y.dialogue.text); readOnce('dialogue', y.dialogue.wink); for (const c of y.dialogue.choices) readOnce('dialogue', c.label); }
+    }
   });
   await wait(state, () => state.hello && state.snap, 'connection');
   return state;
@@ -132,6 +161,24 @@ async function converse(state, npcId, flag) {
   assert.ok(you(state).flags[flag], `${npcId} conversation sets ${flag}`);
 }
 
+/** The opening, measured: bot time by phase, words a person reads, and an estimate of a first playthrough. */
+function report() {
+  const total = (Date.now() - T0) / 1000;
+  const sum = prefix => phases.filter(p => p.label.startsWith(prefix)).reduce((a, p) => a + p.ms, 0) / 1000;
+  const walk = sum('walk'), fight = sum('fight'), talk = sum('talk') + sum('verb');
+  const wordsTotal = read.dialogue + read.spoken + read.journal + read.notices;
+  const readingMin = wordsTotal / 180; // a careful reader
+  const humanWalkMin = (walk * 1.8) / 60; // a person wanders, looks, misses a corner
+  const fightMin = Math.max(fight, 45) / 60; // a first fight with a dodge to learn
+  const decideMin = (read.decisions * 40) / 60; // forty seconds per real choice
+  const lowerBound = (total / 60 + readingMin).toFixed(1);
+  const estimate = (humanWalkMin + fightMin + readingMin + decideMin).toFixed(1);
+  console.log(`measure: bot ${total.toFixed(1)} s (walk ${walk.toFixed(1)} s, fight ${fight.toFixed(1)} s, talk+verbs ${talk.toFixed(1)} s)`);
+  console.log(`measure: words shown ${wordsTotal} (dialogue ${read.dialogue}, spoken ${read.spoken}, journal ${read.journal}, notices ${read.notices}); decisions ${read.decisions}`);
+  console.log(`measure: first playthrough lower bound ${lowerBound} min; estimate ${estimate} min (target 15–20)`);
+  for (const p of phases) console.log(`  ${p.label.padEnd(22)} ${(p.ms / 1000).toFixed(1)} s`);
+}
+
 try {
   const { state: me } = await newSession();
   assert.equal(me.hello.v, 2, 'protocol v2');
@@ -140,14 +187,18 @@ try {
   assert.ok(dist(you(me), T.spawn) < 4, 'spawned at the guest spawn');
 
   // Intake: the clerk comes to you; strike until it falls.
+  phase('walk: intake');
   await walk(me, ROUTE.toIntake);
+  phase('fight: intake');
   const strikes = setInterval(() => send(me, { t: 'strike' }), 450);
   try { await wait(me, () => you(me).flags.intake, 'intake clerk falls', 25000); }
   finally { clearInterval(strikes); }
   assert.ok(you(me).hp > 0, 'still standing after intake');
 
   // First node: keep it when nobody has; the world persists between runs, so fall back to extracting.
+  phase('walk: node');
   await walk(me, ROUTE.toNode);
+  read.decisions++;
   const node = me.snap.nodes.find(n => n.id === 'nave-node-1');
   assert.ok(node, 'nave-node-1 is in view');
   const op = node.kept ? (node.charges > 0 ? 'extract' : null) : 'keep';
@@ -157,32 +208,51 @@ try {
   } else console.log('note: nave-node-1 already kept and empty; skipping the node beat');
 
   // The party, in the Nave.
+  phase('walk: ord');
   await walk(me, ROUTE.toOrd);
+  phase('talk: ord');
   await converse(me, 'ord', 'talked:ord');
   await converse(me, 'ord', 'weather:ord');
+  phase('walk: quill');
   await walk(me, ROUTE.toQuill);
+  phase('talk: quill');
   await converse(me, 'quill', 'talked:quill');
+  phase('walk: nara');
   await walk(me, ROUTE.toNara);
+  phase('talk: nara');
   await converse(me, 'nara', 'talked:nara');
 
   // The memorial recorder, then the burial.
+  phase('walk: recorder');
   await walk(me, ROUTE.toRecorder);
+  read.decisions++;
+  phase('verb: memorial');
   await useVerb(me, 'memorial-recorder', byKey('Q'), () => !!you(me).flags.memorial, 'memorial decision');
+  phase('walk: plot');
   await walk(me, ROUTE.toPlot);
+  phase('verb: burial');
   await useVerb(me, 'nara-plot', byKey('F'), () => !!you(me).flags['buried:nara'], 'burial');
   assert.ok(you(me).readiness > 0, 'burial gives readiness');
+  phase('walk: nara again');
   await walk(me, ROUTE.backToNara);
+  phase('talk: nara weather');
   await converse(me, 'nara', 'weather:nara');
 
   // Name the weather at the Safety plaque.
+  phase('walk: plaque');
   await walk(me, ROUTE.toPlaque);
+  read.decisions++;
+  phase('verb: plaque');
   await useVerb(me, 'safety-plaque', byKey('F'), () => !!you(me).flags['weather:safety'], 'read the plaque');
   assert.ok(you(me).flags['weather:ord'] && you(me).flags['weather:nara'], 'Ord and Nara each gave their weather');
   await useVerb(me, 'safety-plaque', verbs => verbs.find(v => v.key === 'E') ?? verbs.find(v => v.key === 'F'), () => !!you(me).flags['weather:named'], 'name the weather');
   assert.ok(you(me).choices.weather, 'the weather has a name');
 
   // The going-under threshold locks a guest.
+  phase('walk: threshold');
   await walk(me, ROUTE.toUnder);
+  read.decisions++;
+  phase('verb: threshold');
   await useVerb(me, 'going-under', byKey('F'), () => you(me).locked, 'guest lock');
   assert.equal(you(me).guest, true, 'still a guest');
   assert.equal(you(me).wink, '', 'a guest never gets a Wink');
@@ -200,6 +270,8 @@ try {
   assert.equal(you(me).movement, 2, 'Movement II');
   assert.equal(you(me).hp, 100, 'woke whole');
 
+  phase('end');
+  report();
   clearTimeout(deadline);
   console.log('PASS: Movement I — intake, first node, Ord / Quill / Nara, memorial, burial, weather named, guest lock; link 7777; under → the Care, Movement II');
   for (const ws of sockets) ws.close();

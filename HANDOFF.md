@@ -51,6 +51,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   rectangle cover of the wall tiles (no per-frame masks), rain on the Wet Grid
   by weather band, shrine light pools, walk bob and lean, idle breath, hit-stop
   squash and a shadow under every body.
+- Opening measured (2026-09-25): the campaign smoke reports bot time by phase,
+  words shown by source, decisions, and a first-playthrough estimate.
 - Shape migration (2026-09-25): `src/sim/migrate.ts` rebuilds a checkpoint
   from any earlier build over the current defaults (nodes, npcs, pois merged
   by id; enemies and transient player state rebuilt; every scalar type-checked;
@@ -102,10 +104,20 @@ they are discovered; keep this list honest.
    Higgsfield budget after this session: about 170 credits, for replacements only.
 2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
    (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
-3. **Measure the opening.** Script a bot through Movement I over the wire
-   (extend `scripts/smoke-campaign.mjs` with real walking) and time it; tune
-   distances and copy toward a 15–20 minute first playthrough.
-4. **Combat readability.** Directional telegraph arcs, cold ledger damage
+3. **Opening density.** Measured 2026-09-25 (`scripts/smoke-campaign.mjs`
+   prints `measure:` lines): bot 45 s (walk 40 s, fight 3 s), 996 words on the
+   critical path (dialogue 459, spoken 108, journal 315, notices 114), four
+   decisions; estimated first playthrough about 10 min against the 15–20
+   target. Close the gap with authored beats, not padding: the first fight must
+   ask for one dodge and one heavy (see item 4); give Quill's and Ord's first
+   conversations a choice each with a consequence; put the second yield node
+   and Desk Three on the way to Quill; let the recorder be heard before it is
+   decided; a short second clerk on the way to the plaque. Re-measure after
+   each change and keep the numbers here.
+4. **Combat readability.** The Intake Clerk falls to four light hits in three
+   seconds before its first telegraph lands; raise its health and shorten its
+   recovery so a first fight shows at least two telegraphs and rewards a heavy
+   interrupt. Directional telegraph arcs, cold ledger damage
    ticks (no coin shower), enemy variety in feel (warden slow and heavy,
    enforcer fast), heavy interrupt feedback.
 5. **PvP surfaces.** Hot-street flag zone visuals, ruin-duel spectator
