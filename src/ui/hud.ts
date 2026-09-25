@@ -175,7 +175,7 @@ export class Hud {
     this.minimap = mountMinimap(root);
     this.lock = mountLock(root, serial => this.cb.link(serial));
     this.events = mountEvents(q(root, "#hud-events"));
-    this.ledger = mountLedger(q(root, "#hud-ledger"), { market: (op, args) => this.cb.market(op, args) });
+    this.ledger = mountLedger(q(root, "#hud-ledger-panel"), { market: (op, args) => this.cb.market(op, args) });
 
     this.stance?.addEventListener("click", this.onStance);
     this.kit?.addEventListener("click", this.onKit);

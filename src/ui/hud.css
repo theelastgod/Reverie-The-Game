@@ -391,7 +391,7 @@ canvas { display: block; }
 @media (max-width: 1200px) { .events { top: 112px; } }
 
 /* ledger: holdings, claims, the Grid */
-.ledger {
+.ledger-panel {
   position: absolute; left: var(--gutter); top: 120px; width: 300px;
   max-height: calc(100vh - 120px - var(--marquee-h) - 140px); overflow: auto; pointer-events: auto;
   font-size: 11px; letter-spacing: 0.04em;
@@ -416,7 +416,7 @@ canvas { display: block; }
 .ledger-btn { border: 2px solid var(--ink); background: var(--paper); box-shadow: 2px 2px 0 var(--ink); font: inherit; font-weight: 700; letter-spacing: 0.08em; padding: 2px 6px; cursor: pointer; }
 .ledger-btn:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
 .ledger-btn:not(:disabled):active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
-@media (max-width: 1200px) { .ledger { top: 170px; width: 260px; } }
+@media (max-width: 1200px) { .ledger-panel { top: 170px; width: 260px; } }
 
 /* minimap */
 .minimap {
