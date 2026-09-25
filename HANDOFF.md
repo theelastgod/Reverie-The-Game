@@ -51,6 +51,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   rectangle cover of the wall tiles (no per-frame masks), rain on the Wet Grid
   by weather band, shrine light pools, walk bob and lean, idle breath, hit-stop
   squash and a shadow under every body.
+- Combat readability (2026-09-25): the Intake Clerk has twice the health, so
+  a first fight shows two telegraphs and a heavy interrupt pays (the bot's
+  fight went from 3 s to 7 s); telegraphs are wedges aimed at their target
+  over a faint reach ring; an interrupted swing shows a longer sky window and
+  a burst; hp changes tick as cold ledger numbers over the body; enemies
+  differ in silhouette and gait (wardens plod, enforcers hurry).
 - Opening measured (2026-09-25): the campaign smoke reports bot time by phase,
   words shown by source, decisions, and a first-playthrough estimate.
 - Shape migration (2026-09-25): `src/sim/migrate.ts` rebuilds a checkpoint
@@ -120,17 +126,17 @@ they are discovered; keep this list honest.
    interrupt. Directional telegraph arcs, cold ledger damage
    ticks (no coin shower), enemy variety in feel (warden slow and heavy,
    enforcer fast), heavy interrupt feedback.
-5. **PvP surfaces.** Hot-street flag zone visuals, ruin-duel spectator
+4. **PvP surfaces.** Hot-street flag zone visuals, ruin-duel spectator
    readout, House war countdown in the HUD, Clearing contest keep/extract bar.
-6. **Economy panels.** Claims desk (file / bank / take with the hold timer),
+5. **Economy panels.** Claims desk (file / bank / take with the hold timer),
    market (list / buy / cancel), inventory grouped cult / exhibition / paper.
-7. **Side quest surfaces.** Active side quests with bearings in the journal;
+6. **Side quest surfaces.** Active side quests with bearings in the journal;
    quest givers marked in the world.
-8. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
+7. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
     the cookie session stays as the guest identity.
-9. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
+8. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
     (history, passings, claims) with additive migrations.
-10. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+9. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
     into `banked` only. Keep the fairness tests green.
 
 ## Rules

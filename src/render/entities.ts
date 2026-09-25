@@ -60,6 +60,27 @@ type Body = {
   /** Smoothed speed in px/s from the lerp, for the walk bob. */
   speed: number;
   visible: boolean;
+  /** Walk-cycle rate: wardens plod, enforcers hurry. */
+  gait: number;
+  /** Last known hp, for ledger ticks. */
+  hp: number;
+  /** Last enemy state, to catch a heavy interrupt. */
+  state: string;
+};
+
+/** Enemy feel by kind: silhouette scale and gait. */
+const ENEMY_FEEL: Record<Enemy["kind"], { size: number; gait: number }> = {
+  clerk: { size: 1, gait: 1 },
+  intake: { size: 1.04, gait: 0.9 },
+  warden: { size: 1.14, gait: 0.65 },
+  enforcer: { size: 0.94, gait: 1.45 },
+  dummy: { size: 1, gait: 0 },
+};
+
+/** Fx hooks Entities raises from snapshot diffs; the scene wires them to Fx. */
+export type EntityEvents = {
+  ledger: (x: number, y: number, text: string, tone: "hot" | "paper" | "sky" | "muted") => void;
+  interrupt: (x: number, y: number) => void;
 };
 
 const WALK_SPEED_MIN = 14; // px/s; below this the body idles
@@ -108,6 +129,8 @@ export class Entities {
   private tick = 0;
   private time = 0;
   private youBody: Body | null = null;
+  private youHp = -1;
+  events: EntityEvents | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -154,6 +177,11 @@ export class Entities {
   }
 
   private fillYou(you: YouView): void {
+    // A cold ledger tick when your own hp drops (never on respawn's refill).
+    if (this.youHp >= 0 && you.hp < this.youHp && !you.dead && this.youBody) {
+      this.events?.ledger(this.youBody.x, this.youBody.y - 70, `−${Math.round(this.youHp - you.hp)}`, "hot");
+    }
+    this.youHp = you.hp;
     const y = this.youLike;
     y.id = you.id;
     y.name = you.name;
@@ -204,6 +232,7 @@ export class Entities {
     const b: Body = {
       img, x, y, tx: x, ty: y, seen: this.tick, frozen: false, aura: null,
       baseSX: img.scaleX, baseSY: img.scaleY, size: 1, phase: 0, seed: Math.random() * Math.PI * 2, speed: 0, visible: true,
+      gait: 1, hp: -1, state: "",
     };
     return b;
   }
@@ -260,10 +289,17 @@ export class Entities {
     const dead = e.state === "dead";
     b.img.setVisible(!dead);
     b.visible = !dead;
+    const feel = ENEMY_FEEL[e.kind];
+    b.gait = feel.gait;
+    // Ledger tick for damage dealt to it; interrupt burst when a heavy cuts its telegraph.
+    if (b.hp >= 0 && e.hp < b.hp && !dead) this.events?.ledger(b.x, b.y - 64, `−${Math.round(b.hp - e.hp)}`, "paper");
+    if (b.state === "telegraph" && e.state === "recover" && e.t > ENEMY[e.kind].recovery + 0.05) this.events?.interrupt(b.x, b.y);
+    b.hp = dead ? -1 : e.hp;
+    b.state = e.state;
     if (!dead) {
       b.img.setTint(e.hp / e.maxHp < LOW_HP ? 0xff9ab0 : ENEMY_TINT[e.tint]);
-      b.size = e.state === "telegraph" ? 1.08 : 1;
-      b.frozen = e.state === "recover" && e.t > 0.7;
+      b.size = feel.size * (e.state === "telegraph" ? 1.08 : 1);
+      b.frozen = e.state === "recover" && e.t > ENEMY[e.kind].recovery * 0.8;
     }
   }
 
@@ -368,7 +404,7 @@ export class Entities {
     let sx = 1;
     let sy = 1;
     if (moving) {
-      const rate = Math.min(1.5, Math.max(0.6, b.speed / 170));
+      const rate = Math.min(1.5, Math.max(0.6, b.speed / 170)) * (b.gait || 1);
       b.phase += dtMs * 0.0125 * rate;
       bob = Math.abs(Math.sin(b.phase)) * BOB_PX;
       lean = Math.sin(b.phase) * LEAN_DEG * (b.img.flipX ? -1 : 1);
@@ -432,7 +468,7 @@ export class Entities {
       }
     }
 
-    // Enemies: telegraph ring grows to the reach (red), recover ring is sky.
+    // Enemies: a telegraph is a wedge toward its target that fills to the reach (red); recovery is a sky ring.
     for (const e of snap.enemies) {
       const b = this.enemies.get(e.id);
       if (!b || e.state === "dead") continue;
@@ -440,13 +476,31 @@ export class Entities {
       if (e.state === "telegraph" && stats.telegraph > 0) {
         const p = 1 - Math.max(0, Math.min(1, e.t / stats.telegraph));
         const r = 12 + (stats.reach - 12) * p;
-        g.lineStyle(2, COLOR.hot, 0.9);
-        g.strokeCircle(b.x, b.y - 2, r);
-        g.fillStyle(COLOR.wine, 0.18 + 0.2 * p);
-        g.fillCircle(b.x, b.y - 2, r);
+        const target = e.targetId === you.id ? this.youBody : this.players.get(e.targetId) ?? null;
+        const cx = b.x;
+        const cy = b.y - 2;
+        // Faint full reach so the danger's size is legible before the wedge commits.
+        g.lineStyle(1, COLOR.wine, 0.5);
+        g.strokeCircle(cx, cy, stats.reach);
+        if (target) {
+          const a = Math.atan2(target.y - cy, target.x - cx);
+          const half = 0.62;
+          g.fillStyle(COLOR.wine, 0.22 + 0.3 * p);
+          g.slice(cx, cy, r, a - half, a + half, false);
+          g.fillPath();
+          g.lineStyle(2, COLOR.hot, 0.95);
+          g.slice(cx, cy, r, a - half, a + half, false);
+          g.strokePath();
+        } else {
+          g.lineStyle(2, COLOR.hot, 0.9);
+          g.strokeCircle(cx, cy, r);
+          g.fillStyle(COLOR.wine, 0.18 + 0.2 * p);
+          g.fillCircle(cx, cy, r);
+        }
       } else if (e.state === "recover") {
-        g.lineStyle(1.5, COLOR.sky, 0.8);
-        g.strokeCircle(b.x, b.y - 2, stats.reach * 0.6);
+        const open = e.t > stats.recovery; // an interrupted swing: a longer, brighter window
+        g.lineStyle(open ? 2.5 : 1.5, COLOR.sky, open ? 1 : 0.8);
+        g.strokeCircle(b.x, b.y - 2, stats.reach * (open ? 0.75 : 0.6));
       }
     }
 

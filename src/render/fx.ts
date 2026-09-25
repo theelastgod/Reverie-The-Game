@@ -95,6 +95,32 @@ export class Fx {
     this.scene.cameras.main.shake(60, 0.0022);
   }
 
+  private readonly ledgers: Phaser.GameObjects.Text[] = [];
+  private static readonly LEDGER_TONE = { hot: "#ff2d6b", paper: "#ffffff", sky: "#7eb6ff", muted: "#9a9a9a" } as const;
+
+  /** A cold ledger tick: a small number that rises and fades. No coin shower. */
+  ledger(x: number, y: number, text: string, tone: keyof typeof Fx.LEDGER_TONE): void {
+    let t = this.ledgers.find((l) => !l.visible);
+    if (!t) {
+      t = this.scene.add
+        .text(0, 0, "", { fontFamily: UI_FONT, fontSize: "12px", fontStyle: "700", color: "#ffffff", backgroundColor: "rgba(10,10,10,0.78)", padding: { x: 4, y: 1 } })
+        .setOrigin(0.5, 1)
+        .setDepth(DEPTH.fx)
+        .setResolution(2);
+      this.ledgers.push(t);
+    }
+    t.setText(text).setColor(Fx.LEDGER_TONE[tone]).setPosition(Math.round(x + (Math.random() - 0.5) * 16), Math.round(y)).setAlpha(1).setVisible(true);
+    this.scene.tweens.add({ targets: t, y: y - 26, alpha: 0, duration: 520, ease: "Quad.Out", onComplete: () => t!.setVisible(false) });
+  }
+
+  /** A heavy cut a telegraph: a sky ring bursts outward and the word lands. */
+  interrupt(x: number, y: number): void {
+    const ring = this.scene.add.circle(x, y - 2, 14).setStrokeStyle(2.5, COLOR.sky, 1).setDepth(DEPTH.fx).setScale(1, 0.6);
+    this.scene.tweens.add({ targets: ring, radius: 52, alpha: 0, duration: 380, ease: "Cubic.Out", onComplete: () => ring.destroy() });
+    this.ledger(x, y - 56, "INTERRUPT", "sky");
+    this.scene.cameras.main.shake(40, 0.0016);
+  }
+
   // ------------------------------------------------------------ private lines and states
 
   /** A champagne ripple under you when a Wink arrives. */
@@ -175,6 +201,7 @@ export class Fx {
     this.underTween?.stop();
     for (const s of this.strikes) s.destroy();
     for (const g of this.ghosts) g.destroy();
+    for (const l of this.ledgers) l.destroy();
     this.shimmer.destroy();
     this.veil.destroy();
     this.wing.destroy();

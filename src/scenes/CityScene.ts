@@ -73,6 +73,10 @@ export class CityScene extends Phaser.Scene {
     this.floors = new Floors(this);
     this.entities = new Entities(this);
     this.fx = new Fx(this);
+    this.entities.events = {
+      ledger: (x, y, text, tone) => this.fx.ledger(x, y, text, tone),
+      interrupt: (x, y) => this.fx.interrupt(x, y),
+    };
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, WORLD_W, WORLD_H);

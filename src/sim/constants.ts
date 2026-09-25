@@ -42,7 +42,7 @@ export const FACE_DURATION = 20;
 // Enemies
 export const ENEMY = {
   clerk: { hp: 44, damage: 14, telegraph: 0.6, recovery: 0.85, aggro: 96, reach: 44, speed: 110, respawn: 40 },
-  intake: { hp: 88, damage: 14, telegraph: 0.7, recovery: 0.85, aggro: 120, reach: 44, speed: 100, respawn: 12 },
+  intake: { hp: 176, damage: 14, telegraph: 0.7, recovery: 0.85, aggro: 120, reach: 44, speed: 100, respawn: 12 },
   warden: { hp: 90, damage: 20, telegraph: 0.8, recovery: 1.0, aggro: 110, reach: 52, speed: 90, respawn: 60 },
   enforcer: { hp: 70, damage: 18, telegraph: 0.5, recovery: 0.7, aggro: 130, reach: 48, speed: 150, respawn: 50 },
   dummy: { hp: 60, damage: 0, telegraph: 0, recovery: 0, aggro: 0, reach: 0, speed: 0, respawn: 0 },
