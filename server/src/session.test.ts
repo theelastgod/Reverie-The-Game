@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import worker, { ReverieWorld, sameOrigin, sessionToken } from "./index";
 import { emptyWorld, spawnGuest } from "../../src/sim/world";
+import { WET_GRID } from "../../src/sim/campaign";
 
 const token = "12345678-1234-4123-8123-123456789abc";
 function socket(id = "a") {
@@ -117,6 +118,19 @@ describe("durable world sessions", () => {
     const ws = socket();
     await worldHarness(new Map(), [ws]);
     expect(ws.close).toHaveBeenCalledWith(1012, expect.any(String));
+  });
+
+  it("owns flag eligibility and persists the explicit request without accepting supplied state", async () => {
+    const saved = emptyWorld(); saved.players.set("a", spawnGuest("a"));
+    const ws = socket();
+    const { world, data } = await worldHarness(new Map([["world:v1", saved]]), [ws]);
+    await world.webSocketMessage(ws as never, JSON.stringify({ t: "flag", x: WET_GRID.x, y: WET_GRID.y, guest: false, flagged: true }));
+    expect(data.get(`player:${token}`)).toMatchObject({ guest: true, flagged: false, x: 192 });
+    const ready = emptyWorld();
+    ready.players.set("a", { ...spawnGuest("a"), guest: false, x: WET_GRID.x, y: WET_GRID.y });
+    const linked = await worldHarness(new Map([["world:v1", ready]]), [ws]);
+    await linked.world.webSocketMessage(ws as never, '{"t":"flag"}');
+    expect(linked.data.get(`player:${token}`)).toMatchObject({ guest: false, flagged: true });
   });
 });
 

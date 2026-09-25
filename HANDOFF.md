@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 272** — Follow `DESIGN.md`: verify and measure the rendered opening, carry the memorial decision into later consequences, and audit personal Movement III requirements. No more repeated “as people” plaques. No mint.
+**Next stage: 273** — Follow `DESIGN.md`: verify and measure the rendered opening, carry the memorial decision into later consequences, and enforce personal Movement III requirements at organ interactions. No more repeated “as people” plaques. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1152,12 +1152,20 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - No extra Bestand, Winke, readiness, aura or climate changes are awarded by the memorial. Its materials go directly to the burial. Ordinary finite yield nodes remain unchanged. Replaying or reversing the recorded decision grants nothing.
 - Field notes guide Nara → recorder → burial, with contextual E/Q controls. First contact with Nara takes priority over the nearby grave so the two interaction radii cannot trap a newcomer.
 - Added original built-in-generated companion art at `public/assets/memorial-recorder-v1.jpg`, guided by the existing Imagine burial image. Source preserved; exact prompt and provenance in `brand/memorial-recorder-v1.md`. Displayed only in the journal, loaded on demand.
-- Validation: 346 tests covered across the full suite and corrected campaign regression run; client/server type-checks and production build passed. `scripts/smoke-memorial.mjs` passed against local Wrangler for both choices, shared display changes, repeat protection, burial consequences and saved reconnect. Run it alongside the world and intake smoke checks after deployment.
+- Validation: 346 tests covered across the full suite and corrected campaign regression run; client/server type-checks and production build passed. `scripts/smoke-memorial.mjs` passed against local Wrangler for both choices, shared display changes, repeat protection, burial consequences and saved reconnect. World, intake and both memorial branches passed against the deployed Worker; the served bundle, art bytes and release revision matched GitHub. The intake check needed a retry after a relief wait failure and temporary connection timeouts (see Stage 273 timing audit).
 - Rendered visual/performance acceptance remains open: the browser service exposed no available surface during this pass. The generated asset was inspected directly; no frame-rate or campaign-duration claim is established.
 
-## Stage 272 (do this next)
+## Stage 272 (landed)
+- PvP now checks both participants' flags before damage, Storm effects, death, spoils or hit feedback. Standing by a grave never authorizes damage to an unflagged witness. Ruin-duel rewards still apply to flagged participants around live wreckage.
+- Active truces prevent damage in both directions even if a saved flag is stale. Flag requests cannot cut a truce short. The old “truce as people” path now actually unflags both participants and grants the same 20-second protection; it previously only narrated that change.
+- Entering hot streets or a residual season no longer flags people automatically. Seasonal and bracket dialogue leave combat choice alone. V at Wet Grid sends an explicit flag intent, available even when an older story interaction occupies F. The server rejects remote, guest and locked requests. Truce expiry leaves both players unflagged until they choose to return.
+- The practice area protects both sides of its 80-unit boundary from PvP. The dummy and clerk combat still work. Existing guest protection, equal damage, banked/cult safety and bounded spectator rewards remain.
+- Validation: client and server type-checks and production build passed; 359 tests covered across the full suite and corrected campaign/PvP/server rerun. World, intake, memorial and two-Angel PvP smoke checks passed against local Wrangler. Added 12 simulation regressions and a public-protocol flag persistence test. Updated earlier combat fixtures to declare participant flags; insurance/print-loss checks now use clerk deaths so they do not rely on attacking unflagged people. The two-Angel smoke script walks the real corridor, checks no/single/both flags, deals one ordinary hit, then tests truce and saved reconnect without killing either participant.
+
+## Stage 273 (do this next)
 - Complete rendered visual/performance acceptance when screenshot capture works; inspect restored WebGL behavior and laptop HUD overlap. Do not claim the full visual gate from DOM checks alone.
-- Follow `DESIGN.md`. Measure the complete opening and carry the memorial decision into later party consequences. The memorial is a narrative material choice; it does not replace the finite shared node economy. Audit organ interactions for personal Movement III requirements and later party availability. Audit Angel PvP eligibility against flag, truce and arena rules before broadening combat.
+- Follow `DESIGN.md`. Measure the complete opening and carry the memorial decision into later party consequences. The memorial is a narrative material choice; it does not replace the finite shared node economy. Audit organ interactions for personal Movement III requirements and later party availability: `applyOrgan` still checks only the shared `m3Open` flag before granting a new character organ progress or dispatching legacy branches. Require their own entry and preserve access to introductory organ beats after another player changes the shared district. Carry the memorial decision into a playable party consequence. PvP flag/truce/practice enforcement landed in Stage 272; explicit duel pairing and individual opt-out are still future design work.
+- Live timing audit: alarm delivery advances a fixed 50ms per callback. One capture advanced two simulation seconds in 3.3 wall seconds; one relief-shift smoke wait timed out before a later retry passed. Measure and correct drift with bounded server-owned elapsed-time steps before claiming combat timing/performance acceptance. Do not merely lengthen tests to hide slow simulation.
 - Audit other earners and define event identity before adding seasonal Passing rewards. Preserve named interactions but prioritize playable consequences and bounded resources over additional plaques.
 - Continue toward PROMPT.md. No mint, Base or real-value settlement.
 

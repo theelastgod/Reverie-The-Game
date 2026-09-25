@@ -26,8 +26,8 @@ describe("deliberate dodge", () => {
   });
   it("walking in Restraint is vulnerable; a timed step evades and prevents simultaneous attacks", () => {
     let w = emptyWorld();
-    w.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
-    w.players.set("b", { ...spawnGuest("b"), guest: false, restraint: true, x: 220, y: 480 });
+    w.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 200, y: 480 });
+    w.players.set("b", { ...spawnGuest("b"), guest: false, flagged: true, restraint: true, x: 220, y: 480 });
     w.intents.set("b", { ...idle, up: true });
     expect(applyStrike(w, "a").players.get("b")!.hp).toBeLessThan(100);
     w = applyDodge(w, "b", 0, -1);

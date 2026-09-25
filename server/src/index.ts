@@ -18,6 +18,7 @@ import {
   applyRuinBack,
   applyParty,
   applyTruce,
+  applyFlag,
   applyCyber,
   applyDwell,
   applyOperator,
@@ -243,6 +244,10 @@ export class ReverieWorld {
       this.broadcast();
     } else if (data.t === "party") {
       this.w = applyParty(this.w, id);
+      await this.checkpoint();
+      this.broadcast();
+    } else if (data.t === "flag") {
+      this.w = applyFlag(this.w, id);
       await this.checkpoint();
       this.broadcast();
     } else if (data.t === "truce") {

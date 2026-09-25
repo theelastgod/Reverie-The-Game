@@ -21,6 +21,7 @@ Dodge is a deliberate input with a brief window and a recovery period. Walking i
 - Shift plus movement requests a server-controlled dodge with collision, duration and cooldown. Restraint modestly extends its window. No token or serial damage modifier.
 - Reduce floor materials and floating plaques. Reuse authored stills in field notes.
 - A reusable intake shift gives every arrival access to a readable first fight. Hits, misses and interrupts all recover; participation belongs to each character.
+- PvP requires both Angels to flag explicitly. Truces protect both directions; the practice ground is safe for people. Hot streets and season progress do not choose combat for the player.
 - Nara's recorder makes the first resource decision part of a burial: preserve a voice and use cloth, or dismantle copper for coffin bindings. Personal decisions persist while the public memorial changes. No additional numeric reward is created; the original finite yield economy remains separate.
 
 ## Next acceptance gates

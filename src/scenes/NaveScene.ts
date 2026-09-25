@@ -135,6 +135,7 @@ export class NaveScene extends Phaser.Scene {
     this.input.keyboard.addKey("E").on("down", () => this.useNear("extract"));
     this.input.keyboard.addKey("Q").on("down", () => this.useNear("keep"));
     this.input.keyboard.addKey("F").on("down", () => this.interact());
+    this.input.keyboard.addKey("V").on("down", () => this.net.flag());
     this.input.keyboard.addKey("SPACE").on("down", () => {
       this.net.strike();
       this.flashStrike();
@@ -1309,6 +1310,8 @@ export class NaveScene extends Phaser.Scene {
           : "Q bank unbanked (vault). F file a claim (not a yield). E TAKE is disarmed. No Base.");
     } else if (wet && (me.guest || me.locked)) {
       this.prompt = "A wet street. You are not flagged. You are not spoils.";
+    } else if (wet && me.truceUntil > snap.now) {
+      this.prompt = `Truce · ${Math.ceil(me.truceUntil - snap.now)}s remaining. PvP and reflagging are paused.`;
     } else if (wet && (me.beats.spokenPeople || snap.spokenPeopleHeld)) {
       this.prompt = me.heard || "Spoken — people. Same quest, different spoken Wink. Not a stick.";
     } else if (wet && snap.questPeopleHeld && !me.guest) {
@@ -1718,17 +1721,17 @@ export class NaveScene extends Phaser.Scene {
     } else if (wet && me.beats.unflagAsk) {
       this.prompt = "F — unflag the Wet Grid. Quill keeps the street. Not a fetch.";
     } else if (wet && (snap.creditsHeld || me.beats.credits) && !snap.seasonHeld && !me.beats.season) {
-      this.prompt = "F — name the residual season. Wet Grid flags by default. The MMO is the rest of life.";
+      this.prompt = "F — name the residual season. V at Wet Grid opts into PvP. The MMO is the rest of life.";
     } else if (wet && (snap.bracketHeld || me.beats.bracket)) {
       this.prompt = me.heard || "The season — equal. Serials stay visible. Combat is not.";
     } else if (wet && (snap.seasonHeld || me.beats.season) && !snap.bracketHeld) {
       this.prompt = "F — optional equalized bracket. Serials stay visible. Not a stick.";
     } else if (wet && (snap.seasonHeld || me.beats.season)) {
-      this.prompt = me.heard || "The season — residual. Flagged by default. Spoils from people. Combat is not.";
+      this.prompt = me.heard || "The season — residual. V opts into PvP. Spoils from people. Combat is not.";
     } else if (wet && me.flagged) {
       this.prompt = me.heard || "Flagged. Click strike. Spoils: unbanked and copies. Cult stays. Guests are not loot.";
     } else if (wet) {
-      this.prompt = "F — flag in the Wet Grid. Seconds. Spoils from people, not a faucet.";
+      this.prompt = "Wet Grid. Both Angels must flag before either can deal damage.";
     } else if (me.locked) {
       this.prompt = care ? me.heard || "You see a door. You do not see what it is for." : me.heard || "A guest cannot prepare the ground.";
     } else if (hall && me.inCare && !me.guest) {
@@ -2207,7 +2210,7 @@ export class NaveScene extends Phaser.Scene {
     } else if (clerkNear) {
       this.prompt = `${clerkNear.name} is working the yield. They will strike if you stay. Click to interrupt.`;
     } else if (wreckNear && !me.guest) {
-      this.prompt = "Ruin duel. The grave is the ring. Spectators gain a little aura. Not a bigger stick.";
+      this.prompt = "Ruin duel. Both Angels must flag at Wet Grid (V). Unflagged witnesses stay safe.";
     } else if (keptNear && me.messenger === "herald") {
       this.prompt = "F — Herald Announce. Ping the kept node. This is not a strike.";
     } else if (keptNear && me.messenger === "dweller" && !me.guest && !me.beats.dwell) {
@@ -2228,7 +2231,9 @@ export class NaveScene extends Phaser.Scene {
 
     const promptEl = hud("prompt-chip");
     if (promptEl) {
-      promptEl.textContent = this.prompt || "Strike leaves wreckage. F to speak. Guests cannot claim.";
+      const flagHint = wet && !me.guest && !me.locked && !me.flagged && me.truceUntil <= snap.now && !snap.wetCult && !me.beats.unflag
+        ? "V — enter PvP. " : "";
+      promptEl.textContent = flagHint + (this.prompt || "Strike leaves wreckage. F to speak. Guests cannot claim.");
       promptEl.style.display = "block";
     }
     const guest = hud("guest-chip");

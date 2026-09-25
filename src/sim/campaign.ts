@@ -7052,17 +7052,17 @@ export function creditsPoi(): Poi {
 }
 
 export const SEASON_COPY =
-  "The residual season. Wet Grid flags by default. Spoils from people. The MMO is the rest of life. Combat is not. This was not a fetch.";
+  "The residual season. V at Wet Grid opts into PvP. Spoils from people. The MMO is the rest of life. Combat is not. This was not a fetch.";
 export const WINK_SEASON = "A season is a street, not a stick. The token does not strike.";
 export const SEASON_NEED = "Credits first. The hour is not residual yet.";
-export const SEASON_HELD = "The season already holds. The street flags. Combat is not.";
+export const SEASON_HELD = "The season already holds. V at Wet Grid opts into PvP. Combat is not.";
 export const SEASON_SPECTATOR = "A wet street. You do not get a season.";
 export const SEASON_CULT = "The street is cult. A season does not list here.";
 
 export const SEASON_PLAQUE: Sign = {
   id: WET_GRID.id,
   title: "The season — residual",
-  text: "Flagged by default. Spoils from people. Guests are not loot. The number does not strike.",
+  text: "PvP requires both players to flag. Spoils from people. Guests are not loot. The number does not strike.",
   x: WET_GRID.x,
   y: WET_GRID.y,
 };
@@ -7101,10 +7101,6 @@ export function bracketPoi(): Poi {
     y: WET_GRID.y,
     kind: "wet-grid-bracket",
   };
-}
-
-export function wetGridDefaultFlag(args: { wetCult: boolean; seasonHeld: boolean; gestell: number }): boolean {
-  return !args.wetCult && (args.seasonHeld || args.gestell >= GESTELL_HOT);
 }
 
 export const PARTY_BLIND =

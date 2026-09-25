@@ -1273,7 +1273,6 @@ import {
   BRACKET_HELD,
   BRACKET_SPECTATOR,
   BRACKET_PLAQUE,
-  wetGridDefaultFlag,
   PARTY_BLIND,
   WINK_PARTY_BLIND,
   PARTY_BLIND_HELD,
@@ -1784,6 +1783,7 @@ import {
   guestCanClaim,
   spawnGuest,
   tickWorld,
+  tickClerks,
   tickAura,
   NAVE_SPAWN_X,
   NAVE_SPAWN_Y,
@@ -2442,10 +2442,11 @@ describe("Restraint dodge window", () => {
     expect(intentMoving({ up: true, down: false, left: false, right: false })).toBe(true);
     expect(intentMoving({ up: false, down: false, left: false, right: false })).toBe(false);
     const w = emptyWorld();
-    w.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    w.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 200, y: 480 });
     w.players.set("b", {
       ...spawnGuest("b"),
       guest: false,
+      flagged: true,
       serial: TEST_SERIAL,
       restraint: true,
       dodgeT: 0.18,
@@ -2464,10 +2465,11 @@ describe("Restraint dodge window", () => {
     expect(DODGE_COPY).not.toMatch(/heidegger|midgar|\$REVERIE/i);
 
     const still = emptyWorld();
-    still.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    still.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 200, y: 480 });
     still.players.set("b", {
       ...spawnGuest("b"),
       guest: false,
+      flagged: true,
       restraint: true,
       hp: 20,
       x: 220,
@@ -2482,8 +2484,8 @@ describe("Restraint dodge window", () => {
 describe("Hit-stop", () => {
   it("connecting strike holds the hit without buying damage; dodge does not", () => {
     const w = emptyWorld();
-    w.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
-    w.players.set("b", { ...spawnGuest("b"), guest: false, hp: 80, x: 220, y: 480 });
+    w.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 200, y: 480 });
+    w.players.set("b", { ...spawnGuest("b"), guest: false, flagged: true, hp: 80, x: 220, y: 480 });
     const held = applyStrike(w, "a");
     const p = held.players.get("a")!;
     expect(p.heard).toBe(HIT_STOP_COPY);
@@ -2499,10 +2501,11 @@ describe("Hit-stop", () => {
     expect(guestCanClaim(p)).toBe(false);
 
     const dodge = emptyWorld();
-    dodge.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    dodge.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 200, y: 480 });
     dodge.players.set("b", {
       ...spawnGuest("b"),
       guest: false,
+      flagged: true,
       restraint: true,
       dodgeT: 0.18,
       hp: 80,
@@ -2648,8 +2651,8 @@ describe("Heavy strike", () => {
   it("holds longer, drops clerk telegraph, does not buy damage", () => {
     const w = emptyWorld();
     w.clerks = [{ id: "c1", name: "Yield clerk", x: 210, y: 480, hp: 40, telegraph: 0.4 }];
-    w.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
-    w.players.set("b", { ...spawnGuest("b"), guest: false, hp: 80, x: 220, y: 480 });
+    w.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 200, y: 480 });
+    w.players.set("b", { ...spawnGuest("b"), guest: false, flagged: true, hp: 80, x: 220, y: 480 });
     const heavy = applyHeavy(w, "a");
     const p = heavy.players.get("a")!;
     expect(p.heard).toBe(HEAVY_COPY);
@@ -2666,10 +2669,11 @@ describe("Heavy strike", () => {
     expect(guestCanClaim(p)).toBe(false);
 
     const dodge = emptyWorld();
-    dodge.players.set("a", { ...spawnGuest("a"), guest: false, x: 200, y: 480 });
+    dodge.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 200, y: 480 });
     dodge.players.set("b", {
       ...spawnGuest("b"),
       guest: false,
+      flagged: true,
       restraint: true,
       dodgeT: 0.18,
       hp: 80,
@@ -2727,8 +2731,9 @@ describe("Truce", () => {
     expect(applyTruce(truced, "a").players.get("a")?.heard).toBe(TRUCE_HELD);
 
     const expired = tickWorld({ ...truced, now: TRUCE_HOLD }, 1);
-    expect(expired.players.get("a")?.flagged).toBe(true);
-    expect(expired.players.get("b")?.flagged).toBe(true);
+    expect(expired.players.get("a")?.flagged).toBe(false);
+    expect(applyFlag(expired, "a").players.get("a")?.flagged).toBe(true);
+    expect(expired.players.get("b")?.flagged).toBe(false);
 
     const alone = emptyWorld();
     alone.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 720, y: 520 });
@@ -4123,7 +4128,7 @@ describe("Flag — people", () => {
 });
 
 describe("Truce — people", () => {
-  it("names the truce as people after the flag; both stay flagged until the truce; guests cannot", () => {
+  it("names the truce as people after the flag; both receive protection immediately; guests cannot", () => {
     const w = emptyWorld();
     w.flagPeopleHeld = true;
     w.players.set("a", {
@@ -4148,8 +4153,8 @@ describe("Truce — people", () => {
     expect(p.heard).toBe(TRUCE_PEOPLE_COPY);
     expect(p.wink).toBe(WINK_TRUCE_PEOPLE);
     expect(p.beats.trucePeople).toBe(true);
-    expect(p.flagged).toBe(true);
-    expect(named.players.get("b")?.flagged).toBe(true);
+    expect(p.flagged).toBe(false);
+    expect(named.players.get("b")?.flagged).toBe(false);
     expect(named.trucePeopleHeld).toBe(true);
     expect(named.pois.find((poi) => poi.kind === "truce-people")?.name).toBe("Truce — people");
     expect(named.signs.find((s) => s.id === "truce-people")?.title).toBe(TRUCE_PEOPLE_PLAQUE.title);
@@ -4162,7 +4167,7 @@ describe("Truce — people", () => {
     const truced = applyTruce(named, "a");
     expect(truced.players.get("a")?.flagged).toBe(false);
     expect(truced.players.get("b")?.flagged).toBe(false);
-    expect(truced.players.get("a")?.heard).toBe(TRUCE_COPY);
+    expect(truced.players.get("a")?.heard).toBe(TRUCE_HELD);
 
     const early = emptyWorld();
     early.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, x: 720, y: 520 });
@@ -9253,10 +9258,11 @@ describe("Storm vs high-progress", () => {
     expect(alreadyFallen({ hp: 80, x: 0, y: 0 }, [])).toBe(false);
 
     const w = emptyWorld();
-    w.players.set("a", { ...spawnGuest("a"), guest: false, storm: true, x: 200, y: 480 });
+    w.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, storm: true, x: 200, y: 480 });
     w.players.set("b", {
       ...spawnGuest("b"),
       guest: false,
+      flagged: true,
       hp: 80,
       bestand: 40,
       fakeWinke: 1,
@@ -9294,10 +9300,11 @@ describe("Storm vs high-progress", () => {
 
     const rag = emptyWorld();
     rag.wreckage = [{ id: "g", x: 220, y: 480, fromId: "z", fromName: "Angel", until: 40 }];
-    rag.players.set("a", { ...spawnGuest("a"), guest: false, storm: true, x: 200, y: 480 });
+    rag.players.set("a", { ...spawnGuest("a"), guest: false, flagged: true, storm: true, x: 200, y: 480 });
     rag.players.set("b", {
       ...spawnGuest("b"),
       guest: false,
+      flagged: true,
       hp: 80,
       bestand: 40,
       x: 220,
@@ -10275,11 +10282,7 @@ describe("Movement IV Clearing and Passing", () => {
     expect(gCredits.creditsHeld).toBe(false);
   });
 
-  it("after credits, F at Wet Grid names the residual season and flags by default", () => {
-    expect(wetGridDefaultFlag({ wetCult: false, seasonHeld: true, gestell: 12 })).toBe(true);
-    expect(wetGridDefaultFlag({ wetCult: false, seasonHeld: false, gestell: GESTELL_HOT })).toBe(true);
-    expect(wetGridDefaultFlag({ wetCult: true, seasonHeld: true, gestell: 100 })).toBe(false);
-    expect(wetGridDefaultFlag({ wetCult: false, seasonHeld: false, gestell: 12 })).toBe(false);
+  it("after credits, the residual season leaves PvP entry to each player", () => {
 
     const w = emptyWorld();
     w.creditsHeld = true;
@@ -10296,7 +10299,7 @@ describe("Movement IV Clearing and Passing", () => {
     expect(p.heard).toBe(SEASON_COPY);
     expect(p.wink).toBe(WINK_SEASON);
     expect(p.beats.season).toBe(true);
-    expect(p.flagged).toBe(true);
+    expect(p.flagged).toBe(false);
     expect(named.seasonHeld).toBe(true);
     expect(named.pois.find((poi) => poi.id === WET_GRID.id)?.kind).toBe("wet-grid-season");
     expect(named.signs.find((s) => s.id === WET_GRID.id)?.title).toBe(SEASON_PLAQUE.title);
@@ -10338,7 +10341,7 @@ describe("Movement IV Clearing and Passing", () => {
       y: WET_GRID.y,
     });
     const ticked = tickWorld(hot, 0.05);
-    expect(ticked.players.get("a")?.flagged).toBe(true);
+    expect(ticked.players.get("a")?.flagged).toBe(false);
     expect(damageFor(ticked.players.get("a")!)).toBe(damageFor(spawnGuest("g")));
 
     const gWorld = emptyWorld();
@@ -11933,6 +11936,7 @@ describe("Ruin duel", () => {
     w.players.set("a", {
       ...spawnGuest("a"),
       guest: false,
+      flagged: true,
       serial: TEST_SERIAL,
       messenger: "ruin-angel",
       aura: auraSeed(TEST_SERIAL),
@@ -11943,6 +11947,7 @@ describe("Ruin duel", () => {
     w.players.set("b", {
       ...spawnGuest("b"),
       guest: false,
+      flagged: true,
       serial: 2,
       messenger: "herald",
       x: 210,
@@ -11985,6 +11990,7 @@ describe("Ruin duel", () => {
     after.players.set("c", {
       ...spawnGuest("c"),
       guest: false,
+      flagged: true,
       x: 208,
       y: 480,
       hp: 20,
@@ -11997,6 +12003,7 @@ describe("Ruin duel", () => {
       cur.players.set("c", {
         ...spawnGuest("c"),
         guest: false,
+      flagged: true,
         x: 208,
         y: 480,
         hp: 20,
@@ -12156,7 +12163,9 @@ describe("Bestand sinks", () => {
       lastCareX: SHRINE.x,
       lastCareY: SHRINE.y,
     });
-    const dead = applyStrike(fight, "k");
+    fight.players.set("v", { ...fight.players.get("v")!, hp: 1 });
+    fight.clerks = [{ id: "test-clerk", name: "Clerk", x: 220, y: 480, hp: 44, telegraph: .01, targetId: "v" }];
+    const dead = tickClerks(fight, .05);
     const v = dead.players.get("v")!;
     expect(v.hp).toBe(100);
     expect(v.x).toBe(SHRINE.x);
@@ -12177,7 +12186,9 @@ describe("Bestand sinks", () => {
       aura: 12,
       insured: false,
     });
-    const walked = applyStrike(bare, "k");
+    bare.players.set("v", { ...bare.players.get("v")!, hp: 1 });
+    bare.clerks = [{ id: "test-clerk", name: "Clerk", x: 220, y: 480, hp: 44, telegraph: .01, targetId: "v" }];
+    const walked = tickClerks(bare, .05);
     const raw = walked.players.get("v")!;
     expect(raw.x).toBe(NAVE_SPAWN_X);
     expect(raw.y).toBe(NAVE_SPAWN_Y);
@@ -12199,7 +12210,9 @@ describe("Bestand sinks", () => {
       cultWink: true,
       bestand: 30,
     });
-    const dead = applyStrike(fight, "k");
+    fight.players.set("v", { ...fight.players.get("v")!, hp: 1 });
+    fight.clerks = [{ id: "test-clerk", name: "Clerk", x: 220, y: 480, hp: 44, telegraph: .01, targetId: "v" }];
+    const dead = tickClerks(fight, .05);
     const v = dead.players.get("v")!;
     expect(v.fakeWinke).toBe(0);
     expect(v.damaged).toBe(2);

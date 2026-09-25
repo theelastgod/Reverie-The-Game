@@ -435,6 +435,10 @@ export class WorldSocket {
     this.send({ t: "party" });
   }
 
+  flag() {
+    this.send({ t: "flag" });
+  }
+
   truce() {
     this.send({ t: "truce" });
   }

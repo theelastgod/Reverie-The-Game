@@ -1,3 +1,4 @@
+import { pvpBlockReason, TRUCE_ACTIVE } from "./pvp";
 import { CLERK_RECOVERY, INTAKE, INTAKE_RECOVERY, refreshIntake } from "./encounters";
 import { MEMORIAL, MEMORIAL_ASK, MEMORIAL_NEED, MEMORIAL_CHOICE, MEMORIAL_BURIAL, memorialNode } from "./memorial";
 import {
@@ -1506,7 +1507,6 @@ import {
   SEASON_CULT,
   SEASON_PLAQUE,
   seasonPoi,
-  wetGridDefaultFlag,
   PARTY_BLIND,
   WINK_PARTY_BLIND,
   PARTY_BLIND_HELD,
@@ -2587,24 +2587,10 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
   const afterWar = tickHouseWar(afterClerks, dt);
   const afterDecay = tickExhibit(afterWar, dt);
   const afterAura = tickAura(afterDecay, dt);
-  const afterFlag = tickWetFlag(afterAura);
   return {
-    ...afterFlag,
-    wreckage: afterFlag.wreckage.filter((r) => r.until > now),
+    ...afterAura,
+    wreckage: afterAura.wreckage.filter((r) => r.until > now),
   };
-}
-
-function tickWetFlag(w: WorldState): WorldState {
-  if (!wetGridDefaultFlag(w)) return w;
-  const players = new Map(w.players);
-  let changed = false;
-  for (const [id, p] of players) {
-    if (p.guest || p.locked || p.flagged || p.hp <= 0 || p.truceUntil > w.now) continue;
-    if (!inWetGrid(p.x, p.y)) continue;
-    players.set(id, { ...p, flagged: true });
-    changed = true;
-  }
-  return changed ? { ...w, players } : w;
 }
 
 export function tickAura(w: WorldState, dt: number): WorldState {
@@ -2720,6 +2706,12 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       }
       continue;
     }
+    const blocked = pvpBlockReason(a, b, w.now);
+    if (blocked) {
+      const k = players.get(attackerId)!;
+      if (k.heard === priorHeard) players.set(attackerId, { ...k, heard: blocked });
+      continue;
+    }
     if ((b.dodgeT ?? 0) > 0) {
       players.set(id, { ...b, heard: DODGE_COPY });
       const k = players.get(attackerId)!;
@@ -2737,7 +2729,7 @@ export function applyStrike(w: WorldState, attackerId: string): WorldState {
       ];
       const grief = a.guest || b.guest || b.locked;
       const grave = w.wreckage.find(
-        (r) => nearPoint(a.x, a.y, r.x, r.y, 72) && nearPoint(b.x, b.y, r.x, r.y, 72),
+        (r) => r.until > w.now && nearPoint(a.x, a.y, r.x, r.y, 72) && nearPoint(b.x, b.y, r.x, r.y, 72),
       );
       const ruinDuel = !grief && !!grave;
       const flaggedFight = !grief && a.flagged && b.flagged;
@@ -5539,13 +5531,17 @@ export function applyTrucePeople(w: WorldState, playerId: string): WorldState {
   const my = Math.round((p.y + other.y) / 2);
   players.set(playerId, {
     ...p,
-    beats: { ...p.beats, trucePeople: true },
+    flagged: false,
+    truceUntil: w.now + TRUCE_HOLD,
+    beats: { ...p.beats, trucePeople: true, truce: true },
     heard: TRUCE_PEOPLE_COPY,
     wink: visibleWink(false, WINK_TRUCE_PEOPLE),
   });
   players.set(other.id, {
     ...other,
-    beats: { ...other.beats, trucePeople: true },
+    flagged: false,
+    truceUntil: w.now + TRUCE_HOLD,
+    beats: { ...other.beats, trucePeople: true, truce: true },
     heard: TRUCE_PEOPLE_COPY,
     wink: visibleWink(false, WINK_TRUCE_PEOPLE),
   });
@@ -5555,7 +5551,7 @@ export function applyTrucePeople(w: WorldState, playerId: string): WorldState {
   const signs = w.signs.some((s) => s.id === "truce-people")
     ? w.signs.map((s) => (s.id === "truce-people" ? { ...TRUCE_PEOPLE_PLAQUE, x: mx, y: my } : s))
     : [...w.signs, { ...TRUCE_PEOPLE_PLAQUE, x: mx, y: my }];
-  return { ...w, players, trucePeopleHeld: true, pois, signs };
+  return { ...w, players, trucePeopleHeld: true, truceHeld: true, pois, signs };
 }
 
 export function applyHandoffPeople(w: WorldState, playerId: string): WorldState {
@@ -10233,6 +10229,10 @@ export function applyFlag(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: FLAG_SPECTATOR, flagged: false });
     return { ...w, players };
   }
+  if (p.truceUntil > w.now) {
+    players.set(playerId, { ...p, flagged: false, heard: TRUCE_ACTIVE });
+    return { ...w, players };
+  }
   if (w.wetCult || p.beats.unflag) {
     players.set(playerId, { ...p, flagged: false, heard: FLAG_CULT, wink: visibleWink(false, WINK_UNFLAG) });
     return { ...w, players };
@@ -10261,7 +10261,6 @@ export function applySeason(w: WorldState, playerId: string): WorldState {
     if (!w.bracketHeld && !p.beats.bracket) return applyBracket(w, playerId);
     players.set(playerId, {
       ...p,
-      flagged: true,
       heard: SEASON_HELD,
       wink: visibleWink(false, WINK_SEASON),
     });
@@ -10274,7 +10273,6 @@ export function applySeason(w: WorldState, playerId: string): WorldState {
   players.set(playerId, {
     ...p,
     beats: { ...p.beats, season: true },
-    flagged: true,
     heard: SEASON_COPY,
     wink: visibleWink(false, WINK_SEASON),
   });
@@ -10310,7 +10308,6 @@ export function applyBracket(w: WorldState, playerId: string): WorldState {
   players.set(playerId, {
     ...p,
     beats: { ...p.beats, bracket: true },
-    flagged: true,
     heard: BRACKET_COPY,
     wink: visibleWink(false, WINK_BRACKET),
   });
