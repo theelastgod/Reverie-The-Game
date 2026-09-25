@@ -123,7 +123,7 @@ function mkWorld(over: Partial<WorldState> = {}): WorldState {
 }
 
 const flagsOf = (keys: string[]): Record<string, number> => Object.fromEntries(keys.map(k => [k, 1]));
-const M1_FLAGS = [F.ARRIVED, F.INTAKE, F.FIRST_NODE, F.TALKED_QUILL, F.TALKED_ORD, F.TALKED_NARA, F.MEMORIAL, F.BURIED_NARA, F.WEATHER_SAFETY, F.WEATHER_ORD, F.WEATHER_NARA, F.WEATHER_NAMED];
+const M1_FLAGS = [F.ARRIVED, F.INTAKE, F.FIRST_NODE, F.DESK_THREE, F.SECOND_NODE, F.HEARD_RECORDER, F.TALKED_QUILL, F.TALKED_ORD, F.TALKED_NARA, F.MEMORIAL, F.BURIED_NARA, F.WEATHER_SAFETY, F.WEATHER_ORD, F.WEATHER_NARA, F.WEATHER_NAMED];
 const M2_FLAGS = [...M1_FLAGS, F.UNDER, F.ANGEL, F.CARE, F.SHRINE, F.HALL, F.FREEZE, F.BOARD, F.OPERATOR, F.M3];
 const M3_FLAGS = [...M2_FLAGS, F.STRAIT, F.FOUNDRY, F.CABLE, F.MAP, F.GARDEN, F.FAILED, F.FORGE];
 const M4_FLAGS = [...M3_FLAGS, F.MORTALITY, F.PREPARE, F.PASSING, F.CREDITS];
@@ -151,7 +151,7 @@ function contexts(): { name: string; ctx: Ctx }[] {
   const list: { name: string; ctx: Ctx }[] = [
     { name: "guest fresh", ctx: { w: base, p: mkPlayer(), now: base.now } },
     { name: "guest mid M1", ctx: { w: base, p: mkPlayer({ flags: flagsOf([F.TALKED_NARA, F.TALKED_ORD, F.TALKED_QUILL, F.MEMORIAL, F.WEATHER_SAFETY]), choices: { [C.MEMORIAL]: "voice" }, extracted: 1 }), now: base.now } },
-    { name: "guest locked", ctx: { w: named, p: mkPlayer({ flags: flagsOf(M1_FLAGS), choices: { [C.MEMORIAL]: "copper", [C.WEATHER]: "end" }, locked: true, kept: 1, x: POSITIONS["going-under"].x, y: POSITIONS["going-under"].y }), now: named.now } },
+    { name: "guest locked", ctx: { w: named, p: mkPlayer({ flags: flagsOf(M1_FLAGS), choices: { [C.MEMORIAL]: "copper", [C.WEATHER]: "end" }, locked: true, kept: 2, x: POSITIONS["going-under"].x, y: POSITIONS["going-under"].y }), now: named.now } },
     { name: "angel M1 named", ctx: { w: named, p: angel(12, "sky", "witness", "omen", { flags: flagsOf(M1_FLAGS), choices: { [C.MEMORIAL]: "voice", [C.WEATHER]: "process" }, movement: 1 }), now: named.now } },
     { name: "angel 7777 M2 fresh", ctx: { w: named, p: angel(TEST_SERIAL, "mortals", "herald", "hint", { flags: flagsOf([...M1_FLAGS, F.UNDER, F.ANGEL]), movement: 2, party: { nara: "with", quill: "with", ord: "with" } }), now: named.now } },
     { name: "angel sky M2 signed", ctx: { w: named, p: angel(2, "sky", "witness", "wreckage", { flags: flagsOf([...M1_FLAGS, F.UNDER, F.ANGEL, F.SHRINE, F.CARE, F.HALL, F.FREEZE]), choices: { [C.FREEZE]: "signed" }, movement: 2, party: { nara: "with", quill: "with", ord: "with" } }), now: named.now } },

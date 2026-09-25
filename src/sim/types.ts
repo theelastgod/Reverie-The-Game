@@ -173,6 +173,7 @@ export type Enemy = {
   participants: string[]; // players who struck it in this life
   respawnAt: number;
   tint: "lavender" | "wine" | "sky" | "paper";
+  fallFlag?: string; // personal flag every participant gets when it falls (the Intake Clerk credits by kind)
 };
 
 export type YieldNode = {

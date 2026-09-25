@@ -95,12 +95,14 @@ const NARA_NODES: Record<string, DialogueNode> = {
   },
   memorial: {
     id: "memorial",
-    text: "A voice survived in that recorder. Its copper would close the coffin. Leave the voice running, or give its body to this one. I won't choose for you.",
+    text: (ctx) => (has(ctx, F.HEARD_RECORDER)
+      ? "You heard it. Its copper would close the coffin. Leave the voice running, or give its body to this one. I won't choose for you."
+      : "A voice survived in that recorder, on a crate east of here. Its copper would close the coffin. Go and hear it first. I won't choose for you, and I won't let you choose deaf."),
     wink: "A voice or a vessel. Neither one pays. That is the point of the street.",
     choices: [
-      { id: "voice", label: "Leave the voice running.", when: ctx => !has(ctx, F.MEMORIAL), next: "memorial-voice" },
-      { id: "copper", label: "Take the copper for the coffin.", when: ctx => !has(ctx, F.MEMORIAL), next: "memorial-copper" },
-      { id: "look", label: "I want to hear it first." },
+      { id: "voice", label: "Leave the voice running.", when: ctx => !has(ctx, F.MEMORIAL) && has(ctx, F.HEARD_RECORDER), next: "memorial-voice" },
+      { id: "copper", label: "Take the copper for the coffin.", when: ctx => !has(ctx, F.MEMORIAL) && has(ctx, F.HEARD_RECORDER), next: "memorial-copper" },
+      { id: "look", label: "I want to hear it first.", when: ctx => !has(ctx, F.HEARD_RECORDER) || has(ctx, F.MEMORIAL) },
     ],
   },
   "memorial-voice": {
@@ -225,6 +227,9 @@ function quillRoute(ctx: Ctx): string {
   return "board-read";
 }
 
+/** After her first three answers Quill makes her offer, once. */
+const quillOffer = (ctx: Ctx): string | undefined => (ctx.p.choices[C.QUILL_PRINT] ? undefined : "offer");
+
 const QUILL_NODES: Record<string, DialogueNode> = {
   dark: {
     id: "dark",
@@ -256,16 +261,49 @@ const QUILL_NODES: Record<string, DialogueNode> = {
     id: "owners",
     text: "The Houses, on paper. The weather, in fact. Go through the east gate to the Wet Grid and stand at the listing board when you have eyes for it. You do not yet. Come back with a grave on you.",
     wink: "The Wet Grid looks like freedom. It is a stall. The sky is already priced.",
+    next: quillOffer,
   },
   "burial-joke": {
     id: "burial-joke",
     text: "You look like you might bury something. Cute. Burial doesn't list. I still respect it. Go see the sexton. She will not laugh. Someone on this street has to and she has decided it is me.",
+    next: quillOffer,
+  },
+  offer: {
+    id: "offer",
+    text: "One more thing, since you are standing there. I can print you. Unsealed face, a surface; it travels, and the aura stays where it is, which is nowhere yet. Or keep the name and I print nobody. Cheaper. Lonelier.",
+    wink: "She wants the print because a face on the kerb is a customer she can find again.",
+    choices: [
+      { id: "print", label: "Print me.", next: "print-yes" },
+      { id: "keep", label: "Keep the name.", next: "print-no" },
+    ],
+  },
+  "print-yes": {
+    id: "print-yes",
+    text: "She prints you in one pass and hands it over wet. It is you the way a plaque is a district. \"It will decay. Everything on paper does. List it on the Grid when you have eyes, or keep it and watch it go grey.\"",
+    effects: [
+      { kind: "choice", key: C.QUILL_PRINT, value: "printed" },
+      { kind: "item", add: { id: "copy:face", kind: "exhibition", name: "A print of your face", qty: 1, value: 3 } },
+      { kind: "notice", text: "A print of your face. Exhibition. It decays.", tone: "ink" },
+    ],
+  },
+  "print-no": {
+    id: "print-no",
+    text: "\"Kept the name.\" She shrugs and wipes the plate. \"Nobody will ask for it either. That is the honest version of privacy.\"",
+    effects: [
+      { kind: "choice", key: C.QUILL_PRINT, value: "kept" },
+      { kind: "notice", text: "You kept the name. Nothing printed.", tone: "ink" },
+    ],
   },
   later: {
     id: "later",
-    text: (ctx) => has(ctx, F.WEATHER_NAMED)
-      ? "You named it. Good. Now the threshold. I am not going under. Someone has to keep the lights on. Also I am not dead yet, which is a requirement."
-      : "Still here. Still printing. Ord is up by the Annex gate with his numbers and Nara is on the funeral street with her earth. Between them you get the weather. I get the middle.",
+    text: (ctx) => {
+      const print = ctx.p.choices[C.QUILL_PRINT] === "printed"
+        ? "Your face is on the kerb. Nobody has asked whose it is. "
+        : ctx.p.choices[C.QUILL_PRINT] === "kept" ? "Still no print of you. Nobody has asked for one either. " : "";
+      return print + (has(ctx, F.WEATHER_NAMED)
+        ? "You named it. Good. Now the threshold. I am not going under. Someone has to keep the lights on. Also I am not dead yet, which is a requirement."
+        : "Still here. Still printing. Ord is up by the Annex gate with his numbers and Nara is on the funeral street with her earth. Between them you get the weather. I get the middle.");
+    },
   },
   "board-hint": {
     id: "board-hint",
@@ -367,6 +405,9 @@ const honestNumber = (ctx: Ctx): string => {
   return `Gestell ${g}. Tax ${tax} percent on every node. The number goes up because people extract. I will not pretty it.`;
 };
 
+/** After the weather, Ord opens the second ledger, once. */
+const ordLedger = (ctx: Ctx): string | undefined => (ctx.p.choices[C.ORD_LEDGER] ? undefined : "ledger");
+
 const ORD_NODES: Record<string, DialogueNode> = {
   dark: {
     id: "dark",
@@ -394,6 +435,33 @@ const ORD_NODES: Record<string, DialogueNode> = {
     text: "The process. Not stability. Stability is what you call a thing when you are paid by the thing. The process is what it is when you count it. It goes up. It does not care what you call it. Nara will give you a third word. Hers is the one that hurts.",
     effects: [{ kind: "flag", key: F.WEATHER_ORD }],
     wink: "The number is honest. Honest is not the same as kind.",
+    next: ordLedger,
+  },
+  ledger: {
+    id: "ledger",
+    text: "\"I keep a second ledger. Not Safety's. Honest lines only: who came in, what they did, what it cost. It has no column for stability.\" He turns it so you can see the pen. \"Give me a line, or stay off it. Both are honest. Only one is remembered.\"",
+    wink: "The second ledger is the only book in the city that counts the dead as people.",
+    choices: [
+      { id: "enter", label: "Enter me.", next: "ledger-yes" },
+      { id: "off", label: "Leave me off it.", next: "ledger-no" },
+    ],
+  },
+  "ledger-yes": {
+    id: "ledger-yes",
+    text: (ctx) => `He writes without looking up. "${ctx.p.guest ? "Unsealed" : ctx.p.name}. Came in. ${ctx.p.choices[C.FIRST_NODE] === "extract" ? "Extracted at the first node." : "Kept the first node."}" He reads it back once. "That is the whole line. It will get longer. They always do."`,
+    effects: [
+      { kind: "choice", key: C.ORD_LEDGER, value: "entered" },
+      { kind: "news", text: "A new line in Ord's ledger. Honest." },
+      { kind: "notice", text: "Entered in the honest ledger.", tone: "ink" },
+    ],
+  },
+  "ledger-no": {
+    id: "ledger-no",
+    text: "\"Off it.\" He closes the book. \"Then the number is one short and honest about that too. Safety's ledger has you anyway. It has everyone.\"",
+    effects: [
+      { kind: "choice", key: C.ORD_LEDGER, value: "off" },
+      { kind: "notice", text: "Off the honest ledger. Safety's has you anyway.", tone: "ink" },
+    ],
   },
   nodes: {
     id: "nodes",
@@ -402,9 +470,14 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   later: {
     id: "later",
-    text: (ctx) => has(ctx, F.WEATHER_NAMED)
-      ? "You named it. Whatever you called it, the number did not move. That is not a criticism. It is the number."
-      : "Grief is not a ledger item. The process continues whether you keep the node or not. I am here so the number stays honest. Go and hear the other two names.",
+    text: (ctx) => {
+      const line = ctx.p.choices[C.ORD_LEDGER] === "entered"
+        ? "Your line is in the book. It has not got longer yet. "
+        : ctx.p.choices[C.ORD_LEDGER] === "off" ? "You are off the book. The number is one short. " : "";
+      return line + (has(ctx, F.WEATHER_NAMED)
+        ? "You named it. Whatever you called it, the number did not move. That is not a criticism. It is the number."
+        : "Grief is not a ledger item. The process continues whether you keep the node or not. I am here so the number stays honest. Go and hear the other two names.");
+    },
     choices: [
       { id: "number", label: "Give me the number.", next: "number" },
       { id: "leave", label: "That is enough." },

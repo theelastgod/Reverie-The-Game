@@ -17,6 +17,9 @@ const T = {
   spawn: at(5, 42),            // GUEST_SPAWN
   intake: at(13, 42),          // enemy intake-clerk
   node1: at(11, 36),           // nave-node-1
+  deskThree: at(21, 38),       // enemy desk-three
+  node2: at(21, 45),           // nave-node-2
+  node3: at(27, 47),           // nave-node-3
   ord: at(19, 32),             // home:ord
   quill: at(31, 41),           // home:quill
   nara: at(8, 49),             // home:nara
@@ -30,7 +33,10 @@ const T = {
 const ROUTE = {
   toIntake: [at(11, 42)],
   toNode: [at(11, 36)],
-  toOrd: [at(19, 36), at(19, 33)],
+  toDeskThree: [at(18, 36), at(20, 37)],
+  toNode2: [at(18, 40), at(20, 45)],
+  toNode3: [at(26, 45), at(27, 46)],
+  toOrd: [at(18, 45), at(18, 36), at(19, 33)],
   toQuill: [at(30, 33), at(30, 41)],
   toNara: [at(30, 46), at(8, 46), at(8, 48)],
   toRecorder: [at(10, 48), at(10, 51)],
@@ -169,7 +175,8 @@ function report() {
   const wordsTotal = read.dialogue + read.spoken + read.journal + read.notices;
   const readingMin = wordsTotal / 180; // a careful reader
   const humanWalkMin = (walk * 1.8) / 60; // a person wanders, looks, misses a corner
-  const fightMin = Math.max(fight, 45) / 60; // a first fight with a dodge to learn
+  const fights = phases.filter(p => p.label.startsWith('fight')).map(p => p.ms / 1000);
+  const fightMin = fights.reduce((a, s, i) => a + Math.max(s, i === 0 ? 45 : 25), 0) / 60; // the first fight teaches the dodge; a later one still costs a person a look
   const decideMin = (read.decisions * 40) / 60; // forty seconds per real choice
   const lowerBound = (total / 60 + readingMin).toFixed(1);
   const estimate = (humanWalkMin + fightMin + readingMin + decideMin).toFixed(1);
@@ -207,16 +214,48 @@ try {
     await wait(me, () => you(me).kept + you(me).extracted >= 1, `${op} the first node`);
   } else console.log('note: nave-node-1 already kept and empty; skipping the node beat');
 
+  // Desk Three holds the aisle to the east gate: the second fight, then the second node.
+  phase('walk: desk three');
+  await walk(me, ROUTE.toDeskThree);
+  phase('fight: desk three');
+  await settle(me, () => me.snap.enemies.some(e => e.id === 'desk-three' && e.state !== 'dead'), 'desk three staffed', 50000);
+  const strikes2 = setInterval(() => send(me, { t: 'strike' }), 450);
+  try { await wait(me, () => you(me).flags['desk-three'], 'desk three falls', 25000); }
+  finally { clearInterval(strikes2); }
+  assert.ok(you(me).hp > 0, 'still standing after desk three');
+  phase('walk: node 2');
+  await walk(me, ROUTE.toNode2);
+  read.decisions++;
+  const secondNode = async (nodeId) => {
+    const node = me.snap.nodes.find(n => n.id === nodeId);
+    assert.ok(node, `${nodeId} is in view`);
+    const op = node.kept ? (node.charges > 0 ? 'extract' : null) : 'keep';
+    if (!op) return false;
+    send(me, { t: 'interact', targetId: nodeId, choice: op });
+    await wait(me, () => you(me).kept + you(me).extracted >= 2, `${op} the second node`);
+    return true;
+  };
+  if (!(await secondNode('nave-node-2'))) {
+    console.log('note: nave-node-2 already kept and empty; taking the third node instead');
+    await walk(me, ROUTE.toNode3);
+    if (!(await secondNode('nave-node-3'))) console.log('note: nave-node-3 too; the second-node beat is skipped');
+  }
+  await wait(me, () => !!you(me).flags['node:second'], 'the pair is read', 6000);
+
   // The party, in the Nave.
   phase('walk: ord');
   await walk(me, ROUTE.toOrd);
   phase('talk: ord');
   await converse(me, 'ord', 'talked:ord');
   await converse(me, 'ord', 'weather:ord');
+  read.decisions++; // the honest ledger
+  assert.ok(you(me).choices['ord:ledger'], 'Ord\'s ledger was answered');
   phase('walk: quill');
   await walk(me, ROUTE.toQuill);
   phase('talk: quill');
   await converse(me, 'quill', 'talked:quill');
+  read.decisions++; // the print
+  assert.ok(you(me).choices['quill:print'], 'Quill\'s offer was answered');
   phase('walk: nara');
   await walk(me, ROUTE.toNara);
   phase('talk: nara');
@@ -227,6 +266,7 @@ try {
   await walk(me, ROUTE.toRecorder);
   read.decisions++;
   phase('verb: memorial');
+  await useVerb(me, 'memorial-recorder', byKey('F'), () => !!you(me).flags['heard:recorder'], 'hear the recorder');
   await useVerb(me, 'memorial-recorder', byKey('Q'), () => !!you(me).flags.memorial, 'memorial decision');
   phase('walk: plot');
   await walk(me, ROUTE.toPlot);

@@ -113,6 +113,7 @@ const NAVE: PoiConfig[] = [
         label: "Listen",
         choice: "listen",
         guest: "allow",
+        effects: ctx => (has(ctx, F.TALKED_NARA) ? [{ kind: "flag", key: F.HEARD_RECORDER }] : []),
         say: ctx => {
           if (!has(ctx, F.TALKED_NARA)) return "A recorder on a crate. A voice in it, mid-sentence, on a loop. Nara holds the grave open west of here. Speak with her first.";
           if (poiState(ctx, "memorial-recorder") === "dismantled") return "The recorder is open. The coil is gone. The voice stopped mid-breath and did not start again. The copper is in a coffin.";
@@ -123,7 +124,7 @@ const NAVE: PoiConfig[] = [
         key: "E",
         label: "Dismantle the copper",
         choice: "copper",
-        when: ctx => has(ctx, F.TALKED_NARA) && !has(ctx, F.MEMORIAL),
+        when: ctx => has(ctx, F.TALKED_NARA) && has(ctx, F.HEARD_RECORDER) && !has(ctx, F.MEMORIAL),
         guest: "allow",
         once: F.MEMORIAL,
         say: "You lift the coil from the recorder. The voice stops mid-breath. Nara folds the copper around the coffin. No part goes to market.",
@@ -138,7 +139,7 @@ const NAVE: PoiConfig[] = [
         key: "Q",
         label: "Preserve the voice",
         choice: "voice",
-        when: ctx => has(ctx, F.TALKED_NARA) && !has(ctx, F.MEMORIAL),
+        when: ctx => has(ctx, F.TALKED_NARA) && has(ctx, F.HEARD_RECORDER) && !has(ctx, F.MEMORIAL),
         guest: "allow",
         once: F.MEMORIAL,
         say: "You leave the recorder running. Nara tears her coat into binding cloth. The voice has another night.",

@@ -28,6 +28,7 @@ export function spawnEnemy(spawn: EnemySpawn, now: number, name?: string): Enemy
     participants: [],
     respawnAt: now,
     tint: spawn.tint,
+    ...(spawn.fallFlag ? { fallFlag: spawn.fallFlag } : {}),
   };
 }
 

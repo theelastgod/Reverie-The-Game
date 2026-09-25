@@ -70,6 +70,36 @@ const M1_STEPS: QuestStep[] = [
     ],
   },
   {
+    id: "desk-three",
+    title: "The second clerk",
+    detail: "Desk Three counts the aisle between the first node and the east gate. It winds up slower than the Intake Clerk. Wait for the red, step through it with Shift, and answer with R while it recovers.",
+    target: "enemy:desk-three",
+    plate: "plate-arena.jpg",
+    done: ctx => has(ctx, F.DESK_THREE),
+    onComplete: [notice("Desk Three falls. The aisle is quiet. It will be staffed again.")],
+  },
+  {
+    id: "second-node",
+    title: "The same question twice",
+    detail: "A second node hums south of Desk Three; two more sit further along the aisle. E extracts, Q keeps. The city reads the pair, not the choice.",
+    target: "nave-node-2",
+    plate: "plate-arena.jpg",
+    done: ctx => ctx.p.extracted + ctx.p.kept >= 2,
+    onComplete: ctx => {
+      const pair = ctx.p.extracted >= 1 && ctx.p.kept >= 1 ? "split" : ctx.p.extracted >= 2 ? "extract" : "keep";
+      return [
+        { kind: "choice", key: C.SECOND_NODE, value: pair },
+        { kind: "flag", key: F.SECOND_NODE },
+        notice(
+          pair === "split" ? "One kept, one extracted. The number went up and eased. That is most people."
+            : pair === "extract" ? "Two extracted. Bestand twice. The weather is up two and it will come back as earth."
+            : "Two kept. Readiness twice. Nothing in your hand and the number eased twice.",
+          pair === "keep" ? "gold" : pair === "extract" ? "hot" : "ink",
+        ),
+      ];
+    },
+  },
+  {
     id: "quill",
     title: "A copy of a hole",
     detail: "Quill keeps a stall by the east gate. F speaks. She will explain the market without meaning to.",
@@ -99,7 +129,7 @@ const M1_STEPS: QuestStep[] = [
   {
     id: "memorial",
     title: "A voice or a vessel",
-    detail: "At the recorder east of Nara: E dismantles it for coffin bindings. Q preserves the voice; Nara supplies cloth. Neither choice pays Bestand.",
+    detail: "At the recorder east of Nara: F listens first. Then E dismantles it for coffin bindings, or Q preserves the voice and Nara supplies cloth. Neither choice pays Bestand.",
     target: "memorial-recorder",
     plate: "memorial-recorder-v1.jpg",
     done: ctx => has(ctx, F.MEMORIAL),

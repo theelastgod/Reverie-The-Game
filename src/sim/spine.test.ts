@@ -16,6 +16,7 @@ import { DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEN
 import { POSITIONS, blockedFor, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
+import { verbsFor } from "./interact";
 import { LINES } from "./content";
 import type { Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
@@ -124,6 +125,20 @@ function fightIntake(w: WorldState, id: string): WorldState {
   return cur;
 }
 
+/** Strike Desk Three until it falls with this body among the participants. */
+function fightDeskThree(w: WorldState, id: string): WorldState {
+  const clerk = POSITIONS["enemy:desk-three"];
+  let cur = place(w, id, clerk.x - 40, clerk.y);
+  for (let i = 0; i < 40 && !(me(cur, id).flags[F.DESK_THREE] ?? 0); i++) {
+    cur = act(cur, id, { t: "strike" });
+    cur = tick(cur, 10);
+  }
+  expect(me(cur, id).flags[F.DESK_THREE], "Desk Three fell with this body in it").toBe(1);
+  expect(cur.enemies.find(e => e.id === "desk-three")?.state).toBe("dead");
+  expect(me(cur, id).dead).toBe(false);
+  return cur;
+}
+
 // ---------------------------------------------------------------- Movement I
 
 type Opening = { node: "extract" | "keep"; extra: string[]; memorial: "copper" | "voice"; weather: "stability" | "process" | "end" };
@@ -156,12 +171,33 @@ function movementOne(w0: WorldState, o: Opening): WorldState {
     expect(me(w).bestand, `${nodeId} pays`).toBeGreaterThan(purse);
   }
 
-  // Quill
+  // Desk Three, then the second node (already answered when the extras took it)
+  w = fightDeskThree(w, ME);
+  w = tick(w);
+  if (me(w).extracted + me(w).kept < 2) {
+    expectStep(w, Q.M1, 4);
+    w = goTo(w, ME, "nave-node-2");
+    w = interact(w, ME, "nave-node-2", o.node);
+  }
+  w = tick(w, 2);
+  expectStep(w, Q.M1, 5);
+  expect(me(w).flags[F.SECOND_NODE]).toBe(1);
+  expect(["keep", "extract", "split"]).toContain(me(w).choices[C.SECOND_NODE]);
+
+  // Quill: three answers, then her offer
   w = talkTo(w, ME, "quill");
   expect(me(w).dialogue?.node).toBe("first");
-  w = closeAll(choose(w, ME, "sells"), ME);
+  w = choose(w, ME, "sells");
+  expect(me(w).dialogue?.node).toBe("market");
+  w = act(w, ME, { t: "close" });
+  expect(me(w).dialogue?.node).toBe("owners");
+  w = act(w, ME, { t: "close" });
+  expect(me(w).dialogue?.node).toBe("offer");
+  w = closeAll(choose(w, ME, "print"), ME);
+  expect(me(w).choices[C.QUILL_PRINT]).toBe("printed");
+  expect(me(w).items.find(i => i.id === "copy:face")).toMatchObject({ kind: "exhibition", qty: 1 });
   w = tick(w);
-  expectStep(w, Q.M1, 4);
+  expectStep(w, Q.M1, 6);
   expect(me(w).party.quill).toBe("with");
 
   // Ord
@@ -169,33 +205,39 @@ function movementOne(w0: WorldState, o: Opening): WorldState {
   expect(me(w).dialogue?.node).toBe("first");
   w = closeAll(choose(w, ME, "leave"), ME);
   w = tick(w);
-  expectStep(w, Q.M1, 5);
+  expectStep(w, Q.M1, 7);
   expect(me(w).party.ord).toBe("with");
 
-  // Nara, and the recorder
+  // Nara, then the recorder: it is heard before it is decided
   w = talkTo(w, ME, "nara");
   expect(me(w).dialogue?.node).toBe("first");
   if (me(w).guest) {
     expect(me(w).wink).toBe("");
     expect(me(w).dialogue?.wink).toBe("");
   }
+  w = choose(w, ME, "help");
+  expect(me(w).dialogue?.node).toBe("memorial");
+  expect(me(w).dialogue?.choices.map(c => c.id)).toEqual(["look"]);
+  w = closeAll(choose(w, ME, "look"), ME);
+  w = tick(w);
+  expectStep(w, Q.M1, 8);
+  w = goTo(w, ME, "memorial-recorder");
+  expect(verbsFor({ w, p: me(w), now: w.now }, "memorial-recorder").map(v => v.choice)).toEqual(["listen"]);
+  w = interact(w, ME, "memorial-recorder", "listen");
+  expect(me(w).flags[F.HEARD_RECORDER]).toBe(1);
   if (o.memorial === "voice") {
-    w = choose(w, ME, "help");
+    w = talkTo(w, ME, "nara");
     expect(me(w).dialogue?.node).toBe("memorial");
     w = choose(w, ME, "voice");
     expect(me(w).dialogue?.node).toBe("memorial-voice");
     w = closeAll(w, ME);
     w = tick(w);
-    expectStep(w, Q.M1, 7);
+    expectStep(w, Q.M1, 9);
     expect(w.flags[W.MEMORIAL_VOICE]).toBe(1);
     expect(w.pois["memorial-recorder"].state).toBe("playing");
   } else {
-    w = closeAll(choose(w, ME, "leave"), ME);
-    w = tick(w);
-    expectStep(w, Q.M1, 6);
-    w = goTo(w, ME, "memorial-recorder");
     w = tick(interact(w, ME, "memorial-recorder", "copper"));
-    expectStep(w, Q.M1, 7);
+    expectStep(w, Q.M1, 9);
     expect(w.pois["memorial-recorder"].state).toBe("dismantled");
     expect(me(w).items.find(i => i.id === "cult:copper-binding")).toMatchObject({ kind: "cult", bound: true });
   }
@@ -206,7 +248,7 @@ function movementOne(w0: WorldState, o: Opening): WorldState {
   // burial
   w = goTo(w, ME, "nara-plot");
   w = tick(interact(w, ME, "nara-plot", "bury"));
-  expectStep(w, Q.M1, 8);
+  expectStep(w, Q.M1, 10);
   expect(w.pois["nara-plot"].state).toBe("closed");
   expect(me(w).history.buried).toBe(1);
   expect(me(w).flags[F.BURIED_NARA]).toBe(1);
@@ -214,23 +256,28 @@ function movementOne(w0: WorldState, o: Opening): WorldState {
   // three names for the weather
   w = goTo(w, ME, "safety-plaque");
   w = tick(interact(w, ME, "safety-plaque", "read"));
-  expectStep(w, Q.M1, 9);
+  expectStep(w, Q.M1, 11);
   expect(me(w).flags[F.WEATHER_SAFETY]).toBe(1);
   w = talkTo(w, ME, "ord");
   expect(me(w).dialogue?.node).toBe("weather");
-  w = tick(closeAll(w, ME));
-  expectStep(w, Q.M1, 10);
+  w = act(w, ME, { t: "close" });
+  expect(me(w).dialogue?.node).toBe("ledger");
+  w = closeAll(choose(w, ME, "enter"), ME);
+  expect(me(w).choices[C.ORD_LEDGER]).toBe("entered");
+  expect(w.news.some(n => n.text.includes("Ord's ledger"))).toBe(true);
+  w = tick(w);
+  expectStep(w, Q.M1, 12);
   expect(me(w).flags[F.WEATHER_ORD]).toBe(1);
   w = talkTo(w, ME, "nara");
   expect(me(w).dialogue?.node).toBe("weather");
   w = tick(closeAll(w, ME));
-  expectStep(w, Q.M1, 11);
+  expectStep(w, Q.M1, 13);
   expect(me(w).flags[F.WEATHER_NARA]).toBe(1);
 
   // name it
   w = goTo(w, ME, "safety-plaque");
   w = tick(interact(w, ME, "safety-plaque", o.weather));
-  expectStep(w, Q.M1, 12);
+  expectStep(w, Q.M1, 14);
   expect(me(w).choices[C.WEATHER]).toBe(o.weather);
   expect(me(w).flags[F.WEATHER_NAMED]).toBe(1);
   expect(w.pois["safety-plaque"].state).toBe("named");
@@ -511,7 +558,7 @@ describe("the private yield is decided once", () => {
     const p: Player = {
       ...spawnGuest(ME), guest: false, serial: 42, name: "#0042", house: "sky", messenger: "witness", winkSchool: "omen", auraSeed: 12, aura: 12,
       movement: 2, flags: { [F.ANGEL]: 1, [F.UNDER]: 1, [F.SHRINE]: 1, [F.HALL]: 1 },
-      party: { nara: "with", quill: "with", ord: "with" }, quests: { [Q.M1]: 13 },
+      party: { nara: "with", quill: "with", ord: "with" }, quests: { [Q.M1]: 15 },
     };
     return goTo(add(emptyWorld(), p), ME, "operator-desk");
   }
@@ -549,7 +596,10 @@ describe("the private yield is decided once", () => {
   it("the memorial, the last word and the forge lesson cannot be chosen twice either", () => {
     let w = add(emptyWorld(), spawnGuest(ME));
     w = talkTo(w, ME, "nara");
-    w = choose(w, ME, "help");
+    w = closeAll(choose(w, ME, "leave"), ME);
+    w = interact(goTo(w, ME, "memorial-recorder"), ME, "memorial-recorder", "listen");
+    w = talkTo(w, ME, "nara");
+    expect(me(w).dialogue?.node).toBe("memorial");
     w = choose(w, ME, "voice");
     w = closeAll(w, ME);
     expect(me(w).flags[F.MEMORIAL]).toBe(1);
@@ -564,7 +614,7 @@ describe("the private yield is decided once", () => {
 
 describe("the spine, played through", () => {
   it("has four movements of the authored length", () => {
-    expect(questById(Q.M1)!.steps.length).toBe(13);
+    expect(questById(Q.M1)!.steps.length).toBe(15);
     expect(questById(Q.M2)!.steps.length).toBe(7);
     expect(questById(Q.M3)!.steps.length).toBe(7);
     expect(questById(Q.M4)!.steps.length).toBe(4);
@@ -573,8 +623,8 @@ describe("the spine, played through", () => {
   it("run one: extract, the copper, the process, refuse the freeze, take the private yield, sell the print, Cold claims the hour", () => {
     let w = add(emptyWorld(), spawnGuest(ME));
     w = movementOne(w, { node: "extract", extra: [], memorial: "copper", weather: "process" });
-    expect(me(w).extracted).toBe(1);
-    expect(w.flags[W.EXTRACTIONS]).toBe(1);
+    expect(me(w).extracted, "both nodes extracted").toBe(2);
+    expect(w.flags[W.EXTRACTIONS]).toBe(2);
     w = guestLockAndLink(w);
 
     w = movementTwo(w, { freeze: "refuse", operator: "take" });

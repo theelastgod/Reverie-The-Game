@@ -183,8 +183,11 @@ returns `Effect[]` that `effects.ts` applies.
 ### Spine (hour bands are budgets; each hour has a reversal, a name, a world change)
 **I — Diagnosis (guest-legal).** Arrive unsealed → Intake Clerk (learn strike,
 dodge, heavy) → first node: extract (Bestand, Gestell +1) or keep (Readiness) →
-Quill at the Wet gate → Ord at the Annex gate → Nara on the funeral street:
-memorial recorder (preserve the voice / dismantle the copper), burial → name the
+Desk Three (the second fight: wait for the red, interrupt) → second node (the
+city reads the pair) → Quill at the Wet gate (print your face, or keep the
+name) → Ord at the Annex gate (enter the honest ledger, or stay off it) → Nara
+on the funeral street: hear the memorial recorder, then preserve the voice /
+dismantle the copper, burial → name the
 weather at the Safety plaque (stability / the process / the end of world as
 world) → the going-under threshold: guests lock ("A guest cannot prepare the
 ground."), Angels die-as-death and wake in the Care.

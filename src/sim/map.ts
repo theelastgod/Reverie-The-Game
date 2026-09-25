@@ -264,12 +264,12 @@ export const NPC_STATIONS: Record<string, NpcHome> = Object.fromEntries([
   home("ione-clearing", "clearing", 52, 65),
 ].map(h => [h.id, h]));
 
-export type EnemySpawn = { id: string; kind: EnemyKind; district: DistrictId; x: number; y: number; name: string; tint: "lavender" | "wine" | "sky" | "paper" };
-const spawn = (id: string, kind: EnemyKind, district: DistrictId, tx: number, ty: number, name: string, tint: EnemySpawn["tint"]): EnemySpawn =>
-  ({ id, kind, district, ...at(tx, ty), name, tint });
+export type EnemySpawn = { id: string; kind: EnemyKind; district: DistrictId; x: number; y: number; name: string; tint: "lavender" | "wine" | "sky" | "paper"; fallFlag?: string };
+const spawn = (id: string, kind: EnemyKind, district: DistrictId, tx: number, ty: number, name: string, tint: EnemySpawn["tint"], fallFlag?: string): EnemySpawn =>
+  ({ id, kind, district, ...at(tx, ty), name, tint, ...(fallFlag ? { fallFlag } : {}) });
 export const ENEMY_SPAWNS: EnemySpawn[] = [
   spawn("intake-clerk", "intake", "nave", 13, 42, "Intake Clerk", "lavender"),
-  spawn("desk-three", "clerk", "nave", 21, 38, "Desk Three", "lavender"),
+  spawn("desk-three", "clerk", "nave", 21, 38, "Desk Three", "lavender", "desk-three"), // F.DESK_THREE: the second fight of the opening
   spawn("annex-runner", "clerk", "nave", 26, 43, "Annex Runner", "lavender"),
   spawn("practice-dummy", "dummy", "nave", 28, 33, "Practice dummy", "paper"),
   spawn("enforcer-1", "enforcer", "wet", 40, 50, "Cold desk · one", "wine"),

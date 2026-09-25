@@ -98,6 +98,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/generated-manifest.tsv` (72–83); the trailer itself is an uploaded
   media file, not a generation. Nothing is wired into the client yet (see
   Backlog 1).
+- Opening beats (2026-09-25): Movement I has fifteen steps. Desk Three is the
+  second fight (a data `fallFlag` on its spawn credits every participant, the
+  way the Intake Clerk's kind does); the second node follows and the city
+  reads the pair (`C.SECOND_NODE`: keep / extract / split). Quill's first
+  conversation ends in her offer: print your face (an exhibition item that
+  decays) or keep the name; Ord's weather answer opens his second ledger:
+  enter a line (a news item everyone sees) or stay off it; both remember it
+  in their later lines. The memorial recorder must be heard (F) before it can
+  be decided at the crate or with Nara. The campaign bot fights Desk Three,
+  takes the second node (or the third when the second is spent), answers both
+  offers, and listens before deciding.
 
 ## Verified (2026-09-25, integration)
 
@@ -114,8 +125,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - Against `npx wrangler dev --port 8788`: `scripts/smoke-world.mjs` PASS;
   `scripts/smoke-campaign.mjs` PASS on a fresh world and again on the same
   world (Movement I to the guest lock, link 7777, going under, Movement II);
-  latest measure: bot 50.5 s (walk 42.3 s, fight 6.8 s, talk 1.4 s), 990 words
-  shown, 4 decisions, first playthrough estimate 10.2 min.
+  latest measure (after the opening beats, fresh world and reused world):
+  bot 57 s (walk 47 s, two fights 8 s, talk 1.6 s), 1292 words shown, 7
+  decisions, first playthrough estimate 14.4 min.
 - `scripts/render-check.mjs` PASS: title, Nave with HUD, dialogue screenshots
   in `.rebuild/shots/`; 14.9 fps under this sandbox's software WebGL
   (SwiftShader), so frame pacing on a GPU-backed laptop is still unmeasured.
@@ -153,16 +165,17 @@ they are discovered; keep this list honest.
    trailer: about 255 credits, for replacements only.
 2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
    (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
-3. **Opening density.** Measured 2026-09-25 (`scripts/smoke-campaign.mjs`
-   prints `measure:` lines): bot 50.5 s (walk 42.3 s, fight 6.8 s, talk
-   1.4 s), 990 words on the critical path (dialogue 459, spoken 107, journal
-   315, notices 109), four decisions; estimated first playthrough 10.2 min
-   against the 15–20 target. The fight now asks for two telegraphs and pays a
-   heavy interrupt. Close the rest of the gap with authored beats, not
-   padding: give Quill's and Ord's first conversations a choice each with a
-   consequence; put the second yield node and Desk Three on the way to Quill;
-   let the recorder be heard before it is decided; a short second clerk on the
-   way to the plaque. Re-measure after each change and keep the numbers here.
+3. **Opening density.** Measured 2026-09-25 after the opening beats
+   (`scripts/smoke-campaign.mjs` prints `measure:` lines; a later fight is
+   floored at 25 s of a person's time, the first at 45 s): bot 57.5 s (walk
+   47.6 s, fights 8.2 s, talk 1.6 s), 1292 words on the critical path
+   (dialogue 586, spoken 161, journal 392, notices 153), seven decisions;
+   estimated first playthrough 14.4 min against the 15–20 target (was 10.2).
+   Left to author: a short exchange with Ord about the pair the second node
+   read; a line from Nara when the print is in your holdings; the Annex
+   Runner as an optional third clerk on the way back to the plaque (it would
+   need a courier route, not just an aggro radius). Re-measure after each
+   change and keep the numbers here.
 4. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
    the cookie session stays as the guest identity.
 5. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log

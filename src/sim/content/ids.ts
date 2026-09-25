@@ -8,6 +8,9 @@ export const F = {
   ARRIVED: "arrived", // moved for the first time
   INTAKE: "intake", // took part in the Intake Clerk's fall
   FIRST_NODE: "node:first", // decided the first node
+  DESK_THREE: "desk-three", // took part in Desk Three's fall
+  SECOND_NODE: "node:second", // decided the second node
+  HEARD_RECORDER: "heard:recorder", // listened to the recorder after meeting Nara
   TALKED_QUILL: "talked:quill",
   TALKED_ORD: "talked:ord",
   TALKED_NARA: "talked:nara",
@@ -47,6 +50,9 @@ export const seasonPassingFlag = (season: number): string => `passing:${season}`
 /** Key decisions (Player.choices). */
 export const C = {
   FIRST_NODE: "node:first", // "extract" | "keep"
+  SECOND_NODE: "node:second", // "extract" | "keep" | "split"
+  QUILL_PRINT: "quill:print", // "printed" | "kept"
+  ORD_LEDGER: "ord:ledger", // "entered" | "off"
   MEMORIAL: "memorial", // "voice" | "copper"
   WEATHER: "weather", // "stability" | "process" | "end"
   FREEZE: "freeze", // "signed" | "refused"

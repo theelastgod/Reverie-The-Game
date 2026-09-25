@@ -293,7 +293,7 @@ export function applyStance(w: WorldState, id: string): WorldState {
 
 // ---------------------------------------------------------------- hits
 
-/** A player strikes an enemy. Death leaves a wreckage with no spoils; the intake clerk credits every participant. */
+/** A player strikes an enemy. Death leaves a wreckage with no spoils; the intake clerk and any spawn with a fall flag credit every participant. */
 function hitEnemy(w: WorldState, attacker: Player, e: Enemy, dmg: number): WorldState {
   const now = w.now;
   const stats = enemyStats(e.kind);
@@ -326,11 +326,12 @@ function hitEnemy(w: WorldState, attacker: Player, e: Enemy, dmg: number): World
     items: [],
   };
   cur = { ...cur, wreckage: [...cur.wreckage, wreck] };
-  if (e.kind === "intake") {
+  const fallFlag = e.kind === "intake" ? F.INTAKE : e.fallFlag;
+  if (fallFlag) {
     const players = new Map(cur.players);
     for (const pid of participants) {
       const q = players.get(pid);
-      if (q && !(q.flags[F.INTAKE] ?? 0)) players.set(pid, { ...q, flags: { ...q.flags, [F.INTAKE]: 1 } });
+      if (q && !(q.flags[fallFlag] ?? 0)) players.set(pid, { ...q, flags: { ...q.flags, [fallFlag]: 1 } });
     }
     cur = { ...cur, players };
   }
