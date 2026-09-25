@@ -32,14 +32,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - Engine, content and client modules are landing from their own workflows;
   see the file list in `DESIGN.md` §1.
 
-## Verified
+## Verified (2026-09-25, integration)
 
-- `npx vitest run server` — session harness (restore, persist-before-broadcast,
-  unknown socket, intent expiry, takeover, junk packets, per-viewer snapshots),
-  clock.
-- `npx tsc --noEmit -p tsconfig.server.json` — Worker typecheck against the sim.
-- The live scripts run against `npx wrangler dev --port 8788` with the client
-  staged in `site/play/`. Record the results here when they pass on a deploy.
+- `npm run typecheck` — client and Worker clean.
+- `npm test` — 19 files, 305 tests: map integrity and reachability, identity,
+  world/combat/fairness, economy, houses, clearing, engine glue, snapshot
+  visibility, content coverage, side quests (all 33 driven end to end), two
+  full spine playthroughs reaching every Passing outcome, server sessions,
+  clock, client socket, HUD helpers, standalone-content lint.
+- `npm run build:play` + `node scripts/stage-play.mjs` — production client staged.
+- Against `npx wrangler dev --port 8788`: `scripts/smoke-world.mjs` PASS;
+  `scripts/smoke-campaign.mjs` PASS on a fresh world and again on the same
+  world (Movement I to the guest lock, link 7777, going under, Movement II).
+- `scripts/render-check.mjs` PASS: title, Nave with HUD, dialogue screenshots
+  in `.rebuild/shots/`; 16 fps under this sandbox's software WebGL
+  (SwiftShader), so frame pacing on a GPU-backed laptop is still unmeasured.
+- Not verified: a deploy (the Cloudflare API is denied by the network policy),
+  the Stage B assets (results host denied), rendered play on real hardware.
 
 ## Backlog
 
@@ -88,7 +97,11 @@ they are discovered; keep this list honest.
     the cookie session stays as the guest identity.
 11. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
     (history, passings, claims) with additive migrations.
-12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+12. **Saved-world shape migration.** A world checkpointed by an older build
+    can carry stale enemy/node/POI shapes; on restore, rebuild those
+    collections from defaults while keeping player progress, and version the
+    checkpoint. (A stale local checkpoint made the campaign smoke fail once.)
+13. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
     into `banked` only. Keep the fairness tests green.
 
 ## Rules

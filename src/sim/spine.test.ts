@@ -100,6 +100,12 @@ function expectDone(w: WorldState, questId: string, id = ME): void {
   expect(questProgress(me(w, id), questId), `${questId} finished`).toMatchObject({ started: true, done: true });
 }
 
+/** With no spine step live, the journal shows a side hour or nothing; never a movement. */
+function expectNoSpineObjective(w: WorldState, id = ME): void {
+  const objective = snapshotFor(w, id).objective;
+  if (objective) expect(questById(objective.quest)?.kind, `${objective.quest} is a side hour`).toBe("side");
+}
+
 const pass = (w: WorldState): WorldState => interact(goTo(w, ME, "clearing-ring"), ME, "clearing-ring", "pass");
 const ready = (w: WorldState, over: Partial<Player>): WorldState => add(w, { ...me(w), ...over });
 
@@ -254,7 +260,7 @@ function guestLockAndLink(w0: WorldState): WorldState {
   const snap = snapshotFor(w, ME);
   expect(snap.you.wink).toBe("");
   expect(snap.you.locked).toBe(true);
-  expect(snap.objective).toBeNull();
+  expectNoSpineObjective(w);
 
   // a locked guest cannot claim, flag, extract or enter the Care
   w = interact(goTo(w, ME, "claims-desk"), ME, "claims-desk", "file");
@@ -490,7 +496,7 @@ function throughTheCredits(w0: WorldState): WorldState {
   expect(me(w).flags[F.CREDITS]).toBe(1);
   expect(me(w).movement).toBe(5);
   expect(me(w).notices.some(n => n.text.includes("REVERIE: THE GAME"))).toBe(true);
-  expect(snapshotFor(w, ME).objective).toBeNull();
+  expectNoSpineObjective(w);
   expect(w.news.some(n => n.text.includes("credits"))).toBe(true);
   return w;
 }
