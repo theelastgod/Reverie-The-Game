@@ -9,7 +9,8 @@ import { chromium } from 'playwright-core';
 
 const origin = process.argv[2] ?? 'http://127.0.0.1:8788/play/';
 const shots = '.rebuild/shots';
-const MIN_FPS = 30;
+// A GPU-less sandbox (SwiftShader) rasterises the canvas in software at ~16 fps; set RENDER_MIN_FPS to run there.
+const MIN_FPS = Number(process.env.RENDER_MIN_FPS ?? 30);
 const deadline = setTimeout(() => { console.error('FAIL: render-check deadline (120 s) exceeded'); process.exit(1); }, 120000);
 
 function findChromium() {
@@ -81,7 +82,13 @@ try {
     requestAnimationFrame(tick);
   }));
   const canvases = await page.locator('canvas').count();
-  console.log(`canvas: ${canvases}  avg fps: ${fps.toFixed(1)}  prompt: ${JSON.stringify(promptText.trim())}`);
+  const renderer = await page.evaluate(() => {
+    const gl = document.createElement('canvas').getContext('webgl2') ?? document.createElement('canvas').getContext('webgl');
+    const info = gl?.getExtension('WEBGL_debug_renderer_info');
+    return gl && info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : 'no webgl';
+  }).catch(() => 'unknown');
+  console.log(`canvas: ${canvases}  avg fps: ${fps.toFixed(1)}  gl: ${renderer}  prompt: ${JSON.stringify(promptText.trim())}`);
+  if (/swiftshader|software|llvmpipe/i.test(String(renderer))) console.log('note: software WebGL; frame pacing here does not reflect a GPU-backed browser');
   if (errors.length) console.log(`page errors: ${errors.slice(0, 5).join(' | ')}`);
   if (canvases === 0) failures.push('no canvas rendered');
   if (fps < MIN_FPS) failures.push(`fps ${fps.toFixed(1)} < ${MIN_FPS}`);

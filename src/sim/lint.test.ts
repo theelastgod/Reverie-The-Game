@@ -6,7 +6,8 @@ import { join } from "node:path";
 const FORBIDDEN = /\b(studios?|film|films|documentary|director|collective|screening|screenings|production still|observer room|participant room|founder room|sephiroth|aerith|midgar|shinra|materia|lifestream|buster sword)\b/i;
 // DESIGN.md, AGENTS.md and PROMPT.md are developer documents that state the rule; the shipped tree is what is linted.
 const ROOTS = ["src", "server/src", "site", "index.html", "README.md", "HANDOFF.md", "public/assets", "scripts"];
-const SKIP = /node_modules|\.test\.ts$|lint\.test\.ts$/;
+// Build output (site/play, dist) carries third-party library headers and is regenerated from the sources linted here.
+const SKIP = /node_modules|\.test\.ts$|lint\.test\.ts$|^site\/play\/|^dist\//;
 
 function walk(path: string, out: string[] = []): string[] {
   if (!existsSync(path)) return out;
