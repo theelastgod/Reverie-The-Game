@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Reverie: The Game</title>
-    <meta name="description" content="Near-AAA top-down 2D MMO RPG. Every player is an angel. 7777 Reverie Angels. Play-to-earn on Base." />
+    <meta name="description" content="A standalone top-down 2D action RPG / MMO. You are a cybernetic angel inside a world that has already ended. The singularity is the weather." />
     <link rel="icon" href="./assets/wing-star.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,57 +19,98 @@
           <span>REVERIE: THE GAME</span>
         </a>
         <nav>
-          <a href="./prompt.html">Master prompt</a>
-          <a href="https://reverie.cc" target="_blank" rel="noreferrer">reverie.cc</a>
+          <a href="#controls">Controls</a>
+          <a href="#rules">Rules</a>
+          <a class="play" href="./play/">Play</a>
         </nav>
       </header>
 
       <section class="hero">
         <div class="hero-copy">
-          <p class="tag">Reverie Studios · Base · 7,777 Angels</p>
-          <h1>TECH<br />CULTURE<br /><span class="hot">MACHINE</span></h1>
+          <p class="tag">Top-down action RPG · MMO · 7,777 Angels</p>
+          <h1>REVERIE:<br /><span class="hot">THE GAME</span></h1>
           <p class="lede">
             You are a cybernetic angel inside a world that has already ended. The singularity is the weather.
             You prepare the ground for the last god — or you become standing-reserve.
           </p>
           <div class="row">
-            <a class="btn primary" href="./play/">Play the Nave</a>
-            <a class="btn" href="./prompt.html">Read the brief</a>
-            <a class="btn" href="https://github.com/theelastgod/Reverie-The-Game">GitHub</a>
+            <a class="btn primary" href="./play/">Play</a>
+            <a class="btn" href="#controls">Controls</a>
           </div>
+          <p class="fine">Guests play Movement I in the browser. No wallet, no download.</p>
         </div>
         <div class="hero-mark">
-          <video autoplay muted loop playsinline>
+          <video autoplay muted loop playsinline poster="./assets/wing-star.png">
             <source src="./assets/clearing-ring.mp4" type="video/mp4" />
           </video>
-          <img src="./assets/wing-star.png" alt="Reverie mark" />
+          <img src="./assets/wing-star.png" alt="The wing-star mark" />
           <p class="temp">Cold · pressurized · operational</p>
         </div>
       </section>
-
-      <div class="marquee">
-        <div class="track">
-          The Last God · Rev/Acc · $REVERIE · Angels · Gestell · Fourfold · The Last God · Rev/Acc · $REVERIE · Angels ·
-        </div>
-      </div>
 
       <section class="grid3">
         <article>
           <p class="label">01</p>
           <h2>Campaign</h2>
-          <p>~5 hour authored spine on the live server. Four movements. FF7-density plot without Square IP. Guests lock at going-under.</p>
+          <p>Four movements on the live server. Diagnosis, the techno-feudal city, the Organs, the Turn. A party that can leave you. Guests lock at the going-under: <em>a guest cannot prepare the ground.</em></p>
         </article>
         <article>
           <p class="label">02</p>
-          <h2>MMO / PvP</h2>
-          <p>Houses of the Fourfold. Clearing contests. Flagged fights that take spoils from people, not a faucet.</p>
+          <h2>MMO &amp; PvP</h2>
+          <p>Houses of the Fourfold. Clearing contests and Passings that need more than one Angel. Flagged fights in the Wet Grid and the Organs that take spoils from people, not a faucet. Wreckage stays on the map.</p>
         </article>
         <article class="acid">
           <p class="label">03</p>
-          <h2>$REVERIE</h2>
-          <p>Angel NFT required to earn. Token never buys combat. Bestand in-game. $REVERIE on Base drops last.</p>
+          <h2>Bestand &amp; $REVERIE</h2>
+          <p>Bestand is earned in-world and every earner has a sink. Only a linked Angel can bank it. <strong>The token never buys combat.</strong> Serials, aura and items change perception, verbs and style — never a number that decides a fight.</p>
         </article>
       </section>
+
+      <section class="band" id="controls">
+        <div class="band-head">
+          <p class="label">Controls</p>
+          <h2>Move, dodge, strike, speak.</h2>
+        </div>
+        <table class="controls">
+          <thead><tr><th>Input</th><th>Does</th><th>Rule</th></tr></thead>
+          <tbody>
+            <tr><td>WASD / arrows</td><td>Move</td><td>170 px/s, walls and personal gates are the server's</td></tr>
+            <tr><td>Shift + direction</td><td>Dodge</td><td>0.18 s dash, invulnerable only while dashing; longer window in Restraint</td></tr>
+            <tr><td>Click / Space</td><td>Strike</td><td>Light hit, hit-stop, one constant damage number for everyone</td></tr>
+            <tr><td>R / Shift + click</td><td>Heavy</td><td>Wind-up you cannot dodge out of; interrupts a telegraph</td></tr>
+            <tr><td>Tab</td><td>Stance</td><td>Restraint sees Winke; Storm sees wreckage and burns restraint</td></tr>
+            <tr><td>K</td><td>Kit</td><td>Your messenger's one verb. Never damage</td></tr>
+            <tr><td>F</td><td>Speak / read / bury / enter</td><td>The primary verb of the nearest thing</td></tr>
+            <tr><td>E / Q</td><td>Secondary verbs</td><td>Extract or keep a node, take or refuse, spot or sell, loot or bury</td></tr>
+            <tr><td>1–4 · Esc</td><td>Dialogue</td><td>Choose · close</td></tr>
+            <tr><td>V / T</td><td>Flag / truce</td><td>Angels only, in flag-legal districts; a truce unflags both</td></tr>
+            <tr><td>I</td><td>Use</td><td>The first paper item: insurance or repair</td></tr>
+            <tr><td>J / M</td><td>Journal / minimap</td><td>Field notes and bearing; the city at a glance</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="band rules" id="rules">
+        <div class="band-head">
+          <p class="label">Non-negotiables</p>
+          <h2>What the server will not let anyone buy.</h2>
+        </div>
+        <ol class="rules-list">
+          <li><strong>The server owns every number.</strong> Combat, loot, aura, Bestand, Winke, claims, PvP, weather, Passings. The client sends intents and renders.</li>
+          <li><strong>The token never buys combat.</strong> $REVERIE, serials, aura and items never touch damage, drop rates, win chances, quest completion or House rank. Traits change perception, verbs and style.</li>
+          <li><strong>Only a linked Angel earns.</strong> Guests play Movement I and lock at the going-under. Guests cannot claim, flag, see Winke, or enter the Care, the Clearing or the Organs.</li>
+          <li><strong>Every earner ships a sink.</strong> No unbounded faucet. The claims desk ships disarmed: no mint, no real-value settlement.</li>
+          <li><strong>Death is real.</strong> Unbanked Bestand and exhibition items drop, aura is wounded, wreckage stays on the map. Cult objects and banked value never drop.</li>
+          <li><strong>A solo hero cannot force a Passing.</strong> At meltdown the Clearing must be held by dwelling Angels.</li>
+          <li><strong>PvP needs both flags.</strong> No truce, not on the practice ground. Camping the same body costs the camper.</li>
+          <li><strong>No yield promises.</strong> Anywhere.</li>
+        </ol>
+      </section>
+
+      <footer class="foot">
+        <span>REVERIE: THE GAME</span>
+        <a href="./play/">Play</a>
+      </footer>
     </div>
   </body>
 </html>

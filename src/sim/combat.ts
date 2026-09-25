@@ -23,6 +23,7 @@ const INTAKE_ARRIVAL_RADIUS = 240; // px; the intake clerk only takes a shift fo
 const ENEMY_STANDOFF = 28; // px; an enemy stops short of standing inside a body
 const SUBSTEP = BODY_R / 2;
 const HOME_EPSILON = 4;
+const EPS = 1e-6; // timers this close to zero are zero; float drift never steals a tick
 
 // ---------------------------------------------------------------- helpers
 
@@ -155,7 +156,7 @@ function tickEnemy(w: WorldState, e0: Enemy, dt: number): { e: Enemy; w: WorldSt
 
   if (e.state === "telegraph") {
     const t = e.t - dt;
-    if (t > 0) return { e: { ...e, t }, w };
+    if (t > EPS) return { e: { ...e, t }, w };
     let cur = w;
     if (within(e, target, stats.reach * 1.25)) {
       if (target.dodgeT > 0) {
@@ -171,7 +172,7 @@ function tickEnemy(w: WorldState, e0: Enemy, dt: number): { e: Enemy; w: WorldSt
 
   // recover
   const t = e.t - dt;
-  if (t > 0) return { e: { ...e, t }, w };
+  if (t > EPS) return { e: { ...e, t }, w };
   return { e: { ...e, state: "aggro", t: 0 }, w };
 }
 
@@ -188,7 +189,7 @@ export function tickEnemies(w: WorldState, dt: number): WorldState {
 
 // ---------------------------------------------------------------- player timers
 
-const down = (v: number, dt: number) => (v > 0 ? Math.max(0, v - dt) : 0);
+const down = (v: number, dt: number) => (v > 0 && v - dt > EPS ? v - dt : 0);
 
 /** Cooldowns and windows. `now` lets an expired kit fall away; without it the kit is left for the world tick. */
 export function tickCombatTimers(p: Player, dt: number, now?: number): Player {
@@ -340,8 +341,9 @@ function pvpKill(w: WorldState, killerId: string, victimId: string): WorldState 
   if (!k0 || !v0) return w;
 
   const duelWreck = liveWreckage(w).find(r => within(r, k0, RUIN_DUEL_RADIUS) && within(r, v0, RUIN_DUEL_RADIUS)) ?? null;
-  const chained = k0.lastKillAt > 0 && now - k0.lastKillAt < CHAIN_KILL_WINDOW;
-  const camping = k0.lastKillId === victimId && k0.lastKillAt > 0 && now - k0.lastKillAt < CAMP_WINDOW;
+  const hasKilled = k0.lastKillId !== "";
+  const chained = hasKilled && now - k0.lastKillAt < CHAIN_KILL_WINDOW;
+  const camping = hasKilled && k0.lastKillId === victimId && now - k0.lastKillAt < CAMP_WINDOW;
 
   let cur = killPlayer(w, victimId, killerId, LINES.DEATH_BY(k0.name));
   const wreckIdx = cur.wreckage.findIndex(r => r.fromId === victimId && r.at === now && r.killerId === killerId);
@@ -365,12 +367,13 @@ function pvpKill(w: WorldState, killerId: string, victimId: string): WorldState 
     history: spoils > 0 ? { ...k.history, looted: k.history.looted + 1 } : k.history,
   };
   if (spoils > 0) k = say(k, LINES.SPOILS_COPY, now);
+  if (duelWreck) k = say(k, LINES.DUEL_COPY, now);
   if (chained) k = { ...k, restraint: Math.max(0, k.restraint - RESTRAINT_CHAIN_KILL_PENALTY) };
   if (camping) {
+    // The camp line is the one the camper hears, even at a duel's grave.
     k = say({ ...k, aura: Math.max(0, k.aura - AURA_CAMP_PENALTY), campCount: k.campCount + 1 }, LINES.CAMP_COPY, now);
     cur = { ...cur, gestell: Math.min(100, cur.gestell + GESTELL_CAMP) };
   }
-  if (duelWreck) k = say(k, LINES.DUEL_COPY, now);
   cur = setPlayer(cur, k);
 
   if (duelWreck) {
