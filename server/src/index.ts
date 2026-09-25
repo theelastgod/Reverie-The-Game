@@ -37,6 +37,7 @@ import {
   WorldState,
   Player,
 } from "../../src/sim/world.ts";
+import { SimulationClock, STEP_MS } from "./clock";
 
 type Env = {
   ASSETS: { fetch: (req: Request) => Promise<Response> };
@@ -71,6 +72,7 @@ export class ReverieWorld {
   private checkpointAt = 0;
   private intentAt = new Map<string, number>();
   private ticking = false;
+  private clock = new SimulationClock();
 
   constructor(private readonly ctx: DurableObjectState, _env: Env) {
     this.w = emptyWorld();
@@ -159,6 +161,8 @@ export class ReverieWorld {
       return;
     }
     if (!data || typeof data !== "object" || Array.isArray(data)) return;
+    // Settle elapsed time before a new input; it must not act retroactively during catch-up.
+    this.advanceWorld(Date.now());
     if (data.t === "intent" && data.intent) {
       this.intentAt.set(id, Date.now());
       this.w.intents.set(id, {
@@ -306,18 +310,32 @@ export class ReverieWorld {
   private async ensureTick() {
     if (this.ticking) return;
     this.ticking = true;
-    await this.ctx.storage.setAlarm(Date.now() + 50);
+    this.clock.start(Date.now());
+    // A hibernated object's constructor must not replace its pending alarm.
+    if (await this.ctx.storage.getAlarm() === null) await this.ctx.storage.setAlarm(Date.now() + STEP_MS);
+  }
+
+  private advanceWorld(now: number) {
+    for (const id of this.w.players.keys()) {
+      if (now - (this.intentAt.get(id) ?? 0) > 1000) this.w.intents.set(id, { ...idle });
+    }
+    // Advance by elapsed server time rather than counting callbacks; keep fixed physics steps.
+    const steps = this.clock.advance(now);
+    for (let i = 0; i < steps; i++) this.w = tickWorld(this.w, DT);
   }
 
   async alarm() {
-    for (const id of this.w.players.keys()) {
-      if (Date.now() - (this.intentAt.get(id) ?? 0) > 1000) this.w.intents.set(id, { ...idle });
+    if (this.w.players.size === 0) {
+      this.ticking = false;
+      this.clock.stop();
+      return;
     }
-    this.w = tickWorld(this.w, DT);
+    const now = Date.now();
+    this.advanceWorld(now);
     if (this.w.now - this.checkpointAt >= 1) await this.checkpoint();
     this.broadcast();
-    if (this.w.players.size > 0) await this.ctx.storage.setAlarm(Date.now() + 50);
-    else this.ticking = false;
+    if (this.w.players.size > 0) await this.ctx.storage.setAlarm(Math.max(now + STEP_MS, Date.now() + 1));
+    else { this.ticking = false; this.clock.stop(); }
   }
 
   private broadcast() {

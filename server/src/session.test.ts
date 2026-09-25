@@ -1,7 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import worker, { ReverieWorld, sameOrigin, sessionToken } from "./index";
 import { emptyWorld, spawnGuest } from "../../src/sim/world";
-import { WET_GRID } from "../../src/sim/campaign";
+import { CLERK_DAMAGE, WET_GRID } from "../../src/sim/campaign";
+
+beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(0); });
+afterEach(() => { vi.useRealTimers(); });
 
 const token = "12345678-1234-4123-8123-123456789abc";
 function socket(id = "a") {
@@ -15,6 +18,7 @@ async function worldHarness(data = new Map<string, unknown>(), sockets: ReturnTy
       for (const [key, value] of Object.entries(values)) data.set(key, structuredClone(value));
     }),
     setAlarm: vi.fn(async () => {}),
+    getAlarm: vi.fn(async () => data.get("scheduled") ?? null),
   };
   const ctx = { storage, getWebSockets: () => sockets, waitUntil: vi.fn(),
     blockConcurrencyWhile: (fn: () => Promise<unknown>) => (ready = fn()) };
@@ -71,16 +75,15 @@ describe("durable world sessions", () => {
     const saved = emptyWorld(); saved.players.set("a", spawnGuest("a"));
     const ws = socket();
     const { world } = await worldHarness(new Map([["world:v1", saved]]), [ws]);
-    const date = vi.spyOn(Date, "now").mockReturnValue(1000);
-    try {
-      await world.webSocketMessage(ws as never, '{"t":"intent","intent":{"right":true}}');
-      await world.alarm();
-      const moved = JSON.parse(ws.send.mock.calls.at(-1)![0]).players[0].x;
-      expect(moved).toBeGreaterThan(spawnGuest("a").x);
-      date.mockReturnValue(2101);
-      await world.alarm();
-      expect(JSON.parse(ws.send.mock.calls.at(-1)![0]).players[0].x).toBe(moved);
-    } finally { date.mockRestore(); }
+    vi.setSystemTime(50);
+    await world.webSocketMessage(ws as never, '{"t":"intent","intent":{"right":true}}');
+    vi.setSystemTime(100);
+    await world.alarm();
+    const moved = JSON.parse(ws.send.mock.calls.at(-1)![0]).players[0].x;
+    expect(moved).toBeGreaterThan(spawnGuest("a").x);
+    vi.setSystemTime(1151);
+    await world.alarm();
+    expect(JSON.parse(ws.send.mock.calls.at(-1)![0]).players[0].x).toBe(moved);
   });
 
   it("broadcasts opening encounters to newcomers while veterans see shared departures", async () => {
@@ -131,6 +134,60 @@ describe("durable world sessions", () => {
     const linked = await worldHarness(new Map([["world:v1", ready]]), [ws]);
     await linked.world.webSocketMessage(ws as never, '{"t":"flag"}');
     expect(linked.data.get(`player:${token}`)).toMatchObject({ guest: false, flagged: true });
+  });
+
+  it("tracks elapsed time through delayed and duplicate alarm callbacks", async () => {
+    const saved = emptyWorld(); saved.players.set("a", spawnGuest("a"));
+    const ws = socket();
+    const { world } = await worldHarness(new Map([["world:v1", saved]]), [ws]);
+    await world.webSocketMessage(ws as never, '{"t":"intent","intent":{"right":true}}');
+    for (let i = 1; i <= 10; i++) { vi.setSystemTime(i * 83); await world.alarm(); }
+    const snap = JSON.parse(ws.send.mock.calls.at(-1)![0]);
+    expect(snap.now).toBeCloseTo(.8);
+    expect(snap.players[0].x).toBeGreaterThan(spawnGuest("a").x);
+    await world.alarm();
+    expect(JSON.parse(ws.send.mock.calls.at(-1)![0])).toEqual(snap);
+  });
+
+  it("bounds outage catch-up, clears stale movement and does not replay a minute of attacks", async () => {
+    const saved = emptyWorld(); saved.players.set("a", spawnGuest("a"));
+    saved.clerks = [{ id: "test", name: "Clerk", x: 200, y: 480, hp: 44, telegraph: .1, targetId: "a" }];
+    const ws = socket();
+    const { world } = await worldHarness(new Map([["world:v1", saved]]), [ws]);
+    await world.webSocketMessage(ws as never, '{"t":"intent","intent":{"right":true}}');
+    vi.setSystemTime(60000);
+    await world.alarm();
+    const snap = JSON.parse(ws.send.mock.calls.at(-1)![0]);
+    expect(snap.now).toBeCloseTo(.25);
+    expect(snap.players[0]).toMatchObject({ x: spawnGuest("a").x, hp: 100 - CLERK_DAMAGE });
+  });
+
+  it("settles old elapsed time before applying a fresh dodge request", async () => {
+    const saved = emptyWorld(); saved.players.set("a", spawnGuest("a"));
+    const ws = socket();
+    const { world, data } = await worldHarness(new Map([["world:v1", saved]]), [ws]);
+    vi.setSystemTime(125);
+    await world.webSocketMessage(ws as never, '{"t":"dodge","dx":1,"dy":0,"elapsed":999999}');
+    expect(data.get(`player:${token}`)).toMatchObject({ dodgeT: .18 });
+    vi.setSystemTime(150);
+    await world.alarm();
+    const snap = JSON.parse(ws.send.mock.calls.at(-1)![0]);
+    expect(snap.now).toBeCloseTo(.15);
+    expect(snap.players[0].dodgeT).toBeCloseTo(.13);
+  });
+
+  it("preserves an alarm already scheduled before hibernation", async () => {
+    const saved = emptyWorld(); saved.players.set("a", spawnGuest("a"));
+    const ws = socket();
+    const { world, storage } = await worldHarness(new Map<string, unknown>([["world:v1", saved], ["scheduled", 50]]), [ws]);
+    expect(storage.getAlarm).toHaveBeenCalled();
+    expect(storage.setAlarm).not.toHaveBeenCalled();
+    vi.setSystemTime(50); await world.alarm();
+    expect(JSON.parse(ws.send.mock.calls.at(-1)![0]).now).toBeCloseTo(.05);
+    await world.webSocketClose(ws as never);
+    storage.setAlarm.mockClear();
+    vi.setSystemTime(60000); await world.alarm();
+    expect(storage.setAlarm).not.toHaveBeenCalled();
   });
 });
 
