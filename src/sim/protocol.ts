@@ -4,7 +4,7 @@
 import type {
   Claim, ClearingState, DialogueView, DistrictId, Enemy, FailedPassing, Fourfold, Grave, HistoryMark, House, HouseScores,
   HouseWar, Intent, Item, Listing, Messenger, Movement, Notice, NpcState, Objective, PartyState, PassingState, PoiState,
-  Player, Prompt, Stance, WinkSchool, Wreckage, YieldNode,
+  Player, Prompt, SideObjective, Stance, WinkSchool, Wreckage, YieldNode,
 } from "./types";
 
 export const PROTOCOL_VERSION = 2;
@@ -90,6 +90,7 @@ export type Snap = {
   news: string[];
   prompt: Prompt | null;
   objective: Objective | null;
+  sideObjectives: SideObjective[];
   notices: Notice[];
 };
 

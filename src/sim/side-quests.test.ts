@@ -522,3 +522,32 @@ describe("every side hour, walked", () => {
     });
   }
 });
+
+describe("side objectives in the snapshot", () => {
+  it("lists every active side hour with its title and a resolved target, newest first, capped", async () => {
+    const { snapshotFor } = await import("./snapshot");
+    const { applyEffects } = await import("./effects");
+    let w = emptyWorld();
+    const a: Player = { ...spawnGuest("a"), guest: false, serial: 42, name: "#0042", house: "earth", messenger: "herald", winkSchool: "hint", auraSeed: 10, aura: 10, flags: { angel: 1, under: 1, m3: 1 }, movement: 3 };
+    w = { ...w, players: new Map([["a", a]]) };
+    const started = SIDE.slice(0, 8);
+    for (const q of started) w = applyEffects(w, "a", [{ kind: "quest", id: q.id, op: "start" }]);
+    const snap = snapshotFor(w, "a");
+    expect(snap.sideObjectives.length).toBeLessThanOrEqual(6);
+    expect(snap.sideObjectives.length).toBeGreaterThan(0);
+    for (const so of snap.sideObjectives) {
+      const q = SIDE_BY_ID[so.quest];
+      expect(q, so.quest).toBeTruthy();
+      expect(so.questTitle).toBe(q.title);
+      expect(so.district).toBe(q.district);
+      expect(so.title).toBe(q.steps[w.players.get("a")!.quests[q.id]].title);
+      if (so.target) expect(Number.isFinite(so.target.x) && Number.isFinite(so.target.y)).toBe(true);
+    }
+    // Newest first: the last started quest that is still active leads.
+    const activeIds = started.filter(q => (w.players.get("a")!.quests[q.id] ?? 0) < q.steps.length).map(q => q.id);
+    expect(snap.sideObjectives[0].quest).toBe(activeIds[activeIds.length - 1]);
+    // Guests never carry side hours they cannot start; a fresh guest has none.
+    const g = { ...w, players: new Map([["g", spawnGuest("g")]]) };
+    expect(snapshotFor(g, "g").sideObjectives).toEqual([]);
+  });
+});

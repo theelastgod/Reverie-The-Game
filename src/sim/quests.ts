@@ -5,7 +5,7 @@
  */
 import { POSITIONS } from "./map";
 import { QUESTS as CONTENT_QUESTS } from "./content";
-import type { Ctx, Objective, Player, Quest, QuestStep, WorldState } from "./types";
+import type { SideObjective, Ctx, Objective, Player, Quest, QuestStep, WorldState } from "./types";
 import { applyEffects } from "./effects";
 import { npcView } from "./snapshot";
 
@@ -175,6 +175,19 @@ function objectiveOf(ctx: Ctx, q: Quest, step: QuestStep): Objective {
     plate: step.plate ?? "",
     movement: q.movement,
   };
+}
+
+/** Every active side quest's current step, with the quest title, most recently started first. Capped so the snapshot stays small. */
+export function sideObjectivesFor(ctx: Ctx, cap = 6): SideObjective[] {
+  const out: SideObjective[] = [];
+  const started = Object.keys(ctx.p.quests);
+  for (let i = started.length - 1; i >= 0 && out.length < cap; i--) {
+    const q = questById(started[i]);
+    if (!q || q.kind !== "side") continue;
+    const s = ctx.p.quests[q.id];
+    if (s < q.steps.length) out.push({ ...objectiveOf(ctx, q, q.steps[s]), questTitle: q.title, district: q.district });
+  }
+  return out;
 }
 
 export function activeQuests(ctx: Ctx): { quest: Quest; step: QuestStep }[] {

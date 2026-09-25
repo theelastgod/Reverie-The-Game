@@ -51,6 +51,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   rectangle cover of the wall tiles (no per-frame masks), rain on the Wet Grid
   by weather band, shrine light pools, walk bob and lean, idle breath, hit-stop
   squash and a shadow under every body.
+- Side hours surfaced (2026-09-25): the snapshot carries every active side
+  quest's current step with the quest title and a resolved target (newest
+  first, capped at six); the journal lists them with live bearings and the
+  world draws a paper ring at each target.
 - Ledger panel (2026-09-25): L toggles it; it opens itself at the claims desk
   and the listing board. Holdings grouped cult / exhibition / paper, claims
   with their hold clocks and the desk's F / E / Q, the Grid's listings with
@@ -138,8 +142,10 @@ they are discovered; keep this list honest.
    interrupt. Directional telegraph arcs, cold ledger damage
    ticks (no coin shower), enemy variety in feel (warden slow and heavy,
    enforcer fast), heavy interrupt feedback.
-4. **Side quest surfaces.** Active side quests with bearings in the journal;
-   quest givers marked in the world.
+4. **Quest givers marked in the world.** The journal and the world now show
+   active side hours; an NPC with an unstarted hour to offer this viewer is not
+   yet marked. Needs a cheap server-side `offers` flag on `NpcView` computed
+   from the secondary cast's hub routers (or a giver field on each side quest).
 5. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
     the cookie session stays as the guest identity.
 6. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log

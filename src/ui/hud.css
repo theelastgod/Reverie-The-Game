@@ -532,6 +532,10 @@ canvas { display: block; }
 .journal-quests li.spine { color: var(--ink); }
 .journal-quests li .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .journal-quests li .step { flex: none; font-variant-numeric: tabular-nums; }
+.journal-quests li.side { display: grid; grid-template-columns: 1fr auto; gap: 0 6px; }
+.journal-quests li.side .name { grid-column: 1 / -1; font-weight: 700; }
+.journal-quests li.side .step { grid-column: 1; white-space: normal; font-weight: 500; color: var(--muted); text-align: left; }
+.journal-quests li.side .where { grid-column: 2; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; }
 
 /* bars */
 .bars {

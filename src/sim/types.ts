@@ -424,5 +424,8 @@ export type Objective = {
   movement: Movement;
 };
 
+/** An active side quest's current step, with the quest's own title, for the journal. */
+export type SideObjective = Objective & { questTitle: string; district: DistrictId };
+
 export type PromptVerb = { key: "F" | "E" | "Q" | "V" | "T" | "I"; label: string; choice: string };
 export type Prompt = { targetId: string; targetKind: "poi" | "npc" | "wreckage" | "player" | "enemy" | "node"; name: string; verbs: PromptVerb[] };

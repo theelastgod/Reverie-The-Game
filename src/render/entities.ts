@@ -562,6 +562,13 @@ export class Entities {
       g.strokeCircle(target.x, target.y, 24 + 8 * pulse);
     }
 
+    // Side hours: a thin paper ring at each step's target, quieter than the spine's gold.
+    for (const so of snap.sideObjectives ?? []) {
+      if (!so.target) continue;
+      g.lineStyle(1.5, COLOR.paper, 0.35 + 0.25 * pulse);
+      g.strokeCircle(so.target.x, so.target.y, 18 + 4 * pulse);
+    }
+
     // The prompt target: a thin paper ring; a POI target also gets a gold one.
     const prompt = snap.prompt;
     if (prompt) {

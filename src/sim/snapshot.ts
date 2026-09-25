@@ -13,7 +13,7 @@ import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type NodeView, type NpcVi
 import type { Ctx, NpcState, Player, Prompt, Wreckage, WorldState } from "./types";
 import { nodeYield } from "./economy";
 import { perception } from "./houses";
-import { objectiveFor } from "./quests";
+import { objectiveFor, sideObjectivesFor } from "./quests";
 import { NODE_REACH, NPC_REACH, PLAYER_REACH, POI_REACH, WRECKAGE_REACH, verbsFor } from "./interact";
 
 const MARKET_TOP = 12;
@@ -225,6 +225,7 @@ export function snapshotFor(w: WorldState, viewerId: string): Snap {
     news: w.news.map(n => n.text),
     prompt: promptFor(ctx),
     objective: objectiveFor(ctx),
+    sideObjectives: sideObjectivesFor(ctx),
     notices: p.notices,
   };
 }

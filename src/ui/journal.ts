@@ -2,12 +2,12 @@
  * Field notes: the current objective (plate, movement numeral, title, detail,
  * bearing) and a compact list of active quests with step numbers.
  */
-import type { Objective } from "../sim/types";
+import type { Objective, SideObjective } from "../sim/types";
 import type { YouView } from "../sim/protocol";
-import { assetUrl, bearingTo, questRows, roman, setClass, setText } from "./format";
+import { assetUrl, bearingTo, roman, setClass, setText } from "./format";
 
 export type JournalPanel = {
-  set(objective: Objective | null, you: YouView): void;
+  set(objective: Objective | null, you: YouView, side?: readonly SideObjective[]): void;
   toggle(): void;
   destroy(): void;
 };
@@ -27,6 +27,7 @@ export function mountJournal(root: HTMLElement): JournalPanel {
   let objectiveSig = "";
   let plateFile = "";
   let questSig = "";
+  const bearingEls = new Map<string, HTMLElement>();
 
   const toggle = () => {
     if (!panel) return;
@@ -36,7 +37,7 @@ export function mountJournal(root: HTMLElement): JournalPanel {
   tab?.addEventListener("click", toggle);
 
   return {
-    set(objective, you) {
+    set(objective, you, side = []) {
       if (!panel) return;
       const sig = objective
         ? [objective.quest, objective.step, objective.title, objective.detail, objective.plate, objective.movement].join("\u0000")
@@ -62,23 +63,31 @@ export function mountJournal(root: HTMLElement): JournalPanel {
       setText(bearing, b);
       setClass(bearing, "here", b === "HERE");
 
-      const rows = questRows(you.quests);
-      const qsig = rows.map(r => r.id + r.step).join("|");
+      // Side hours: the quest, its current step, and a live bearing to the step's target.
+      const qsig = side.map(r => r.quest + ":" + r.step).join("|");
       if (qsig !== questSig && quests) {
         questSig = qsig;
         quests.replaceChildren();
-        for (const r of rows) {
+        bearingEls.clear();
+        for (const r of side) {
           const li = document.createElement("li");
-          if (r.spine) li.className = "spine";
+          li.className = "side";
           const name = document.createElement("span");
           name.className = "name";
-          name.textContent = r.label;
+          name.textContent = r.questTitle;
           const step = document.createElement("span");
           step.className = "step";
-          step.textContent = r.step;
-          li.append(name, step);
+          step.textContent = r.title;
+          const where = document.createElement("span");
+          where.className = "where";
+          li.append(name, step, where);
           quests.append(li);
+          bearingEls.set(r.quest, where);
         }
+      }
+      for (const r of side) {
+        const el = bearingEls.get(r.quest);
+        if (el) setText(el, bearingTo({ x: you.x, y: you.y, district: you.district }, r.target));
       }
     },
     toggle,
