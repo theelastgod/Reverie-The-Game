@@ -89,6 +89,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   world draws a breathing paper diamond over such a person and adds "· has an
   hour" to the label; the minimap rings their dot. Party members keep the gold
   dot.
+- Music and a trailer (2026-09-25, owner-authorized Higgsfield spend): seven
+  instrumental tracks (title theme, Nave underscore, combat pulse, burial
+  elegy, Grid underscore, Clearing rite, a 32 s trailer cue) and a 30 s
+  16:9 trailer cut in the Higgsfield sandbox from four new image-to-video
+  clips (Nave, hot street, Kerb, arena) plus four existing loops, with paper
+  captions in the game's register and the cue mixed under. All rows are in
+  `.rebuild/generated-manifest.tsv` (72–83); the trailer itself is an uploaded
+  media file, not a generation. Nothing is wired into the client yet (see
+  Backlog 1).
 
 ## Verified (2026-09-25, integration)
 
@@ -134,8 +143,14 @@ they are discovered; keep this list honest.
    panel, the four Passing outcomes as full-screen overlays, district ambients
    in the journal); audio (district beds with cross-fades, SFX on strike, heavy,
    hit, dodge, wink, death, extract, keep, page, going-under, burial, freeze,
-   appearance, hijack; a mute toggle; volume in localStorage). Remaining
-   Higgsfield budget after this session: about 170 credits, for replacements only.
+   appearance, hijack; a mute toggle; volume in localStorage); music (rows
+   72–78: the title theme behind the title screen, the Nave and Grid
+   underscores by district, the combat pulse while an enemy is in telegraph
+   or recovery, the burial elegy at the plot and the Care, the rite in the
+   Clearing; cross-fade with the beds, never both at full level); the four
+   trailer clips (79–82) as extra loops, and the 30 s trailer (83) on the
+   landing page in `site/`. Remaining Higgsfield budget after the music and
+   trailer: about 255 credits, for replacements only.
 2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
    (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
 3. **Opening density.** Measured 2026-09-25 (`scripts/smoke-campaign.mjs`
