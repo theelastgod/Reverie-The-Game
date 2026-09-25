@@ -5,7 +5,7 @@
  */
 import { POSITIONS } from "./map";
 import { QUESTS as CONTENT_QUESTS } from "./content";
-import type { SideObjective, Ctx, Objective, Player, Quest, QuestStep, WorldState } from "./types";
+import type { SideObjective, Ctx, DialogueNode, NpcDef, Objective, Player, Quest, QuestStep, WorldState } from "./types";
 import { applyEffects } from "./effects";
 import { npcView } from "./snapshot";
 
@@ -27,6 +27,53 @@ export function questProgress(p: Player, id: string): { started: boolean; step: 
   const step = p.quests[id];
   if (step === undefined) return { started: false, step: 0, done: false };
   return { started: true, step, done: !!q && step >= q.steps.length };
+}
+
+// ---------------------------------------------------------------- offers
+
+type OfferCandidate = { when?: (ctx: Ctx) => boolean; effects: Array<DialogueNode["effects"]> };
+const OFFER_CANDIDATES = new Map<string, OfferCandidate[]>();
+
+/** The lines in a person's tree that can start a quest: their own effects or those of the node they open. Authored content, so computed once per person. */
+function offerCandidates(def: NpcDef): OfferCandidate[] {
+  const cached = OFFER_CANDIDATES.get(def.id);
+  if (cached) return cached;
+  const mayStart = (effects: DialogueNode["effects"]): boolean =>
+    typeof effects === "function" || (effects ?? []).some(e => e.kind === "quest" && e.op === "start");
+  const list: OfferCandidate[] = [];
+  for (const node of Object.values(def.nodes)) {
+    for (const c of node.choices ?? []) {
+      const next = c.next ? def.nodes[c.next] : undefined;
+      const effects = [c.effects, next?.effects].filter(mayStart);
+      if (effects.length) list.push({ when: c.when, effects });
+    }
+  }
+  OFFER_CANDIDATES.set(def.id, list);
+  return list;
+}
+
+/**
+ * Whether this person has a side hour to hand this viewer right now: a line
+ * whose gate passes and which starts a side quest the viewer has not started
+ * and may hold (a guest only a guest-legal one). The gates on the hub lines
+ * are the authored truth; the walk through the tree to reach them is not
+ * traced.
+ */
+export function npcOffers(ctx: Ctx, def: NpcDef): boolean {
+  const { p } = ctx;
+  const holdable = (questId: string): boolean => {
+    if (p.quests[questId] !== undefined) return false;
+    const q = questById(questId);
+    return !!q && q.kind === "side" && (q.guestLegal || !p.guest);
+  };
+  for (const c of offerCandidates(def)) {
+    if (c.when && !c.when(ctx)) continue;
+    for (const effects of c.effects) {
+      const list = typeof effects === "function" ? effects(ctx) : effects ?? [];
+      for (const e of list) if (e.kind === "quest" && e.op === "start" && holdable(e.id)) return true;
+    }
+  }
+  return false;
 }
 
 function finished(p: Player, q: Quest): boolean {

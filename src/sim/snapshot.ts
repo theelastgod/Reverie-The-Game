@@ -13,7 +13,7 @@ import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type NodeView, type NpcVi
 import type { Ctx, NpcState, Player, Prompt, Wreckage, WorldState } from "./types";
 import { nodeYield } from "./economy";
 import { perception } from "./houses";
-import { objectiveFor, sideObjectivesFor } from "./quests";
+import { npcOffers, objectiveFor, sideObjectivesFor } from "./quests";
 import { NODE_REACH, NPC_REACH, PLAYER_REACH, POI_REACH, WRECKAGE_REACH, verbsFor } from "./interact";
 
 const MARKET_TOP = 12;
@@ -70,7 +70,7 @@ export function npcView(ctx: Ctx, npc: NpcState): NpcView | null {
     }
   }
   if (!merged.present) return null;
-  return { ...merged, name: def.name, role: def.role, sprite: def.sprite, party: ctx.p.party[npc.id] ?? "none" };
+  return { ...merged, name: def.name, role: def.role, sprite: def.sprite, party: ctx.p.party[npc.id] ?? "none", offers: npcOffers(ctx, def) };
 }
 
 /** Wreckage this viewer can see: until, plus the House / messenger bonus, plus the storm; a Witness blitz shows all. */

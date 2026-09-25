@@ -57,7 +57,8 @@ export type PublicPlayer = {
 export type NodeView = YieldNode & { yieldHint?: number; chargesHint?: number; safe?: boolean };
 /** `passings` is the fallen Angel's Passing count, sent only while the viewer faces the wreckage (Ruin-angel kit). */
 export type WreckageView = Pick<Wreckage, "id" | "x" | "y" | "district" | "fromName" | "fromSerial" | "buried" | "looted" | "until"> & { yours: boolean; bestand?: number; passings?: number };
-export type NpcView = NpcState & { name: string; role: string; sprite: string; party: PartyState };
+/** `offers`: this person has a side hour to hand this viewer right now (a hub line whose gate passes and whose hour the viewer has not started). */
+export type NpcView = NpcState & { name: string; role: string; sprite: string; party: PartyState; offers: boolean };
 export type PoiView = { id: string; state: string; count: number };
 
 /** `kitReadout` is the Ruin-angel kit reading the viewer's own history while Face is active. */

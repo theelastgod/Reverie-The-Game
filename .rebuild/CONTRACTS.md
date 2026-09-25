@@ -133,6 +133,7 @@ export function applyPassing(w, id): WorldState;            // at the ring, prep
 
 ## quests.ts
 ```ts
+export function npcOffers(ctx, def: NpcDef): boolean; // a line in the person's tree whose gate passes and whose effects (own or the node it opens) start a side quest the viewer has not started and may hold; candidates cached per person
 export const QUESTS: Quest[];                               // [...SPINE, ...SIDE] from content
 export function questById(id: string): Quest | undefined;
 export function questProgress(p, id): { started: boolean; step: number; done: boolean };
@@ -169,7 +170,7 @@ export function snapshotFor(w: WorldState, viewerId: string): Snap; // while the
 export function publicPlayer(p: Player, now: number): PublicPlayer;
 export function promptFor(ctx: Ctx): Prompt | null;         // nearest of: npc (personal position, 72px, verbs [F Speak]), poi (reach), node (56: E Extract / Q Keep; hidden if frozen), wreckage (64: F Bury, E Loot [Angels only]), player (96: V Flag/Unflag, T Truce when flagged) — choose the closest; POIs whose verbsFor is empty are skipped
 export function visibleWreckage(w, p): Wreckage[];          // until + perception(p).wreckageBonus (+ storm) ; witness blitz shows all in AOI
-export function npcView(ctx, npc: NpcState): NpcView | null; // apply NPCS[id].personal override; null when not present for this viewer
+export function npcView(ctx, npc: NpcState): NpcView | null; // apply NPCS[id].personal override; null when not present for this viewer; offers = npcOffers(ctx, def)
 ```
 
 ## actions.ts

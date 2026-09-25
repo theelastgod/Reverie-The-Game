@@ -505,15 +505,27 @@ export class Entities {
       }
     }
 
-    // NPCs in the party get a gold dot above the head.
+    // NPCs in the party get a gold dot above the head; one with an hour to hand you, a paper mark that breathes.
     for (const n of snap.npcs) {
-      if (n.party !== "with" || !n.present) continue;
+      if (!n.present) continue;
       const b = this.npcs.get(n.id);
       if (!b) continue;
-      g.fillStyle(COLOR.champagneLight, 1);
-      g.fillCircle(b.x, b.y - 70, 4);
-      g.lineStyle(1, COLOR.champagne, 1);
-      g.strokeCircle(b.x, b.y - 70, 5.5);
+      if (n.party === "with") {
+        g.fillStyle(COLOR.champagneLight, 1);
+        g.fillCircle(b.x, b.y - 70, 4);
+        g.lineStyle(1, COLOR.champagne, 1);
+        g.strokeCircle(b.x, b.y - 70, 5.5);
+      } else if (n.offers) {
+        const y = b.y - 70 - 2 * pulse;
+        g.lineStyle(1.5, COLOR.paper, 0.75 + 0.25 * pulse);
+        g.beginPath();
+        g.moveTo(b.x, y - 6);
+        g.lineTo(b.x + 5, y);
+        g.lineTo(b.x, y + 6);
+        g.lineTo(b.x - 5, y);
+        g.closePath();
+        g.strokePath();
+      }
     }
 
     // Buried wreckage and graves: small slabs.
@@ -689,7 +701,7 @@ export class Entities {
       for (const n of snap.npcs) {
         const b = this.npcs.get(n.id);
         if (!b || !n.present || !near(b.x, b.y)) continue;
-        this.label(`n:${n.id}`, n.name, b.x, b.y - 74, "#e8d5a3");
+        this.label(`n:${n.id}`, n.offers && n.party !== "with" ? `${n.name} · has an hour` : n.name, b.x, b.y - 74, "#e8d5a3");
       }
       for (const n of snap.nodes) {
         if (!near(n.x, n.y)) continue;

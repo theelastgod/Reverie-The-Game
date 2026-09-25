@@ -81,22 +81,34 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   unknown keys and ids dropped) and stamps `shape` on every checkpoint; the
   server restores worlds and players through it. Verified live against the
   oldest local checkpoint.
+- Quest givers marked (2026-09-25): `NpcView.offers` says a person has a side
+  hour to hand this viewer: a line in their tree whose gate passes and whose
+  effects (its own, or the node it opens) start a side quest the viewer has not
+  started and may hold; a guest only a guest-legal one. The candidate lines are
+  found once per person, so the check per snapshot is a few gate closures. The
+  world draws a breathing paper diamond over such a person and adds "· has an
+  hour" to the label; the minimap rings their dot. Party members keep the gold
+  dot.
 
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
-- `npm test` — 19 files, 337 tests: map integrity and reachability, identity,
+- `npm test` — 22 files, 356 tests: map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
   visibility, content coverage, side quests (all 33 driven end to end, every
-  verb through the prompt), two full spine playthroughs reaching every Passing
-  outcome, the desk decided once, ruin duels, meltdown streets, the season roll,
-  server sessions, clock, client socket, HUD helpers, standalone-content lint.
+  verb through the prompt, who offers what to whom), two full spine
+  playthroughs reaching every Passing outcome, the desk decided once, ruin
+  duels, meltdown streets, the season roll, shape migration, server sessions
+  (including a stale-shape restore), clock, client socket, HUD helpers (events
+  strip, ledger, journal), standalone-content lint.
 - `npm run build:play` + `node scripts/stage-play.mjs` — production client staged.
 - Against `npx wrangler dev --port 8788`: `scripts/smoke-world.mjs` PASS;
   `scripts/smoke-campaign.mjs` PASS on a fresh world and again on the same
-  world (Movement I to the guest lock, link 7777, going under, Movement II).
+  world (Movement I to the guest lock, link 7777, going under, Movement II);
+  latest measure: bot 50.5 s (walk 42.3 s, fight 6.8 s, talk 1.4 s), 990 words
+  shown, 4 decisions, first playthrough estimate 10.2 min.
 - `scripts/render-check.mjs` PASS: title, Nave with HUD, dialogue screenshots
-  in `.rebuild/shots/`; 16 fps under this sandbox's software WebGL
+  in `.rebuild/shots/`; 14.9 fps under this sandbox's software WebGL
   (SwiftShader), so frame pacing on a GPU-backed laptop is still unmeasured.
 - Not verified: a deploy (the Cloudflare API is denied by the network policy),
   the Stage B assets (results host denied), rendered play on real hardware.
@@ -127,31 +139,21 @@ they are discovered; keep this list honest.
 2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
    (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
 3. **Opening density.** Measured 2026-09-25 (`scripts/smoke-campaign.mjs`
-   prints `measure:` lines): bot 45 s (walk 40 s, fight 3 s), 996 words on the
-   critical path (dialogue 459, spoken 108, journal 315, notices 114), four
-   decisions; estimated first playthrough about 10 min against the 15–20
-   target. Close the gap with authored beats, not padding: the first fight must
-   ask for one dodge and one heavy (see item 4); give Quill's and Ord's first
-   conversations a choice each with a consequence; put the second yield node
-   and Desk Three on the way to Quill; let the recorder be heard before it is
-   decided; a short second clerk on the way to the plaque. Re-measure after
-   each change and keep the numbers here.
-4. **Combat readability.** The Intake Clerk falls to four light hits in three
-   seconds before its first telegraph lands; raise its health and shorten its
-   recovery so a first fight shows at least two telegraphs and rewards a heavy
-   interrupt. Directional telegraph arcs, cold ledger damage
-   ticks (no coin shower), enemy variety in feel (warden slow and heavy,
-   enforcer fast), heavy interrupt feedback.
-4. **Quest givers marked in the world.** The journal and the world now show
-   active side hours; an NPC with an unstarted hour to offer this viewer is not
-   yet marked. Needs a cheap server-side `offers` flag on `NpcView` computed
-   from the secondary cast's hub routers (or a giver field on each side quest).
-5. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
-    the cookie session stays as the guest identity.
-6. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
-    (history, passings, claims) with additive migrations.
-7. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
-    into `banked` only. Keep the fairness tests green.
+   prints `measure:` lines): bot 50.5 s (walk 42.3 s, fight 6.8 s, talk
+   1.4 s), 990 words on the critical path (dialogue 459, spoken 107, journal
+   315, notices 109), four decisions; estimated first playthrough 10.2 min
+   against the 15–20 target. The fight now asks for two telegraphs and pays a
+   heavy interrupt. Close the rest of the gap with authored beats, not
+   padding: give Quill's and Ord's first conversations a choice each with a
+   consequence; put the second yield node and Desk Three on the way to Quill;
+   let the recorder be heard before it is decided; a short second clerk on the
+   way to the plaque. Re-measure after each change and keep the numbers here.
+4. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
+   the cookie session stays as the guest identity.
+5. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
+   (history, passings, claims) with additive migrations.
+6. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+   into `banked` only. Keep the fairness tests green.
 
 ## Rules
 

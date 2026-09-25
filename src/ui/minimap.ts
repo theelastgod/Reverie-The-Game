@@ -95,11 +95,18 @@ export function mountMinimap(root: HTMLElement): MinimapPanel {
 
     // npcs
     ctx.fillStyle = GOLD;
+    ctx.strokeStyle = PAPER;
+    ctx.lineWidth = 1;
     for (const n of snap.npcs) {
       if (!n.present) continue;
       ctx.beginPath();
       ctx.arc(n.x * sx, n.y * sy, 1.6, 0, Math.PI * 2);
       ctx.fill();
+      if (n.offers) {
+        ctx.beginPath();
+        ctx.arc(n.x * sx, n.y * sy, 3.4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
 
     // other players (dim paper)

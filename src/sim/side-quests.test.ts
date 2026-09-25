@@ -551,3 +551,32 @@ describe("side objectives in the snapshot", () => {
     expect(snapshotFor(g, "g").sideObjectives).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------- offers
+
+describe("a person with an hour to hand this viewer is marked", () => {
+  const view = (w: WorldState, npcId: string) => npcView({ w, p: me(w), now: w.now }, w.npcs[npcId]);
+
+  it("marks the Officer for a fresh guest, whose first hour is guest-legal, and not the desk, whose hours are for Angels", () => {
+    const w = add(emptyWorld(), spawnGuest(ME));
+    expect(SIDE_BY_ID[SQ.CENSUS].guestLegal).toBe(true);
+    expect(view(w, "officer")?.offers).toBe(true);
+    expect(view(w, "desk")?.offers).toBe(false);
+    expect(snapshotFor(w, ME).npcs.find(n => n.id === "officer")?.offers).toBe(true);
+  });
+
+  it("turns off once the last of a person's hours is taken", () => {
+    let w = world({ id: SQ.COLUMN, steps: [], check: () => {} });
+    expect(view(w, "desk")?.offers).toBe(true);
+    w = talkChoose(w, "desk", "column");
+    expect(me(w).quests[SQ.COLUMN]).toBe(0);
+    expect(view(w, "desk")?.offers).toBe(false);
+  });
+
+  it("is off for the whole cast once every hour is started", () => {
+    const quests: Record<string, number> = {};
+    for (const q of SIDE) quests[q.id] = 0;
+    const w = add(emptyWorld(), { ...spawnGuest(ME), guest: false, quests });
+    for (const who of CAST) expect(view(w, who)?.offers, who).toBe(false);
+  });
+});
