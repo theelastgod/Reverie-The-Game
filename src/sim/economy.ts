@@ -6,6 +6,9 @@
  * Every earner in EARNERS maps to a sink in EARNER_SINKS; a test asserts it.
  */
 import {
+  AURA_CRAFT_WITHER,
+  AURA_DARK_YIELD_BONUS,
+  AURA_DIM,
   AURA_MAX,
   BANK_FEE,
   CLAIM_AMOUNT,
@@ -75,6 +78,7 @@ const MARKET_BAD_PRICE = "Price it between one and nine hundred ninety-nine. The
 const MARKET_LISTED = (price: number, fee: number) =>
   fee > 0 ? `Listed at ${price}. Listing fee ${fee}. Exhibition decays.` : `Listed at ${price}. Glamour waived the fee. Exhibition still decays.`;
 const MARKET_NO_LISTING = "That listing is gone.";
+const MARKET_SELLER_AWAY = "The seller is not on the Grid. The listing waits.";
 const MARKET_OWN_LISTING = "It is your listing. Cancel it if you want it back.";
 const MARKET_BOUGHT = (price: number) => `Bought for ${price}. A copy travels. The hole does not.`;
 const MARKET_CANCELLED = "The listing comes down. The print is back in your hand.";
@@ -83,6 +87,8 @@ const FORGE_SPOTTED = "You keep the eye. The printed ones go to the tray. The bu
 const FORGE_NOTHING_TO_SPOT = "Nothing in your hand is a copy.";
 const FORGE_NOTHING_TO_SELL = "Nothing in your hand is a print. Craft one first.";
 const FORGE_SOLD = "You sold a copy. Aura thins. Cult does not list.";
+const CRAFT_WINDOW_AT = "craft:windowAt"; // personal: when the current run of prints began
+const CRAFT_WINDOW_N = "craft:windowN"; // personal: prints in that run; the second and later thin the aura
 
 // ---------------------------------------------------------------- helpers
 
@@ -151,11 +157,12 @@ export function gestellTax(gestell: number): number {
   return Math.floor(clampGestell(gestell) / 4);
 }
 
-/** What one extraction pays this player at this node, after the tax. Frozen districts pay nothing. */
+/** What one extraction pays this player at this node, after the tax. Frozen districts pay nothing; a dark aura farms a little better. */
 export function nodeYield(w: WorldState, p: Player, node: YieldNode): number {
   if (isFrozen(w, node.district)) return 0;
   const fat = w.gestell >= GESTELL_FAT;
-  const base = NODE_YIELD * (fat ? NODE_FAT_MULT : 1) * (p.stance === "restraint" ? NODE_RESTRAINT_MULT : 1);
+  const dark = !p.guest && p.aura < AURA_DIM;
+  const base = NODE_YIELD * (fat ? NODE_FAT_MULT : 1) * (p.stance === "restraint" ? NODE_RESTRAINT_MULT : 1) * (dark ? 1 + AURA_DARK_YIELD_BONUS : 1);
   const taxPoints = Math.max(0, gestellTax(w.gestell) - perception(p).groundResist);
   return Math.max(0, Math.floor(base * (1 - taxPoints / 100)));
 }
@@ -381,22 +388,25 @@ export function applyMarket(
         at: w.now,
       };
       const next = { ...paid, market: [...paid.market, listing] };
-      return speak(next, removeItem(payer, itemId, 1), MARKET_LISTED(price, fee));
+      // Putting a thing up for reproduction thins the one who does it. Surface is honest about its price.
+      const seller = removeItem({ ...payer, aura: payer.guest ? 0 : Math.max(0, payer.aura - AURA_CRAFT_WITHER) }, itemId, 1);
+      return speak(next, seller, MARKET_LISTED(price, fee));
     }
     case "buy": {
       const index = w.market.findIndex(l => l.id === args.listingId);
       if (index < 0) return speak(w, p, MARKET_NO_LISTING);
       const listing = w.market[index];
       if (listing.sellerId === id) return speak(w, p, MARKET_OWN_LISTING);
+      // Bestand stays inside the sim: no seller on the Grid, no sale. The listing waits for them or their cancel.
+      const seller = w.players.get(listing.sellerId);
+      if (!seller) return speak(w, p, MARKET_SELLER_AWAY);
       if (p.bestand < listing.price) return speak(w, p, LINES.CANT_AFFORD);
       const market = w.market.slice();
       market.splice(index, 1);
       let next: WorldState = { ...w, market };
       const buyer = addItem({ ...p, bestand: p.bestand - listing.price }, listing.item);
       next = setPlayer(next, buyer);
-      const seller = next.players.get(listing.sellerId);
-      if (seller) next = setPlayer(next, { ...seller, banked: seller.banked + listing.price });
-      else next = bumpFlag(next, `owed:${listing.sellerId}`, listing.price);
+      next = setPlayer(next, { ...seller, banked: seller.banked + listing.price });
       next = bumpFlag(next, "earned:craft", listing.price);
       return speak(next, buyer, MARKET_BOUGHT(listing.price));
     }
@@ -446,7 +456,13 @@ export function applyForge(w: WorldState, id: string, op: "craft" | "spot" | "se
       const paid = spend(w, id, FORGE_COST, "forge");
       if (!paid) return speak(w, p, LINES.CANT_AFFORD);
       const payer = paid.players.get(id) ?? p;
-      const me = addItem({ ...payer, fakeWinke: payer.fakeWinke + 1 }, copyItem());
+      // One print is a lesson. A run of them is mass reproduction, and the aura withers for every one past the first.
+      const windowAt = payer.flags[CRAFT_WINDOW_AT] ?? -Infinity;
+      const inWindow = w.now - windowAt < KIT_DURATION;
+      const n = (inWindow ? payer.flags[CRAFT_WINDOW_N] ?? 0 : 0) + 1;
+      const flags = { ...payer.flags, [CRAFT_WINDOW_AT]: inWindow ? windowAt : w.now, [CRAFT_WINDOW_N]: n };
+      const aura = n > 1 ? Math.max(0, payer.aura - AURA_CRAFT_WITHER) : payer.aura;
+      const me = addItem({ ...payer, fakeWinke: payer.fakeWinke + 1, flags, aura }, copyItem());
       return speak(paid, me, FORGE_CRAFTED);
     }
     case "spot": {
@@ -465,7 +481,7 @@ export function applyForge(w: WorldState, id: string, op: "craft" | "spot" | "se
       const listed = applyMarket(w, id, "list", { itemId: ITEM_COPY_WINK, price: COPY_PRICE });
       const me = listed.players.get(id);
       if (!me || listed.market.length === w.market.length) return listed; // could not list; its line already spoke
-      return speak(listed, { ...me, aura: Math.max(0, me.aura - 1) }, FORGE_SOLD);
+      return speak(listed, me, FORGE_SOLD); // the listing itself thinned the aura
     }
     default:
       return w;

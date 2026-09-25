@@ -5,13 +5,16 @@
  * item reaches them.
  */
 import {
-  AURA_DRIFT, AURA_MAX, AURA_DIM, AURA_WOUND, BODY_R, DODGE_SPEED, EXHIBITION_DROP_CHANCE, GESTELL_BASELINE, GESTELL_DRIFT,
-  GESTELL_START, HEAVY_DAMAGE, MAX_HP, NEWS_KEEP, NOTICE_KEEP, NOTICE_TTL, RESTRAINT_MAX, RESTRAINT_START,
-  RESTRAINT_WINK_MIN, SPEED, STORM_RESTRAINT_BURN, STRIKE_DAMAGE, UNBANKED_DROP, WRECKAGE_TTL, WRECKAGE_TTL_BONUS,
+  AURA_ADDRESS_GLAMOUR, AURA_DRIFT, AURA_MAX, AURA_DIM, AURA_PRESENT, AURA_WOUND, BODY_R, DODGE_SPEED, EXHIBITION_DROP_CHANCE,
+  GESTELL_BASELINE, GESTELL_DRIFT, GESTELL_FAT, GESTELL_MELTDOWN, GESTELL_START, HEAVY_DAMAGE, MAX_HP, NEWS_KEEP, NOTICE_KEEP,
+  NOTICE_TTL, RESTRAINT_MAX, RESTRAINT_START, RESTRAINT_WINK_MIN, SEASON_LENGTH, SPEED, STORM_RESTRAINT_BURN, STRIKE_DAMAGE,
+  UNBANKED_DROP, WRECKAGE_TTL, WRECKAGE_TTL_BONUS,
 } from "./constants";
-import { circleHitsWalls, districtAt, GUEST_SPAWN, NPC_HOMES } from "./map";
+import { circleHitsWalls, districtAt, FAILED_PASSING_MARKS, GUEST_SPAWN, NPC_HOMES } from "./map";
 import { POI_STATES } from "./content/ids";
-import type { DistrictId, Intent, Item, Notice, NpcState, Player, PoiState, Vec, WorldState, Wreckage } from "./types";
+import { newsFor } from "./content/news";
+import { weatherBand } from "./protocol";
+import type { DistrictId, FailedPassing, Intent, Item, Notice, NpcState, Player, PoiState, Vec, WorldState, Wreckage } from "./types";
 import { initialEnemies } from "./enemies";
 import { initialNodes, tickMarket, tickNodes } from "./economy";
 import { initialHouses, tickHouseWar } from "./houses";
@@ -26,8 +29,19 @@ const RESTRAINT_REGAIN = 0.2; // per second in Restraint stance
 /** Wreckage stays in the world past `until` so Mortals, Ruin-angels and Storm can still see it. */
 const WRECKAGE_GRACE = WRECKAGE_TTL_BONUS * 3;
 const RNG_SEED = 0x9e3779b9;
+const CLEARING_RING = "clearing-ring";
+const WEATHER_BAND_KEY = "weather:band"; // the last climate band the marquee announced
+const BAND_INDEX = { clear: 1, mixed: 2, fat: 3, meltdown: 4 } as const;
+/** The hole every shard starts with: last season's Passing failed before anyone here arrived. */
+const LAST_SEASON_LINE = "Last season's Passing failed. The hour went by. The city kept the weather.";
+const SEASON_NEWS = (id: number) => `Season ${id}. The Clearing is asphalt again. The omens are spent. There are people to stand on it.`;
 
 // ---------------------------------------------------------------- construction
+
+/** Ruin-sight, Storm and the House of Sky see a failed Passing from last season on any shard, from the first hour. */
+function initialFailed(): FailedPassing[] {
+  return FAILED_PASSING_MARKS.map(m => ({ id: m.id, x: m.x, y: m.y, district: m.district, season: 0, line: LAST_SEASON_LINE }));
+}
 
 export function emptyWorld(): WorldState {
   const npcs: Record<string, NpcState> = {};
@@ -56,7 +70,7 @@ export function emptyWorld(): WorldState {
     passing: initialPassing(),
     market: [],
     news: [],
-    failed: [],
+    failed: initialFailed(),
     history: [],
     rng: RNG_SEED,
   };
@@ -163,10 +177,33 @@ export function say(p: Player, text: string, now: number): Player {
   return { ...p, heard: text, heardAt: now };
 }
 
-/** A private line. Guests never receive one; a dark aura or spent restraint cannot see one. */
-export function wink(p: Player, text: string, now: number): Player {
-  if (p.guest) return p;
-  if (p.aura < AURA_DIM || p.restraint < RESTRAINT_WINK_MIN) return p;
+/** The aura the city addresses: the body's, plus what an Iridescent Glamour paints on for its minute. Guests are 0. */
+export function addressAura(p: Player, now: number): number {
+  if (p.guest) return 0;
+  const glamour = !!p.kit && p.kit.verb === "iridescent" && p.kit.until > now;
+  return p.aura + (glamour ? AURA_ADDRESS_GLAMOUR : 0);
+}
+
+/**
+ * Whether a private line reaches this body now. Guests never; a dark aura or
+ * spent restraint never; with the weather given: fat weather dims the late
+ * Winke (Movement III on) for anyone the city does not look up at, and the
+ * House of Divinities goes blind at meltdown. Perception, never a number.
+ */
+export function canSeeWink(p: Player, now: number, gestell?: number): boolean {
+  if (p.guest) return false;
+  const aura = addressAura(p, now);
+  if (aura < AURA_DIM || p.restraint < RESTRAINT_WINK_MIN) return false;
+  if (gestell !== undefined) {
+    if (gestell >= GESTELL_MELTDOWN && p.house === "divinities") return false;
+    if (gestell >= GESTELL_FAT && p.movement >= 3 && aura < AURA_PRESENT) return false;
+  }
+  return true;
+}
+
+/** A private line. Guests never receive one; a dark aura or spent restraint cannot see one; fat weather dims the late ones. */
+export function wink(p: Player, text: string, now: number, gestell?: number): Player {
+  if (!text || !canSeeWink(p, now, gestell)) return p;
   return { ...p, wink: text, winkAt: now };
 }
 
@@ -311,6 +348,7 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
   cur = tickMarket(cur, dt);
   cur = tickHouseWar(cur, dt);
   cur = tickClearing(cur, dt);
+  cur = tickSeason(cur);
 
   // Gestell drifts toward its baseline; the weather forgets slowly.
   let gestell = cur.gestell;
@@ -326,8 +364,46 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
     for (const [d, until] of Object.entries(cur.frozen)) if (until > now) frozen[d] = until;
   }
   cur = { ...cur, gestell, wreckage, graves, frozen };
+  cur = announceWeather(cur);
 
   for (const id of cur.players.keys()) cur = tickQuests(cur, id);
+  return cur;
+}
+
+/** The marquee names the climate band once, when the weather crosses into it. Mixed is the default and says nothing. */
+function announceWeather(w: WorldState): WorldState {
+  const band = weatherBand(w.gestell);
+  const index = BAND_INDEX[band];
+  const last = w.flags[WEATHER_BAND_KEY];
+  if (last === index) return w;
+  let cur: WorldState = { ...w, flags: { ...w.flags, [WEATHER_BAND_KEY]: index } };
+  if (last !== undefined && band !== "mixed") cur = pushNews(cur, newsFor(band));
+  return cur;
+}
+
+/**
+ * A season rolls: the Clearing is asphalt again with a full reserve, the
+ * ring closes, the House omens are spent, and only the season that just ended
+ * keeps its failed Passing in view (older holes stay until a newer one fails).
+ * Seeds in the ground survive the roll.
+ */
+function tickSeason(w: WorldState): WorldState {
+  if (w.now - w.season.startedAt < SEASON_LENGTH) return w;
+  const ended = w.season.id;
+  const flags: Record<string, number> = {};
+  for (const [k, v] of Object.entries(w.flags)) if (!k.startsWith("omen:")) flags[k] = v;
+  const recent = w.failed.filter(f => f.season === ended);
+  const ring = w.pois[CLEARING_RING];
+  const pois = ring ? { ...w.pois, [CLEARING_RING]: { ...ring, state: "closed", by: "", at: w.now } } : w.pois;
+  let cur: WorldState = {
+    ...w,
+    season: { id: ended + 1, startedAt: w.now },
+    flags,
+    pois,
+    clearing: { ...initialClearing(), seeds: w.clearing.seeds },
+    failed: recent.length ? recent : w.failed,
+  };
+  cur = pushNews(cur, SEASON_NEWS(ended + 1));
   return cur;
 }
 
@@ -378,6 +454,7 @@ export function killPlayer(w: WorldState, victimId: string, killerId: string, ca
     looted: false,
     bestand: droppedBestand,
     items: dropped,
+    fromHistory: { passings: v.history.passings, buried: v.history.buried, looted: v.history.looted },
   };
 
   const aura = v.guest ? 0 : Math.max(v.auraSeed, v.aura - AURA_WOUND);

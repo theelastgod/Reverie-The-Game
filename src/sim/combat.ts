@@ -6,15 +6,17 @@
  */
 import {
   AURA_CAMP_PENALTY, AURA_MAX, AURA_SPECTATE_GAIN, BLITZ_DURATION, BODY_R, CAMP_WINDOW, DODGE_COOLDOWN, DODGE_DURATION,
-  ENEMY_LEASH, FACE_DURATION, GESTELL_CAMP, HEAVY_COOLDOWN, HEAVY_RANGE, HEAVY_WINDUP, HIT_STOP, KIT_COOLDOWN, KIT_DURATION,
-  RESTRAINT_CHAIN_KILL_PENALTY, RESTRAINT_DODGE_BONUS, RUIN_DUEL_RADIUS, SPECTATE_CAP, SPECTATE_RADIUS, STORM_FALLEN_PENALTY,
-  STORM_GEARED_BESTAND, STORM_GEARED_BONUS, STRIKE_COOLDOWN, STRIKE_RANGE, TRUCE_SECONDS, WRECKAGE_TTL,
+  DUEL_CHALLENGE_SECONDS, DUEL_SECONDS, ENEMY_LEASH, FACE_DURATION, GESTELL_CAMP, GESTELL_MELTDOWN, HEAVY_COOLDOWN, HEAVY_RANGE,
+  HEAVY_WINDUP, HIT_STOP, KIT_COOLDOWN, KIT_DURATION, RESTRAINT_CHAIN_KILL_PENALTY, RESTRAINT_DODGE_BONUS, RUIN_DUEL_RADIUS,
+  SPECTATE_CAP, SPECTATE_RADIUS, STORM_BAND_BONUS, STORM_FALLEN_PENALTY, STORM_GEARED_BESTAND, STRIKE_COOLDOWN, STRIKE_RANGE,
+  TRUCE_SECONDS, WRECKAGE_TTL,
 } from "./constants";
 import { circleHitsWalls, DISTRICT_BY_ID, inPatch } from "./map";
 import { F } from "./content/ids";
-import type { Enemy, Player, Vec, WorldState, Wreckage } from "./types";
+import { weatherBand } from "./protocol";
+import type { DuelState, Enemy, Player, Vec, WorldState, Wreckage } from "./types";
 import { enemyStats } from "./enemies";
-import { damageFor, heavyFor, killPlayer, pushNews, say } from "./world";
+import { damageFor, heavyFor, killPlayer, notice, pushNews, say } from "./world";
 import { applyNode, earn } from "./economy";
 import * as LINES from "./content/lines";
 
@@ -191,9 +193,10 @@ export function tickEnemies(w: WorldState, dt: number): WorldState {
 
 const down = (v: number, dt: number) => (v > 0 && v - dt > EPS ? v - dt : 0);
 
-/** Cooldowns and windows. `now` lets an expired kit fall away; without it the kit is left for the world tick. */
+/** Cooldowns and windows. `now` lets an expired kit or duel fall away; without it they are left for the world tick. */
 export function tickCombatTimers(p: Player, dt: number, now?: number): Player {
   const kit = now !== undefined && p.kit && p.kit.until <= now ? null : p.kit;
+  const duel = now !== undefined && p.duel && p.duel.until <= now ? undefined : p.duel;
   const next: Player = {
     ...p,
     strikeCd: down(p.strikeCd, dt),
@@ -204,11 +207,13 @@ export function tickCombatTimers(p: Player, dt: number, now?: number): Player {
     dodgeCd: down(p.dodgeCd, dt),
     kitCd: down(p.kitCd, dt),
     kit,
+    duel,
   };
   if (
     next.strikeCd === p.strikeCd && next.heavyCd === p.heavyCd && next.heavyWindup === p.heavyWindup && next.hitStop === p.hitStop &&
-    next.dodgeT === p.dodgeT && next.dodgeCd === p.dodgeCd && next.kitCd === p.kitCd && next.kit === p.kit
+    next.dodgeT === p.dodgeT && next.dodgeCd === p.dodgeCd && next.kitCd === p.kitCd && next.kit === p.kit && next.duel === p.duel
   ) return p;
+  if (next.duel === undefined) delete next.duel;
   return next;
 }
 
@@ -234,28 +239,42 @@ export function applyDodge(w: WorldState, id: string, dx: number, dy: number): W
 
 // ---------------------------------------------------------------- consent and stance
 
+/** A duel that has been answered and has not run out. */
+function liveDuel(p: Player, now: number): DuelState | null {
+  return p.duel && p.duel.accepted && p.duel.until > now ? p.duel : null;
+}
+
+/** At meltdown the Wet Grid flags itself: two Angels on it are flagged whether or not they raised one. */
+function weatherFlagged(a: Player, b: Player, w: WorldState): boolean {
+  return w.gestell >= GESTELL_MELTDOWN && a.district === "wet" && b.district === "wet";
+}
+
 /** The one gate for player-on-player damage. Null means the strike may land. */
 export function pvpBlockReason(a: Player, b: Player, w: WorldState): string | null {
   if (a.guest || b.guest || a.locked || b.locked) return LINES.GUEST_GRIEF;
   if (a.truceUntil > w.now || b.truceUntil > w.now) return LINES.TRUCE_ACTIVE;
   if (inPatch("patch-arena", a.x, a.y) || inPatch("patch-arena", b.x, b.y)) return LINES.PRACTICE_SAFE;
-  if (!a.flagged || !b.flagged) return LINES.PVP_FLAG_REQUIRED;
+  const ad = liveDuel(a, w.now);
+  const bd = liveDuel(b, w.now);
+  if ((ad && ad.with !== b.id) || (bd && bd.with !== a.id)) return LINES.DUEL_CLOSED;
+  if (!(a.flagged && b.flagged) && !weatherFlagged(a, b, w)) return LINES.PVP_FLAG_REQUIRED;
   return null;
-}
-
-function faceActive(p: Player, now: number): boolean {
-  return !!p.kit && p.kit.verb === "ruin" && p.kit.until > now;
 }
 
 function fallen(w: WorldState, p: Player): boolean {
   return w.wreckage.some(r => r.fromId === p.id && !r.buried && r.until > w.now);
 }
 
-/** Storm presses the geared and spares the already-fallen. Restraint, guests and a Ruin-angel wearing the storm strike plain. */
+/**
+ * Storm presses the geared and spares the already-fallen; the press grows
+ * with the weather. Restraint and guests strike plain. Nothing about the
+ * attacker's messenger, House, serial or kit is read here: a Ruin-angel wearing
+ * the Face burns no restraint (world.driftPlayer) and hits the same number.
+ */
 export function stormMultiplier(a: Player, b: Player, w: WorldState): number {
-  if (a.stance !== "storm" || a.guest || faceActive(a, w.now)) return 1;
+  if (a.stance !== "storm" || a.guest) return 1;
   if (fallen(w, b)) return 1 - STORM_FALLEN_PENALTY;
-  if (b.bestand >= STORM_GEARED_BESTAND) return 1 + STORM_GEARED_BONUS;
+  if (b.bestand >= STORM_GEARED_BESTAND) return 1 + STORM_BAND_BONUS[weatherBand(w.gestell)];
   return 1;
 }
 
@@ -318,6 +337,12 @@ function hitPlayer(w: WorldState, attackerId: string, targetId: string, base: nu
   if (!a || !b || b.dead) return { w, hit: false };
   const reason = pvpBlockReason(a, b, w);
   if (reason) return { w: setPlayer(w, say(a, reason, w.now)), hit: false };
+  if (b.dodgeT > 0) {
+    // The dash is a window against people too. The Restraint stance's longer step is worth something here.
+    let missed = setPlayer(w, say(a, LINES.DODGE_WHIFF, w.now));
+    missed = setPlayer(missed, say(b, LINES.DODGE_COPY, w.now));
+    return { w: missed, hit: false };
+  }
   const mult = stormMultiplier(a, b, w);
   const dmg = Math.max(0, Math.round(base * mult));
   let cur = w;
@@ -357,8 +382,18 @@ function pvpKill(w: WorldState, killerId: string, victimId: string): WorldState 
     cur = earn(cur, killerId, spoils, "spoils");
   }
 
+  // A fall ends the duel for both bodies; the ring opens again.
+  const v = cur.players.get(victimId);
+  if (v && v.duel) {
+    const { duel: _gone, ...rest } = v;
+    cur = setPlayer(cur, rest);
+  }
   let k = cur.players.get(killerId);
   if (!k) return cur;
+  if (k.duel) {
+    const { duel: _gone, ...rest } = k;
+    k = rest;
+  }
   k = {
     ...k,
     kills: k.kills + 1,
@@ -492,6 +527,54 @@ export function applyKit(w: WorldState, id: string, _targetId?: string): WorldSt
     case "iridescent":
       return setPlayer(w, armed({ ...p, kit: { verb: "iridescent", until: now + KIT_DURATION } }));
   }
+}
+
+// ---------------------------------------------------------------- ruin duels
+
+/** The live wreckage both bodies stand within RUIN_DUEL_RADIUS of, if any. */
+export function duelWreckageFor(w: WorldState, a: Player, b: Player): Wreckage | null {
+  return liveWreckage(w).find(r => within(r, a, RUIN_DUEL_RADIUS) && within(r, b, RUIN_DUEL_RADIUS)) ?? null;
+}
+
+/** Whether `p` may offer or answer a ruin duel with `other` right now; the reason otherwise. */
+export function duelBlockReason(p: Player, other: Player, w: WorldState): string | null {
+  if (p.guest || other.guest || p.locked || other.locked) return LINES.GUEST_GRIEF;
+  if (p.dead || other.dead) return LINES.DUEL_WHERE;
+  if (p.truceUntil > w.now || other.truceUntil > w.now) return LINES.TRUCE_ACTIVE;
+  if (!p.flagged || !other.flagged) return LINES.PVP_FLAG_REQUIRED;
+  if (!duelWreckageFor(w, p, other)) return LINES.DUEL_WHERE;
+  if (liveDuel(p, w.now) || liveDuel(other, w.now)) return LINES.DUEL_BUSY;
+  return null;
+}
+
+/**
+ * A ruin duel: offered at a wreckage to a flagged Angel standing at the same
+ * one; the same press from them accepts it. While it is live nobody else may
+ * strike either body. It ends when one falls or DUEL_SECONDS run out. The
+ * watchers are paid at the fall, as before; the kit does not strike harder.
+ */
+export function applyDuel(w: WorldState, id: string, targetId: string): WorldState {
+  const p = w.players.get(id);
+  const t = w.players.get(targetId);
+  if (!p || !t || p.dead || t.id === p.id) return w;
+  const now = w.now;
+  const reason = duelBlockReason(p, t, w);
+  if (reason) return setPlayer(w, say(p, reason, now));
+  const wreck = duelWreckageFor(w, p, t);
+  if (!wreck) return w;
+
+  const offered = t.duel && !t.duel.accepted && t.duel.with === p.id && t.duel.until > now;
+  if (offered) {
+    const until = now + DUEL_SECONDS;
+    const duel = (other: string): DuelState => ({ with: other, until, accepted: true });
+    let cur = setPlayer(w, say({ ...p, duel: duel(t.id) }, LINES.DUEL_OPEN, now));
+    cur = setPlayer(cur, say({ ...t, duel: duel(p.id) }, LINES.DUEL_OPEN, now));
+    return pushNews(cur, `A ruin duel at ${wreck.fromName}'s wreckage. ${p.name} and ${t.name}. The grave is the ring.`);
+  }
+  const offer: DuelState = { with: t.id, until: now + DUEL_CHALLENGE_SECONDS, accepted: false };
+  let cur = setPlayer(w, say({ ...p, duel: offer }, LINES.DUEL_CHALLENGE, now));
+  cur = setPlayer(cur, notice(t, `${p.name} offers a ruin duel at the wreckage. F answers it.`, now, "hot"));
+  return cur;
 }
 
 // ---------------------------------------------------------------- flags and truces

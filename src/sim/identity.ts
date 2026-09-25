@@ -5,7 +5,7 @@
  */
 import { ANGEL_SUPPLY, MOCK_SIG, TEST_SERIAL } from "./constants";
 import { POSITIONS } from "./map";
-import type { Fourfold, HistoryMark, House, Messenger, WinkSchool } from "./types";
+import type { Fourfold, HistoryLog, HistoryMark, House, Messenger, WinkSchool } from "./types";
 
 export const HOUSES: readonly Fourfold[] = ["earth", "sky", "mortals", "divinities"];
 export const MESSENGERS: readonly Exclude<Messenger, "">[] = ["herald", "witness", "ruin", "dweller", "cybernetic", "iridescent"];
@@ -112,11 +112,39 @@ export function validLink(serial: number, sig: string): boolean {
 
 const HISTORY_LINE = "A prior hour. You stood here and left the body in the weather.";
 
-/** A serial with a prior hour sees its own wreckage. Only the test serial carries one so far. */
+/** A serial with a prior hour sees its own wreckage. Only the test serial carries an authored one. */
 export function serialHistoryMark(serial: number): HistoryMark | null {
   if (serial !== TEST_SERIAL) return null;
   const key = `history:${serial}`;
   const pos = POSITIONS[key];
   if (!pos) return null;
   return { id: key, serial, x: pos.x, y: pos.y, district: pos.district, line: HISTORY_LINE };
+}
+
+const OUTCOME_LINES: Record<string, string> = {
+  appearance: "A prior hour. A trace came while you stood here. The city was briefly world.",
+  absence: "A prior hour. Nothing came. You stood in the hole anyway.",
+  hijack: "A prior hour. Somebody claimed the rite. You are still marked.",
+  failed: "A prior hour. Gestell kept the weather. The hole did not open.",
+};
+
+/**
+ * The mark a serial's written-back log leaves in the Care: the last Passing
+ * outcome if there is one, else what the hands did. Null for a log with
+ * nothing in it. The mark is perception; nothing here reaches a number.
+ */
+export function historyMarkFor(serial: number, log: HistoryLog, deaths = 0): HistoryMark | null {
+  if (!Number.isInteger(serial) || serial < 1) return null;
+  const prior = log.passings + log.buried + log.looted + deaths;
+  if (prior <= 0) return null;
+  const pos = POSITIONS["history:mark"];
+  if (!pos) return null;
+  const last = log.outcomes[log.outcomes.length - 1];
+  let line = last ? OUTCOME_LINES[last] : "";
+  if (!line) {
+    if (log.looted > 0 && log.looted >= log.buried) line = "A prior hour. You took from the fallen here and left the body in the weather.";
+    else if (log.buried > 0) line = "A prior hour. You put a body in the ground here and did not make a story of it.";
+    else line = HISTORY_LINE;
+  }
+  return { id: `history:${serial}`, serial, x: pos.x, y: pos.y, district: pos.district, line };
 }

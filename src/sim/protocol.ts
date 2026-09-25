@@ -55,11 +55,13 @@ export type PublicPlayer = {
 };
 
 export type NodeView = YieldNode & { yieldHint?: number; chargesHint?: number; safe?: boolean };
-export type WreckageView = Pick<Wreckage, "id" | "x" | "y" | "district" | "fromName" | "fromSerial" | "buried" | "looted" | "until"> & { yours: boolean; bestand?: number };
+/** `passings` is the fallen Angel's Passing count, sent only while the viewer faces the wreckage (Ruin-angel kit). */
+export type WreckageView = Pick<Wreckage, "id" | "x" | "y" | "district" | "fromName" | "fromSerial" | "buried" | "looted" | "until"> & { yours: boolean; bestand?: number; passings?: number };
 export type NpcView = NpcState & { name: string; role: string; sprite: string; party: PartyState };
 export type PoiView = { id: string; state: string; count: number };
 
-export type YouView = Omit<Player, "items" | "claims"> & { items: Item[]; claims: Claim[] };
+/** `kitReadout` is the Ruin-angel kit reading the viewer's own history while Face is active. */
+export type YouView = Omit<Player, "items" | "claims"> & { items: Item[]; claims: Claim[]; kitReadout?: string[] };
 
 export type Snap = {
   t: "snap";

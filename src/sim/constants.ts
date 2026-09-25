@@ -26,9 +26,12 @@ export const HEAVY_RANGE = 64;
 export const HEAVY_DAMAGE = 34;
 export const HEAVY_COOLDOWN = 1.1;
 export const HEAVY_WINDUP = 0.25;
-export const STORM_GEARED_BONUS = 0.25;
+export const STORM_GEARED_BONUS = 0.25; // the mixed-weather bonus; STORM_BAND_BONUS scales it by climate band
+export const STORM_BAND_BONUS = { clear: 0.15, mixed: STORM_GEARED_BONUS, fat: 0.35, meltdown: 0.4 } as const;
 export const STORM_FALLEN_PENALTY = 0.25;
 export const STORM_GEARED_BESTAND = 60;
+export const DUEL_CHALLENGE_SECONDS = 20; // a ruin duel offer waits this long for the answer
+export const DUEL_SECONDS = 60; // an accepted ruin duel closes the ring for this long
 export const STORM_RESTRAINT_BURN = 1; // per second while in Storm stance
 export const KIT_COOLDOWN = 30;
 export const KIT_DURATION = 60;
@@ -57,7 +60,11 @@ export const GRAVE_TTL = 600; // a buried wreckage leaves a grave marker this lo
 // Aura, readiness, restraint, gestell
 export const AURA_MAX = 100;
 export const AURA_DRIFT = 0.02; // per second toward seed
-export const AURA_DIM = 6; // below this, Winke go dark for an Angel
+export const AURA_DIM = 6; // below this, Winke go dark for an Angel and the city stops addressing them
+export const AURA_PRESENT = 40; // at this the city looks up; late Winke stay lit in fat weather
+export const AURA_ADDRESS_GLAMOUR = 10; // an Iridescent Glamour counts this much extra aura for address
+export const AURA_DARK_YIELD_BONUS = 0.1; // a dark aura farms a little more efficiently
+export const AURA_CRAFT_WITHER = 1; // per craft beyond the first inside a KIT_DURATION window, and per listing
 export const AURA_LOOT_PENALTY = 2;
 export const AURA_CAMP_PENALTY = 4;
 export const AURA_DWELL_GAIN = 0.05; // per second dwelling in a Clearing or at a shrine
@@ -128,8 +135,9 @@ export const CLEARING_RESERVE = 40;
 export const CLEARING_EXTRACT = 10;
 export const CLEARING_RADIUS = 120;
 export const CLEARING_HOLD_ANGELS = 2; // dwellers needed to hold a Passing at meltdown
+export const CLEARING_HOLD_SCALE = { clear: 1.5, mixed: 1, fat: 1, meltdown: 0.5 } as const; // WAR_HOLD scaled by climate band
 export const PASSING_STIPEND = 20;
-export const SEASON_LENGTH = 7 * 24 * 60 * 60;
+export const SEASON_LENGTH = 7 * 24 * 60 * 60; // a season rolls the Clearing, the omens and the Passing rite
 
 // Snapshot / area of interest
 export const AOI_RADIUS = 1040;

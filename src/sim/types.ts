@@ -65,6 +65,9 @@ export type HistoryLog = {
 
 export type KitState = { verb: Messenger; until: number; data?: string };
 
+/** A ruin duel: an offer until it is answered, then a closed ring of two bodies until it expires or one falls. */
+export type DuelState = { with: string; until: number; accepted: boolean };
+
 export type Player = {
   id: string;
   name: string; // "GUEST" or "#0042"
@@ -128,6 +131,7 @@ export type Player = {
   spectated: number;
   kills: number;
   deaths: number;
+  duel?: DuelState; // a ruin duel offered or live; absent when none
 
   // inventory
   items: Item[];
@@ -199,6 +203,7 @@ export type Wreckage = {
   looted: boolean;
   bestand: number; // dropped purse still on the ground
   items: Item[]; // dropped exhibition items
+  fromHistory?: { passings: number; buried: number; looted: number }; // the fallen Angel's log at the fall; Ruin-sight reads it
 };
 
 export type Grave = { id: string; x: number; y: number; district: DistrictId; name: string; by: string; at: number; until: number };
@@ -232,7 +237,8 @@ export type ClearingState = {
   reserve: number;
   openedAt: number;
   seeds: string[]; // node ids / tile keys that hold a seed
-  contest: { active: boolean; keep: number; extract: number; endsAt: number } | null;
+  // keep / extract are the dwelling votes as last tallied; votes is one stance per Angel per contest
+  contest: { active: boolean; keep: number; extract: number; endsAt: number; votes?: Record<string, "keep" | "extract"> } | null;
   heldBy: string[]; // player ids dwelling in the ring right now
   lastOutcome: "" | "kept" | "extracted";
 };
@@ -285,6 +291,10 @@ export type WorldState = {
 
 export type Ctx = { w: WorldState; p: Player; now: number };
 
+/** A Wink authored per school; `default` is heard by any school without its own line. */
+export type WinkBySchool = Partial<Record<Exclude<WinkSchool, "">, string>> & { default: string };
+export type WinkText = string | WinkBySchool;
+
 export type Effect =
   | { kind: "flag"; key: string; value?: number } // personal flag (default 1)
   | { kind: "count"; key: string; delta: number } // personal counter
@@ -306,7 +316,7 @@ export type Effect =
   | { kind: "poi"; id: string; state: string }
   | { kind: "news"; text: string }
   | { kind: "say"; text: string } // heard line
-  | { kind: "wink"; text: string } // private Wink (filtered by guest / aura / restraint)
+  | { kind: "wink"; text: WinkText } // private Wink (filtered by guest / aura / restraint; per school when authored so)
   | { kind: "notice"; text: string; tone?: Notice["tone"] }
   | { kind: "item"; add?: Item; remove?: string; qty?: number }
   | { kind: "claim"; label: string; amount?: number }
@@ -385,7 +395,7 @@ export type DialogueNode = {
   id: string;
   speaker?: string; // npc id; defaults to the owning npc
   text: string | ((ctx: Ctx) => string);
-  wink?: string | ((ctx: Ctx) => string);
+  wink?: WinkText | ((ctx: Ctx) => WinkText);
   choices?: DialogueChoice[];
   next?: string | ((ctx: Ctx) => string | undefined);
   effects?: Effect[] | ((ctx: Ctx) => Effect[]); // applied when the node opens, once per opening

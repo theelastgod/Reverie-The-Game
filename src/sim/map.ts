@@ -303,6 +303,7 @@ export const POSITIONS: Record<string, Vec & { district: DistrictId }> = {
   ...Object.fromEntries(GATES.map(g => [g.id, { ...at(g.rect.x + 1, g.rect.y + 1), district: g.a }])),
   "spawn:guest": GUEST_SPAWN,
   "history:7777": { ...at(12, 63), district: "care" },
+  "history:mark": { ...at(12, 63), district: "care" }, // where any serial's prior hour stands; only its owner sees it
 };
 
 // ---------------------------------------------------------------- grid
