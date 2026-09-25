@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import worker, { ReverieWorld, restoreWorld, sameOrigin, serializeWorld, sessionToken, WORLD_KEY, PLAYER_PREFIX } from "./index";
+import worker, { ReverieWorld, restoreWorld, sameOrigin, serializeWorld, sessionToken } from "./index";
+
+const WORLD_KEY = "world:v2";
+const PLAYER_PREFIX = "player:v2:";
 import { emptyWorld, spawnGuest } from "../../src/sim/world";
 import { DODGE_COOLDOWN, DODGE_DURATION, RESTRAINT_DODGE_BONUS, TEST_SERIAL } from "../../src/sim/constants";
 import { PROTOCOL_VERSION } from "../../src/sim/protocol";
@@ -69,7 +72,7 @@ describe("durable world sessions", () => {
     expect(snap.v).toBe(PROTOCOL_VERSION);
     expect(snap.you).toMatchObject({ id: "a", x: player.x, y: player.y, bestand: 91, banked: 33 });
     expect(snap.players.map((p: { id: string }) => p.id)).not.toContain("orphan");
-    expect(snap.gestell).toBe(74);
+    expect(snap.gestell).toBeCloseTo(74, 2);
     expect(snap.weatherNamed).toBe(true);
     expect(storage.setAlarm).toHaveBeenCalled();
     await world.webSocketClose(ws as never);

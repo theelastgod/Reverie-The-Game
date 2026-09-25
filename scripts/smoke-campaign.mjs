@@ -35,7 +35,8 @@ const ROUTE = {
   toNara: [at(30, 46), at(8, 46), at(8, 48)],
   toRecorder: [at(10, 48), at(10, 51)],
   toPlot: [at(7, 51)],
-  toPlaque: [at(6, 51), at(6, 48), at(6, 30), at(15, 30), at(15, 31)],
+  backToNara: [at(8, 48)],
+  toPlaque: [at(6, 48), at(6, 30), at(15, 30), at(15, 31)],
   toUnder: [at(15, 52)],
 };
 
@@ -145,15 +146,20 @@ try {
   finally { clearInterval(strikes); }
   assert.ok(you(me).hp > 0, 'still standing after intake');
 
-  // First node: keep it.
+  // First node: keep it when nobody has; the world persists between runs, so fall back to extracting.
   await walk(me, ROUTE.toNode);
-  send(me, { t: 'interact', targetId: 'nave-node-1', choice: 'keep' });
-  await wait(me, () => you(me).kept >= 1, 'keep the first node');
-  assert.equal(you(me).extracted, 0, 'kept, not extracted');
+  const node = me.snap.nodes.find(n => n.id === 'nave-node-1');
+  assert.ok(node, 'nave-node-1 is in view');
+  const op = node.kept ? (node.charges > 0 ? 'extract' : null) : 'keep';
+  if (op) {
+    send(me, { t: 'interact', targetId: 'nave-node-1', choice: op });
+    await wait(me, () => you(me).kept + you(me).extracted >= 1, `${op} the first node`);
+  } else console.log('note: nave-node-1 already kept and empty; skipping the node beat');
 
   // The party, in the Nave.
   await walk(me, ROUTE.toOrd);
   await converse(me, 'ord', 'talked:ord');
+  await converse(me, 'ord', 'weather:ord');
   await walk(me, ROUTE.toQuill);
   await converse(me, 'quill', 'talked:quill');
   await walk(me, ROUTE.toNara);
@@ -165,6 +171,8 @@ try {
   await walk(me, ROUTE.toPlot);
   await useVerb(me, 'nara-plot', byKey('F'), () => !!you(me).flags['buried:nara'], 'burial');
   assert.ok(you(me).readiness > 0, 'burial gives readiness');
+  await walk(me, ROUTE.backToNara);
+  await converse(me, 'nara', 'weather:nara');
 
   // Name the weather at the Safety plaque.
   await walk(me, ROUTE.toPlaque);

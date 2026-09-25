@@ -21,12 +21,13 @@ type Env = {
   WORLD: DurableObjectNamespace;
 };
 
-export const SESSION_COOKIE = "reverie_session";
-export const WORLD_KEY = "world:v2";
-export const PLAYER_PREFIX = "player:v2:";
-export const WORLD_NAME = "city-v2";
-export const MAX_MESSAGE = 4096;
-export const INTENT_TTL_MS = 1000;
+// workerd accepts only functions and handlers as named exports of the entry module, so these stay module-private.
+const SESSION_COOKIE = "reverie_session";
+const WORLD_KEY = "world:v2";
+const PLAYER_PREFIX = "player:v2:";
+const WORLD_NAME = "city-v2";
+const MAX_MESSAGE = 4096;
+const INTENT_TTL_MS = 1000;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function sessionToken(req: Request): string | null {
