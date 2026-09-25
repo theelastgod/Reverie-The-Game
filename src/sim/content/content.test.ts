@@ -151,7 +151,7 @@ function contexts(): { name: string; ctx: Ctx }[] {
   const list: { name: string; ctx: Ctx }[] = [
     { name: "guest fresh", ctx: { w: base, p: mkPlayer(), now: base.now } },
     { name: "guest mid M1", ctx: { w: base, p: mkPlayer({ flags: flagsOf([F.TALKED_NARA, F.TALKED_ORD, F.TALKED_QUILL, F.MEMORIAL, F.WEATHER_SAFETY]), choices: { [C.MEMORIAL]: "voice" }, extracted: 1 }), now: base.now } },
-    { name: "guest locked", ctx: { w: named, p: mkPlayer({ flags: flagsOf(M1_FLAGS), choices: { [C.MEMORIAL]: "copper", [C.WEATHER]: "end" }, locked: true, kept: 1 }), now: named.now } },
+    { name: "guest locked", ctx: { w: named, p: mkPlayer({ flags: flagsOf(M1_FLAGS), choices: { [C.MEMORIAL]: "copper", [C.WEATHER]: "end" }, locked: true, kept: 1, x: POSITIONS["going-under"].x, y: POSITIONS["going-under"].y }), now: named.now } },
     { name: "angel M1 named", ctx: { w: named, p: angel(12, "sky", "witness", "omen", { flags: flagsOf(M1_FLAGS), choices: { [C.MEMORIAL]: "voice", [C.WEATHER]: "process" }, movement: 1 }), now: named.now } },
     { name: "angel 7777 M2 fresh", ctx: { w: named, p: angel(TEST_SERIAL, "mortals", "herald", "hint", { flags: flagsOf([...M1_FLAGS, F.UNDER, F.ANGEL]), movement: 2, party: { nara: "with", quill: "with", ord: "with" } }), now: named.now } },
     { name: "angel sky M2 signed", ctx: { w: named, p: angel(2, "sky", "witness", "wreckage", { flags: flagsOf([...M1_FLAGS, F.UNDER, F.ANGEL, F.SHRINE, F.CARE, F.HALL, F.FREEZE]), choices: { [C.FREEZE]: "signed" }, movement: 2, party: { nara: "with", quill: "with", ord: "with" } }), now: named.now } },
