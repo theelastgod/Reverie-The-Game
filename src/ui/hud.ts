@@ -16,6 +16,7 @@ import { mountDialogue, type DialoguePanel } from "./dialogue";
 import { mountJournal, type JournalPanel } from "./journal";
 import { mountMinimap, type MinimapPanel } from "./minimap";
 import { mountLock, type LockPanel } from "./lock";
+import { eventRows, mountEvents, type EventsPanel } from "./events";
 
 export type HudCallbacks = {
   choose: (choiceId: string) => void; // dialogue choice clicked
@@ -49,6 +50,7 @@ export class Hud {
   private readonly journal: JournalPanel;
   private readonly minimap: MinimapPanel;
   private readonly lock: LockPanel;
+  private readonly events: EventsPanel;
 
   // elements
   private readonly identity: HTMLElement | null;
@@ -168,6 +170,7 @@ export class Hud {
     this.journal = mountJournal(root);
     this.minimap = mountMinimap(root);
     this.lock = mountLock(root, serial => this.cb.link(serial));
+    this.events = mountEvents(q(root, "#hud-events"));
 
     this.stance?.addEventListener("click", this.onStance);
     this.kit?.addEventListener("click", this.onKit);
@@ -222,6 +225,7 @@ export class Hud {
     this.updateMarquee(snap.news);
     this.updateLock(snap);
     this.updateCredits(snap);
+    this.events.set(eventRows(snap));
     this.dialogue.set(you.dialogue);
     this.journal.set(snap.objective, you);
     this.minimap.update(snap);

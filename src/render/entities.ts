@@ -6,8 +6,8 @@
  * within LABEL_RANGE of you. Positions lerp toward the snapshot.
  */
 import Phaser from "phaser";
-import { ENEMY, AURA_DIM, CLEARING_RADIUS, MAX_HP } from "../sim/constants";
-import { POIS, POI_LIST } from "../sim/map";
+import { ENEMY, AURA_DIM, CLEARING_RADIUS, GESTELL_MELTDOWN, MAX_HP } from "../sim/constants";
+import { DISTRICT_BY_ID, PATCHES, POIS, POI_LIST, TILE } from "../sim/map";
 import type { NodeView, NpcView, PublicPlayer, Snap, WreckageView, YouView } from "../sim/protocol";
 import type { Enemy, Messenger, Stance } from "../sim/types";
 import { COLOR, DEPTH, NPC_SPRITES, TEX, UI_FONT, bodyDepth } from "./floors";
@@ -99,6 +99,7 @@ const ENEMY_TINT: Record<Enemy["tint"], number> = {
   paper: 0xffffff,
 };
 const AURA_SIZE = [0, 64, 80, 98] as const;
+const HOT_STREET = PATCHES.find((p) => p.id === "patch-hot-street");
 const LOW_HP = 0.35;
 const LOW_HP_TINT = 0xff8fa8;
 
@@ -524,6 +525,21 @@ export class Entities {
       }
     }
     for (const gr of snap.graves) this.drawSlab(g, gr.x, gr.y);
+
+    // The flag zone: the hot street when it is hot, the whole Wet Grid in meltdown weather.
+    if (you.id && this.youBody && snap.district === "wet") {
+      const meltdown = snap.gestell >= GESTELL_MELTDOWN;
+      const hot = this.poiState("hot-street") === "hot";
+      const rect = meltdown ? DISTRICT_BY_ID.wet.rect : hot ? HOT_STREET?.rect : undefined;
+      if (rect) {
+        g.lineStyle(2, COLOR.hot, 0.45 + 0.35 * pulse);
+        g.strokeRect(rect.x * TILE + 3, rect.y * TILE + 3, rect.w * TILE - 6, rect.h * TILE - 6);
+        // Corner ticks so the edge reads as a boundary, not a frame.
+        const cx = rect.x * TILE, cy = rect.y * TILE, cw = rect.w * TILE, ch = rect.h * TILE;
+        g.fillStyle(COLOR.hot, 0.8);
+        for (const [x, y] of [[cx, cy], [cx + cw, cy], [cx, cy + ch], [cx + cw, cy + ch]] as const) g.fillCircle(x, y, 4);
+      }
+    }
 
     // The Clearing ring: gold when open, wine when failed, faint otherwise.
     const ring = POIS["clearing-ring"];

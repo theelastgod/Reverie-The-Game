@@ -51,6 +51,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   rectangle cover of the wall tiles (no per-frame masks), rain on the Wet Grid
   by weather band, shrine light pools, walk bob and lean, idle breath, hit-stop
   squash and a shadow under every body.
+- PvP surfaces (2026-09-25): an events strip under the top row shows the
+  House war (site, who holds, countdown; a next-war countdown inside five
+  minutes), the Clearing contest (keep / extract counts, dwellers, countdown,
+  a two-tone bar) and your ruin duel (offered or live, the opponent, the
+  clock); the hot street draws its boundary while hot, the whole Wet Grid in
+  meltdown weather.
 - Combat readability (2026-09-25): the Intake Clerk has twice the health, so
   a first fight shows two telegraphs and a heavy interrupt pays (the bot's
   fight went from 3 s to 7 s); telegraphs are wedges aimed at their target
@@ -126,17 +132,15 @@ they are discovered; keep this list honest.
    interrupt. Directional telegraph arcs, cold ledger damage
    ticks (no coin shower), enemy variety in feel (warden slow and heavy,
    enforcer fast), heavy interrupt feedback.
-4. **PvP surfaces.** Hot-street flag zone visuals, ruin-duel spectator
-   readout, House war countdown in the HUD, Clearing contest keep/extract bar.
-5. **Economy panels.** Claims desk (file / bank / take with the hold timer),
+4. **Economy panels.** Claims desk (file / bank / take with the hold timer),
    market (list / buy / cancel), inventory grouped cult / exhibition / paper.
-6. **Side quest surfaces.** Active side quests with bearings in the journal;
+5. **Side quest surfaces.** Active side quests with bearings in the journal;
    quest givers marked in the world.
-7. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
+6. **Wallet login** (EIP-6963 signature, never a seed) replacing the mock link;
     the cookie session stays as the guest identity.
-8. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
+7. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
     (history, passings, claims) with additive migrations.
-9. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+8. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
     into `banked` only. Keep the fairness tests green.
 
 ## Rules
