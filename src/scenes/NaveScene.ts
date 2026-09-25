@@ -25,6 +25,8 @@ import {
   ORGAN_STRAIT,
   ORGAN_FOUNDRY,
   ORGAN_CABLE,
+  organBeat,
+  organsComplete,
   FORGE_TRAY,
   FORGE_PAY,
   LISTING_FEE,
@@ -315,6 +317,14 @@ export class NaveScene extends Phaser.Scene {
     }
     if (!me.locked && !me.beats.under && movementReady(me.beats) && nearPoint(me.x, me.y, GOING_UNDER.x, GOING_UNDER.y, 56)) {
       this.net.goingUnder(); return;
+    }
+    const firstOrgan = this.net.snap?.signs.find(s => {
+      const beat = organBeat(s.id);
+      return beat && (!me.beats.m3 || !me.beats[beat]) && nearPoint(me.x, me.y, s.x, s.y, 56);
+    });
+    if (firstOrgan) { this.net.read(firstOrgan.id); return; }
+    if (!me.beats.m3 && nearPoint(me.x, me.y, M3_DOOR.x, M3_DOOR.y, 56)) {
+      this.net.m3(); return;
     }
     const npc = (this.net.snap?.npcs ?? [...NAVE_NPCS, IONE]).find((n) => nearPoint(me.x, me.y, n.x, n.y));
     if (npc) {
@@ -1009,7 +1019,7 @@ export class NaveScene extends Phaser.Scene {
     const objective = nextObjective(me, snap.npcs);
     const art = hud("journal-art") as HTMLImageElement | null;
     if (art) {
-      const pictures: Record<string, string> = { "memorial-choice": "memorial-recorder-v1.jpg", "intake-clerk": "safety-annex.jpg", "meet-nara": "plate-burial.jpg", "first-burial": "plate-burial.jpg", "safety-weather": "safety-annex.jpg", "meet-ord": "organ-strait.jpg", "meet-quill": "clearing-stall.jpg", "name-weather": "plate-burial.jpg", "going-under": "plate-under.jpg", "guest-lock": "plate-under.jpg", "enter-care": "plate-care.jpg", "house-hall": "house-hall.jpg", "operator-offer": "plate-operator.jpg", "operator-choice": "plate-operator.jpg", "wreckage-garden": "wreckage-garden.jpg", "third-movement": "plate-m3.jpg" };
+      const pictures: Record<string, string> = { "memorial-choice": "memorial-recorder-v1.jpg", "intake-clerk": "safety-annex.jpg", "meet-nara": "plate-burial.jpg", "first-burial": "plate-burial.jpg", "safety-weather": "safety-annex.jpg", "meet-ord": "organ-strait.jpg", "meet-quill": "clearing-stall.jpg", "name-weather": "plate-burial.jpg", "going-under": "plate-under.jpg", "guest-lock": "plate-under.jpg", "enter-care": "plate-care.jpg", "house-hall": "house-hall.jpg", "operator-offer": "plate-operator.jpg", "operator-choice": "plate-operator.jpg", "wreckage-garden": "wreckage-garden.jpg", "third-movement": "plate-m3.jpg", "organ-strait": "organ-strait.jpg", "organ-foundry": "organ-foundry.jpg", "organ-cable": "organ-cable.jpg", "organ-map": "plate-m3.jpg" };
       const file = pictures[objective.id] ?? "clearing-ring.jpg";
       if (art.dataset.file !== file) { art.src = `${import.meta.env.BASE_URL}assets/${file}`; art.dataset.file = file; }
     }
@@ -1174,7 +1184,13 @@ export class NaveScene extends Phaser.Scene {
     const mateNear = snap.players.find(
       (o) => o.id !== me.id && !o.guest && nearPoint(me.x, me.y, o.x, o.y, 56),
     );
-    if (nearPoint(me.x, me.y, MEMORIAL.x, MEMORIAL.y, 48)) {
+    if ((strait || foundry || cable) && !me.beats.m3) {
+      this.prompt = me.guest || me.locked ? "Movement III is beyond the guest threshold." : "Enter through the Third Movement door before approaching the organs.";
+    } else if ((strait && !me.beats.strait) || (foundry && !me.beats.foundry) || (cable && !me.beats.cable)) {
+      this.prompt = `F — study the ${strait ? "Strait" : foundry ? "Foundry" : "Cable"}. Trace what it feeds.`;
+    } else if (npcNear?.id === "ord" && me.beats.m3 && !me.beats.map && !me.guest && !me.locked) {
+      this.prompt = organsComplete(me.beats) ? "F — put the three organs together with Ord." : "F — ask Ord about the three organs. Visit each one to complete his map.";
+    } else if (nearPoint(me.x, me.y, MEMORIAL.x, MEMORIAL.y, 48)) {
       this.prompt = me.openingChoice ? "Your choice is held. Return to Nara’s burial plot." : me.beats.nara ? "E — copper for the coffin · Q — preserve the voice. No part goes to market." : "Speak with Nara before touching the recorder.";
     } else if (weatherPlaque && (me.beats.navePeople || snap.navePeopleHeld)) {
       this.prompt = me.heard || "The Nave — people. Extract still costs. Not a stick.";
@@ -1959,6 +1975,10 @@ export class NaveScene extends Phaser.Scene {
       this.prompt = "A concentrator. She will not quote until you have read the hall.";
     } else if (m3 && (me.guest || me.locked)) {
       this.prompt = "A door with a number. You do not travel organs.";
+    } else if (m3 && !me.beats.m3) {
+      this.prompt = me.beats.hall && (me.beats.cold || (me.beats.refuse && me.beats.garden))
+        ? "F — enter Movement III. Strait / Foundry / Cable."
+        : "Read the House hall. Take Vesper’s offer, or refuse and mourn the wreckage garden.";
     } else if (m3 && (me.beats.m3People || snap.m3PeopleHeld)) {
       this.prompt = me.heard || "M3 — people. Going-under still works. Not a stick.";
     } else if (m3 && snap.vesperPeopleHeld && !me.guest) {

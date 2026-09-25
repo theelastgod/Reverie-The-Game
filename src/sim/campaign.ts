@@ -1549,7 +1549,8 @@ export const WINK_ORGANS =
   "Three organs. One weather. The map is not a stick. Owning a token will not make you hit it harder.";
 export const M3_ENTER = "The Third Movement is organs, not nations. The Clearing you touched is already a garden.";
 export const M3_SPECTATOR = "A door with a number. You do not travel organs.";
-export const ORGAN_NEED_M3 = "Your way into the organs is unfinished. Read the House hall, then take Vesper’s offer or refuse it and mourn the wreckage garden.";
+export const ORGAN_NEED_M3 = "Enter through the Third Movement door. First read the House hall, then take Vesper’s offer or refuse it and mourn the wreckage garden.";
+export const ORD_NEED_ORGANS = "Walk the Strait, the Foundry and the Cable first. See what each one feeds. Then bring those three places back to me.";
 export const ORD_ERRAND =
   "The Cable still hums because the Strait paid. Keep a node. Do not extract. Then find me at the Cable.";
 export const ORD_ERRAND_WAIT = "The Cable is still a light. Keep a node. Do not extract.";
@@ -1821,6 +1822,13 @@ export const ORGAN_PLAQUES: Sign[] = [
     y: ORGAN_CABLE.y,
   },
 ];
+
+export function organBeat(id: string): "strait" | "foundry" | "cable" | undefined {
+  if (id === ORGAN_STRAIT.id) return "strait";
+  if (id === ORGAN_FOUNDRY.id) return "foundry";
+  if (id === ORGAN_CABLE.id) return "cable";
+  return undefined;
+}
 
 export const FORGE_TRAY = { id: "forge-tray", x: 1080, y: 600 };
 export const FORGE_PAY = 25;

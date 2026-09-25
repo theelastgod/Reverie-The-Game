@@ -1,6 +1,6 @@
 import { INTAKE } from "./encounters";
 import { MEMORIAL } from "./memorial";
-import { BURIAL_PLOT, GOING_UNDER, NAVE_NPCS, NAVE_SIGNS, CARE_DOOR, HOUSE_HALL, OPERATOR_DESK, WRECK_GARDEN, M3_DOOR } from "./campaign";
+import { BURIAL_PLOT, GOING_UNDER, NAVE_NPCS, NAVE_SIGNS, CARE_DOOR, HOUSE_HALL, OPERATOR_DESK, WRECK_GARDEN, M3_DOOR, ORGAN_STRAIT, ORGAN_FOUNDRY, ORGAN_CABLE } from "./campaign";
 import type { Player } from "./world";
 
 export type Objective = { id: string; title: string; detail: string; target?: { x: number; y: number } };
@@ -25,6 +25,10 @@ export function nextObjective(p: Player, npcs = NAVE_NPCS): Objective {
   if (!p.beats.cold && !p.beats.refuse) return { id: "operator-choice", title: "What will you take?", detail: "At Vesper’s desk: E accepts private yield. Q refuses it and opens a path through care for the dead.", target: OPERATOR_DESK };
   if (!p.beats.garden) return { id: "wreckage-garden", title: "What the work destroyed", detail: "Return to the wreckage garden. Press F to bury it, or keep watch if someone came before you.", target: WRECK_GARDEN };
   if (!p.beats.m3) return { id: "third-movement", title: "The city has organs", detail: "Go to the Third Movement door and press F. Your choice has made a way through.", target: M3_DOOR };
+  if (!p.beats.strait) return { id: "organ-strait", title: "Where the city feeds", detail: "Follow the northern aisle to the Strait. Press F to study the waterway that feeds the Foundry.", target: ORGAN_STRAIT };
+  if (!p.beats.foundry) return { id: "organ-foundry", title: "What the heat consumes", detail: "Continue east along the northern aisle to the Foundry. Press F to trace the heat into the Cable.", target: ORGAN_FOUNDRY };
+  if (!p.beats.cable) return { id: "organ-cable", title: "Who pays for the light", detail: "Continue east to the Cable. Press F to see what keeps its signal alive.", target: ORGAN_CABLE };
+  if (!p.beats.map) return { id: "organ-map", title: "Three organs, one weather", detail: "Return to Ord in the northwestern aisle. Press F to put the three places together.", target: npc("ord") };
   return { id: "open-city", title: "The city is listening", detail: "Follow the people and their changed places. F listens; E extracts; Q keeps. Each choice changes what remains." };
 }
 

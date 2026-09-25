@@ -3402,7 +3402,7 @@ describe("M3 — people", () => {
       ...spawnGuest("a"),
       guest: false,
       serial: TEST_SERIAL,
-      beats: { ...emptyBeats(), vesperPeople: true, hall: true, cold: true },
+      beats: { ...emptyBeats(), vesperPeople: true, hall: true, cold: true, m3: true },
       x: M3_DOOR.x,
       y: M3_DOOR.y,
     });
@@ -12360,7 +12360,7 @@ describe("The Strait is refused", () => {
       guest: false,
       serial: TEST_SERIAL,
       aura: auraSeed(TEST_SERIAL),
-      beats: { ...emptyBeats(), foundryDark: true, foundry: true, m3: true },
+      beats: { ...emptyBeats(), foundryDark: true, foundry: true, strait: true, m3: true },
       x: ORGAN_STRAIT.x,
       y: ORGAN_STRAIT.y,
     });
@@ -12418,7 +12418,7 @@ describe("House of Sky standing on the dark Cable", () => {
       guest: false,
       serial: 2,
       house: "sky",
-      beats: { ...emptyBeats(), cableDark: true, hall: true, m3: true },
+      beats: { ...emptyBeats(), cableDark: true, cable: true, hall: true, m3: true },
       x: ORGAN_CABLE.x,
       y: ORGAN_CABLE.y,
     });
@@ -12491,7 +12491,7 @@ describe("House of Divinities standing on the buried Strait", () => {
       guest: false,
       serial: 4,
       house: "divinities",
-      beats: { ...emptyBeats(), canalBury: true, hall: true, m3: true },
+      beats: { ...emptyBeats(), canalBury: true, strait: true, hall: true, m3: true },
       x: ORGAN_STRAIT.x,
       y: ORGAN_STRAIT.y,
     });
@@ -12555,7 +12555,7 @@ describe("House of Earth standing on the dark Foundry", () => {
       guest: false,
       serial: 1,
       house: "earth",
-      beats: { ...emptyBeats(), foundryDark: true, hall: true, m3: true },
+      beats: { ...emptyBeats(), foundryDark: true, foundry: true, hall: true, m3: true },
       x: ORGAN_FOUNDRY.x,
       y: ORGAN_FOUNDRY.y,
     });
@@ -12618,7 +12618,7 @@ describe("The Cable goes dark", () => {
       guest: false,
       serial: TEST_SERIAL,
       aura: auraSeed(TEST_SERIAL),
-      beats: { ...emptyBeats(), straitRefuse: true, m3: true },
+      beats: { ...emptyBeats(), straitRefuse: true, cable: true, m3: true },
       x: ORGAN_CABLE.x,
       y: ORGAN_CABLE.y,
     });

@@ -54,4 +54,14 @@ it("guides refusal through the garden to the Third Movement door", () => {
   expect(nextObjective(p).id).toBe("wreckage-garden");
   p.beats.garden = true;
   expect(nextObjective(p).id).toBe("third-movement");
+  p.beats.m3 = true;
+  expect(nextObjective(p).id).toBe("organ-strait");
+  p.beats.strait = true;
+  expect(nextObjective(p).id).toBe("organ-foundry");
+  p.beats.foundry = true;
+  expect(nextObjective(p).id).toBe("organ-cable");
+  p.beats.cable = true;
+  expect(nextObjective(p).id).toBe("organ-map");
+  p.beats.map = true;
+  expect(nextObjective(p).id).toBe("open-city");
 });

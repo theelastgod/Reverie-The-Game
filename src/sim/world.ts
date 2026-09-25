@@ -1370,6 +1370,8 @@ import {
   M3_SPECTATOR,
   NARA_SILENCE,
   ORD_MAP,
+  ORD_NEED_ORGANS,
+  organBeat,
   ORGAN_CABLE,
   ORGAN_FOUNDRY,
   ORGAN_NEED_M3,
@@ -3386,7 +3388,12 @@ export function inOpening(p: Player): boolean {
 
 export function campaignNpcs(w: WorldState, p?: Player) {
   const shared = liveNpcs(w.ioneGone, w.ordAtCable, w.naraAtStrait, w.quillAtGrid, w.vesperAtFoundry, w.ordAtStrait, w.wetCult, w.straitBuried, w.ordAtCare, w.naraAtCare, w.quillNoPrint, w.vesperNoGod, w.naraAtClearing, w.ordAtHijack, w.vesperAtHijack, w.naraGone, w.ordGone, w.quillGone, w.vesperGone, w.naraPersonHeld, w.quillPersonHeld, w.ordPersonHeld, w.vesperPersonHeld);
-  if (!p || !inOpening(p)) return shared;
+  if (!p) return shared;
+  if (p.beats.m3 && !p.beats.map && !p.guest && !p.locked) {
+    // Each arrival can finish Ord's map even if shared events moved him away.
+    return [...shared.filter(n => n.id !== "ord"), NAVE_NPCS.find(n => n.id === "ord")!];
+  }
+  if (!inOpening(p)) return shared;
   // The three opening encounters belong to each arrival, even after shared departures.
   return [...shared.filter(n => !NAVE_NPCS.some(first => first.id === n.id)), ...NAVE_NPCS];
 }
@@ -3409,6 +3416,15 @@ export function applyTalk(w: WorldState, playerId: string, npcId: string): World
   const id = npc.id as NpcId;
   if (inOpening(p) && NAVE_NPCS.some(n => n.id === id)) return openingTalk(w, p, id);
   const players = new Map(w.players);
+  if (id === "ord" && !p.guest && !p.locked && !p.beats.map && w.m3Open) {
+    if (!p.beats.m3 || !organsComplete(p.beats)) {
+      players.set(playerId, { ...p, heard: p.beats.m3 ? ORD_NEED_ORGANS : ORGAN_NEED_M3 });
+    } else {
+      players.set(playerId, { ...p, beats: { ...p.beats, ord: true, map: true },
+        heard: ORD_MAP, wink: visibleWink(false, WINK_ORGANS), readiness: p.readiness + 1 });
+    }
+    return { ...w, players };
+  }
   const gardenOpen = w.rites.some((r) => r.kind === "garden" && !r.done);
   if (id === "nara" && (p.beats.funeral || w.naraPersonHeld) && !w.naraGone) {
     return applyNaraPerson(w, playerId);
@@ -3711,6 +3727,7 @@ export function applyRead(w: WorldState, playerId: string, signId: string): Worl
     return applyWeatherPeople(w, playerId);
   }
   if (sign.id === CARE_DOOR.id) return applyCare(w, playerId);
+  if (sign.id === M3_DOOR.id) return applyM3(w, playerId);
   if (sign.id === "organs-people") return applyOrgansPeople(w, playerId);
   if (sign.id === "bounty-people") return applyBountyPeople(w, playerId);
   if (sign.id === "tithe-people") return applyTithePeople(w, playerId);
@@ -9814,14 +9831,23 @@ export function applyOperator(
 
 export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldState {
   const p = w.players.get(playerId);
-  if (!p || p.hp <= 0 || !nearPoint(p.x, p.y, sign.x, sign.y, 56)) return w;
+  const key = organBeat(sign.id);
+  const original = ORGAN_PLAQUES.find(s => s.id === sign.id);
+  if (!p || !key || !original || p.hp <= 0 || !nearPoint(p.x, p.y, original.x, original.y, 56)) return w;
   const players = new Map(w.players);
   if (p.guest || p.locked) {
     players.set(playerId, { ...p, heard: M3_SPECTATOR, wink: "" });
     return { ...w, players };
   }
-  if (!w.m3Open) {
+  if (!w.m3Open || !p.beats.m3) {
     players.set(playerId, { ...p, heard: ORGAN_NEED_M3 });
+    return { ...w, players };
+  }
+  if (!p.beats[key]) {
+    const beats = { ...p.beats, [key]: true };
+    players.set(playerId, { ...p, beats, readiness: p.readiness + 1,
+      heard: `${original.title}: ${original.text}${sign.text !== original.text ? ` Here now: ${sign.text}` : ""}`,
+      wink: visibleWink(false, organsComplete(beats) ? WINK_ORGANS : p.wink) });
     return { ...w, players };
   }
   if (sign.id === ORGAN_STRAIT.id) {
@@ -9857,7 +9883,6 @@ export function applyOrgan(w: WorldState, playerId: string, sign: Sign): WorldSt
       return applyCableDark(w, playerId);
     }
   }
-  const key = sign.id === ORGAN_STRAIT.id ? "strait" : sign.id === ORGAN_FOUNDRY.id ? "foundry" : "cable";
   const beats = { ...p.beats, [key]: true };
   const done = organsComplete(beats);
   players.set(playerId, {
@@ -10131,7 +10156,7 @@ export function applyM3(w: WorldState, playerId: string): WorldState {
     players.set(playerId, { ...p, heard: ORGAN_NEED_M3, wink: "" });
     return { ...w, players };
   }
-  if (w.vesperPeopleHeld && !w.m3PeopleHeld) return applyM3People(w, playerId);
+  if (p.beats.m3 && w.vesperPeopleHeld && !w.m3PeopleHeld) return applyM3People(w, playerId);
   if (!w.m3Open && p.beats.hall && p.beats.refuse && p.beats.garden) {
     const pois = w.pois.map(poi => poi.id === M3_DOOR.id ? m3Poi(true) : poi);
     if (!pois.some(poi => poi.id === M3_DOOR.id)) pois.push(m3Poi(true));

@@ -2,7 +2,7 @@
 
 Execute `PROMPT.md`. Do not wait for a new user prompt.
 
-**Next stage: 274** — Follow `DESIGN.md`: verify and measure the rendered opening, carry the memorial decision into later consequences, and enforce personal Movement III requirements at organ interactions. No more repeated “as people” plaques. No mint.
+**Next stage: 275** — Follow `DESIGN.md`: preserve each arrival’s Movement II encounters after shared departures (Care, House hall, Vesper and the wreckage garden), then carry the memorial decision into later consequences. Rendered opening measurement remains pending. No more repeated “as people” plaques. No mint.
 
 ## Live
 - GitHub: https://github.com/theelastgod/Reverie-The-Game
@@ -1182,3 +1182,14 @@ Local: `npx wrangler dev --port 8788` and `npm run dev`.
 - Reuse Imagine art; additional built-in image generation was authorized by the owner on 2026-09-24. Keep the master visual synthesis and reference existing assets. No Higgsfield until owner confirms credits.
 - Co-Authored-By: Grok <noreply@x.ai>. No other model names in the repo.
 - Never write WALL STREET / Meltdown / METROPHAGE / Mafia / Solana Seas repos.
+
+
+## Stage 274 — personal organ progression (landed)
+- Shared organ states no longer authorize a new arrival to interact before their own Movement III entry. The server validates the canonical organ and distance, then the character’s entry beat; guests remain spectators.
+- Each character gets the original Strait, Foundry and Cable introductions once, with the current shared state acknowledged. Earlier players’ darkened, buried or renamed organs cannot consume these introductions or award standing instead. The shared city is preserved.
+- A changed Third Movement door routes F through the same personal entry check. First entry takes precedence over legacy shared plaque branches.
+- Ord remains available at his original aisle for the character’s unfinished map. He requires all three organ introductions, even after shared events have moved or removed him.
+- Journal bearings and F prompts guide the northern organ circuit and the return to Ord; reuse the existing Imagine organ art. No additional plaques or currencies.
+- Validation: 374 tests pass; client/server type-checks and production build pass (`index-CDB4MRDx.js`). New public WebSocket campaign smoke walks Movement I, guest lock, mock Angel, refusal/garden, Movement III, three organs and Ord, verifies saved reconnect, then denies organ shortcuts to another new arrival. Local run passes; live run follows deployment.
+- Browser visual acceptance is still pending: the in-app browser was discovered, but its webview timed out attaching. No rendered quality or frame-rate claim.
+- Remaining scope: legacy Movement II shared branches can still intercept newcomers after later world milestones. The next stage should protect those encounters before extending later campaign consequences. Token, mint and real-value claims remain disarmed.
