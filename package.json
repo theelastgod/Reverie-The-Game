@@ -1,27 +1,28 @@
 {
   "name": "reverie-the-game",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "Reverie: The Game \u2014 top-down 2D MMO RPG",
+  "description": "Reverie: The Game — a standalone top-down 2D action RPG / MMO",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5175",
     "dev:world": "wrangler dev --port 8788",
-    "dev:online": "wrangler dev --port 8788",
     "build": "npm run typecheck && vite build",
     "build:play": "npm run typecheck && VITE_BASE=/play/ vite build",
-    "deploy": "npm run build:play && node scripts/stage-play.mjs && npx wrangler deploy",
+    "deploy": "npm run build:play && node scripts/stage-play.mjs && wrangler deploy",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json",
     "test": "vitest run",
-    "deploy:site": "npx wrangler deploy",
-    "test:smoke": "node scripts/smoke-world.mjs"
+    "test:smoke": "node scripts/smoke-world.mjs",
+    "test:campaign": "node scripts/smoke-campaign.mjs",
+    "test:render": "node scripts/render-check.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260924.1",
+    "playwright-core": "^1.56.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
     "vitest": "^2.1.9",

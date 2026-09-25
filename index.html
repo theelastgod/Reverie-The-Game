@@ -3,111 +3,163 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Reverie: The Game. A top-down action RPG in an enframed city." />
+    <meta name="theme-color" content="#0a0a0a" />
     <title>Reverie: The Game</title>
     <link rel="icon" href="./assets/wing-star.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
-    <style>
-      html, body { margin: 0; height: 100%; background: #0a0a0a; overflow: hidden; }
-      #hud {
-        position: fixed; inset: 0; pointer-events: none; z-index: 5;
-        font-family: "Space Grotesk", system-ui, sans-serif; color: #0a0a0a;
-      }
-      #hud .top {
-        pointer-events: none; display: flex; justify-content: space-between; align-items: flex-start;
-        padding: 12px;
-      }
-      #hud-icons {
-        position: absolute; top: 52px; left: 12px; display: flex; gap: 4px;
-      }
-      #hud-icons { display: none; }
-      #dodge-chip { position: absolute; left: 12px; top: 58px; font-size: 10px; }
-      #journal-art { display: block; width: 100%; height: 108px; object-fit: cover; filter: saturate(.72); border-bottom: 3px solid #0a0a0a; }
-      #hud-icons img { width: 28px; height: 28px; image-rendering: pixelated; border: 2px solid #0a0a0a; background: #fff; }
-      .chip {
-        border: 3px solid #0a0a0a; background: #fff; box-shadow: 4px 4px 0 #0a0a0a;
-        padding: 8px 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-        font-size: 12px;
-      }
-      .chip.hot { background: #ff2d6b; color: #fff; }
-      .chip.acid { background: #d4ff00; }
-      #lock-panel {
-        position: absolute; inset: 18% 12%; max-width: 36rem; margin: auto; height: fit-content;
-        pointer-events: auto; border: 3px solid #0a0a0a; background: #fff;
-        box-shadow: 8px 8px 0 #0a0a0a; padding: 24px 28px; text-align: left;
-      }
-      #lock-panel img { width: 48px; }
-      #lock-panel h2 {
-        font-family: Anton, Impact, sans-serif; font-weight: 400; letter-spacing: 0.04em;
-        font-size: 1.6rem; margin: 12px 0 8px;
-      }
-      #lock-panel p { margin: 0; color: #5a5a5a; font-size: 14px; line-height: 1.45; }
-      #lock-panel .cta {
-        margin-top: 16px; display: inline-block; border: 3px solid #0a0a0a; padding: 8px 12px;
-        background: #e8e8e8; font-weight: 700; font-size: 12px; letter-spacing: 0.08em;
-        text-transform: uppercase; font-family: inherit; cursor: pointer;
-      }
-      #journal { position: absolute; right: 16px; top: 136px; width: 250px; pointer-events: auto; border: 3px solid #0a0a0a; background: #fff; box-shadow: 5px 5px 0 #0a0a0a; }
-      #journal summary { padding: 10px 12px; background: #d4ff00; font-weight: 700; font-size: 11px; letter-spacing: .1em; cursor: pointer; }
-      #journal h2 { margin: 14px 14px 8px; font: 24px/1.05 Anton, Impact, sans-serif; text-transform: uppercase; }
-      #journal p { margin: 8px 14px 14px; font-size: 13px; line-height: 1.5; }
-      #journal-bearing { border-top: 3px solid #0a0a0a; padding: 10px 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
-      @media (max-width: 720px) { #journal { top: 100px; width: 200px; } #journal h2 { font-size: 20px; } }
-      #boot-title {
-        position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-        background: #0a0a0a; z-index: 10; color: #c9a56a; font-family: "Anton", Impact, sans-serif;
-      }
-      #boot-title img { width: 160px; margin-bottom: 18px; }
-      #boot-title h1 { margin: 0; font-size: clamp(2.5rem, 8vw, 4.5rem); letter-spacing: 0.04em; font-weight: 400; }
-      #boot-title p { font-family: "Space Grotesk", sans-serif; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
-    </style>
+    <link rel="stylesheet" href="/src/ui/hud.css" />
   </head>
   <body>
-    <div id="boot-title">
-      <img src="./assets/wing-star.png" alt="" />
-      <h1>REVERIE</h1>
-      <p>The Game · click to enter the Nave</p>
+    <!-- Boot / title overlay -->
+    <div id="title" role="dialog" aria-label="Reverie: The Game">
+      <div class="title-inner">
+        <img class="title-mark" src="./assets/wing-star.png" alt="" width="160" height="160" />
+        <h1 class="title-word">REVERIE</h1>
+        <div class="title-sub">THE GAME</div>
+        <p class="title-temp">Cold · pressurized · operational</p>
+        <div class="title-actions">
+          <button id="title-enter" class="btn btn-paper" type="button">ENTER THE CITY</button>
+          <div class="title-link">
+            <label class="title-serial-label" for="title-serial">SERIAL</label>
+            <input id="title-serial" class="serial-input" type="number" inputmode="numeric" min="1" max="7777" step="1" value="7777" aria-label="Angel serial, 1 to 7777" />
+            <button id="title-link" class="btn btn-secondary" type="button">LINK A TEST ANGEL</button>
+          </div>
+        </div>
+        <p class="title-fine">The link is a test. No mint. No chain. 7,777 Angels.</p>
+      </div>
+      <div class="title-foot">01 · REVERIE: THE GAME</div>
     </div>
+
+    <!-- HUD root; D1 only touches it through Hud -->
     <div id="hud" hidden>
-      <div class="top">
-        <div class="chip hot" id="guest-chip">Guest · aura 0</div>
-        <div class="chip acid" id="zone-chip">Nave of Tubes</div>
-        <div class="chip" id="stat-chip">Bestand 0 · Winke 0</div>
+      <div id="hud-top" class="hud-top">
+        <div id="hud-identity" class="chip chip-identity">
+          <img class="chip-icon" src="./assets/hud/wing.png" alt="" />
+          <span class="chip-text">GUEST · AURA 0</span>
+          <span class="chip-tags"></span>
+        </div>
+        <div id="hud-district" class="chip chip-district">
+          <span class="chip-text">NAVE OF TUBES</span>
+          <span class="chip-small">GESTELL</span>
+        </div>
+        <div id="hud-weather" class="chip chip-weather">
+          <span class="chip-text">MIXED WEATHER</span>
+          <span class="chip-small chip-gestell">38</span>
+          <span class="chip-tags"></span>
+        </div>
+        <div id="hud-ledger" class="chip chip-ledger">
+          <img class="chip-icon" src="./assets/hud/coin.png" alt="" />
+          <span class="chip-text">BESTAND 0</span>
+        </div>
       </div>
-      <div class="chip acid" id="connection-chip" role="status" style="position:absolute;top:88px;right:12px;max-width:24rem;">Entering the Nave…</div>
-      <div class="chip" id="dodge-chip">SHIFT + MOVE · DODGE</div>
-      <div id="hud-icons">
-        <img src="./assets/hud/wing.png" alt="" />
-        <img src="./assets/hud/coin.png" alt="" />
-        <img src="./assets/hud/eye.png" alt="" />
-        <img src="./assets/hud/lamp.png" alt="" />
-        <img src="./assets/hud/grave.png" alt="" />
-        <img src="./assets/hud/flag.png" alt="" />
-        <img src="./assets/hud/care.png" alt="" />
-        <img src="./assets/hud/claims.png" alt="" />
+
+      <div id="hud-connection" class="chip chip-connection" role="status">CONNECTING</div>
+
+      <div id="hud-left" class="hud-left">
+        <div id="hud-wink" class="panel wink" hidden>
+          <div class="wink-tag">WINK</div>
+          <div class="wink-text"></div>
+        </div>
+        <div id="hud-notices" class="notices" aria-live="polite"></div>
       </div>
-      <div class="chip" id="wink-chip" hidden style="position:absolute;top:88px;left:12px;max-width:36rem;background:#0a0a0a;color:#c9a56a;border-color:#c9a56a;"></div>
-      <div class="chip" id="prompt-chip" style="position:absolute;bottom:16px;left:12px;right:12px;max-width:42rem;">
-        Connecting to the Nave…
+
+      <div id="hud-minimap" class="panel minimap">
+        <canvas width="208" height="160" aria-label="City map"></canvas>
+        <div class="minimap-tag"><span class="num">02</span> CITY</div>
       </div>
-      <details id="journal" open>
-        <summary>01 / FIELD NOTES</summary>
-        <img id="journal-art" src="./assets/plate-burial.jpg" alt="" />
-        <h2 id="journal-title">A name for the dead</h2>
-        <p id="journal-detail">Your place in the city will appear here.</p>
-        <div id="journal-bearing">NAVE OF TUBES</div>
-      </details>
-      <div id="lock-panel" hidden>
-        <img src="./assets/wing-star.png" alt="" />
-        <h2>A GUEST CANNOT PREPARE THE GROUND</h2>
-        <p>
-          The going-under is not a lecture. It is a death you have to be an Angel to die.
-          Stay in the Nave as a spectator. Angel link and mint stay disarmed.
-        </p>
-        <button class="cta" id="mock-link" type="button">Link test Angel #7777 · mock · no mint</button>
+
+      <aside id="hud-journal" class="panel interactive journal">
+        <button class="journal-tab" type="button"><span class="num">01</span> FIELD NOTES</button>
+        <div class="journal-body">
+          <img class="journal-plate" src="./assets/plate-arena.jpg" alt="" />
+          <div class="journal-movement">MOVEMENT I</div>
+          <h2 class="journal-title">The city</h2>
+          <p class="journal-detail">Your place in the city will appear here.</p>
+          <div class="journal-bearing">NO BEARING</div>
+          <ul class="journal-quests"></ul>
+        </div>
+      </aside>
+
+      <div id="hud-bars" class="panel bars">
+        <div class="bar" data-bar="hp">
+          <div class="bar-head"><span class="bar-label">HP</span><span class="bar-value">100</span></div>
+          <div class="bar-track"><div class="bar-fill"></div></div>
+        </div>
+        <div class="bar" data-bar="aura">
+          <div class="bar-head"><span class="bar-label">AURA</span><span class="bar-value">0</span></div>
+          <div class="bar-track"><div class="bar-fill"></div></div>
+        </div>
+        <div class="bar" data-bar="restraint">
+          <div class="bar-head"><span class="bar-label">RESTRAINT</span><span class="bar-value">60</span></div>
+          <div class="bar-track"><div class="bar-fill"></div></div>
+        </div>
+        <div class="bar" data-bar="readiness">
+          <div class="bar-head"><span class="bar-label">READINESS</span><span class="bar-value">0</span></div>
+          <div class="bar-track"><div class="bar-fill"></div></div>
+        </div>
+      </div>
+
+      <div id="hud-verbs" class="hud-verbs">
+        <button id="hud-stance" class="chip chip-btn interactive" type="button"><kbd class="cap">TAB</kbd><span class="chip-text">RESTRAINT</span></button>
+        <button id="hud-kit" class="chip chip-btn interactive" type="button"><kbd class="cap">K</kbd><span class="chip-text">NO KIT</span></button>
+        <div id="hud-dodge" class="chip chip-dodge"><span class="chip-text">SHIFT + MOVE · DODGE</span></div>
+      </div>
+
+      <div id="hud-heard" class="chip heard" hidden></div>
+
+      <div id="hud-prompt" class="panel prompt interactive" hidden>
+        <span class="prompt-name"></span>
+        <div class="prompt-verbs"></div>
+      </div>
+
+      <div id="hud-loading" class="chip chip-loading" hidden><span class="chip-text">LOADING</span><span class="loading-pct"></span></div>
+
+      <div id="hud-marquee" class="marquee" hidden>
+        <span class="marquee-tag">NEWS</span>
+        <div class="marquee-track"><span class="marquee-text"></span></div>
+      </div>
+
+      <div id="hud-dialogue" class="panel interactive dialogue" hidden>
+        <img class="dlg-portrait" src="./assets/guest.jpg" alt="" />
+        <div class="dlg-body">
+          <div class="dlg-speaker">—</div>
+          <p class="dlg-text"></p>
+          <div class="dlg-wink" hidden><span class="wink-tag">WINK</span><span class="dlg-wink-text"></span></div>
+          <div class="dlg-choices"></div>
+        </div>
+      </div>
+
+      <div id="hud-lock" class="panel interactive lock" hidden>
+        <img class="lock-mark" src="./assets/wing-star.png" alt="" width="72" height="72" />
+        <h2 class="lock-title">A GUEST CANNOT PREPARE THE GROUND</h2>
+        <p class="lock-copy">The going-under is not failure. It is the structure of the readiness itself. Angels die as death and wake in the Care. Guests stop here.</p>
+        <p class="lock-copy lock-copy-small">You may remain in the Nave and watch. The link below is a test link. No mint, no chain, no settlement.</p>
+        <div class="lock-actions">
+          <button class="btn btn-paper lock-link" type="button">LINK TEST ANGEL #7777</button>
+          <div class="lock-serial">
+            <label class="title-serial-label" for="lock-serial">SERIAL</label>
+            <input id="lock-serial" class="serial-input" type="number" inputmode="numeric" min="1" max="7777" step="1" value="7777" aria-label="Angel serial, 1 to 7777" />
+          </div>
+          <button class="btn btn-quiet lock-stay" type="button">REMAIN IN THE NAVE</button>
+        </div>
+      </div>
+
+      <div id="hud-credits" class="credits interactive" hidden>
+        <div class="credits-roll">
+          <div class="credits-line credits-mark"><img src="./assets/wing-star.png" alt="" width="120" height="120" /></div>
+          <div class="credits-line">REVERIE: THE GAME</div>
+          <div class="credits-line">THE CITY</div>
+          <div class="credits-line">THE FOURFOLD</div>
+          <div class="credits-line">THE ANGELS</div>
+          <div class="credits-line">THE MMO IS THE REST OF LIFE</div>
+        </div>
+        <div class="credits-hint">CLICK TO RETURN TO THE CITY</div>
       </div>
     </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

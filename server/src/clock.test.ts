@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DT } from "../../src/sim/world";
+import { DT } from "../../src/sim/constants";
 import { MAX_CATCHUP_MS, SimulationClock, STEP_MS } from "./clock";
 
 describe("elapsed server clock", () => {

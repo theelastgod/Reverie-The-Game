@@ -1,42 +1,19 @@
-import {
-  applyBury,
-  applyDodge,
-  applyCare,
-  applyGoingUnder,
-  applyLink,
-  applyM3,
-  applyWatch,
-  applyForge,
-  applyDesk,
-  applyRestore,
-  applyInsure,
-  applyRepair,
-  applyClockOut,
-  applyClearing,
-  applyAnnounce,
-  applyBlitz,
-  applyRuinBack,
-  applyParty,
-  applyTruce,
-  applyFlag,
-  applyCyber,
-  applyDwell,
-  applyOperator,
-  applyRead,
-  applyStrike,
-  applyHeavy,
-  applyTalk,
-  applyUse,
-  DT,
-  emptyWorld,
-  Intent,
-  snapshot,
-  inOpening,
-  spawnGuest,
-  tickWorld,
-  WorldState,
-  Player,
-} from "../../src/sim/world.ts";
+/**
+ * Reverie: The Game — the city Worker.
+ *
+ * One Durable Object (`ReverieWorld`) owns the whole shared sim: it restores
+ * the checkpointed world, accepts cookie-bound WebSocket sessions, applies
+ * every client message through `applyAction`, steps the world in fixed 20 Hz
+ * ticks from an alarm, checkpoints before it broadcasts, and sends every
+ * viewer their own `snapshotFor` view. The client never computes a number.
+ */
+import { emptyWorld, spawnGuest, tickWorld } from "../../src/sim/world.ts";
+import { DT } from "../../src/sim/constants.ts";
+import { applyAction } from "../../src/sim/actions.ts";
+import { snapshotFor } from "../../src/sim/snapshot.ts";
+import { isClientMsg, PROTOCOL_VERSION } from "../../src/sim/protocol.ts";
+import type { Hello } from "../../src/sim/protocol.ts";
+import type { Intent, Player, WorldState } from "../../src/sim/types.ts";
 import { SimulationClock, STEP_MS } from "./clock";
 
 type Env = {
@@ -44,8 +21,12 @@ type Env = {
   WORLD: DurableObjectNamespace;
 };
 
-const SESSION_COOKIE = "reverie_session";
-const WORLD_KEY = "world:v1";
+export const SESSION_COOKIE = "reverie_session";
+export const WORLD_KEY = "world:v2";
+export const PLAYER_PREFIX = "player:v2:";
+export const WORLD_NAME = "city-v2";
+export const MAX_MESSAGE = 4096;
+export const INTENT_TTL_MS = 1000;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function sessionToken(req: Request): string | null {
@@ -63,12 +44,36 @@ export function sameOrigin(req: Request): boolean {
   return url.hostname === "127.0.0.1" && origin === "http://127.0.0.1:5175";
 }
 
+/** The checkpointed form of the world: Maps become arrays, intents are never saved. */
+export type SavedWorld = Omit<WorldState, "players" | "intents"> & { players: [string, Player][] };
+
+export function serializeWorld(w: WorldState): SavedWorld {
+  const { players, intents: _intents, ...rest } = w;
+  return { ...rest, players: [...players] };
+}
+
+export function restoreWorld(saved: Partial<SavedWorld> | undefined): WorldState {
+  const base = emptyWorld();
+  if (!saved) return base;
+  const { players, ...rest } = saved;
+  const entries: [string, Player][] = Array.isArray(players)
+    ? players
+    : players && typeof players === "object"
+      ? (Object.entries(players as unknown as Record<string, Player>))
+      : [];
+  return { ...base, ...rest, players: new Map(entries), intents: new Map() };
+}
+
 type Session = { id: string; token: string };
 const idle: Intent = { up: false, down: false, left: false, right: false };
+const playerKey = (token: string) => `${PLAYER_PREFIX}${token}`;
+
+/** A WebSocket as this object uses it; narrow so tests can hand in doubles. */
+type Socket = Pick<WebSocket, "send" | "close" | "serializeAttachment" | "deserializeAttachment">;
 
 export class ReverieWorld {
   private w: WorldState;
-  private sessions = new Map<WebSocket, Session>();
+  private sessions = new Map<Socket, Session>();
   private checkpointAt = 0;
   private intentAt = new Map<string, number>();
   private ticking = false;
@@ -77,8 +82,8 @@ export class ReverieWorld {
   constructor(private readonly ctx: DurableObjectState, _env: Env) {
     this.w = emptyWorld();
     this.ctx.blockConcurrencyWhile(async () => {
-      const saved = await this.ctx.storage.get<WorldState>(WORLD_KEY);
-      if (saved) this.w = { ...emptyWorld(), ...saved, intents: new Map() };
+      const saved = await this.ctx.storage.get<SavedWorld>(WORLD_KEY);
+      this.w = restoreWorld(saved);
       const connected = new Set<string>();
       for (const ws of this.ctx.getWebSockets()) {
         const session = ws.deserializeAttachment() as Session | null;
@@ -90,7 +95,7 @@ export class ReverieWorld {
         connected.add(session.id);
         this.w.intents.set(session.id, { ...idle });
       }
-      for (const id of this.w.players.keys()) {
+      for (const id of [...this.w.players.keys()]) {
         if (!connected.has(id)) this.w.players.delete(id);
       }
       this.checkpointAt = this.w.now;
@@ -99,10 +104,10 @@ export class ReverieWorld {
   }
 
   private async checkpoint(extra: Record<string, unknown> = {}) {
-    const records: Record<string, unknown> = { [WORLD_KEY]: this.w, ...extra };
+    const records: Record<string, unknown> = { [WORLD_KEY]: serializeWorld(this.w), ...extra };
     for (const session of this.sessions.values()) {
       const player = this.w.players.get(session.id);
-      if (player) records[`player:${session.token}`] = player;
+      if (player) records[playerKey(session.token)] = player;
     }
     await this.ctx.storage.put(records);
     this.checkpointAt = this.w.now;
@@ -110,183 +115,65 @@ export class ReverieWorld {
 
   async fetch(req: Request): Promise<Response> {
     if (req.headers.get("Upgrade") !== "websocket") {
-      return new Response("world", { status: 200 });
+      return Response.json({ ok: true, v: PROTOCOL_VERSION, players: this.w.players.size });
     }
     const token = sessionToken(req);
     if (!token || !sameOrigin(req)) return new Response("Session required", { status: 403 });
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair);
+    await this.join(token, server);
+    return new Response(null, { status: 101, webSocket: client });
+  }
+
+  /**
+   * Bind a browser session to a body. One active body per session cookie:
+   * a newer socket takes over and the older one is closed with 4001.
+   */
+  async join(token: string, server: Socket): Promise<Hello> {
     return this.ctx.blockConcurrencyWhile(async () => {
-      const saved = await this.ctx.storage.get<Player>(`player:${token}`);
+      const saved = await this.ctx.storage.get<Player>(playerKey(token));
       const active = [...this.sessions.entries()].find(([, session]) => session.token === token);
-      const player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(crypto.randomUUID());
-      // One active body per browser session. An old socket cannot evict its replacement.
+      const player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(crypto.randomUUID(), this.w.now);
       if (active) {
         this.sessions.delete(active[0]);
-        active[0].close(4001, "This Angel is active in another tab");
+        try { active[0].close(4001, "This Angel is active in another tab"); } catch { /* already gone */ }
       }
-      const pair = new WebSocketPair();
-      const [client, server] = Object.values(pair);
-      this.ctx.acceptWebSocket(server);
+      this.ctx.acceptWebSocket(server as WebSocket);
       const id = player.id;
       this.w.players.set(id, player);
       this.w.intents.set(id, { ...idle });
-      const session = { id, token };
+      const session: Session = { id, token };
       this.sessions.set(server, session);
       server.serializeAttachment(session);
       await this.checkpoint();
-      server.send(JSON.stringify({ t: "hello", id, guest: player.guest, you: player }));
+      const hello: Hello = { t: "hello", v: PROTOCOL_VERSION, id, guest: player.guest, you: snapshotFor(this.w, id).you };
+      server.send(JSON.stringify(hello));
       this.broadcast();
       await this.ensureTick();
-      return new Response(null, { status: 101, webSocket: client });
+      return hello;
     });
   }
 
   async webSocketMessage(ws: WebSocket, msg: string | ArrayBuffer) {
     const id = this.sessions.get(ws)?.id;
-    if (!id || typeof msg !== "string" || msg.length > 2048) return;
-    let data: {
-      t?: string;
-      intent?: Intent;
-      dx?: number;
-      dy?: number;
-      nodeId?: string;
-      npcId?: string;
-      signId?: string;
-      serial?: number;
-      sig?: string;
-      choice?: "extract" | "keep" | "hear" | "take" | "refuse" | "spot" | "sell" | "pass" | "file" | "bank";
-    };
+    if (!id || typeof msg !== "string" || msg.length > MAX_MESSAGE) return;
+    let data: unknown;
     try {
       data = JSON.parse(msg);
     } catch {
       return;
     }
-    if (!data || typeof data !== "object" || Array.isArray(data)) return;
+    if (!isClientMsg(data)) return;
+    if (!this.w.players.has(id)) return;
     // Settle elapsed time before a new input; it must not act retroactively during catch-up.
     this.advanceWorld(Date.now());
-    if (data.t === "intent" && data.intent) {
+    this.w = applyAction(this.w, id, data);
+    if (data.t === "intent") {
       this.intentAt.set(id, Date.now());
-      this.w.intents.set(id, {
-        up: !!data.intent.up,
-        down: !!data.intent.down,
-        left: !!data.intent.left,
-        right: !!data.intent.right,
-      });
-    } else if (data.t === "dodge" && typeof data.dx === "number" && typeof data.dy === "number") {
-      this.w = applyDodge(this.w, id, data.dx, data.dy);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "strike") {
-      this.w = applyStrike(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "heavy") {
-      this.w = applyHeavy(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "use" && data.nodeId && (data.choice === "extract" || data.choice === "keep")) {
-      this.w = applyUse(this.w, id, data.nodeId, data.choice);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "talk" && data.npcId) {
-      this.w = applyTalk(this.w, id, data.npcId);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "bury") {
-      this.w = applyBury(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "under") {
-      this.w = applyGoingUnder(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "read" && data.signId) {
-      this.w = applyRead(this.w, id, data.signId);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "link" && typeof data.serial === "number") {
-      this.w = applyLink(this.w, id, data.serial, typeof data.sig === "string" ? data.sig : "");
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "care") {
-      this.w = applyCare(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "operator") {
-      const choice = data.choice === "take" || data.choice === "refuse" || data.choice === "hear" ? data.choice : "hear";
-      this.w = applyOperator(this.w, id, choice);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "m3") {
-      this.w = applyM3(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "watch") {
-      this.w = applyWatch(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "forge") {
-      const choice = data.choice === "spot" || data.choice === "sell" || data.choice === "hear" ? data.choice : "hear";
-      this.w = applyForge(this.w, id, choice);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "clearing") {
-      const choice = data.choice === "extract" || data.choice === "pass" || data.choice === "keep" ? data.choice : "keep";
-      this.w = applyClearing(this.w, id, choice);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "announce" && data.nodeId) {
-      this.w = applyAnnounce(this.w, id, data.nodeId);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "blitz") {
-      this.w = applyBlitz(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "ruinBack") {
-      this.w = applyRuinBack(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "party") {
-      this.w = applyParty(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "flag") {
-      this.w = applyFlag(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "truce") {
-      this.w = applyTruce(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "cyber" && data.nodeId) {
-      this.w = applyCyber(this.w, id, data.nodeId);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "dwell" && data.nodeId) {
-      this.w = applyDwell(this.w, id, data.nodeId);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "desk") {
-      this.w = applyDesk(this.w, id, data.choice === "take" ? "take" : data.choice === "bank" ? "bank" : "file");
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "restore") {
-      this.w = applyRestore(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "insure") {
-      this.w = applyInsure(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "repair") {
-      this.w = applyRepair(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
-    } else if (data.t === "clock") {
-      this.w = applyClockOut(this.w, id);
-      await this.checkpoint();
-      this.broadcast();
+      return;
     }
+    await this.checkpoint();
+    this.broadcast();
   }
 
   async webSocketClose(ws: WebSocket, code = 1000, reason = "") {
@@ -299,7 +186,7 @@ export class ReverieWorld {
     this.w.players.delete(session.id);
     this.w.intents.delete(session.id);
     this.intentAt.delete(session.id);
-    await this.checkpoint(player ? { [`player:${session.token}`]: player } : {});
+    await this.checkpoint(player ? { [playerKey(session.token)]: player } : {});
     this.broadcast();
   }
 
@@ -317,7 +204,7 @@ export class ReverieWorld {
 
   private advanceWorld(now: number) {
     for (const id of this.w.players.keys()) {
-      if (now - (this.intentAt.get(id) ?? 0) > 1000) this.w.intents.set(id, { ...idle });
+      if (now - (this.intentAt.get(id) ?? 0) > INTENT_TTL_MS) this.w.intents.set(id, { ...idle });
     }
     // Advance by elapsed server time rather than counting callbacks; keep fixed physics steps.
     const steps = this.clock.advance(now);
@@ -338,18 +225,14 @@ export class ReverieWorld {
     else { this.ticking = false; this.clock.stop(); }
   }
 
+  /** Every viewer gets their own snapshot: Winke, purse, claims and marks are never shared. */
   private broadcast() {
-    const raw = JSON.stringify(snapshot(this.w));
-    let openingRaw: string | undefined;
     for (const [ws, session] of this.sessions) {
       try {
-        const p = this.w.players.get(session.id);
-        if (p && inOpening(p)) {
-          openingRaw ??= JSON.stringify(snapshot(this.w, session.id));
-          ws.send(openingRaw);
-        } else ws.send(raw);
+        if (!this.w.players.has(session.id)) continue;
+        ws.send(JSON.stringify(snapshotFor(this.w, session.id)));
       } catch {
-        this.ctx.waitUntil(this.webSocketClose(ws));
+        this.ctx.waitUntil(this.webSocketClose(ws as WebSocket));
       }
     }
   }
@@ -358,6 +241,9 @@ export class ReverieWorld {
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
+    if (url.pathname === "/health") {
+      return Response.json({ ok: true, v: PROTOCOL_VERSION }, { headers: { "Cache-Control": "no-store" } });
+    }
     if (url.pathname === "/session") {
       if (req.method !== "POST") return new Response("POST required", { status: 405 });
       if (!sameOrigin(req)) return new Response("Same origin required", { status: 403 });
@@ -368,7 +254,7 @@ export default {
       } });
     }
     if (url.pathname === "/ws" || url.pathname === "/world") {
-      const id = env.WORLD.idFromName("nave");
+      const id = env.WORLD.idFromName(WORLD_NAME);
       return env.WORLD.get(id).fetch(req);
     }
     return env.ASSETS.fetch(req);
