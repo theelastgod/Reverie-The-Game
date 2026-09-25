@@ -622,13 +622,12 @@ export const NPCS: Record<string, NpcDef> = {
     portrait: "nara.jpg",
     sprite: "nara",
     party: true,
-    personal: (ctx: Ctx, shared: NpcState): NpcOverride => {
+    personal: (ctx: Ctx): NpcOverride => {
       const { p } = ctx;
       if (p.movement >= 5) return null;
       if (has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)) return { ...station("nara-garden"), state: "garden" };
       if (has(ctx, F.PREPARE) && p.party.nara !== "gone" && !has(ctx, F.PASSING)) return { ...station("nara-clearing"), state: "clearing" };
       if (has(ctx, F.UNDER) && !has(ctx, F.OPERATOR) && p.party.nara !== "waiting") return { ...station("nara-care"), state: "care" };
-      void shared;
       return null;
     },
     entry: (ctx: Ctx) => (unseenWink(ctx, "nara") ? "blind" : naraRoute(ctx)),

@@ -74,9 +74,11 @@ const NAVE: PoiConfig[] = [
         key: "F",
         label: "Read the plaque",
         choice: "reread",
-        when: ctx => has(ctx, F.WEATHER_SAFETY) && has(ctx, F.WEATHER_NAMED),
+        when: ctx => has(ctx, F.WEATHER_SAFETY) && !(has(ctx, F.WEATHER_ORD) && has(ctx, F.WEATHER_NARA) && !has(ctx, F.WEATHER_NAMED)),
         guest: "allow",
-        say: ctx => `Office of Safety. You called it ${ctx.p.choices[C.WEATHER] === "end" ? "the end of world as world" : ctx.p.choices[C.WEATHER] === "process" ? "the process" : "stability"}. The plaque still says stability. Plaques do.`,
+        say: ctx => (has(ctx, F.WEATHER_NAMED)
+          ? `Office of Safety. You called it ${ctx.p.choices[C.WEATHER] === "end" ? "the end of world as world" : ctx.p.choices[C.WEATHER] === "process" ? "the process" : "stability"}. The plaque still says stability. Plaques do.`
+          : "Office of Safety. Stability, it says. You have one name. Ord and Nara have the other two. Do not name it from a plaque."),
       },
     ],
   },
@@ -1069,7 +1071,7 @@ const CLEARING: PoiConfig[] = [
         key: "F",
         label: "Stand at the ring",
         choice: "look",
-        when: ctx => !has(ctx, F.MORTALITY) || !partyWilling(ctx),
+        when: ctx => (!has(ctx, F.MORTALITY) || !partyWilling(ctx)) && !has(ctx, F.PREPARE) && !has(ctx, F.PASSING),
         guest: spectate,
         say: ctx => (!has(ctx, F.MORTALITY)
           ? "A ring in the asphalt. Keep the hole. The hour is not a character. A mortality act is required first: watch, a burial, or a last word."
