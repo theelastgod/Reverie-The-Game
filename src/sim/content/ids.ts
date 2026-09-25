@@ -1,0 +1,125 @@
+/**
+ * Canonical ids shared by the engine, the content and the tests.
+ * Persistent once shipped. Add, never rename.
+ */
+
+/** Personal flags (Player.flags). Value 1 unless noted. */
+export const F = {
+  ARRIVED: "arrived", // moved for the first time
+  INTAKE: "intake", // took part in the Intake Clerk's fall
+  FIRST_NODE: "node:first", // decided the first node
+  TALKED_QUILL: "talked:quill",
+  TALKED_ORD: "talked:ord",
+  TALKED_NARA: "talked:nara",
+  MEMORIAL: "memorial", // decided the recorder
+  BURIED_NARA: "buried:nara", // closed Nara's plot
+  WEATHER_SAFETY: "weather:safety", // read the Office of Safety plaque
+  WEATHER_ORD: "weather:ord",
+  WEATHER_NARA: "weather:nara",
+  WEATHER_NAMED: "weather:named", // gave the weather a name at the plaque
+  UNDER: "under", // went under (gate flag: nave↔care)
+  ANGEL: "angel", // linked an Angel (guest is false)
+  CARE: "care", // entered the Care
+  SHRINE: "shrine", // touched the Care shrine (respawn set)
+  HALL: "hall", // read own House hall plaque
+  FREEZE: "freeze", // decided the Safety desk
+  HISTORY: "history", // faced the serial history mark
+  BOARD: "board", // read the listing board (the resistance prices Clearings)
+  OPERATOR: "operator", // decided Vesper's offer
+  M3: "m3", // Movement III door (gate flag: wet/ring ↔ organs)
+  STRAIT: "strait",
+  FOUNDRY: "foundry",
+  CABLE: "cable",
+  MAP: "map", // Ord put the organs together
+  GARDEN: "garden", // buried the wreckage garden
+  FAILED: "failed", // saw a failed Passing
+  FORGE: "forge", // decided copies with Quill
+  PREPARE: "prepare", // prepared the Clearing
+  MORTALITY: "mortality", // did a mortality act
+  PASSING: "passing", // the Passing resolved for this Angel
+  CREDITS: "credits",
+  ANNOUNCE_HEARD: "kit:announce", // counters for kit uses
+} as const;
+
+/** Key decisions (Player.choices). */
+export const C = {
+  FIRST_NODE: "node:first", // "extract" | "keep"
+  MEMORIAL: "memorial", // "voice" | "copper"
+  WEATHER: "weather", // "stability" | "process" | "end"
+  FREEZE: "freeze", // "signed" | "refused"
+  OPERATOR: "operator", // "take" | "refuse"
+  FORGE: "forge", // "spot" | "sell"
+  MORTALITY: "mortality", // "watch" | "burial" | "lastword"
+  CLEARING: "clearing", // "keep" | "extract" | "pass"
+  PASSING: "passing", // PassingOutcome
+} as const;
+
+/** Shared world flags and counters (WorldState.flags). */
+export const W = {
+  EXTRACTIONS: "extractions",
+  BURIALS: "burials",
+  GARDEN_BURIED: "gardenBuried",
+  CLEARING_LISTED: "clearingListed",
+  VESPER_GONE: "vesperGone",
+  IONE_GONE: "ioneGone",
+  MEMORIAL_VOICE: "memorialVoice", // 1 = the recorder still plays
+  WEATHER_NAMES: "weatherNames", // count of arrivals who named it
+  FREEZES: "freezes",
+  PASSINGS: "passings",
+} as const;
+
+/** Quest ids. */
+export const Q = {
+  M1: "m1-diagnosis",
+  M2: "m2-techno-feudal",
+  M3: "m3-geopolitics",
+  M4: "m4-the-turn",
+} as const;
+
+/** POI states (WorldState.pois[id].state). Every POI starts in the first listed state. */
+export const POI_STATES: Record<string, readonly string[]> = {
+  "safety-plaque": ["unnamed", "named"],
+  "memorial-recorder": ["playing", "dismantled"],
+  "nara-plot": ["open", "closed"],
+  "going-under": ["shut", "open"],
+  "guest-arena": ["open"],
+  "listing-board": ["quiet", "clearing-listed"],
+  "claims-desk": ["disarmed"],
+  "operator-desk": ["open", "closed"],
+  "hot-street": ["quiet", "hot"],
+  "care-shrine": ["lit"],
+  "clinic": ["open"],
+  "funeral-desk": ["open"],
+  "hall-mortals": ["dark", "lit"],
+  "hall-sky": ["dark", "lit"],
+  "hall-divinities": ["dark", "lit"],
+  "hall-earth": ["dark", "lit"],
+  "wreckage-garden": ["wreck", "buried"],
+  "safety-desk": ["open", "frozen"],
+  "tax-window": ["open"],
+  "omen-terrace": ["quiet", "read"],
+  "hour-bell": ["still", "struck"],
+  "forecast-glass": ["dark", "lit"],
+  "shrine-1": ["unkept", "kept"],
+  "shrine-2": ["unkept", "kept"],
+  "shrine-3": ["unkept", "kept"],
+  "mute-bell": ["mute", "rung"],
+  "last-god-trace": ["faint", "seen"],
+  "cult-vault": ["sealed", "open"],
+  "organ-strait": ["feeding", "refused", "buried"],
+  "organ-foundry": ["lit", "dark"],
+  "organ-cable": ["live", "quiet"],
+  "cold-desk": ["open"],
+  "clearing-ring": ["closed", "open", "held", "failed"],
+  "seed-1": ["bare", "seeded"],
+  "seed-2": ["bare", "seeded"],
+  "seed-3": ["bare", "seeded"],
+  "seed-4": ["bare", "seeded"],
+  "crt-altar-1": ["dark", "lit"],
+  "crt-altar-2": ["dark", "lit"],
+  "stall-1": ["open"], "stall-2": ["open"], "stall-3": ["open"], "stall-4": ["open"], "forge-tray": ["cold", "warm"],
+};
+
+/** Earner and sink ids used in bestand effects; economy.ts pairs them. */
+export const EARNERS = ["node", "spoils", "craft", "bounty", "claim", "stipend", "operator"] as const;
+export const SINKS = ["tax", "repair", "restore", "listing", "tithe", "freeze", "insurance", "upkeep", "funeral", "forge", "door", "bank"] as const;

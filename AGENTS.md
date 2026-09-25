@@ -1,13 +1,21 @@
 # Reverie: The Game — agent rules
 
-You are shipping **Reverie: The Game** at `/Users/wendellphillips/reverie-game`.
+Standalone top-down 2D action RPG / MMO. Read `PROMPT.md` (the master brief),
+`DESIGN.md` (how the rebuilt code satisfies it) and `.rebuild/CONTRACTS.md`
+(module signatures) before editing.
 
-Read `PROMPT.md` and `HANDOFF.md` before editing. Implement the next stage in HANDOFF. Then bump the stage number, commit, push `main`, deploy `site/` to Cloudflare Pages project `reverie-the-game` if the brief site changed.
-
-- Title: Reverie: The Game. Token `$REVERIE` on Base, disarmed. 7777 Angels.
-- Art references are influence, not official. Synthesis in PROMPT §3.
-- Reuse Imagine assets. Owner also authorized built-in image generation on 2026-09-24. No Higgsfield until the owner confirms credits.
-- Server owns numbers. `$REVERIE` never buys combat.
-- Do not touch WALL STREET, Meltdown, METROPHAGE, Mafia, Solana Seas.
-- Co-Authored-By: Grok <noreply@x.ai>. No other lab names in the repo.
-- Keep going until the stage gate is green. Then start the next stage in the same session if time remains.
+- Title: Reverie: The Game. Token `$REVERIE` on Base, disarmed. 7,777 Angels.
+- This is a standalone game. No studio, film, documentary, director, collective,
+  screening, dispatch, production still or film-access room appears in code,
+  copy, site, docs or asset names. Credits name only the game.
+- The server owns every number. `damageFor` is a constant. `$REVERIE`, serials,
+  aura and items never change combat. Traits change perception, verbs, style.
+- Guests play Movement I and lock at the going-under. Guests cannot claim, flag,
+  see Winke, or enter the Care, the Clearing or the Organs.
+- Every earner ships a sink. Claims desk stays disarmed. No mint, no Base, no
+  real-value settlement.
+- Reuse the existing Imagine art in `public/assets/`. Do not generate new art.
+  No Square Enix names or silhouettes. No acid green in the world; no gold in the HUD.
+- Never touch WALL STREET, Meltdown, METROPHAGE, Mafia or Solana Seas.
+- Do not commit or push from an agent; the session owner handles git.
+- Keep `npm run typecheck`, `npm test` and `npm run build` green before handing off.

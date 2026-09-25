@@ -8,3 +8,6 @@ site/play/
 .env.*
 server/.dev.vars
 brand/reference/session-drop/
+.rebuild/prompts/
+.rebuild/salvage.md
+.rebuild/shots/
