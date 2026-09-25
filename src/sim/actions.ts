@@ -8,7 +8,7 @@ import { CLIENT_MSG_TYPES, type ClientMsg } from "./protocol";
 import type { Intent, Player, WorldState } from "./types";
 import { F } from "./content/ids";
 import { LINES } from "./content";
-import { auraSeed, formatSerial, houseFor, messengerFor, serialHistoryMark, validLink, winkSchoolFor } from "./identity";
+import { auraSeed, formatSerial, historyMarkFor, houseFor, messengerFor, serialHistoryMark, validLink, winkSchoolFor } from "./identity";
 import { say } from "./world";
 import { applyDodge, applyFlag, applyHeavy, applyKit, applyStance, applyStrike, applyTruce } from "./combat";
 import { applyMarket, applyUse } from "./economy";
@@ -127,7 +127,8 @@ export function applyLink(w: WorldState, id: string, serial: number, sig: string
     history: { ...p.history, houses },
   };
   let cur = setPlayer(w, say(me, LINES.LINK_COPY(serial, house, messenger), w.now));
-  const mark = serialHistoryMark(serial);
+  // The serial's prior hour: the authored one for the test serial, else what this body's own log has written back.
+  const mark = serialHistoryMark(serial) ?? historyMarkFor(serial, p.history, p.deaths);
   if (mark && !cur.history.some(m => m.id === mark.id)) cur = { ...cur, history: [...cur.history, mark] };
   return cur;
 }

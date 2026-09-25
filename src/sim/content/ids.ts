@@ -41,6 +41,9 @@ export const F = {
   ANNOUNCE_HEARD: "kit:announce", // counters for kit uses
 } as const;
 
+/** The personal flag for a season's Passing rite: once per Angel per season. F.PASSING marks the first, for the campaign. */
+export const seasonPassingFlag = (season: number): string => `passing:${season}`;
+
 /** Key decisions (Player.choices). */
 export const C = {
   FIRST_NODE: "node:first", // "extract" | "keep"

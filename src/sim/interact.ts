@@ -11,6 +11,7 @@ import { say } from "./world";
 import { applyNode, applyClaims, applyForge, spend } from "./economy";
 import { applyBounty, applyTithe } from "./houses";
 import { applyPassing } from "./clearing";
+import { applyDuel, duelBlockReason } from "./combat";
 import { applyEffects } from "./effects";
 import { applyTalk } from "./dialogue";
 import { visibleWreckage } from "./snapshot";
@@ -67,17 +68,19 @@ function interactPoi(w: WorldState, p: Player, cfg: PoiConfig, choice: string): 
   }
   if (verb.once && (p.flags[verb.once] ?? 0) > 0) return speak(w, p, LINES.ALREADY);
 
-  const routed = route(w, p.id, cfg.id, choice);
+  // A verb on the world closes whatever conversation was left open; a decision made at a desk cannot be made again in a stale window.
+  const closed: WorldState = p.dialogue ? setPlayer(w, { ...p, dialogue: null }) : w;
+  const routed = route(closed, p.id, cfg.id, choice);
   let cur: WorldState;
   if (routed) {
     cur = routed;
   } else {
     if (verb.cost && verb.cost.bestand > 0) {
-      const paid = spend(w, p.id, verb.cost.bestand, verb.cost.sink);
+      const paid = spend(closed, p.id, verb.cost.bestand, verb.cost.sink);
       if (!paid) return speak(w, p, LINES.CANT_AFFORD);
       cur = paid;
     } else {
-      cur = w;
+      cur = closed;
     }
   }
 
@@ -118,6 +121,11 @@ export function applyInteract(w: WorldState, id: string, targetId: string, choic
     return applyEffects(w, id, [{ kind: "wreckage", op: choice, id: targetId }]);
   }
 
+  const other = w.players.get(targetId);
+  if (other && other.id !== id) {
+    return choice === "duel" ? applyDuel(w, id, targetId) : w;
+  }
+
   const cfg = POI_CONFIGS[targetId];
   if (cfg) return interactPoi(w, p, cfg, choice);
   return w;
@@ -150,6 +158,10 @@ export function verbsFor(ctx: Ctx, targetId: string): PromptVerb[] {
   if (other && other.id !== p.id) {
     if (p.guest || p.locked || other.guest || other.locked || other.dead) return [];
     const out: PromptVerb[] = [];
+    if (!duelBlockReason(p, other, w)) {
+      const offered = !!other.duel && !other.duel.accepted && other.duel.with === p.id && other.duel.until > w.now;
+      out.push({ key: "F", label: offered ? "Answer the duel" : "Ruin duel", choice: "duel" });
+    }
     if (DISTRICT_BY_ID[p.district].flagLegal && p.truceUntil <= w.now) out.push({ key: "V", label: p.flagged ? "Unflag" : "Flag", choice: "flag" });
     if (p.flagged && other.flagged) out.push({ key: "T", label: "Truce", choice: "truce" });
     return out;

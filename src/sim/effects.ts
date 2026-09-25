@@ -16,7 +16,7 @@ import { addItem, applyNode, earn, removeItem, spend } from "./economy";
 import { applyStanding } from "./houses";
 import { applyClearing, applyPassing } from "./clearing";
 import { spawnEnemy } from "./enemies";
-import { openNode } from "./dialogue";
+import { openNode, resolveWink } from "./dialogue";
 import { advanceQuest, completeQuest, startQuest } from "./quests";
 
 const WRECKAGE_REACH = 64;
@@ -206,7 +206,7 @@ function applyOne(w: WorldState, id: string, e: Effect): WorldState {
     case "say":
       return setPlayer(w, say(p, e.text, now));
     case "wink":
-      return setPlayer(w, wink(p, e.text, now));
+      return setPlayer(w, wink(p, resolveWink({ w, p, now }, e.text), now, w.gestell));
     case "notice":
       return setPlayer(w, notice(p, e.text, now, e.tone));
     case "item": {

@@ -19,6 +19,7 @@ import { SIDE, SIDE_BY_ID, SIDE_ITEMS, SIDE_PLACES, SQ, SW, offerKey } from "./c
 import type { Fourfold, Item, Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
+import { verbsFor } from "./interact";
 import { questById, questProgress } from "./quests";
 import { npcView, snapshotFor } from "./snapshot";
 
@@ -432,6 +433,11 @@ function perform(w: WorldState, a: Act): WorldState {
       let cur = goTo(w, ME, a.id);
       for (let i = 0; i < a.times; i++) {
         const before = me(cur);
+        // the client only sends what the prompt offers: the hour's verb must win its key while the hour is live
+        const offered = verbsFor({ w: cur, p: before, now: cur.now }, a.id).map(v => v.choice);
+        expect(offered, `${a.id} offers ${a.choice} in the prompt`).toContain(a.choice);
+        const prompt = snapshotFor(cur, ME).prompt;
+        expect(prompt?.targetId, `the nearest prompt is ${a.id}`).toBe(a.id);
         cur = interact(cur, a.id, a.choice);
         expect(me(cur), `${a.id} ${a.choice} did something`).not.toBe(before);
         expect(REFUSALS, `${a.id} ${a.choice} was not refused`).not.toContain(me(cur).heard);

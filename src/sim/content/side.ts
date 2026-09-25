@@ -507,7 +507,8 @@ const WET: Quest[] = [
         detail: "Quill's tray goes cold between prints. Press E to bank the coals so the spotted hint keeps.",
         target: "forge-tray",
         plate: "plate-forge.jpg",
-        done: ({ p, w }) => has(p, SF.TRAY_BANKED) || poiIs(w, "forge-tray", "warm"),
+        // Your own hands on the coals, not the shared tray: a warm tray someone else banked does not do this hour for you.
+        done: ({ p }) => has(p, SF.TRAY_BANKED),
         onComplete: [poi("forge-tray", "warm"), news("Someone banked the forge tray. The print that was not a print stays warm.")],
       }),
       step({
@@ -1433,7 +1434,7 @@ const CLEARING: Quest[] = [
     onFinish: [
       give(SIDE_ITEMS.seasonMark),
       { kind: "readiness", delta: 2 },
-      wink("You face the wreckage. The storm is at your back. This is not a fight bonus."),
+      wink("A front that already went by. You faced it and did not loot it. That is the only omen that cannot be wrong."),
       notice("Last season's mark. Cult. Readiness is slower than salvage."),
     ],
   }),

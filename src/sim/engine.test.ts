@@ -75,6 +75,7 @@ const FIX = vi.hoisted(() => {
         },
         second: { id: "second", text: "Second.", next: "third", effects: [{ kind: "count", key: "opened:second", delta: 1 }] },
         third: { id: "third", text: "Third." },
+        schooled: { id: "schooled", text: "By school.", wink: { default: "Any school.", omen: "The omen line.", hint: "The hint line." } },
       },
     },
     quill: {
@@ -136,7 +137,7 @@ import type { ClientMsg } from "./protocol";
 import type { Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest } from "./world";
 import { applyEffects } from "./effects";
-import { applyChoose, applyClose, applyTalk } from "./dialogue";
+import { applyChoose, applyClose, applyTalk, openNode, resolveWink } from "./dialogue";
 import { applyInteract, verbsFor } from "./interact";
 import { objectiveFor, questProgress, tickQuests } from "./quests";
 import { applyAction, applyLink } from "./actions";
@@ -222,6 +223,39 @@ describe("dialogue", () => {
     expect(me(w, "a").dialogue).toBeNull();
     expect(applyClose(w, "a")).toBe(w);
   });
+
+  it("a Wink authored by school is heard by school; two Angels of different schools hear different lines at the same node", () => {
+    const base = emptyWorld();
+    const omen = add(base, { ...angel("o", 3), winkSchool: "omen" as const });
+    const hint = add(base, { ...angel("h", 4), winkSchool: "hint" as const });
+    const dwelling = add(base, { ...angel("d", 5), winkSchool: "dwelling" as const });
+    expect(me(openNode(omen, "o", "nara", "schooled"), "o").dialogue?.wink).toBe("The omen line.");
+    expect(me(openNode(hint, "h", "nara", "schooled"), "h").dialogue?.wink).toBe("The hint line.");
+    expect(me(openNode(dwelling, "d", "nara", "schooled"), "d").dialogue?.wink).toBe("Any school.");
+    expect(me(openNode(dwelling, "d", "nara", "schooled"), "d").wink).toBe("Any school.");
+    // a Wink authored once is heard as written
+    expect(me(openNode(omen, "o", "nara", "hello"), "o").dialogue?.wink).toBe("A private line.");
+    // the effect form goes the same way
+    const winked = applyEffects(hint, "h", [{ kind: "wink", text: { default: "Plain.", hint: "Hinted." } }]);
+    expect(me(winked, "h").wink).toBe("Hinted.");
+  });
+
+  it("the House of Divinities and the Wink seeds hear the Winke dense: their school's line follows, the same one every time", () => {
+    const w = emptyWorld();
+    const plain = { ...angel("p", 42), winkSchool: "omen" as const };
+    const divine = { ...plain, id: "d", house: "divinities" as const };
+    const seed = { ...plain, id: "s", serial: 1221 };
+    const ctx = (p: Player) => ({ w, p, now: 0 });
+    expect(resolveWink(ctx(plain), "A line.")).toBe("A line.");
+    const dense = resolveWink(ctx(divine), "A line.");
+    expect(dense.startsWith("A line. ")).toBe(true);
+    expect(dense).toBe("A line. o"); // the fixture's one omen line
+    expect(resolveWink(ctx(divine), "A line.")).toBe(dense);
+    expect(resolveWink(ctx(seed), "A line.")).toBe("A line. o");
+    expect(resolveWink(ctx({ ...divine, guest: true, winkSchool: "" }), "A line.")).toBe("A line.");
+    // a dense Angel at meltdown is a Divinities Angel with no density
+    expect(resolveWink({ w: { ...w, gestell: 95 }, p: divine, now: 0 }, "A line.")).toBe("A line.");
+  });
 });
 
 // ---------------------------------------------------------------- interact
@@ -277,6 +311,19 @@ describe("interact", () => {
     const near = add(emptyWorld(), at(angel("a"), PLAQUE.x, PLAQUE.y));
     expect(applyInteract(near, "a", "safety-plaque", "nope")).toBe(near);
     expect(applyInteract(near, "a", "no-such-thing", "read")).toBe(near);
+  });
+
+  it("a verb on the world closes a conversation left open; a refused or unknown verb leaves it", () => {
+    let w = applyTalk(add(emptyWorld(), at(angel("a"), NARA.x, NARA.y)), "a", "nara");
+    expect(me(w, "a").dialogue).not.toBeNull();
+    w = add(w, { ...at(me(w, "a"), PLAQUE.x, PLAQUE.y), bestand: 2 });
+    const short = applyInteract(w, "a", "safety-plaque", "pay");
+    expect(me(short, "a").dialogue).not.toBeNull(); // could not afford it: nothing fired
+    expect(applyInteract(w, "a", "safety-plaque", "nope")).toBe(w);
+    const read = applyInteract(w, "a", "safety-plaque", "read");
+    expect(me(read, "a").flags["weather:safety"]).toBe(1);
+    expect(me(read, "a").dialogue).toBeNull();
+    expect(applyChoose(read, "a", "a")).toBe(read);
   });
 
   it("routes node ids to the economy and npc ids to talk", () => {
@@ -540,6 +587,17 @@ describe("actions", () => {
     w = applyLink(w, "b", 7777, MOCK_SIG);
     expect(me(w, "b").guest).toBe(true);
     expect(me(w, "b").heard).toBe(FIX.LINES.LINK_ELSEWHERE);
+  });
+
+  it("a serial whose body has a log written back links with a prior hour in the Care; an empty log has none", () => {
+    const clean = applyLink(add(emptyWorld(), guest("g")), "g", 42, MOCK_SIG);
+    expect(clean.history).toEqual([]);
+    let w = add(emptyWorld(), { ...guest("g"), history: { passings: 0, buried: 1, looted: 0, houses: [], outcomes: [] } });
+    w = applyLink(w, "g", 42, MOCK_SIG);
+    expect(w.history).toHaveLength(1);
+    expect(w.history[0]).toMatchObject({ id: "history:42", serial: 42, district: "care", x: POSITIONS["history:mark"].x, y: POSITIONS["history:mark"].y });
+    const fell = applyLink(add(emptyWorld(), { ...guest("f"), deaths: 2 }), "f", 43, MOCK_SIG);
+    expect(fell.history[0]).toMatchObject({ id: "history:43", serial: 43 });
   });
 
   it("a locked guest who links is unlocked but not sent under until the threshold is used again", () => {

@@ -24,7 +24,8 @@ function mergePois(base: Record<string, PoiConfig>, extra: Record<string, PoiVer
   for (const [id, verbs] of Object.entries(extra)) {
     const cfg = out[id];
     if (cfg) {
-      out[id] = { ...cfg, verbs: [...cfg.verbs, ...verbs] };
+      // The hour's verbs come first: they are gated on their step, and while the hour is live they win the key.
+      out[id] = { ...cfg, verbs: [...verbs, ...cfg.verbs] };
     } else {
       // A side verb on a POI the spine did not configure: the map still names it.
       out[id] = { id, label: POIS[id]?.name ?? id, verbs: [...verbs] };

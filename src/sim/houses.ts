@@ -3,7 +3,7 @@
  * perception each House grants. Standing is a lamp, never a stick: nothing in
  * this module changes damage.
  */
-import { TITHE_COST, WAR_HOLD, WAR_PERIOD, WAR_RADIUS, WRECKAGE_TTL_BONUS } from "./constants";
+import { GESTELL_MELTDOWN, TITHE_COST, WAR_HOLD, WAR_PERIOD, WAR_RADIUS, WRECKAGE_TTL_BONUS } from "./constants";
 import type { Fourfold, House, HouseScores, HouseWar, Player, WorldState } from "./types";
 import { POSITIONS, nearPoint } from "./map";
 import { LINES } from "./content";
@@ -159,8 +159,8 @@ export function applyStanding(w: WorldState, house: Fourfold, delta: number): Wo
 
 // ---------------------------------------------------------------- perception
 
-/** What a House and a messenger let you perceive. Never a damage number. */
-export function perception(p: Player): { wreckageBonus: number; forecast: boolean; winkDensity: number; groundResist: number; funeralSight: boolean } {
+/** What a House and a messenger let you perceive. Never a damage number. With the weather given, Divinities go blind at meltdown. */
+export function perception(p: Player, gestell?: number): { wreckageBonus: number; forecast: boolean; winkDensity: number; groundResist: number; funeralSight: boolean } {
   const out = { wreckageBonus: 0, forecast: false, winkDensity: p.guest ? 0 : 1, groundResist: 0, funeralSight: false };
   if (p.guest) return out;
   switch (p.house) {
@@ -172,7 +172,8 @@ export function perception(p: Player): { wreckageBonus: number; forecast: boolea
       out.forecast = true;
       break;
     case "divinities":
-      out.winkDensity = 2;
+      // Winke density, and fragile where the weather is at its worst.
+      out.winkDensity = gestell !== undefined && gestell >= GESTELL_MELTDOWN ? 0 : 2;
       break;
     case "earth":
       out.groundResist = 2;

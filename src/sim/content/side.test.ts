@@ -156,7 +156,7 @@ const SATISFIERS: Record<string, Sat[][]> = {
   [SQ.VAN]: [[f(SF.VAN_ASKED)], [f(SF.VAN_WAVED), poi("hot-street", "hot")]],
   [SQ.COPY]: [[f(SF.COPY_READ)], [f(SF.COPY_DOWN)]],
   [SQ.LISTING_FEE]: [[f(SF.FEE_1, SF.FEE_2)], [f(SF.FEE_3, SF.FEE_4)]],
-  [SQ.TRAY]: [[f(SF.TRAY_BANKED), poi("forge-tray", "warm")], [f(SF.TRAY_TAKEN)]],
+  [SQ.TRAY]: [[f(SF.TRAY_BANKED)], [f(SF.TRAY_TAKEN)]],
   [SQ.DESK]: [[f(SF.DESK_READ)], [f(SF.DESK_CLOSED), poi("operator-desk", "closed")]],
   [SQ.LEDGER]: [[{ buried: 2 }], [f(SF.LEDGER_REPORTED)]],
   [SQ.TWELVE]: [[f(SF.TWELVE_PLATE)], [f(SF.TWELVE_BURIED)], [f(SF.TWELVE_NAMED)]],
@@ -529,6 +529,24 @@ describe("secondary cast", () => {
     expect(labels(ctxOf(player({ flags: { [F.FREEZE]: 1, [SF.OFFICER_VISITS]: 1 } })))).not.toContain("grief");
     expect(labels(ctxOf(player({ flags: { [F.FREEZE]: 1, [SF.OFFICER_VISITS]: 2 } })))).toContain("grief");
     expect(labels(ctxOf(guest({ flags: { [F.FREEZE]: 1, [SF.OFFICER_VISITS]: 2 } })))).not.toContain("grief");
+  });
+
+  it("keeps the Officer at the Annex for a guest once the shared body has walked behind the Angel gate", () => {
+    const walked: NpcState = { id: "officer", ...SIDE_PLACES["officer-clearing"], present: true, state: "clearing" };
+    // an Angel who has not finished the hour sees the shared body where it went
+    expect(SIDE_NPCS.officer.personal!(ctxOf(player()), walked)).toBeNull();
+    // a guest mid-way through a paper hour finds him where a guest can walk
+    const g = ctxOf(guest({ quests: { [SQ.NOTICE]: 1 }, flags: { [offerKey(SQ.NOTICE)]: 1 } }));
+    const seen = SIDE_NPCS.officer.personal!(g, walked);
+    expect(seen).toMatchObject({ x: NPC_HOMES.officer.x, y: NPC_HOMES.officer.y, district: "annex", present: true, state: "home" });
+    expect(["nave", "wet", "kerb", "annex", "ring"]).toContain(seen!.district);
+    const hub = SIDE_NPCS.officer.nodes.hub;
+    const text = typeof hub.text === "function" ? hub.text({ ...g, w: { ...g.w, npcs: { ...g.w.npcs, officer: walked } } }) : hub.text;
+    expect(text).not.toContain("where the Passing failed");
+    expect(text).toContain("Unsealed");
+    // the Ring is open to guests, so the census walk stays shared
+    const counted: NpcState = { id: "officer", ...SIDE_PLACES["officer-ring"], present: true, state: "ring" };
+    expect(SIDE_NPCS.officer.personal!(g, counted)).toBeNull();
   });
 
   it("changes a person's place for a viewer only after their own hour did", () => {

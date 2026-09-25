@@ -67,9 +67,9 @@ export const KIT_COPY: Record<Kit, string> = {
 // ---------------------------------------------------------------- claims, bank, link
 
 export const CLAIMS_GUEST = "A period on a ledger. Guests cannot claim.";
-export const CLAIMS_FILED = "Claim filed. Not a yield. Hold a day. TAKE pays Bestand into the vault. No settle.";
-export const CLAIMS_HELD = "The hold is not done. The claim sits. No faucet.";
-export const CLAIMS_TAKEN = "Taken. Banked Bestand. Not real value. The desk stays disarmed.";
+export const CLAIMS_FILED = "Claim filed. It sits a day. Then TAKE moves it to the vault.";
+export const CLAIMS_HELD = "The hold is not done. The claim sits.";
+export const CLAIMS_TAKEN = "Taken. Banked. It does not drop and it does not strike.";
 export const CLAIMS_CAP = "Three claims is the campaign. The desk does not file a fourth.";
 export const BANKED = "Banked. It does not drop. It does not strike. The fee is the price of not dropping.";
 export const LINK_ELSEWHERE = "That serial is already walking. One body per Angel.";
@@ -93,7 +93,7 @@ const MESSENGER_LABEL: Record<string, string> = {
 export function LINK_COPY(serial: number, house: string, messenger: string): string {
   const h = HOUSE_LABEL[house] ?? house;
   const m = MESSENGER_LABEL[messenger] ?? messenger;
-  return `Angel #${String(serial).padStart(4, "0")} linked. ${h}. ${m} kit. Perception, not a stick. Claims stay disarmed.`;
+  return `Angel #${String(serial).padStart(4, "0")} linked. ${h}. ${m} kit. Perception, not a stick.`;
 }
 
 // ---------------------------------------------------------------- the party

@@ -31,15 +31,32 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - Landing page in `site/` (the game only), README rewritten.
 - Engine, content and client modules are landing from their own workflows;
   see the file list in `DESIGN.md` §1.
+- Sim review fixes (2026-09-25): the storm press reads no kit and scales by
+  climate band; the dash is a window against people; the private yield pays
+  the Organs door into the `door` sink and is decided once (a verb on the world
+  closes a stale dialogue, one-shot choices are gated); a market buy needs the
+  seller on the Grid; the Clearing contest is one stance per Angel per contest,
+  recounted from who stands in the ring, re-openable after `WAR_PERIOD`, with a
+  reserve that refills while closed; seasons roll (`SEASON_LENGTH`), the
+  Passing rite is once per Angel per season, every shard starts with last
+  season's hole; aura addresses (party and operators do not look up at a dark
+  aura, sacred doors dark or dim in fat weather, a dark aura farms +10%, prints
+  and listings wither it, Glamour counts +10); Winke resolve by school with
+  density for Divinities and Wink seeds; the serial's log writes back as a
+  history mark the Ruin-angel kit reads; ruin duels are offered and answered
+  at a wreckage and close the ring to third bodies; the Officer stays reachable
+  for guests; side-hour verbs win their key while live; the desk and stipend
+  copy speak the city's register.
 
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
-- `npm test` — 19 files, 305 tests: map integrity and reachability, identity,
+- `npm test` — 19 files, 337 tests: map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
-  visibility, content coverage, side quests (all 33 driven end to end), two
-  full spine playthroughs reaching every Passing outcome, server sessions,
-  clock, client socket, HUD helpers, standalone-content lint.
+  visibility, content coverage, side quests (all 33 driven end to end, every
+  verb through the prompt), two full spine playthroughs reaching every Passing
+  outcome, the desk decided once, ruin duels, meltdown streets, the season roll,
+  server sessions, clock, client socket, HUD helpers, standalone-content lint.
 - `npm run build:play` + `node scripts/stage-play.mjs` — production client staged.
 - Against `npx wrangler dev --port 8788`: `scripts/smoke-world.mjs` PASS;
   `scripts/smoke-campaign.mjs` PASS on a fresh world and again on the same

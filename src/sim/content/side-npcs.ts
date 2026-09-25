@@ -5,6 +5,7 @@
  * moves the shared body and `personal` keeps the viewer's own version honest.
  */
 import type { Ctx, DialogueChoice, DialogueNode, Effect, NpcDef, NpcState, Player } from "../types";
+import { NPC_HOMES } from "../map";
 import { F } from "./ids";
 import { SF, SIDE_BY_ID, SIDE_PLACES, SQ, has, offerKey, offered, stepOf } from "./side";
 
@@ -31,11 +32,25 @@ const node = (n: DialogueNode): DialogueNode => n;
 
 // ---------------------------------------------------------------- Corvin Slate, Officer of Safety
 
-const officerHub = (ctx: Ctx): string => {
+/**
+ * Where the Officer stands for this viewer. The Clearing is behind an Angel
+ * gate: when the shared body has walked there, an unsealed viewer keeps him at
+ * the Annex desk, where their paper hours can still reach him.
+ */
+const officerState = (ctx: Ctx): string => {
   const { p, w } = ctx;
-  const state = w.npcs["officer"]?.state ?? "home";
-  if (finished(p, SQ.HONEST) || state === "clearing") return "You are standing where the Passing failed. He does not turn around. \"The freeze held. I have the paperwork. Say what you came to say.\"";
-  if (finished(p, SQ.CENSUS) || state === "ring") return "He is under the shrine of the mute bell with a form on a board. \"Two with tongues. One without. Your count was right. I wanted to see the one without.\"";
+  if (finished(p, SQ.HONEST)) return "clearing";
+  if (finished(p, SQ.CENSUS)) return "ring";
+  const shared = w.npcs["officer"]?.state ?? "home";
+  if (p.guest && shared === "clearing") return "home";
+  return shared;
+};
+
+const officerHub = (ctx: Ctx): string => {
+  const { p } = ctx;
+  const state = officerState(ctx);
+  if (state === "clearing") return "You are standing where the Passing failed. He does not turn around. \"The freeze held. I have the paperwork. Say what you came to say.\"";
+  if (state === "ring") return "He is under the shrine of the mute bell with a form on a board. \"Two with tongues. One without. Your count was right. I wanted to see the one without.\"";
   if (p.guest) return "\"Unsealed. You can still carry paper. Safety has paper that needs carrying.\"";
   return "\"Officer of Safety. The district is stable. If you have come about the freeze, it holds. If you have come about something else, say it.\"";
 };
@@ -48,9 +63,13 @@ const officer: NpcDef = {
   portrait: "safety-annex.jpg",
   sprite: "clerk",
   party: false,
-  personal: (ctx) => {
+  personal: (ctx, shared) => {
     if (finished(ctx.p, SQ.HONEST)) return { ...place("officer-clearing"), state: "clearing" };
     if (finished(ctx.p, SQ.CENSUS)) return { ...place("officer-ring"), state: "ring" };
+    if (ctx.p.guest && shared.state === "clearing") {
+      const home = NPC_HOMES.officer;
+      return { x: home.x, y: home.y, district: home.district, present: true, state: "home" };
+    }
     return null;
   },
   entry: ({ p }) => (has(p, SF.OFFICER_MET) ? "hub" : "greet"),

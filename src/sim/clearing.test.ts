@@ -15,19 +15,22 @@ import {
   AURA_DWELL_GAIN,
   CLEARING_EXTRACT,
   CLEARING_HOLD_ANGELS,
+  CLEARING_HOLD_SCALE,
   CLEARING_RADIUS,
   CLEARING_RESERVE,
   GESTELL_CLEARING_HOLD,
   GESTELL_MELTDOWN,
   MAX_HP,
+  NODE_REGEN,
   PASSING_STIPEND,
   READINESS_KEEP,
   RESTRAINT_KEEP_GAIN,
   RESTRAINT_START,
   SEASON_LENGTH,
   WAR_HOLD,
+  WAR_PERIOD,
 } from "./constants";
-import { C, F, W } from "./content/ids";
+import { C, F, W, seasonPassingFlag } from "./content/ids";
 import { POSITIONS } from "./map";
 import { initialNodes } from "./economy";
 import { initialHouses } from "./houses";
@@ -39,6 +42,7 @@ import {
   initialClearing,
   initialPassing,
   partyWilling,
+  passedThisSeason,
   resolvePassing,
   tickClearing,
 } from "./clearing";
@@ -184,43 +188,62 @@ describe("tickClearing", () => {
     expect(you(held, "g").aura).toBe(0);
   });
 
-  it("resolves the contest at endsAt: keep holds the ring, extract closes it", () => {
-    const w = makeWorld([atRing()]);
-    const kept = {
-      ...w,
-      clearing: { ...w.clearing, open: true, contest: { active: true, keep: 2, extract: 1, endsAt: w.now } },
-    };
+  it("resolves the contest at endsAt by the stances of the Angels still standing in it: keep holds the ring, extract closes it", () => {
+    const w = makeWorld([atRing({ id: "a" }), atRing({ id: "b" }), atRing({ id: "c", x: ring.x + CLEARING_RADIUS + 200 })]);
+    const contest = (votes: Record<string, "keep" | "extract">, endsAt = w.now) => ({ active: true, keep: 0, extract: 0, endsAt, votes });
+    const kept = { ...w, clearing: { ...w.clearing, open: true, contest: contest({ a: "keep", b: "keep", c: "extract" }) } };
     const k = tickClearing(kept, 0.05);
     expect(k.clearing.lastOutcome).toBe("kept");
     expect(k.clearing.open).toBe(true);
-    expect(k.clearing.contest?.active).toBe(false);
+    expect(k.clearing.contest).toMatchObject({ active: false, keep: 2, extract: 0 }); // c walked off; their stance left with them
     expect(k.pois[RING].state).toBe("held");
     expect(k.news).toHaveLength(1);
 
-    const extracted = { ...kept, clearing: { ...kept.clearing, contest: { active: true, keep: 0, extract: 1, endsAt: w.now } } };
+    const extracted = { ...kept, clearing: { ...kept.clearing, contest: contest({ a: "extract", b: "extract", c: "keep" }) } };
     const e = tickClearing(extracted, 0.05);
     expect(e.clearing.lastOutcome).toBe("extracted");
+    expect(e.clearing.contest).toMatchObject({ keep: 0, extract: 2 });
     expect(e.clearing.open).toBe(false);
     expect(e.pois[RING].state).toBe("closed");
 
-    const pending = { ...kept, clearing: { ...kept.clearing, contest: { active: true, keep: 1, extract: 0, endsAt: w.now + 5 } } };
-    expect(tickClearing(pending, 0.05).clearing.contest?.active).toBe(true);
+    // a hole nobody contests stays a hole
+    const quiet = { ...kept, clearing: { ...kept.clearing, contest: contest({}) } };
+    expect(tickClearing(quiet, 0.05).clearing.lastOutcome).toBe("kept");
+
+    const pending = { ...kept, clearing: { ...kept.clearing, contest: contest({ a: "keep" }, w.now + 5) } };
+    const p = tickClearing(pending, 0.05);
+    expect(p.clearing.contest?.active).toBe(true);
+    expect(p.clearing.contest?.keep).toBe(1); // recounted every tick
+  });
+
+  it("a closed Clearing regains one point of reserve per NODE_REGEN", () => {
+    let w = makeWorld([makePlayer({ x: 0, y: 0 })], { clearing: { ...initialClearing(), reserve: CLEARING_RESERVE - 3 } });
+    w = tickClearing(w, 0.05);
+    expect(w.clearing.reserve).toBe(CLEARING_RESERVE - 3);
+    w = tickClearing({ ...w, now: w.now + NODE_REGEN }, 0.05);
+    expect(w.clearing.reserve).toBe(CLEARING_RESERVE - 2);
+    w = tickClearing({ ...w, now: w.now + NODE_REGEN * 2 }, 0.05);
+    expect(w.clearing.reserve).toBe(CLEARING_RESERVE - 1);
+    // open, it does not fill
+    const open = tickClearing({ ...w, now: w.now + NODE_REGEN * 5, clearing: { ...w.clearing, open: true } }, 0.05);
+    expect(open.clearing.reserve).toBe(CLEARING_RESERVE - 1);
   });
 });
 
 describe("applyClearing", () => {
-  it("open starts a contest; keep and extract vote; extract pays from a finite reserve", () => {
+  it("open starts a contest; keep and extract are stances; extract pays from a finite reserve", () => {
     let w = makeWorld([atRing({ id: "a", aura: 20 }), atRing({ id: "b" })]);
     w = applyClearing(w, "a", "open");
     expect(w.clearing.open).toBe(true);
     expect(w.clearing.openedAt).toBe(w.now);
-    expect(w.clearing.contest).toEqual({ active: true, keep: 0, extract: 0, endsAt: w.now + WAR_HOLD });
+    expect(w.clearing.contest).toEqual({ active: true, keep: 0, extract: 0, endsAt: w.now + WAR_HOLD, votes: {} });
     expect(w.pois[RING].state).toBe("open");
     expect(w.pois[RING].by).toBe("a");
     expect(you(applyClearing(w, "b", "open"), "b").heard).toBe("ALREADY");
 
     const kept = applyClearing(w, "b", "keep");
     expect(kept.clearing.contest?.keep).toBe(1);
+    expect(kept.clearing.contest?.votes).toEqual({ b: "keep" });
     expect(you(kept, "b").readiness).toBe(READINESS_KEEP * 2);
     expect(you(kept, "b").restraint).toBe(RESTRAINT_START + RESTRAINT_KEEP_GAIN);
     expect(you(kept, "b").choices[C.CLEARING]).toBe("keep");
@@ -228,28 +251,86 @@ describe("applyClearing", () => {
     const gestell = kept.gestell;
     const ex = applyClearing(kept, "a", "extract");
     expect(ex.clearing.contest?.extract).toBe(1);
+    expect(ex.clearing.contest?.keep).toBe(1);
     expect(ex.clearing.reserve).toBe(CLEARING_RESERVE - CLEARING_EXTRACT);
     expect(you(ex, "a").bestand).toBe(CLEARING_EXTRACT);
     expect(ex.flags["earned:node"]).toBe(CLEARING_EXTRACT);
     expect(you(ex, "a").aura).toBe(18);
     expect(ex.gestell).toBe(gestell + 2);
     expect(you(ex, "a").choices[C.CLEARING]).toBe("extract");
+
+    // a stance can change; it is still one body, one vote
+    const turned = applyClearing(ex, "a", "keep");
+    expect(turned.clearing.contest).toMatchObject({ keep: 2, extract: 0 });
+    expect(turned.clearing.contest?.votes).toEqual({ b: "keep", a: "keep" });
   });
 
-  it("the reserve is finite and extracting past it pays nothing", () => {
+  it("keep is one stance and one readiness per Angel per contest: fifty presses count once", () => {
+    let w = makeWorld([atRing({ id: "a" }), atRing({ id: "b" })]);
+    w = applyClearing(w, "a", "open");
+    for (let i = 0; i < 50; i++) w = applyClearing(w, "b", "keep");
+    expect(w.clearing.contest?.keep).toBe(1);
+    expect(you(w, "b").readiness).toBe(READINESS_KEEP * 2);
+    expect(you(w, "b").restraint).toBe(RESTRAINT_START + RESTRAINT_KEEP_GAIN);
+    // switching out and back does not pay the readiness again
+    w = applyClearing(w, "b", "extract");
+    w = applyClearing(w, "b", "keep");
+    expect(w.clearing.contest).toMatchObject({ keep: 1, extract: 0 });
+    expect(you(w, "b").readiness).toBe(READINESS_KEEP * 2);
+    // a new contest is a new readiness
+    const later = { ...w, now: w.now + WAR_PERIOD + 1, clearing: { ...w.clearing, open: false, contest: { ...w.clearing.contest!, active: false } }, pois: { [RING]: { state: "closed", by: "", at: 0, count: 2 } } };
+    let next = applyClearing(later, "a", "open");
+    expect(next.clearing.open).toBe(true);
+    next = applyClearing(next, "b", "keep");
+    expect(you(next, "b").readiness).toBe(READINESS_KEEP * 4);
+  });
+
+  it("the reserve is finite and extracting past it pays nothing and costs nothing more", () => {
     let w = makeWorld([atRing()]);
     w = applyClearing(w, "p1", "open");
     const pulls = Math.ceil(CLEARING_RESERVE / CLEARING_EXTRACT);
     for (let i = 0; i < pulls; i++) w = applyClearing(w, "p1", "extract");
     expect(w.clearing.reserve).toBe(0);
     expect(you(w).bestand).toBe(CLEARING_RESERVE);
+    const gestell = w.gestell;
+    const aura = you(w).aura;
     const dry = applyClearing(w, "p1", "extract");
     expect(dry.clearing.reserve).toBe(0);
     expect(you(dry).bestand).toBe(CLEARING_RESERVE);
     expect(dry.flags["earned:node"]).toBe(CLEARING_RESERVE);
-    // once spent and closed, it cannot be opened again
-    const closed = { ...dry, clearing: { ...dry.clearing, open: false }, pois: { [RING]: { state: "closed", by: "", at: 0, count: 1 } } };
+    expect(dry.gestell).toBe(gestell);
+    expect(you(dry).aura).toBe(aura);
+    // once spent and closed, it cannot be opened again until the reserve fills
+    const closed = { ...dry, now: dry.now + WAR_PERIOD + 1, clearing: { ...dry.clearing, open: false }, pois: { [RING]: { state: "closed", by: "", at: 0, count: 1 } } };
     expect(applyClearing(closed, "p1", "open").clearing.open).toBe(false);
+  });
+
+  it("a contest can be opened again on a closed, failed or held ring once WAR_PERIOD has set, and the hold scales with the weather", () => {
+    let w = makeWorld([atRing()]);
+    w = applyClearing(w, "p1", "open");
+    // extracted and closed
+    w = tickClearing({ ...w, now: w.now + WAR_HOLD, clearing: { ...w.clearing, contest: { ...w.clearing.contest!, votes: { p1: "extract" } } } }, 0.05);
+    expect(w.pois[RING].state).toBe("closed");
+    expect(w.clearing.open).toBe(false);
+    const soon = applyClearing(w, "p1", "open");
+    expect(soon.clearing.open).toBe(false);
+    expect(you(soon).heard).toContain("contested lately");
+    const later = applyClearing({ ...w, now: w.clearing.openedAt + WAR_PERIOD }, "p1", "open");
+    expect(later.clearing.open).toBe(true);
+    expect(later.clearing.contest).toMatchObject({ active: true, keep: 0, extract: 0, votes: {} });
+    // a failed ring opens again the same way
+    const failed = { ...w, now: w.clearing.openedAt + WAR_PERIOD, pois: { [RING]: { state: "failed", by: "x", at: 0, count: 3 } } };
+    expect(applyClearing(failed, "p1", "open").pois[RING].state).toBe("open");
+    // a held ring (kept, still open) takes a new contest too, but never over a live one
+    const held = { ...w, now: w.clearing.openedAt + WAR_PERIOD, clearing: { ...w.clearing, open: true }, pois: { [RING]: { state: "held", by: "x", at: 0, count: 3 } } };
+    const contested = applyClearing(held, "p1", "open");
+    expect(contested.clearing.contest?.active).toBe(true);
+    expect(you(applyClearing(contested, "p1", "open")).heard).toBe("ALREADY");
+    // clear weather holds longer, meltdown shorter
+    const clear = applyClearing({ ...w, now: w.clearing.openedAt + WAR_PERIOD, gestell: 20 }, "p1", "open");
+    expect(clear.clearing.contest?.endsAt).toBeCloseTo(clear.now + WAR_HOLD * CLEARING_HOLD_SCALE.clear);
+    const melt = applyClearing({ ...w, now: w.clearing.openedAt + WAR_PERIOD, gestell: 95 }, "p1", "open");
+    expect(melt.clearing.contest?.endsAt).toBeCloseTo(melt.now + WAR_HOLD * CLEARING_HOLD_SCALE.meltdown);
   });
 
   it("guests, the locked, the far away and a closed ring are refused", () => {
@@ -334,14 +415,27 @@ describe("applyPassing", () => {
     expect(next.failed).toHaveLength(0);
   });
 
-  it("is idempotent for the same Angel", () => {
+  it("is once per Angel per season; the next season takes the rite again and writes it after the first", () => {
     const w = makeWorld([prepared({ readiness: 80 })]);
     const once = applyPassing(w, "p1");
+    expect(passedThisSeason(once, you(once))).toBe(true);
+    expect(you(once).flags[seasonPassingFlag(3)]).toBe(1);
+    expect(you(once).notices.some(n => n.text.includes("For the shrines, not the hand"))).toBe(true);
+    expect(you(once).notices.some(n => /mint|faucet|disarmed/i.test(n.text))).toBe(false);
     const twice = applyPassing(once, "p1");
     expect(twice).toBe(once);
     expect(you(twice).bestand).toBe(PASSING_STIPEND);
     expect(twice.passing.count).toBe(1);
     expect(you(twice).history.passings).toBe(1);
+    // a season later the same prepared Angel stands for it again; the stipend is one per season
+    const nextSeason = { ...once, season: { id: 4, startedAt: once.now }, now: once.now + 10, gestell: 20 };
+    expect(passedThisSeason(nextSeason, you(nextSeason))).toBe(false);
+    const again = applyPassing({ ...nextSeason, players: new Map([["p1", { ...you(nextSeason), readiness: 70 }]]) }, "p1");
+    expect(again.passing.count).toBe(2);
+    expect(you(again).choices[C.PASSING]).toBe("absence");
+    expect(you(again).history.outcomes).toEqual(["appearance", "absence"]);
+    expect(you(again).bestand).toBe(PASSING_STIPEND);
+    expect(applyPassing(again, "p1")).toBe(again);
   });
 
   it("absence and hijack are written and reported; hijack names who claimed the hour", () => {

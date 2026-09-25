@@ -7,7 +7,7 @@
 import type { Ctx, Effect, Quest, QuestStep } from "../types";
 import { GUEST_SPAWN } from "../map";
 import { C, F, Q, W } from "./ids";
-import { TEST_SERIAL } from "../constants";
+import { LAST_SEASON_WINK } from "./pois";
 
 const has = (ctx: Ctx, key: string): boolean => (ctx.p.flags[key] ?? 0) > 0;
 const chose = (ctx: Ctx, key: string, value: string): boolean => ctx.p.choices[key] === value;
@@ -15,6 +15,23 @@ const poiState = (ctx: Ctx, id: string): string => ctx.w.pois[id]?.state ?? "";
 
 const ARRIVE_RADIUS = 96;
 const farFromSpawn = (ctx: Ctx): boolean => Math.hypot(ctx.p.x - GUEST_SPAWN.x, ctx.p.y - GUEST_SPAWN.y) > ARRIVE_RADIUS;
+
+/** A prior hour of this serial stands in the Care when its written-back log put one there. */
+const hasHistoryMark = (ctx: Ctx): boolean => ctx.p.serial !== null && ctx.w.history.some(m => m.serial === ctx.p.serial);
+
+/** Ruin-sight, the Storm and the House of Sky see last season's hole itself; the rest read it off the glass. */
+const seesFailed = (ctx: Ctx): boolean => !ctx.p.guest && (ctx.p.messenger === "ruin" || ctx.p.stance === "storm" || ctx.p.house === "sky");
+const HOLE_REACH = 64;
+const failedMarkNear = (ctx: Ctx): boolean => ctx.w.failed.some(f => Math.hypot(f.x - ctx.p.x, f.y - ctx.p.y) <= HOLE_REACH);
+const nearestFailedMark = (ctx: Ctx): string | undefined => {
+  let best: string | undefined;
+  let bestD = Infinity;
+  for (const f of ctx.w.failed) {
+    const d = Math.hypot(f.x - ctx.p.x, f.y - ctx.p.y);
+    if (d < bestD) { bestD = d; best = f.id; }
+  }
+  return best;
+};
 
 const notice = (text: string, tone: "ink" | "gold" | "hot" | "acid" | "sky" = "ink"): Effect => ({ kind: "notice", text, tone });
 
@@ -186,11 +203,14 @@ const M2_STEPS: QuestStep[] = [
   {
     id: "history",
     title: "A prior hour",
-    detail: "Wreckage only you can see stands in the Care. Q at the Care shrine faces it.",
-    target: ctx => (ctx.p.serial === TEST_SERIAL ? "history:7777" : "care-shrine"),
+    detail: ctx => (hasHistoryMark(ctx)
+      ? "Wreckage only you can see stands in the Care. Q at the Care shrine faces it."
+      : "The serial has no prior hour written yet. The Care shrine keeps the place for one. Walk on."),
+    target: ctx => (hasHistoryMark(ctx) ? "history:mark" : "care-shrine"),
     plate: "serial-wreckage.jpg",
-    done: ctx => has(ctx, F.HISTORY) || ctx.p.serial !== TEST_SERIAL,
-    onComplete: ctx => (ctx.p.serial === TEST_SERIAL ? [notice("The serial remembers. The city does not.", "sky")] : []),
+    // A serial whose log has nothing written back has no wreckage to face; the beat is theirs the next time they link.
+    done: ctx => has(ctx, F.HISTORY) || !hasHistoryMark(ctx),
+    onComplete: ctx => (hasHistoryMark(ctx) ? [notice("The serial remembers. The city does not.", "sky")] : []),
   },
   {
     id: "board",
@@ -274,11 +294,21 @@ const M3_STEPS: QuestStep[] = [
   {
     id: "failed",
     title: "Last season",
-    detail: "On the Kerb of Hours, the forecast glass. Press F to face last season's Passing. Ruin-sight would show you the hole itself.",
-    target: "forecast-glass",
+    detail: ctx => (seesFailed(ctx) && ctx.w.failed.length > 0
+      ? "You can see the hole itself: last season's Passing failed there. Stand at it. The forecast glass on the Kerb shows it too; press F there."
+      : "On the Kerb of Hours, the forecast glass. Press F to face last season's Passing. Ruin-sight, the Storm and the House of Sky would show you the hole itself."),
+    target: ctx => (seesFailed(ctx) && nearestFailedMark(ctx)) || "forecast-glass",
     plate: "failed-passing.jpg",
-    done: ctx => has(ctx, F.FAILED),
-    onComplete: [notice("Last season's Passing failed. The city kept the weather.", "sky")],
+    // The glass for everyone; the hole itself for those who can see it, by standing at it.
+    done: ctx => has(ctx, F.FAILED) || (seesFailed(ctx) && failedMarkNear(ctx)),
+    onComplete: ctx => (has(ctx, F.FAILED)
+      ? [notice("Last season's Passing failed. The city kept the weather.", "sky")]
+      : [
+          { kind: "flag", key: F.FAILED },
+          { kind: "wink", text: LAST_SEASON_WINK },
+          { kind: "readiness", delta: 2 },
+          notice("Last season's Passing failed here. The hour went by. You did not loot it.", "sky"),
+        ]),
   },
   {
     id: "forge",

@@ -11,7 +11,7 @@ vi.mock("./world", () => ({
   pushNews: (w: WorldState, text: string): WorldState => ({ ...w, news: [...w.news, { text, at: w.now }] }),
 }));
 
-import { MAX_HP, RESTRAINT_START, TITHE_COST, WAR_HOLD, WAR_PERIOD, WAR_RADIUS, WRECKAGE_TTL_BONUS } from "./constants";
+import { GESTELL_MELTDOWN, MAX_HP, RESTRAINT_START, TITHE_COST, WAR_HOLD, WAR_PERIOD, WAR_RADIUS, WRECKAGE_TTL_BONUS } from "./constants";
 import { POSITIONS } from "./map";
 import { initialClearing, initialPassing } from "./clearing";
 import { initialNodes } from "./economy";
@@ -190,6 +190,10 @@ describe("perception", () => {
     const ruin = perception(makePlayer({ house: "sky", messenger: "ruin" }));
     expect(ruin.wreckageBonus).toBe(WRECKAGE_TTL_BONUS);
     expect(ruin.forecast).toBe(true);
+    // Divinities are fragile where the weather is at its worst
+    expect(perception(makePlayer({ house: "divinities" }), GESTELL_MELTDOWN - 1).winkDensity).toBe(2);
+    expect(perception(makePlayer({ house: "divinities" }), GESTELL_MELTDOWN).winkDensity).toBe(0);
+    expect(perception(makePlayer({ house: "mortals" }), GESTELL_MELTDOWN).winkDensity).toBe(1);
     const keys = Object.keys(ruin);
     expect(keys.some(k => /damage|dps|strike|heavy/i.test(k))).toBe(false);
   });

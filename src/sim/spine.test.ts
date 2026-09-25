@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
  * end of world as world, signs the freeze, refuses the yield, buries the
  * garden, spots the copy, and reaches every outcome the Passing can have.
  */
-import { DT, FREEZE_FEE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, TEST_SERIAL } from "./constants";
+import { DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_REFUSE, TEST_SERIAL } from "./constants";
 import { POSITIONS, blockedFor, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
@@ -372,8 +372,10 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
     expect(me(w).dialogue?.node).toBe("take");
     w = closeAll(w, ME);
     expect(me(w).choices[C.OPERATOR]).toBe("take");
-    expect(me(w).bestand).toBe(before + OPERATOR_YIELD);
+    // the yield funds the door: the desk keeps the door's price back out of it
+    expect(me(w).bestand).toBe(before + OPERATOR_YIELD - M3_DOOR_PRICE);
     expect(w.flags["earned:operator"]).toBe(OPERATOR_YIELD);
+    expect(w.flags["sunk:door"]).toBe(M3_DOOR_PRICE);
     expect(me(w).current).toBe("cold");
     expect(me(w).flags[F.M3]).toBe(1);
     expect(me(w).party.nara).toBe("waiting");
@@ -501,6 +503,63 @@ function throughTheCredits(w0: WorldState): WorldState {
   return w;
 }
 
+// ---------------------------------------------------------------- the desk and the window
+
+describe("the private yield is decided once", () => {
+  /** An Angel who has read their hall, standing at Vesper's desk with the purse empty. */
+  function atTheDesk(): WorldState {
+    const p: Player = {
+      ...spawnGuest(ME), guest: false, serial: 42, name: "#0042", house: "sky", messenger: "witness", winkSchool: "omen", auraSeed: 12, aura: 12,
+      movement: 2, flags: { [F.ANGEL]: 1, [F.UNDER]: 1, [F.SHRINE]: 1, [F.HALL]: 1 },
+      party: { nara: "with", quill: "with", ord: "with" }, quests: { [Q.M1]: 13 },
+    };
+    return goTo(add(emptyWorld(), p), ME, "operator-desk");
+  }
+
+  it("hear at the desk, then E at the desk, then the stale window's take: sixty is paid once and the window is gone", () => {
+    let w = atTheDesk();
+    w = interact(w, ME, "operator-desk", "hear");
+    expect(me(w).dialogue?.node).toBe("offer");
+    expect(me(w).dialogue?.choices.map(c => c.id)).toEqual(["take", "refuse", "wait"]);
+    w = interact(w, ME, "operator-desk", "take");
+    expect(me(w).flags[F.OPERATOR]).toBe(1);
+    expect(me(w).bestand).toBe(OPERATOR_YIELD - M3_DOOR_PRICE);
+    expect(me(w).dialogue, "a verb on the world closes the stale window").toBeNull();
+    w = act(w, ME, { t: "choose", choiceId: "take" });
+    expect(me(w).bestand).toBe(OPERATOR_YIELD - M3_DOOR_PRICE);
+    expect(w.flags["earned:operator"]).toBe(OPERATOR_YIELD);
+    expect(w.flags["sunk:door"]).toBe(M3_DOOR_PRICE);
+  });
+
+  it("a window forced open after the decision offers neither take nor refuse, and a raw choose is refused", () => {
+    let w = atTheDesk();
+    w = interact(w, ME, "operator-desk", "refuse");
+    expect(me(w).readiness).toBe(READINESS_REFUSE);
+    // a client that keeps the offer open and sends choose anyway
+    const forced = add(w, { ...me(w), dialogue: { npc: "vesper", node: "offer", speaker: "Vesper Hale", portrait: "vesper.jpg", text: "", wink: "", choices: [{ id: "take", label: "Take the private yield." }] } });
+    const taken = act(forced, ME, { t: "choose", choiceId: "take" });
+    expect(me(taken).bestand).toBe(0);
+    expect(me(taken).choices[C.OPERATOR]).toBe("refuse");
+    expect(me(taken).current).toBe("");
+    // and Vesper, spoken to afterwards, does not quote twice
+    w = talkTo(w, ME, "vesper");
+    expect(me(w).dialogue?.node).toBe("refused");
+  });
+
+  it("the memorial, the last word and the forge lesson cannot be chosen twice either", () => {
+    let w = add(emptyWorld(), spawnGuest(ME));
+    w = talkTo(w, ME, "nara");
+    w = choose(w, ME, "help");
+    w = choose(w, ME, "voice");
+    w = closeAll(w, ME);
+    expect(me(w).flags[F.MEMORIAL]).toBe(1);
+    const again = add(w, { ...me(w), dialogue: { npc: "nara", node: "memorial", speaker: "Nara Vale", portrait: "nara.jpg", text: "", wink: "", choices: [{ id: "copper", label: "x" }] } });
+    const copper = act(again, ME, { t: "choose", choiceId: "copper" });
+    expect(me(copper).choices[C.MEMORIAL]).toBe("voice");
+    expect(me(copper).items).toEqual([]);
+  });
+});
+
 // ---------------------------------------------------------------- the runs
 
 describe("the spine, played through", () => {
@@ -607,13 +666,15 @@ describe("the spine, played through", () => {
       let a = pass({ ...ready(brink, { readiness: 85 }), gestell: 95 });
       expect(me(a).choices[C.PASSING]).toBe("failed");
       expect(a.passing).toMatchObject({ lastOutcome: "failed", hijackedBy: "" });
-      expect(a.failed.map(f => f.id)).toEqual(["failed-1"]);
+      // this season's hole joins last season's, which every shard starts with
+      expect(a.failed.filter(f => f.season === a.season.id).map(f => f.id)).toEqual(["failed-1"]);
+      expect(a.failed.some(f => f.season === 0)).toBe(true);
       expect(a.pois["clearing-ring"].state).toBe("failed");
       expect(a.clearing.open).toBe(false);
       expect(me(a).bestand).toBe(me(brink).bestand);
       // the failed mark shows to Ruin-sight, Storm or Sky; a Herald of Mortals in Restraint sees the ring, not the hole
       expect(snapshotFor(a, ME).failed).toEqual([]);
-      expect(snapshotFor(act(a, ME, { t: "stance" }), ME).failed.map(f => f.id)).toEqual(["failed-1"]);
+      expect(snapshotFor(act(a, ME, { t: "stance" }), ME).failed.map(f => f.id)).toContain("failed-1");
       a = throughTheCredits(a);
       expect(me(a).history.outcomes).toEqual(["failed"]);
     }

@@ -112,6 +112,34 @@ describe("snapshotFor", () => {
     expect(snapshotFor(w, "g").failed).toEqual([]);
   });
 
+  it("a Ruin-angel on a fresh shard already sees last season's hole", () => {
+    const w = add(emptyWorld(), { ...angel("ruin", "earth", 45), messenger: "ruin" });
+    const snap = snapshotFor(w, "ruin");
+    expect(snap.failed.length).toBeGreaterThanOrEqual(1);
+    expect(snap.failed.every(f => f.season === 0 && f.line.length > 0)).toBe(true);
+    expect(snapshotFor(add(w, angel("earth", "earth")), "earth").failed).toEqual([]);
+  });
+
+  it("the Face reads the log: the viewer's own readout, and the fallen's Passings on their wreckage", () => {
+    const fallenAngel = { ...wreck("w1", 600, 2000, 100, { fromId: "v", fromName: "#0009", fromSerial: 9 }), fromHistory: { passings: 2, buried: 1, looted: 0 } };
+    const clerk = wreck("w2", 620, 2000, 100);
+    let w: WorldState = { ...emptyWorld(), wreckage: [fallenAngel, clerk], history: [mark] };
+    const me7777 = { ...at(angel("a", "mortals", 7777), 600, 2000), messenger: "ruin" as const, history: { passings: 1, buried: 3, looted: 0, houses: [], outcomes: ["absence"] } };
+    w = add(w, me7777);
+    const plain = snapshotFor(w, "a");
+    expect(plain.you.kitReadout).toBeUndefined();
+    expect(plain.wreckage.every(r => r.passings === undefined)).toBe(true);
+    const facing = add(w, { ...me7777, kit: { verb: "ruin", until: 10 } });
+    const snap = snapshotFor(facing, "a");
+    expect(snap.you.kitReadout).toEqual(["A prior hour.", "Passings 1. Buried 3. Looted 0. Fell 0 times.", "The last hour: absence."]);
+    expect(snap.wreckage.find(r => r.id === "w1")?.passings).toBe(2);
+    expect(snap.wreckage.find(r => r.id === "w2")?.passings).toBeUndefined();
+    // other viewers never see the readout, and their snapshot of the same wreckage carries no log
+    const other = add(facing, at(angel("o", "earth", 42), 600, 2000));
+    expect(snapshotFor(other, "o").you.kitReadout).toBeUndefined();
+    expect(snapshotFor(other, "o").wreckage.find(r => r.id === "w1")?.passings).toBeUndefined();
+  });
+
   it("the area of interest excludes a player 3000 px away and includes one nearby; the viewer is not among the others", () => {
     let w = add(emptyWorld(), at(angel("a"), 600, 2000));
     w = add(w, at(angel("near", "sky", 43), 600 + 500, 2000));

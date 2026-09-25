@@ -52,14 +52,18 @@ All state is immutable-style: reducers return a new `WorldState`. `players` and
 ## 2. Non-negotiables enforced in code (tests exist for each)
 
 1. `damageFor(player)` returns a constant. No serial, house, messenger, aura,
-   Bestand, `$REVERIE`, item or claim appears in it. Traits change perception,
-   verbs and style only.
+   Bestand, `$REVERIE`, item or claim appears in it. `stormMultiplier` reads
+   only the attacker's stance, the target's purse or fallen state and the
+   climate band; never a kit. Traits change perception, verbs and style only.
 2. Guests: aura 0; `wink` always empty; cannot `claim`, `flag`, `link` anyone
    else, enter the Care, the Clearing or the Organs; locked at going-under;
    cannot hurt or be hurt by other players; can fight enemies and the practice
    dummy.
 3. Every earner has a sink in the same module. `economy.ts` exports the
-   `EARNER_SINKS` table and a test asserts each earner id has a sink id.
+   `EARNER_SINKS` table and a test asserts each earner id has a sink id; the
+   private yield keeps the Organs door's price back into `door` on both paths,
+   a market buy needs the seller on the Grid (Bestand never leaves the sim),
+   and the Clearing contest is one stance and one readiness per Angel per contest.
 4. Claims desk is disarmed: `file` creates a claim with a hold, `take` after the
    hold settles into `banked` Bestand only, never real value; idempotent by
    claim id; guests refused; no double settle.
@@ -68,8 +72,10 @@ All state is immutable-style: reducers return a new `WorldState`. `players` and
    wreckage is left, respawn at the last Care shrine / House hall or the Nave.
 6. Gestell ≥ 91 fails a Passing unless the Clearing is held by enough dwelling
    Angels. A solo hero cannot force it.
-7. PvP needs both flags, no truce, not on the practice ground; kills leave
-   wreckage; camping the same body is Gestell+ and aura− for the camper.
+7. PvP needs both flags (meltdown weather flags the Wet Grid itself), no
+   truce, not on the practice ground, and never into a live ruin duel from
+   outside it; kills leave wreckage; camping the same body is Gestell+ and
+   aura− for the camper.
 8. Persistent ids (quests, POIs, districts, protocol) do not change once shipped.
 
 ## 3. The city (`src/sim/map.ts`)
@@ -129,12 +135,12 @@ See `src/sim/types.ts`. Summary:
 | Input | Message | Server rule |
 |---|---|---|
 | WASD / arrows | `intent` | 170 px/s, wall collision with substeps, personal gates |
-| Shift + direction | `dodge` | 0.18 s at 440 px/s, 0.9 s cooldown, +0.06 s window in Restraint; i-frames only during the dash; no attacks during it |
+| Shift + direction | `dodge` | 0.18 s at 440 px/s, 0.9 s cooldown, +0.06 s window in Restraint; i-frames only during the dash, against clerks and against people; no attacks during it |
 | click / Space | `strike` | light: 22 dmg, 56 px reach, 0.42 s; hit-stop extends cooldown by 0.08 s |
 | R / Shift+click | `heavy` | 34 dmg, 64 px reach, 1.1 s; 0.25 s windup during which the player cannot dodge; interrupts an enemy telegraph and forces recovery |
-| Tab | `stance` | toggle Restraint ⇄ Storm. Storm burns restraint 1/s, shows wreckage, +25% vs "geared" targets (bestand ≥ 60 unbanked), −25% vs the already-fallen. Restraint: see Winke, better dodge, −20% node yield |
+| Tab | `stance` | toggle Restraint ⇄ Storm. Storm burns restraint 1/s, shows wreckage, presses "geared" targets (bestand ≥ 60 unbanked) by the climate band (+15% clear, +25% mixed, +35% fat, +40% meltdown), −25% vs the already-fallen; no kit, messenger, House or serial term. Restraint: see Winke, better dodge, −20% node yield |
 | K | `kit` | messenger verb: Herald *Announce* (mark a kept node safe for allies 60 s), Witness *Blitz* (reveal last 8 wreckages 20 s), Ruin-angel *Face* (Storm stance costs no restraint 20 s), Dweller *Keep* (plant a Clearing seed on the current tile), Cybernetic *Read* (see node charges/yield 60 s), Iridescent *Glamour* (listing fee 0 and aura counts as +10 for NPC address 60 s). Guests: nothing. 30 s cooldown. Never damage |
-| F | `interact` (verb `F`) / `talk` | primary verb of the nearest thing (speak, read, bury, enter, sign, file…) |
+| F | `interact` (verb `F`) / `talk` | primary verb of the nearest thing (speak, read, bury, enter, sign, file…); on a flagged Angel at a shared wreckage: offer or answer a ruin duel (`interact(playerId, "duel")`) |
 | E / Q | `interact` (verb `E` / `Q`) | secondary verbs (extract / keep, take / refuse, spot / sell, loot / bury) |
 | 1–4 | `choose` | dialogue choice |
 | Esc | `close` | close dialogue |

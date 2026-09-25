@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Ctx, NpcState, Player, PoiVerb, WorldState } from "../types";
+import type { Ctx, Effect, NpcState, Player, PoiVerb, WorldState } from "../types";
 import { GUEST_SPAWN, NPC_HOMES, POI_LIST, POSITIONS } from "../map";
-import { RESTRAINT_START, TEST_SERIAL } from "../constants";
+import { AURA_DIM, M3_DOOR_PRICE, OPERATOR_YIELD, RESTRAINT_START, TEST_SERIAL } from "../constants";
 import { C, F, POI_STATES, Q, W } from "./ids";
 import { NPCS } from "./npcs";
 import { POI_CONFIGS } from "./pois";
@@ -255,6 +255,21 @@ describe("POI configs", () => {
     expect(vTake).toContain(`"value":"take"`);
     expect(vTake).toContain(`"key":"${F.OPERATOR}"`);
     expect(vTake).toContain(`"key":"${F.M3}"`);
+    // the operator earner ships its sink on both paths: the yield pays the door
+    for (const effects of [take.effects, NPCS.vesper.nodes.take.effects] as Effect[][]) {
+      expect(effects.some(e => e.kind === "bestand" && e.delta === OPERATOR_YIELD && e.earner === "operator")).toBe(true);
+      expect(effects.some(e => e.kind === "bestand" && e.delta === -M3_DOOR_PRICE && e.sink === "door")).toBe(true);
+    }
+    // the offer is decided once: its choices hide after the decision, whichever desk decided it
+    const decided = { ...CTXS.find(c => c.name === "angel earth M2 take")!.ctx };
+    const offer = NPCS.vesper.nodes.offer.choices!;
+    expect(offer.filter(c => !c.when || c.when(decided)).map(c => c.id)).toEqual(["wait"]);
+    const undecided = CTXS.find(c => c.name === "angel sky M2 signed")!.ctx;
+    expect(offer.filter(c => !c.when || c.when(undecided)).map(c => c.id)).toEqual(["take", "refuse", "wait"]);
+    const said = CTXS.find(c => c.name === "angel M4 lastword prepared")!.ctx;
+    expect(NPCS.ione.nodes.offer.choices!.filter(c => !c.when || c.when(said)).map(c => c.id)).toEqual(["wait"]);
+    expect(NPCS.quill.nodes["forge-lesson"].choices!.filter(c => !c.when || c.when(said)).map(c => c.id)).toEqual(["think"]);
+    expect(NPCS.nara.nodes.memorial.choices!.filter(c => !c.when || c.when(said)).map(c => c.id)).toEqual(["look"]);
     const vRefuse = JSON.stringify(NPCS.vesper.nodes.refuse.effects);
     expect(vRefuse).toContain(`"value":"refuse"`);
     expect(vRefuse).toContain(`"key":"${F.OPERATOR}"`);
@@ -343,6 +358,41 @@ describe("dialogue", () => {
     const early = CTXS.find(c => c.name === "angel 7777 M2 fresh")!.ctx;
     expect(NPCS.ione.personal!(early, SHARED_NPC)).toBeNull();
     expect(NPCS.vesper.personal!(early, SHARED_NPC)).toBeNull();
+  });
+
+  it("the party and the operators do not look up at a dark aura; a Glamour or a guest is addressed", () => {
+    const lit = CTXS.find(c => c.name === "angel 7777 M2 fresh")!.ctx;
+    const dark = { ...lit, p: { ...lit.p, aura: AURA_DIM - 1 } };
+    for (const id of ["nara", "quill", "ord", "vesper", "ione"]) {
+      expect(NPCS[id].entry(lit)).not.toBe("dark");
+      expect(NPCS[id].entry(dark), id).toBe("dark");
+      const line = NPCS[id].nodes.dark.text;
+      expect(typeof line === "string" ? line : line(dark)).toMatch(/aura|look/i);
+      expect(NPCS[id].nodes.dark.choices ?? []).toEqual([]);
+    }
+    const glamour = { ...dark, p: { ...dark.p, kit: { verb: "iridescent" as const, until: dark.now + 10 } } };
+    expect(NPCS.nara.entry(glamour)).not.toBe("dark");
+    const guest = CTXS.find(c => c.name === "guest fresh")!.ctx;
+    expect(NPCS.nara.entry(guest)).toBe("first");
+  });
+
+  it("the sacred doors are dark to a dark aura and dim in fat weather; the shrine still offers a place to stand", () => {
+    const late = CTXS.find(c => c.name === "angel divinities M3 refuse")!.ctx; // winke 3, a cult object in hand, but a world at 92
+    const lit = { ...late, w: { ...late.w, gestell: 38 } };
+    const live = (id: string, ctx: Ctx) => POI_CONFIGS[id].verbs.filter(v => !v.when || v.when(ctx)).map(v => v.choice);
+    expect(live("last-god-trace", lit)).toEqual(["face"]);
+    expect(live("cult-vault", lit)).toEqual(["open"]);
+    expect(live("shrine-1", lit)).toEqual(["keep"]);
+    const dark = { ...lit, p: { ...lit.p, aura: AURA_DIM - 1 } };
+    expect(live("last-god-trace", dark)).toEqual(["look"]);
+    expect(live("cult-vault", dark)).toEqual(["try"]);
+    expect(live("shrine-1", dark)).toEqual(["stand"]);
+    const fat = { ...lit, w: { ...lit.w, gestell: 80 } };
+    expect(live("shrine-1", fat)).toEqual(["stand"]);
+    expect(live("shrine-1", { ...fat, p: { ...fat.p, aura: 60 } })).toEqual(["keep"]);
+    const stand = POI_CONFIGS["shrine-1"].verbs.find(v => v.choice === "stand")!;
+    expect(typeof stand.say === "function" ? stand.say(dark) : stand.say).toContain("dark");
+    expect(typeof stand.say === "function" ? stand.say(fat) : stand.say).toContain("Fat weather");
   });
 
   it("Ione's last word and Quill's forge set the key decisions", () => {

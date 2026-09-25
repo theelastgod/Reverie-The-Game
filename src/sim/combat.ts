@@ -27,6 +27,13 @@ const SUBSTEP = BODY_R / 2;
 const HOME_EPSILON = 4;
 const EPS = 1e-6; // timers this close to zero are zero; float drift never steals a tick
 
+// Copy owned by this module: the ruin duel. Short, cold, the grave is the ring.
+const DUEL_CLOSED = "A ruin duel. The ring is two bodies and yours is not one of them.";
+const DUEL_WHERE = "A ruin duel needs a wreckage under both of you. Find one and stand at it.";
+const DUEL_BUSY = "One of you is already in a ring. Wait for the grave to settle.";
+const DUEL_OPEN = "The duel is open. Sixty seconds. The grave is the ring and nobody else may step in it.";
+const DUEL_CHALLENGE = "You offered a ruin duel at the wreckage. Twenty seconds for the answer.";
+
 // ---------------------------------------------------------------- helpers
 
 const d2 = (a: Vec, b: Vec) => (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
@@ -256,7 +263,7 @@ export function pvpBlockReason(a: Player, b: Player, w: WorldState): string | nu
   if (inPatch("patch-arena", a.x, a.y) || inPatch("patch-arena", b.x, b.y)) return LINES.PRACTICE_SAFE;
   const ad = liveDuel(a, w.now);
   const bd = liveDuel(b, w.now);
-  if ((ad && ad.with !== b.id) || (bd && bd.with !== a.id)) return LINES.DUEL_CLOSED;
+  if ((ad && ad.with !== b.id) || (bd && bd.with !== a.id)) return DUEL_CLOSED;
   if (!(a.flagged && b.flagged) && !weatherFlagged(a, b, w)) return LINES.PVP_FLAG_REQUIRED;
   return null;
 }
@@ -539,11 +546,11 @@ export function duelWreckageFor(w: WorldState, a: Player, b: Player): Wreckage |
 /** Whether `p` may offer or answer a ruin duel with `other` right now; the reason otherwise. */
 export function duelBlockReason(p: Player, other: Player, w: WorldState): string | null {
   if (p.guest || other.guest || p.locked || other.locked) return LINES.GUEST_GRIEF;
-  if (p.dead || other.dead) return LINES.DUEL_WHERE;
+  if (p.dead || other.dead) return DUEL_WHERE;
   if (p.truceUntil > w.now || other.truceUntil > w.now) return LINES.TRUCE_ACTIVE;
   if (!p.flagged || !other.flagged) return LINES.PVP_FLAG_REQUIRED;
-  if (!duelWreckageFor(w, p, other)) return LINES.DUEL_WHERE;
-  if (liveDuel(p, w.now) || liveDuel(other, w.now)) return LINES.DUEL_BUSY;
+  if (!duelWreckageFor(w, p, other)) return DUEL_WHERE;
+  if (liveDuel(p, w.now) || liveDuel(other, w.now)) return DUEL_BUSY;
   return null;
 }
 
@@ -567,12 +574,12 @@ export function applyDuel(w: WorldState, id: string, targetId: string): WorldSta
   if (offered) {
     const until = now + DUEL_SECONDS;
     const duel = (other: string): DuelState => ({ with: other, until, accepted: true });
-    let cur = setPlayer(w, say({ ...p, duel: duel(t.id) }, LINES.DUEL_OPEN, now));
-    cur = setPlayer(cur, say({ ...t, duel: duel(p.id) }, LINES.DUEL_OPEN, now));
+    let cur = setPlayer(w, say({ ...p, duel: duel(t.id) }, DUEL_OPEN, now));
+    cur = setPlayer(cur, say({ ...t, duel: duel(p.id) }, DUEL_OPEN, now));
     return pushNews(cur, `A ruin duel at ${wreck.fromName}'s wreckage. ${p.name} and ${t.name}. The grave is the ring.`);
   }
   const offer: DuelState = { with: t.id, until: now + DUEL_CHALLENGE_SECONDS, accepted: false };
-  let cur = setPlayer(w, say({ ...p, duel: offer }, LINES.DUEL_CHALLENGE, now));
+  let cur = setPlayer(w, say({ ...p, duel: offer }, DUEL_CHALLENGE, now));
   cur = setPlayer(cur, notice(t, `${p.name} offers a ruin duel at the wreckage. F answers it.`, now, "hot"));
   return cur;
 }

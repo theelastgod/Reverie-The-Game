@@ -5,7 +5,7 @@
  */
 import type { Ctx, DialogueNode, Effect, NpcDef, NpcState } from "../types";
 import { POSITIONS } from "../map";
-import { COPY_PRICE, OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH } from "../constants";
+import { AURA_ADDRESS_GLAMOUR, AURA_DIM, COPY_PRICE, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH } from "../constants";
 import { C, F, W } from "./ids";
 import { PARTY_BLIND } from "./lines";
 
@@ -18,6 +18,14 @@ const chose = (ctx: Ctx, key: string, value: string): boolean => ctx.p.choices[k
 const worldHas = (ctx: Ctx, key: string): boolean => (ctx.w.flags[key] ?? 0) > 0;
 
 const BLIND_WINDOW = 20; // seconds after a Wink in which the party notices you looking
+
+/** True for an Angel the city does not look up at: aura dark, and no Glamour painting some on. Guests are addressed as unsealed instead. */
+function dark(ctx: Ctx): boolean {
+  const { p, now } = ctx;
+  if (p.guest) return false;
+  const glamour = !!p.kit && p.kit.verb === "iridescent" && p.kit.until > now;
+  return p.aura + (glamour ? AURA_ADDRESS_GLAMOUR : 0) < AURA_DIM;
+}
 
 /** True when the viewer acted on a Wink this NPC could not see and has not been told so yet. */
 function unseenWink(ctx: Ctx, npc: string): boolean {
@@ -59,6 +67,10 @@ function naraRoute(ctx: Ctx): string {
 }
 
 const NARA_NODES: Record<string, DialogueNode> = {
+  dark: {
+    id: "dark",
+    text: "Nara Vale does not look up. A body with no presence on the funeral street is a shape the weather made. The shrine in the Care restores what the city looks at. Come back when it can see you.",
+  },
   blind: {
     id: "blind",
     text: `${PARTY_BLIND} Whatever it is, I cannot bury it for you. Say what you need.`,
@@ -86,8 +98,8 @@ const NARA_NODES: Record<string, DialogueNode> = {
     text: "A voice survived in that recorder. Its copper would close the coffin. Leave the voice running, or give its body to this one. I won't choose for you.",
     wink: "A voice or a vessel. Neither one pays. That is the point of the street.",
     choices: [
-      { id: "voice", label: "Leave the voice running.", next: "memorial-voice" },
-      { id: "copper", label: "Take the copper for the coffin.", next: "memorial-copper" },
+      { id: "voice", label: "Leave the voice running.", when: ctx => !has(ctx, F.MEMORIAL), next: "memorial-voice" },
+      { id: "copper", label: "Take the copper for the coffin.", when: ctx => !has(ctx, F.MEMORIAL), next: "memorial-copper" },
       { id: "look", label: "I want to hear it first." },
     ],
   },
@@ -166,7 +178,7 @@ const NARA_NODES: Record<string, DialogueNode> = {
     id: "stand-offer",
     text: "The Clearing wants a mortality act before it takes anyone. Watch, or a burial, or a last word. I have a grave in the garden with your hands on it. Stand at it with me. It counts. It is not a costume.",
     choices: [
-      { id: "stand", label: "Stand at the grave with her.", next: "stand" },
+      { id: "stand", label: "Stand at the grave with her.", when: ctx => !has(ctx, F.MORTALITY), next: "stand" },
       { id: "later", label: "Not yet." },
     ],
   },
@@ -214,6 +226,10 @@ function quillRoute(ctx: Ctx): string {
 }
 
 const QUILL_NODES: Record<string, DialogueNode> = {
+  dark: {
+    id: "dark",
+    text: "Quill looks through you at the stall behind. No aura, no customer. She sells surfaces and you are not on one. Restore it at the Care shrine; she will find you funny again.",
+  },
   blind: {
     id: "blind",
     text: `${PARTY_BLIND} I can sell you a print of it if you describe it well. Joke. Half a joke.`,
@@ -265,8 +281,8 @@ const QUILL_NODES: Record<string, DialogueNode> = {
     text: "Quill fans two hints. One was buried. One was printed. The printed one lists. The buried one opens. I can teach the difference. I can also sell the print. Pick. I will not think less of you either way. I will think exactly the same amount.",
     wink: "The hint can be forged. Exhibition Winke travel. Cult Winke stay in the hand that buried.",
     choices: [
-      { id: "spot", label: "Teach me to spot the copy.", next: "forge-spot" },
-      { id: "sell", label: "Sell me the print.", next: "forge-sell" },
+      { id: "spot", label: "Teach me to spot the copy.", when: ctx => !has(ctx, F.FORGE), next: "forge-spot" },
+      { id: "sell", label: "Sell me the print.", when: ctx => !has(ctx, F.FORGE), next: "forge-sell" },
       { id: "think", label: "Let me think." },
     ],
   },
@@ -352,6 +368,10 @@ const honestNumber = (ctx: Ctx): string => {
 };
 
 const ORD_NODES: Record<string, DialogueNode> = {
+  dark: {
+    id: "dark",
+    text: "Ord does not look up from the ledger. A body with no aura is not a line he can write honest. Restore it at the Care shrine and he will count you.",
+  },
   blind: {
     id: "blind",
     text: `${PARTY_BLIND} I do not need to see it. I need it to be true. Is it?`,
@@ -485,6 +505,10 @@ function vesperRoute(ctx: Ctx): string {
 }
 
 const VESPER_NODES: Record<string, DialogueNode> = {
+  dark: {
+    id: "dark",
+    text: "Vesper Hale does not price what the city cannot see. She does not look up. Come back with an aura on you and she will tell you what your hour is worth.",
+  },
   blind: {
     id: "blind",
     text: `${PARTY_BLIND} I do not price what I cannot see. Sit down when you are back.`,
@@ -500,24 +524,26 @@ const VESPER_NODES: Record<string, DialogueNode> = {
     text: "Vesper Hale, Concentrator. A private node. Sixty Bestand, yours, now, no tax. Take it and the Third Movement opens the ugly way. Refuse and you stay mortal and walk to the Organs through a garden. I do not lie about the price. I only lie about whether it matters.",
     wink: "She is not a boss. She is a person who already priced your hour. The yield is honest. The door it buys is not.",
     choices: [
-      { id: "take", label: "Take the private yield.", next: "take" },
-      { id: "refuse", label: "Refuse it.", next: "refuse" },
+      { id: "take", label: "Take the private yield.", when: ctx => !has(ctx, F.OPERATOR), next: "take" },
+      { id: "refuse", label: "Refuse it.", when: ctx => !has(ctx, F.OPERATOR), next: "refuse" },
       { id: "wait", label: "Not yet." },
     ],
   },
   take: {
     id: "take",
-    text: "You took the private yield. Cold is a current, not a costume. The Organs door is funded. Nara Vale has stopped speaking to you; she will start again when you pay a funeral. I would not wait. Sextons keep accounts too.",
+    text: "You took the private yield. Cold is a current, not a costume. The Organs door is paid for out of it; I keep the door's price back and open it. Nara Vale has stopped speaking to you; she will start again when you pay a funeral. I would not wait. Sextons keep accounts too.",
     effects: [
       { kind: "choice", key: C.OPERATOR, value: "take" },
       { kind: "bestand", delta: OPERATOR_YIELD, earner: "operator" },
+      // The yield funds the door: the desk keeps the door's price back and opens it.
+      { kind: "bestand", delta: -M3_DOOR_PRICE, sink: "door" },
       { kind: "current", value: "cold" },
       { kind: "flag", key: F.OPERATOR },
       { kind: "flag", key: F.M3 },
       { kind: "worldFlag", key: W.VESPER_GONE, value: 1 },
       { kind: "party", npc: "nara", state: "waiting" },
       { kind: "poi", id: "operator-desk", state: "closed" },
-      { kind: "notice", text: "Private yield. Sixty Bestand. The Organs door is open.", tone: "hot" },
+      { kind: "notice", text: `Private yield. ${OPERATOR_YIELD} Bestand, ${M3_DOOR_PRICE} of it to the Organs door. The door is open.`, tone: "hot" },
     ],
   },
   refuse: {
@@ -566,6 +592,10 @@ function ioneRoute(ctx: Ctx): string {
 }
 
 const IONE_NODES: Record<string, DialogueNode> = {
+  dark: {
+    id: "dark",
+    text: "The bench. She does not look up. There is nobody there for her to look at yet. The shrine in the Care restores an aura. Then sit.",
+  },
   blind: {
     id: "blind",
     text: `${PARTY_BLIND} Keep looking. I will not be looking much longer.`,
@@ -586,7 +616,7 @@ const IONE_NODES: Record<string, DialogueNode> = {
     text: "Ione Kade: I will not be in the next hour. Do not make a story of it. Stand in the hole. If you want a last word I have one. It is not for the city. It is for whoever is standing here when I say it.",
     wink: "The hour does not arrive as a body. It is a trace, or it is not. You cannot buy it.",
     choices: [
-      { id: "say", label: "Say it.", next: "lastword" },
+      { id: "say", label: "Say it.", when: ctx => !has(ctx, F.MORTALITY), next: "lastword" },
       { id: "wait", label: "Not yet." },
     ],
   },
@@ -630,7 +660,7 @@ export const NPCS: Record<string, NpcDef> = {
       if (has(ctx, F.UNDER) && !has(ctx, F.OPERATOR) && p.party.nara !== "waiting") return { ...station("nara-care"), state: "care" };
       return null;
     },
-    entry: (ctx: Ctx) => (unseenWink(ctx, "nara") ? "blind" : naraRoute(ctx)),
+    entry: (ctx: Ctx) => (dark(ctx) ? "dark" : unseenWink(ctx, "nara") ? "blind" : naraRoute(ctx)),
     nodes: NARA_NODES,
   },
   quill: {
@@ -645,7 +675,7 @@ export const NPCS: Record<string, NpcDef> = {
       if (has(ctx, F.UNDER)) return { ...station("quill-forge"), state: "forge" };
       return null;
     },
-    entry: (ctx: Ctx) => (unseenWink(ctx, "quill") ? "blind" : quillRoute(ctx)),
+    entry: (ctx: Ctx) => (dark(ctx) ? "dark" : unseenWink(ctx, "quill") ? "blind" : quillRoute(ctx)),
     nodes: QUILL_NODES,
   },
   ord: {
@@ -663,7 +693,7 @@ export const NPCS: Record<string, NpcDef> = {
       if ((p.movement >= 3 || has(ctx, F.M3)) && !has(ctx, F.MAP)) return { ...station("ord-strait"), state: "strait" };
       return null;
     },
-    entry: (ctx: Ctx) => (unseenWink(ctx, "ord") ? "blind" : ordRoute(ctx)),
+    entry: (ctx: Ctx) => (dark(ctx) ? "dark" : unseenWink(ctx, "ord") ? "blind" : ordRoute(ctx)),
     nodes: ORD_NODES,
   },
   vesper: {
@@ -678,7 +708,7 @@ export const NPCS: Record<string, NpcDef> = {
       if (has(ctx, F.OPERATOR) && worldHas(ctx, W.VESPER_GONE)) return { present: false, state: "gone" };
       return null;
     },
-    entry: (ctx: Ctx) => (unseenWink(ctx, "vesper") ? "blind" : vesperRoute(ctx)),
+    entry: (ctx: Ctx) => (dark(ctx) ? "dark" : unseenWink(ctx, "vesper") ? "blind" : vesperRoute(ctx)),
     nodes: VESPER_NODES,
   },
   ione: {
@@ -693,7 +723,7 @@ export const NPCS: Record<string, NpcDef> = {
       if (chose(ctx, C.MORTALITY, "lastword")) return { present: false, state: "gone" };
       return null;
     },
-    entry: (ctx: Ctx) => (unseenWink(ctx, "ione") ? "blind" : ioneRoute(ctx)),
+    entry: (ctx: Ctx) => (dark(ctx) ? "dark" : unseenWink(ctx, "ione") ? "blind" : ioneRoute(ctx)),
     nodes: IONE_NODES,
   },
 };

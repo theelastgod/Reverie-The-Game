@@ -4,10 +4,11 @@
  * by the rules in world.wink: never to a guest, never to a dark aura or a
  * spent restraint.
  */
-import { AURA_DIM, RESTRAINT_WINK_MIN } from "./constants";
-import { NPCS } from "./content";
-import type { Ctx, DialogueChoiceView, DialogueNode, DialogueView, NpcDef, Player, WorldState } from "./types";
-import { wink } from "./world";
+import { LINES, NPCS } from "./content";
+import type { Ctx, DialogueChoiceView, DialogueNode, DialogueView, NpcDef, Player, WinkText, WorldState } from "./types";
+import { canSeeWink, wink } from "./world";
+import { perception } from "./houses";
+import { isWinkSeed } from "./identity";
 import { applyEffects } from "./effects";
 import { npcView } from "./snapshot";
 
@@ -24,9 +25,36 @@ function text(ctx: Ctx, value: string | ((ctx: Ctx) => string) | undefined): str
   return typeof value === "function" ? value(ctx) : value;
 }
 
-/** True when this player may be shown a private line right now. */
-function canSeeWink(p: Player): boolean {
-  return !p.guest && p.aura >= AURA_DIM && p.restraint >= RESTRAINT_WINK_MIN;
+/** A small stable hash so the school line a Wink carries is the same one every time for the same Angel at the same place. */
+function hash(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
+  return h;
+}
+
+/**
+ * The private line this Angel hears for an authored Wink. Authored per school,
+ * the school's own line is chosen; authored once, everyone hears the same
+ * words. The House of Divinities and the Wink-seed serials hear the Winke
+ * dense: their school's own line follows, picked once and for all by serial
+ * and place. Guests and the dark hear nothing, decided by canSeeWink.
+ */
+export function resolveWink(ctx: Ctx, authored: WinkText | ((ctx: Ctx) => WinkText) | undefined): string {
+  if (authored === undefined) return "";
+  const { p, w } = ctx;
+  const value = typeof authored === "function" ? authored(ctx) : authored;
+  const school = p.winkSchool;
+  let line = typeof value === "string" ? value : (school && value[school]) || value.default;
+  if (!line) return "";
+  const dense = perception(p, w.gestell).winkDensity >= 2 || (p.serial !== null && isWinkSeed(p.serial));
+  if (dense && school) {
+    const lines = LINES.WINKE[school] ?? [];
+    if (lines.length) {
+      const extra = lines[(hash(line) + Math.abs(p.serial ?? 0)) % lines.length];
+      if (extra && !line.includes(extra)) line = `${line} ${extra}`;
+    }
+  }
+  return line;
 }
 
 function visibleChoices(ctx: Ctx, node: DialogueNode): DialogueChoiceView[] {
@@ -70,7 +98,7 @@ export function openNode(w: WorldState, id: string, npcId: string, nodeId: strin
   const ctx: Ctx = { w, p, now: w.now };
 
   const speakerDef = node.speaker ? NPCS[node.speaker] ?? def : def;
-  const winkText = canSeeWink(p) ? text(ctx, node.wink) : "";
+  const winkText = canSeeWink(p, w.now, w.gestell) ? resolveWink(ctx, node.wink) : "";
   const view: DialogueView = {
     npc: npcId,
     node: nodeId,
@@ -85,7 +113,7 @@ export function openNode(w: WorldState, id: string, npcId: string, nodeId: strin
   const after = cur.players.get(id);
   if (!after) return cur;
   let me: Player = { ...after, dialogue: view };
-  if (winkText) me = wink(me, winkText, cur.now);
+  if (winkText) me = wink(me, winkText, cur.now, cur.gestell);
   return setPlayer(cur, me);
 }
 

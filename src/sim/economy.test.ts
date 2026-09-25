@@ -12,6 +12,9 @@ vi.mock("./world", () => ({
 }));
 
 import {
+  AURA_CRAFT_WITHER,
+  AURA_DARK_YIELD_BONUS,
+  AURA_DIM,
   CLAIM_AMOUNT,
   CLAIM_CAP,
   CLAIM_HOLD,
@@ -430,6 +433,31 @@ describe("market", () => {
     expect(you(applyMarket(w, "b", "cancel", { listingId: w.market[0].id }), "b").items).toHaveLength(0);
   });
 
+  it("a listing whose seller is not on the Grid cannot be bought: nothing moves and the listing waits", () => {
+    const seller = makePlayer({ id: "s", name: "#0001", bestand: 10, items: [copy()] });
+    const buyer = makePlayer({ id: "b", name: "#0002", bestand: 50 });
+    let w = makeWorld([seller, buyer]);
+    w = applyMarket(w, "s", "list", { itemId: ITEM_COPY_WINK, price: 20 });
+    const players = new Map(w.players);
+    players.delete("s");
+    const away = { ...w, players };
+    const tried = applyMarket(away, "b", "buy", { listingId: w.market[0].id });
+    expect(tried.market).toHaveLength(1);
+    expect(you(tried, "b").bestand).toBe(50);
+    expect(you(tried, "b").items).toHaveLength(0);
+    expect(you(tried, "b").heard).toContain("not on the Grid");
+    expect(Object.keys(tried.flags).some(k => k.startsWith("owed:"))).toBe(false);
+    expect(tried.flags["earned:craft"]).toBeUndefined();
+    // the seller back on the Grid can still cancel and get the print back
+    const back = { ...tried, players: new Map([...tried.players, ["s", you(w, "s")]]) };
+    expect(hasItem(you(applyMarket(back, "s", "cancel", { listingId: w.market[0].id }), "s"), ITEM_COPY_WINK)).toBe(true);
+  });
+
+  it("listing thins the seller's aura by one; a guest stays at zero", () => {
+    const w = makeWorld([makePlayer({ bestand: 10, aura: 20, items: [copy()] })]);
+    expect(you(applyMarket(w, "p1", "list", { itemId: ITEM_COPY_WINK, price: 5 })).aura).toBe(20 - AURA_CRAFT_WITHER);
+  });
+
   it("refuses cult objects, bad prices, guests and self-purchase", () => {
     const cult: Item = { id: "cult:mark", kind: "cult", name: "mark", qty: 1, value: 0, bound: true };
     const w = makeWorld([makePlayer({ bestand: 10, items: [cult, copy()] })]);
@@ -492,5 +520,30 @@ describe("forge tray", () => {
     expect(you(applyForge(poor, "p1", "craft")).heard).toBe("CANT_AFFORD");
     const guest = makeWorld([makePlayer({ guest: true, serial: null, bestand: 50 })]);
     expect(you(applyForge(guest, "p1", "craft")).items).toHaveLength(0);
+  });
+
+  it("a run of prints withers the aura: the first is free, every one after it inside KIT_DURATION costs a point, and the window resets", () => {
+    let w = makeWorld([makePlayer({ bestand: FORGE_COST * 6, aura: 20 })]);
+    w = applyForge(w, "p1", "craft");
+    expect(you(w).aura).toBe(20);
+    w = applyForge(w, "p1", "craft");
+    w = applyForge(w, "p1", "craft");
+    expect(you(w).aura).toBe(20 - 2 * AURA_CRAFT_WITHER);
+    expect(you(w).fakeWinke).toBe(3);
+    const later = applyForge({ ...w, now: w.now + KIT_DURATION + 1 }, "p1", "craft");
+    expect(you(later).aura).toBe(20 - 2 * AURA_CRAFT_WITHER);
+    expect(you(applyForge(later, "p1", "craft")).aura).toBe(20 - 3 * AURA_CRAFT_WITHER);
+  });
+});
+
+describe("a dark aura", () => {
+  it("farms a little more efficiently; guests at zero do not", () => {
+    const node = initialNodes()[0];
+    const w = makeWorld([atNode()]);
+    const lit = nodeYield(w, atNode({ aura: 20, stance: "storm" }), node);
+    const dark = nodeYield(w, atNode({ aura: AURA_DIM - 1, stance: "storm" }), node);
+    expect(dark).toBe(Math.floor(NODE_YIELD * (1 + AURA_DARK_YIELD_BONUS) * (1 - gestellTax(w.gestell) / 100)));
+    expect(dark).toBeGreaterThan(lit);
+    expect(nodeYield(w, atNode({ guest: true, serial: null, aura: 0, stance: "storm" }), node)).toBe(lit);
   });
 });

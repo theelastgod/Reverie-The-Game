@@ -59,11 +59,11 @@ vi.mock("./clearing", () => ({
 vi.mock("./quests", () => ({ tickQuests: (w: WorldState) => w }));
 
 import {
-  AURA_CAMP_PENALTY, AURA_SPECTATE_GAIN, AURA_WOUND, CAMP_WINDOW, GESTELL_CAMP, HEAVY_DAMAGE, MAX_HP, RESTRAINT_CHAIN_KILL_PENALTY,
-  SPECTATE_CAP, STORM_FALLEN_PENALTY, STORM_GEARED_BESTAND, STORM_GEARED_BONUS, STRIKE_DAMAGE, TILE, TRUCE_SECONDS, UNBANKED_DROP,
-  WRECKAGE_TTL,
+  AURA_CAMP_PENALTY, AURA_SPECTATE_GAIN, AURA_WOUND, CAMP_WINDOW, DUEL_CHALLENGE_SECONDS, DUEL_SECONDS, GESTELL_CAMP, GESTELL_MELTDOWN,
+  HEAVY_DAMAGE, MAX_HP, RESTRAINT_CHAIN_KILL_PENALTY, SPECTATE_CAP, STORM_BAND_BONUS, STORM_FALLEN_PENALTY, STORM_GEARED_BESTAND,
+  STORM_GEARED_BONUS, STRIKE_DAMAGE, TILE, TRUCE_SECONDS, UNBANKED_DROP, WRECKAGE_TTL,
 } from "./constants";
-import { applyFlag, applyStrike, applyTruce, pvpBlockReason, stormMultiplier } from "./combat";
+import { applyDuel, applyFlag, applyStrike, applyTruce, pvpBlockReason, resolveHeavy, stormMultiplier } from "./combat";
 import { auraSeed, formatSerial, houseFor, messengerFor, winkSchoolFor } from "./identity";
 import { damageFor, emptyWorld, heavyFor, killPlayer, spawnGuest, tickWorld, wink } from "./world";
 
@@ -216,20 +216,134 @@ describe("PvP consent", () => {
 });
 
 describe("storm stance", () => {
-  it("presses the geared, spares the fallen, and never applies for guests or a Ruin-angel wearing the face", () => {
+  it("presses the geared, spares the fallen, never applies for guests, and reads no kit: a Ruin-angel wearing the face hits the same number", () => {
     const w = faceOff(angel("a", 1, { flagged: true, stance: "storm" }), angel("b", 2, { flagged: true, bestand: STORM_GEARED_BESTAND }));
     const a = w.players.get("a")!;
     const b = w.players.get("b")!;
     expect(stormMultiplier(a, b, w)).toBeCloseTo(1 + STORM_GEARED_BONUS);
     expect(stormMultiplier({ ...a, stance: "restraint" }, b, w)).toBe(1);
     expect(stormMultiplier({ ...a, guest: true }, b, w)).toBe(1);
-    expect(stormMultiplier({ ...a, kit: { verb: "ruin", until: w.now + 10 } }, b, w)).toBe(1);
+    expect(stormMultiplier({ ...a, kit: { verb: "ruin", until: w.now + 10 } }, b, w)).toBeCloseTo(1 + STORM_GEARED_BONUS);
+    expect(stormMultiplier({ ...a, messenger: "ruin", kit: { verb: "ruin", until: w.now + 10 } }, b, w)).toBeCloseTo(1 + STORM_GEARED_BONUS);
     expect(stormMultiplier(a, { ...b, bestand: 10 }, w)).toBe(1);
     const fallen = { ...w, wreckage: [{ id: "x", x: 0, y: 0, district: "clearing" as const, fromId: "b", fromName: "#0002", fromSerial: 2, killerId: "", at: 0, until: w.now + WRECKAGE_TTL, buried: false, looted: false, bestand: 0, items: [] }] };
     expect(stormMultiplier(a, b, fallen)).toBeCloseTo(1 - STORM_FALLEN_PENALTY);
+    expect(stormMultiplier({ ...a, messenger: "ruin", kit: { verb: "ruin", until: w.now + 10 } }, b, fallen)).toBeCloseTo(1 - STORM_FALLEN_PENALTY);
     const pressed = applyStrike(w, "a");
     expect(hp(pressed, "b")).toBe(MAX_HP - Math.round(STRIKE_DAMAGE * (1 + STORM_GEARED_BONUS)));
     expect(pressed.players.get("a")!.heard).toBe("Storm. You pressed the geared.");
+  });
+
+  it("lands the same number for every messenger with its kit active", () => {
+    const numbers = new Set<number>();
+    for (const [i, messenger] of (["herald", "witness", "ruin", "dweller", "cybernetic", "iridescent"] as const).entries()) {
+      const w = faceOff(
+        angel("a", i + 1, { flagged: true, stance: "storm", messenger, kit: { verb: messenger, until: 100 } }),
+        angel("b", 6000, { flagged: true, bestand: STORM_GEARED_BESTAND }),
+      );
+      numbers.add(hp(applyStrike(w, "a"), "b"));
+    }
+    expect(numbers.size).toBe(1);
+  });
+
+  it("the press grows with the weather and never with a serial", () => {
+    const w = faceOff(angel("a", 1, { flagged: true, stance: "storm" }), angel("b", 2, { flagged: true, bestand: STORM_GEARED_BESTAND }));
+    const a = w.players.get("a")!;
+    const b = w.players.get("b")!;
+    expect(stormMultiplier(a, b, { ...w, gestell: 20 })).toBeCloseTo(1 + STORM_BAND_BONUS.clear);
+    expect(stormMultiplier(a, b, { ...w, gestell: 50 })).toBeCloseTo(1 + STORM_BAND_BONUS.mixed);
+    expect(stormMultiplier(a, b, { ...w, gestell: 80 })).toBeCloseTo(1 + STORM_BAND_BONUS.fat);
+    expect(stormMultiplier(a, b, { ...w, gestell: 95 })).toBeCloseTo(1 + STORM_BAND_BONUS.meltdown);
+    expect(stormMultiplier({ ...a, serial: 7777 }, b, { ...w, gestell: 95 })).toBeCloseTo(1 + STORM_BAND_BONUS.meltdown);
+  });
+});
+
+describe("meltdown weather", () => {
+  it("flags the Wet Grid itself: two unflagged Angels on the hot street can be struck at meltdown, nowhere else, and guests stay safe", () => {
+    let w = emptyWorld();
+    w = put(w, angel("a", 1, { ...HOT, x: HOT.x - 15, district: "wet", facing: { dx: 1, dy: 0 } }));
+    w = put(w, angel("b", 2, { ...HOT, x: HOT.x + 15, district: "wet", facing: { dx: -1, dy: 0 } }));
+    expect(hp(applyStrike({ ...w, gestell: 50 }, "a"), "b")).toBe(MAX_HP);
+    expect(hp(applyStrike({ ...w, gestell: GESTELL_MELTDOWN }, "a"), "b")).toBe(MAX_HP - STRIKE_DAMAGE);
+    expect(pvpBlockReason(w.players.get("a")!, w.players.get("b")!, { ...w, gestell: 95 })).toBeNull();
+    // the Clearing does not flag itself
+    const ring = faceOff(angel("a", 1), angel("b", 2));
+    expect(hp(applyStrike({ ...ring, gestell: 95 }, "a"), "b")).toBe(MAX_HP);
+    // a guest on the hot street at meltdown is still not loot
+    const g = put({ ...w, gestell: 95 }, { ...spawnGuest("g"), ...HOT, x: HOT.x + 15, district: "wet" });
+    const swung = put(g, { ...g.players.get("a")!, facing: { dx: 1, dy: 0 } });
+    expect(hp(applyStrike(swung, "a"), "g")).toBe(MAX_HP);
+  });
+});
+
+describe("the dodge window", () => {
+  it("a dashing Angel is missed by a strike and a heavy, and both bodies hear it", () => {
+    const w = faceOff(angel("a", 1, { flagged: true }), angel("b", 2, { flagged: true, dodgeT: 0.1 }));
+    const missed = applyStrike(w, "a");
+    expect(hp(missed, "b")).toBe(MAX_HP);
+    expect(missed.players.get("a")!.heard).toBe("Your strike crossed an empty space.");
+    expect(missed.players.get("b")!.heard).toBe("You stepped through the strike.");
+    expect(missed.players.get("a")!.strikeCd).toBeGreaterThan(0);
+    expect(missed.players.get("a")!.hitStop).toBe(0);
+    const heavy = resolveHeavy(w, "a");
+    expect(hp(heavy, "b")).toBe(MAX_HP);
+    // the window closes with the dash
+    const landed = applyStrike(put(w, { ...w.players.get("b")!, dodgeT: 0 }), "a");
+    expect(hp(landed, "b")).toBe(MAX_HP - STRIKE_DAMAGE);
+  });
+});
+
+describe("ruin duels", () => {
+  const grave = (w: WorldState) => ({ id: "old", x: RING.x, y: RING.y + 20, district: "clearing" as const, fromId: "z", fromName: "#0009", fromSerial: 9, killerId: "", at: 0, until: w.now + WRECKAGE_TTL, buried: false, looted: false, bestand: 0, items: [] });
+
+  it("is offered and answered at a shared wreckage; while it is live nobody else may strike either body; a fall ends it", () => {
+    let w = faceOff(angel("a", 1, { flagged: true }), angel("b", 2, { flagged: true, respawn: { x: RING.x + 15, y: RING.y, district: "clearing" } }));
+    w = put(w, angel("c", 3, { x: RING.x - 15, y: RING.y - 30, district: "clearing", flagged: true, facing: { dx: 1, dy: 1 } }));
+    // no wreckage under them: refused
+    expect(applyDuel(w, "a", "b").players.get("a")!.duel).toBeUndefined();
+    w = { ...w, wreckage: [grave(w)] };
+    w = applyDuel(w, "a", "b");
+    expect(w.players.get("a")!.duel).toMatchObject({ with: "b", accepted: false });
+    expect(w.players.get("b")!.notices.some(n => n.text.includes("ruin duel"))).toBe(true);
+    // offered, not yet answered: the street is still the street
+    expect(hp(applyStrike(w, "c"), "b")).toBe(MAX_HP - STRIKE_DAMAGE);
+    w = applyDuel(w, "b", "a");
+    expect(w.players.get("a")!.duel).toMatchObject({ with: "b", accepted: true });
+    expect(w.players.get("b")!.duel).toMatchObject({ with: "a", accepted: true });
+    expect(w.news.some(n => n.text.includes("ruin duel"))).toBe(true);
+    // a third body is refused; the pair may strike
+    const third = applyStrike(w, "c");
+    expect(hp(third, "b")).toBe(MAX_HP);
+    expect(third.players.get("c")!.heard).toContain("two bodies");
+    const bHit = applyStrike(w, "b");
+    expect(hp(bHit, "a")).toBe(MAX_HP - STRIKE_DAMAGE);
+    const fell = applyStrike(put(w, { ...w.players.get("b")!, hp: 10 }), "a");
+    expect(fell.players.get("b")!.deaths).toBe(1);
+    expect(fell.players.get("a")!.duel).toBeUndefined();
+    expect(fell.players.get("b")!.duel).toBeUndefined();
+    expect(fell.players.get("a")!.heard).toBe("A ruin duel. The grave is the ring.");
+  });
+
+  it("an unanswered offer and a live duel both run out", () => {
+    let w = faceOff(angel("a", 1, { flagged: true }), angel("b", 2, { flagged: true }));
+    w = { ...w, wreckage: [{ ...grave(w), until: w.now + 10000 }] };
+    w = applyDuel(w, "a", "b");
+    w = run(w, DUEL_CHALLENGE_SECONDS + 1);
+    expect(w.players.get("a")!.duel).toBeUndefined();
+    w = applyDuel(w, "a", "b");
+    w = applyDuel(w, "b", "a");
+    expect(w.players.get("a")!.duel?.accepted).toBe(true);
+    w = run(w, DUEL_SECONDS + 1);
+    expect(w.players.get("a")!.duel).toBeUndefined();
+    expect(w.players.get("b")!.duel).toBeUndefined();
+  });
+
+  it("needs both flags, no truce and no guest", () => {
+    let w = faceOff(angel("a", 1, { flagged: true }), angel("b", 2));
+    w = { ...w, wreckage: [grave(w)] };
+    expect(applyDuel(w, "a", "b").players.get("a")!.heard).toBe("Both Angels must flag.");
+    const g = put(w, { ...spawnGuest("g"), x: RING.x + 15, y: RING.y, district: "clearing" });
+    expect(applyDuel(g, "a", "g").players.get("a")!.heard).toBe("Guests are not loot.");
   });
 });
 

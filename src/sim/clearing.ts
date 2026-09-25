@@ -28,7 +28,7 @@ import {
 import type { ClearingState, FailedPassing, PassingOutcome, PassingState, Player, PoiState, WorldState } from "./types";
 import { POSITIONS, nearPoint } from "./map";
 import { weatherBand } from "./protocol";
-import { C, F, W } from "./content/ids";
+import { C, F, W, seasonPassingFlag } from "./content/ids";
 import { LINES } from "./content";
 import { notice, pushNews, say } from "./world";
 import { earn } from "./economy";
@@ -104,8 +104,7 @@ const sameIds = (a: string[], b: string[]) => a.length === b.length && a.every((
 
 /** The personal once-flag for the readiness a contest pays: one keep per Angel per contest. */
 const keptKey = (openedAt: number): string => `clearing:kept:${openedAt}`;
-/** The personal once-flag for a season's Passing rite. */
-const passedKey = (season: number): string => `passing:${season}`;
+const passedKey = seasonPassingFlag;
 
 /** Counts the stances of the Angels still standing in the ring. A vote left with the body is not a vote. */
 function tally(contest: Contest, dwellers: Iterable<string>): Contest {
@@ -121,12 +120,15 @@ function tally(contest: Contest, dwellers: Iterable<string>): Contest {
   return keep === contest.keep && extract === contest.extract && contest.votes ? contest : { ...contest, votes, keep, extract };
 }
 
-/** Records one Angel's stance for the live contest, then recounts with them standing in the ring. */
-function castVote(clearing: ClearingState, id: string, vote: Vote): ClearingState {
+/** Records one Angel's stance for the live contest, then recounts against who is standing in the ring right now. */
+function castVote(w: WorldState, id: string, vote: Vote): ClearingState {
+  const clearing = w.clearing;
   const contest = clearing.contest;
   if (!contest || !contest.active) return clearing;
   const votes = { ...(contest.votes ?? {}), [id]: vote };
-  return { ...clearing, contest: tally({ ...contest, votes }, [...clearing.heldBy, id]) };
+  const dwellers: string[] = [id];
+  for (const p of w.players.values()) if (p.id !== id && dwells(p)) dwellers.push(p.id);
+  return { ...clearing, contest: tally({ ...contest, votes }, dwellers) };
 }
 
 // ---------------------------------------------------------------- state
@@ -222,7 +224,7 @@ export function applyClearing(w: WorldState, id: string, op: "open" | "keep" | "
       const already = (p.flags[key] ?? 0) > 0;
       const votedKeep = clearing.contest?.active && clearing.contest.votes?.[id] === "keep";
       if (already && (votedKeep || !clearing.contest?.active)) return speak(w, p, CLEARING_KEPT_AGAIN);
-      const next: WorldState = { ...w, clearing: castVote(clearing, id, "keep") };
+      const next: WorldState = { ...w, clearing: castVote(w, id, "keep") };
       // The readiness is for keeping, once per contest; a stance changed back does not pay twice.
       const me: Player = already
         ? { ...p, choices: { ...p.choices, [C.CLEARING]: "keep" } }
@@ -238,7 +240,7 @@ export function applyClearing(w: WorldState, id: string, op: "open" | "keep" | "
     case "extract": {
       if (!clearing.open) return speak(w, p, CLEARING_NOT_OPEN);
       const pay = Math.max(0, Math.min(CLEARING_EXTRACT, clearing.reserve));
-      const voted = castVote(clearing, id, "extract");
+      const voted = castVote(w, id, "extract");
       // The reserve is finite; past it the stance still counts but the loss costs nothing more.
       let next: WorldState = {
         ...w,

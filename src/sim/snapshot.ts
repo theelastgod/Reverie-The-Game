@@ -6,7 +6,7 @@
  * history marks go only to their owner; failed Passings only to Ruin-sight,
  * Storm stance or the House of Sky.
  */
-import { AOI_RADIUS, AURA_DIM, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
+import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
 import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
 import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type NodeView, type NpcView, type PoiView, type PublicPlayer, type Snap, type WreckageView, type YouView } from "./protocol";
@@ -17,7 +17,6 @@ import { objectiveFor } from "./quests";
 import { NODE_REACH, NPC_REACH, PLAYER_REACH, POI_REACH, WRECKAGE_REACH, verbsFor } from "./interact";
 
 const MARKET_TOP = 12;
-const AURA_PRESENT = 40;
 
 const d2 = (ax: number, ay: number, bx: number, by: number) => (ax - bx) * (ax - bx) + (ay - by) * (ay - by);
 
@@ -131,6 +130,15 @@ export function promptFor(ctx: Ctx): Prompt | null {
   return best ? (best as Candidate).prompt : null;
 }
 
+/** What the Face reads off an Angel's own log: the marks they can see, then the counts, then the last outcome. */
+function kitReadout(p: Player, marks: string[]): string[] {
+  const h = p.history;
+  const out = [...marks, `Passings ${h.passings}. Buried ${h.buried}. Looted ${h.looted}. Fell ${p.deaths} times.`];
+  const last = h.outcomes[h.outcomes.length - 1];
+  if (last) out.push(`The last hour: ${last}.`);
+  return out;
+}
+
 // ---------------------------------------------------------------- the snapshot
 
 export function snapshotFor(w: WorldState, viewerId: string): Snap {
@@ -165,6 +173,7 @@ export function snapshotFor(w: WorldState, viewerId: string): Snap {
     nodes.push(view);
   }
 
+  const facing = kitActive(p, "ruin", now); // the Ruin-angel kit reads the written-back log: theirs and the fallen's
   const wreckage: WreckageView[] = [];
   for (const r of visibleWreckage(w, p)) {
     if (!near(r.x, r.y)) continue;
@@ -173,6 +182,7 @@ export function snapshotFor(w: WorldState, viewerId: string): Snap {
       yours: r.fromId === p.id,
     };
     if (!p.guest) view.bestand = r.bestand;
+    if (facing && r.fromHistory && r.fromSerial !== null) view.passings = r.fromHistory.passings;
     wreckage.push(view);
   }
 
@@ -183,9 +193,10 @@ export function snapshotFor(w: WorldState, viewerId: string): Snap {
   const frozen = Object.entries(w.frozen).filter(([, until]) => until > now).map(([d]) => d);
 
   // Winke never leave for a guest, whatever content did.
-  const you: YouView = p.guest
+  let you: YouView = p.guest
     ? { ...p, wink: "", dialogue: p.dialogue ? { ...p.dialogue, wink: "" } : null }
     : p;
+  if (facing) you = { ...you, kitReadout: kitReadout(p, history.map(m => m.line)) };
 
   return {
     t: "snap",

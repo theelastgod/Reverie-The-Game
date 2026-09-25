@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ANGEL_SUPPLY, MOCK_SIG, TEST_SERIAL } from "./constants";
 import { POSITIONS } from "./map";
 import {
-  HOUSES, MESSENGERS, SCHOOLS, auraSeed, formatSerial, houseFor, houseName, isWinkSeed, kitVerb, messengerFor, messengerName,
+  HOUSES, MESSENGERS, SCHOOLS, auraSeed, formatSerial, historyMarkFor, houseFor, houseName, isWinkSeed, kitVerb, messengerFor, messengerName,
   schoolName, serialHistoryMark, validLink, winkSchoolFor,
 } from "./identity";
 
@@ -91,6 +91,23 @@ describe("validLink", () => {
     expect(validLink(Number.POSITIVE_INFINITY, MOCK_SIG)).toBe(false);
     expect(validLink(42, "wrong")).toBe(false);
     expect(validLink(42, "")).toBe(false);
+  });
+});
+
+describe("historyMarkFor", () => {
+  const empty = { passings: 0, buried: 0, looted: 0, houses: [], outcomes: [] };
+
+  it("writes a serial's log back as a mark in the Care, and nothing for a log with nothing in it", () => {
+    expect(historyMarkFor(42, empty)).toBeNull();
+    expect(historyMarkFor(42, empty, 0)).toBeNull();
+    expect(historyMarkFor(0, { ...empty, buried: 3 })).toBeNull();
+    const buried = historyMarkFor(42, { ...empty, buried: 1 })!;
+    expect(buried).toMatchObject({ id: "history:42", serial: 42, district: "care", x: POSITIONS["history:mark"].x, y: POSITIONS["history:mark"].y });
+    expect(buried.line).toContain("in the ground");
+    expect(historyMarkFor(42, { ...empty, looted: 2, buried: 1 })!.line).toContain("took from the fallen");
+    expect(historyMarkFor(42, empty, 2)!.line).toContain("left the body in the weather");
+    expect(historyMarkFor(42, { ...empty, passings: 1, outcomes: ["absence"] })!.line).toContain("Nothing came");
+    expect(historyMarkFor(42, { ...empty, passings: 2, outcomes: ["absence", "appearance"] })!.line).toContain("A trace came");
   });
 });
 

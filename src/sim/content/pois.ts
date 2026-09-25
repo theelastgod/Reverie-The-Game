@@ -4,13 +4,13 @@
  * sink, once-flag, spoken line, and the Effects the engine applies.
  * Sacred POIs are "spectate" for guests: a refusal, never a lecture.
  */
-import type { Ctx, Effect, PoiConfig, PoiVerb } from "../types";
+import type { Ctx, Effect, PoiConfig, PoiVerb, WinkBySchool } from "../types";
 import {
-  FREEZE_FEE, FUNERAL_COST, GESTELL_BASELINE, INSURE_COST, MAX_HP, OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE,
-  READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, TEST_SERIAL, UPKEEP_COST,
+  AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_PRESENT, FREEZE_FEE, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
+  OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, UPKEEP_COST,
 } from "../constants";
 import { weatherBand } from "../protocol";
-import { C, F, W } from "./ids";
+import { C, F, W, seasonPassingFlag } from "./ids";
 import { WEATHER_LABELS, WEATHER_NAMED } from "./lines";
 
 // ---------------------------------------------------------------- helpers
@@ -22,6 +22,27 @@ const gestellTax = (g: number): number => Math.floor(Math.max(0, Math.min(100, g
 const partyWilling = (ctx: Ctx): boolean => ctx.p.party.nara !== "gone" && ctx.p.party.ord !== "gone";
 const hasCult = (ctx: Ctx): boolean => ctx.p.items.some(i => i.kind === "cult");
 const hallOf = (house: string): string => (house ? `hall-${house}` : "");
+/** The aura the city addresses: the body's, plus what a Glamour paints on. Guests are 0. */
+const addressAura = (ctx: Ctx): number => {
+  const { p, now } = ctx;
+  if (p.guest) return 0;
+  const glamour = !!p.kit && p.kit.verb === "iridescent" && p.kit.until > now;
+  return p.aura + (glamour ? AURA_ADDRESS_GLAMOUR : 0);
+};
+/** Sacred doors: dark to a dark aura, dim in fat weather to anyone the city does not look up at. Guests are refused elsewhere. */
+const sacredOpen = (ctx: Ctx): boolean => {
+  if (ctx.p.guest) return true;
+  const aura = addressAura(ctx);
+  if (aura < AURA_DIM) return false;
+  return !(ctx.w.gestell >= GESTELL_FAT && aura < AURA_PRESENT);
+};
+const SACRED_DARK = "The door does not know you are here. Your aura is dark; the city does not look up. Restore it at the Care shrine.";
+const SACRED_DIM = "Fat weather. The sacred doors dim. The city looks up only at the present. Keep, bury, dwell; come back with more aura or less weather.";
+const sacredRefusal = (ctx: Ctx): string => (addressAura(ctx) < AURA_DIM ? SACRED_DARK : SACRED_DIM);
+/** Whether this Angel has a prior hour standing in the Care: a history mark of their own serial. */
+const hasHistoryMark = (ctx: Ctx): boolean => ctx.p.serial !== null && ctx.w.history.some(m => m.serial === ctx.p.serial);
+/** Once per season the ring takes the rite; the first one is the campaign's Turn. */
+const passedThisSeason = (ctx: Ctx): boolean => (ctx.p.flags[seasonPassingFlag(ctx.w.season.id)] ?? 0) > 0;
 const HOUSE_NAME: Record<string, string> = {
   earth: "House of Earth",
   sky: "House of Sky",
@@ -405,16 +426,18 @@ const WET: PoiConfig[] = [
         when: ctx => has(ctx, F.HALL) && !has(ctx, F.OPERATOR),
         guest: spectate,
         once: F.OPERATOR,
-        say: "You took the private yield. Cold is a current, not a costume. The Organs door is funded. Nara Vale has stopped speaking to you.",
+        say: "You took the private yield. Cold is a current, not a costume. The Organs door is paid for out of it. Nara Vale has stopped speaking to you.",
         effects: [
           { kind: "choice", key: C.OPERATOR, value: "take" },
           { kind: "bestand", delta: OPERATOR_YIELD, earner: "operator" },
+          // The yield funds the door: the desk keeps the door's price back and opens it. The rest is yours, Cold.
+          { kind: "bestand", delta: -M3_DOOR_PRICE, sink: "door" },
           { kind: "current", value: "cold" },
           { kind: "flag", key: F.M3 },
           { kind: "worldFlag", key: W.VESPER_GONE, value: 1 },
           { kind: "party", npc: "nara", state: "waiting" },
           { kind: "poi", id: "operator-desk", state: "closed" },
-          { kind: "notice", text: "Private yield. Sixty Bestand. The Organs door is open.", tone: "hot" },
+          { kind: "notice", text: `Private yield. ${OPERATOR_YIELD} Bestand, ${M3_DOOR_PRICE} of it to the Organs door. The door is open.`, tone: "hot" },
         ],
       },
       {
@@ -445,7 +468,7 @@ const WET: PoiConfig[] = [
         guest: "allow",
         say: ctx => (ctx.p.guest
           ? "A wet street. Painted on the kerb: opt in, seconds, spoils from people. You are not flagged. You are not spoils."
-          : "A wet street. Painted on the kerb: opt in, seconds, spoils from people, not a faucet. Press V to flag. Unbanked and copies drop. Cult and banked stay. Guests are not loot."),
+          : "A wet street. Painted on the kerb: opt in, seconds, spoils from people, not from the street. Press V to flag. Unbanked and copies drop. Cult and banked stay. Guests are not loot. In meltdown weather the street flags itself."),
       },
     ],
   },
@@ -485,10 +508,13 @@ const CARE: PoiConfig[] = [
         key: "Q",
         label: "Face the history",
         choice: "history",
-        when: ctx => ctx.p.serial === TEST_SERIAL && !has(ctx, F.HISTORY),
+        when: ctx => hasHistoryMark(ctx) && !has(ctx, F.HISTORY),
         guest: spectate,
         once: F.HISTORY,
-        say: "A prior hour. You stood here and left the body in the weather. Only you can face this wreckage. The serial remembers. The city does not.",
+        say: ctx => {
+          const mark = ctx.w.history.find(m => m.serial === ctx.p.serial);
+          return `${mark?.line ?? "A prior hour. You stood here and left the body in the weather."} Only you can face this wreckage. The serial remembers. The city does not.`;
+        },
         effects: [
           { kind: "flag", key: F.HISTORY },
           { kind: "wink", text: "The serial remembers. The city does not. That is the only privacy left." },
@@ -718,6 +744,17 @@ const ANNEX: PoiConfig[] = [
 
 // ---------------------------------------------------------------- the Kerb of Hours
 
+/** Last season's hole, by school. Each points at what is not there; none names it. */
+export const LAST_SEASON_WINK: WinkBySchool = {
+  default: "You face the wreckage. The storm is at your back. That is the whole stance.",
+  hint: "A hole where nobody stood is still a door. It was held open for no one.",
+  wreckage: "You face the wreckage. The storm is at your back. That is the whole stance.",
+  omen: "The front came and went while the glass showed a number. The number was not wrong. It was not the weather.",
+  dwelling: "The hole needed people in it. There were none. Rooms do not hold themselves.",
+  process: "The ledger has the season as a line: opened, unheld, closed. The line is honest. Honest is not the same as enough.",
+  surface: "Last season's hole lists for nothing. It is the one thing on the Kerb that could not be copied.",
+};
+
 const forecastLine = (ctx: Ctx): string => {
   const band = weatherBand(ctx.w.gestell);
   const base = WEATHER_LABELS[band];
@@ -787,9 +824,9 @@ const KERB: PoiConfig[] = [
         effects: [
           { kind: "flag", key: F.FAILED },
           { kind: "poi", id: "forecast-glass", state: "lit" },
-          { kind: "wink", text: "You face the wreckage. The storm is at your back. This is not a fight bonus." },
+          { kind: "wink", text: LAST_SEASON_WINK },
           { kind: "readiness", delta: 2 },
-          { kind: "notice", text: "A failed Passing from last season. Ruin-sight would show you the hole itself.", tone: "sky" },
+          { kind: "notice", text: "A failed Passing from last season. Ruin-sight, the Storm and the House of Sky can stand at the hole itself.", tone: "sky" },
         ],
       },
     ],
@@ -808,6 +845,7 @@ const shrine = (id: string, name: string, line: string): PoiConfig => ({
       key: "F",
       label: `Keep upkeep (${UPKEEP_COST})`,
       choice: "keep",
+      when: sacredOpen,
       guest: spectate,
       cost: { bestand: UPKEEP_COST, sink: "upkeep" },
       say: `${line} Five Bestand into the ground. A Wink. Aura thickens a little.`,
@@ -816,6 +854,14 @@ const shrine = (id: string, name: string, line: string): PoiConfig => ({
         { kind: "winke", delta: 1 },
         { kind: "aura", delta: 1 },
       ],
+    },
+    {
+      key: "F",
+      label: "Stand at the shrine",
+      choice: "stand",
+      when: ctx => !sacredOpen(ctx),
+      guest: spectate,
+      say: sacredRefusal,
     },
   ],
 });
@@ -833,7 +879,7 @@ const RING: PoiConfig[] = [
         key: "F",
         label: "Ring the bell",
         choice: "ring",
-        when: ctx => poiState(ctx, "shrine-2") === "kept",
+        when: ctx => poiState(ctx, "shrine-2") === "kept" && sacredOpen(ctx),
         guest: spectate,
         say: "You ring the mute bell. No sound. Every bird on the Ring leaves at once.",
         effects: [
@@ -845,9 +891,11 @@ const RING: PoiConfig[] = [
         key: "F",
         label: "Look at the bell",
         choice: "look",
-        when: ctx => poiState(ctx, "shrine-2") !== "kept",
+        when: ctx => !(poiState(ctx, "shrine-2") === "kept" && sacredOpen(ctx)),
         guest: spectate,
-        say: "A bell with no tongue. The shrine above it is unkept. Keep it and the bell will take a hand.",
+        say: ctx => (poiState(ctx, "shrine-2") !== "kept"
+          ? "A bell with no tongue. The shrine above it is unkept. Keep it and the bell will take a hand."
+          : sacredRefusal(ctx)),
       },
     ],
   },
@@ -860,7 +908,7 @@ const RING: PoiConfig[] = [
         key: "F",
         label: "Face the trace",
         choice: "face",
-        when: ctx => ctx.p.winke >= 2,
+        when: ctx => ctx.p.winke >= 2 && sacredOpen(ctx),
         guest: spectate,
         say: "A place on the stone where the light is a different age. Nothing is here. It was, in the way a door was open. You face it. That is the whole visit.",
         effects: [
@@ -873,9 +921,11 @@ const RING: PoiConfig[] = [
         key: "F",
         label: "Look",
         choice: "look",
-        when: ctx => ctx.p.winke < 2,
+        when: ctx => !(ctx.p.winke >= 2 && sacredOpen(ctx)),
         guest: spectate,
-        say: "A faint place on the stone. You do not have the Winke to see what it is a trace of. Keep two shrines.",
+        say: ctx => (ctx.p.winke < 2
+          ? "A faint place on the stone. You do not have the Winke to see what it is a trace of. Keep two shrines."
+          : sacredRefusal(ctx)),
       },
     ],
   },
@@ -888,7 +938,7 @@ const RING: PoiConfig[] = [
         key: "F",
         label: "Open the vault",
         choice: "open",
-        when: hasCult,
+        when: ctx => hasCult(ctx) && sacredOpen(ctx),
         guest: spectate,
         say: "The vault takes the cult object in your hand as a key and gives it back. Inside: shelves of things that have never been listed. Yours goes on a shelf in your mind and nowhere else.",
         effects: [
@@ -900,9 +950,11 @@ const RING: PoiConfig[] = [
         key: "F",
         label: "Try the door",
         choice: "try",
-        when: ctx => !hasCult(ctx),
+        when: ctx => !(hasCult(ctx) && sacredOpen(ctx)),
         guest: spectate,
-        say: "Sealed. The lock wants a cult object: something bound, something that does not list. You are carrying only things that can be in two hands.",
+        say: ctx => (!hasCult(ctx)
+          ? "Sealed. The lock wants a cult object: something bound, something that does not list. You are carrying only things that can be in two hands."
+          : sacredRefusal(ctx)),
       },
     ],
   },
@@ -1071,17 +1123,18 @@ const CLEARING: PoiConfig[] = [
         key: "F",
         label: "Stand at the ring",
         choice: "look",
-        when: ctx => (!has(ctx, F.MORTALITY) || !partyWilling(ctx)) && !has(ctx, F.PREPARE) && !has(ctx, F.PASSING),
+        when: ctx => (!has(ctx, F.MORTALITY) || !partyWilling(ctx)) && !has(ctx, F.PREPARE) && !passedThisSeason(ctx),
         guest: spectate,
         say: ctx => (!has(ctx, F.MORTALITY)
           ? "A ring in the asphalt. Keep the hole. The hour is not a character. A mortality act is required first: watch, a burial, or a last word."
           : "A ring in the asphalt. The party will not stand. Someone walked. You cannot force the hour alone."),
       },
       {
+        // Once prepared, the ring is the rest of life: keep or extract whenever a hole is open, one stance per contest.
         key: "E",
         label: "Keep the hole",
         choice: "keep",
-        when: ctx => has(ctx, F.PREPARE) && !has(ctx, F.PASSING),
+        when: ctx => has(ctx, F.PREPARE),
         guest: spectate,
         effects: [{ kind: "clearing", op: "keep" }],
       },
@@ -1089,15 +1142,16 @@ const CLEARING: PoiConfig[] = [
         key: "Q",
         label: "Extract the hole",
         choice: "extract",
-        when: ctx => has(ctx, F.PREPARE) && !has(ctx, F.PASSING),
+        when: ctx => has(ctx, F.PREPARE),
         guest: spectate,
         effects: [{ kind: "clearing", op: "extract" }],
       },
       {
+        // The rite is seasonal: the first Passing is the Turn; every season after, a prepared Angel may stand for it again.
         key: "F",
         label: "The Passing",
         choice: "pass",
-        when: ctx => has(ctx, F.PREPARE) && !has(ctx, F.PASSING),
+        when: ctx => has(ctx, F.PREPARE) && !passedThisSeason(ctx),
         guest: spectate,
         // The engine routes "pass" on clearing-ring to clearing.applyPassing; the effect below is the content-side signal.
         effects: [{ kind: "passing" }],
@@ -1106,7 +1160,7 @@ const CLEARING: PoiConfig[] = [
         key: "F",
         label: "Stand in what is left",
         choice: "after",
-        when: ctx => has(ctx, F.PASSING),
+        when: passedThisSeason,
         guest: spectate,
         say: ctx => {
           switch (ctx.p.choices[C.PASSING]) {

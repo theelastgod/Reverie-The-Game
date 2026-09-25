@@ -58,11 +58,14 @@ vi.mock("./clearing", () => ({
 }));
 vi.mock("./quests", () => ({ tickQuests: (w: WorldState) => w }));
 
-import { AURA_DRIFT, BODY_R, GESTELL_START, MAX_HP, NOTICE_TTL, RESTRAINT_START, TILE, UNBANKED_DROP, WRECKAGE_TTL } from "./constants";
+import {
+  AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_DRIFT, AURA_PRESENT, BODY_R, GESTELL_FAT, GESTELL_MELTDOWN, GESTELL_START, MAX_HP, NOTICE_TTL, RESTRAINT_START,
+  SEASON_LENGTH, TILE, UNBANKED_DROP, WRECKAGE_TTL,
+} from "./constants";
 import { POI_STATES } from "./content/ids";
 import { auraSeed, formatSerial } from "./identity";
-import { circleHitsWalls, districtAt, ENEMY_SPAWNS, GUEST_SPAWN, NPC_HOMES } from "./map";
-import { emptyWorld, killPlayer, nextRand, notice, pushNews, say, spawnGuest, stepPlayer, tickWorld, updateDistrict, wink } from "./world";
+import { circleHitsWalls, districtAt, ENEMY_SPAWNS, FAILED_PASSING_MARKS, GUEST_SPAWN, NPC_HOMES } from "./map";
+import { addressAura, canSeeWink, emptyWorld, killPlayer, nextRand, notice, pushNews, say, spawnGuest, stepPlayer, tickWorld, updateDistrict, wink } from "./world";
 
 const NONE: Intent = { up: false, down: false, left: false, right: false };
 const DOWN: Intent = { ...NONE, down: true };
@@ -100,6 +103,17 @@ describe("emptyWorld", () => {
     expect(w.rng).toBe(0x9e3779b9);
     expect(w.clearing.reserve).toBe(40);
     expect(w.houses.standing.mortals).toBe(0);
+  });
+
+  it("starts with last season's failed Passing already in the world, one hole per mark", () => {
+    const w = emptyWorld();
+    expect(w.failed.map(f => f.id)).toEqual(FAILED_PASSING_MARKS.map(m => m.id));
+    for (const f of w.failed) {
+      expect(f.season).toBe(0);
+      expect(f.line).toContain("Last season");
+      const mark = FAILED_PASSING_MARKS.find(m => m.id === f.id)!;
+      expect([f.x, f.y, f.district]).toEqual([mark.x, mark.y, mark.district]);
+    }
   });
 
   it("spawns a guest unsealed at the guest spawn", () => {
@@ -260,6 +274,78 @@ describe("tickWorld", () => {
     let low = { ...emptyWorld(), gestell: 10 };
     low = run(low, 60);
     expect(low.gestell).toBeGreaterThan(10);
+  });
+
+  it("names the climate band on the marquee once when the weather crosses into it", () => {
+    let w = tickWorld(emptyWorld(), 0.05);
+    expect(w.news).toEqual([]); // mixed is the default and says nothing
+    w = tickWorld({ ...w, gestell: 95 }, 0.05);
+    expect(w.news.map(n => n.text)).toEqual(["Meltdown weather. Passings fail unless a Clearing is held. The street flags itself."]);
+    w = tickWorld(w, 0.05);
+    expect(w.news).toHaveLength(1);
+    w = tickWorld({ ...w, gestell: 80 }, 0.05);
+    expect(w.news[1].text).toContain("Fat weather");
+    w = tickWorld({ ...w, gestell: 10 }, 0.05);
+    expect(w.news[2].text).toContain("Clear weather");
+    w = tickWorld({ ...w, gestell: 50 }, 0.05);
+    expect(w.news).toHaveLength(3);
+  });
+
+  it("rolls the season: the Clearing is asphalt again, the omens are spent, the ring closes, seeds survive, last season's hole stays in view", () => {
+    let w = emptyWorld();
+    w = {
+      ...w,
+      now: 10,
+      season: { id: 1, startedAt: 0 },
+      flags: { "omen:sky": 1, extractions: 4 },
+      clearing: { ...w.clearing, open: true, reserve: 3, seeds: ["nave-node-1"], openedAt: 5, contest: { active: false, keep: 1, extract: 0, endsAt: 9, votes: { a: "keep" } }, lastOutcome: "kept" },
+      pois: { ...w.pois, "clearing-ring": { state: "held", by: "a", at: 5, count: 2 } },
+      failed: [...w.failed, { id: "failed-1", x: 1, y: 1, district: "clearing", season: 1, line: "This one." }],
+    };
+    const before = tickWorld(w, 0.05);
+    expect(before.season.id).toBe(1);
+    const rolled = tickWorld({ ...before, now: SEASON_LENGTH }, 0.05);
+    expect(rolled.season.id).toBe(2);
+    expect(rolled.season.startedAt).toBeCloseTo(SEASON_LENGTH + 0.05);
+    expect(rolled.clearing).toMatchObject({ open: false, reserve: 40, contest: null, seeds: ["nave-node-1"], lastOutcome: "" });
+    expect(rolled.pois["clearing-ring"].state).toBe("closed");
+    expect(rolled.flags["omen:sky"]).toBeUndefined();
+    expect(rolled.flags.extractions).toBe(4);
+    // only the season that just ended keeps its hole
+    expect(rolled.failed).toEqual([{ id: "failed-1", x: 1, y: 1, district: "clearing", season: 1, line: "This one." }]);
+    expect(rolled.news.some(n => n.text.startsWith("Season 2"))).toBe(true);
+    // a season with no failure leaves the older hole in view
+    const quiet = tickWorld({ ...rolled, now: SEASON_LENGTH * 2 + 1 }, 0.05);
+    expect(quiet.season.id).toBe(3);
+    expect(quiet.failed).toEqual(rolled.failed);
+  });
+});
+
+describe("address and the weather on a Wink", () => {
+  it("addressAura is the body's aura plus a Glamour; a Glamour lets a dim Angel be addressed", () => {
+    const a = angel("a", 42, { aura: AURA_DIM - 2 });
+    expect(addressAura(a, 0)).toBe(AURA_DIM - 2);
+    expect(canSeeWink(a, 0)).toBe(false);
+    const glamoured = { ...a, kit: { verb: "iridescent" as const, until: 10 } };
+    expect(addressAura(glamoured, 0)).toBe(AURA_DIM - 2 + AURA_ADDRESS_GLAMOUR);
+    expect(canSeeWink(glamoured, 0)).toBe(true);
+    expect(canSeeWink(glamoured, 11)).toBe(false);
+    expect(addressAura({ ...spawnGuest("g"), aura: 50 }, 0)).toBe(0);
+  });
+
+  it("fat weather dims the late Winke for anyone the city does not look up at; meltdown blinds the House of Divinities", () => {
+    const early = angel("a", 42, { aura: 20, movement: 2 });
+    const late = { ...early, movement: 3 as const };
+    expect(canSeeWink(late, 0, GESTELL_FAT - 1)).toBe(true);
+    expect(canSeeWink(late, 0, GESTELL_FAT)).toBe(false);
+    expect(canSeeWink(early, 0, GESTELL_FAT)).toBe(true);
+    expect(canSeeWink({ ...late, aura: AURA_PRESENT }, 0, GESTELL_FAT)).toBe(true);
+    expect(wink(late, "private", 3, GESTELL_FAT).wink).toBe("");
+    expect(wink(late, "private", 3).wink).toBe("private");
+    const divine = angel("d", 4, { aura: 60, house: "divinities", movement: 4 });
+    expect(canSeeWink(divine, 0, GESTELL_MELTDOWN - 1)).toBe(true);
+    expect(canSeeWink(divine, 0, GESTELL_MELTDOWN)).toBe(false);
+    expect(canSeeWink({ ...divine, house: "earth" }, 0, GESTELL_MELTDOWN)).toBe(true);
   });
 });
 
