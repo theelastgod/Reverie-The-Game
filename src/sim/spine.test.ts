@@ -413,15 +413,42 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   expectStep(w, Q.M2, 1);
   expect(me(w).flags[F.SHRINE]).toBe(1);
 
-  w = tick(interact(goTo(w, ME, "hall-mortals"), ME, "hall-mortals", "read"));
+  // Pim Ashe at the wake: the Care's own book
+  expect(snapshotFor(w, ME).objective).toMatchObject({ step: "sexton", target: POSITIONS["home:sexton"] });
+  w = talkTo(w, ME, "sexton");
+  expect(me(w).dialogue?.node).toBe("wake");
+  expect(me(w).dialogue?.text).toContain("You are in the book now");
+  w = closeAll(choose(w, ME, "lie"), ME);
+  w = tick(w);
   expectStep(w, Q.M2, 2);
+  expect(me(w).flags[F.TALKED_SEXTON]).toBe(1);
+  expect(me(talkTo(w, ME, "sexton")).dialogue?.node, "met once at the wake, then his hub").toBe("hub");
+  w = closeAll(w, ME);
+
+  w = tick(interact(goTo(w, ME, "hall-mortals"), ME, "hall-mortals", "read"));
+  expectStep(w, Q.M2, 3);
   expect(me(w).flags[F.HALL]).toBe(1);
   expect(w.pois["hall-mortals"].state).toBe("lit");
   expect(me(w).wink, "an Angel sees the Wink").not.toBe("");
 
+  // Corvin Slate in the corridor: say what you want the weather to be, then the desk remembers
+  expect(snapshotFor(w, ME).objective).toMatchObject({ step: "officer", target: POSITIONS["home:officer"] });
+  w = talkTo(w, ME, "officer");
+  expect(me(w).dialogue?.node).toBe("corridor");
+  expect(me(w).dialogue?.choices.map(c => c.id)).toEqual(["held", "hungry"]);
+  const said = o.freeze === "sign" ? "hungry" : "held"; // the desk contradicts the corridor either way
+  w = closeAll(choose(w, ME, said), ME);
+  w = tick(w);
+  expectStep(w, Q.M2, 4);
+  expect(me(w).flags[F.TALKED_OFFICER]).toBe(1);
+  expect(me(w).choices[C.ANNEX]).toBe(said);
+  expect(me(talkTo(w, ME, "officer")).dialogue?.node, "stopped once in the corridor, then his hub").toBe("hub");
+  w = closeAll(w, ME);
+
   const purse = me(w).bestand;
   w = tick(interact(goTo(w, ME, "safety-desk"), ME, "safety-desk", o.freeze));
-  expectStep(w, Q.M2, 3);
+  expectStep(w, Q.M2, 5);
+  expect(me(w).heard, "the desk keeps both").toContain(`You said ${said} in the corridor.`);
   if (o.freeze === "sign") {
     expect(me(w).choices[C.FREEZE]).toBe("signed");
     expect(me(w).bestand).toBe(purse - FREEZE_FEE);
@@ -439,12 +466,12 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   expect(history.step).toBe("history");
   expect(history.target).toEqual(POSITIONS["history:7777"]);
   w = tick(interact(goTo(w, ME, "care-shrine"), ME, "care-shrine", "history"));
-  expectStep(w, Q.M2, 4);
+  expectStep(w, Q.M2, 6);
   expect(me(w).flags[F.HISTORY]).toBe(1);
   expect(snapshotFor(w, ME).history.map(m => m.serial)).toEqual([TEST_SERIAL]);
 
   w = tick(interact(goTo(w, ME, "listing-board"), ME, "listing-board", "read"));
-  expectStep(w, Q.M2, 5);
+  expectStep(w, Q.M2, 7);
   expect(me(w).flags[F.BOARD]).toBe(1);
   expect(w.flags[W.CLEARING_LISTED]).toBe(1);
   expect(w.pois["listing-board"].state).toBe("clearing-listed");
@@ -474,7 +501,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
     expect(snapshotFor(w, ME).npcs.some(n => n.id === "vesper")).toBe(false);
   } else {
     w = tick(interact(goTo(w, ME, "operator-desk"), ME, "operator-desk", "refuse"));
-    expectStep(w, Q.M2, 6);
+    expectStep(w, Q.M2, 8);
     expect(me(w).choices[C.OPERATOR]).toBe("refuse");
     expect(me(w).flags[F.M3]).toBeUndefined();
     expect(me(w).current).toBe("");
@@ -656,7 +683,7 @@ describe("the private yield is decided once", () => {
 describe("the spine, played through", () => {
   it("has four movements of the authored length", () => {
     expect(questById(Q.M1)!.steps.length).toBe(15);
-    expect(questById(Q.M2)!.steps.length).toBe(7);
+    expect(questById(Q.M2)!.steps.length).toBe(9);
     expect(questById(Q.M3)!.steps.length).toBe(7);
     expect(questById(Q.M4)!.steps.length).toBe(4);
   });

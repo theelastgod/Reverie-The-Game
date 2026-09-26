@@ -57,14 +57,17 @@ const ROUTE = {
 // the operator's room (door at 64,47).
 const T2 = {
   shrine: at(17, 61),          // care-shrine; the wake
+  sexton: at(18, 64),          // home:sexton, Pim Ashe, beside the shrine
   hall: at(7, 71),             // hall-mortals (serial 7777 is House of Mortals)
+  officer: at(17, 13),         // home:officer, Corvin Slate, in the Annex corridor
   desk: at(17, 6),             // safety-desk, the Annex
   board: at(58, 38),           // listing-board, the Wet Grid
   operator: at(64, 50),        // operator-desk; Vesper stands at 65,50
 };
 const ROUTE2 = {
   toHall: [at(13, 63), at(13, 71), at(9, 71)],
-  hallToDesk: [at(13, 71), at(13, 63), at(17, 58), at(17, 50), at(17, 30), at(17, 27), at(17, 11), at(17, 7)],
+  hallToOfficer: [at(13, 71), at(13, 63), at(17, 58), at(17, 50), at(17, 30), at(17, 27), at(17, 15)],
+  officerToDesk: [at(17, 11), at(17, 7)],
   deskToShrine: [at(17, 11), at(17, 27), at(17, 30), at(17, 50), at(17, 58), at(17, 62)],
   shrineToBoard: [at(17, 58), at(17, 50), at(17, 42), at(35, 42), at(38, 41), at(58, 41), at(58, 39)],
   boardToOperator: [at(58, 41), at(64, 44), at(64, 48), at(64, 50)],
@@ -443,6 +446,9 @@ try {
     await stand(me, T2.shrine);
     await useVerb(me, 'care-shrine', byKey('F'), () => !!you(me).flags.shrine, 'rest at the shrine');
     assert.equal(you(me).house, 'mortals', 'serial 7777 is House of Mortals');
+    phase('II talk: sexton');
+    await stand(me, T2.sexton, 72);
+    await converse(me, 'sexton', 'talked:sexton');
     phase('II walk: hall');
     await walk(me, ROUTE2.toHall);
     await stand(me, T2.hall);
@@ -450,15 +456,24 @@ try {
     await useVerb(me, 'hall-mortals', byKey('F'), () => !!you(me).flags.hall, 'read the hall plaque');
     assert.ok(you(me).wink, 'an Angel sees the Wink');
 
-    // The freeze desk in the Annex: refuse (it costs nothing and keeps the Passing possible).
+    // The Officer stops you in the Annex corridor: say what you want the weather to be (the bot says held).
     phase('II walk: annex');
-    await walk(me, ROUTE2.hallToDesk);
-    await stand(me, T2.desk);
+    await walk(me, ROUTE2.hallToOfficer);
+    await stand(me, T2.officer, 72);
     assert.equal(me.snap.district, 'annex', 'through the Nave to the Annex');
+    read.decisions++;
+    phase('II talk: officer');
+    await converse(me, 'officer', 'talked:officer');
+    assert.equal(you(me).choices['annex:weather'], 'held', 'told the Officer: held');
+    // Then the freeze desk: refuse (it costs nothing and keeps the Passing possible); the desk keeps both answers.
+    phase('II walk: desk');
+    await walk(me, ROUTE2.officerToDesk);
+    await stand(me, T2.desk);
     read.decisions++;
     phase('II verb: freeze');
     await useVerb(me, 'safety-desk', byKey('Q'), () => !!you(me).flags.freeze, 'refuse the freeze');
     assert.equal(you(me).choices.freeze, 'refused', 'the freeze was refused');
+    assert.match(you(me).heard, /You said held in the corridor/, 'the desk remembers the corridor');
 
     // The history: a prior hour of this serial stands in the Care; Q at the shrine faces it.
     phase('II walk: shrine again');
@@ -488,7 +503,7 @@ try {
 
     phase('end II');
     reportTwo(T1, read1, from);
-    console.log('PASS: Movement II — the shrine, the hall, the freeze refused, the history faced, the board read, the private yield taken → Movement III');
+    console.log('PASS: Movement II — the shrine, Pim Ashe at the wake, the hall, Corvin Slate in the corridor, the freeze refused, the history faced, the board read, the private yield taken → Movement III');
   }
 
   clearTimeout(deadline);

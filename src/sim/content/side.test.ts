@@ -485,7 +485,7 @@ describe("secondary cast", () => {
       expect(def.name.length).toBeGreaterThan(0);
       expect(def.role.length).toBeGreaterThan(0);
       expect(Object.keys(def.nodes).length, `${id} node count`).toBeGreaterThanOrEqual(6);
-      expect(Object.keys(def.nodes).length, `${id} node count`).toBeLessThanOrEqual(12);
+      expect(Object.keys(def.nodes).length, `${id} node count`).toBeLessThanOrEqual(14); // the Officer and the sexton each carry a Movement II beat besides their hours
     }
   });
 

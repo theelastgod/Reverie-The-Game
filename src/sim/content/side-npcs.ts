@@ -6,7 +6,7 @@
  */
 import type { Ctx, DialogueChoice, DialogueNode, Effect, NpcDef, NpcState, Player } from "../types";
 import { NPC_HOMES } from "../map";
-import { F } from "./ids";
+import { C, F } from "./ids";
 import { SF, SIDE_BY_ID, SIDE_PLACES, SQ, has, offerKey, offered, stepOf } from "./side";
 
 // ---------------------------------------------------------------- helpers
@@ -72,7 +72,8 @@ const officer: NpcDef = {
     }
     return null;
   },
-  entry: ({ p }) => (has(p, SF.OFFICER_MET) ? "hub" : "greet"),
+  // Movement II: an Angel who has read their hall and not yet been stopped in the corridor is stopped, whatever they said to him before.
+  entry: ({ p }) => (angel(p) && has(p, F.HALL) && !has(p, F.TALKED_OFFICER) ? "corridor" : has(p, SF.OFFICER_MET) ? "hub" : "greet"),
   nodes: {
     greet: node({
       id: "greet",
@@ -83,6 +84,27 @@ const officer: NpcDef = {
         { id: "work", label: "Is there paper to carry?", next: "hub" },
         leave,
       ],
+    }),
+    corridor: node({
+      id: "corridor",
+      text: ({ p }) => `${has(p, SF.OFFICER_MET) ? "He is in the corridor this time, between the gate and the desk, and he does not step aside." : "\"Corvin Slate. Officer of Safety.\" He is in the corridor between the gate and the desk, and he does not step aside."} "You have read your hall. Good. The desk ahead will sell you a freeze: fifteen Bestand, the Nave holds for half an hour, nobody goes under in it. I sign them. I will tell you what the plaque does not, because the desk will not ask: while the Nave holds, the Passing goes hungry. A held district feeds nothing. Peace is a kind of weather.\" He waits. "Tell me what you want the weather to be. Then go and sign, or do not."`,
+      wink: "He is asking you to say it out loud so that the form has a witness. The form is the point. The witness is you.",
+      effects: [flag(SF.OFFICER_MET), tally(SF.OFFICER_VISITS)],
+      choices: [
+        { id: "held", label: "I want it held.", next: "corridor-held" },
+        { id: "hungry", label: "Hungry is honest.", next: "corridor-hungry" },
+      ],
+    }),
+    "corridor-held": node({
+      id: "corridor-held",
+      text: "\"Most do.\" He writes nothing down; he already has your serial. \"I will have the form ready. Fifteen Bestand. If you change your mind at the desk, Safety keeps that too.\" He steps aside.",
+      effects: [flag(F.TALKED_OFFICER), { kind: "choice", key: C.ANNEX, value: "held" }],
+    }),
+    "corridor-hungry": node({
+      id: "corridor-hungry",
+      text: "\"Then you and I disagree, and I would rather know it here than read it off a form.\" He steps aside. \"The desk will take your refusal and file it beside the signatures. It keeps those too. It is what keeping means to us.\"",
+      wink: "The other honest answer, said back to him. It costs nothing here. It costs something at the desk.",
+      effects: [flag(F.TALKED_OFFICER), { kind: "choice", key: C.ANNEX, value: "hungry" }],
     }),
     safety: node({
       id: "safety",
@@ -353,12 +375,24 @@ const sexton: NpcDef = {
   sprite: "nara",
   party: false,
   personal: (ctx) => (finished(ctx.p, SQ.LEDGER) ? { ...place("sexton-garden"), state: "garden" } : null),
-  entry: ({ p }) => (has(p, SF.SEXTON_MET) ? "hub" : "greet"),
+  // Movement II: an Angel who has just woken under the shrine is met at the wake, whatever they said to him before.
+  entry: ({ p }) => (angel(p) && has(p, F.UNDER) && !has(p, F.TALKED_SEXTON) ? "wake" : has(p, SF.SEXTON_MET) ? "hub" : "greet"),
   nodes: {
     greet: node({
       id: "greet",
       text: "\"Pim Ashe. I dig for Nara Vale.\" He is younger than the shovel. \"Every grave in the Care has a name. She says so. So it is so.\" The ledger corner in his coat says something else.",
       effects: [flag(SF.SEXTON_MET), tally(SF.SEXTON_VISITS)],
+      choices: [
+        { id: "lie", label: "Every grave has a name?", next: "lie" },
+        { id: "work", label: "Is there digging?", next: "hub" },
+        leave,
+      ],
+    }),
+    wake: node({
+      id: "wake",
+      text: ({ p }) => `${has(p, SF.SEXTON_MET) ? "He was digging when you woke; he does not stop." : "\"Pim Ashe. I dig for Nara Vale.\" He was digging when you woke; he does not stop."} "You are in the book now. Name, hour, the district you went under from. Angels wake here and get a line. Guests stop at the lip and get nothing, which is also a kind of line." He wipes the shovel. "Every grave in the Care has a name. She says so. So it is so." The ledger corner in his coat says something else.`,
+      wink: "Twelve numbers in a ledger he keeps because she will not. You are the newest line in a book that only gets shorter when someone does their job.",
+      effects: [flag(F.TALKED_SEXTON), flag(SF.SEXTON_MET), tally(SF.SEXTON_VISITS)],
       choices: [
         { id: "lie", label: "Every grave has a name?", next: "lie" },
         { id: "work", label: "Is there digging?", next: "hub" },

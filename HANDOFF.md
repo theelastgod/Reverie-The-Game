@@ -144,6 +144,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   80 still fall behind (interval mean 117 ms). Next levers, in
   `.rebuild/ZONES.md`: the 36-character ids are now about a third of a
   crowd's fast frame, `you` still rides whole, then zones.
+- Movement II beats (2026-09-26, backlog 6): two spine steps on the route.
+  `sexton`: Pim Ashe beside the shrine meets an Angel at the wake (a `wake`
+  node whatever they said to him before: you are a line in the Care's book,
+  guests get nothing, the twelve numbers in his coat), then his hours as
+  before. `officer`: Corvin Slate stops an Angel who has read their hall in
+  the Annex corridor (`corridor`): what a freeze buys in Safety's own
+  words, and a choice, `C.ANNEX` held or hungry, that the desk remembers:
+  a signature after hungry or a refusal after held gets "You said … in the
+  corridor. Safety keeps both." Flags `F.TALKED_SEXTON`, `F.TALKED_OFFICER`;
+  Movement II is nine steps. The smoke's Movement II talks to both and
+  asserts the desk's line.
 - Movement II over the wire (2026-09-26): `scripts/smoke-campaign.mjs
   --movement=2` (`npm run test:campaign:2`) goes on from the wake: rests at
   the Care shrine, reads the House of Mortals hall, walks the Nave to the
@@ -302,10 +313,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   latest measure (after the courier beat, a full run on a reused world):
   bot 67 s (walk 48 s, three fights 16 s, talk 1.8 s), 1524 words shown, 8
   decisions, first playthrough estimate 16.7 min. With `--movement=2`
-  (2026-09-26): Movement II PASS, bot 68 s (walk 67 s: hall 6 s, the Annex
-  21 s, back to the shrine 17 s, the board 19 s, the operator 5 s; verbs and
-  talk 0.6 s), 664 words (dialogue 131, spoken 262, journal 176, notices
-  95), 2 decisions, estimate 7.0 min on the spine alone.
+  (2026-09-26, after the sexton and Officer beats): Movement II PASS, bot
+  69 s (walk 68 s: hall 6 s, the Annex 19 s, the desk 2 s, back to the
+  shrine 16 s, the board 19 s, the operator 5 s; talk and verbs 1.8 s), 1196
+  words (dialogue 492, spoken 382, journal 194, notices 128), 3 decisions,
+  estimate 10.7 min on the spine alone (was 664 words, 2 decisions, 7.0 min
+  before the beats).
 - Writeback log: 4 diff tests (every kind, unchanged world, a body that only
   appeared, rolling news), 4 sink tests (batches, overflow, a failing D1
   keeps the queue and warns once a minute, one flush in flight), 3 session
@@ -426,22 +439,19 @@ they are discovered; keep this list honest.
    a run right after another may note it was not met. Nothing further is
    planned here; re-measure after any change to Movement I and keep the
    numbers here.
-6. **Movement II density.** Measured 2026-09-26 over the wire: 7.0 min on
-   the spine alone (the brief budgets about an hour per movement, with the
-   MMO carrying most of it), 664 words, two decisions (the freeze, the
-   yield), and 67 s of bot walking against 0.6 s of verbs, of which the
-   Annex round trip is 38 s with nothing said on the way. The route passes
-   the Officer of Safety (17,13) in the Annex corridor, the tax window
-   (7,22), and the sexton (18,64) beside the shrine, none of them on the
-   spine. Candidates, in the order they are met: a line from the sexton at
-   the wake (the funeral street's ledger, a hint at the twelve names); the
-   Officer stopping the body in the corridor on the way to the desk (what a
-   freeze buys, in the Annex's own words, a decision about the tax window);
-   the history mark itself spoken as a reversal rather than a flag; the
-   board with a second listing that moves the market. Each is a spine step
-   or a gated line, with the campaign smoke's Movement II measure kept here
-   after every change. Target: 12–15 min on the spine with four or five
-   decisions.
+6. **Movement II density, the rest.** Measured 2026-09-26 over the wire
+   after the sexton and Officer beats: 10.7 min on the spine alone (was
+   7.0), 1196 words, three decisions (the corridor, the freeze, the yield);
+   68 s of bot walking, the Annex round trip still 35 s of it. Target: 12–15
+   min with four or five decisions. Candidates left, in the order they are
+   met: the tax window (7,22) in the Annex as a decision on the way back
+   (pay the tithe now against the hall's number, or let it ride and hear it
+   at the Cold desk later); the history mark spoken as a reversal (the
+   shrine's Q says what the prior hour did, in the mark's own line, and asks
+   whether to keep it); the board with a second listing that moves the
+   market, so the "resistance" has a price you can watch. Each is a spine
+   step or a gated line, with the campaign smoke's Movement II measure kept
+   here after every change.
 7. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

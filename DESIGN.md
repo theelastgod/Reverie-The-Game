@@ -198,9 +198,12 @@ number under the word for everyone) → the going-under threshold: guests lock
 ("A guest cannot prepare the ground."), Angels die-as-death and wake in the
 Care.
 
-**II — Techno-Feudal.** The Care shrine → your House hall (tax, who owns the
-nodes) → Safety desk: sign a freeze (protects the Nave, starves the Passing) or
-refuse → serial history as wreckage only you see → the listing board: the
+**II — Techno-Feudal.** The Care shrine → Pim Ashe at the wake (the Care's
+own book; you are a line in it) → your House hall (tax, who owns the nodes) →
+Corvin Slate in the Annex corridor: say what you want the weather to be, held
+or hungry → Safety desk: sign a freeze (protects the Nave, starves the
+Passing) or refuse; the desk says so when the signature contradicts the
+corridor → serial history as wreckage only you see → the listing board: the
 "resistance" is already pricing Clearings → Vesper Hale: take the private yield
 (Cold; opens the Organs door with Bestand) or refuse (Readiness; opens it through
 the wreckage garden burial).

@@ -699,7 +699,8 @@ const ANNEX: PoiConfig[] = [
         guest: spectate,
         cost: { bestand: FREEZE_FEE, sink: "freeze" },
         once: F.FREEZE,
-        say: "You signed the freeze. Fifteen Bestand. The Nave holds. The Passing will go hungry. Peace is a kind of weather.",
+        say: ctx => "You signed the freeze. Fifteen Bestand. The Nave holds. The Passing will go hungry. Peace is a kind of weather."
+          + (chose(ctx, C.ANNEX, "hungry") ? " You said hungry in the corridor. The signature says otherwise. Safety keeps both." : ""),
         effects: [
           { kind: "choice", key: C.FREEZE, value: "signed" },
           { kind: "freeze", district: "nave", seconds: 1800 },
@@ -715,7 +716,8 @@ const ANNEX: PoiConfig[] = [
         when: ctx => has(ctx, F.HALL) && !has(ctx, F.FREEZE),
         guest: spectate,
         once: F.FREEZE,
-        say: "You refused. The Nave stays a mouth. The Passing stays possible. The clerk stamps a form that says you were here and did nothing, which is the form for that.",
+        say: ctx => "You refused. The Nave stays a mouth. The Passing stays possible. The clerk stamps a form that says you were here and did nothing, which is the form for that."
+          + (chose(ctx, C.ANNEX, "held") ? " You said held in the corridor. The refusal says otherwise. Safety keeps both." : ""),
         effects: [
           { kind: "choice", key: C.FREEZE, value: "refused" },
           { kind: "readiness", delta: 4 },

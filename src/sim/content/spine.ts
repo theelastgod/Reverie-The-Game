@@ -210,6 +210,15 @@ const M2_STEPS: QuestStep[] = [
     onComplete: [notice("The Care does not keep you. It only lets you be mortal in a warehouse.")],
   },
   {
+    id: "sexton",
+    title: "Counted here",
+    detail: "Pim Ashe digs beside the shrine. F speaks. The Care has a book too; ask him what he counts in it.",
+    target: "home:sexton",
+    plate: "plate-burial.jpg",
+    done: ctx => has(ctx, F.TALKED_SEXTON),
+    onComplete: [notice("The Care keeps a ledger. It is shorter than Safety's and it gets shorter when someone does their job.")],
+  },
+  {
     id: "hall",
     title: "Who owns the nodes",
     detail: ctx => `Read your House hall plaque with F. ${ctx.p.house === "mortals" ? "The House of Mortals hall is in the Care, west of the garden." : ctx.p.house === "sky" ? "The House of Sky hall is on the Kerb of Hours." : ctx.p.house === "divinities" ? "The House of Divinities hall is on the Gold Ring." : ctx.p.house === "earth" ? "The House of Earth hall is in the Organs; the door opens in Movement III, so tithe later." : "Your hall is where your House stands."} The city has owners even here.`,
@@ -220,6 +229,15 @@ const M2_STEPS: QuestStep[] = [
     onComplete: ctx => (has(ctx, F.HALL)
       ? [notice("The tax is climate. It will never make you hit harder.")]
       : [{ kind: "flag", key: F.HALL }, notice("House of Earth. Your hall is in the Organs. The tax is read from the window for now.")]),
+  },
+  {
+    id: "officer",
+    title: "The other honest answer",
+    detail: "Corvin Slate, Officer of Safety, stands in the Annex corridor between the gate and the desk. F. He will say what a freeze buys before the desk sells you one. Tell him what you want the weather to be.",
+    target: "home:officer",
+    plate: "safety-annex.jpg",
+    done: ctx => has(ctx, F.TALKED_OFFICER),
+    onComplete: ctx => [notice(chose(ctx, C.ANNEX, "held") ? "You told Safety you want it held. The desk will have the form ready." : "You told Safety hungry is honest. The desk keeps refusals too.", "ink")],
   },
   {
     id: "freeze",
