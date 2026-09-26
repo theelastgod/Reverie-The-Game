@@ -202,6 +202,20 @@ export class LoopSlot { constructor(parent, className, before?); set(target | nu
 export function overlayLoop(root, target, ms = 6000): HTMLVideoElement | null; // a full-screen loop for a moment
 ```
 
+## protocol v3 frames (protocol.ts, frames.ts; the server splits, the client folds)
+```ts
+export const PROTOCOL_VERSION = 3;  export const SLOW_EVERY_TICKS = 5;
+export type EnemyView = Pick<Enemy, "id"|"kind"|"name"|"x"|"y"|"hp"|"maxHp"|"state"|"t"|"tint"|"targetId">; // Snap.enemies; positions and timers to a tenth
+export const FAST_KEYS = ["now","tick","you","players","enemies","prompt"];  export const SLOW_KEYS = [/* every other Snap key */];
+export type PlayerMotion = Pick<PublicPlayer, "id"|"x"|"y"|"facing"|"hpFrac"|"dead"|"dodgeT"|"heavyWindup"|"hitStop">;  export type PlayerRoster = Omit<PublicPlayer, motion keys but id>;
+export type FastFrame = { t: "fast"; v } & Pick<Snap, FastKey> with players: PlayerMotion[];   // every step
+export type SlowFrame = { t: "slow"; v } & Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[] }; // only what changed; roster entries only when new to the viewer or changed
+export function splitSnap(snap): { fast, slow };  export function mergeFrames(slow: SlowState, fast): Snap; // a body without a roster entry is left out until it arrives
+export function applySlow(slow: SlowState, frame): SlowState;   // sections replace; the roster merges by id
+export class SlowTracker { fresh(viewer); rosterDue(viewer, fast); diff(viewer, slow): SlowFrame | null; forget(viewer) }
+// The object: fast every broadcast; slow when force (after an action, a join, a close) || tick % 5 === 0 || fresh || rosterDue. WorldSocket folds; a new socket starts empty.
+```
+
 ## server/src/load.ts (the object's load meter; `/world` → `load`)
 ```ts
 export type LoadReport = { sessions; bodies; lateMs; maxLateMs; catchUp; maxCatchUp; stalls; broadcastChars; charsPerViewer; alarms };

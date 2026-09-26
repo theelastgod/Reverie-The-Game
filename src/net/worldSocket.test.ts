@@ -91,6 +91,33 @@ describe("handshake", () => {
     net.disconnect();
   });
 
+  it("merges v3 fast frames over the slow sections, and a slow frame alone republishes the merged view", async () => {
+    const { net, ws } = await online();
+    const seen: string[] = [];
+    net.onSnap = (s) => seen.push(`${s.tick}:${(s.news ?? []).join("|")}:${s.you.x}`);
+    ws.message({ t: "slow", v: PROTOCOL_VERSION, news: ["First."], pois: [{ id: "p", state: "open", count: 0 }], gestell: 40 });
+    expect(net.snap, "a slow frame before any fast frame publishes nothing").toBeNull();
+    ws.message({ t: "fast", v: PROTOCOL_VERSION, now: 1, tick: 7, you: { id: "p1", x: 10, y: 20 }, players: [], enemies: [], prompt: null });
+    expect(net.snap).toMatchObject({ t: "snap", tick: 7, news: ["First."], gestell: 40, you: { x: 10 } });
+    expect(net.snap?.pois).toEqual([{ id: "p", state: "open", count: 0 }]);
+    ws.message({ t: "fast", v: PROTOCOL_VERSION, now: 2, tick: 8, you: { id: "p1", x: 11, y: 21 }, players: [{ id: "o", x: 1, y: 2, facing: { dx: 1, dy: 0 }, hpFrac: 1, dead: false, dodgeT: 0, heavyWindup: 0, hitStop: 0 }], enemies: [], prompt: null });
+    expect(net.snap).toMatchObject({ tick: 8, news: ["First."], you: { x: 11 } });
+    expect(net.snap?.players, "a body without a roster entry waits").toEqual([]);
+    ws.message({ t: "slow", v: PROTOCOL_VERSION, news: ["First.", "Second."], roster: [{ id: "o", name: "#0042", guest: false, locked: false, house: "sky", messenger: "witness", district: "nave", stance: "restraint", flagged: false, truce: false, auraTier: 2, kit: "" }] });
+    expect(net.snap).toMatchObject({ tick: 8, news: ["First.", "Second."], gestell: 40, you: { x: 11 } });
+    expect(net.snap?.players).toEqual([{ id: "o", x: 1, y: 2, facing: { dx: 1, dy: 0 }, hpFrac: 1, dead: false, dodgeT: 0, heavyWindup: 0, hitStop: 0, name: "#0042", guest: false, locked: false, house: "sky", messenger: "witness", district: "nave", stance: "restraint", flagged: false, truce: false, auraTier: 2, kit: "" }]);
+    expect(net.seq).toBe(3);
+    expect(seen).toEqual(["7:First.:10", "8:First.:11", "8:First.|Second.:11"]);
+    // a reconnect forgets the slow state: the server sends it all again after the hello
+    ws.close(1006);
+    await vi.advanceTimersByTimeAsync(1000);
+    const ws2 = FakeSocket.instances[1];
+    ws2.hello();
+    ws2.message({ t: "fast", v: PROTOCOL_VERSION, now: 3, tick: 9, you: { id: "p1", x: 12, y: 22 }, players: [], enemies: [], prompt: null });
+    expect(net.snap?.news).toBeUndefined();
+    net.disconnect();
+  });
+
   it("ignores junk frames", async () => {
     const { net, ws } = await online();
     ws.onmessage?.({ data: "not json" });

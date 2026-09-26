@@ -7,7 +7,14 @@ import type {
   Player, Prompt, SideObjective, Stance, WinkSchool, Wreckage, YieldNode,
 } from "./types";
 
-export const PROTOCOL_VERSION = 2;
+/**
+ * v3: the server sends a `fast` frame every step (you, players, enemies, the
+ * prompt) and a `slow` frame with only the sections that changed, at most
+ * every SLOW_EVERY_TICKS steps and at once after an action; the client merges
+ * them into one `Snap`. A full `snap` is still a valid frame.
+ */
+export const PROTOCOL_VERSION = 3;
+export const SLOW_EVERY_TICKS = 5;
 
 export type ClientMsg =
   | { t: "intent"; intent: Partial<Intent> }
@@ -54,6 +61,9 @@ export type PublicPlayer = {
   hitStop: number;
 };
 
+/** What a viewer sees of an enemy: where it stands, how it is doing and whom it faces; never its participants, its home or its respawn. */
+export type EnemyView = Pick<Enemy, "id" | "kind" | "name" | "x" | "y" | "hp" | "maxHp" | "state" | "t" | "tint" | "targetId">;
+
 export type NodeView = YieldNode & { yieldHint?: number; chargesHint?: number; safe?: boolean };
 /** `passings` is the fallen Angel's Passing count, sent only while the viewer faces the wreckage (Ruin-angel kit). */
 export type WreckageView = Pick<Wreckage, "id" | "x" | "y" | "district" | "fromName" | "fromSerial" | "buried" | "looted" | "until"> & { yours: boolean; bestand?: number; passings?: number };
@@ -76,7 +86,7 @@ export type Snap = {
   district: DistrictId; // the viewer's district
   you: YouView;
   players: PublicPlayer[];
-  enemies: Enemy[];
+  enemies: EnemyView[];
   npcs: NpcView[];
   nodes: NodeView[];
   wreckage: WreckageView[];
@@ -95,9 +105,29 @@ export type Snap = {
   notices: Notice[];
 };
 
+/** The sections that move every step. */
+export const FAST_KEYS = ["now", "tick", "you", "players", "enemies", "prompt"] as const;
+export type FastKey = (typeof FAST_KEYS)[number];
+/** Everything else: sent when it changes, at most every SLOW_EVERY_TICKS steps, and at once after the viewer acts. */
+export const SLOW_KEYS = [
+  "gestell", "weather", "weatherNamed", "frozen", "district", "npcs", "nodes", "wreckage", "graves", "pois", "history", "failed",
+  "houses", "clearing", "passing", "market", "news", "objective", "sideObjectives", "notices",
+] as const;
+export type SlowKey = (typeof SLOW_KEYS)[number];
+
+/** The part of another body that moves every step. */
+export type PlayerMotion = Pick<PublicPlayer, "id" | "x" | "y" | "facing" | "hpFrac" | "dead" | "dodgeT" | "heavyWindup" | "hitStop">;
+export const MOTION_KEYS = ["id", "x", "y", "facing", "hpFrac", "dead", "dodgeT", "heavyWindup", "hitStop"] as const;
+/** The rest of another body: who they are and how they stand; sent as a roster when it changes. */
+export type PlayerRoster = Omit<PublicPlayer, Exclude<keyof PlayerMotion, "id">>;
+
+export type FastFrame = { t: "fast"; v: typeof PROTOCOL_VERSION } & Omit<Pick<Snap, FastKey>, "players"> & { players: PlayerMotion[] };
+/** Only the sections that changed since the viewer's last slow frame; the first one after a hello carries them all, the roster included. */
+export type SlowFrame = { t: "slow"; v: typeof PROTOCOL_VERSION } & Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[] };
+
 /** `mockLink`: the test link (serial + mock signature) is accepted by this city; off in production, where wallets go through /wallet. */
 export type Hello = { t: "hello"; v: typeof PROTOCOL_VERSION; id: string; guest: boolean; mockLink: boolean; you: YouView };
-export type ServerMsg = Hello | Snap;
+export type ServerMsg = Hello | Snap | FastFrame | SlowFrame;
 
 export function isClientMsg(data: unknown): data is ClientMsg {
   if (!data || typeof data !== "object" || Array.isArray(data)) return false;

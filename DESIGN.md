@@ -15,7 +15,9 @@ Read this before touching any file under `src/`, `server/`, `site/` or `scripts/
 - **Shared sim:** `src/sim/**` is DOM-free TypeScript imported by both the client
   (types, map, labels) and the Worker (authoritative reducers).
 - **Server:** one Cloudflare Worker, one Durable Object shard (`ReverieWorld`),
-  20 Hz fixed step, cookie sessions, checkpointed state, per-viewer snapshots.
+  20 Hz fixed step, cookie sessions, checkpointed state, per-viewer snapshots
+  sent as protocol v3 frames: what moves every step, what changed only when
+  it changed (`src/sim/frames.ts`; the scale notes are in `.rebuild/ZONES.md`).
 - **Persistence:** DO storage keys `world:v2` and `player:v2:<token>`. Older
   prototype saves are ignored.
 

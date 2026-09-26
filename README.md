@@ -46,7 +46,9 @@ deploy.
   protocol, reducers, content). The server owns every number.
 - `server/src/index.ts` — one Cloudflare Worker and one Durable Object
   (`ReverieWorld`): cookie sessions, 20 Hz fixed steps from an alarm, checkpoint
-  before broadcast, per-viewer snapshots, single-tab ownership (code 4001).
+  before broadcast, per-viewer snapshots as protocol v3 frames (a fast frame
+  every step, a slow frame only for what changed; `src/sim/frames.ts` splits
+  and folds), single-tab ownership (code 4001), a load report on `/world`.
   Storage keys `world:v2` and `player:v2:<token>`; the object is `city-v2`.
 - `src/` (client) — Phaser 3 + Vite + TypeScript, DOM HUD over the canvas. Sends
   intents, renders snapshots.

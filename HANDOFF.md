@@ -123,6 +123,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never leave the table. `npm run d1:migrate` applies the migration locally;
   the deploy needs `wrangler d1 create reverie-log`, its id in
   `wrangler.toml`, and `npm run d1:migrate:remote`.
+- The snapshot diet, protocol v3 (2026-09-26, backlog 4's first step). The
+  object sends a `fast` frame every step (`now`, `tick`, `you`, `players`
+  as motion only, `enemies` as views with positions to a tenth, `prompt`)
+  and a `slow` frame carrying only the sections that changed (`gestell`,
+  weather, `frozen`, `district`, `npcs`, `nodes`, `wreckage`, `graves`,
+  `pois`, `history`, `failed`, `houses`, `clearing`, `passing`, `market`,
+  `news`, `objective`, `sideObjectives`, `notices`) plus the roster entries
+  (who another body is) the viewer does not hold yet or that changed;
+  checked every 5 steps, at once after the viewer acts, at once when the
+  bodies in view change, in full after a hello. `src/sim/frames.ts` splits,
+  merges and tracks (`SlowTracker`, per viewer, by section signature and per
+  roster entry); `WorldSocket` folds frames into one `Snap` so the
+  renderers, the HUD and the audio read what they always read; the smokes
+  and the load check fold the same way. `EnemyView` replaces `Enemy` on the
+  wire (no participants, home or respawn). Measured on this container: per
+  viewer per broadcast 4.3 KB at 20 bodies (was 14.3), 7.2 KB at 40 (was
+  20.3), 14.4 KB at 80 (was 31.8); 40 bodies now hold 20 Hz (alarm late
+  mean 8 ms, worst 80 ms) where before the worst alarm slipped to 145 ms;
+  80 still fall behind (interval mean 117 ms). Next levers, in
+  `.rebuild/ZONES.md`: the 36-character ids are now about a third of a
+  crowd's fast frame, `you` still rides whole, then zones.
 - Load meter, load check and the scale design (2026-09-26, backlog 4).
   `server/src/load.ts` reads what a Worker can read about its own load
   (the clock is frozen during compute): how late each alarm fires against
@@ -223,7 +244,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
-- `npm test` — 33 files, 427 tests (2026-09-26): map integrity and reachability, identity,
+- `npm test` — 34 files, 435 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
   visibility, content coverage, side quests (all 33 driven end to end, every
   verb through the prompt, who offers what to whom), two full spine
@@ -283,11 +304,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - Load: 3 meter tests (empty, smoothing and the windowed worst that is
   forgotten, no negative lateness, stalls, the last broadcast per viewer)
   and a session test reads `/world`'s report after one late alarm. Live,
-  `scripts/load-check.mjs` against the local Worker: 20 bots, 15 s, snapshot
-  interval mean 47–49 ms (p99 75 ms), alarm late mean 5 ms (worst 47 ms),
-  no stalls, 14.3 KB per viewer per broadcast, PASS twice; 40 bots: mean
-  55 ms but the worst alarm 145 ms late, FAIL; 80 bots: mean 128 ms, a
-  stall, FAIL. This container's workerd, one small CPU.
+  `scripts/load-check.mjs` against the local Worker after the diet: 20
+  bots, 15 s, snapshot interval mean 48 ms (p99 74 ms), alarm late mean 4 ms
+  (worst 40 ms), 4.5 KB per fast frame, PASS; 40 bots: mean 56 ms (p99 96
+  ms), alarm late mean 8 ms (worst 80 ms), 7.6 KB per fast frame, PASS; 80
+  bots: mean 117 ms, alarm late mean 347 ms, FAIL. Before the diet 40 bots
+  failed on a 145 ms alarm and 80 stalled. This container's workerd, one
+  small CPU.
+- Protocol v3: 7 frame tests (every Snap key fast or slow exactly once,
+  a body split into motion and roster and joined back exactly, a crowd's
+  split and merge equal to the snapshot, a body without a roster entry left
+  out, the fast frame under 40 % of the snapshot, applySlow merging the
+  roster by id, the tracker's first-full/nothing/only-changed/roster-owed
+  sequence), a socket test folding fast and slow frames and forgetting them
+  on reconnect, and the session tests reading the object's view through the
+  same fold. Both smokes and the load check fold frames the same way.
 - Generated-asset slots: 13 tests pin the manifest loader (the URL and
   no-cache request, one load shared, 404 / network / junk / wrong shape as
   empty, unsafe targets dropped) and the pure slot map (who has a portrait,
@@ -345,16 +376,17 @@ they are discovered; keep this list honest.
    Angel active per body stays the rule (`applyLink` already refuses a serial
    that is walking). Not built: reading beyond the first token of a wallet
    that holds several (the first is the one that walks).
-4. **The snapshot diet, then zones.** Designed and measured in
-   `.rebuild/ZONES.md`. Next: protocol v3, a 20 Hz fast frame (`you`
-   trimmed, `players`, `enemies`, `prompt`) and a slow frame sent on change
-   and at most at 5 Hz (everything else), merged in `WorldSocket` so the
-   renderers, the HUD and the smokes keep reading one `Snap`; change
-   detection by per-section signature first, per-section version counters
-   second. Prove it with `scripts/load-check.mjs --bots=40` and `--bots=80`
-   (today 40 slips and 80 falls behind on this container). Zone objects with
+4. **Past 40 bodies, then zones.** The diet is in (protocol v3, see Done);
+   40 bodies hold on this container, 80 fall behind. The next levers, in
+   order, all measured with `scripts/load-check.mjs --bots=80`: short wire
+   ids for bodies (a per-world counter in base 36 carried as `PublicPlayer.id`
+   on the wire, the uuid kept server-side; ids are about a third of a
+   crowd's fast frame), a trimmed `you` (its `quests`, `flags`, `choices`,
+   `party`, `items`, `claims`, `history` and `respawn` into the slow frame,
+   merged by the client like the roster), and per-section version counters
+   on the world so the slow check skips the stringify. Zone objects with
    handoff at the gates come after, behind `ZONES=0`, and only when a real
-   population asks; the design is written.
+   population asks; the design is written in `.rebuild/ZONES.md`.
 5. **Opening density.** Measured 2026-09-26 after the Annex Runner courier
    beat (`scripts/smoke-campaign.mjs` prints `measure:` lines; a later fight
    is floored at 25 s of a person's time, the first at 45 s; keep only runs

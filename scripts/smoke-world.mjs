@@ -5,7 +5,29 @@ import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 
 const origin = process.argv[2] ?? 'http://127.0.0.1:8788';
-const PROTOCOL_VERSION = 2;
+const PROTOCOL_VERSION = 3;
+
+/**
+ * Folds v3 frames the way the client does: fast frames over the slow sections last received, other bodies
+ * joined from the roster by id (a body whose roster entry has not arrived waits); a full snap stands alone.
+ */
+function folder() {
+  let slow = {};
+  return data => {
+    if (data.t === 'snap') { slow = {}; return data; }
+    if (data.t === 'slow') {
+      const { t, v, roster, ...rest } = data;
+      slow = { ...slow, ...rest };
+      if (roster) { const byId = new Map((slow.roster ?? []).map(r => [r.id, r])); for (const r of roster) byId.set(r.id, r); slow.roster = [...byId.values()]; }
+      return null;
+    }
+    if (data.t !== 'fast') return null;
+    const { roster = [], ...sections } = slow;
+    const byId = new Map(roster.map(r => [r.id, r]));
+    const players = data.players.flatMap(m => (byId.has(m.id) ? [{ ...byId.get(m.id), ...m }] : []));
+    return { ...sections, ...data, players, t: 'snap' };
+  };
+}
 const deadline = setTimeout(() => { console.error('FAIL: smoke deadline (90 s) exceeded'); process.exit(1); }, 90000);
 
 // `wrangler dev` reloads the local server whenever site/ changes (a fresh `stage-play`), a quarter
@@ -29,9 +51,12 @@ function connect() {
     const ws = new WebSocket(origin.replace(/^http/, 'ws') + '/ws', { headers: { Cookie: cookie, Origin: origin } });
     const timer = setTimeout(() => { ws.terminate(); reject(new Error('hello timeout')); }, 15000);
     ws.once('error', reject);
+    // One folder per socket: every listener below reads the merged view.
+    ws.fold = folder();
     ws.on('message', raw => {
       const data = JSON.parse(raw.toString());
       if (data.t === 'hello') { clearTimeout(timer); resolve({ ws, hello: data }); }
+      else ws.view = ws.fold(data) ?? ws.view;
     });
   });
 }
@@ -40,7 +65,9 @@ function snapshot(ws, predicate, label = 'snapshot') {
     const timer = setTimeout(() => { ws.off('message', receive); reject(new Error(`${label} timeout`)); }, 15000);
     function receive(raw) {
       const data = JSON.parse(raw.toString());
-      if (data.t === 'snap' && predicate(data)) { clearTimeout(timer); ws.off('message', receive); resolve(data); }
+      if (data.t !== 'fast' && data.t !== 'snap') return;
+      const view = ws.view; // folded by the connect listener, which runs first
+      if (view && predicate(view)) { clearTimeout(timer); ws.off('message', receive); resolve(view); }
     }
     ws.on('message', receive);
   });
@@ -95,4 +122,4 @@ assert.equal(snap.you.id, id, 'one body, seen as you');
 assert.equal(snap.players.filter(p => p.id === id).length, 0, 'never duplicated among the others');
 third.ws.close();
 clearTimeout(deadline);
-console.log('PASS: health, hello v2, live ticks, movement, timed dodge, junk ignored, saved reconnect, guest identity, single-tab ownership');
+console.log('PASS: health, hello v3, fast and slow frames, live ticks, movement, timed dodge, junk ignored, saved reconnect, guest identity, single-tab ownership');

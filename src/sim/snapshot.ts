@@ -9,8 +9,8 @@
 import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
 import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
-import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type NodeView, type NpcView, type PoiView, type PublicPlayer, type Snap, type WreckageView, type YouView } from "./protocol";
-import type { Ctx, NpcState, Player, Prompt, Wreckage, WorldState } from "./types";
+import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type EnemyView, type NodeView, type NpcView, type PoiView, type PublicPlayer, type Snap, type WreckageView, type YouView } from "./protocol";
+import type { Ctx, Enemy, NpcState, Player, Prompt, Wreckage, WorldState } from "./types";
 import { nodeYield } from "./economy";
 import { perception } from "./houses";
 import { npcOffers, objectiveFor, sideObjectivesFor } from "./quests";
@@ -31,27 +31,28 @@ export function publicPlayer(p: Player, now: number): PublicPlayer {
   if (p.guest) auraTier = 0;
   else if (p.aura < AURA_DIM) auraTier = 1;
   else if (p.aura < AURA_PRESENT) auraTier = 2;
+  // Positions and timers to a tenth (see `tenth`): another body is never drawn finer.
   return {
     id: p.id,
     name: p.name,
-    x: p.x,
-    y: p.y,
+    x: Math.round(p.x * 10) / 10,
+    y: Math.round(p.y * 10) / 10,
     facing: p.facing,
     district: p.district,
     guest: p.guest,
     locked: p.locked,
     house: p.house,
     messenger: p.messenger,
-    hpFrac: Math.max(0, Math.min(1, p.hp / MAX_HP)),
+    hpFrac: Math.round(Math.max(0, Math.min(1, p.hp / MAX_HP)) * 1000) / 1000,
     dead: p.dead,
-    dodgeT: p.dodgeT,
+    dodgeT: Math.round(p.dodgeT * 100) / 100,
     stance: p.stance,
     flagged: p.flagged,
     truce: p.truceUntil > now,
     auraTier,
     kit: p.kit && p.kit.until > now ? p.kit.verb : "",
-    heavyWindup: p.heavyWindup,
-    hitStop: p.hitStop,
+    heavyWindup: Math.round(p.heavyWindup * 100) / 100,
+    hitStop: Math.round(p.hitStop * 100) / 100,
   };
 }
 
@@ -139,6 +140,14 @@ function kitReadout(p: Player, marks: string[]): string[] {
   return out;
 }
 
+/** Positions and timers to a tenth: a body is never drawn finer, and the digits were a third of every frame. */
+export const tenth = (v: number): number => Math.round(v * 10) / 10;
+
+/** What a viewer sees of an enemy; its participants, its home and its respawn stay with the server. */
+export function enemyView(e: Enemy): EnemyView {
+  return { id: e.id, kind: e.kind, name: e.name, x: tenth(e.x), y: tenth(e.y), hp: tenth(e.hp), maxHp: e.maxHp, state: e.state, t: tenth(e.t), tint: e.tint, targetId: e.targetId };
+}
+
 // ---------------------------------------------------------------- the snapshot
 
 export function snapshotFor(w: WorldState, viewerId: string): Snap {
@@ -210,7 +219,7 @@ export function snapshotFor(w: WorldState, viewerId: string): Snap {
     district: p.district,
     you,
     players,
-    enemies: w.enemies.filter(e => e.state !== "dead" && near(e.x, e.y)),
+    enemies: w.enemies.filter(e => e.state !== "dead" && near(e.x, e.y)).map(enemyView),
     npcs,
     nodes,
     wreckage,

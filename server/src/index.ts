@@ -18,7 +18,8 @@ import { logEventsFor, PUBLIC_LOG_KINDS } from "./log.ts";
 import { LogSink } from "./logSink.ts";
 import { LoadMeter } from "./load.ts";
 import { snapshotFor } from "../../src/sim/snapshot.ts";
-import { isClientMsg, PROTOCOL_VERSION } from "../../src/sim/protocol.ts";
+import { SlowTracker, splitSnap } from "../../src/sim/frames.ts";
+import { isClientMsg, PROTOCOL_VERSION, SLOW_EVERY_TICKS } from "../../src/sim/protocol.ts";
 import type { Hello } from "../../src/sim/protocol.ts";
 import type { Intent, Player, WorldState } from "../../src/sim/types.ts";
 import { SimulationClock, STEP_MS } from "./clock";
@@ -92,6 +93,7 @@ export class ReverieWorld {
   private clock = new SimulationClock();
   private readonly sink = new LogSink();
   private readonly load = new LoadMeter();
+  private readonly slow = new SlowTracker(); // per viewer, which slow sections they already hold
   private alarmDue = 0; // when the pending alarm was asked for, to read its lateness
   private logged: WorldState; // the world as of the last log diff
 
@@ -191,7 +193,7 @@ export class ReverieWorld {
       ? applyWallet(this.w, live.id, address, LINES.LINK_NO_ANGEL)
       : applyLink(applyWallet(this.w, live.id, address), live.id, serial, { kind: "wallet", address });
     await this.checkpoint();
-    this.broadcast();
+    this.broadcast(true);
     const me = this.w.players.get(live.id);
     return Response.json({ ok: true, address, serial: me && !me.guest ? me.serial : null }, { headers });
   }
@@ -224,6 +226,7 @@ export class ReverieWorld {
       const player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(crypto.randomUUID(), this.w.now);
       if (active) {
         this.sessions.delete(active[0]);
+        this.slow.forget(active[1].id); // the new socket starts with a full slow frame
         try { active[0].close(4001, "This Angel is active in another tab"); } catch { /* already gone */ }
       }
       this.ctx.acceptWebSocket(server as WebSocket);
@@ -236,7 +239,7 @@ export class ReverieWorld {
       await this.checkpoint();
       const hello: Hello = { t: "hello", v: PROTOCOL_VERSION, id, guest: player.guest, mockLink: this.mockLink, you: snapshotFor(this.w, id).you };
       server.send(JSON.stringify(hello));
-      this.broadcast();
+      this.broadcast(true);
       await this.ensureTick();
       return hello;
     });
@@ -262,7 +265,7 @@ export class ReverieWorld {
       return;
     }
     await this.checkpoint();
-    this.broadcast();
+    this.broadcast(true);
   }
 
   async webSocketClose(ws: WebSocket, code = 1000, reason = "") {
@@ -272,11 +275,12 @@ export class ReverieWorld {
     if (!session) return;
     const player = this.w.players.get(session.id);
     this.sessions.delete(ws);
+    this.slow.forget(session.id);
     this.w.players.delete(session.id);
     this.w.intents.delete(session.id);
     this.intentAt.delete(session.id);
     await this.checkpoint(player ? { [playerKey(session.token)]: player } : {});
-    this.broadcast();
+    this.broadcast(true);
   }
 
   async webSocketError(ws: WebSocket) {
@@ -322,14 +326,30 @@ export class ReverieWorld {
     else { this.ticking = false; this.clock.stop(); }
   }
 
-  /** Every viewer gets their own snapshot: Winke, purse, claims and marks are never shared. */
-  private broadcast() {
+  /**
+   * Every viewer gets their own snapshot: Winke, purse, claims and marks are
+   * never shared. The fast frame goes every time; the slow sections go when
+   * they changed, checked every SLOW_EVERY_TICKS steps, at once for a viewer
+   * who has none yet, and at once when `force` (after an action).
+   */
+  private broadcast(force = false) {
     let chars = 0;
     let viewers = 0;
+    const slowDue = force || this.w.tick % SLOW_EVERY_TICKS === 0;
     for (const [ws, session] of this.sessions) {
       try {
         if (!this.w.players.has(session.id)) continue;
-        const payload = JSON.stringify(snapshotFor(this.w, session.id));
+        const { fast, slow } = splitSnap(snapshotFor(this.w, session.id));
+        // The roster must cover every body the fast frame moves, so a change in who is in view brings the slow frame forward.
+        if (this.slow.rosterDue(session.id, fast) || slowDue || this.slow.fresh(session.id)) {
+          const changed = this.slow.diff(session.id, slow);
+          if (changed) {
+            const payload = JSON.stringify(changed);
+            chars += payload.length;
+            ws.send(payload);
+          }
+        }
+        const payload = JSON.stringify(fast);
         chars += payload.length;
         viewers++;
         ws.send(payload);

@@ -4,8 +4,9 @@
  * (1 s doubling to 10 s); close code 4001 means the Angel is active in another
  * tab and this one stands down. Every sender emits the exact ClientMsg shape.
  */
-import type { ClientMsg, Hello, ServerMsg, Snap, YouView } from "../sim/protocol";
+import type { ClientMsg, FastFrame, Hello, ServerMsg, Snap, YouView } from "../sim/protocol";
 import type { Intent } from "../sim/types";
+import { applySlow, mergeFrames, type SlowState } from "../sim/frames";
 
 export type SocketStatus = "connecting" | "online" | "reconnecting" | "elsewhere" | "closed";
 
@@ -34,6 +35,9 @@ export class WorldSocket {
   private lastIntentKey = "";
   private lastIntentAt = -Infinity;
   private snapSeq = 0;
+  /** The slow sections last received (protocol v3); a fast frame merges over them into `snap`. */
+  private slow: SlowState = {};
+  private lastFast: FastFrame | null = null;
 
   /** Monotonic counter bumped on every snapshot, so the scene can tell a new one apart. */
   get seq(): number {
@@ -55,6 +59,9 @@ export class WorldSocket {
       const ws = new WebSocket(`${proto}://${location.host}/ws`);
       this.ws = ws;
       this.lastIntentKey = "";
+      // A new socket gets a full slow frame after its hello; nothing from the old one is trusted.
+      this.slow = {};
+      this.lastFast = null;
       ws.onmessage = (ev: MessageEvent) => {
         if (this.ws !== ws) return;
         let data: ServerMsg | null = null;
@@ -71,10 +78,15 @@ export class WorldSocket {
           this.setStatus("online");
           this.onHello?.(data);
         } else if (data.t === "snap") {
-          this.snap = data;
-          this.you = data.you;
-          this.snapSeq++;
-          this.onSnap?.(data);
+          this.slow = applySlow({}, { ...data, t: "slow" });
+          this.publish(data);
+        } else if (data.t === "slow") {
+          this.slow = applySlow(this.slow, data);
+          // A slow frame alone still moves the HUD (news, notices, the objective) when a fast frame has been seen.
+          if (this.lastFast) this.publish(mergeFrames(this.slow, this.lastFast));
+        } else if (data.t === "fast") {
+          this.lastFast = data;
+          this.publish(mergeFrames(this.slow, data));
         }
       };
       ws.onerror = () => {
@@ -94,6 +106,13 @@ export class WorldSocket {
     } catch {
       if (!this.stopped) this.scheduleReconnect();
     }
+  }
+
+  private publish(snap: Snap): void {
+    this.snap = snap;
+    this.you = snap.you;
+    this.snapSeq++;
+    this.onSnap?.(snap);
   }
 
   private scheduleReconnect(): void {

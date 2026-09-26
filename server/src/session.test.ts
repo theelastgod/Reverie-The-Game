@@ -8,7 +8,8 @@ const WORLD_KEY = "world:v2";
 const PLAYER_PREFIX = "player:v2:";
 import { emptyWorld, spawnGuest } from "../../src/sim/world";
 import { DODGE_COOLDOWN, DODGE_DURATION, RESTRAINT_DODGE_BONUS, TEST_SERIAL } from "../../src/sim/constants";
-import { PROTOCOL_VERSION } from "../../src/sim/protocol";
+import { PROTOCOL_VERSION, type FastFrame } from "../../src/sim/protocol";
+import { applySlow, mergeFrames, type SlowState } from "../../src/sim/frames";
 import type { Player, WorldState } from "../../src/sim/types";
 
 beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(0); });
@@ -60,7 +61,24 @@ async function worldHarness(world: WorldState | null, sockets: Sock[] = [], extr
   await ready!;
   return { world: dobj, storage, data, ctx };
 }
-const last = (ws: Sock) => JSON.parse(ws.send.mock.calls.at(-1)![0]);
+/**
+ * The viewer's current view: every frame the socket was sent, folded the way
+ * the client folds them (v3 fast frames over slow sections; a full snap
+ * stands alone). Reads as one `snap`.
+ */
+function last(ws: Sock): Record<string, any> {
+  let slow: SlowState = {};
+  let fast: FastFrame | null = null;
+  for (const call of ws.send.mock.calls) {
+    const data = JSON.parse(call[0]);
+    if (data.t === "slow") slow = applySlow(slow, data);
+    else if (data.t === "fast") fast = data;
+  }
+  if (!fast) throw new Error("no fast frame was sent");
+  return mergeFrames(slow, fast);
+}
+/** Every frame sent on the socket, parsed, in order. */
+const frames = (ws: Sock): Record<string, any>[] => ws.send.mock.calls.map(c => JSON.parse(c[0]));
 const savedWorld = (data: Map<string, unknown>) => data.get(WORLD_KEY) as ReturnType<typeof serializeWorld>;
 
 describe("durable world sessions", () => {

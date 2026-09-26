@@ -29,16 +29,28 @@ async function bot(i) {
   const res = await fetch(`${origin}/session`, { method: 'POST', headers: { Origin: origin } });
   const cookie = res.headers.get('set-cookie').split(';')[0];
   const ws = new WebSocket(origin.replace(/^http/, 'ws') + '/ws', { headers: { Cookie: cookie, Origin: origin } });
-  const b = { i, ws, snap: null, snaps: 0, lastAt: 0, intervals: [], errors: 0, bytes: 0 };
+  const b = { i, ws, snap: null, snaps: 0, lastAt: 0, intervals: [], errors: 0, bytes: 0, slowBytes: 0 };
+  let slow = {};
   ws.on('error', () => { b.errors++; });
   ws.on('message', raw => {
     const at = Date.now();
     b.bytes += raw.length;
     const d = JSON.parse(raw.toString());
-    if (d.t !== 'snap') return;
+    if (d.t === 'slow') {
+      b.slowBytes += raw.length;
+      const { t, v, roster, ...rest } = d;
+      slow = { ...slow, ...rest };
+      if (roster) { const byId = new Map((slow.roster ?? []).map(r => [r.id, r])); for (const r of roster) byId.set(r.id, r); slow.roster = [...byId.values()]; }
+      return;
+    }
+    if (d.t !== 'fast' && d.t !== 'snap') return;
     if (b.lastAt) b.intervals.push(at - b.lastAt);
     b.lastAt = at;
-    b.snap = d;
+    if (d.t === 'fast') {
+      const { roster = [], ...sections } = slow;
+      const byId = new Map(roster.map(r => [r.id, r]));
+      b.snap = { ...sections, ...d, players: d.players.flatMap(m => (byId.has(m.id) ? [{ ...byId.get(m.id), ...m }] : [])), t: 'snap' };
+    } else b.snap = d;
     b.snaps++;
   });
   await new Promise((resolve, reject) => { ws.once('open', resolve); ws.once('error', reject); });
@@ -95,9 +107,10 @@ const worstLate = Math.max(0, ...samples.map(s => s.maxLateMs ?? 0));
 const worstCatchUp = Math.max(0, ...samples.map(s => s.maxCatchUp ?? 0));
 const stalls = last.stalls ?? 0;
 const bytes = bots.reduce((a, b) => a + b.bytes, 0);
+const slowBytes = bots.reduce((a, b) => a + b.slowBytes, 0);
 const snaps = bots.reduce((a, b) => a + b.snaps, 0);
 const errors = bots.reduce((a, b) => a + b.errors, 0);
-console.log(`measure: ${bots.length} bots for ${SECONDS} s: ${snaps} snapshots, ${(bytes / 1024 / 1024).toFixed(1)} MB down (${(bytes / Math.max(1, snaps)).toFixed(0)} B per snapshot), ${errors} socket errors`);
+console.log(`measure: ${bots.length} bots for ${SECONDS} s: ${snaps} fast frames, ${(bytes / 1024 / 1024).toFixed(1)} MB down (${((bytes - slowBytes) / Math.max(1, snaps)).toFixed(0)} B per fast frame, ${(slowBytes / 1024).toFixed(0)} KB of slow frames), ${errors} socket errors`);
 console.log(`measure: snapshot interval mean ${mean.toFixed(1)} ms, p50 ${pct(0.5)} ms, p95 ${pct(0.95)} ms, p99 ${pct(0.99)} ms (the step is ${STEP_MS} ms)`);
 console.log(`measure: object: sessions ${last.sessions ?? '?'}, bodies ${last.bodies ?? '?'}, alarm late mean ${last.lateMs ?? '?'} ms, worst ${worstLate} ms; catch-up mean ${last.catchUp ?? '?'} steps, worst ${worstCatchUp}; stalls ${stalls}; ${last.charsPerViewer ?? '?'} chars per viewer per broadcast`);
 

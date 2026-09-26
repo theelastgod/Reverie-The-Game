@@ -8,8 +8,8 @@
 import Phaser from "phaser";
 import { ENEMY, AURA_DIM, CLEARING_RADIUS, GESTELL_MELTDOWN, MAX_HP } from "../sim/constants";
 import { DISTRICT_BY_ID, PATCHES, POIS, POI_LIST, TILE } from "../sim/map";
-import type { NodeView, NpcView, PublicPlayer, Snap, WreckageView, YouView } from "../sim/protocol";
-import type { Enemy, Messenger, Stance } from "../sim/types";
+import type { EnemyView, NodeView, NpcView, PublicPlayer, Snap, WreckageView, YouView } from "../sim/protocol";
+import type { Messenger, Stance } from "../sim/types";
 import { COLOR, DEPTH, NPC_SPRITES, TEX, UI_FONT, bodyDepth } from "./floors";
 import { propTarget, spriteFor } from "../assets/slots";
 import { genTex } from "../scenes/BootScene";
@@ -71,7 +71,7 @@ type Body = {
 };
 
 /** Enemy feel by kind: silhouette scale and gait. */
-const ENEMY_FEEL: Record<Enemy["kind"], { size: number; gait: number }> = {
+const ENEMY_FEEL: Record<EnemyView["kind"], { size: number; gait: number }> = {
   clerk: { size: 1, gait: 1 },
   intake: { size: 1.04, gait: 0.9 },
   warden: { size: 1.14, gait: 0.65 },
@@ -95,7 +95,7 @@ const SQUASH_Y = 0.92;
 
 type Mark = { img: Phaser.GameObjects.Image; seen: number };
 
-const ENEMY_TINT: Record<Enemy["tint"], number> = {
+const ENEMY_TINT: Record<EnemyView["tint"], number> = {
   lavender: 0xcdc4ea,
   wine: 0xff7a9c,
   sky: 0xa6d0ff,
@@ -281,13 +281,13 @@ export class Entities {
   }
 
   /** A generated sprite for this enemy when the manifest had it and the boot loaded it; else the clerk silhouette. */
-  private enemyTexture(e: Enemy): string {
+  private enemyTexture(e: EnemyView): string {
     const target = spriteFor(e);
     const key = target ? genTex(target) : "";
     return key && this.scene.textures.exists(key) ? key : TEX.clerk;
   }
 
-  private syncEnemy(e: Enemy): void {
+  private syncEnemy(e: EnemyView): void {
     const key = this.enemyTexture(e);
     let b = this.enemies.get(e.id);
     if (!b) {

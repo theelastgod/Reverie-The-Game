@@ -108,9 +108,26 @@ async function connect(cookie) {
   sockets.push(ws);
   const state = { ws, hello: undefined, snap: undefined, error: undefined };
   ws.on('error', error => { state.error = error; });
+  // Protocol v3: fast frames every step, slow sections when they change; fold them the way the client does
+  // (other bodies joined from the roster by id; the slow frame alone refreshes the last view).
+  let slow = {};
+  let lastFast = null;
+  const fold = fast => {
+    const { roster = [], ...sections } = slow;
+    const byId = new Map(roster.map(r => [r.id, r]));
+    const players = fast.players.flatMap(m => (byId.has(m.id) ? [{ ...byId.get(m.id), ...m }] : []));
+    return { ...sections, ...fast, players, t: 'snap' };
+  };
   ws.on('message', raw => {
-    const data = JSON.parse(raw.toString());
+    let data = JSON.parse(raw.toString());
     if (data.t === 'hello') state.hello = data;
+    if (data.t === 'slow') {
+      const { t, v, roster, ...rest } = data;
+      slow = { ...slow, ...rest };
+      if (roster) { const byId = new Map((slow.roster ?? []).map(r => [r.id, r])); for (const r of roster) byId.set(r.id, r); slow.roster = [...byId.values()]; }
+      if (lastFast) data = fold(lastFast); else return;
+    }
+    else if (data.t === 'fast') { lastFast = data; data = fold(data); }
     if (data.t === 'snap') {
       state.snap = data;
       state.snapAt = Date.now();
@@ -239,7 +256,7 @@ function report() {
 try {
   await settled();
   const { state: me } = await newSession();
-  assert.equal(me.hello.v, 2, 'protocol v2');
+  assert.equal(me.hello.v, 3, 'protocol v3');
   assert.equal(you(me).guest, true, 'fresh session is a guest');
   assert.equal(you(me).movement, 1, 'Movement I');
   assert.ok(dist(you(me), T.spawn) < 4, 'spawned at the guest spawn');

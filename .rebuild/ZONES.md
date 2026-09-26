@@ -36,7 +36,24 @@ the passing, the market, the news, the objective and the side objectives,
 the notices. Only players, enemies, nodes, wreckage and graves are limited
 to the area of interest (AOI_RADIUS 1040 px, about 21 tiles).
 
+### After the diet (protocol v3, the same day)
+
+| bodies | snapshot interval mean / p95 / p99 | alarm late mean / worst | per-viewer broadcast | verdict |
+|---:|---|---|---:|---|
+| 20 | 48 / 67 / 74 ms | 4 / 40 ms | 4.3 KB (fast 4.5 KB, slow 336 KB over 15 s) | 20 Hz held |
+| 40 | 56 / 84 / 96 ms | 8 / 80 ms | 7.2 KB (fast 7.6 KB) | 20 Hz held; the knee moved past here |
+| 80 | 117 / 196 / 2701 ms | 347 / 4821 ms | 14.4 KB (fast 12 KB) | behind; the next levers are in §2 |
+
+What is left in a crowd's fast frame: ~150 bytes per body in view, of
+which the 36-character id is 44; `you` whole (~1.1 KB); the enemies in
+view (~110 bytes each). The levers, in order: short wire ids, `you` split
+like the roster, version counters so the slow check skips the stringify.
+
 ## 2. First: the snapshot diet (protocol v3)
+
+Done 2026-09-26 as described below (with one addition: other bodies split
+into motion and a roster, joined by id on merge). Kept as the record of
+why.
 
 Before any zoning, send less, because zoning does not shrink a viewer's
 snapshot, it only spreads the viewers.
