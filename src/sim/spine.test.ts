@@ -63,6 +63,14 @@ function tick(w: WorldState, n = 1): WorldState {
 const act = (w: WorldState, id: string, msg: ClientMsg): WorldState => applyAction(w, id, msg);
 const interact = (w: WorldState, id: string, targetId: string, choice: string): WorldState => act(w, id, { t: "interact", targetId, choice });
 
+/** Stand at a POI and press a spine verb the way the client would: it must be in the prompt first (a side hour can take its key). */
+function use(w: WorldState, poiId: string, choice: string): WorldState {
+  const cur = goTo(w, ME, poiId);
+  const offered = verbsFor({ w: cur, p: me(cur), now: cur.now }, poiId).map(v => v.choice);
+  expect(offered, `${poiId} offers ${choice} in the prompt`).toContain(choice);
+  return interact(cur, ME, poiId, choice);
+}
+
 /** Stand where this viewer sees the person and speak. The party first notices a Wink they could not see; that node is closed through. */
 function talkTo(w: WorldState, id: string, npcId: string): WorldState {
   const shared = w.npcs[npcId];
@@ -409,7 +417,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   let w = w0;
   expectStep(w, Q.M2, 0);
 
-  w = tick(interact(goTo(w, ME, "care-shrine"), ME, "care-shrine", "rest"));
+  w = tick(use(w, "care-shrine", "rest"));
   expectStep(w, Q.M2, 1);
   expect(me(w).flags[F.SHRINE]).toBe(1);
 
@@ -425,7 +433,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   expect(me(talkTo(w, ME, "sexton")).dialogue?.node, "met once at the wake, then his hub").toBe("hub");
   w = closeAll(w, ME);
 
-  w = tick(interact(goTo(w, ME, "hall-mortals"), ME, "hall-mortals", "read"));
+  w = tick(use(w, "hall-mortals", "read"));
   expectStep(w, Q.M2, 3);
   expect(me(w).flags[F.HALL]).toBe(1);
   expect(w.pois["hall-mortals"].state).toBe("lit");
@@ -446,7 +454,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   w = closeAll(w, ME);
 
   const purse = me(w).bestand;
-  w = tick(interact(goTo(w, ME, "safety-desk"), ME, "safety-desk", o.freeze));
+  w = tick(use(w, "safety-desk", o.freeze));
   expectStep(w, Q.M2, 5);
   expect(me(w).heard, "the desk keeps both").toContain(`You said ${said} in the corridor.`);
   if (o.freeze === "sign") {
@@ -466,7 +474,11 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   expect(snapshotFor(w, ME).objective).toMatchObject({ step: "tithe", target: POSITIONS["tax-window"] });
   const beforeTithe = me(w).bestand;
   const standingBefore = w.houses.standing;
-  w = tick(interact(goTo(w, ME, "tax-window"), ME, "tax-window", o.freeze === "sign" ? "ride" : "pay"));
+  // Both spine verbs stand in the prompt: the Annex's side hours share this window's E and Q and wait for the decision.
+  const atWindow = verbsFor({ w: goTo(w, ME, "tax-window"), p: me(w), now: w.now }, "tax-window");
+  expect(atWindow.map(v => `${v.key}:${v.choice}`), "the tithe is the window's decision").toEqual(expect.arrayContaining(["E:pay", "Q:ride"]));
+  expect(questProgress(me(w), "side-annex-tax-is-climate").started, "the tax hour waits for the tithe").toBe(false);
+  w = tick(use(w, "tax-window", o.freeze === "sign" ? "ride" : "pay"));
   expectStep(w, Q.M2, 6);
   expect(me(w).flags[F.TITHE]).toBe(1);
   if (o.freeze === "sign") {
@@ -485,12 +497,12 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   const history = snapshotFor(w, ME).objective!;
   expect(history.step).toBe("history");
   expect(history.target).toEqual(POSITIONS["history:7777"]);
-  w = tick(interact(goTo(w, ME, "care-shrine"), ME, "care-shrine", "history"));
+  w = tick(use(w, "care-shrine", "history"));
   expectStep(w, Q.M2, 7);
   expect(me(w).flags[F.HISTORY]).toBe(1);
   expect(snapshotFor(w, ME).history.map(m => m.serial)).toEqual([TEST_SERIAL]);
 
-  w = tick(interact(goTo(w, ME, "listing-board"), ME, "listing-board", "read"));
+  w = tick(use(w, "listing-board", "read"));
   expectStep(w, Q.M2, 8);
   expect(me(w).flags[F.BOARD]).toBe(1);
   expect(w.flags[W.CLEARING_LISTED]).toBe(1);
@@ -520,14 +532,14 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
     // the offer and the door fall in one tick; the movement turns
     expect(snapshotFor(w, ME).npcs.some(n => n.id === "vesper")).toBe(false);
   } else {
-    w = tick(interact(goTo(w, ME, "operator-desk"), ME, "operator-desk", "refuse"));
+    w = tick(use(w, "operator-desk", "refuse"));
     expectStep(w, Q.M2, 9);
     expect(me(w).choices[C.OPERATOR]).toBe("refuse");
     expect(me(w).flags[F.M3]).toBeUndefined();
     expect(me(w).current).toBe("");
     expect(w.pois["wreckage-garden"].state).toBe("wreck");
     expect(snapshotFor(w, ME).objective).toMatchObject({ step: "door", target: POSITIONS["wreckage-garden"] });
-    w = tick(interact(goTo(w, ME, "wreckage-garden"), ME, "wreckage-garden", "bury"));
+    w = tick(use(w, "wreckage-garden", "bury"));
     expect(w.pois["wreckage-garden"].state).toBe("buried");
     expect(w.flags[W.GARDEN_BURIED]).toBe(1);
     expect(me(w).flags[F.GARDEN]).toBe(1);
@@ -548,7 +560,7 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell" }): WorldStat
   const organs: [number, string, string][] = [[0, "organ-strait", F.STRAIT], [1, "organ-foundry", F.FOUNDRY], [2, "organ-cable", F.CABLE]];
   for (const [step, organ, flag] of organs) {
     expectStep(w, Q.M3, step);
-    w = tick(interact(goTo(w, ME, organ), ME, organ, "study"));
+    w = tick(use(w, organ, "study"));
     expect(me(w).flags[flag], organ).toBe(1);
   }
   expectStep(w, Q.M3, 3);
@@ -565,14 +577,14 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell" }): WorldStat
   } else {
     expectStep(w, Q.M3, 4);
     expect(me(w).party.nara).toBe("waiting");
-    w = tick(interact(goTo(w, ME, "wreckage-garden"), ME, "wreckage-garden", "bury"));
+    w = tick(use(w, "wreckage-garden", "bury"));
     expectStep(w, Q.M3, 5);
     expect(me(w).flags[F.GARDEN]).toBe(1);
     expect(me(w).party.nara).toBe("with");
     expect(w.pois["wreckage-garden"].state).toBe("buried");
   }
 
-  w = tick(interact(goTo(w, ME, "forecast-glass"), ME, "forecast-glass", "season"));
+  w = tick(use(w, "forecast-glass", "season"));
   expectStep(w, Q.M3, 6);
   expect(me(w).flags[F.FAILED]).toBe(1);
 
@@ -616,7 +628,7 @@ function movementFourToTheRing(w0: WorldState): WorldState {
   expect(w.flags[W.IONE_GONE]).toBe(1);
   expect(snapshotFor(w, ME).npcs.some(n => n.id === "ione"), "Ione Kade does not return").toBe(false);
 
-  w = tick(interact(goTo(w, ME, "clearing-ring"), ME, "clearing-ring", "prepare"));
+  w = tick(use(w, "clearing-ring", "prepare"));
   expectStep(w, Q.M4, 2);
   expect(me(w).flags[F.PREPARE]).toBe(1);
   expect(w.clearing.open).toBe(true);

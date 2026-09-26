@@ -18,6 +18,9 @@ const either = (...fs: ((ctx: Ctx) => boolean)[]) => (ctx: Ctx): boolean => fs.s
 
 const live = (ctx: Ctx, v: PoiVerb): boolean => !(v.once && (ctx.p.flags[v.once] ?? 0) > 0) && (!v.when || v.when(ctx));
 
+/** The spine decides this hour's tithe at the tax window on E and Q; the hours' verbs there wait for that. */
+const tithed = ({ p }: Ctx): boolean => has(p, F.TITHE);
+
 /** Same-key verbs on one POI show one at a time, in the order written. */
 function exclusive(verbs: PoiVerb[]): PoiVerb[] {
   return verbs.map((v, i) => {
@@ -198,13 +201,13 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
   "tax-window": exclusive([
     {
       key: "E", label: "File Form 9", choice: "side:form9:file",
-      when: atStep(SQ.FORM9, 1), guest: "spectate", once: SF.FORM9_FILED, cost: { bestand: 5, sink: "freeze" },
+      when: both(atStep(SQ.FORM9, 1), tithed), guest: "spectate", once: SF.FORM9_FILED, cost: { bestand: 5, sink: "freeze" },
       effects: [{ kind: "choice", key: SC.FORM9, value: "filed" }],
       say: "Five Bestand. Stamped. The freeze you signed is on paper now. Paper holds longer than weather.",
     },
     {
       key: "Q", label: "Refuse Form 9", choice: "side:form9:refuse",
-      when: atStep(SQ.FORM9, 1), guest: "spectate", once: SF.FORM9_FILED,
+      when: both(atStep(SQ.FORM9, 1), tithed), guest: "spectate", once: SF.FORM9_FILED,
       effects: [{ kind: "choice", key: SC.FORM9, value: "refused" }],
       say: "You do not pay for it twice. The freeze holds on the ground. On paper it lapses. The clerk writes 'lapsed' with no expression.",
     },

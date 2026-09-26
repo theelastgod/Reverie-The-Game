@@ -173,6 +173,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   crosses the Care, Annex and Wet gates on foot and prints a second
   `measure:` block. PASS on the first run. The numbers are in Verified and
   Backlog 5.
+- Movement III over the wire (2026-09-26): `scripts/smoke-campaign.mjs
+  --movement=3` (`npm run test:campaign:3`, 480 s deadline) goes on through
+  the Organs door: studies the Strait, the Foundry and the Cable, hears Ord's
+  map at the Strait, walks back across the Nave to bury the wreckage garden
+  in the Care (Nara waits, then walks), north to the Kerb's forecast glass
+  for last season, and to Quill at the forge tray to spot the copy, reaching
+  Movement IV; it prints a third `measure:` block. The Care garden's lane
+  comes down x 17 to row 70 before turning east through the gap (the wall at
+  x 19 rows 66–68 jammed the diagonal). Numbers in Verified and Backlog 7.
+- The tax window's key clash (2026-09-26, found by the smoke's diagnostics):
+  the side hour "The tax is climate" opened on the same gate as the spine's
+  tithe (`F.HALL` and a House) and its "Read who pays" took key E at the
+  window, so "Pay this hour's tithe" was never in the prompt; a player could
+  only let it ride, or pay the hour's share first. The hour now opens once
+  the tithe is decided (`F.TITHE`), and Form 9's file / refuse verbs at the
+  same window wait for it too (the Officer's ask stays on the way). The
+  spine test presses every POI verb through a `use()` helper that first
+  asserts the verb is in `verbsFor`'s prompt, the way the client would, and
+  pins both `E:pay` and `Q:ride` at the window with the tax hour not yet
+  started; the smoke no longer falls back to the prompt's first verb when
+  the one it wants is missing (the missing verb is the finding).
 - The fast frame's second pass (2026-09-26): new bodies get twelve-hex ids
   (`bodyId()` in the object; saved bodies keep theirs) instead of 36-character
   uuids, and `you` splits like the roster (`quests`, `flags`, `choices`,
@@ -330,7 +351,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   words, 2 decisions, 7.0 min before the beats; 1196 / 3 / 10.7 before the
   window). One run right after a worker restart failed at the intake fight
   ("intake clerk falls did not complete") and passed on the rerun; not
-  reproduced, not root-caused.
+  reproduced, not root-caused. With `--movement=3` (2026-09-26, after the
+  tax-window fix): Movements I, II and III PASS in one run; Movement III bot
+  95 s (walk 95 s: the Strait 6 s, the Foundry 3 s, the Cable 4 s, Ord 6 s,
+  the garden 30 s, the glass 32 s, the forge 14 s; talk and verbs 0.7 s),
+  723 words (dialogue 202, spoken 210, journal 188, notices 123), 1
+  decision (the forge), estimate 7.5 min on the spine alone. Before the fix
+  the same run failed at the window one time in two ("the tithe decided did
+  not complete": the prompt offered `E:side:tax:read, F:read, Q:ride`, no
+  `pay`; the other time the purse was short and the bot let it ride).
 - Writeback log: 4 diff tests (every kind, unchanged world, a body that only
   appeared, rolling news), 4 sink tests (batches, overflow, a failing D1
   keeps the queue and warns once a minute, one flush in flight), 3 session
@@ -458,9 +487,26 @@ they are discovered; keep this list honest.
    with four decisions. One candidate left, optional: the listing board
    with a second listing that moves the market (a world listing effect the
    engine does not have yet), so the "resistance" has a price you can watch.
-   Movements III and IV are unmeasured over the wire; extending the smoke
-   through the Organs (`--movement=3`) is the next measure to take.
-7. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+7. **Movement III density: thin.** Measured 2026-09-26 over the wire
+   (`npm run test:campaign:3`): 7.5 min on the spine alone, 723 words, one
+   decision (Quill's spot or sell), and 95 s of bot walking of which 76 s is
+   the two crossings after Ord's map (the Organs to the Care garden, the
+   Care to the Kerb's glass). Movement III has seven steps; the first four
+   are three F reads and a talk, all within the Organs. No target is written
+   for it; by Movement II's shape, 10–12 min with three decisions is the
+   proposal. Candidates, in order: make Ord's map a decision (which organ
+   the city should feed first, `C.MAP`, that the cold desk and the Officer
+   remember, and that sets which organ's side hour is offered first); give
+   the garden a line from Nara before the burial (she is `waiting` there and
+   says nothing until it is in the ground); and a Kerb beat on the way to
+   the glass (the omen at the terrace reads last season for a price, or the
+   hour bell struck once) so the 32 s walk has a stop in it. The Strait's
+   "refuse the feed" and the Foundry's "darken" already stand as optional E
+   and Q verbs; the smoke counts only the spine's decisions, and neither is
+   on it. Re-measure with `--movement=3` after each beat and keep the
+   numbers here. Movement IV is unmeasured over the wire; extending the
+   smoke through the ring (`--movement=4`) is the measure after this one.
+8. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 
 ## Rules

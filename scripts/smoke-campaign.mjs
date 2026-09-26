@@ -1,16 +1,17 @@
 // Drives Movement I over the real WebSocket using only public messages, then
 // links the test Angel and goes under. With --movement=2 it goes on through
 // Movement II (the Care shrine, the hall, the Annex desk, the history, the
-// board, Vesper) to the Organs door. Run against local Wrangler:
+// board, Vesper) to the Organs door; with --movement=3 through the Organs, the
+// garden, the Kerb's glass and Quill's forge to Movement IV. Run against local Wrangler:
 //   npx wrangler dev --port 8788      (in another shell)
-//   node scripts/smoke-campaign.mjs [origin] [--movement=2]
-// Default origin http://127.0.0.1:8788. Deadline 90 s, 240 s with Movement II.
+//   node scripts/smoke-campaign.mjs [origin] [--movement=2|3]
+// Default origin http://127.0.0.1:8788. Deadline 90 s; 240 s with Movement II; 480 s with III.
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 
 const origin = process.argv.find(a => a.startsWith('http')) ?? 'http://127.0.0.1:8788';
 const MOVEMENT = Number((process.argv.find(a => a.startsWith('--movement=')) ?? '').split('=')[1] || 1);
-const DEADLINE_S = MOVEMENT >= 2 ? 240 : 90;
+const DEADLINE_S = MOVEMENT >= 3 ? 480 : MOVEMENT >= 2 ? 240 : 90;
 const deadline = setTimeout(() => { console.error(`FAIL: campaign deadline (${DEADLINE_S} s) exceeded`); process.exit(1); }, DEADLINE_S * 1000);
 
 // Tile coordinates duplicated from src/sim/map.ts (Nave of Tubes, 48 px tiles).
@@ -73,6 +74,32 @@ const ROUTE2 = {
   windowToShrine: [at(17, 23), at(17, 27), at(17, 30), at(17, 50), at(17, 58), at(17, 62)],
   shrineToBoard: [at(17, 58), at(17, 50), at(17, 42), at(35, 42), at(38, 41), at(58, 41), at(58, 39)],
   boardToOperator: [at(58, 41), at(64, 44), at(64, 48), at(64, 50)],
+};
+
+// Movement III, from the operator's desk with the Organs door funded. The Organs (x 72..101, rows
+// 29..54): the Strait canal at x 74..75 with its bridge on rows 40..43, furnace blocks at x 84..90
+// rows 32..34 and x 84..86 rows 41..42, cable trunks at x 94 and 98 rows 31..38 and 45..52. The
+// garden is back in the Care (walls at x 19 rows 66..68 and 72..74, the gap at 69..71). The Kerb
+// (x 37..68, rows 2..25): terraces on row 6 and row 21 (a gap at x 49), a wall at x 45 rows 13..18.
+const T3 = {
+  door: at(70, 41),            // gate-wet-organs
+  strait: at(77, 41),          // organ-strait
+  foundry: at(86, 38),         // organ-foundry
+  cable: at(96, 41),           // organ-cable
+  ordStrait: at(78, 40),       // station:ord-strait, where Ord waits for the map
+  garden: at(25, 70),          // wreckage-garden, the Care
+  glass: at(60, 10),           // forecast-glass, the Kerb
+  quillForge: at(59, 44),      // station:quill-forge, the Wet Grid
+};
+const ROUTE3 = {
+  toStrait: [at(64, 48), at(64, 44), at(68, 41), at(70, 41), at(73, 41), at(76, 41)],
+  toFoundry: [at(80, 41), at(82, 38), at(85, 38)],
+  toCable: [at(88, 38), at(92, 40), at(95, 41)],
+  toOrd: [at(92, 40), at(88, 38), at(80, 40)],
+  // The garden's wall stands at x 19 rows 66..68: come down x 17 to row 70 first, then east through the gap.
+  toGarden: [at(76, 41), at(73, 41), at(70, 41), at(68, 41), at(64, 44), at(38, 41), at(35, 42), at(20, 42), at(17, 42), at(17, 50), at(17, 58), at(17, 63), at(17, 70), at(19, 70), at(23, 70)],
+  toGlass: [at(19, 70), at(17, 70), at(17, 63), at(17, 58), at(17, 50), at(17, 30), at(17, 27), at(17, 15), at(20, 14), at(33, 14), at(35, 13), at(38, 13), at(40, 10), at(58, 10)],
+  toForge: [at(58, 10), at(49, 19), at(49, 23), at(53, 26), at(53, 27), at(53, 30), at(53, 38), at(58, 41)],
 };
 
 const sockets = [];
@@ -237,10 +264,14 @@ async function useVerb(state, poiId, pick, done, label) {
     throw new Error(`${error.message} (standing at ${Math.round(p.x)},${Math.round(p.y)}; the prompt shows ${JSON.stringify(state.snap.prompt)}; flags ${JSON.stringify(p.flags)})`);
   });
   const verbs = state.snap.prompt.verbs;
-  const verb = pick(verbs) ?? verbs[0];
-  assert.ok(verb, `${label}: a verb at ${poiId} (got ${JSON.stringify(verbs)})`);
+  // No fallback: the client can only send what the prompt offers, so a missing verb is the finding.
+  const verb = pick ? pick(verbs) : verbs[0];
+  assert.ok(verb, `${label}: the verb at ${poiId} is not in the prompt (offered ${JSON.stringify(verbs.map(v => `${v.key}:${v.choice}`))})`);
   send(state, { t: 'interact', targetId: poiId, choice: verb.choice });
-  await wait(state, done, label, 8000);
+  await wait(state, done, label, 8000).catch(error => {
+    const p = you(state);
+    throw new Error(`${error.message} (sent ${verb.choice} of ${JSON.stringify(verbs.map(v => `${v.key}:${v.choice}`))}; bestand ${p.bestand}; heard: ${p.heard})`);
+  });
 }
 const byKey = key => verbs => verbs.find(v => v.key === key);
 
@@ -281,18 +312,20 @@ function report() {
   for (const p of phases) console.log(`  ${p.label.padEnd(22)} ${(p.ms / 1000).toFixed(1)} s`);
 }
 
-/** Movement II, measured the same way, from the wake to the Organs door. */
-function reportTwo(t1, read1, from) {
+/** A later movement, measured the same way as the opening, from its first beat to its last. `numeral` prefixes its phase labels. */
+function reportMovement(numeral, t1, read1, from) {
   const total = (Date.now() - t1) / 1000;
   const mine = phases.slice(from);
-  const sum = prefix => mine.filter(p => p.label.startsWith(prefix)).reduce((a, p) => a + p.ms, 0) / 1000;
-  const walk = sum('II walk'), talk = sum('II talk') + sum('II verb');
+  const sum = prefix => mine.filter(p => p.label.startsWith(`${numeral} ${prefix}`)).reduce((a, p) => a + p.ms, 0) / 1000;
+  const walk = sum('walk'), fight = sum('fight'), talk = sum('talk') + sum('verb');
   const words = { dialogue: read.dialogue - read1.dialogue, spoken: read.spoken - read1.spoken, journal: read.journal - read1.journal, notices: read.notices - read1.notices };
   const wordsTotal = words.dialogue + words.spoken + words.journal + words.notices;
   const decisions = read.decisions - read1.decisions;
-  const estimate = ((walk * 1.8) / 60 + wordsTotal / 180 + (decisions * 40) / 60).toFixed(1);
-  console.log(`measure: Movement II bot ${total.toFixed(1)} s (walk ${walk.toFixed(1)} s, talk+verbs ${talk.toFixed(1)} s)`);
-  console.log(`measure: Movement II words shown ${wordsTotal} (dialogue ${words.dialogue}, spoken ${words.spoken}, journal ${words.journal}, notices ${words.notices}); decisions ${decisions}; estimate ${estimate} min on the spine alone`);
+  const fights = mine.filter(p => p.label.startsWith(`${numeral} fight`)).map(p => p.ms / 1000);
+  const fightMin = fights.reduce((a, s) => a + Math.max(s, 25), 0) / 60;
+  const estimate = ((walk * 1.8) / 60 + fightMin + wordsTotal / 180 + (decisions * 40) / 60).toFixed(1);
+  console.log(`measure: Movement ${numeral} bot ${total.toFixed(1)} s (walk ${walk.toFixed(1)} s, fight ${fight.toFixed(1)} s, talk+verbs ${talk.toFixed(1)} s)`);
+  console.log(`measure: Movement ${numeral} words shown ${wordsTotal} (dialogue ${words.dialogue}, spoken ${words.spoken}, journal ${words.journal}, notices ${words.notices}); decisions ${decisions}; estimate ${estimate} min on the spine alone`);
   for (const p of mine) console.log(`  ${p.label.padEnd(22)} ${(p.ms / 1000).toFixed(1)} s`);
 }
 
@@ -518,8 +551,75 @@ try {
     assert.equal(you(me).current, 'cold', 'Cold is a current');
 
     phase('end II');
-    reportTwo(T1, read1, from);
+    reportMovement('II', T1, read1, from);
     console.log('PASS: Movement II — the shrine, Pim Ashe at the wake, the hall, Corvin Slate in the corridor, the freeze refused, the tithe decided, the history faced, the board read, the private yield taken → Movement III');
+  }
+
+  if (MOVEMENT >= 3) {
+    const T2s = Date.now();
+    const read2 = { ...read };
+    const from = phases.length;
+
+    // The Organs door is funded: through it to the three organs, west to east.
+    phase('III walk: strait');
+    await walk(me, ROUTE3.toStrait);
+    await stand(me, T3.strait);
+    assert.equal(me.snap.district, 'organs', 'through the funded door into the Organs');
+    phase('III verb: strait');
+    await useVerb(me, 'organ-strait', verbs => verbs.find(v => v.choice === 'study'), () => !!you(me).flags.strait, 'study the Strait');
+    phase('III walk: foundry');
+    await walk(me, ROUTE3.toFoundry);
+    await stand(me, T3.foundry);
+    phase('III verb: foundry');
+    await useVerb(me, 'organ-foundry', verbs => verbs.find(v => v.choice === 'study'), () => !!you(me).flags.foundry, 'study the Foundry');
+    phase('III walk: cable');
+    await walk(me, ROUTE3.toCable);
+    await stand(me, T3.cable);
+    phase('III verb: cable');
+    await useVerb(me, 'organ-cable', verbs => verbs.find(v => v.choice === 'study'), () => !!you(me).flags.cable, 'study the Cable');
+
+    // Ord at the Strait puts the three together.
+    phase('III walk: ord');
+    await walk(me, ROUTE3.toOrd);
+    await stand(me, T3.ordStrait, 72);
+    phase('III talk: ord');
+    await converse(me, 'ord', 'map');
+
+    // The garden in the Care: the yield was taken, so Nara waits until it is in the ground.
+    assert.equal(you(me).party.nara, 'waiting', 'Nara waits on the garden after the yield');
+    phase('III walk: garden');
+    await walk(me, ROUTE3.toGarden);
+    await stand(me, T3.garden, 64);
+    assert.equal(me.snap.district, 'care', 'back in the Care');
+    phase('III verb: garden');
+    await useVerb(me, 'wreckage-garden', verbs => verbs.find(v => v.choice === 'bury'), () => !!you(me).flags.garden, 'bury the garden');
+    assert.equal(you(me).party.nara, 'with', 'Nara speaks again');
+
+    // Last season, in the forecast glass on the Kerb.
+    phase('III walk: glass');
+    await walk(me, ROUTE3.toGlass);
+    await stand(me, T3.glass);
+    assert.equal(me.snap.district, 'kerb', 'through the Annex to the Kerb');
+    phase('III verb: glass');
+    await useVerb(me, 'forecast-glass', verbs => verbs.find(v => v.choice === 'season'), () => !!you(me).flags.failed, 'face last season');
+
+    // Quill at the forge tray: learn to spot the copy (the first choice), which turns the movement.
+    phase('III walk: forge');
+    await walk(me, ROUTE3.toForge);
+    await stand(me, T3.quillForge, 72);
+    assert.equal(me.snap.district, 'wet', 'down to the Wet Grid');
+    read.decisions++;
+    phase('III talk: quill');
+    await converse(me, 'quill', 'forge');
+    assert.equal(you(me).choices.forge, 'spot', 'learned to spot the copy');
+    await wait(me, () => you(me).movement === 4, 'Movement IV opens', 6000).catch(error => {
+      const p = you(me);
+      throw new Error(`${error.message} (movement ${p.movement}, quests ${JSON.stringify(p.quests)}, flags strait ${p.flags.strait} foundry ${p.flags.foundry} cable ${p.flags.cable} map ${p.flags.map} garden ${p.flags.garden} failed ${p.flags.failed} forge ${p.flags.forge})`);
+    });
+
+    phase('end III');
+    reportMovement('III', T2s, read2, from);
+    console.log('PASS: Movement III — the Strait, the Foundry, the Cable, Ord\'s map, the garden buried, last season in the glass, the copy spotted → Movement IV');
   }
 
   clearTimeout(deadline);

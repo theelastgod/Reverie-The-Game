@@ -16,6 +16,7 @@
     "test:smoke": "node scripts/smoke-world.mjs",
     "test:campaign": "node scripts/smoke-campaign.mjs",
     "test:campaign:2": "node scripts/smoke-campaign.mjs --movement=2",
+    "test:campaign:3": "node scripts/smoke-campaign.mjs --movement=3",
     "test:load": "node scripts/load-check.mjs",
     "test:render": "node scripts/render-check.mjs",
     "d1:migrate": "wrangler d1 migrations apply reverie-log --local",

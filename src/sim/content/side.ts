@@ -795,7 +795,8 @@ const ANNEX: Quest[] = [
     district: "annex",
     guestLegal: false,
     changes: "standing",
-    available: ({ p }) => angel(p) && p.house !== "" && has(p, F.HALL),
+    // The hour opens once the spine's own tithe is decided: its E verbs share the window with "Pay this hour's tithe".
+    available: ({ p }) => angel(p) && p.house !== "" && has(p, F.TITHE),
     steps: [
       step({
         id: "read",
