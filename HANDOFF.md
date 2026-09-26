@@ -684,6 +684,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The whole spine over the wire after the frames, the listing and the
+  review fixes (2026-09-26, `npm run test:campaign:4` on a fresh world):
+  I 16.8 min / 8 decisions, II 12.5 / 4 (the Clearing priced at 40, then
+  48 on the yield), III 11.4 / 3, IV 7.4 / 3 with the Passing `failed` at
+  readiness 52 as designed, the credits reached; the city's log then
+  reads the credits, the failed Passing, the re-price (48 → 42) and the
+  ground prepared, newest first, on the landing page. The bench curve at
+  80, 120 and 160 bodies is in `.rebuild/ZONES.md` and Backlog 4.
 - The city's log on the landing page (2026-09-26): typecheck, 458 tests
   (the wording of "ago", the lines kept and left out, the mount with a
   fake document and fetch: shown as text, hidden on a 404, on nothing
@@ -811,8 +819,18 @@ they are discovered; keep this list honest.
    the runs). The next measure is `scripts/load-check.mjs --bots=80`
    (then 120, 160) against a deployed city from a second machine, once
    the deploy is possible; only that run decides whether zone objects
-   are needed at all. No per-viewer compute lever is left that is worth
-   a change before that run: what remains per viewer is the fast encode
+   are needed at all. The in-process curve is known (2026-09-26,
+   `BENCH_BODIES=N npm run bench`, `.rebuild/ZONES.md`): with N bodies
+   walking in one area of interest the step (tick and one broadcast to
+   every viewer) is 4.7 ms at 80, 9.4 ms at 120 and 15.0 ms at 160
+   (99th percentile 9, 18 and 29 ms), the tick alone 1.2, 2.1 and 4.0
+   ms; the broadcast grows with the square of the bodies in view, and
+   compute alone would cross the 50 ms step near 250–300 bodies in one
+   area, where the wire (about 3 MB per step at 160) binds long before.
+   So the object's compute is not the knee at any population one area
+   could hold; the area of interest and the wire are, and that is what
+   the deployed run measures. No per-viewer compute lever is left that is
+   worth a change before that run: what remains per viewer is the fast encode
    (the fan-out itself, 79 fragments joined per viewer) and, for Angels
    in a mob, the prompt's candidates; at that density the broadcast is
    847 KB per step (17 MB/s), so the wire binds first, which argues for

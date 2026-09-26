@@ -169,6 +169,33 @@ per step at that density, 17 MB/s at 20 Hz: with 80 bodies in one area
 of interest the wire is the bound long before the compute, which is the
 case for zones (or a smaller area of interest), not for more diet.
 
+### The curve past 80 bodies (the same day, last)
+
+`BENCH_BODIES=N npm run bench` on this container: N bodies in one area
+of interest, every body walking every step. `tick` is the step without
+any broadcast (every body's intent applied, the world ticked); the other
+rows add one broadcast to every viewer. Means, and the frames path's
+99th percentile:
+
+| bodies | tick alone | one viewer at a time | shared views, split after | frames (the object's path) | frames p99 |
+|---:|---:|---:|---:|---:|---:|
+| 80 | 1.2 ms | 25.9 ms | 9.7 ms | 4.7 ms | 9.3 ms |
+| 120 | 2.1 ms | 54.4 ms | 16.7 ms | 9.4 ms | 17.9 ms |
+| 160 | 4.0 ms | 95.3 ms | 28.6 ms | 15.0 ms | 29.3 ms |
+
+The tick grows with the bodies; the broadcast grows with their square,
+since every viewer is sent every other body in view. At 160 bodies in
+one area the step is 15 ms mean and 29 ms at the 99th on this CPU,
+inside the 50 ms step; by this curve the compute alone would cross 50
+ms near 250–300 bodies in one area (the old path crossed it at about
+115). The wire binds first: 160 bodies in one area is about 3 MB per
+step, 60 MB/s, which no single object should be asked to send. So the
+object's compute is not the knee at any population one area could
+hold; the area of interest, the wire, and then zones are. This is one
+process on the container's CPU; a Workers isolate has its own CPU
+budget and its own socket costs, so the deployed run (HANDOFF Backlog
+4) is still the measure of the real knee.
+
 ## 2. First: the snapshot diet (protocol v3)
 
 Done 2026-09-26 as described below (with one addition: other bodies split
