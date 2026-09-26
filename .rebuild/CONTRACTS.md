@@ -182,6 +182,16 @@ export function applyWallet(w, id, address: string, line?: string): WorldState; 
 export function applyLink(w, id, serial: number, proof: LinkProof | string): WorldState; // validLink; a wallet proof also sets player.wallet; refuse if another connected player has the serial (say LINES.LINK_ELSEWHERE); guest=false, serial, name formatSerial, house/messenger/winkSchool, auraSeed, aura = max(aura, seed), flags[F.ANGEL]=1, locked=false, linkedAt, history mark push: serialHistoryMark(serial) ?? historyMarkFor(serial, p.history, p.deaths); if locked at the threshold, the "under" effect is NOT applied automatically (player uses the threshold again)
 ```
 
+## server/src/holders.ts (the Worker only; the client never calls a chain)
+```ts
+export type HoldersEnv = { ANGEL_HOLDERS?: string; ANGEL_CONTRACT?: string; ANGEL_RPC_URL?: string; ANGEL_TOKEN_OFFSET?: string };
+export type HolderCache = Map<string, { serial: number | null; at: number }>; // per object, CACHE_TTL_MS = 5 min, CACHE_MAX = 1000
+export function encodeCall(selector: string, address: string, index?: bigint): string; // balanceOf 0x70a08231, tokenOfOwnerByIndex 0x2f745c59
+export function decodeUint(hex: unknown): bigint | null;
+export function serialFromChain(address, env, fetcher, nowMs, cache): Promise<number | null | undefined>; // number = holds this serial; null = no Angel (or outside 1..ANGEL_SUPPLY); undefined = the chain could not be read (never cached)
+export function serialFor(address, env, fetcher, nowMs, cache): Promise<number | null | undefined>; // ANGEL_HOLDERS wins; then the chain when ANGEL_CONTRACT + ANGEL_RPC_URL are set; else null. /wallet/link answers 503 { reason: "chain" } on undefined
+```
+
 ## content/index.ts (owned by the integrator)
 ```ts
 export const NPCS: Record<string, NpcDef>;       // party (npcs.ts) + secondary (side-npcs.ts)

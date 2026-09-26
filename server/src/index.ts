@@ -12,7 +12,8 @@ import { migratePlayer, migrateWorld, SHAPE } from "../../src/sim/migrate.ts";
 import { DT } from "../../src/sim/constants.ts";
 import { applyAction, applyLink, applyWallet } from "../../src/sim/actions.ts";
 import { LINES } from "../../src/sim/content/index.ts";
-import { CHALLENGE_TTL_MS, challengeMessage, isAddress, normalizeAddress, parseHolders, recoverAddress } from "./wallet.ts";
+import { CHALLENGE_TTL_MS, challengeMessage, isAddress, normalizeAddress, recoverAddress } from "./wallet.ts";
+import { serialFor, type HolderCache } from "./holders.ts";
 import { logEventsFor, PUBLIC_LOG_KINDS } from "./log.ts";
 import { LogSink } from "./logSink.ts";
 import { snapshotFor } from "../../src/sim/snapshot.ts";
@@ -25,7 +26,10 @@ type Env = {
   ASSETS: { fetch: (req: Request) => Promise<Response> };
   WORLD: DurableObjectNamespace;
   MOCK_LINK?: string; // "1" accepts the test link (serial + mock signature); unset or "0" refuses it
-  ANGEL_HOLDERS?: string; // JSON { "0xaddress": serial } until the contract exists
+  ANGEL_HOLDERS?: string; // JSON { "0xaddress": serial }: test serials, and the only source until the contract exists
+  ANGEL_CONTRACT?: string; // the ERC-721's address; with the RPC below, /wallet/link reads ownership from the chain
+  ANGEL_RPC_URL?: string; // a JSON-RPC endpoint the Worker may call (eth_call only; never a transaction)
+  ANGEL_TOKEN_OFFSET?: string; // serial = tokenId + offset
   LOG?: D1Database; // the writeback log; absent, nothing is written
 };
 
@@ -136,12 +140,17 @@ export class ReverieWorld {
     return (this.env?.MOCK_LINK ?? "0") === "1";
   }
 
+  /** Chain answers remembered per address for a few minutes, for the life of this object. */
+  private readonly holders: HolderCache = new Map();
+
   /**
    * Wallet login, disarmed. POST /wallet/challenge issues a nonce to this
    * session; POST /wallet/link takes { address, signature } over that nonce,
    * recovers the signer, and seals the live body with the serial the holders
-   * map assigns, or binds the address to the guest when it holds no Angel.
-   * The nonce is spent on first use and expires on its own.
+   * map assigns (or, with a contract configured, the one the chain says it
+   * holds), or binds the address to the guest when it holds no Angel. When
+   * the chain cannot be read the link is refused with 503 and nothing
+   * changes. The nonce is spent on first use and expires on its own.
    */
   private async wallet(req: Request, path: string): Promise<Response> {
     const headers = { "Cache-Control": "no-store" };
@@ -171,7 +180,9 @@ export class ReverieWorld {
     const address = normalizeAddress(body.address);
     const signer = recoverAddress(challengeMessage(challenge.nonce, challenge.at), body.signature);
     if (!signer || signer !== address) return refuse(403, "bad-signature");
-    const serial = parseHolders(this.env?.ANGEL_HOLDERS).get(address) ?? null;
+    const serial = await serialFor(address, this.env ?? {}, (input, init) => fetch(input, init), Date.now(), this.holders);
+    if (serial === undefined) return refuse(503, "chain");
+    if (!this.w.players.has(live.id)) return refuse(409, "no-session"); // the body left while the chain answered
     this.advanceWorld(Date.now());
     this.w = serial === null
       ? applyWallet(this.w, live.id, address, LINES.LINK_NO_ANGEL)

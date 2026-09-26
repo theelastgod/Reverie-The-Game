@@ -68,8 +68,11 @@ panel (serial 7777, mock signature; offered only while `MOCK_LINK=1`, which
 wallet instead: the lock panel's LINK A WALLET asks an EIP-6963 wallet for one
 `personal_sign` over a server nonce, the Worker recovers the signer, and the
 serial comes from the `ANGEL_HOLDERS` map in `wrangler.toml` until the
-contract exists. Never a seed, never a transaction. Clearing cookies starts a
-new guest.
+contract exists; with `ANGEL_CONTRACT` and `ANGEL_RPC_URL` set, the Worker
+reads ownership from the chain instead (two `eth_call`s, cached five minutes
+per address, the map as an override for test serials) and refuses the link
+while the chain cannot be read. Never a seed, never a transaction. Clearing
+cookies starts a new guest.
 
 ## Release checks
 

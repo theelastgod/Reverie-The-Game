@@ -25,7 +25,14 @@ migrations_dir = "server/migrations"
 
 # The test link (serial + mock signature) is a development convenience.
 # `.dev.vars` turns it on for `wrangler dev`; a deployed city keeps it off and
-# links Angels through /wallet with the holders map below until the contract exists.
+# links Angels through /wallet. The serial comes from the holders map (test
+# serials, and the only source until the contract exists); once ANGEL_CONTRACT
+# and ANGEL_RPC_URL are set the Worker reads ownership from the chain with two
+# eth_calls (balanceOf, tokenOfOwnerByIndex), cached five minutes per address,
+# and the map is an override. Never a transaction.
 [vars]
 MOCK_LINK = "0"
 ANGEL_HOLDERS = "{}"
+ANGEL_CONTRACT = ""
+ANGEL_RPC_URL = ""
+ANGEL_TOKEN_OFFSET = "0"

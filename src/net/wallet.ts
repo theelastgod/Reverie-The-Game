@@ -8,7 +8,7 @@ export type Eip1193 = { request: (args: { method: string; params?: unknown[] }) 
 export type ProviderInfo = { uuid: string; name: string; icon: string; rdns: string };
 export type Announced = { info: ProviderInfo; provider: Eip1193 };
 
-export type WalletReason = "no-wallet" | "rejected" | "no-session" | "bad-signature" | "disarmed" | "network";
+export type WalletReason = "no-wallet" | "rejected" | "no-session" | "bad-signature" | "disarmed" | "chain" | "network";
 export type WalletOutcome =
   | { ok: true; address: string; serial: number | null }
   | { ok: false; reason: WalletReason; detail?: string };
@@ -94,7 +94,7 @@ export async function linkWallet(fetcher: typeof fetch = (...a) => fetch(...a), 
     });
     const body = (await r.json().catch(() => ({}))) as { ok?: boolean; serial?: number | null; reason?: string };
     if (r.ok && body.ok) return { ok: true, address: address.toLowerCase(), serial: typeof body.serial === "number" ? body.serial : null };
-    const reason: WalletReason = body.reason === "bad-signature" || body.reason === "no-session" || body.reason === "disarmed" ? body.reason : "network";
+    const reason: WalletReason = body.reason === "bad-signature" || body.reason === "no-session" || body.reason === "disarmed" || body.reason === "chain" ? body.reason : "network";
     return { ok: false, reason, detail: body.reason ?? String(r.status) };
   } catch {
     return { ok: false, reason: "network" };
@@ -114,6 +114,7 @@ export function walletLine(o: WalletOutcome): string {
     case "no-session": return "The city cannot see this session. Enter the city first.";
     case "bad-signature": return "The signature did not match the address. Nothing changed.";
     case "disarmed": return "The link is disarmed on this city. Nothing changed.";
+    case "chain": return "The chain did not answer, so the city could not read the Angel. Nothing changed. Try again in a minute.";
     default: return "The desk did not answer. Try again in a moment.";
   }
 }

@@ -436,6 +436,50 @@ describe("wallet login", () => {
     expect(junk.status).toBe(400);
   });
 
+  it("reads the serial from the chain when a contract is configured, and refuses the link while the chain is unreadable", async () => {
+    const CHAIN_ENV = { MOCK_LINK: "0", ANGEL_HOLDERS: JSON.stringify({ [addressOf(HOLDER)]: 42 }), ANGEL_CONTRACT: "0x00000000000000000000000000000000000000a1", ANGEL_RPC_URL: "https://rpc.example/v1" };
+    const word = (n: bigint) => "0x" + n.toString(16).padStart(64, "0");
+    let down = false;
+    const rpc = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (down) return new Response("bad gateway", { status: 502 });
+      const data = (JSON.parse(String(init?.body)) as { params: [{ data: string }] }).params[0].data;
+      return Response.json({ jsonrpc: "2.0", id: 1, result: data.startsWith("0x70a08231") ? word(1n) : word(7n) });
+    });
+    vi.stubGlobal("fetch", rpc);
+    try {
+      const { world, data } = await worldHarness(null, [], [], CHAIN_ENV);
+      const ws = socket();
+      await world.join(token, ws as never);
+      // the chain is down: nothing changes, the nonce is spent, the client is told why
+      down = true;
+      let message = await challenge(world);
+      const refused = await world.fetch(post("/wallet/link", token, { address: addressOf(STRANGER), signature: ethSign(message, STRANGER) }));
+      expect(refused.status).toBe(503);
+      expect(await refused.json()).toEqual({ ok: false, reason: "chain" });
+      expect(last(ws).you).toMatchObject({ guest: true, wallet: "" });
+      expect(rpc).toHaveBeenCalledTimes(1);
+      // the chain answers: balance 1, first token 7
+      down = false;
+      message = await challenge(world);
+      const res = await world.fetch(post("/wallet/link", token, { address: addressOf(STRANGER), signature: ethSign(message, STRANGER) }));
+      expect(await res.json()).toEqual({ ok: true, address: addressOf(STRANGER), serial: 7 });
+      expect(last(ws).you).toMatchObject({ guest: false, serial: 7, name: "#0007", wallet: addressOf(STRANGER) });
+      expect(savedWorld(data).players[0][1]).toMatchObject({ serial: 7 });
+      expect(rpc).toHaveBeenCalledTimes(3);
+      expect((rpc.mock.calls[1][1] as RequestInit).method).toBe("POST");
+      expect(JSON.parse(String((rpc.mock.calls[1][1] as RequestInit).body))).toMatchObject({ method: "eth_call", params: [{ to: CHAIN_ENV.ANGEL_CONTRACT }, "latest"] });
+      // the map still wins, without a chain call
+      const ws2 = socket("b", otherToken);
+      await world.join(otherToken, ws2 as never);
+      message = await challenge(world, otherToken);
+      const mapped = await world.fetch(post("/wallet/link", otherToken, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+      expect(await mapped.json()).toEqual({ ok: true, address: addressOf(HOLDER), serial: 42 });
+      expect(rpc).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("accepts the test link only where the environment turns it on", async () => {
     const off = await worldHarness(null, [], [], { ANGEL_HOLDERS: "{}" });
     const ws = socket();

@@ -94,6 +94,11 @@ describe("the handshake", () => {
     expect(bound).toEqual({ ok: true, address: ADDR.toLowerCase(), serial: null });
     expect(walletLine(bound)).toContain("no Angel yet");
 
+    const chainDown = vi.fn(async (url: string) => (url === "/wallet/challenge" ? jsonResponse(200, { message: "m" }) : jsonResponse(503, { ok: false, reason: "chain" })));
+    const unread = await linkWallet(chainDown as unknown as typeof fetch, pageWith(signs()));
+    expect(unread).toEqual({ ok: false, reason: "chain", detail: "chain" });
+    expect(walletLine(unread)).toContain("chain did not answer");
+
     const refuses = fakeWallet("io.metamask", { eth_requestAccounts: [ADDR], personal_sign: new Error("denied") });
     const challengeOnly = vi.fn(async () => jsonResponse(200, { message: "m" }));
     expect(await linkWallet(challengeOnly as unknown as typeof fetch, pageWith(refuses))).toEqual({ ok: false, reason: "rejected" });
