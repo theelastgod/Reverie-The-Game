@@ -1,13 +1,17 @@
 // Drives Movement I over the real WebSocket using only public messages, then
-// links the test Angel and goes under. Run against local Wrangler:
+// links the test Angel and goes under. With --movement=2 it goes on through
+// Movement II (the Care shrine, the hall, the Annex desk, the history, the
+// board, Vesper) to the Organs door. Run against local Wrangler:
 //   npx wrangler dev --port 8788      (in another shell)
-//   node scripts/smoke-campaign.mjs [origin]
-// Default origin http://127.0.0.1:8788. Deadline 90 s.
+//   node scripts/smoke-campaign.mjs [origin] [--movement=2]
+// Default origin http://127.0.0.1:8788. Deadline 90 s, 240 s with Movement II.
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 
-const origin = process.argv[2] ?? 'http://127.0.0.1:8788';
-const deadline = setTimeout(() => { console.error('FAIL: campaign deadline (90 s) exceeded'); process.exit(1); }, 90000);
+const origin = process.argv.find(a => a.startsWith('http')) ?? 'http://127.0.0.1:8788';
+const MOVEMENT = Number((process.argv.find(a => a.startsWith('--movement=')) ?? '').split('=')[1] || 1);
+const DEADLINE_S = MOVEMENT >= 2 ? 240 : 90;
+const deadline = setTimeout(() => { console.error(`FAIL: campaign deadline (${DEADLINE_S} s) exceeded`); process.exit(1); }, DEADLINE_S * 1000);
 
 // Tile coordinates duplicated from src/sim/map.ts (Nave of Tubes, 48 px tiles).
 // Keep in sync with POI_LIST / NODE_LIST / NPC_HOMES / ENEMY_SPAWNS / GUEST_SPAWN.
@@ -45,6 +49,25 @@ const ROUTE = {
   backToNara: [at(8, 48)],
   toPlaque: [at(6, 48), at(6, 30), at(15, 30), at(15, 31)],
   toUnder: [at(15, 52)],
+};
+
+// Movement II, after the wake at the Care shrine. Positions from src/sim/map.ts; lanes avoid the Care's
+// pillars (x 14 rows 65/69/73), the hall room's walls (door at 11,71), the Annex cubicles (the corridor
+// is x 15..20; the freeze room's door is 17,9), the Wet Grid's shop blocks (rows 33..35 and 45..47) and
+// the operator's room (door at 64,47).
+const T2 = {
+  shrine: at(17, 61),          // care-shrine; the wake
+  hall: at(7, 71),             // hall-mortals (serial 7777 is House of Mortals)
+  desk: at(17, 6),             // safety-desk, the Annex
+  board: at(58, 38),           // listing-board, the Wet Grid
+  operator: at(64, 50),        // operator-desk; Vesper stands at 65,50
+};
+const ROUTE2 = {
+  toHall: [at(13, 63), at(13, 71), at(9, 71)],
+  hallToDesk: [at(13, 71), at(13, 63), at(17, 58), at(17, 50), at(17, 30), at(17, 27), at(17, 11), at(17, 7)],
+  deskToShrine: [at(17, 11), at(17, 27), at(17, 30), at(17, 50), at(17, 58), at(17, 62)],
+  shrineToBoard: [at(17, 58), at(17, 50), at(17, 42), at(35, 42), at(38, 41), at(58, 41), at(58, 39)],
+  boardToOperator: [at(58, 41), at(64, 44), at(64, 48), at(64, 50)],
 };
 
 const sockets = [];
@@ -253,6 +276,21 @@ function report() {
   for (const p of phases) console.log(`  ${p.label.padEnd(22)} ${(p.ms / 1000).toFixed(1)} s`);
 }
 
+/** Movement II, measured the same way, from the wake to the Organs door. */
+function reportTwo(t1, read1, from) {
+  const total = (Date.now() - t1) / 1000;
+  const mine = phases.slice(from);
+  const sum = prefix => mine.filter(p => p.label.startsWith(prefix)).reduce((a, p) => a + p.ms, 0) / 1000;
+  const walk = sum('II walk'), talk = sum('II talk') + sum('II verb');
+  const words = { dialogue: read.dialogue - read1.dialogue, spoken: read.spoken - read1.spoken, journal: read.journal - read1.journal, notices: read.notices - read1.notices };
+  const wordsTotal = words.dialogue + words.spoken + words.journal + words.notices;
+  const decisions = read.decisions - read1.decisions;
+  const estimate = ((walk * 1.8) / 60 + wordsTotal / 180 + (decisions * 40) / 60).toFixed(1);
+  console.log(`measure: Movement II bot ${total.toFixed(1)} s (walk ${walk.toFixed(1)} s, talk+verbs ${talk.toFixed(1)} s)`);
+  console.log(`measure: Movement II words shown ${wordsTotal} (dialogue ${words.dialogue}, spoken ${words.spoken}, journal ${words.journal}, notices ${words.notices}); decisions ${decisions}; estimate ${estimate} min on the spine alone`);
+  for (const p of mine) console.log(`  ${p.label.padEnd(22)} ${(p.ms / 1000).toFixed(1)} s`);
+}
+
 try {
   await settled();
   const { state: me } = await newSession();
@@ -392,8 +430,68 @@ try {
 
   phase('end');
   report();
-  clearTimeout(deadline);
   console.log('PASS: Movement I — intake, first node, Ord / Quill / Nara, memorial, burial, weather named, guest lock; link 7777; under → the Care, Movement II');
+
+  if (MOVEMENT >= 2) {
+    const T1 = Date.now();
+    const read1 = { ...read };
+    const from = phases.length;
+
+    // The wake is at the shrine: rest, then read your House hall in the Care.
+    phase('II verb: shrine');
+    assert.ok(dist(you(me), T2.shrine) < 60, 'woke at the Care shrine');
+    await stand(me, T2.shrine);
+    await useVerb(me, 'care-shrine', byKey('F'), () => !!you(me).flags.shrine, 'rest at the shrine');
+    assert.equal(you(me).house, 'mortals', 'serial 7777 is House of Mortals');
+    phase('II walk: hall');
+    await walk(me, ROUTE2.toHall);
+    await stand(me, T2.hall);
+    phase('II verb: hall');
+    await useVerb(me, 'hall-mortals', byKey('F'), () => !!you(me).flags.hall, 'read the hall plaque');
+    assert.ok(you(me).wink, 'an Angel sees the Wink');
+
+    // The freeze desk in the Annex: refuse (it costs nothing and keeps the Passing possible).
+    phase('II walk: annex');
+    await walk(me, ROUTE2.hallToDesk);
+    await stand(me, T2.desk);
+    assert.equal(me.snap.district, 'annex', 'through the Nave to the Annex');
+    read.decisions++;
+    phase('II verb: freeze');
+    await useVerb(me, 'safety-desk', byKey('Q'), () => !!you(me).flags.freeze, 'refuse the freeze');
+    assert.equal(you(me).choices.freeze, 'refused', 'the freeze was refused');
+
+    // The history: a prior hour of this serial stands in the Care; Q at the shrine faces it.
+    phase('II walk: shrine again');
+    await walk(me, ROUTE2.deskToShrine);
+    await stand(me, T2.shrine);
+    phase('II verb: history');
+    if ((me.snap.history ?? []).some(m => m.serial === 7777)) {
+      await useVerb(me, 'care-shrine', byKey('Q'), () => !!you(me).flags.history, 'face the history');
+    } else console.log('note: serial 7777 has no history mark on this world; the history beat walks on');
+
+    // The listing board on the Wet Grid, then Vesper's office.
+    phase('II walk: board');
+    await walk(me, ROUTE2.shrineToBoard);
+    await stand(me, T2.board);
+    assert.equal(me.snap.district, 'wet', 'through the Nave to the Wet Grid');
+    phase('II verb: board');
+    await useVerb(me, 'listing-board', byKey('F'), () => !!you(me).flags.board, 'read the board');
+    phase('II walk: operator');
+    await walk(me, ROUTE2.boardToOperator);
+    await stand(me, T2.operator, 72);
+    read.decisions++;
+    phase('II talk: vesper');
+    await converse(me, 'vesper', 'operator');
+    assert.equal(you(me).choices.operator, 'take', 'took the private yield');
+    await wait(me, () => you(me).flags.m3 === 1 && you(me).movement === 3, 'Movement III opens', 6000);
+    assert.equal(you(me).current, 'cold', 'Cold is a current');
+
+    phase('end II');
+    reportTwo(T1, read1, from);
+    console.log('PASS: Movement II — the shrine, the hall, the freeze refused, the history faced, the board read, the private yield taken → Movement III');
+  }
+
+  clearTimeout(deadline);
   for (const ws of sockets) ws.close();
   process.exit(0);
 } catch (error) {

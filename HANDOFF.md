@@ -144,6 +144,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   80 still fall behind (interval mean 117 ms). Next levers, in
   `.rebuild/ZONES.md`: the 36-character ids are now about a third of a
   crowd's fast frame, `you` still rides whole, then zones.
+- Movement II over the wire (2026-09-26): `scripts/smoke-campaign.mjs
+  --movement=2` (`npm run test:campaign:2`) goes on from the wake: rests at
+  the Care shrine, reads the House of Mortals hall, walks the Nave to the
+  Annex and refuses the freeze, walks back and faces the history at the
+  shrine, walks to the Wet Grid, reads the listing board, takes Vesper's
+  private yield, and reaches Movement III with Cold as its current; it
+  crosses the Care, Annex and Wet gates on foot and prints a second
+  `measure:` block. PASS on the first run. The numbers are in Verified and
+  Backlog 5.
 - The fast frame's second pass (2026-09-26): new bodies get twelve-hex ids
   (`bodyId()` in the object; saved bodies keep theirs) instead of 36-character
   uuids, and `you` splits like the roster (`quests`, `flags`, `choices`,
@@ -292,7 +301,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   new wrangler), then start `wrangler dev` again and wait for `/world`;
   latest measure (after the courier beat, a full run on a reused world):
   bot 67 s (walk 48 s, three fights 16 s, talk 1.8 s), 1524 words shown, 8
-  decisions, first playthrough estimate 16.7 min.
+  decisions, first playthrough estimate 16.7 min. With `--movement=2`
+  (2026-09-26): Movement II PASS, bot 68 s (walk 67 s: hall 6 s, the Annex
+  21 s, back to the shrine 17 s, the board 19 s, the operator 5 s; verbs and
+  talk 0.6 s), 664 words (dialogue 131, spoken 262, journal 176, notices
+  95), 2 decisions, estimate 7.0 min on the spine alone.
 - Writeback log: 4 diff tests (every kind, unchanged world, a body that only
   appeared, rolling news), 4 sink tests (batches, overflow, a failing D1
   keeps the queue and warns once a minute, one flush in flight), 3 session
@@ -413,7 +426,23 @@ they are discovered; keep this list honest.
    a run right after another may note it was not met. Nothing further is
    planned here; re-measure after any change to Movement I and keep the
    numbers here.
-6. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+6. **Movement II density.** Measured 2026-09-26 over the wire: 7.0 min on
+   the spine alone (the brief budgets about an hour per movement, with the
+   MMO carrying most of it), 664 words, two decisions (the freeze, the
+   yield), and 67 s of bot walking against 0.6 s of verbs, of which the
+   Annex round trip is 38 s with nothing said on the way. The route passes
+   the Officer of Safety (17,13) in the Annex corridor, the tax window
+   (7,22), and the sexton (18,64) beside the shrine, none of them on the
+   spine. Candidates, in the order they are met: a line from the sexton at
+   the wake (the funeral street's ledger, a hint at the twelve names); the
+   Officer stopping the body in the corridor on the way to the desk (what a
+   freeze buys, in the Annex's own words, a decision about the tax window);
+   the history mark itself spoken as a reversal rather than a flag; the
+   board with a second listing that moves the market. Each is a spine step
+   or a gated line, with the campaign smoke's Movement II measure kept here
+   after every change. Target: 12–15 min on the spine with four or five
+   decisions.
+7. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 
 ## Rules
