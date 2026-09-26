@@ -7,6 +7,7 @@
  */
 import type { Snap } from "../sim/protocol";
 import { genUrl } from "../assets/url";
+import { gen } from "../assets/gen";
 import { bedFor, musicInputs, musicStep, sfxFor, MUSIC_IDLE, type AudioScene, type MusicState, type SfxName } from "./cues";
 import { readAudio, stepVolume, toggleMuted, writeAudio, type AudioSettings, type StorageLike } from "./settings";
 
@@ -215,19 +216,10 @@ export class AudioBus {
     try { voice.source.stop(t + seconds + 0.05); } catch { /* already stopped */ }
   }
 
-  /** The generated-asset manifest names what exists; without it nothing is fetched, so an unfinished city costs one request. */
+  /** The generated-asset manifest names what exists; without it nothing is fetched. One registry, shared with the renderers: the city asks once. */
   private targets(): Promise<Set<string>> {
     if (this.manifest) return this.manifest;
-    this.manifest = (async () => {
-      try {
-        const res = await this.fetcher(this.urlFor("manifest.json"));
-        if (!res.ok) return new Set<string>();
-        const body = (await res.json()) as { targets?: Record<string, unknown> };
-        return new Set(body && body.targets && typeof body.targets === "object" ? Object.keys(body.targets) : []);
-      } catch {
-        return new Set<string>();
-      }
-    })();
+    this.manifest = gen.load(this.fetcher, this.urlFor("manifest.json")).then(m => new Set(Object.keys(m.targets)));
     return this.manifest;
   }
 

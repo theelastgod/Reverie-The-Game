@@ -123,6 +123,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never leave the table. `npm run d1:migrate` applies the migration locally;
   the deploy needs `wrangler d1 create reverie-log`, its id in
   `wrangler.toml`, and `npm run d1:migrate:remote`.
+- Generated-asset slots (2026-09-26, Stage B prep): every Stage B file has a
+  place, with today's rendering as the fallback, so the pull is a drop-in.
+  `src/assets/gen.ts` loads `assets/gen/manifest.json` once before Phaser
+  boots (404, junk or a wrong shape is an empty manifest; one request) and
+  `gen.has`/`gen.url` gate every generated file; `src/assets/slots.ts` is the
+  pure map: portraits for officer, omen, keeper, sexton, desk (dialogue
+  panel); sprites for wardens, enforcers and the hour clerks (entities,
+  through the boot's `gen:` textures); House seals in the identity chip and
+  messenger badges in the kit chip; plates by district in the journal (Kerb,
+  Nave, the hot street while hot); loops (`src/ui/loops.ts`, muted, looping,
+  inline, never under reduced motion): the title mark behind the word, the
+  guest lock in the lock panel, going-under and the four Passing outcomes as
+  full-screen overlays, the ambients in the journal header for the Organs,
+  the Nave and the Wet Grid; static props from the level (node bases and
+  altars, bells at the Ring's shrines and the two bells, light pools at every
+  shrine, stalls, desks, the furnace, the board, two vans on the hot street)
+  drawn under bodies when their texture loaded, replacing the drawn altar,
+  pool and bell post; wreckage uses its prop. Not slotted yet: grave slabs,
+  planted seeds, the credits plate, the minimap seal, the `coin-reverie` and
+  `lockup-game` marks. The asset lint accepts references the generated
+  manifest names.
 - The Annex Runner as a courier (2026-09-26, backlog 5's optional beat).
   Enemies can walk an authored route: `ENEMY_SPAWNS.route` (px points,
   walked as a cycle from home while idle; `Enemy.leg` is the point in hand;
@@ -184,7 +205,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
-- `npm test` — 30 files, 410 tests (2026-09-26): map integrity and reachability, identity,
+- `npm test` — 32 files, 423 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
   visibility, content coverage, side quests (all 33 driven end to end, every
   verb through the prompt, who offers what to whom), two full spine
@@ -241,6 +262,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   handshake's client side is tested with fake EIP-6963 wallets; the local
   Worker answers `/wallet/challenge` (409 without a live session). A real
   wallet in a browser is not verified from this container.
+- Generated-asset slots: 13 tests pin the manifest loader (the URL and
+  no-cache request, one load shared, 404 / network / junk / wrong shape as
+  empty, unsafe targets dropped) and the pure slot map (who has a portrait,
+  which enemies get a sprite, seals and badges never for the unsealed, plates
+  by district and heat, loops by outcome and district, every prop kind sized,
+  the static props standing on level positions with unique ids and nothing
+  live listed). The DOM and Phaser wiring is exercised only by the render
+  check, with an empty manifest: the city renders as before and asks for the
+  manifest once.
 - Enemy routes: 5 tests pin the Runner's authored cycle and leg 0 at home,
   the walk around the cycle, that a courier never starts a fight and answers
   its striker, the leash measured from the corridor (a point on the route is
@@ -268,28 +298,17 @@ they are discovered; keep this list honest.
 1. **Generated assets (Stage B).** 68 results exist in the owner's Higgsfield
    account (manifest: `.rebuild/generated-manifest.tsv`, pull script:
    `scripts/pull-generated.mjs`). Blocked until `d8j0ntlcm91z4.cloudfront.net`
-   is reachable from the container. Then: pull, review each result, drop
-   anything off-style, and wire the keepers: portraits (officer, omen, keeper,
-   sexton, desk) into `side-npcs.ts`; enemy sprites (warden, enforcer, hour
-   clerk) into the entity renderer; House seals into the identity chip and
-   minimap; messenger badges into the kit chip; props on the world surface (CRT
-   altars at nodes, grave slabs, bells, stalls, vans on the hot street, the
-   freeze desk, furnaces, oval light pools, wreckage, the listing board, yield
-   nodes, seeds); plates (Kerb, Nave, hot street, credits) into the journal;
-   loops (title mark behind the title, going-under and guest lock in the lock
-   panel, the four Passing outcomes as full-screen overlays, district ambients
-   in the journal); audio (district beds with cross-fades, SFX on strike, heavy,
-   hit, dodge, wink, death, extract, keep, page, going-under, burial, freeze,
-   appearance, hijack; a mute toggle; volume in localStorage); music (rows
-   72–78: the title theme behind the title screen, the Nave and Grid
-   underscores by district, the combat pulse while an enemy is in telegraph
-   or recovery, the burial elegy at the plot and the Care, the rite in the
-   Clearing; cross-fade with the beds, never both at full level: the audio
-   system is built and gated by `assets/gen/manifest.json`, which the pull
-   script writes, so the pull is a drop-in); the four
-   trailer clips (79–82) as extra loops, and the 30 s trailer (83) on the
-   landing page in `site/`. Remaining Higgsfield budget after the music and
-   trailer: about 255 credits, for replacements only.
+   is reachable from the container. The slots are built (see Done: the
+   manifest gate, portraits, sprites, seals, badges, plates, loops, props, and
+   the whole audio system), so the remaining work is: `node
+   scripts/pull-generated.mjs`, review each result in the render check's
+   screenshots and drop anything off-style (delete the file; the manifest is
+   rewritten from disk), then the leftovers with no slot yet: grave slabs and
+   planted seeds (entities draws them), the credits plate, the seal on the
+   minimap legend, the `coin-reverie` and `lockup-game` marks (the landing
+   page), the four trailer clips (79–82) as extra loops, and the 30 s trailer
+   (83) on the landing page in `site/`. Remaining Higgsfield budget after the
+   music and trailer: about 255 credits, for replacements only.
 2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
    (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
 3. **Angel holders from the contract.** The chain read is built and tested

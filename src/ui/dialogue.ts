@@ -5,6 +5,8 @@
  */
 import type { DialogueView } from "../sim/types";
 import { assetUrl, setText, show } from "./format";
+import { gen, pickGen } from "../assets/gen";
+import { portraitFor } from "../assets/slots";
 
 export type DialoguePanel = {
   set(view: DialogueView | null): void;
@@ -79,9 +81,11 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
       const sig = [view.npc, view.node, view.speaker, view.portrait, view.text, view.wink, view.choices.map(c => c.id + "=" + c.label).join("|")].join("\u0000");
       if (sig === signature) return;
       signature = sig;
-      if (portrait && currentPortrait !== view.portrait) {
-        currentPortrait = view.portrait;
-        portrait.src = assetUrl(view.portrait || "guest.jpg");
+      // A generated portrait for the secondary people when the manifest has it; else the content's plate.
+      const src = pickGen(gen.current, portraitFor(view.npc), assetUrl(view.portrait || "guest.jpg"));
+      if (portrait && currentPortrait !== src) {
+        currentPortrait = src;
+        portrait.src = src;
       }
       setText(speaker, view.speaker || "The city");
       setText(text, view.text);

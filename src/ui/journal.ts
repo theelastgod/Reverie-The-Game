@@ -5,9 +5,12 @@
 import type { Objective, SideObjective } from "../sim/types";
 import type { YouView } from "../sim/protocol";
 import { assetUrl, bearingTo, roman, setClass, setText } from "./format";
+import { gen, pickGen } from "../assets/gen";
+import { ambientFor, plateFor } from "../assets/slots";
+import { LoopSlot } from "./loops";
 
 export type JournalPanel = {
-  set(objective: Objective | null, you: YouView, side?: readonly SideObjective[]): void;
+  set(objective: Objective | null, you: YouView, side?: readonly SideObjective[], hot?: boolean): void;
   toggle(): void;
   destroy(): void;
 };
@@ -28,6 +31,8 @@ export function mountJournal(root: HTMLElement): JournalPanel {
   let plateFile = "";
   let questSig = "";
   const bearingEls = new Map<string, HTMLElement>();
+  // A generated ambient loop stands in front of the plate for the districts that have one.
+  const loop = new LoopSlot(plate?.parentElement ?? null, "journal-loop", plate);
 
   const toggle = () => {
     if (!panel) return;
@@ -37,19 +42,23 @@ export function mountJournal(root: HTMLElement): JournalPanel {
   tab?.addEventListener("click", toggle);
 
   return {
-    set(objective, you, side = []) {
+    set(objective, you, side = [], hot = false) {
       if (!panel) return;
+      // The plate: a generated one for this district when the manifest has it, else the objective's own.
+      if (objective && plate) {
+        const wanted = pickGen(gen.current, plateFor(you.district, hot), assetUrl(objective.plate || "plate-arena.jpg"));
+        if (plateFile !== wanted) {
+          plateFile = wanted;
+          plate.src = wanted;
+        }
+      }
+      loop.set(ambientFor(you.district));
       const sig = objective
         ? [objective.quest, objective.step, objective.title, objective.detail, objective.plate, objective.movement].join("\u0000")
         : "";
       if (sig !== objectiveSig) {
         objectiveSig = sig;
         if (objective) {
-          const file = objective.plate || "plate-arena.jpg";
-          if (plate && plateFile !== file) {
-            plateFile = file;
-            plate.src = assetUrl(file);
-          }
           setText(movement, `MOVEMENT ${roman(objective.movement)}`);
           setText(title, objective.title);
           setText(detail, objective.detail);

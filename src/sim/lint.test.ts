@@ -37,7 +37,16 @@ describe("standalone game lint", () => {
     expect(hits, hits.join("\n")).toEqual([]);
   });
 
-  it("references only assets that exist", () => {
+  it("references only assets that exist, or generated targets the manifest names", () => {
+    // Generated files land under public/assets/gen/ only after the pull; a reference to one is fine
+    // when .rebuild/generated-manifest.tsv lists it (the pull writes portraits and plates as jpeg).
+    const generated = new Set<string>();
+    for (const line of readFileSync(".rebuild/generated-manifest.tsv", "utf8").split("\n")) {
+      if (!line || line.startsWith("#")) continue;
+      const target = line.split("\t")[2] ?? "";
+      generated.add(target);
+      if (target.startsWith("portraits/") || target.startsWith("plate-")) generated.add(target.replace(/\.png$/, ".jpg"));
+    }
     const missing: string[] = [];
     const referenced = new Set<string>();
     for (const root of ["src", "index.html", "site"]) {
@@ -48,6 +57,7 @@ describe("standalone game lint", () => {
       }
     }
     for (const ref of referenced) {
+      if (generated.has(ref)) continue;
       if (!existsSync(`public/assets/${ref}`) && !existsSync(`site/assets/${ref}`) && !existsSync(`public/${ref}`)) missing.push(ref);
     }
     expect(missing, missing.join("\n")).toEqual([]);

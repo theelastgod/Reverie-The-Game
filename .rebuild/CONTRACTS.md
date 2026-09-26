@@ -185,6 +185,23 @@ export function applyWallet(w, id, address: string, line?: string): WorldState; 
 export function applyLink(w, id, serial: number, proof: LinkProof | string): WorldState; // validLink; a wallet proof also sets player.wallet; refuse if another connected player has the serial (say LINES.LINK_ELSEWHERE); guest=false, serial, name formatSerial, house/messenger/winkSchool, auraSeed, aura = max(aura, seed), flags[F.ANGEL]=1, locked=false, linkedAt, history mark push: serialHistoryMark(serial) ?? historyMarkFor(serial, p.history, p.deaths); if locked at the threshold, the "under" effect is NOT applied automatically (player uses the threshold again)
 ```
 
+## assets/gen.ts, assets/slots.ts, ui/loops.ts (client; generated files, always optional)
+```ts
+export type GenManifest = { v: number; targets: Record<string, { w: number; h: number }> }; // public/assets/gen/manifest.json, written by scripts/pull-generated.mjs
+export function loadGenManifest(fetcher, url = genUrl("manifest.json")): Promise<GenManifest>; // 404 / junk / wrong shape → EMPTY_MANIFEST, never throws
+export const hasGen = (m, target) => boolean;  export const pickGen = (m, target | null, fallback) => string;
+export const gen: { load(fetcher?): Promise<GenManifest>; current; has(target); url(target, fallback); set(m) }; // one registry, loaded in main.ts before Phaser boots
+export const portraitFor = (npcId) => "portraits/<id>.jpg" | null;   // officer, omen, keeper, sexton, desk
+export function spriteFor(e: { kind; id }): "sprites/warden.png" | "sprites/enforcer.png" | "sprites/hour-clerk.png" | null;
+export const sealFor = (house) => "seals/<house>.png" | null;  export const badgeFor = (messenger) => "badges/<m>.png" | null;
+export function plateFor(district, hot = false): "plate-kerb.jpg" | "plate-nave.jpg" | "plate-hot-street.jpg" | null;
+export const loopFor = (name: LoopName) => "video/<name>.mp4";  export function passingLoopFor(outcome): string | null;  export function ambientFor(district): string | null;
+export function staticPropSlots(): { kind: PropKind; id; x; y }[]; // from NODE_LIST, POI_LIST (shrine, bell, stall, desk, board, organ-foundry) and the hot-street patch; PROP_SIZE per kind
+export const genTex = (target) => `gen:${target}`;             // scenes/BootScene.ts: the boot loads GEN_TEXTURES (sprites, props) the manifest names
+export class LoopSlot { constructor(parent, className, before?); set(target | null); destroy() }; // ui/loops.ts: a muted looping inline <video>, only when the manifest has it and motion is allowed
+export function overlayLoop(root, target, ms = 6000): HTMLVideoElement | null; // a full-screen loop for a moment
+```
+
 ## server/src/holders.ts (the Worker only; the client never calls a chain)
 ```ts
 export type HoldersEnv = { ANGEL_HOLDERS?: string; ANGEL_CONTRACT?: string; ANGEL_RPC_URL?: string; ANGEL_TOKEN_OFFSET?: string };

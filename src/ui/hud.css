@@ -214,6 +214,52 @@ canvas { display: block; }
   margin-bottom: 8px;
   mix-blend-mode: screen;
 }
+/* Generated loops: the title mark's behind the word, the journal's ambient in the header, the lock's above the copy, overlays over everything. */
+.title-inner { position: relative; }
+.title-loop {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: min(720px, 100vw);
+  height: 100%;
+  transform: translateX(-50%);
+  object-fit: cover;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 0;
+}
+.title-inner > :not(.title-loop) { position: relative; z-index: 1; }
+.chip-seal, .chip-badge { width: 18px; height: 18px; object-fit: contain; margin-right: 6px; vertical-align: middle; }
+.journal-loop {
+  display: block;
+  width: 100%;
+  height: 96px;
+  object-fit: cover;
+  border-bottom: var(--border) solid var(--ink);
+}
+.journal-loop + .journal-plate { display: none; }
+.lock-loop {
+  display: block;
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  margin-bottom: 12px;
+  border-bottom: var(--border) solid var(--ink);
+}
+.gen-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.85;
+  mix-blend-mode: screen;
+  transition: opacity 0.6s ease;
+}
+.gen-overlay.gone { opacity: 0; }
 .title-word {
   margin: 0;
   font-family: var(--display);
@@ -907,6 +953,7 @@ canvas { display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .title-loop, .journal-loop, .lock-loop, .gen-overlay { display: none; }
   .marquee-text { animation: none; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .credits-roll { animation: none; top: 50%; transform: translateY(-50%); gap: 24px; }
   .notice { animation: none; }

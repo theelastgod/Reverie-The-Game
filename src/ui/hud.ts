@@ -20,6 +20,8 @@ import type { WalletOutcome } from "../net/wallet";
 import { audio } from "../audio/bus";
 import { eventRows, mountEvents, type EventsPanel } from "./events";
 import { ledgerModel, mountLedger, type LedgerPanel } from "./ledger";
+import { gen } from "../assets/gen";
+import { badgeFor, sealFor } from "../assets/slots";
 
 export type HudCallbacks = {
   choose: (choiceId: string) => void; // dialogue choice clicked
@@ -77,6 +79,9 @@ export class Hud {
   private readonly stanceHint: HTMLElement;
   private readonly kit: HTMLButtonElement | null;
   private readonly kitText: HTMLElement | null;
+  /** Generated House seal and messenger badge; hidden until the manifest has them. */
+  private readonly identitySeal: HTMLImageElement;
+  private readonly kitBadge: HTMLImageElement;
   private readonly dodge: HTMLElement | null;
   private readonly dodgeText: HTMLElement | null;
   private readonly prompt: HTMLElement | null;
@@ -157,6 +162,16 @@ export class Hud {
     this.stance?.append(this.stanceHint);
     this.kit = q<HTMLButtonElement>(root, "#hud-kit");
     this.kitText = this.kit ? q(this.kit, ".chip-text") : null;
+    this.identitySeal = document.createElement("img");
+    this.identitySeal.className = "chip-seal";
+    this.identitySeal.alt = "";
+    this.identitySeal.hidden = true;
+    (this.identity?.querySelector(".chip-icon") ?? null)?.after(this.identitySeal);
+    this.kitBadge = document.createElement("img");
+    this.kitBadge.className = "chip-badge";
+    this.kitBadge.alt = "";
+    this.kitBadge.hidden = true;
+    this.kitText?.before(this.kitBadge);
     this.dodge = q(root, "#hud-dodge");
     this.dodgeText = this.dodge ? q(this.dodge, ".chip-text") : null;
     this.prompt = q(root, "#hud-prompt");
@@ -241,7 +256,7 @@ export class Hud {
     this.events.set(eventRows(snap));
     this.updateLedger(snap);
     this.dialogue.set(you.dialogue);
-    this.journal.set(snap.objective, you, snap.sideObjectives);
+    this.journal.set(snap.objective, you, snap.sideObjectives, snap.pois.some(p => p.id === "hot-street" && p.state === "hot"));
     this.minimap.update(snap);
 
     this.last = snap;
@@ -332,6 +347,10 @@ export class Hud {
     setText(this.identityText, identityLine(you));
     setClass(this.identity, "guest", you.guest);
     setClass(this.identity, "angel", !you.guest);
+    const seal = you.guest ? null : sealFor(you.house);
+    const sealUrl = seal && gen.has(seal) ? gen.url(seal, "") : "";
+    if (sealUrl && this.identitySeal.getAttribute("src") !== sealUrl) this.identitySeal.src = sealUrl;
+    show(this.identitySeal, !!sealUrl);
     if (this.identityTags) {
       this.identityTags.replaceChildren();
       if (you.dead) this.identityTags.append(tag("DOWN", "hot"));
@@ -429,6 +448,10 @@ export class Hud {
     if (sig === this.kitSig) return;
     this.kitSig = sig;
     setText(this.kitText, kitLine(you.messenger, cd, active));
+    const badge = you.guest ? null : badgeFor(you.messenger);
+    const badgeUrl = badge && gen.has(badge) ? gen.url(badge, "") : "";
+    if (badgeUrl && this.kitBadge.getAttribute("src") !== badgeUrl) this.kitBadge.src = badgeUrl;
+    show(this.kitBadge, !!badgeUrl);
     setClass(this.kit, "cooling", cd > 0 && !active);
     setClass(this.kit, "active", active);
     if (this.kit) this.kit.disabled = you.guest || !you.messenger;

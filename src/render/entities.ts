@@ -11,6 +11,8 @@ import { DISTRICT_BY_ID, PATCHES, POIS, POI_LIST, TILE } from "../sim/map";
 import type { NodeView, NpcView, PublicPlayer, Snap, WreckageView, YouView } from "../sim/protocol";
 import type { Enemy, Messenger, Stance } from "../sim/types";
 import { COLOR, DEPTH, NPC_SPRITES, TEX, UI_FONT, bodyDepth } from "./floors";
+import { propTarget, spriteFor } from "../assets/slots";
+import { genTex } from "../scenes/BootScene";
 
 export const LABEL_RANGE = 180;
 export const LERP = 0.35;
@@ -278,13 +280,22 @@ export class Entities {
     }
   }
 
+  /** A generated sprite for this enemy when the manifest had it and the boot loaded it; else the clerk silhouette. */
+  private enemyTexture(e: Enemy): string {
+    const target = spriteFor(e);
+    const key = target ? genTex(target) : "";
+    return key && this.scene.textures.exists(key) ? key : TEX.clerk;
+  }
+
   private syncEnemy(e: Enemy): void {
+    const key = this.enemyTexture(e);
     let b = this.enemies.get(e.id);
     if (!b) {
-      b = this.newBody(e.x, e.y, TEX.clerk);
+      b = this.newBody(e.x, e.y, key);
       b.img.setTint(ENEMY_TINT[e.tint]);
       this.enemies.set(e.id, b);
     }
+    this.retexture(b, key);
     b.seen = this.tick;
     b.tx = e.x;
     b.ty = e.y;
@@ -323,7 +334,8 @@ export class Entities {
   private syncWreckage(w: WreckageView): void {
     let m = this.wreckage.get(w.id);
     if (!m) {
-      const img = this.scene.add.image(w.x, w.y, TEX.wreckage).setDisplaySize(36, 44).setOrigin(0.5, 0.85).setDepth(DEPTH.ground + 0.5);
+      const wreckKey = this.scene.textures.exists(genTex(propTarget("wreckage"))) ? genTex(propTarget("wreckage")) : TEX.wreckage;
+      const img = this.scene.add.image(w.x, w.y, wreckKey).setDisplaySize(36, 44).setOrigin(0.5, 0.85).setDepth(DEPTH.ground + 0.5);
       m = { img, seen: this.tick };
       this.wreckage.set(w.id, m);
     }

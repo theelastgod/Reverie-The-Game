@@ -6,6 +6,8 @@
  */
 import { formatSerial, parseSerial, TEST_SERIAL } from "./format";
 import { walletLine, type WalletOutcome } from "../net/wallet";
+import { loopFor } from "../assets/slots";
+import { LoopSlot } from "./loops";
 
 export type LockPanel = {
   show(): void;
@@ -24,6 +26,8 @@ export function mountLock(root: HTMLElement, onLink: (serial: number) => void, o
   const stayBtn = panel?.querySelector<HTMLButtonElement>(".lock-stay") ?? null;
   const input = panel?.querySelector<HTMLInputElement>(".serial-input") ?? null;
   const note = panel?.querySelector<HTMLElement>(".lock-note") ?? null;
+  // The generated guest-lock loop, above the title, while the panel is up.
+  const loop = new LoopSlot(panel, "lock-loop", panel?.querySelector(".lock-title") ?? null);
   let dismissed = false;
   let busy = false;
 
@@ -83,11 +87,13 @@ export function mountLock(root: HTMLElement, onLink: (serial: number) => void, o
     show() {
       dismissed = false;
       if (panel) panel.hidden = false;
+      loop.set(loopFor("guest-lock"));
     },
     hide() {
       if (panel) panel.hidden = true;
       dismissed = false;
       say("");
+      loop.set(null);
     },
     setMockLink(on) {
       if (test) test.hidden = !on;
@@ -98,6 +104,7 @@ export function mountLock(root: HTMLElement, onLink: (serial: number) => void, o
       linkBtn?.removeEventListener("click", link);
       walletBtn?.removeEventListener("click", wallet);
       stayBtn?.removeEventListener("click", onStay);
+      loop.destroy();
       void dismissed;
     },
   };

@@ -13,6 +13,8 @@ import { Floors, TEX } from "../render/floors";
 import { Fx } from "../render/fx";
 import { audio } from "../audio/bus";
 import { VOLUME_STEP } from "../audio/settings";
+import { loopFor, passingLoopFor } from "../assets/slots";
+import { overlayLoop } from "../ui/loops";
 
 const IDLE: Intent = { up: false, down: false, left: false, right: false };
 const MOVE_KEYS: Record<string, keyof Intent> = {
@@ -393,8 +395,14 @@ export class CityScene extends Phaser.Scene {
       }
       if (you.winkAt !== prev.winkAt && you.wink && !you.guest) this.fx.wink(at.x, at.y);
       if (you.deaths > prev.deaths) this.fx.death();
-      if (under === 1 && prev.under === 0) this.fx.goingUnder();
-      if (passing === 1 && prev.passing === 0) this.fx.passing(snap.passing.lastOutcome);
+      if (under === 1 && prev.under === 0) {
+        this.fx.goingUnder();
+        overlayLoop(document.getElementById("hud"), loopFor("going-under"), 4000);
+      }
+      if (passing === 1 && prev.passing === 0) {
+        this.fx.passing(snap.passing.lastOutcome);
+        overlayLoop(document.getElementById("hud"), passingLoopFor(snap.passing.lastOutcome));
+      }
     }
     prev.init = true;
     prev.dodgeT = you.dodgeT;

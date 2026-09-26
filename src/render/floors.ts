@@ -13,6 +13,8 @@ import {
 } from "../sim/map";
 import type { PoiView, WeatherBand } from "../sim/protocol";
 import type { DistrictId, Player } from "../sim/types";
+import { PROP_SIZE, propTarget, staticPropSlots, type PropKind } from "../assets/slots";
+import { genTex } from "../scenes/BootScene";
 
 // ---------------------------------------------------------------- shared render tokens
 
@@ -336,8 +338,25 @@ export class Floors {
 
   private buildProps(): void {
     const s = this.scene;
+    // Generated props stand in for the drawn ones wherever the boot loaded their texture.
+    const genKey = (kind: PropKind): string | null => (s.textures.exists(genTex(propTarget(kind))) ? genTex(propTarget(kind)) : null);
+    const generated = new Set<PropKind>();
+    for (const slot of staticPropSlots()) {
+      const key = genKey(slot.kind);
+      if (!key) continue;
+      generated.add(slot.kind);
+      const size = PROP_SIZE[slot.kind];
+      const img = s.add.image(slot.x, slot.y, key).setDisplaySize(size.w, size.h).setOrigin(0.5, 0.7).setDepth(DEPTH.prop);
+      if (slot.kind === "oval-light") img.setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.7).setOrigin(0.5, 0.5);
+      if (slot.kind === "crt-altar") {
+        img.setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.85).setOrigin(0.5, 0.5);
+        this.altars.set(slot.id, img);
+      }
+    }
+
     // CRT altars: at the crt-altar POIs and at every yield node.
     const altarAt = (id: string, x: number, y: number) => {
+      if (generated.has("crt-altar")) return;
       const img = s.add
         .image(x, y - 10, TEX.crt)
         .setDisplaySize(46, 46)
@@ -356,7 +375,7 @@ export class Floors {
       this.drawOvals(glow, d);
     }
     for (const p of POI_LIST) {
-      if (p.kind !== "shrine") continue;
+      if (p.kind !== "shrine" || generated.has("oval-light")) continue;
       glow.fillStyle(COLOR.champagneLight, 0.14);
       glow.fillEllipse(p.x, p.y + 4, 116, 62);
       glow.fillStyle(COLOR.champagneLight, 0.12);
@@ -367,7 +386,7 @@ export class Floors {
     // Bell posts.
     const solid = s.add.graphics().setDepth(DEPTH.prop);
     for (const p of POI_LIST) {
-      if (p.kind !== "bell") continue;
+      if (p.kind !== "bell" || generated.has("shrine-bell")) continue;
       solid.fillStyle(COLOR.wallBlock, 1);
       solid.fillRect(p.x - 3, p.y - 26, 6, 26);
       solid.fillStyle(COLOR.void, 0.35);
