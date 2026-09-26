@@ -8,6 +8,14 @@ const origin = process.argv[2] ?? 'http://127.0.0.1:8788';
 const PROTOCOL_VERSION = 2;
 const deadline = setTimeout(() => { console.error('FAIL: smoke deadline (90 s) exceeded'); process.exit(1); }, 90000);
 
+// `wrangler dev` reloads the local server whenever site/ changes (a fresh `stage-play`), a quarter
+// second later and for a second or two; a reload mid-run drops every object. Start once three probes in a row answer.
+for (let quiet = 0, i = 0; quiet < 3; i++) {
+  assert.ok(i < 60, `the Worker at ${origin} answers`);
+  try { quiet = (await fetch(`${origin}/world`)).ok ? quiet + 1 : 0; } catch { quiet = 0; }
+  if (quiet < 3) await new Promise(r => setTimeout(r, 500));
+}
+
 const health = await fetch(`${origin}/health`);
 assert.equal(health.status, 200, 'health');
 assert.deepEqual(await health.json(), { ok: true, v: PROTOCOL_VERSION }, 'health body');

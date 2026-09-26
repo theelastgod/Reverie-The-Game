@@ -68,6 +68,8 @@ function readOnce(bucket, text) {
   read[bucket] += words(text);
 }
 
+const STALL_MS = 3000; // the city ticks at 20 Hz; a socket this quiet has lost its object (a local reload, usually)
+
 function wait(state, predicate, label, ms = 20000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
@@ -76,9 +78,25 @@ function wait(state, predicate, label, ms = 20000) {
       try { ok = predicate(); } catch { ok = false; }
       if (ok) { clearInterval(timer); resolve(true); }
       else if (state.error || state.ws.readyState === WebSocket.CLOSED) { clearInterval(timer); reject(state.error ?? new Error(`${label}: socket closed`)); }
+      else if (state.snapAt && Date.now() - state.snapAt > STALL_MS) { clearInterval(timer); reject(new Error(`${label}: no snapshot for ${((Date.now() - state.snapAt) / 1000).toFixed(1)} s (did the local server reload?)`)); }
       else if (Date.now() - start > ms) { clearInterval(timer); reject(new Error(`${label} did not complete`)); }
     }, 40);
   });
+}
+
+/**
+ * `wrangler dev` reloads the local server whenever site/ changes (a fresh
+ * `stage-play`), a quarter second later and for a second or two; a reload
+ * mid-run drops every object and stalls every socket. Start only once the
+ * Worker has answered three probes in a row.
+ */
+async function settled() {
+  let quiet = 0;
+  for (let i = 0; i < 60 && quiet < 3; i++) {
+    try { quiet = (await fetch(`${origin}/world`)).ok ? quiet + 1 : 0; } catch { quiet = 0; }
+    if (quiet < 3) await sleep(500);
+  }
+  assert.equal(quiet, 3, `the Worker at ${origin} answers`);
 }
 /** Like wait, but resolves false instead of rejecting when the time runs out. */
 const settle = (state, predicate, label, ms) => wait(state, predicate, label, ms).catch(() => false);
@@ -94,6 +112,7 @@ async function connect(cookie) {
     if (data.t === 'hello') state.hello = data;
     if (data.t === 'snap') {
       state.snap = data;
+      state.snapAt = Date.now();
       const y = data.you;
       readOnce('spoken', y.heard);
       readOnce('spoken', y.wink);
@@ -115,7 +134,7 @@ const you = state => state.snap.you;
 const send = (state, data) => state.ws.send(JSON.stringify(data));
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
-async function approach(state, target) {
+async function approach(state, target, within = 10) {
   let lastPos = { x: you(state).x, y: you(state).y };
   let lastProgress = Date.now();
   let nudge = null;
@@ -132,15 +151,23 @@ async function approach(state, target) {
     const intent = nudge ?? { right: p.x < target.x - 5, left: p.x > target.x + 5, down: p.y < target.y - 5, up: p.y > target.y + 5 };
     send(state, { t: 'intent', intent });
   }, 100);
-  try { await wait(state, () => dist(you(state), target) < 10, `approach ${Math.round(target.x)},${Math.round(target.y)}`, 25000); }
+  try { await wait(state, () => dist(you(state), target) < within, `approach ${Math.round(target.x)},${Math.round(target.y)}`, 25000); }
   finally { clearInterval(drive); send(state, { t: 'intent', intent: {} }); }
 }
 const walk = async (state, points) => { for (const point of points) await approach(state, point); };
+/**
+ * Stand inside an interaction's reach (56 px for nodes and plots, 72 for people). The lanes end a
+ * tile (48 px) from their target and a stop 10 px past the lane's end is out of reach; step in first.
+ */
+const stand = (state, target, reach = 56) => approach(state, target, reach - 16);
 
 /** Use a verb at a POI through the prompt the server offers; never guess content ids. */
 async function useVerb(state, poiId, pick, done, label) {
   if (done()) return;
-  await wait(state, () => state.snap.prompt?.targetId === poiId, `prompt for ${poiId}`, 6000);
+  await wait(state, () => state.snap.prompt?.targetId === poiId, `prompt for ${poiId}`, 6000).catch(error => {
+    const p = you(state);
+    throw new Error(`${error.message} (standing at ${Math.round(p.x)},${Math.round(p.y)}; the prompt shows ${JSON.stringify(state.snap.prompt)}; flags ${JSON.stringify(p.flags)})`);
+  });
   const verbs = state.snap.prompt.verbs;
   const verb = pick(verbs) ?? verbs[0];
   assert.ok(verb, `${label}: a verb at ${poiId} (got ${JSON.stringify(verbs)})`);
@@ -187,6 +214,7 @@ function report() {
 }
 
 try {
+  await settled();
   const { state: me } = await newSession();
   assert.equal(me.hello.v, 2, 'protocol v2');
   assert.equal(you(me).guest, true, 'fresh session is a guest');
@@ -202,17 +230,24 @@ try {
   finally { clearInterval(strikes); }
   assert.ok(you(me).hp > 0, 'still standing after intake');
 
-  // First node: keep it when nobody has; the world persists between runs, so fall back to extracting.
+  // Nodes: the world persists between runs, so each beat takes the first op the Nave still offers
+  // (keep when nobody has; else extract while charges last, one back every 300 s). The pair needs two.
+  const taken = () => you(me).kept + you(me).extracted;
+  const takeNode = async (nodeId, target) => {
+    await stand(me, target);
+    const node = me.snap.nodes.find(n => n.id === nodeId);
+    assert.ok(node, `${nodeId} is in view`);
+    const op = node.kept ? (node.charges > 0 ? 'extract' : null) : 'keep';
+    if (!op) { console.log(`note: ${nodeId} is kept and empty; skipped`); return false; }
+    const before = taken();
+    send(me, { t: 'interact', targetId: nodeId, choice: op });
+    await wait(me, () => taken() > before, `${op} ${nodeId}`);
+    return true;
+  };
   phase('walk: node');
   await walk(me, ROUTE.toNode);
   read.decisions++;
-  const node = me.snap.nodes.find(n => n.id === 'nave-node-1');
-  assert.ok(node, 'nave-node-1 is in view');
-  const op = node.kept ? (node.charges > 0 ? 'extract' : null) : 'keep';
-  if (op) {
-    send(me, { t: 'interact', targetId: 'nave-node-1', choice: op });
-    await wait(me, () => you(me).kept + you(me).extracted >= 1, `${op} the first node`);
-  } else console.log('note: nave-node-1 already kept and empty; skipping the node beat');
+  await takeNode('nave-node-1', T.node1);
 
   // Desk Three holds the aisle to the east gate: the second fight, then the second node.
   phase('walk: desk three');
@@ -226,21 +261,10 @@ try {
   phase('walk: node 2');
   await walk(me, ROUTE.toNode2);
   read.decisions++;
-  const secondNode = async (nodeId) => {
-    const node = me.snap.nodes.find(n => n.id === nodeId);
-    assert.ok(node, `${nodeId} is in view`);
-    const op = node.kept ? (node.charges > 0 ? 'extract' : null) : 'keep';
-    if (!op) return false;
-    send(me, { t: 'interact', targetId: nodeId, choice: op });
-    await wait(me, () => you(me).kept + you(me).extracted >= 2, `${op} the second node`);
-    return true;
-  };
-  if (!(await secondNode('nave-node-2'))) {
-    console.log('note: nave-node-2 already kept and empty; taking the third node instead');
-    await walk(me, ROUTE.toNode3);
-    if (!(await secondNode('nave-node-3'))) console.log('note: nave-node-3 too; the second-node beat is skipped');
-  }
-  await wait(me, () => !!you(me).flags['node:second'], 'the pair is read', 6000);
+  if (taken() < 2) await takeNode('nave-node-2', T.node2);
+  if (taken() < 2) { await walk(me, ROUTE.toNode3); await takeNode('nave-node-3', T.node3); }
+  if (taken() >= 2) await wait(me, () => !!you(me).flags['node:second'], 'the pair is read', 6000);
+  else console.log(`note: the Nave is spent (${taken()} of the pair taken; every node kept and empty); the pair beat waits for a charge and is skipped here`);
 
   // The party, in the Nave.
   phase('walk: ord');
@@ -265,12 +289,14 @@ try {
   // The memorial recorder, then the burial.
   phase('walk: recorder');
   await walk(me, ROUTE.toRecorder);
+  await stand(me, T.recorder);
   read.decisions++;
   phase('verb: memorial');
   await useVerb(me, 'memorial-recorder', byKey('F'), () => !!you(me).flags['heard:recorder'], 'hear the recorder');
   await useVerb(me, 'memorial-recorder', byKey('Q'), () => !!you(me).flags.memorial, 'memorial decision');
   phase('walk: plot');
   await walk(me, ROUTE.toPlot);
+  await stand(me, T.plot);
   phase('verb: burial');
   await useVerb(me, 'nara-plot', byKey('F'), () => !!you(me).flags['buried:nara'], 'burial');
   assert.ok(you(me).readiness > 0, 'burial gives readiness');
@@ -282,6 +308,7 @@ try {
   // Name the weather at the Safety plaque.
   phase('walk: plaque');
   await walk(me, ROUTE.toPlaque);
+  await stand(me, T.plaque);
   read.decisions++;
   phase('verb: plaque');
   await useVerb(me, 'safety-plaque', byKey('F'), () => !!you(me).flags['weather:safety'], 'read the plaque');
@@ -292,6 +319,7 @@ try {
   // The going-under threshold locks a guest.
   phase('walk: threshold');
   await walk(me, ROUTE.toUnder);
+  await stand(me, T.under);
   read.decisions++;
   phase('verb: threshold');
   await useVerb(me, 'going-under', byKey('F'), () => you(me).locked, 'guest lock');

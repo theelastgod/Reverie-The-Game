@@ -123,6 +123,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never leave the table. `npm run d1:migrate` applies the migration locally;
   the deploy needs `wrangler d1 create reverie-log`, its id in
   `wrangler.toml`, and `npm run d1:migrate:remote`.
+- Angel holders from the chain (2026-09-26, disarmed): `server/src/holders.ts`.
+  With `ANGEL_CONTRACT` and `ANGEL_RPC_URL` set, `/wallet/link` reads the
+  signer's Angel with two `eth_call`s over JSON-RPC (ERC-721 Enumerable:
+  `balanceOf`, then `tokenOfOwnerByIndex(owner, 0)`; serial = token id +
+  `ANGEL_TOKEN_OFFSET`, inside 1..7777 or no Angel) and remembers definite
+  answers five minutes per address (a thousand addresses, oldest forgotten).
+  The `ANGEL_HOLDERS` map wins first, so test serials keep working; without
+  a contract the map is the only source. An unreadable chain (transport,
+  RPC error, junk word) refuses the link with `503 chain`, spends the nonce
+  and changes nothing; the lock panel says so. Never a transaction; the
+  Worker signs nothing. `wrangler.toml` ships both vars empty.
 - Audio system (2026-09-26, Stage B prep): `src/audio/cues.ts` decides the
   bed by district, the music track (title theme on the title and the
   credits; Nave and Annex underscore; Grid underscore on the Wet Grid and the
@@ -156,7 +167,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
-- `npm test` — 22 files, 356 tests: map integrity and reachability, identity,
+- `npm test` — 29 files, 405 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
   visibility, content coverage, side quests (all 33 driven end to end, every
   verb through the prompt, who offers what to whom), two full spine
@@ -167,7 +178,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - `npm run build:play` + `node scripts/stage-play.mjs` — production client staged.
 - Against `npx wrangler dev --port 8788`: `scripts/smoke-world.mjs` PASS;
   `scripts/smoke-campaign.mjs` PASS on a fresh world and again on the same
-  world (Movement I to the guest lock, link 7777, going under, Movement II);
+  world (Movement I to the guest lock, link 7777, going under, Movement II).
+  The campaign smoke used to fail about one run in two, for two reasons
+  found 2026-09-26: its lanes end a tile (48 px) from the node or plot and
+  the bot could stop 10 px past the lane's end, outside the 56 px reach
+  ("prompt for nara-plot did not complete"); and it waited for two nodes
+  taken in total, which a lived-in Nave cannot always give (a node keeps
+  once until someone extracts, and charges come back one per 300 s), so
+  after a few runs the first node was kept and empty and the count stopped
+  at one ("keep the second node did not complete"). It now steps inside
+  reach before every interaction, takes ops at nodes 1, 2 and 3 until the
+  pair is taken, counts relative to what the body had, notes a spent Nave
+  and skips the pair beat (the `measure:` lines of such a run under-read;
+  keep only runs without a `spent` note), and its failures name where the
+  bot stood and what the prompt showed. Separately, `wrangler dev` reloads the local
+  server about a quarter second after `site/` changes (a fresh
+  `stage-play`) and a reload drops the object mid-run, so both smokes wait
+  for three quiet probes before connecting and the campaign smoke fails fast
+  when the snapshot stream stalls for three seconds;
   latest measure (after the opening beats, fresh world and reused world):
   bot 59 s (walk 49 s, two fights 8 s, talk 1.8 s), 1393 words shown, 7
   decisions, first playthrough estimate 15.0 min.
@@ -184,12 +212,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   persistence, a storage that throws). The bus itself is thin and untested;
   the render check passes with the chip in the top row. No generated file
   exists in this checkout, so nothing has been heard.
-- Wallet login: 6 session tests drive the object with real secp256k1
+- Wallet login: 7 session tests drive the object with real secp256k1
   signatures (holder sealed, stranger bound, forged signature refused, nonce
-  spent and expired, mock link on/off by environment, worker routing); the
+  spent and expired, the chain read through a stubbed `fetch` and refused
+  while down, mock link on/off by environment, worker routing); the
   handshake's client side is tested with fake EIP-6963 wallets; the local
   Worker answers `/wallet/challenge` (409 without a live session). A real
   wallet in a browser is not verified from this container.
+- Holders from the chain: 8 tests pin the calldata of both calls, word
+  decoding, the offset and supply bounds, the five-minute cache and its
+  bound, every unreadable-chain shape (down, RPC error, thrown fetch, junk,
+  empty body) as unknown and uncached, and the map-then-chain order. No
+  real RPC has been called from this container.
 - `scripts/render-check.mjs` PASS: title, Nave with HUD, dialogue screenshots
   in `.rebuild/shots/`; 14.9 fps under this sandbox's software WebGL
   (SwiftShader), so frame pacing on a GPU-backed laptop is still unmeasured.
@@ -229,12 +263,14 @@ they are discovered; keep this list honest.
    trailer: about 255 credits, for replacements only.
 2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
    (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
-3. **Angel holders from the contract.** `ANGEL_HOLDERS` is a map in the
-   environment until the ERC-721 exists; then `/wallet/link` should read
-   ownership from the chain (an RPC binding, cached per address for a few
-   minutes) and the map becomes an override for test serials only. One Angel
-   active per body stays the rule (`applyLink` already refuses a serial that
-   is walking).
+3. **Angel holders from the contract.** The chain read is built and tested
+   (`server/src/holders.ts`); it waits on the ERC-721 itself. At deploy, set
+   `ANGEL_CONTRACT`, `ANGEL_RPC_URL` (an endpoint the Worker may call) and
+   `ANGEL_TOKEN_OFFSET` in `wrangler.toml`, then link one real wallet against
+   the deployed city. Until then `ANGEL_HOLDERS` is the only source. One
+   Angel active per body stays the rule (`applyLink` already refuses a serial
+   that is walking). Not built: reading beyond the first token of a wallet
+   that holds several (the first is the one that walks).
 4. **Per-zone Durable Objects** with handoff at gates. The D1 log is in;
    zones would share it. Design first: which state is per zone (bodies,
    enemies, nodes, wreckage) and which stays global (houses, clearing,
