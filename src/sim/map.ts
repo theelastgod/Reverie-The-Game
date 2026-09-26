@@ -257,6 +257,7 @@ export const NPC_STATIONS: Record<string, NpcHome> = Object.fromEntries([
   home("ord-strait", "organs", 78, 40),
   home("ord-cable", "organs", 95, 40),
   home("ord-clearing", "clearing", 54, 66),
+  home("ord-gate", "clearing", 38, 67), // just inside the Clearing at the Care gate: the ledger before the ring
   home("ord-care", "care", 22, 62),
   home("vesper-foundry", "organs", 87, 36),
   home("vesper-clearing", "clearing", 52, 63),

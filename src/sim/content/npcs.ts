@@ -440,6 +440,8 @@ function ordRoute(ctx: Ctx): string {
   if (!has(ctx, F.TALKED_ORD)) return "first";
   if (!has(ctx, F.UNDER)) return has(ctx, F.WEATHER_ORD) ? "later" : "weather";
   if (has(ctx, F.MAP) && has(ctx, F.PREPARE)) return "ring";
+  if (has(ctx, F.MORTALITY) && p.movement >= 4 && !p.choices[C.PARTY]) return "gate";
+  if (has(ctx, F.MORTALITY) && p.movement >= 4) return "gate-after";
   if (has(ctx, F.MAP)) return "after-map";
   if (has(ctx, F.M3)) {
     return has(ctx, F.STRAIT) && has(ctx, F.FOUNDRY) && has(ctx, F.CABLE) ? "map" : "organs";
@@ -635,6 +637,44 @@ const ORD_NODES: Record<string, DialogueNode> = {
       { id: "number", label: "Give me the number.", next: "number" },
       { id: "leave", label: "Enough." },
     ],
+  },
+  gate: {
+    id: "gate",
+    text: "Ord is at the Care gate, not the ring. The ledger is open on his knee. Before you go in: who stands in it. The party will, if you say so; Nara is in there already and I will walk in behind you. Or you stand alone and we count from the gate. Both are written. Neither is wrong. One of them is yours.",
+    wink: "He is asking whether the hour is a party or a person. The ledger has a column for each and he has never filled the second.",
+    choices: [
+      { id: "with", label: "With me. All of you.", when: ctx => !ctx.p.choices[C.PARTY], next: "gate-with" },
+      { id: "alone", label: "Alone. Count from the gate.", when: ctx => !ctx.p.choices[C.PARTY], next: "gate-alone" },
+      { id: "later", label: "Let me look at the ring first." },
+    ],
+  },
+  "gate-with": {
+    id: "gate-with",
+    text: "He closes the ledger. Then it is a party. A willing one counts: it is the one number about the hour that is not weather. We stand in it with you. If it fails, it failed with people in it, and I will write that.",
+    wink: "Willingness is readiness that has other names on it.",
+    effects: [
+      { kind: "choice", key: C.PARTY, value: "with" },
+      { kind: "flag", key: F.GATE },
+      { kind: "readiness", delta: 4 },
+      { kind: "notice", text: "The party stands with you. Readiness.", tone: "gold" },
+    ],
+  },
+  "gate-alone": {
+    id: "gate-alone",
+    text: "He writes it without looking up. Alone. Your own counsel, then; the hour cannot be claimed off a person who is not selling anything. We count from the gate. Nara will not leave the ring for it. I would not ask her to.",
+    wink: "Alone is not brave and it is not sad. It is the second column, and somebody finally filled it.",
+    effects: [
+      { kind: "choice", key: C.PARTY, value: "alone" },
+      { kind: "flag", key: F.GATE },
+      { kind: "restraint", delta: 8 },
+      { kind: "notice", text: "You stand alone. Restraint.", tone: "ink" },
+    ],
+  },
+  "gate-after": {
+    id: "gate-after",
+    text: (ctx) => (chose(ctx, C.PARTY, "alone")
+      ? "The gate. I count from here. Nara is at the ring; she reads the number. Prepare the ground when you are ready and I will write what it does."
+      : "We stand with you. Nara is at the ring already; she reads the number. Prepare the ground and I will be in behind you."),
   },
   ring: {
     id: "ring",
@@ -866,7 +906,9 @@ export const NPCS: Record<string, NpcDef> = {
     personal: (ctx: Ctx): NpcOverride => {
       const { p } = ctx;
       if (p.party.ord === "gone") return { present: false, state: "gone" };
-      if (has(ctx, F.PREPARE) && has(ctx, F.MAP) && !has(ctx, F.PASSING)) return { ...station("ord-clearing"), state: "clearing" };
+      // From the mortality act on he is at the Care gate with the ledger; after the ground is kept, in the ring with the party or still at the gate, alone.
+      if (has(ctx, F.PREPARE) && has(ctx, F.MAP) && !has(ctx, F.PASSING)) return chose(ctx, C.PARTY, "alone") ? { ...station("ord-gate"), state: "gate" } : { ...station("ord-clearing"), state: "clearing" };
+      if (has(ctx, F.MORTALITY) && p.movement >= 4 && !has(ctx, F.PASSING)) return { ...station("ord-gate"), state: "gate" };
       if ((p.movement >= 3 || has(ctx, F.M3)) && !has(ctx, F.MAP)) return { ...station("ord-strait"), state: "strait" };
       return null;
     },

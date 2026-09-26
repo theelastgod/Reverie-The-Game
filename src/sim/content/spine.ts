@@ -401,6 +401,15 @@ const M4_STEPS: QuestStep[] = [
     onComplete: ctx => [notice(chose(ctx, C.MORTALITY, "lastword") ? "That was the last word. Do not make a story of it." : chose(ctx, C.MORTALITY, "burial") ? "You stood at the grave. It counts." : "You kept watch. It counts.", "gold")],
   },
   {
+    id: "party",
+    title: "Who stands in it",
+    detail: "Ord waits at the Care gate to the Clearing. Press F: the party stands in the ring with you (their willingness counts toward the hour), or you stand alone (your own counsel; restraint against a claimed hour). The ledger says which.",
+    target: "station:ord-gate",
+    plate: "plate-m3.jpg",
+    done: ctx => !!ctx.p.choices[C.PARTY],
+    onComplete: ctx => [notice(chose(ctx, C.PARTY, "alone") ? "You stand alone. The party waits at the gate; Ord counts from there." : "The party stands with you. Ord counts from the ring.", "ink")],
+  },
+  {
     id: "prepare",
     title: "Keep the hole",
     detail: ctx => `The Clearing is south of the Wet Grid. Nara Vale is at the ring already; she reads the number. With the party still willing, press F at the ring to prepare the ground. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}.`,

@@ -220,9 +220,11 @@ failed Passing from last season, visible to Ruin-sight → Quill: a Wink can be
 forged; spot copies or sell them.
 
 **IV — The Turn.** Mortality act (watch, burial, or the last word with Ione
-Kade, who will not return) → Nara at the ring before it is a ring, reading the
-readiness against the floor (the journal and Ord read it too) → prepare the
-Clearing with the party willing → the first stance: keep the hole or extract it
+Kade, who will not return) → Ord at the Care gate: the party stands in the ring
+with you (readiness) or you stand alone (restraint; the news says so) → Nara at
+the ring before it is a ring, reading the readiness against the floor (the
+journal and Ord read it too) → prepare the Clearing with the party willing →
+the first stance: keep the hole or extract it
 → the Passing (server-aware): Appearance / Absence / Hijack (Cold or Safety) /
 Failed (short of the floor, Gestell maxed, Clearing not held). All four are
 written. Credits name only the game. Then the MMO.

@@ -668,8 +668,8 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
 
 // ---------------------------------------------------------------- Movement IV
 
-/** The mortality act with Ione Kade and the prepared ring. Returns the world standing at the brink of the Passing. */
-function movementFourToTheRing(w0: WorldState): WorldState {
+/** The mortality act with Ione Kade, Ord at the gate and the prepared ring. Returns the world standing at the brink of the Passing. */
+function movementFourToTheRing(w0: WorldState, party: "with" | "alone"): WorldState {
   let w = w0;
   expect(snapshotFor(w, ME).npcs.some(n => n.id === "ione")).toBe(true);
   w = talkTo(w, ME, "ione");
@@ -683,6 +683,32 @@ function movementFourToTheRing(w0: WorldState): WorldState {
   expect(w.flags[W.IONE_GONE]).toBe(1);
   expect(snapshotFor(w, ME).npcs.some(n => n.id === "ione"), "Ione Kade does not return").toBe(false);
 
+  // Ord at the Care gate with the ledger: the party stands in the ring with you, or you stand alone
+  expect(snapshotFor(w, ME).objective).toMatchObject({ step: "party", target: POSITIONS["station:ord-gate"] });
+  const ordAtGate = npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!;
+  expect(ordAtGate).toMatchObject({ state: "gate", x: POSITIONS["station:ord-gate"].x, y: POSITIONS["station:ord-gate"].y });
+  w = talkTo(w, ME, "ord");
+  expect(me(w).dialogue?.node).toBe("gate");
+  expect(me(w).dialogue?.choices.map(c => c.id)).toEqual(["with", "alone", "later"]);
+  const readinessBefore = me(w).readiness;
+  const restraintBefore = me(w).restraint;
+  w = choose(w, ME, party);
+  expect(me(w).dialogue?.node).toBe(`gate-${party}`);
+  w = tick(closeAll(w, ME));
+  expectStep(w, Q.M4, 2);
+  expect(me(w).choices[C.PARTY]).toBe(party);
+  expect(me(w).flags[F.GATE]).toBe(1);
+  // the tick after the choice drifts restraint by a hundredth; the deltas are the point
+  if (party === "with") {
+    expect(me(w).readiness).toBeCloseTo(readinessBefore + 4, 1);
+    expect(me(w).restraint).toBeCloseTo(restraintBefore, 1);
+  } else {
+    expect(me(w).readiness).toBeCloseTo(readinessBefore, 1);
+    expect(me(w).restraint).toBeCloseTo(restraintBefore + 8, 1);
+  }
+  expect(me(talkTo(w, ME, "ord")).dialogue?.node, "decided once").toBe("gate-after");
+  w = closeAll(w, ME);
+
   // Nara is at the ring before it is a ring, and reads the number against the floor; so does the journal
   const nara = npcView({ w, p: me(w), now: w.now }, w.npcs.nara)!;
   expect(nara).toMatchObject({ state: "clearing", x: POSITIONS["station:nara-clearing"].x, y: POSITIONS["station:nara-clearing"].y });
@@ -695,20 +721,23 @@ function movementFourToTheRing(w0: WorldState): WorldState {
   expect(snapshotFor(w, ME).objective?.detail).toContain(`Readiness ${Math.round(me(w).readiness)} of ${READINESS_PASSING_MIN}`);
 
   w = tick(use(w, "clearing-ring", "prepare"));
-  expectStep(w, Q.M4, 2);
+  expectStep(w, Q.M4, 3);
   expect(me(w).flags[F.PREPARE]).toBe(1);
   expect(w.clearing.open).toBe(true);
   expect(w.clearing.contest?.active).toBe(true);
   expect(w.pois["clearing-ring"].state).toBe("open");
   expect(w.clearing.heldBy).toEqual([ME]);
   expect(snapshotFor(w, ME).objective).toMatchObject({ quest: Q.M4, step: "stance" });
-  expect(me(talkTo(w, ME, "ord")).dialogue?.text, "Ord reads the number at the ring").toContain(`Readiness ${Math.round(me(w).readiness)}`);
+  // with the party, Ord walks in behind you; alone, he counts from the gate; either way he reads the number
+  const ordAfter = npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!;
+  expect(ordAfter.state).toBe(party === "with" ? "clearing" : "gate");
+  expect(me(talkTo(w, ME, "ord")).dialogue?.text, "Ord reads the number").toContain(`Readiness ${Math.round(me(w).readiness)}`);
   w = closeAll(w, ME);
 
   // the first stance is the spine's: keep the hole, and the ring counts it
   const before = me(w).readiness;
   w = tick(use(w, "clearing-ring", "keep"));
-  expectStep(w, Q.M4, 3);
+  expectStep(w, Q.M4, 4);
   expect(me(w).choices[C.CLEARING]).toBe("keep");
   expect(w.clearing.contest?.votes).toEqual({ [ME]: "keep" });
   expect(me(w).readiness).toBeGreaterThan(before);
@@ -854,7 +883,7 @@ describe("the spine, played through", () => {
     expect(questById(Q.M1)!.steps.length).toBe(15);
     expect(questById(Q.M2)!.steps.length).toBe(10);
     expect(questById(Q.M3)!.steps.length).toBe(8);
-    expect(questById(Q.M4)!.steps.length).toBe(5);
+    expect(questById(Q.M4)!.steps.length).toBe(6);
   });
 
   it("run one: extract, the copper, the process, refuse the freeze, take the private yield, sell the print, Cold claims the hour", () => {
@@ -867,7 +896,7 @@ describe("the spine, played through", () => {
     w = movementTwo(w, { freeze: "refuse", operator: "take" });
     expect(me(w).current).toBe("cold");
     w = movementThree(w, { forge: "sell", cut: "strait", plate: "numbered" });
-    const brink = movementFourToTheRing(w);
+    const brink = movementFourToTheRing(w, "with");
 
     // readiness below the floor: the hour does not open, whoever funded the door
     const short = pass(brink);
@@ -900,7 +929,7 @@ describe("the spine, played through", () => {
 
     w = movementTwo(w, { freeze: "sign", operator: "refuse", plate: "unnumbered" });
     w = movementThree(w, { forge: "spot", cut: "whole", plate: "unnumbered" });
-    const brink = movementFourToTheRing(w);
+    const brink = movementFourToTheRing(w, "alone");
     expect(me(brink).restraint).toBeGreaterThanOrEqual(50);
     expect(me(brink).party).toMatchObject({ nara: "with", ord: "with" });
 
@@ -909,6 +938,7 @@ describe("the spine, played through", () => {
       let a = pass(ready(brink, { readiness: 85 }));
       expect(me(a).choices[C.PASSING]).toBe("appearance");
       expect(a.passing).toMatchObject({ lastOutcome: "appearance", hijackedBy: "", lastBy: ME, count: 1 });
+      expect(a.news.some(n => n.text.includes(`${me(a).name}, alone, prepared the ground`)), "the city writes that you stood alone").toBe(true);
       expect(a.passing.appearanceUntil).toBeGreaterThan(a.now);
       expect(me(a).bestand).toBe(me(brink).bestand + PASSING_STIPEND);
       expect(a.flags["earned:stipend"]).toBe(PASSING_STIPEND);

@@ -173,6 +173,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   crosses the Care, Annex and Wet gates on foot and prints a second
   `measure:` block. PASS on the first run. The numbers are in Verified and
   Backlog 5.
+- The Care gate (2026-09-26, backlog 8): a third Movement IV decision on
+  the walk from Ione Kade to the ring. Ord waits with the ledger at a new
+  station just inside the Clearing at the Care gate (`station:ord-gate`,
+  38,67) from the mortality act on, and asks who stands in it: the party
+  with you (`C.PARTY` with: readiness 4, Ord walks in behind you to the
+  ring once the ground is kept) or alone (restraint 8, which is the number
+  the Safety hijack reads; Ord counts from the gate, and the city writes
+  the rite's news under "name, alone,"). A spine step `party` between the
+  act and the preparation; Movement IV is six steps. Nara stays at the
+  ring either way; she said she would. The spine test decides it both
+  ways and reads the news; the smoke answers "with".
 - Movement IV beats (2026-09-26, backlog 8): the number is read before
   anyone stands. The journal's `prepare`, `stance` and `passing` steps
   carry "Readiness N of 60" (and, at the Passing, whether the hour can
@@ -451,7 +462,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   568 words (dialogue 222, spoken 111, journal 161, notices 74), 2
   decisions (the last word, the stance), estimate 5.1 min on the spine
   alone; the Passing wrote `failed` at readiness 48, told beforehand by
-  Nara, Ord and the journal. On the reused world the run before it failed
+  Nara, Ord and the journal. After the Care gate (the same day, fresh local
+  world): Movement IV bot 22 s (walk 21 s: the Care gate 15 s, Ord 2 s,
+  the ring 4 s; talk and verbs 1.6 s), 851 words (dialogue 348, spoken
+  169, journal 244, notices 90), 3 decisions (the last word, the party,
+  the stance), estimate 7.3 min on the spine alone; `failed` at readiness
+  52. On the reused world the run before it failed
   at "the hole is open": the last hole had not set (600 s of world time,
   and the world only runs while bodies are in it), which is the ring's
   ground bug above; the smoke now notes that case and passes partial.
@@ -611,25 +627,25 @@ they are discovered; keep this list honest.
    the spine; Ord's cut now points at them without forcing them. Nothing
    further is planned here; re-measure after any change to Movement III and
    keep the numbers here. Movement IV is measured (Backlog 8).
-8. **Movement IV density: near target; the spine alone still cannot reach
-   the rite, and now says so.** Measured 2026-09-26 over the wire after
-   the readiness read, the stance step and Nara at the brink (`npm run
-   test:campaign:4`, fresh local world): 5.1 min on the spine alone (was
-   3.0), 568 words (was 309), two decisions (the last word, the stance;
-   was one), and the Passing wrote `failed` at readiness 48 (was 36; the
-   keep stance pays), told beforehand by Nara, Ord and the journal, with
-   where the rest is. The target by the other movements' shape is 6–8 min
-   with three decisions; one decision short. The readiness a spine-only
-   first playthrough can reach is 48 (the yield refused instead of taken
-   would make it 58: refuse 10 against the take's 0), and the floor is
-   60, so the honest ending of a spine-only run is `failed` by design, and
-   a refusing Angel with one side hour (Form 9 refused pays 2) crosses it.
-   One candidate left, optional: a third Movement IV decision on the walk
-   from Ione to the ring, the Care gate (Nara or the Officer at the
-   Clearing station asks whether to bring the party or stand alone; alone
-   forgoes the hold at meltdown), which would also give the 15 s walk a
-   stop. Nothing else is planned here; re-measure after any change to
-   Movement IV and keep the numbers here.
+8. **Movement IV density: at target; the spine alone still cannot reach
+   the rite, and says so.** Measured 2026-09-26 over the wire after the
+   readiness read, the stance step, Nara at the brink and Ord at the Care
+   gate (`npm run test:campaign:4`, fresh local world): 7.3 min on the
+   spine alone (was 3.0), 851 words (was 309), three decisions (the last
+   word, the party, the stance; was one), and the Passing wrote `failed`
+   at readiness 52 (was 36), told beforehand by Nara, Ord and the journal,
+   with where the rest is. Inside the 6–8 min, three-decision target the
+   other movements' shape set. The readiness a spine-only first
+   playthrough can reach is 52 with the party (the yield refused instead
+   of taken would make it 62 and cross the floor of 60: refuse 10 against
+   the take's 0), so the honest ending of a taking, spine-only run is
+   `failed` by design, and a refusing Angel crosses it; alone trades the
+   4 readiness for 8 restraint against the Safety hijack. Nothing further
+   is planned here; re-measure after any change to Movement IV and keep
+   the numbers here. Every movement is now measured over the wire: I
+   16.7 min / 8 decisions, II 12.5 / 4, III 11.5 / 3, IV 7.3 / 3; the
+   whole campaign is about 48 min of a first playthrough on the spine
+   alone, with 18 decisions.
 9. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

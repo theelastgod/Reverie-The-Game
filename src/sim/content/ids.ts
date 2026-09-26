@@ -45,6 +45,7 @@ export const F = {
   FORGE: "forge", // decided copies with Quill
   PREPARE: "prepare", // prepared the Clearing
   BRINK: "brink", // Movement IV: heard Nara at the ring before the ground was kept, with the readiness read
+  GATE: "gate", // Movement IV: decided with Ord at the Care gate whether the party stands in the ring
   MORTALITY: "mortality", // did a mortality act
   PASSING: "passing", // the Passing resolved for this Angel
   CREDITS: "credits",
@@ -70,6 +71,7 @@ export const C = {
   GARDEN: "garden", // "numbered" | "unnumbered": the plate on the buried garden, decided with Nara
   FORGE: "forge", // "spot" | "sell"
   MORTALITY: "mortality", // "watch" | "burial" | "lastword"
+  PARTY: "party", // "with" | "alone": whether the party stands in the ring with you (readiness) or you stand alone (restraint); the news says which
   CLEARING: "clearing", // "keep" | "extract" | "pass"
   PASSING: "passing", // PassingOutcome
 } as const;

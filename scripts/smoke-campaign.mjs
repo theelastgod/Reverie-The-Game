@@ -108,6 +108,7 @@ const ROUTE3 = {
 };
 const T4 = {
   ione: at(31, 67),            // home:ione, the bench at the edge of the Care's garden
+  gate: at(38, 67),            // station:ord-gate, just inside the Clearing at the Care gate, where Ord waits with the ledger
   naraRing: at(50, 66),        // station:nara-clearing, where Nara waits at the ring from the last word on
   ring: at(52, 67),            // clearing-ring
 };
@@ -115,7 +116,8 @@ const T4 = {
 // (46,63) (52,61) (58,63) (60,67) (58,71) (52,73) (46,71) (44,67); the Care gate is x 34..36 rows 66..68.
 const ROUTE4 = {
   toIone: [at(59, 48), at(59, 52), at(53, 52), at(53, 56), at(53, 59), at(50, 60), at(50, 64), at(48, 66), at(40, 66), at(36, 67), at(33, 67)],
-  toRing: [at(36, 67), at(40, 66), at(48, 66), at(50, 66)],
+  toGate: [at(36, 67)],
+  toRing: [at(40, 66), at(48, 66), at(50, 66)],
 };
 
 const sockets = [];
@@ -684,6 +686,16 @@ try {
     await converse(me, 'ione', 'mortality');
     assert.equal(you(me).choices.mortality, 'lastword', 'the last word');
     assert.ok(!(me.snap.npcs ?? []).some(n => n.id === 'ione'), 'Ione Kade does not return');
+
+    // Ord at the Care gate with the ledger: the party stands in the ring with you, or you stand alone.
+    phase('IV walk: gate');
+    await walk(me, ROUTE4.toGate);
+    await stand(me, T4.gate, 72);
+    assert.equal(me.snap.district, 'clearing', 'through the Care gate');
+    read.decisions++;
+    phase('IV talk: ord');
+    await converse(me, 'ord', 'gate');
+    assert.equal(you(me).choices.party, 'with', 'the party stands with you');
 
     // The ring: Nara is there first with the number; prepare the ground with the party still willing, take a stance, then the Passing, whatever it writes.
     phase('IV walk: ring');

@@ -65,6 +65,8 @@ const NEWS_APPEARANCE = (name: string) => `A Passing. ${name} prepared the groun
 const NEWS_ABSENCE = (name: string) => `A Passing went by. ${name} kept the hole. Absence is honest.`;
 const NEWS_HIJACK = (name: string, by: "cold" | "safety") => `${by === "cold" ? "Cold" : "Safety"} claimed the hour at ${name}'s Clearing. The world continues.`;
 const NEWS_FAILED = (name: string) => `${name}'s Passing failed. Gestell kept the weather.`;
+/** The name the city writes the rite under: an Angel who stood alone is written so. */
+const standingName = (p: Player): string => (p.choices[C.PARTY] === "alone" ? `${p.name}, alone,` : p.name);
 const FAILED_LINE = "Last season's Passing failed. The hour went by. The city kept the weather.";
 
 // ---------------------------------------------------------------- helpers
@@ -325,15 +327,15 @@ export function applyPassing(w: WorldState, id: string): WorldState {
       next = earn(next, id, PASSING_STIPEND, "stipend");
       me = next.players.get(id) ?? me;
       me = notice(me, `Stipend. ${PASSING_STIPEND} Bestand. For the shrines, not the hand.`, next.now, "gold");
-      next = pushNews(next, NEWS_APPEARANCE(p.name));
+      next = pushNews(next, NEWS_APPEARANCE(standingName(p)));
       return speak(next, me, PASSING_APPEARANCE);
     }
     case "absence": {
-      next = pushNews(next, NEWS_ABSENCE(p.name));
+      next = pushNews(next, NEWS_ABSENCE(standingName(p)));
       return speak(next, me, PASSING_ABSENCE);
     }
     case "hijack": {
-      next = pushNews(next, NEWS_HIJACK(p.name, by === "safety" ? "safety" : "cold"));
+      next = pushNews(next, NEWS_HIJACK(standingName(p), by === "safety" ? "safety" : "cold"));
       return speak(next, me, by === "safety" ? PASSING_HIJACK_SAFETY : PASSING_HIJACK_COLD);
     }
     case "failed":
@@ -347,7 +349,7 @@ export function applyPassing(w: WorldState, id: string): WorldState {
       }
       next = { ...next, clearing: { ...next.clearing, open: false, contest: next.clearing.contest ? { ...next.clearing.contest, active: false } : null } };
       next = setRing(next, "failed", id);
-      next = pushNews(next, NEWS_FAILED(p.name));
+      next = pushNews(next, NEWS_FAILED(standingName(p)));
       return speak(next, me, PASSING_FAILED);
     }
   }
