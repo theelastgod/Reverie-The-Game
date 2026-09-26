@@ -53,13 +53,20 @@ const SWEEP_PAGE = 64; // bodies per page: with their stamps, 128 keys per delet
 /** The sweep's clock and cursor outlive the instance: `sweep:v2` → { at, after? }. A new city waits an hour before its first. */
 const SWEEP_KEY = "sweep:v2";
 /**
- * Joins are budgeted for the whole object: each costs a checkpoint, a forced
- * broadcast to every viewer and a hello, and a session cookie is minted for
- * free, so a bucket per socket alone would be bypassed by reconnecting.
- * Past the bucket the upgrade is refused with 429 and counted.
+ * Joins are budgeted: each costs a checkpoint, a forced broadcast to every
+ * viewer and a hello, and a session cookie is minted for free, so a bucket
+ * per socket alone would be bypassed by reconnecting. A bucket per address
+ * (CF-Connecting-IP; "local" without it) is drawn first, so one script
+ * starves only itself; then the city's own bucket, the backstop on what the
+ * object computes for joins in all. Past either the upgrade is refused with
+ * 429 and counted. Address buckets that are full again are forgotten once
+ * the map is past JOIN_ADDRESSES_MAX.
  */
 const JOINS_PER_SECOND = 10;
 const JOIN_BURST = 30;
+const CITY_JOINS_PER_SECOND = 30;
+const CITY_JOIN_BURST = 60;
+const JOIN_ADDRESSES_MAX = 1024;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 /** A body's id rides every frame for every viewer in range: twelve hex characters (2.8e14) instead of a 36-character uuid. Saved bodies keep the id they were given. */
 const bodyId = (): string => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
@@ -142,7 +149,8 @@ export class ReverieWorld {
   private alarmDue = 0; // when the pending alarm was asked for, to read its lateness
   private logged: WorldState; // the world as of the last log diff
   private readonly budgets = new Map<Socket, Budget>(); // what each socket may still send
-  private readonly joins: Budget = { tokens: JOIN_BURST, at: 0 }; // what the object still admits in joins
+  private readonly joins = new Map<string, Budget>(); // what each address may still join
+  private readonly cityJoins: Budget = { tokens: CITY_JOIN_BURST, at: 0 }; // what the object still admits in joins from everyone
   private pending = false; // an action since the last broadcast: the next alarm checkpoints first, then broadcasts forced
   private actionAt = -Infinity; // wall clock of the last broadcast an action forced (a join's or a close's does not count)
   private readonly stamped = new Set<string>(); // tokens whose seen stamp this instance wrote; the close writes it again
@@ -281,7 +289,7 @@ export class ReverieWorld {
     if (!token || !sameOrigin(req)) return new Response("Session required", { status: 403 });
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
-    const hello = await this.join(token, server);
+    const hello = await this.join(token, server, req.headers.get("CF-Connecting-IP") ?? "local");
     if (!hello) return new Response("Too many joins; try again in a moment", { status: 429, headers: { "Retry-After": "1" } });
     return new Response(null, { status: 101, webSocket: client });
   }
@@ -290,8 +298,8 @@ export class ReverieWorld {
    * Bind a browser session to a body. One active body per session cookie:
    * a newer socket takes over and the older one is closed with 4001.
    */
-  async join(token: string, server: Socket): Promise<Hello | null> {
-    if (!this.admitJoin(Date.now())) return null;
+  async join(token: string, server: Socket, address = "local"): Promise<Hello | null> {
+    if (!this.admitJoin(address, Date.now())) return null;
     return this.ctx.blockConcurrencyWhile(async () => {
       const saved = await this.ctx.storage.get<Player>(playerKey(token));
       const active = [...this.sessions.entries()].find(([, session]) => session.token === token);
@@ -329,9 +337,18 @@ export class ReverieWorld {
     return false;
   }
 
-  /** True when the object's join bucket has a token; past it the join is refused and counted. */
-  private admitJoin(now: number): boolean {
-    if (draw(this.joins, JOIN_BURST, JOINS_PER_SECOND, now)) return true;
+  /** True when the address's bucket and then the city's have a token for this join; past either it is refused and counted. */
+  private admitJoin(address: string, now: number): boolean {
+    let budget = this.joins.get(address);
+    if (!budget) {
+      if (this.joins.size >= JOIN_ADDRESSES_MAX) { // forget the addresses whose buckets are full again
+        const full = JOIN_BURST / JOINS_PER_SECOND * 1000;
+        for (const [key, b] of this.joins) if (now - b.at >= full) this.joins.delete(key);
+      }
+      budget = { tokens: JOIN_BURST, at: now };
+      this.joins.set(address, budget);
+    }
+    if (draw(budget, JOIN_BURST, JOINS_PER_SECOND, now) && draw(this.cityJoins, CITY_JOIN_BURST, CITY_JOINS_PER_SECOND, now)) return true;
     this.load.refused();
     return false;
   }

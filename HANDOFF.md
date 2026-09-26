@@ -302,6 +302,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- The join budget per address (2026-09-26, found reading the last change
+  again): one bucket for the whole city meant one script joining in a
+  loop refused every honest player's join too, a denial the budget
+  itself handed out. Now a bucket per address (`CF-Connecting-IP`, which
+  the edge sets and a client cannot; "local" without it, as under
+  `wrangler dev` and in the tests) is drawn first, 30 deep and 10 a
+  second, so a script starves only its own address; then the city's own
+  bucket, 60 deep and 30 a second, the backstop on what the object
+  computes for joins in all (a join costs a checkpoint, a broadcast to
+  every viewer and a hello). Past either the upgrade answers 429 with
+  `Retry-After: 1` and `/world` counts `refused`. Address buckets that
+  are full again are forgotten once the map is past 1024 entries, so a
+  sweep of addresses cannot grow it without bound. `/log/recent` was
+  checked for the same reason and already carries `max-age=15`, so the
+  edge absorbs a read flood there.
 - Review fixes on the budget and the sweep (2026-09-26, a code review of
   `8f2ccb8..3305f22`, nine findings, all taken): joins are budgeted for
   the whole object (30 deep, 10 a second, `draw()` shared with the
@@ -779,6 +794,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The join budget per address (2026-09-26, latest): typecheck, 464 tests
+  (thirty joins from one address admitted and its thirty-first refused
+  while another address joins; sixty from everyone and the city's
+  sixty-first refused, `refused` 2; the upgrade without an address header
+  answering 429 with `Retry-After`; a token back a tenth of a second
+  later; 1024 address buckets and the full ones forgotten at the next
+  new address three seconds on; an oversize message dropped and
+  counted), the build, the session smoke (its 5000-character junk frame
+  now the one `dropped` on the report, by design), the Movement I smoke
+  on a fresh world (16.8 min / 8 decisions, `refused` 0), and the render
+  check at `RENDER_MIN_FPS=5` (desktop and phone).
 - The review fixes on the budget and the sweep (2026-09-26, last):
   typecheck, 464 tests (thirty joins in one instant admitted and the
   thirty-first refused, the upgrade answering 429 with `Retry-After`,

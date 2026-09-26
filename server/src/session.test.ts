@@ -675,16 +675,23 @@ describe("wallet login", () => {
     expect(data.get(playerKey(token))).toMatchObject({ id: "a" });
   });
 
-  it("refuses a join past the object's bucket with 429 and counts it; the bucket refills; an oversize message is dropped and counted", async () => {
+  it("budgets joins per address and then for the city, refusing with 429 and counting; the buckets refill; full address buckets are forgotten; an oversize message is dropped and counted", async () => {
     const ws = socket();
     const { world, ctx } = await worldHarness(saved(spawnGuest("a")), [ws]);
+    const joinFrom = (address: string, n: number) => world.join(`${address}-${n}`, socket(`${address}-${n}`, `${address}-${n}`) as never, address);
     vi.setSystemTime(1000);
-    for (let i = 0; i < 30; i++) expect(await world.join(`t${i}`, socket(`b${i}`, `t${i}`) as never), `join ${i}`).not.toBeNull();
-    expect(await world.join("t30", socket("b30", "t30") as never), "the 31st join").toBeNull();
+    for (let i = 0; i < 30; i++) expect(await joinFrom("10.0.0.1", i), `join ${i}`).not.toBeNull();
+    expect(await joinFrom("10.0.0.1", 30), "the 31st from one address").toBeNull();
+    expect(await joinFrom("10.0.0.2", 0), "another address still joins").not.toBeNull();
     let body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { refused: number; dropped: number; sessions: number } };
     expect(body.load.refused).toBe(1);
-    expect(body.load.sessions).toBe(31);
-    // the upgrade answers 429 when the join is refused (the pair the runtime makes is a double here)
+    expect(body.load.sessions).toBe(32);
+    // the city's own bucket holds sixty in one instant from everyone: 31 are in, 29 more from fresh addresses, then no more
+    for (let i = 0; i < 29; i++) expect(await joinFrom(`10.0.1.${i}`, 0), `city join ${i}`).not.toBeNull();
+    expect(await joinFrom("10.0.2.1", 0), "the city's 61st").toBeNull();
+    body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { refused: number; dropped: number; sessions: number } };
+    expect(body.load.refused).toBe(2);
+    // the upgrade answers 429 when the join is refused (the pair the runtime makes is a double here; no CF-Connecting-IP is "local")
     const g = globalThis as { WebSocketPair?: unknown };
     g.WebSocketPair = class { 0 = socket("c", token); 1 = socket("s", token); };
     try {
@@ -694,10 +701,18 @@ describe("wallet login", () => {
     } finally {
       delete g.WebSocketPair;
     }
-    expect(ctx.acceptWebSocket).toHaveBeenCalledTimes(30);
-    // a tenth of a second later one token is back
+    expect(ctx.acceptWebSocket).toHaveBeenCalledTimes(60);
+    // a tenth of a second later the first address has a token back and the city three
     vi.setSystemTime(1100);
-    expect(await world.join("t31", socket("b31", "t31") as never)).not.toBeNull();
+    expect(await joinFrom("10.0.0.1", 31)).not.toBeNull();
+    // address buckets that are full again are forgotten once the map is past its size: refused joins from fresh
+    // addresses fill it cheaply (the city's two remaining tokens admit two), and three seconds on every bucket is full
+    const joins = (world as unknown as { joins: Map<string, unknown> }).joins;
+    for (let i = joins.size; i < 1024; i++) await joinFrom(`10.1.${i >> 8}.${i & 255}`, 0);
+    expect(joins.size).toBe(1024);
+    vi.setSystemTime(4100);
+    expect(await joinFrom("10.2.0.1", 0)).not.toBeNull();
+    expect(joins.size, "the full buckets are gone; the new address stays").toBe(1);
     // an oversize message spends its token, is dropped unread and counted
     await world.webSocketMessage(ws as never, `{"t":"stance","pad":"${"x".repeat(5000)}"}`);
     body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { refused: number; dropped: number; sessions: number } };
