@@ -121,6 +121,9 @@ export const CLAIM_AMOUNT = 25;
 export const BANK_FEE = 0.05;
 export const OPERATOR_YIELD = 60;
 export const M3_DOOR_PRICE = 40;
+/** The resistance's Clearing on the listing board: the opening price, and how far it moves when the city does. */
+export const CLEARING_LIST_PRICE = 40;
+export const CLEARING_PRICE_MOVE = { taken: 8, refused: -4, appearance: 12, absence: 4, hijack: 8, failed: -6 } as const;
 
 // PvP
 export const TRUCE_SECONDS = 20;

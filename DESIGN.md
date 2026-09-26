@@ -206,7 +206,10 @@ Passing) or refuse; the desk says so when the signature contradicts the
 corridor → the tax window: pay this hour's tithe now into your House's
 standing, or let the weather take it at the node → serial history as wreckage
 only you see → the listing board: the
-"resistance" is already pricing Clearings → Vesper Hale: take the private yield
+"resistance" is already pricing Clearings (the read puts their Clearing on the
+Grid at 40 for everyone, a price and never a sale; it moves when the city does:
+up when an Angel takes the private yield or a Passing opens the hole, down when
+the yield is refused or a Passing fails, and the news says so) → Vesper Hale: take the private yield
 (Cold; opens the Organs door with Bestand) or refuse (Readiness; opens it through
 the wreckage garden burial).
 

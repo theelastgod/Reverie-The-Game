@@ -16,6 +16,8 @@ import {
   CLEARING_EXTRACT,
   CLEARING_HOLD_ANGELS,
   CLEARING_HOLD_SCALE,
+  CLEARING_LIST_PRICE,
+  CLEARING_PRICE_MOVE,
   CLEARING_RADIUS,
   CLEARING_RESERVE,
   GESTELL_CLEARING_HOLD,
@@ -31,8 +33,9 @@ import {
   WAR_PERIOD,
 } from "./constants";
 import { C, F, W, seasonPassingFlag } from "./content/ids";
+import { CLEARING_ITEM, CLEARING_LISTING, RESISTANCE } from "./content/market";
 import { POSITIONS } from "./map";
-import { initialNodes } from "./economy";
+import { applyListing, initialNodes } from "./economy";
 import { initialHouses } from "./houses";
 import {
   FAILED_MARK,
@@ -413,6 +416,20 @@ describe("applyPassing", () => {
     expect(next.passing.appearanceUntil).toBe(w.now + SEASON_LENGTH);
     expect(next.news).toHaveLength(1);
     expect(next.failed).toHaveLength(0);
+  });
+
+  it("re-prices the resistance's Clearing once the board has been read: up on an appearance, down on a failure, not at all before", () => {
+    const w = makeWorld([prepared({ readiness: 80 })]);
+    expect(applyPassing(w, "p1").market).toEqual([]);
+    const listed = applyListing(w, { id: CLEARING_LISTING, seller: RESISTANCE, item: CLEARING_ITEM, price: CLEARING_LIST_PRICE });
+    const appeared = applyPassing(listed, "p1");
+    expect(you(appeared).choices[C.PASSING]).toBe("appearance");
+    expect(appeared.market[0].price).toBe(CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.appearance);
+    const failing = { ...listed, players: new Map([["p1", { ...you(listed), readiness: 59 }]]) };
+    const failed = applyPassing(failing, "p1");
+    expect(you(failed).choices[C.PASSING]).toBe("failed");
+    expect(failed.market[0].price).toBe(CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.failed);
+    expect(failed.news.some(n => n.text.includes(`at ${CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.failed}, down from ${CLEARING_LIST_PRICE}`))).toBe(true);
   });
 
   it("is once per Angel per season; the next season takes the rite again and writes it after the first", () => {

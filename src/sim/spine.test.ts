@@ -12,10 +12,11 @@ import { describe, expect, it } from "vitest";
  * end of world as world, signs the freeze, refuses the yield, buries the
  * garden, spots the copy, and reaches every outcome the Passing can have.
  */
-import { DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_PASSING_MIN, READINESS_REFUSE, TEST_SERIAL, TITHE_COST } from "./constants";
+import { CLEARING_LIST_PRICE, CLEARING_PRICE_MOVE, DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_PASSING_MIN, READINESS_REFUSE, TEST_SERIAL, TITHE_COST } from "./constants";
 import { POSITIONS, blockedFor, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
+import { CLEARING_LISTING } from "./content/market";
 import { verbsFor } from "./interact";
 import { LINES } from "./content";
 import type { Player, WorldState } from "./types";
@@ -522,6 +523,14 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   expect(me(w).flags[F.BOARD]).toBe(1);
   expect(w.flags[W.CLEARING_LISTED]).toBe(1);
   expect(w.pois["listing-board"].state).toBe("clearing-listed");
+  // the board puts the resistance's Clearing on the Grid, priced, for everyone; the read and the label say the price
+  const priced = () => w.market.find(l => l.id === CLEARING_LISTING);
+  expect(priced()).toMatchObject({ sellerId: "", sellerName: "the resistance", price: CLEARING_LIST_PRICE });
+  expect(me(w).heard).toContain(`${CLEARING_LIST_PRICE} Bestand, the resistance's price today`);
+  expect(snapshotFor(w, ME).prompt?.name).toBe(`Listing board — a Clearing at ${CLEARING_LIST_PRICE}`);
+  expect(snapshotFor(w, ME).market[0]?.id).toBe(CLEARING_LISTING);
+  expect(w.news[w.news.length - 1].text).toBe(`the resistance lists A Clearing, the hole scheduled at ${CLEARING_LIST_PRICE}.`);
+  expect(tick(use(w, "listing-board", "read")).market.find(l => l.id === CLEARING_LISTING)?.price, "a second read leaves the price").toBe(CLEARING_LIST_PRICE);
 
   const organs = POSITIONS["gate-wet-organs"];
   expect(blockedFor(me(w), Math.floor(organs.x / 48), Math.floor(organs.y / 48))).toBe(true);
@@ -543,6 +552,9 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
     expect(me(w).party.nara).toBe("waiting");
     expect(w.flags[W.VESPER_GONE]).toBe(1);
     expect(w.pois["operator-desk"].state).toBe("closed");
+    // Cold bought an hour: the resistance's price moves up, and the news says by how much
+    expect(priced()?.price).toBe(CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.taken);
+    expect(w.news.some(n => n.text === `the resistance prices A Clearing, the hole scheduled at ${CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.taken}, up from ${CLEARING_LIST_PRICE}.`)).toBe(true);
     w = tick(w);
     // the offer and the door fall in one tick; the movement turns
     expect(snapshotFor(w, ME).npcs.some(n => n.id === "vesper")).toBe(false);
@@ -550,6 +562,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
     w = tick(use(w, "operator-desk", "refuse"));
     expectStep(w, Q.M2, 9);
     expect(me(w).choices[C.OPERATOR]).toBe("refuse");
+    expect(priced()?.price, "an hour not for sale: the price gives").toBe(CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.refused);
     expect(me(w).flags[F.M3]).toBeUndefined();
     expect(me(w).current).toBe("");
     expect(w.pois["wreckage-garden"].state).toBe("wreck");

@@ -38,7 +38,7 @@ import type { Claim, Item, Listing, Player, WorldState, YieldNode } from "./type
 import { NODE_LIST, nearPoint } from "./map";
 import { EARNERS, SINKS, W } from "./content/ids";
 import { LINES } from "./content";
-import { say } from "./world";
+import { pushNews, say } from "./world";
 import { perception } from "./houses";
 
 export type EarnerId = (typeof EARNERS)[number];
@@ -79,6 +79,9 @@ const MARKET_LISTED = (price: number, fee: number) =>
   fee > 0 ? `Listed at ${price}. Listing fee ${fee}. Exhibition decays.` : `Listed at ${price}. Glamour waived the fee. Exhibition still decays.`;
 const MARKET_NO_LISTING = "That listing is gone.";
 const MARKET_SELLER_AWAY = "The seller is not on the Grid. The listing waits.";
+const MARKET_CITY_LISTING = "A price, not a sale. The hole does not travel.";
+const MARKET_CITY_LISTED = (seller: string, item: string, price: number) => `${seller} lists ${item} at ${price}.`;
+const MARKET_CITY_MOVED = (seller: string, item: string, price: number, from: number) => `${seller} prices ${item} at ${price}, ${price > from ? "up" : "down"} from ${from}.`;
 const MARKET_OWN_LISTING = "It is your listing. Cancel it if you want it back.";
 const MARKET_BOUGHT = (price: number) => `Bought for ${price}. A copy travels. The hole does not.`;
 const MARKET_CANCELLED = "The listing comes down. The print is back in your hand.";
@@ -396,6 +399,7 @@ export function applyMarket(
       const index = w.market.findIndex(l => l.id === args.listingId);
       if (index < 0) return speak(w, p, MARKET_NO_LISTING);
       const listing = w.market[index];
+      if (listing.sellerId === CITY_SELLER) return speak(w, p, MARKET_CITY_LISTING);
       if (listing.sellerId === id) return speak(w, p, MARKET_OWN_LISTING);
       // Bestand stays inside the sim: no seller on the Grid, no sale. The listing waits for them or their cancel.
       const seller = w.players.get(listing.sellerId);
@@ -421,6 +425,35 @@ export function applyMarket(
     default:
       return w;
   }
+}
+
+/** The seller id of a listing the city posts: no body on the Grid sells it, so nobody buys it and nobody cancels it. */
+export const CITY_SELLER = "";
+const PRICE_MIN = 1;
+const PRICE_MAX = 999;
+
+/**
+ * A listing the city posts or re-prices: a price to watch, not a sale.
+ * Posted once per id (`seller`, `item`, `price`; a second post leaves the
+ * price where the city moved it); `delta` moves the price within the
+ * stall's bounds, and before the listing exists moves nothing. The news
+ * carries the posting and every move; nothing changes, nothing is said.
+ */
+export function applyListing(w: WorldState, e: { id: string; seller?: string; item?: Item; price?: number; delta?: number }): WorldState {
+  const index = w.market.findIndex(l => l.id === e.id);
+  if (index < 0) {
+    if (!e.seller || !e.item || e.price === undefined) return w;
+    const price = clamp(Math.round(e.price), PRICE_MIN, PRICE_MAX);
+    const listing: Listing = { id: e.id, sellerId: CITY_SELLER, sellerName: e.seller, item: { ...e.item, qty: 1 }, price, at: w.now };
+    return pushNews({ ...w, market: [...w.market, listing] }, MARKET_CITY_LISTED(e.seller, e.item.name, price));
+  }
+  const cur = w.market[index];
+  if (cur.sellerId !== CITY_SELLER || !e.delta) return w;
+  const price = clamp(Math.round(cur.price + e.delta), PRICE_MIN, PRICE_MAX);
+  if (price === cur.price) return w;
+  const market = w.market.slice();
+  market[index] = { ...cur, price, at: w.now };
+  return pushNews({ ...w, market }, MARKET_CITY_MOVED(cur.sellerName, cur.item.name, price, cur.price));
 }
 
 const DECAY_KEY = "exhibit:decayAt";

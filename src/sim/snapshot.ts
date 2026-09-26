@@ -11,7 +11,7 @@ import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
 import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type EnemyView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView } from "./protocol";
 import type { Ctx, Enemy, FailedPassing, HistoryMark, NpcState, Player, PoiConfig, Prompt, PromptVerb, Wreckage, WorldState, YieldNode } from "./types";
-import { nodeYield } from "./economy";
+import { CITY_SELLER, nodeYield } from "./economy";
 import { perception } from "./houses";
 import { npcOffers, objectiveFor, sideObjectivesFor } from "./quests";
 import { NODE_REACH, NPC_REACH, PLAYER_REACH, POI_REACH, WRECKAGE_REACH, nodeVerbs, npcVerbs, playerVerbs, poiVerbs, wreckageVerbs } from "./interact";
@@ -290,7 +290,11 @@ export function stepViews(w: WorldState): StepViews {
     nodes,
     pois: keptPois.get(w.pois, pois => Object.entries(pois).map(([id, s]) => ({ id, state: s.state, count: s.count }))),
     frozen: keptFrozen,
-    market: keptMarket.get(w.market, market => market.slice(-MARKET_TOP).reverse()),
+    // The city's own listings stand first, whatever else is up: a price to watch, never pushed off the board by prints.
+    market: keptMarket.get(w.market, market => [
+      ...market.filter(l => l.sellerId === CITY_SELLER),
+      ...market.filter(l => l.sellerId !== CITY_SELLER).slice(-MARKET_TOP).reverse(),
+    ]),
     news: keptNews.get(w.news, news => news.map(n => n.text)),
     clearing: keptClearing.get(w.clearing, c => ({ open: c.open, reserve: c.reserve, contest: c.contest, lastOutcome: c.lastOutcome, dwellers: c.heldBy.length })),
     passing: keptPassing.get(w.passing, () => new Keep()).get(w.season.id, season => ({ ...w.passing, season })),

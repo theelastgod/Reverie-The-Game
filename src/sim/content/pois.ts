@@ -6,13 +6,14 @@
  */
 import type { Ctx, Effect, Fourfold, PoiConfig, PoiVerb, WinkBySchool } from "../types";
 import {
-  AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_PRESENT, FREEZE_FEE, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
+  AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_PRESENT, CLEARING_LIST_PRICE, FREEZE_FEE, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
   OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, TITHE_COST, UPKEEP_COST,
   WAR_PERIOD,
 } from "../constants";
 import { weatherBand } from "../protocol";
 import { C, F, W, seasonPassingFlag } from "./ids";
 import { WEATHER_LABELS, WEATHER_NAMED } from "./lines";
+import { clearingPrice, listClearing, moveClearing } from "./market";
 
 // ---------------------------------------------------------------- helpers
 
@@ -394,7 +395,10 @@ const WET: PoiConfig[] = [
   },
   {
     id: "listing-board",
-    label: ctx => (poiState(ctx, "listing-board") === "clearing-listed" ? "Listing board — a Clearing, priced" : "Listing board"),
+    label: ctx => {
+      const price = clearingPrice(ctx.w);
+      return price === null ? "Listing board" : `Listing board — a Clearing at ${price}`;
+    },
     plate: "clearing-stall.jpg",
     verbs: [
       {
@@ -402,11 +406,13 @@ const WET: PoiConfig[] = [
         label: "Read the board",
         choice: "read",
         guest: spectate,
-        say: "Quill listed a Clearing. Forty Bestand. Copies travel. The hole does not. Below it, smaller hands: keep-groups, hold-rates, a schedule of who will stand in which hole for what.",
+        // The say is read after the effects: the first read posts the Clearing and reads its opening price; a later read reads where the city moved it.
+        say: ctx => `Quill listed a Clearing. ${clearingPrice(ctx.w) ?? CLEARING_LIST_PRICE} Bestand, the resistance's price today. Copies travel. The hole does not. Below it, smaller hands: keep-groups, hold-rates, a schedule of who will stand in which hole for what. The number is on the Grid now, in your ledger, and it moves when the city does.`,
         effects: [
           { kind: "flag", key: F.BOARD },
           { kind: "worldFlag", key: W.CLEARING_LISTED, value: 1 },
           { kind: "poi", id: "listing-board", state: "clearing-listed" },
+          listClearing(),
           { kind: "wink", text: "It looks like freedom. It is a stall. The sky is already priced." },
           { kind: "notice", text: "The resistance is pricing Clearings.", tone: "hot" },
         ],
@@ -467,6 +473,7 @@ const WET: PoiConfig[] = [
           { kind: "worldFlag", key: W.VESPER_GONE, value: 1 },
           { kind: "party", npc: "nara", state: "waiting" },
           { kind: "poi", id: "operator-desk", state: "closed" },
+          moveClearing("taken"), // Cold bought an hour: the resistance's Clearing is worth more
           { kind: "notice", text: `Private yield. ${OPERATOR_YIELD} Bestand, ${M3_DOOR_PRICE} of it to the Organs door. The door is open.`, tone: "hot" },
         ],
       },
@@ -481,6 +488,7 @@ const WET: PoiConfig[] = [
         effects: [
           { kind: "choice", key: C.OPERATOR, value: "refuse" },
           { kind: "readiness", delta: READINESS_REFUSE },
+          moveClearing("refused"), // an hour not for sale: the price gives a little
           { kind: "notice", text: "You refused the private yield. Readiness. The garden opens the door.", tone: "gold" },
         ],
       },

@@ -12,7 +12,7 @@ import { F, W } from "./content/ids";
 import { LINES } from "./content";
 import type { Claim, Ctx, Effect, Enemy, EnemyKind, Grave, NpcState, Player, WorldState, Wreckage } from "./types";
 import { notice, pushNews, say, wink } from "./world";
-import { addItem, applyNode, earn, removeItem, spend } from "./economy";
+import { addItem, applyListing, applyNode, earn, removeItem, spend } from "./economy";
 import { applyStanding } from "./houses";
 import { applyClearing, applyPassing } from "./clearing";
 import { spawnEnemy } from "./enemies";
@@ -205,6 +205,8 @@ function applyOne(w: WorldState, id: string, e: Effect): WorldState {
     }
     case "news":
       return pushNews(w, e.text);
+    case "listing":
+      return applyListing(w, e);
     case "say":
       return setPlayer(w, say(p, e.text, now));
     case "wink":

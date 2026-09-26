@@ -406,9 +406,14 @@ try {
   await walk(me, ROUTE.toDeskThree);
   phase('fight: desk three');
   await settle(me, () => me.snap.enemies.some(e => e.id === 'desk-three' && e.state !== 'dead'), 'desk three staffed', 50000);
-  const strikes2 = setInterval(() => send(me, { t: 'strike' }), 450);
-  try { await wait(me, () => you(me).flags['desk-three'], 'desk three falls', 25000); }
-  finally { clearInterval(strikes2); }
+  // Walk at the clerk and strike in reach, as at intake: from the lane's end the desk is a tile away on the diagonal, past
+  // a strike's reach, and a clerk that does not come to the body (a load run, a fall and a wake elsewhere) was never struck.
+  const fell2 = await hunt(me, 'desk-three', T.deskThree, () => !!you(me).flags['desk-three'], 'desk three falls', 25000);
+  if (!fell2) {
+    const p = you(me);
+    const desk = (me.snap.enemies ?? []).find(e => e.id === 'desk-three');
+    throw new Error(`desk three falls did not complete (bot at ${Math.round(p.x)},${Math.round(p.y)} hp ${p.hp} dead ${p.dead}; desk ${desk ? `${desk.state} hp ${desk.hp} at ${Math.round(desk.x)},${Math.round(desk.y)} target ${desk.targetId || '-'}` : 'not in view'}; heard: ${p.heard})`);
+  }
   assert.ok(you(me).hp > 0, 'still standing after desk three');
   phase('walk: node 2');
   await walk(me, ROUTE.toNode2);
@@ -573,6 +578,11 @@ try {
     assert.equal(me.snap.district, 'wet', 'through the Nave to the Wet Grid');
     phase('II verb: board');
     await useVerb(me, 'listing-board', byKey('F'), () => !!you(me).flags.board, 'read the board');
+    // The board puts the resistance's Clearing on the Grid, priced; the price moves when the city does (the yield taken, below).
+    const clearingPrice = () => (me.snap.market ?? []).find(l => l.id === 'listing:city:clearing')?.price ?? null;
+    await wait(me, () => clearingPrice() !== null, 'the Clearing is priced on the Grid', 4000);
+    const priced = clearingPrice();
+    console.log(`  the resistance prices a Clearing at ${priced}`);
     phase('II walk: operator');
     await walk(me, ROUTE2.boardToOperator);
     await stand(me, T2.operator, 72);
@@ -585,6 +595,10 @@ try {
       throw new Error(`${error.message} (movement ${p.movement}, m3 ${p.flags.m3}, quests ${JSON.stringify(p.quests)}, operator ${p.choices.operator}, tithe ${p.choices.tithe}, history ${p.flags.history}, board ${p.flags.board}; heard: ${p.heard})`);
     });
     assert.equal(you(me).current, 'cold', 'Cold is a current');
+    await wait(me, () => (clearingPrice() ?? 0) > priced, 'the resistance re-priced the Clearing on the yield taken', 4000).catch(error => {
+      throw new Error(`${error.message} (the Clearing stands at ${clearingPrice()}, was ${priced}; news: ${JSON.stringify((me.snap.news ?? []).slice(-3))})`);
+    });
+    console.log(`  the resistance re-priced it at ${clearingPrice()}`);
 
     phase('end II');
     reportMovement('II', T1, read1, from);

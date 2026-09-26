@@ -41,6 +41,7 @@ describe("ledgerModel", () => {
       { id: "l1", sellerId: "other", sellerName: "#0042", item: { id: "copy:wink", kind: "exhibition", name: "A print", qty: 1, value: 5 }, price: 9, at: 0 },
       { id: "l2", sellerId: "me", sellerName: "#0007", item: { id: "copy:wink", kind: "exhibition", name: "A print", qty: 1, value: 5 }, price: 12, at: 0 },
       { id: "l3", sellerId: "other", sellerName: "#0042", item: { id: "copy:wink", kind: "exhibition", name: "A print", qty: 1, value: 5 }, price: 99, at: 0 },
+      { id: "listing:city:clearing", sellerId: "", sellerName: "the resistance", item: { id: "city:clearing", kind: "exhibition", name: "A Clearing", qty: 1, value: 0 }, price: 12, at: 0 },
     ] });
     expect(m.guest).toBe(false);
     expect(m.cult.map((r) => r.name)).toEqual(["Copper binding"]);
@@ -49,7 +50,8 @@ describe("ledgerModel", () => {
     expect(m.paper[0].note).toContain("I uses");
     expect(m.claims.map((c) => c.status)).toEqual(["ready", "hold", "settled"]);
     expect(m.claimsLine).toContain(`1 of ${CLAIM_CAP}`);
-    expect(m.listings.map((l) => [l.mine, l.canBuy])).toEqual([[false, true], [true, false], [false, false]]);
+    expect(m.listings.map((l) => [l.mine, l.canBuy, l.city])).toEqual([[false, true, false], [true, false, false], [false, false, false], [false, false, true]]);
+    expect(m.listings[3]).toMatchObject({ seller: "the resistance", item: "A Clearing", price: 12 });
     expect(m.purse).toBe(20);
     expect(m.banked).toBe(5);
   });

@@ -341,7 +341,8 @@ export type Effect =
   | { kind: "clearing"; op: "open" | "keep" | "extract" | "pass" }
   | { kind: "passing" }
   | { kind: "dialogue"; npc: string; node: string }
-  | { kind: "history"; passings?: number; buried?: number; looted?: number; outcome?: string };
+  | { kind: "history"; passings?: number; buried?: number; looted?: number; outcome?: string }
+  | { kind: "listing"; id: string; seller?: string; item?: Item; price?: number; delta?: number }; // a listing the city posts (seller, item, price; once per id) or re-prices (delta); nobody buys it
 
 export type GuestPolicy = "allow" | "spectate" | "deny";
 

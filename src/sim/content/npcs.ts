@@ -5,8 +5,9 @@
  */
 import type { Ctx, DialogueNode, Effect, NpcDef, NpcState } from "../types";
 import { POSITIONS } from "../map";
-import { AURA_ADDRESS_GLAMOUR, AURA_DIM, COPY_PRICE, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_PASSING_MIN, READINESS_REFUSE, READINESS_WATCH } from "../constants";
+import { AURA_ADDRESS_GLAMOUR, AURA_DIM, CLEARING_LIST_PRICE, COPY_PRICE, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_PASSING_MIN, READINESS_REFUSE, READINESS_WATCH } from "../constants";
 import { C, F, W } from "./ids";
+import { clearingPrice, moveClearing } from "./market";
 import { PARTY_BLIND } from "./lines";
 
 type NpcOverride = Partial<NpcState> | null;
@@ -362,7 +363,11 @@ const QUILL_NODES: Record<string, DialogueNode> = {
   },
   "board-read": {
     id: "board-read",
-    text: "Quill listed a Clearing. Forty Bestand. Copies travel. The hole does not. The people who say they are against the process are pricing it. I am not against anything. I just print faster. That is the difference and it is not in my favour.",
+    text: ctx => {
+      const price = clearingPrice(ctx.w);
+      const today = price === null || price === CLEARING_LIST_PRICE ? "Forty Bestand." : `Forty Bestand when I wrote it; ${price} on the board today.`;
+      return `Quill listed a Clearing. ${today} Copies travel. The hole does not. The people who say they are against the process are pricing it. I am not against anything. I just print faster. That is the difference and it is not in my favour.`;
+    },
     wink: "The resistance is a stall with better lighting.",
   },
   "forge-lesson": {
@@ -761,6 +766,7 @@ const VESPER_NODES: Record<string, DialogueNode> = {
       { kind: "worldFlag", key: W.VESPER_GONE, value: 1 },
       { kind: "party", npc: "nara", state: "waiting" },
       { kind: "poi", id: "operator-desk", state: "closed" },
+      moveClearing("taken"), // Cold bought an hour: the resistance's Clearing is worth more
       { kind: "notice", text: `Private yield. ${OPERATOR_YIELD} Bestand, ${M3_DOOR_PRICE} of it to the Organs door. The door is open.`, tone: "hot" },
     ],
   },
@@ -771,6 +777,7 @@ const VESPER_NODES: Record<string, DialogueNode> = {
       { kind: "choice", key: C.OPERATOR, value: "refuse" },
       { kind: "readiness", delta: READINESS_REFUSE },
       { kind: "flag", key: F.OPERATOR },
+      moveClearing("refused"), // an hour not for sale: the price gives a little
       { kind: "notice", text: "You refused the private yield. Readiness. The garden opens the door.", tone: "gold" },
     ],
   },

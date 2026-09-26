@@ -299,6 +299,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- The resistance's Clearing on the Grid (2026-09-26, backlog 6's last
+  candidate): a `listing` effect (`effects.ts` → `economy.applyListing`)
+  lets the city post a listing under its own seller (`CITY_SELLER`, no
+  body on the Grid: nobody buys it, "A price, not a sale. The hole does
+  not travel.", nobody cancels it) or move its price by a delta within
+  the stall's bounds; posting and every move go to the news. The board
+  read posts "A Clearing, the hole scheduled" at 40 for everyone (a
+  second read leaves the price where the city moved it), and its say,
+  its label and Quill's board line read the live price; the private
+  yield taken moves it up 8 and refused down 4 (both the desk's verbs and
+  Vesper's dialogue), and every Passing moves it by its outcome
+  (appearance +12, absence +4, hijack +8, failed −6) once the board has
+  been read. The snapshot's market puts city listings first so prints
+  never push the price off the board; the ledger shows the row with no
+  button. `src/sim/content/market.ts` holds the listing and its moves;
+  `CLEARING_LIST_PRICE` and `CLEARING_PRICE_MOVE` in `constants.ts`. The
+  Movement II smoke waits for the price on the Grid after the board and
+  for the move after the yield.
 - The viewer's own side (2026-09-26, backlog 4, the per-viewer work that
   remained): profiled first, and the cost was not the NPC views the plan
   named but the prompt, the `you` split, the fast encode and the
@@ -621,6 +639,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The resistance's Clearing on the Grid (2026-09-26, later still):
+  typecheck, 454 tests (the listing posted once and moved within bounds
+  with its news lines, a buy and a cancel refused, decay leaving it, a
+  player's listing never moved by it; the Passing re-pricing by outcome
+  and not before the board; Movement II both ways through the spine
+  fixture with the price, the board's label and say, the news line, a
+  second read leaving the price, the yield taken +8 and refused −4; the
+  ledger's city row), the build, the session smoke PASS, `npm run
+  test:campaign:2` PASS on a fresh world right after the session smoke
+  (the resistance prices a Clearing at 40 after the board, 48 after the
+  yield; 12.6 min on the spine alone, unchanged), the render check PASS
+  at `RENDER_MIN_FPS=5`. The Movement I smoke's Desk Three fight now
+  hunts the clerk as the intake fight does and names the clerk's state
+  when it does not fall: from the lane's end the desk stands a tile away
+  on the diagonal (68 px, past a strike's 56), so the fight depended on
+  the clerk walking to the body, and twice on a fresh world it did not
+  within 25 s; hunted, it falls in 2.4 s.
 - The viewer's own side (2026-09-26, later): typecheck, 451 tests (three
   new: the frames against the split snapshot, encoded and folded back,
   with a guest's hidden line, an open dialogue, notices and the kit's
@@ -715,9 +750,12 @@ they are discovered; keep this list honest.
    after the sexton, Officer and tax-window beats: 12.6 min on the spine
    alone (was 7.0), 1369 words, four decisions (the corridor, the freeze,
    the tithe, the yield); 78 s of bot walking. Inside the 12–15 min target
-   with four decisions. One candidate left, optional: the listing board
-   with a second listing that moves the market (a world listing effect the
-   engine does not have yet), so the "resistance" has a price you can watch.
+   with four decisions. The last candidate is in (see Done): the board
+   puts the resistance's Clearing on the Grid, priced, and the price
+   moves with the yield decision and every Passing, so the "resistance"
+   has a number you can watch in the ledger and the news. Nothing further
+   is planned here; re-measure after any change to Movement II and keep
+   the numbers here.
 7. **Movement III density: at target.** Measured 2026-09-26 over the wire
    after the cut, the plate and the bell (`npm run test:campaign:3`): 11.5
    min on the spine alone (was 7.5), 1157 words (was 723), three decisions

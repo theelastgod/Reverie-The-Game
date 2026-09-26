@@ -44,9 +44,11 @@ import {
   ITEM_COPY_WINK,
   ITEM_INSURANCE,
   ITEM_REPAIR,
+  CITY_SELLER,
   addItem,
   applyClaims,
   applyForge,
+  applyListing,
   applyMarket,
   applyNode,
   applyUse,
@@ -431,6 +433,52 @@ describe("market", () => {
     expect(cancelled.market).toHaveLength(0);
     expect(hasItem(you(cancelled, "s"), ITEM_COPY_WINK)).toBe(true);
     expect(you(applyMarket(w, "b", "cancel", { listingId: w.market[0].id }), "b").items).toHaveLength(0);
+  });
+
+  describe("the city's listing: a price, not a sale", () => {
+    const post = { id: "listing:city:clearing", seller: "the resistance", item: { id: "city:clearing", kind: "exhibition" as const, name: "A Clearing", qty: 1, value: 0 }, price: 40 };
+    const last = (w: WorldState) => w.news[w.news.length - 1]?.text;
+
+    it("posts once at its price, moves by delta within the stall's bounds, and says so in the news", () => {
+      let w = makeWorld([makePlayer()]);
+      expect(applyListing(w, { id: post.id, delta: 5 })).toBe(w); // nothing to move before it is posted
+      expect(applyListing(w, { id: post.id, seller: post.seller, price: 40 })).toBe(w); // no item, no listing
+      w = applyListing(w, post);
+      expect(w.market).toHaveLength(1);
+      expect(w.market[0]).toMatchObject({ id: post.id, sellerId: CITY_SELLER, sellerName: "the resistance", price: 40, item: { name: "A Clearing", qty: 1 } });
+      expect(last(w)).toBe("the resistance lists A Clearing at 40.");
+      expect(applyListing(w, post)).toBe(w); // a second post leaves it as it stands
+      const moved = applyListing(w, { id: post.id, delta: 8 });
+      expect(moved.market[0].price).toBe(48);
+      expect(last(moved)).toBe("the resistance prices A Clearing at 48, up from 40.");
+      expect(applyListing(moved, post)).toBe(moved); // a repost does not reset the price
+      expect(applyListing(moved, { id: post.id, delta: 0 })).toBe(moved);
+      const down = applyListing(moved, { id: post.id, delta: -4 });
+      expect(down.market[0].price).toBe(44);
+      expect(last(down)).toBe("the resistance prices A Clearing at 44, down from 48.");
+      const floor = applyListing(moved, { id: post.id, delta: -1000 });
+      expect(floor.market[0].price).toBe(1);
+      expect(applyListing(floor, { id: post.id, delta: -1 })).toBe(floor);
+      expect(applyListing(moved, { id: post.id, delta: 1000 }).market[0].price).toBe(999);
+    });
+
+    it("nobody buys or cancels it, decay leaves it, and a player's listing is never moved by it", () => {
+      const buyer = makePlayer({ id: "b", name: "#0002", bestand: 500 });
+      let w = applyListing(makeWorld([buyer]), post);
+      const tried = applyMarket(w, "b", "buy", { listingId: post.id });
+      expect(tried.market).toHaveLength(1);
+      expect(you(tried, "b").bestand).toBe(500);
+      expect(you(tried, "b").items).toHaveLength(0);
+      expect(you(tried, "b").heard).toBe("A price, not a sale. The hole does not travel.");
+      expect(applyMarket(w, "b", "cancel", { listingId: post.id }).market).toHaveLength(1);
+      w = tickMarket(w, 0.05);
+      const later = tickMarket({ ...w, now: w.now + EXHIBIT_DECAY }, 0.05);
+      expect(later.market[0].item.value).toBe(0);
+      const seller = makePlayer({ id: "s", name: "#0001", bestand: 10, items: [copy()] });
+      let mine = makeWorld([seller]);
+      mine = applyMarket(mine, "s", "list", { itemId: ITEM_COPY_WINK, price: 20 });
+      expect(applyListing(mine, { id: mine.market[0].id, delta: 5 })).toBe(mine);
+    });
   });
 
   it("a listing whose seller is not on the Grid cannot be bought: nothing moves and the listing waits", () => {
