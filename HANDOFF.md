@@ -173,6 +173,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   crosses the Care, Annex and Wet gates on foot and prints a second
   `measure:` block. PASS on the first run. The numbers are in Verified and
   Backlog 5.
+- Movement III beats (2026-09-26, backlog 7): three stops on the route.
+  Ord's map is a decision: after drawing it he asks where you would cut
+  the process (`C.MAP`: strait, foundry, cable, or whole); closing without
+  an answer draws nothing, each answer draws the map (`F.MAP`) with its own
+  line, Ord's later text starts from it, and Renn Coil at the cold desk
+  reads the entry: he names it in his hub and posts the cut organ's hour
+  first (the other two organ hours wait until that one is offered; drawn
+  whole, or without a map, they come as they are). Nara at the garden:
+  the burial verb opens her `garden-plate` node (she kneels; a number on
+  the plate or a blank one, `C.GARDEN` numbered or unnumbered; numbered
+  goes into the Care's book as news, unnumbered thickens the aura by one);
+  a player who closes it meets it again from her, and her buried line
+  remembers the plate. The hour bell: a spine step `bell` between the
+  garden and the glass (`F.BELL`; the strike's line names the way to the
+  glass and the omen-reader hearing it), which also wakes the House of
+  Sky's side hour, whose gate is the struck bell. Movement III is eight
+  steps. The smoke's Movement III answers Ord (the water), numbers the
+  plate through a new `answer()` helper for a verb-opened dialogue, and
+  walks the bell through the row-6 wall's gap before the glass. Numbers in
+  Verified and Backlog 7.
 - The step's shared views (2026-09-26, backlog 4): `stepViews(w)` in
   `snapshot.ts` builds once per broadcast what every viewer sees the same
   (public shapes, enemy and node views, pois, market, news, clearing,
@@ -381,7 +401,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   decision (the forge), estimate 7.5 min on the spine alone. Before the fix
   the same run failed at the window one time in two ("the tithe decided did
   not complete": the prompt offered `E:side:tax:read, F:read, Q:ride`, no
-  `pay`; the other time the purse was short and the bot let it ride).
+  `pay`; the other time the purse was short and the bot let it ride). After
+  the Movement III beats (the same day): Movement III PASS, bot 104 s (walk
+  103 s: the organs 13 s, Ord 6 s, the garden 32 s, the bell 34 s, the
+  glass 4 s, the forge 14 s; talk and verbs 1.1 s), 1157 words (dialogue
+  421, spoken 327, journal 253, notices 156), 3 decisions (the cut, the
+  plate, the forge), estimate 11.5 min on the spine alone.
 - Writeback log: 4 diff tests (every kind, unchanged world, a body that only
   appeared, rolling news), 4 sink tests (batches, overflow, a failing D1
   keeps the queue and warns once a minute, one flush in flight), 3 session
@@ -527,25 +552,20 @@ they are discovered; keep this list honest.
    with four decisions. One candidate left, optional: the listing board
    with a second listing that moves the market (a world listing effect the
    engine does not have yet), so the "resistance" has a price you can watch.
-7. **Movement III density: thin.** Measured 2026-09-26 over the wire
-   (`npm run test:campaign:3`): 7.5 min on the spine alone, 723 words, one
-   decision (Quill's spot or sell), and 95 s of bot walking of which 76 s is
-   the two crossings after Ord's map (the Organs to the Care garden, the
-   Care to the Kerb's glass). Movement III has seven steps; the first four
-   are three F reads and a talk, all within the Organs. No target is written
-   for it; by Movement II's shape, 10–12 min with three decisions is the
-   proposal. Candidates, in order: make Ord's map a decision (which organ
-   the city should feed first, `C.MAP`, that the cold desk and the Officer
-   remember, and that sets which organ's side hour is offered first); give
-   the garden a line from Nara before the burial (she is `waiting` there and
-   says nothing until it is in the ground); and a Kerb beat on the way to
-   the glass (the omen at the terrace reads last season for a price, or the
-   hour bell struck once) so the 32 s walk has a stop in it. The Strait's
-   "refuse the feed" and the Foundry's "darken" already stand as optional E
-   and Q verbs; the smoke counts only the spine's decisions, and neither is
-   on it. Re-measure with `--movement=3` after each beat and keep the
-   numbers here. Movement IV is unmeasured over the wire; extending the
-   smoke through the ring (`--movement=4`) is the measure after this one.
+7. **Movement III density: at target.** Measured 2026-09-26 over the wire
+   after the cut, the plate and the bell (`npm run test:campaign:3`): 11.5
+   min on the spine alone (was 7.5), 1157 words (was 723), three decisions
+   (Ord's cut, Nara's plate, Quill's forge; was one), 103 s of bot walking
+   with a stop in each long crossing. Inside the 10–12 min proposal with
+   three decisions; no target is written in DESIGN for it, so that proposal
+   stands as the target. Movement III has eight steps. The Strait's "refuse
+   the feed" and the Foundry's "darken" still stand as optional verbs off
+   the spine; Ord's cut now points at them without forcing them. Nothing
+   further is planned here; re-measure after any change to Movement III and
+   keep the numbers here. Movement IV is unmeasured over the wire;
+   extending the smoke through Ione Kade, the ring and a Passing
+   (`--movement=4`) is the next measure to take, and the last movement's
+   density is judged from it.
 8. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

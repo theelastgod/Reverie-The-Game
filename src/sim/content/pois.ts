@@ -615,6 +615,8 @@ const CARE: PoiConfig[] = [
           { kind: "history", buried: 1 },
           { kind: "wink", text: "You took a hole and called it weather. It came back as earth. Only burial makes it world again." },
           { kind: "notice", text: "The garden is in the ground. The Organs door is open.", tone: "gold" },
+          // Nara kneels at it: the plate is numbered or it is not, and she asks which.
+          { kind: "dialogue", npc: "nara", node: "garden-plate" },
         ],
       },
       {
@@ -842,8 +844,12 @@ const KERB: PoiConfig[] = [
         label: "Strike the bell",
         choice: "strike",
         guest: spectate,
-        say: "You strike the hour bell. The note goes over the Kerb and does not come back. Somebody below looks up and then goes on extracting.",
+        // The line is read after the effects land, so the flag it set cannot gate it: the glass not yet faced is "on the way".
+        say: ctx => (ctx.p.movement >= 3 && !has(ctx, F.FAILED)
+          ? "You strike the hour bell once, on the way to the glass. The note goes over the Kerb and does not come back. On the terrace below, the omen-reader looks up from her slip with a time on it; the time is wrong by exactly one strike."
+          : "You strike the hour bell. The note goes over the Kerb and does not come back. Somebody below looks up and then goes on extracting."),
         effects: [
+          { kind: "flag", key: F.BELL },
           { kind: "poi", id: "hour-bell", state: "struck" },
           { kind: "news", text: "The hour bell was struck on the Kerb." },
         ],

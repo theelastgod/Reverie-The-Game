@@ -411,7 +411,22 @@ function guestLockAndLink(w0: WorldState): WorldState {
 
 // ---------------------------------------------------------------- Movement II
 
-type Feudal = { freeze: "sign" | "refuse"; operator: "take" | "refuse" };
+type Feudal = { freeze: "sign" | "refuse"; operator: "take" | "refuse"; plate?: Plate };
+type Cut = "strait" | "foundry" | "cable" | "whole";
+type Plate = "numbered" | "unnumbered";
+
+/** Bury the wreckage garden: Nara kneels at it and asks about the plate; the answer is a decision. */
+function buryTheGarden(w0: WorldState, plate: Plate): WorldState {
+  let w = use(w0, "wreckage-garden", "bury");
+  expect(me(w).flags[F.GARDEN]).toBe(1);
+  expect(me(w).dialogue?.node, "Nara asks about the plate").toBe("garden-plate");
+  expect(me(w).dialogue?.choices.map(c => c.id)).toEqual(["numbered", "unnumbered", "later"]);
+  w = closeAll(choose(w, ME, plate), ME);
+  expect(me(w).choices[C.GARDEN]).toBe(plate);
+  expect(me(talkTo(w, ME, "nara")).dialogue?.text, "she remembers the plate").toContain(plate === "numbered" ? "a number on it" : "left the plate blank");
+  w = closeAll(w, ME);
+  return tick(w);
+}
 
 function movementTwo(w0: WorldState, o: Feudal): WorldState {
   let w = w0;
@@ -539,7 +554,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
     expect(me(w).current).toBe("");
     expect(w.pois["wreckage-garden"].state).toBe("wreck");
     expect(snapshotFor(w, ME).objective).toMatchObject({ step: "door", target: POSITIONS["wreckage-garden"] });
-    w = tick(use(w, "wreckage-garden", "bury"));
+    w = buryTheGarden(w, o.plate ?? "unnumbered");
     expect(w.pois["wreckage-garden"].state).toBe("buried");
     expect(w.flags[W.GARDEN_BURIED]).toBe(1);
     expect(me(w).flags[F.GARDEN]).toBe(1);
@@ -555,7 +570,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
 
 // ---------------------------------------------------------------- Movement III
 
-function movementThree(w0: WorldState, o: { forge: "spot" | "sell" }): WorldState {
+function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; plate: Plate }): WorldState {
   let w = w0;
   const organs: [number, string, string][] = [[0, "organ-strait", F.STRAIT], [1, "organ-foundry", F.FOUNDRY], [2, "organ-cable", F.CABLE]];
   for (const [step, organ, flag] of organs) {
@@ -565,27 +580,67 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell" }): WorldStat
   }
   expectStep(w, Q.M3, 3);
 
+  // Ord draws the map and asks where you would cut it; closing without an answer draws nothing
   const ord = npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!;
   expect(ord).toMatchObject({ state: "strait", x: POSITIONS["station:ord-strait"].x, y: POSITIONS["station:ord-strait"].y });
   w = talkTo(w, ME, "ord");
   expect(me(w).dialogue?.node).toBe("map");
+  expect(me(w).dialogue?.choices.map(c => c.id)).toEqual(["strait", "foundry", "cable", "whole"]);
+  w = tick(closeAll(w, ME));
+  expect(me(w).flags[F.MAP], "no answer, no map").toBeUndefined();
+  expectStep(w, Q.M3, 3);
+  w = talkTo(w, ME, "ord");
+  expect(me(w).dialogue?.node).toBe("map");
+  w = choose(w, ME, o.cut);
+  expect(me(w).dialogue?.node).toBe(`map-${o.cut}`);
   w = tick(closeAll(w, ME));
   expect(me(w).flags[F.MAP]).toBe(1);
+  expect(me(w).choices[C.MAP]).toBe(o.cut);
+  expect(me(talkTo(w, ME, "ord")).dialogue?.text, "Ord remembers the cut").toContain(o.cut === "strait" ? "You said the water." : o.cut === "whole" ? "You said nowhere." : "You said the");
+  w = closeAll(w, ME);
+
+  // the cold desk posts the cut organ's hour first; drawn whole, they come as they are
+  w = talkTo(w, ME, "desk");
+  if (me(w).dialogue?.node === "greet") w = choose(w, ME, "number");
+  w = choose(w, ME, "back");
+  expect(me(w).dialogue?.node).toBe("hub");
+  const offered = me(w).dialogue!.choices.map(c => c.id);
+  if (o.cut === "whole") {
+    expect(offered).toEqual(expect.arrayContaining(["toll", "cable", "foundry"]));
+    expect(me(w).dialogue?.text).toContain("in the order they are");
+  } else {
+    const first = { strait: "toll", foundry: "foundry", cable: "cable" }[o.cut];
+    expect(offered.filter(id => ["toll", "cable", "foundry"].includes(id)), "only the cut organ's hour").toEqual([first]);
+    expect(me(w).dialogue?.text).toContain(`I post the ${o.cut === "strait" ? "Strait" : o.cut === "foundry" ? "Foundry" : "Cable"} first.`);
+    w = closeAll(choose(w, ME, first), ME);
+    w = talkTo(w, ME, "desk");
+    expect(me(w).dialogue!.choices.map(c => c.id), "the others follow once it is offered").toEqual(expect.arrayContaining(["toll", "cable", "foundry"].filter(id => id !== first)));
+  }
+  w = closeAll(w, ME);
 
   if (me(w).flags[F.GARDEN]) {
     expectStep(w, Q.M3, 5);
   } else {
     expectStep(w, Q.M3, 4);
     expect(me(w).party.nara).toBe("waiting");
-    w = tick(use(w, "wreckage-garden", "bury"));
+    w = buryTheGarden(w, o.plate);
     expectStep(w, Q.M3, 5);
     expect(me(w).flags[F.GARDEN]).toBe(1);
     expect(me(w).party.nara).toBe("with");
     expect(w.pois["wreckage-garden"].state).toBe("buried");
   }
 
-  w = tick(use(w, "forecast-glass", "season"));
+  // the hour bell once, on the way to the glass: the House of Sky's hour opens on it
+  expect(snapshotFor(w, ME).objective).toMatchObject({ step: "bell", target: POSITIONS["hour-bell"] });
+  w = tick(use(w, "hour-bell", "strike"));
   expectStep(w, Q.M3, 6);
+  expect(me(w).flags[F.BELL]).toBe(1);
+  expect(w.pois["hour-bell"].state).toBe("struck");
+  expect(me(w).heard).toContain("once, on the way to the glass");
+  expect(me(w).quests["side-kerb-omen-glass"], "the sky hour woke on the strike").toBe(0);
+
+  w = tick(use(w, "forecast-glass", "season"));
+  expectStep(w, Q.M3, 7);
   expect(me(w).flags[F.FAILED]).toBe(1);
 
   if (o.forge === "sell") {
@@ -716,7 +771,7 @@ describe("the spine, played through", () => {
   it("has four movements of the authored length", () => {
     expect(questById(Q.M1)!.steps.length).toBe(15);
     expect(questById(Q.M2)!.steps.length).toBe(10);
-    expect(questById(Q.M3)!.steps.length).toBe(7);
+    expect(questById(Q.M3)!.steps.length).toBe(8);
     expect(questById(Q.M4)!.steps.length).toBe(4);
   });
 
@@ -729,7 +784,7 @@ describe("the spine, played through", () => {
 
     w = movementTwo(w, { freeze: "refuse", operator: "take" });
     expect(me(w).current).toBe("cold");
-    w = movementThree(w, { forge: "sell" });
+    w = movementThree(w, { forge: "sell", cut: "strait", plate: "numbered" });
     const brink = movementFourToTheRing(w);
 
     // readiness below the floor: the hour does not open, whoever funded the door
@@ -761,8 +816,8 @@ describe("the spine, played through", () => {
     expect(me(w).bestand).toBeGreaterThanOrEqual(FREEZE_FEE);
     w = guestLockAndLink(w);
 
-    w = movementTwo(w, { freeze: "sign", operator: "refuse" });
-    w = movementThree(w, { forge: "spot" });
+    w = movementTwo(w, { freeze: "sign", operator: "refuse", plate: "unnumbered" });
+    w = movementThree(w, { forge: "spot", cut: "whole", plate: "unnumbered" });
     const brink = movementFourToTheRing(w);
     expect(me(brink).restraint).toBeGreaterThanOrEqual(50);
     expect(me(brink).party).toMatchObject({ nara: "with", ord: "with" });

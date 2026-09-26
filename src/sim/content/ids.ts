@@ -38,8 +38,9 @@ export const F = {
   STRAIT: "strait",
   FOUNDRY: "foundry",
   CABLE: "cable",
-  MAP: "map", // Ord put the organs together
+  MAP: "map", // Ord put the organs together, and heard where you would cut it
   GARDEN: "garden", // buried the wreckage garden
+  BELL: "bell", // Movement III: struck the hour bell once on the way to the glass
   FAILED: "failed", // saw a failed Passing
   FORGE: "forge", // decided copies with Quill
   PREPARE: "prepare", // prepared the Clearing
@@ -64,6 +65,8 @@ export const C = {
   FREEZE: "freeze", // "signed" | "refused"
   TITHE: "tithe", // "paid" | "rode": the hour's tithe at the tax window, paid now into your House or left to the weather
   OPERATOR: "operator", // "take" | "refuse"
+  MAP: "map", // "strait" | "foundry" | "cable" | "whole": where you told Ord you would cut the process; the cold desk posts that organ's hour first
+  GARDEN: "garden", // "numbered" | "unnumbered": the plate on the buried garden, decided with Nara
   FORGE: "forge", // "spot" | "sell"
   MORTALITY: "mortality", // "watch" | "burial" | "lastword"
   CLEARING: "clearing", // "keep" | "extract" | "pass"

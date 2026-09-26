@@ -87,6 +87,7 @@ const T3 = {
   foundry: at(86, 38),         // organ-foundry
   cable: at(96, 41),           // organ-cable
   ordStrait: at(78, 40),       // station:ord-strait, where Ord waits for the map
+  bell: at(52, 4),             // hour-bell, north of the Kerb's row-6 wall through its gap
   garden: at(25, 70),          // wreckage-garden, the Care
   glass: at(60, 10),           // forecast-glass, the Kerb
   quillForge: at(59, 44),      // station:quill-forge, the Wet Grid
@@ -98,7 +99,9 @@ const ROUTE3 = {
   toOrd: [at(92, 40), at(88, 38), at(80, 40)],
   // The garden's wall stands at x 19 rows 66..68: come down x 17 to row 70 first, then east through the gap.
   toGarden: [at(76, 41), at(73, 41), at(70, 41), at(68, 41), at(64, 44), at(38, 41), at(35, 42), at(20, 42), at(17, 42), at(17, 50), at(17, 58), at(17, 63), at(17, 70), at(19, 70), at(23, 70)],
-  toGlass: [at(19, 70), at(17, 70), at(17, 63), at(17, 58), at(17, 50), at(17, 30), at(17, 27), at(17, 15), at(20, 14), at(33, 14), at(35, 13), at(38, 13), at(40, 10), at(58, 10)],
+  // The Kerb's low wall on row 6 (x 39..48 and 57..60) has its gap at x 49..56: the bell at (52,4) is through it.
+  toBell: [at(19, 70), at(17, 70), at(17, 63), at(17, 58), at(17, 50), at(17, 30), at(17, 27), at(17, 15), at(20, 14), at(33, 14), at(35, 13), at(38, 13), at(40, 10), at(52, 10), at(52, 6)],
+  bellToGlass: [at(52, 6), at(52, 10), at(58, 10)],
   toForge: [at(58, 10), at(49, 19), at(49, 23), at(53, 26), at(53, 27), at(53, 30), at(53, 38), at(58, 41)],
 };
 
@@ -274,6 +277,20 @@ async function useVerb(state, poiId, pick, done, label) {
   });
 }
 const byKey = key => verbs => verbs.find(v => v.key === key);
+
+/** A dialogue a verb opened: wait for the node, pick the choice, close what follows. */
+async function answer(state, node, choiceId, done, label) {
+  await wait(state, () => you(state).dialogue?.node === node, `${label}: ${node} opens`, 4000).catch(error => {
+    const d = you(state).dialogue;
+    throw new Error(`${error.message} (the dialogue is ${d ? `${d.npc}/${d.node}` : 'closed'}; heard: ${you(state).heard})`);
+  });
+  const offered = you(state).dialogue.choices.map(c => c.id);
+  assert.ok(offered.includes(choiceId), `${label}: ${node} offers ${choiceId} (offered ${JSON.stringify(offered)})`);
+  send(state, { t: 'choose', choiceId });
+  await wait(state, done, label, 4000);
+  for (let i = 0; i < 6 && you(state).dialogue; i++) { send(state, { t: 'close' }); await sleep(120); }
+  assert.ok(!you(state).dialogue, `${label}: the dialogue closed`);
+}
 
 /** Talk to an NPC and walk the dialogue until the flag is set; retries with a different first choice. */
 async function converse(state, npcId, flag) {
@@ -586,10 +603,13 @@ try {
     phase('III walk: ord');
     await walk(me, ROUTE3.toOrd);
     await stand(me, T3.ordStrait, 72);
+    // Ord draws the map and asks where you would cut it: the first answer is the water.
     phase('III talk: ord');
     await converse(me, 'ord', 'map');
+    read.decisions++;
+    assert.equal(you(me).choices.map, 'strait', 'told Ord the cut is at the water');
 
-    // The garden in the Care: the yield was taken, so Nara waits until it is in the ground.
+    // The garden in the Care: the yield was taken, so Nara waits until it is in the ground; then she asks about the plate.
     assert.equal(you(me).party.nara, 'waiting', 'Nara waits on the garden after the yield');
     phase('III walk: garden');
     await walk(me, ROUTE3.toGarden);
@@ -598,12 +618,22 @@ try {
     phase('III verb: garden');
     await useVerb(me, 'wreckage-garden', verbs => verbs.find(v => v.choice === 'bury'), () => !!you(me).flags.garden, 'bury the garden');
     assert.equal(you(me).party.nara, 'with', 'Nara speaks again');
+    phase('III talk: nara');
+    await answer(me, 'garden-plate', 'numbered', () => you(me).choices.garden === 'numbered', 'the plate numbered');
+    read.decisions++;
 
-    // Last season, in the forecast glass on the Kerb.
-    phase('III walk: glass');
-    await walk(me, ROUTE3.toGlass);
-    await stand(me, T3.glass);
+    // The hour bell, north of the Kerb's terraces, once on the way to the glass.
+    phase('III walk: bell');
+    await walk(me, ROUTE3.toBell);
+    await stand(me, T3.bell);
     assert.equal(me.snap.district, 'kerb', 'through the Annex to the Kerb');
+    phase('III verb: bell');
+    await useVerb(me, 'hour-bell', verbs => verbs.find(v => v.choice === 'strike'), () => !!you(me).flags.bell, 'strike the bell');
+
+    // Last season, in the forecast glass.
+    phase('III walk: glass');
+    await walk(me, ROUTE3.bellToGlass);
+    await stand(me, T3.glass);
     phase('III verb: glass');
     await useVerb(me, 'forecast-glass', verbs => verbs.find(v => v.choice === 'season'), () => !!you(me).flags.failed, 'face last season');
 

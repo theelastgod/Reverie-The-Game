@@ -466,10 +466,25 @@ const sexton: NpcDef = {
 
 // ---------------------------------------------------------------- Renn Coil, cold desk
 
+/** Where Ord wrote that the Angel would cut the process, and the hour the desk posts first for it. */
+const CUT_HOUR: Record<string, string> = { strait: SQ.TOLL, foundry: SQ.FOUNDRY, cable: SQ.CABLE };
+const cutOf = (p: Player): string | undefined => p.choices[C.MAP];
+/** The desk offers the cut organ's hour before the others; with no cut, or the map drawn whole, they come as they are. */
+const postedFirst = (p: Player, organ: "strait" | "foundry" | "cable"): boolean => {
+  const cut = cutOf(p);
+  if (!cut || !(cut in CUT_HOUR) || cut === organ) return true;
+  return offered(p, CUT_HOUR[cut]);
+};
+
 const deskHub = (ctx: Ctx): string => {
   const { p, w } = ctx;
   if (finished(p, SQ.FOUNDRY) || w.npcs["desk"]?.state === "foundry") return "He is at the dark Foundry with the number on a card. Zero. \"I wanted to see what a zero looks like from the front.\"";
-  return "\"Cold desk. I post the number for each organ. Strait, Foundry, Cable. The number is the whole column.\" There is a second column on the sheet. It is folded under.";
+  const cut = cutOf(p);
+  const posted = cut === "strait" ? " \"Ord's entry says you would cut it at the water. I post the Strait first.\""
+    : cut === "foundry" ? " \"Ord's entry says you would cut it at the heat. I post the Foundry first.\""
+    : cut === "cable" ? " \"Ord's entry says you would cut it at the light. I post the Cable first.\""
+    : cut === "whole" ? " \"Ord's entry says nowhere. I post them in the order they are.\"" : "";
+  return `"Cold desk. I post the number for each organ. Strait, Foundry, Cable. The number is the whole column."${posted} There is a second column on the sheet. It is folded under.`;
 };
 
 const desk: NpcDef = {
@@ -504,10 +519,10 @@ const desk: NpcDef = {
       text: deskHub,
       effects: [tally(SF.DESK_VISITS)],
       choices: [
-        { id: "toll", label: "The Strait toll.", when: ({ p }) => angel(p) && has(p, F.M3) && !offered(p, SQ.TOLL), next: "toll-offer" },
-        { id: "cable", label: "The Cable hums.", when: ({ p }) => angel(p) && has(p, F.M3) && !offered(p, SQ.CABLE), next: "cable-offer" },
+        { id: "toll", label: "The Strait toll.", when: ({ p }) => angel(p) && has(p, F.M3) && !offered(p, SQ.TOLL) && postedFirst(p, "strait"), next: "toll-offer" },
+        { id: "cable", label: "The Cable hums.", when: ({ p }) => angel(p) && has(p, F.M3) && !offered(p, SQ.CABLE) && postedFirst(p, "cable"), next: "cable-offer" },
         { id: "cable-told", label: "I kept a node.", when: ({ p }) => atStep(p, SQ.CABLE, 1), next: "cable-told" },
-        { id: "foundry", label: "The Foundry.", when: ({ p }) => angel(p) && has(p, F.FOUNDRY) && !offered(p, SQ.FOUNDRY), next: "foundry-offer" },
+        { id: "foundry", label: "The Foundry.", when: ({ p }) => angel(p) && has(p, F.FOUNDRY) && !offered(p, SQ.FOUNDRY) && postedFirst(p, "foundry"), next: "foundry-offer" },
         { id: "foundry-told", label: "The Foundry is dark.", when: ({ p }) => atStep(p, SQ.FOUNDRY, 1), next: "foundry-told" },
         { id: "column", label: "There is a second column.", when: ({ p }) => angel(p) && has(p, F.MAP) && !offered(p, SQ.COLUMN), next: "column-offer" },
         leave,

@@ -333,7 +333,7 @@ const M3_STEPS: QuestStep[] = [
   {
     id: "map",
     title: "Three organs, one weather",
-    detail: "Return to Ord at the Strait. Press F to put the three places together.",
+    detail: "Return to Ord at the Strait. Press F to put the three places together, and tell him where you would cut it: the water, the heat, the light, or nowhere. The cold desk posts that organ first.",
     target: "station:ord-strait",
     plate: "plate-m3.jpg",
     done: ctx => has(ctx, F.MAP),
@@ -347,6 +347,15 @@ const M3_STEPS: QuestStep[] = [
     plate: "wreckage-garden.jpg",
     done: ctx => has(ctx, F.GARDEN) || chose(ctx, C.MORTALITY, "watch"),
     onComplete: [notice("It is in the earth. She will not forgive the factory.", "gold")],
+  },
+  {
+    id: "bell",
+    title: "One strike, on the way",
+    detail: "The hour bell stands north of the Kerb's terraces, through the gap in the low wall. Press F to strike it once before the glass. The omen-reader hears it; the House of Sky's hour opens on it.",
+    target: "hour-bell",
+    plate: "clearing-ring.jpg",
+    done: ctx => has(ctx, F.BELL),
+    onComplete: [notice("The note went over the Kerb. The glass is east of the bell.", "sky")],
   },
   {
     id: "failed",

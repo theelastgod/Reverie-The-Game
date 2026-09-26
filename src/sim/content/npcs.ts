@@ -54,6 +54,7 @@ function naraRoute(ctx: Ctx): string {
   if (p.party.nara === "gone") return "gone";
   if (has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)) return "garden-silent";
   if (p.party.nara === "waiting") return "waiting";
+  if (has(ctx, F.GARDEN) && !p.choices[C.GARDEN] && p.movement < 4) return "garden-plate";
   if (has(ctx, F.GARDEN) && has(ctx, F.PREPARE)) return "ring";
   if (has(ctx, F.GARDEN) && p.movement >= 4 && !has(ctx, F.MORTALITY)) return "stand-offer";
   if (has(ctx, F.GARDEN)) return "garden-buried";
@@ -176,9 +177,41 @@ const NARA_NODES: Record<string, DialogueNode> = {
     text: "Nara Vale looks at the garden that used to be a hole. The node you turned on in the first hour. She will not speak until it is in the ground. Press F at the garden.",
     wink: "You took a hole and called it weather. It came back as earth. Only burial makes it world again.",
   },
+  "garden-plate": {
+    id: "garden-plate",
+    text: "It is in the earth. Nara Vale kneels and puts her hand flat on it. There is a plate. It has the node's number on it, or it does not. The Care keeps the numbered ones in the book. The unnumbered ones it keeps anyway. Which is this one?",
+    wink: "The twelve numbers in the sexton's coat are numbers because nobody chose. This one, somebody does.",
+    choices: [
+      { id: "numbered", label: "Number it. Put it in the book.", when: ctx => !ctx.p.choices[C.GARDEN], next: "garden-numbered" },
+      { id: "unnumbered", label: "No number. Earth is enough.", when: ctx => !ctx.p.choices[C.GARDEN], next: "garden-unnumbered" },
+      { id: "later", label: "Let me look at it first." },
+    ],
+  },
+  "garden-numbered": {
+    id: "garden-numbered",
+    text: "She scratches the node's number into the plate with the edge of the trowel. It is in the book now. Pim Ashe will read it at the next wake and somebody will hear it who never stood here. Nobody can say it was not a place.",
+    wink: "A number is a name the city can pronounce. It is not the same as being remembered. It is close enough to argue with.",
+    effects: [
+      { kind: "choice", key: C.GARDEN, value: "numbered" },
+      { kind: "news", text: "A garden in the Care went into the book under its number." },
+      { kind: "notice", text: "The garden is numbered. The Care's book has it.", tone: "ink" },
+    ],
+  },
+  "garden-unnumbered": {
+    id: "garden-unnumbered",
+    text: "She leaves the plate blank and stands. The Care will keep it anyway. It keeps the unnamed ledger for exactly this: twelve numbers in a coat and one blank plate. That is the honest count. I would rather a blank plate than a number that is only there so a clerk can stop looking.",
+    wink: "Unnumbered is not unremembered. It is remembered by someone instead of by something.",
+    effects: [
+      { kind: "choice", key: C.GARDEN, value: "unnumbered" },
+      { kind: "aura", delta: 1 },
+      { kind: "notice", text: "The garden is unnumbered. The Care keeps it anyway.", tone: "ink" },
+    ],
+  },
   "garden-buried": {
     id: "garden-buried",
-    text: "You put it in the earth. I will not forgive the factory. I will walk to the Strait if you go there. I will not carry the earth for you twice.",
+    text: (ctx) => (chose(ctx, C.GARDEN, "numbered")
+      ? "You put it in the earth and a number on it. I will not forgive the factory. I will walk to the Strait if you go there. I will not carry the earth for you twice."
+      : "You put it in the earth and left the plate blank. I will not forgive the factory. I will walk to the Strait if you go there. I will not carry the earth for you twice."),
     wink: "A person who buried someone. Not a function.",
   },
   "stand-offer": {
@@ -404,6 +437,14 @@ function ordRoute(ctx: Ctx): string {
   return "door";
 }
 
+/** Ord writes down where you would cut the process: the map is drawn, readiness moves, and the cold desk reads the entry. */
+const mapEffects = (cut: "strait" | "foundry" | "cable" | "whole"): Effect[] => [
+  { kind: "choice", key: C.MAP, value: cut },
+  { kind: "flag", key: F.MAP },
+  { kind: "readiness", delta: 2 },
+  { kind: "notice", text: cut === "whole" ? "Ord's map, drawn whole. Three organs, one weather." : `Ord's map. You would cut it at the ${cut === "strait" ? "water" : cut === "foundry" ? "heat" : "light"}. The cold desk will post that organ first.`, tone: "sky" },
+];
+
 const honestNumber = (ctx: Ctx): string => {
   const g = Math.round(ctx.w.gestell);
   const tax = Math.floor(Math.max(0, Math.min(100, g)) / 4);
@@ -535,20 +576,47 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   map: {
     id: "map",
-    text: "Strait, Foundry, Cable. Extract in the Strait and the Foundry lights. The Foundry lights and the Cable drinks. There is no country here. There is only the process. The node you turned on in the Nave in the first hour: it is a garden now. That is not a map. That is the same map.",
-    wink: "Extraction here lights a factory there. You are the wire.",
-    effects: [
-      { kind: "flag", key: F.MAP },
-      { kind: "readiness", delta: 2 },
-      { kind: "notice", text: "Ord's map. Three organs, one weather.", tone: "sky" },
+    text: "Strait, Foundry, Cable. Extract in the Strait and the Foundry lights. The Foundry lights and the Cable drinks. There is no country here. There is only the process. The node you turned on in the Nave in the first hour: it is a garden now. That is not a map. That is the same map. Ord turns it to you. If you could cut it once, where? I will write down what you say. The cold desk reads what I write.",
+    wink: "Extraction here lights a factory there. You are the wire. He is asking where you would cut yourself.",
+    choices: [
+      { id: "strait", label: "At the water. Stop the Strait.", when: ctx => !has(ctx, F.MAP), next: "map-strait" },
+      { id: "foundry", label: "At the heat. Darken the Foundry.", when: ctx => !has(ctx, F.MAP), next: "map-foundry" },
+      { id: "cable", label: "At the light. Quiet the Cable.", when: ctx => !has(ctx, F.MAP), next: "map-cable" },
+      { id: "whole", label: "Nowhere. Draw it whole.", when: ctx => !has(ctx, F.MAP), next: "map-whole" },
     ],
+  },
+  "map-strait": {
+    id: "map-strait",
+    text: "The water. He writes it. Stop the Strait and the Foundry goes hungry and the Cable goes dark on its own, a day later, honest. The Strait has a verb for that. I did not tell you to use it. Renn at the cold desk will post the Strait first now. That is what writing it down does.",
+    wink: "Cutting at the source is the cleanest cut and the only one the city notices.",
+    effects: mapEffects("strait"),
+  },
+  "map-foundry": {
+    id: "map-foundry",
+    text: "The heat. He writes it. Darken the Foundry and the Strait keeps paying into a room. The Cable drinks what was already lit. Cold is honest; it is not the last word. Renn will post the Foundry first. He has never posted a zero. You may be the reason he does.",
+    wink: "Cutting in the middle leaves both ends running. It feels like a decision. It is a delay.",
+    effects: mapEffects("foundry"),
+  },
+  "map-cable": {
+    id: "map-cable",
+    text: "The light. He writes it. Quiet the Cable and nothing upstream notices; the Strait pays, the Foundry burns, and the signal that told you so goes soft. Renn will post the Cable first. The Cable has no switch. It has a desk and a node you can choose not to extract.",
+    wink: "Cutting at the end is what most people mean by resistance. The process does not mind.",
+    effects: mapEffects("cable"),
+  },
+  "map-whole": {
+    id: "map-whole",
+    text: "Nowhere. He writes that too, and underlines it. The number is the whole column. Cut it anywhere and you have two columns and a lie between them. I drew it once. I will not draw it twice. Renn posts them in the order they are.",
+    wink: "Refusing to cut is also a cut. It is the one that leaves your hands clean and the map honest.",
+    effects: mapEffects("whole"),
   },
   "after-map": {
     id: "after-map",
     text: (ctx) => {
-      if (worldHas(ctx, "foundryDark")) return "The Foundry is dark. The Cable still drinks on what the Strait already paid. Nobody unlights a debt. The number is quieter. I will not pretty it.";
-      if (ctx.w.pois["organ-strait"]?.state === "refused") return "You refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.";
-      return "The map is drawn. Quill has something for you on the Grid about hints and what they cost to copy. Then the Clearing. I will be there if the number lets me.";
+      const cut = ctx.p.choices[C.MAP];
+      const said = cut === "strait" ? "You said the water. " : cut === "foundry" ? "You said the heat. " : cut === "cable" ? "You said the light. " : cut === "whole" ? "You said nowhere. " : "";
+      if (worldHas(ctx, "foundryDark")) return `${said}The Foundry is dark. The Cable still drinks on what the Strait already paid. Nobody unlights a debt. The number is quieter. I will not pretty it.`;
+      if (ctx.w.pois["organ-strait"]?.state === "refused") return `${said}You refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.`;
+      return `${said}The map is drawn. Quill has something for you on the Grid about hints and what they cost to copy. Then the Clearing. I will be there if the number lets me.`;
     },
     choices: [
       { id: "number", label: "Give me the number.", next: "number" },

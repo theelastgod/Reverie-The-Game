@@ -125,7 +125,7 @@ function mkWorld(over: Partial<WorldState> = {}): WorldState {
 const flagsOf = (keys: string[]): Record<string, number> => Object.fromEntries(keys.map(k => [k, 1]));
 const M1_FLAGS = [F.ARRIVED, F.INTAKE, F.FIRST_NODE, F.DESK_THREE, F.SECOND_NODE, F.HEARD_RECORDER, F.TALKED_QUILL, F.TALKED_ORD, F.TALKED_NARA, F.MEMORIAL, F.BURIED_NARA, F.WEATHER_SAFETY, F.WEATHER_ORD, F.WEATHER_NARA, F.WEATHER_NAMED];
 const M2_FLAGS = [...M1_FLAGS, F.UNDER, F.ANGEL, F.CARE, F.SHRINE, F.TALKED_SEXTON, F.HALL, F.TALKED_OFFICER, F.FREEZE, F.TITHE, F.BOARD, F.OPERATOR, F.M3];
-const M3_FLAGS = [...M2_FLAGS, F.STRAIT, F.FOUNDRY, F.CABLE, F.MAP, F.GARDEN, F.FAILED, F.FORGE];
+const M3_FLAGS = [...M2_FLAGS, F.STRAIT, F.FOUNDRY, F.CABLE, F.MAP, F.GARDEN, F.BELL, F.FAILED, F.FORGE];
 const M4_FLAGS = [...M3_FLAGS, F.MORTALITY, F.PREPARE, F.PASSING, F.CREDITS];
 
 const angel = (serial: number, house: Player["house"], messenger: Player["messenger"], school: Player["winkSchool"], over: Partial<Player>): Player =>
@@ -400,7 +400,15 @@ describe("dialogue", () => {
     expect(JSON.stringify(NPCS.ione.nodes.lastword.effects)).toContain(`"key":"${W.IONE_GONE}"`);
     expect(JSON.stringify(NPCS.quill.nodes["forge-spot"].effects)).toContain(`"value":"spot"`);
     expect(JSON.stringify(NPCS.quill.nodes["forge-sell"].effects)).toContain(`"value":"sell"`);
-    expect(JSON.stringify(NPCS.ord.nodes.map.effects)).toContain(`"key":"${F.MAP}"`);
+    // Ord's map is drawn on the answer, not on the question: each cut sets the flag and records where
+    expect(NPCS.ord.nodes.map.effects).toBeUndefined();
+    expect(NPCS.ord.nodes.map.choices!.map(c => c.id)).toEqual(["strait", "foundry", "cable", "whole"]);
+    for (const cut of ["strait", "foundry", "cable", "whole"]) {
+      const effects = JSON.stringify(NPCS.ord.nodes[`map-${cut}`].effects);
+      expect(effects, cut).toContain(`"key":"${F.MAP}"`);
+      expect(effects, cut).toContain(`"key":"${C.MAP}","value":"${cut}"`);
+    }
+    for (const plate of ["numbered", "unnumbered"]) expect(JSON.stringify(NPCS.nara.nodes[`garden-${plate}`].effects)).toContain(`"key":"${C.GARDEN}","value":"${plate}"`);
   });
 });
 

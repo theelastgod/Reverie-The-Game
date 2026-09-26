@@ -211,9 +211,13 @@ only you see → the listing board: the
 the wreckage garden burial).
 
 **III — Geopolitics.** Strait → Foundry → Cable; extraction here lights a factory
-there (Ord's map) → the node you extracted in I is the wreckage garden now; Nara
-will not speak until you bury it → a failed Passing from last season, visible to
-Ruin-sight → Quill: a Wink can be forged; spot copies or sell them.
+there (Ord's map), and Ord asks where you would cut it: the water, the heat, the
+light, or nowhere; the cold desk posts that organ's hour first → the node you
+extracted in I is the wreckage garden now; Nara will not speak until you bury it,
+then kneels at the plate: a number in the Care's book, or blank → the hour bell
+on the Kerb, struck once on the way (the House of Sky's hour opens on it) → a
+failed Passing from last season, visible to Ruin-sight → Quill: a Wink can be
+forged; spot copies or sell them.
 
 **IV — The Turn.** Prepare the Clearing with the party willing → mortality act
 (watch, burial, or the last word with Ione Kade, who will not return) → the
