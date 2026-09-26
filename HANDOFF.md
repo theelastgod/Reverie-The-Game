@@ -299,6 +299,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- A phone's HUD (2026-09-26): at 390 px wide the play client's HUD ran
+  off the right edge (the verb chips), the minimap and the journal's tab
+  sat on the wrapped top chips, and the prompt had no room; a
+  `max-width: 600px` block in `src/ui/hud.css` now shrinks and wraps the
+  chips, seats the minimap and the journal's tab under them at the
+  right (the journal opens full width), gives the prompt and the heard
+  line the width above the bars, wraps the verb chips and drops the
+  keyboard hints, seats the ledger and the dialogue in the screen, and
+  moves the event cards above the prompt. Touch controls stay out of
+  v1 as the brief says; this keeps the city readable in a hand. The
+  landing page's log rows stack their time above the line at that
+  width. `scripts/render-check.mjs` now ends with a phone pass (390 by
+  844, the desktop page closed first, since two software-rendered
+  cities starve each other's boot): the landing page, then the city,
+  failing when any chip or panel runs off the screen, the page scrolls
+  sideways, or the minimap or the journal's tab sits on the chips above
+  (`05-phone-landing.png`, `06-phone-nave.png`). The branch is 55
+  commits ahead of `main` and none behind, so its merge is a
+  fast-forward.
 - The city's log on the landing page (2026-09-26): `site/log.js` reads
   the public writeback route (`GET /log/recent?kind=news&limit=8`) into a
   band on `site/index.html` ("The city's log": the last news lines, each
@@ -684,6 +703,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- A phone's HUD (2026-09-26): typecheck, 458 tests, the build, and the
+  render check's new phone pass PASS (nothing off the screen, nothing
+  stacked, no sideways scroll) beside the desktop pass and the landing
+  page's; the tablet width (820) was already sound.
 - The whole spine over the wire after the frames, the listing and the
   review fixes (2026-09-26, `npm run test:campaign:4` on a fresh world):
   I 16.8 min / 8 decisions, II 12.5 / 4 (the Clearing priced at 40, then

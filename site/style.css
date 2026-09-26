@@ -78,4 +78,5 @@ h1 { font-family: var(--display); font-size: clamp(3.5rem, 10vw, 7.5rem); line-h
   .band { padding: 2rem 1.25rem 2.5rem; }
   .controls { font-size: 0.85rem; }
   .controls th:last-child, .controls td:last-child { display: none; }
+  .city-log li { grid-template-columns: 1fr; gap: 0.2rem; }
 }

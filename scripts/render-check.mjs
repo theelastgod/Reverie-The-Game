@@ -108,6 +108,53 @@ try {
   if (errors.length) console.log(`page errors: ${errors.slice(0, 5).join(' | ')}`);
   if (canvases === 0) failures.push('no canvas rendered');
   if (fps < MIN_FPS) failures.push(`fps ${fps.toFixed(1)} < ${MIN_FPS}`);
+
+  // A phone, 390 by 844: the landing page, then the city. Nothing of the HUD may run off the screen, the page must not
+  // scroll sideways, and the minimap and the journal's tab must sit under the top chips, not on them. The desktop page
+  // closes first: two cities rendering in software at once starve each other's boot.
+  await page.close();
+  const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  try {
+    if (root !== origin) {
+      await phone.goto(root, { waitUntil: 'load', timeout: 30000 });
+      await phone.waitForFunction(() => document.getElementById('city-log-band')?.dataset.state === 'done', null, { timeout: 15000 }).catch(() => {});
+      await phone.screenshot({ path: join(shots, '05-phone-landing.png'), fullPage: true });
+    }
+    await phone.goto(origin, { waitUntil: 'load', timeout: 30000 });
+    await phone.waitForSelector('#title', { timeout: 15000 });
+    const enterPhone = phone.locator('#title button', { hasText: /enter/i }).first();
+    if (await enterPhone.count()) await enterPhone.click(); else await phone.keyboard.press('Enter');
+    await phone.waitForSelector('#hud:not([hidden])', { timeout: 30000 });
+    await phone.waitForTimeout(1500);
+    const fit = await phone.evaluate(() => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const box = el => el.getBoundingClientRect();
+      const visible = el => { const r = box(el); return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; };
+      const name = el => el.id || el.className.split(' ')[0];
+      const off = [];
+      for (const el of document.querySelectorAll('#hud .chip, #hud .panel')) {
+        if (!visible(el)) continue;
+        const r = box(el);
+        if (r.right > w + 1 || r.left < -1 || r.bottom > h + 1) off.push(`${name(el)} at ${Math.round(r.left)},${Math.round(r.top)} to ${Math.round(r.right)},${Math.round(r.bottom)}`);
+      }
+      const chips = [...document.querySelectorAll('#hud-top .chip')].filter(visible).map(box);
+      const chipsBottom = Math.max(0, ...chips.map(r => r.bottom));
+      const minimap = document.getElementById('hud-minimap');
+      const journal = document.getElementById('hud-journal');
+      const stacked = [];
+      if (minimap && visible(minimap) && box(minimap).top < chipsBottom - 1) stacked.push('the minimap sits on the top chips');
+      if (journal && minimap && visible(journal) && box(journal).top < box(minimap).bottom - 1) stacked.push("the journal's tab sits on the minimap");
+      return { off, stacked, scrollW: document.documentElement.scrollWidth, w };
+    });
+    await phone.screenshot({ path: join(shots, '06-phone-nave.png') });
+    console.log(`phone: ${fit.off.length} element(s) off the screen, ${fit.stacked.length} stacked${fit.off.length ? `: ${fit.off.join('; ')}` : ''}${fit.stacked.length ? `: ${fit.stacked.join('; ')}` : ''}`);
+    if (fit.off.length) failures.push(`phone: off the screen: ${fit.off.join('; ')}`);
+    if (fit.stacked.length) failures.push(`phone: ${fit.stacked.join('; ')}`);
+    if (fit.scrollW > fit.w) failures.push(`phone: the page scrolls sideways (${fit.scrollW} > ${fit.w})`);
+  } finally {
+    await phone.close();
+  }
 } catch (error) {
   failures.push(error.message);
 } finally {
@@ -115,4 +162,4 @@ try {
   clearTimeout(deadline);
 }
 if (failures.length) { console.error(`FAIL: ${failures.join('; ')}`); process.exit(1); }
-console.log(`PASS: landing page and its log, title, Nave + HUD, dialogue shot, frame pacing >= ${MIN_FPS} fps (screenshots in ${shots})`);
+console.log(`PASS: landing page and its log, title, Nave + HUD, dialogue shot, frame pacing >= ${MIN_FPS} fps, the phone's HUD in its screen (screenshots in ${shots})`);
