@@ -44,6 +44,7 @@ export const F = {
   FAILED: "failed", // saw a failed Passing
   FORGE: "forge", // decided copies with Quill
   PREPARE: "prepare", // prepared the Clearing
+  BRINK: "brink", // Movement IV: heard Nara at the ring before the ground was kept, with the readiness read
   MORTALITY: "mortality", // did a mortality act
   PASSING: "passing", // the Passing resolved for this Angel
   CREDITS: "credits",

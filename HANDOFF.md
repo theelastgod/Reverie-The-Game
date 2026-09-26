@@ -173,6 +173,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   crosses the Care, Annex and Wet gates on foot and prints a second
   `measure:` block. PASS on the first run. The numbers are in Verified and
   Backlog 5.
+- Movement IV beats (2026-09-26, backlog 8): the number is read before
+  anyone stands. The journal's `prepare`, `stance` and `passing` steps
+  carry "Readiness N of 60" (and, at the Passing, whether the hour can
+  open, whether a trace is possible, or that it is short and where the
+  rest is); Nara Vale stands at the ring from the mortality act on, before
+  the ground is kept, and her `brink` node reads the number against the
+  floor (`F.BRINK`); Ord's `ring` line reads it too. The first stance is a
+  spine step: `stance` between `prepare` and `passing` (E keeps, Q
+  extracts; done on `C.CLEARING` or a vote in the live contest). Movement
+  IV is five steps. Found by the smoke on a reused world and fixed: the
+  ring's `prepare` verb set `F.PREPARE` whether or not the engine's open
+  op took (it refuses within `WAR_PERIOD` of the last opening, with the
+  reserve spent, or over a live contest), so an Angel could be "prepared"
+  at a closed hole. The ring's verbs now follow the hole: `prepare` only
+  on a set, unspent ring; `join` (the flag without a second contest) when
+  another Angel's hole is open; `look` says how many seconds the asphalt
+  has left to set, or that the reserve is spent. Four tests pin the four
+  grounds. The smoke prepares or joins as the prompt offers, and on a
+  world whose last hole is still setting it notes the rite skipped and
+  passes partial; a full Movement IV run wants a fresh local world (stop
+  the Worker, delete `.wrangler/state/v3/do/reverie-the-game-ReverieWorld`).
 - Movement IV over the wire (2026-09-26): `scripts/smoke-campaign.mjs
   --movement=4` (`npm run test:campaign:4`, 600 s deadline) goes on from
   Quill's forge: down the Wet Grid through its Clearing gate, across the
@@ -424,7 +445,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the spine alone; the Passing wrote `failed` at readiness 36 (the rite's
   floor is 60, appearance 80) with Cold as the current and the party all
   with. A run where an earlier run's Annex Runner is still up notes the
-  slip beat skipped; that is the courier's respawn, not a failure.
+  slip beat skipped; that is the courier's respawn, not a failure. After
+  the Movement IV beats (the same day, on a fresh local world): all four
+  movements PASS; Movement IV bot 22 s (walk 21 s; talk and verbs 1.3 s),
+  568 words (dialogue 222, spoken 111, journal 161, notices 74), 2
+  decisions (the last word, the stance), estimate 5.1 min on the spine
+  alone; the Passing wrote `failed` at readiness 48, told beforehand by
+  Nara, Ord and the journal. On the reused world the run before it failed
+  at "the hole is open": the last hole had not set (600 s of world time,
+  and the world only runs while bodies are in it), which is the ring's
+  ground bug above; the smoke now notes that case and passes partial.
 - Writeback log: 4 diff tests (every kind, unchanged world, a body that only
   appeared, rolling news), 4 sink tests (batches, overflow, a failing D1
   keeps the queue and warns once a minute, one flush in flight), 3 session
@@ -581,30 +611,25 @@ they are discovered; keep this list honest.
    the spine; Ord's cut now points at them without forcing them. Nothing
    further is planned here; re-measure after any change to Movement III and
    keep the numbers here. Movement IV is measured (Backlog 8).
-8. **Movement IV density: thin, and the spine alone cannot reach the
-   rite.** Measured 2026-09-26 over the wire (`npm run test:campaign:4`):
-   3.0 min on the spine alone, 309 words, one decision (the last word),
-   22 s of bot walking, and the Passing wrote `failed` at readiness 36. The
-   readiness the spine gives a first playthrough: the freeze refused 4, the
-   garden 8, Ord's cut 2, the glass 2, the last word 6 (the yield refused
-   would add 10; the memorial and the plaque add nothing); the rite's floor
-   is 60 and appearance is 80, so a spine-only Angel always writes
-   `failed` (Gestell kept the weather) and the stipend never pays. That is
-   a written ending, and the design says a solo cannot force the hour,
-   but the player is not told how far short they stand or where the rest
-   is (the side hours: Form 9 refused, the notice, the census; keeping
-   nodes; holding the ring with others). Proposal, in order: a readiness
-   read at the ring before the Passing (Ord's `ring` line names the number
-   and the floor; the journal's `passing` step says "readiness N of 60"),
-   so failing is a choice, not a surprise; a second Movement IV decision
-   at the ring, the keep/extract contest stance (`E`/`Q` already exist;
-   make the first stance a spine step between prepare and the Passing, so
-   the movement has a stop in it); and a Nara beat on the walk from Ione
-   to the ring (her `ring` node exists; she stands at the Clearing station
-   once the ground is prepared, and could meet the Angel at the Care gate
-   first). Target by the other movements' shape: 6–8 min with three
-   decisions. Re-measure with `--movement=4` after each beat and keep the
-   numbers here.
+8. **Movement IV density: near target; the spine alone still cannot reach
+   the rite, and now says so.** Measured 2026-09-26 over the wire after
+   the readiness read, the stance step and Nara at the brink (`npm run
+   test:campaign:4`, fresh local world): 5.1 min on the spine alone (was
+   3.0), 568 words (was 309), two decisions (the last word, the stance;
+   was one), and the Passing wrote `failed` at readiness 48 (was 36; the
+   keep stance pays), told beforehand by Nara, Ord and the journal, with
+   where the rest is. The target by the other movements' shape is 6–8 min
+   with three decisions; one decision short. The readiness a spine-only
+   first playthrough can reach is 48 (the yield refused instead of taken
+   would make it 58: refuse 10 against the take's 0), and the floor is
+   60, so the honest ending of a spine-only run is `failed` by design, and
+   a refusing Angel with one side hour (Form 9 refused pays 2) crosses it.
+   One candidate left, optional: a third Movement IV decision on the walk
+   from Ione to the ring, the Care gate (Nara or the Officer at the
+   Clearing station asks whether to bring the party or stand alone; alone
+   forgoes the hold at meltdown), which would also give the 15 s walk a
+   stop. Nothing else is planned here; re-measure after any change to
+   Movement IV and keep the numbers here.
 9. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

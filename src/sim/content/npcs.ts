@@ -5,7 +5,7 @@
  */
 import type { Ctx, DialogueNode, Effect, NpcDef, NpcState } from "../types";
 import { POSITIONS } from "../map";
-import { AURA_ADDRESS_GLAMOUR, AURA_DIM, COPY_PRICE, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH } from "../constants";
+import { AURA_ADDRESS_GLAMOUR, AURA_DIM, COPY_PRICE, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_PASSING_MIN, READINESS_REFUSE, READINESS_WATCH } from "../constants";
 import { C, F, W } from "./ids";
 import { PARTY_BLIND } from "./lines";
 
@@ -55,6 +55,7 @@ function naraRoute(ctx: Ctx): string {
   if (has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)) return "garden-silent";
   if (p.party.nara === "waiting") return "waiting";
   if (has(ctx, F.GARDEN) && !p.choices[C.GARDEN] && p.movement < 4) return "garden-plate";
+  if (has(ctx, F.MORTALITY) && !has(ctx, F.PREPARE) && p.movement >= 4) return "brink";
   if (has(ctx, F.GARDEN) && has(ctx, F.PREPARE)) return "ring";
   if (has(ctx, F.GARDEN) && p.movement >= 4 && !has(ctx, F.MORTALITY)) return "stand-offer";
   if (has(ctx, F.GARDEN)) return "garden-buried";
@@ -232,9 +233,21 @@ const NARA_NODES: Record<string, DialogueNode> = {
       { kind: "notice", text: "A mortality act. Burial. The Clearing will take you now.", tone: "gold" },
     ],
   },
+  brink: {
+    id: "brink",
+    text: (ctx) => {
+      const r = Math.round(ctx.p.readiness);
+      const read = r >= READINESS_APPEARANCE_MIN ? `Readiness ${r}. Enough for a trace, if the weather lets it.`
+        : r >= READINESS_PASSING_MIN ? `Readiness ${r}. The floor is ${READINESS_PASSING_MIN}; you are over it. A trace wants ${READINESS_APPEARANCE_MIN}.`
+          : `Readiness ${r}. The floor is ${READINESS_PASSING_MIN}. You are short, and I will say so now rather than after: the hours you did not take, the nodes you did not keep, the freeze you signed or did not. It is not a sin. It is a number.`;
+      return `Nara Vale is at the ring before it is a ring. The asphalt is asphalt until somebody keeps it. She looks at you the way she looks at a plate. ${read} I will stand in it either way. Press F at the ring and keep the ground; then E to keep the hole or Q to take it. Then the hour, or not.`;
+    },
+    wink: "A sexton reads the ground before the funeral, not after. She is telling you the depth.",
+    effects: [{ kind: "flag", key: F.BRINK }],
+  },
   ring: {
     id: "ring",
-    text: "I am in the ring. I will stand in the hole as long as it is a hole. If the process takes it I will still be here; I will just be standing in stock. Press F at the ring when the party is ready.",
+    text: (ctx) => `I am in the ring. I will stand in the hole as long as it is a hole. If the process takes it I will still be here; I will just be standing in stock. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}. Press F at the ring when the party is ready.`,
     wink: "The Clearing holds when people do.",
   },
   after: {
@@ -625,9 +638,15 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   ring: {
     id: "ring",
-    text: (ctx) => ctx.w.gestell >= 91
-      ? "Gestell is maxed. I have to tell you: the hour will not open unless enough of you hold the ring. I cannot make that number smaller by wanting it. Nobody can."
-      : "I am in the ring. I am counting. If the hour opens I will write it down honest. If it does not I will write that. Press F when the party is ready.",
+    text: (ctx) => {
+      const r = Math.round(ctx.p.readiness);
+      const read = r >= READINESS_APPEARANCE_MIN ? `Readiness ${r}. Over the line for a trace.`
+        : r >= READINESS_PASSING_MIN ? `Readiness ${r}. Over the floor of ${READINESS_PASSING_MIN}; a trace is ${READINESS_APPEARANCE_MIN}.`
+          : `Readiness ${r} against a floor of ${READINESS_PASSING_MIN}. It will not open for you. I would write that down before you stand, so nobody says the number lied.`;
+      return ctx.w.gestell >= 91
+        ? `Gestell is maxed. I have to tell you: the hour will not open unless enough of you hold the ring. I cannot make that number smaller by wanting it. Nobody can. ${read}`
+        : `I am in the ring. I am counting. ${read} If the hour opens I will write it down honest. If it does not I will write that. Press F when the party is ready.`;
+    },
     wink: "A solo cannot force the hour. He knows the arithmetic and hates it.",
   },
   gone: {
@@ -813,7 +832,8 @@ export const NPCS: Record<string, NpcDef> = {
       const { p } = ctx;
       if (p.movement >= 5) return null;
       if (has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)) return { ...station("nara-garden"), state: "garden" };
-      if (has(ctx, F.PREPARE) && p.party.nara !== "gone" && !has(ctx, F.PASSING)) return { ...station("nara-clearing"), state: "clearing" };
+      // From the mortality act on she is at the ring, before the ground is kept: the first person there reads the number.
+      if ((has(ctx, F.PREPARE) || (has(ctx, F.MORTALITY) && p.movement >= 4)) && p.party.nara !== "gone" && !has(ctx, F.PASSING)) return { ...station("nara-clearing"), state: "clearing" };
       if (has(ctx, F.UNDER) && !has(ctx, F.OPERATOR) && p.party.nara !== "waiting") return { ...station("nara-care"), state: "care" };
       return null;
     },

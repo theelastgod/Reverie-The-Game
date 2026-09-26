@@ -108,6 +108,7 @@ const ROUTE3 = {
 };
 const T4 = {
   ione: at(31, 67),            // home:ione, the bench at the edge of the Care's garden
+  naraRing: at(50, 66),        // station:nara-clearing, where Nara waits at the ring from the last word on
   ring: at(52, 67),            // clearing-ring
 };
 // The Wet Grid's Clearing gate is x 52..54 rows 55..57 (Angels only); the Clearing's pillars ring the centre at
@@ -684,14 +685,38 @@ try {
     assert.equal(you(me).choices.mortality, 'lastword', 'the last word');
     assert.ok(!(me.snap.npcs ?? []).some(n => n.id === 'ione'), 'Ione Kade does not return');
 
-    // The ring: prepare the ground with the party still willing, then the Passing, whatever it writes.
+    // The ring: Nara is there first with the number; prepare the ground with the party still willing, take a stance, then the Passing, whatever it writes.
     phase('IV walk: ring');
     await walk(me, ROUTE4.toRing);
-    await stand(me, T4.ring, 64);
+    await stand(me, T4.naraRing, 72);
     assert.equal(me.snap.district, 'clearing', 'in the Clearing');
+    phase('IV talk: nara');
+    await converse(me, 'nara', 'brink');
+    assert.match(you(me).heard || '', /./, 'Nara spoke');
+    await stand(me, T4.ring, 64);
+    assert.match(me.snap.objective?.detail ?? '', /Readiness \d+ of 60/, 'the journal reads the number against the floor');
+    // The ground can be prepared only when the last hole has set (WAR_PERIOD of world time); a hole still open is joined instead.
+    await wait(me, () => me.snap.prompt?.targetId === 'clearing-ring', 'prompt for clearing-ring', 6000);
+    const ringVerbs = me.snap.prompt.verbs.map(v => v.choice);
+    const ground = ringVerbs.includes('prepare') ? 'prepare' : ringVerbs.includes('join') ? 'join' : null;
+    if (!ground) {
+      console.log(`note: the Clearing is still setting from an earlier run on this world (the ring offers ${JSON.stringify(ringVerbs)}); the rite is skipped. Reset the local world (stop the Worker, delete .wrangler/state/v3/do/reverie-the-game-ReverieWorld) for a full Movement IV.`);
+      phase('end IV');
+      reportMovement('IV', T4s, read4, from);
+      console.log('PASS: Movement IV — Ione Kade\'s last word, Nara at the ring (the ground was not open to prepare: partial)');
+      clearTimeout(deadline);
+      for (const ws of sockets) ws.close();
+      process.exit(0);
+    }
     phase('IV verb: prepare');
-    await useVerb(me, 'clearing-ring', verbs => verbs.find(v => v.choice === 'prepare'), () => !!you(me).flags.prepare, 'prepare the ground');
-    assert.equal(me.snap.clearing?.open, true, 'the hole is open');
+    await useVerb(me, 'clearing-ring', verbs => verbs.find(v => v.choice === ground), () => !!you(me).flags.prepare, `${ground} the ground`);
+    assert.equal(me.snap.clearing?.open, true, `the hole is open (${ground}; heard: ${you(me).heard})`);
+    phase('IV verb: stance');
+    await useVerb(me, 'clearing-ring', verbs => verbs.find(v => v.choice === 'keep'), () => you(me).choices.clearing === 'keep', 'keep the hole');
+    read.decisions++;
+    await wait(me, () => me.snap.objective?.step === 'passing', 'the stance counted', 4000).catch(error => {
+      throw new Error(`${error.message} (objective ${JSON.stringify(me.snap.objective)}; choices ${JSON.stringify(you(me).choices)})`);
+    });
     phase('IV verb: passing');
     const readiness = you(me).readiness;
     await useVerb(me, 'clearing-ring', verbs => verbs.find(v => v.choice === 'pass'), () => !!you(me).flags.passing, 'the Passing');

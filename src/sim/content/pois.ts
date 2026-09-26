@@ -8,6 +8,7 @@ import type { Ctx, Effect, Fourfold, PoiConfig, PoiVerb, WinkBySchool } from "..
 import {
   AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_PRESENT, FREEZE_FEE, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
   OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, TITHE_COST, UPKEEP_COST,
+  WAR_PERIOD,
 } from "../constants";
 import { weatherBand } from "../protocol";
 import { C, F, W, seasonPassingFlag } from "./ids";
@@ -43,6 +44,20 @@ const sacredRefusal = (ctx: Ctx): string => (addressAura(ctx) < AURA_DIM ? SACRE
 const hasHistoryMark = (ctx: Ctx): boolean => ctx.p.serial !== null && ctx.w.history.some(m => m.serial === ctx.p.serial);
 /** Once per season the ring takes the rite; the first one is the campaign's Turn. */
 const passedThisSeason = (ctx: Ctx): boolean => (ctx.p.flags[seasonPassingFlag(ctx.w.season.id)] ?? 0) > 0;
+/**
+ * The ring's ground, as the engine's `open` op will judge it (clearing.ts: never over a live contest or an open
+ * hole, never with the reserve spent, never within WAR_PERIOD of the last opening): "open" is joined, "ok" is
+ * prepared, "soon" and "spent" are stood at. The prompt only offers what the op will take, so the flag follows the hole.
+ */
+type Ground = "open" | "ok" | "soon" | "spent";
+const ringGround = (ctx: Ctx): Ground => {
+  const c = ctx.w.clearing;
+  if ((c.contest && c.contest.active) || poiState(ctx, "clearing-ring") === "open") return "open";
+  if (c.reserve <= 0) return "spent";
+  if (c.openedAt > 0 && ctx.w.now - c.openedAt < WAR_PERIOD) return "soon";
+  return "ok";
+};
+const settingSeconds = (ctx: Ctx): number => Math.max(0, Math.ceil(WAR_PERIOD - (ctx.w.now - ctx.w.clearing.openedAt)));
 const HOUSE_NAME: Record<string, string> = {
   earth: "House of Earth",
   sky: "House of Sky",
@@ -1166,7 +1181,7 @@ const CLEARING: PoiConfig[] = [
         key: "F",
         label: "Prepare the ground",
         choice: "prepare",
-        when: ctx => has(ctx, F.MORTALITY) && partyWilling(ctx) && !has(ctx, F.PREPARE),
+        when: ctx => has(ctx, F.MORTALITY) && partyWilling(ctx) && !has(ctx, F.PREPARE) && ringGround(ctx) === "ok",
         guest: spectate,
         say: "You keep the hole. The party still willing stands in it. The Passing is not yet the weather.",
         effects: [
@@ -1176,14 +1191,30 @@ const CLEARING: PoiConfig[] = [
         ],
       },
       {
+        // Someone else's hole is open: the ground is theirs and yours; no second contest is opened over a live one.
+        key: "F",
+        label: "Stand in the open hole",
+        choice: "join",
+        when: ctx => has(ctx, F.MORTALITY) && partyWilling(ctx) && !has(ctx, F.PREPARE) && ringGround(ctx) === "open",
+        guest: spectate,
+        say: "The hole is open already. Somebody prepared it and it has not set. You stand in it with them; the ring counts bodies, not who opened it.",
+        effects: [
+          { kind: "flag", key: F.PREPARE },
+          { kind: "notice", text: "You stand in an open Clearing. E keeps it. Q extracts it. F passes.", tone: "gold" },
+        ],
+      },
+      {
         key: "F",
         label: "Stand at the ring",
         choice: "look",
-        when: ctx => (!has(ctx, F.MORTALITY) || !partyWilling(ctx)) && !has(ctx, F.PREPARE) && !passedThisSeason(ctx),
+        when: ctx => !has(ctx, F.PREPARE) && !passedThisSeason(ctx) && (!has(ctx, F.MORTALITY) || !partyWilling(ctx) || ringGround(ctx) === "soon" || ringGround(ctx) === "spent"),
         guest: spectate,
-        say: ctx => (!has(ctx, F.MORTALITY)
-          ? "A ring in the asphalt. Keep the hole. The hour is not a character. A mortality act is required first: watch, a burial, or a last word."
-          : "A ring in the asphalt. The party will not stand. Someone walked. You cannot force the hour alone."),
+        say: ctx => {
+          if (!has(ctx, F.MORTALITY)) return "A ring in the asphalt. Keep the hole. The hour is not a character. A mortality act is required first: watch, a burial, or a last word.";
+          if (!partyWilling(ctx)) return "A ring in the asphalt. The party will not stand. Someone walked. You cannot force the hour alone.";
+          if (ringGround(ctx) === "spent") return "A ring in the asphalt. The Clearing's reserve is spent; there is nothing left to open until it fills back, a point at a time.";
+          return `A ring in the asphalt. The last hole was contested lately and the asphalt has not set: ${settingSeconds(ctx)} seconds. Wait for the hour, or stand here while it sets.`;
+        },
       },
       {
         // Once prepared, the ring is the rest of life: keep or extract whenever a hole is open, one stance per contest.

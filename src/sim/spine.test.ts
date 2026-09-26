@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
  * end of world as world, signs the freeze, refuses the yield, buries the
  * garden, spots the copy, and reaches every outcome the Passing can have.
  */
-import { DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_REFUSE, TEST_SERIAL, TITHE_COST } from "./constants";
+import { DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_PASSING_MIN, READINESS_REFUSE, TEST_SERIAL, TITHE_COST } from "./constants";
 import { POSITIONS, blockedFor, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
@@ -683,6 +683,17 @@ function movementFourToTheRing(w0: WorldState): WorldState {
   expect(w.flags[W.IONE_GONE]).toBe(1);
   expect(snapshotFor(w, ME).npcs.some(n => n.id === "ione"), "Ione Kade does not return").toBe(false);
 
+  // Nara is at the ring before it is a ring, and reads the number against the floor; so does the journal
+  const nara = npcView({ w, p: me(w), now: w.now }, w.npcs.nara)!;
+  expect(nara).toMatchObject({ state: "clearing", x: POSITIONS["station:nara-clearing"].x, y: POSITIONS["station:nara-clearing"].y });
+  w = talkTo(w, ME, "nara");
+  expect(me(w).dialogue?.node).toBe("brink");
+  expect(me(w).dialogue?.text).toContain(`Readiness ${Math.round(me(w).readiness)}`);
+  expect(me(w).dialogue?.text).toContain(`floor is ${READINESS_PASSING_MIN}`);
+  w = closeAll(w, ME);
+  expect(me(w).flags[F.BRINK]).toBe(1);
+  expect(snapshotFor(w, ME).objective?.detail).toContain(`Readiness ${Math.round(me(w).readiness)} of ${READINESS_PASSING_MIN}`);
+
   w = tick(use(w, "clearing-ring", "prepare"));
   expectStep(w, Q.M4, 2);
   expect(me(w).flags[F.PREPARE]).toBe(1);
@@ -690,7 +701,19 @@ function movementFourToTheRing(w0: WorldState): WorldState {
   expect(w.clearing.contest?.active).toBe(true);
   expect(w.pois["clearing-ring"].state).toBe("open");
   expect(w.clearing.heldBy).toEqual([ME]);
+  expect(snapshotFor(w, ME).objective).toMatchObject({ quest: Q.M4, step: "stance" });
+  expect(me(talkTo(w, ME, "ord")).dialogue?.text, "Ord reads the number at the ring").toContain(`Readiness ${Math.round(me(w).readiness)}`);
+  w = closeAll(w, ME);
+
+  // the first stance is the spine's: keep the hole, and the ring counts it
+  const before = me(w).readiness;
+  w = tick(use(w, "clearing-ring", "keep"));
+  expectStep(w, Q.M4, 3);
+  expect(me(w).choices[C.CLEARING]).toBe("keep");
+  expect(w.clearing.contest?.votes).toEqual({ [ME]: "keep" });
+  expect(me(w).readiness).toBeGreaterThan(before);
   expect(snapshotFor(w, ME).objective).toMatchObject({ quest: Q.M4, step: "passing" });
+  expect(snapshotFor(w, ME).objective?.detail).toMatch(/Readiness \d+/);
   return w;
 }
 
@@ -704,6 +727,65 @@ function throughTheCredits(w0: WorldState): WorldState {
   expect(w.news.some(n => n.text.includes("credits"))).toBe(true);
   return w;
 }
+
+// ---------------------------------------------------------------- the ring's ground
+
+describe("the ring's ground follows the hole", () => {
+  /** An Angel with the act done and the party willing, standing at the ring of a world whose Clearing is as given. */
+  function atTheRing(clearing: Partial<WorldState["clearing"]>, ring?: string): WorldState {
+    const w = emptyWorld();
+    const p: Player = {
+      ...spawnGuest(ME), guest: false, serial: 42, name: "#0042", house: "sky", messenger: "witness", winkSchool: "omen", auraSeed: 12, aura: 12,
+      movement: 4, flags: { [F.ANGEL]: 1, [F.UNDER]: 1, [F.GARDEN]: 1, [F.MORTALITY]: 1 },
+      party: { nara: "with", quill: "with", ord: "with" }, quests: { [Q.M1]: 15, [Q.M2]: 10, [Q.M3]: 8, [Q.M4]: 1 },
+    };
+    const pois = ring ? { ...w.pois, "clearing-ring": { state: ring, by: "other", at: w.now, count: 1 } } : w.pois;
+    return goTo(add({ ...w, clearing: { ...w.clearing, ...clearing }, pois }, p), ME, "clearing-ring");
+  }
+  const offered = (w: WorldState) => verbsFor({ w, p: me(w), now: w.now }, "clearing-ring").map(v => v.choice);
+
+  it("prepares a set, unspent ring and opens the hole", () => {
+    const w = atTheRing({});
+    expect(offered(w)).toContain("prepare");
+    const after = interact(w, ME, "clearing-ring", "prepare");
+    expect(me(after).flags[F.PREPARE]).toBe(1);
+    expect(after.clearing.open).toBe(true);
+    expect(after.clearing.contest?.active).toBe(true);
+  });
+
+  it("while the last hole sets, offers only to stand, says how long, and the flag does not move", () => {
+    const w = atTheRing({ openedAt: 100, open: false, contest: null }, "failed");
+    const w2 = { ...w, now: 100 + 60 };
+    expect(offered(w2)).toEqual(["look"]);
+    const pressed = interact(w2, ME, "clearing-ring", "prepare");
+    expect(me(pressed).flags[F.PREPARE], "a verb not offered does nothing").toBeUndefined();
+    expect(pressed.clearing.open).toBe(false);
+    const stood = interact(w2, ME, "clearing-ring", "look");
+    expect(me(stood).heard).toContain("has not set: 540 seconds");
+    // the period passes: the ground can be prepared again
+    expect(offered({ ...w, now: 100 + 600 })).toContain("prepare");
+  });
+
+  it("joins a hole another Angel opened instead of opening a second one", () => {
+    const w = atTheRing({ open: true, openedAt: 50, contest: { active: true, keep: 1, extract: 0, endsAt: 500, votes: { other: "keep" } } }, "open");
+    expect(offered(w)).toEqual(["join"]);
+    const after = interact(w, ME, "clearing-ring", "join");
+    expect(me(after).flags[F.PREPARE]).toBe(1);
+    expect(after.clearing.openedAt, "no second contest").toBe(50);
+    expect(after.clearing.contest?.votes).toEqual({ other: "keep" });
+    expect(me(after).heard).toContain("open already");
+    // and the stance counts on the shared contest
+    const kept = interact(after, ME, "clearing-ring", "keep");
+    expect(kept.clearing.contest?.votes).toMatchObject({ [ME]: "keep" });
+    expect(me(kept).choices[C.CLEARING]).toBe("keep");
+  });
+
+  it("with the reserve spent, offers only to stand and says so", () => {
+    const w = atTheRing({ reserve: 0 });
+    expect(offered(w)).toEqual(["look"]);
+    expect(me(interact(w, ME, "clearing-ring", "look")).heard).toContain("reserve is spent");
+  });
+});
 
 // ---------------------------------------------------------------- the desk and the window
 
@@ -772,7 +854,7 @@ describe("the spine, played through", () => {
     expect(questById(Q.M1)!.steps.length).toBe(15);
     expect(questById(Q.M2)!.steps.length).toBe(10);
     expect(questById(Q.M3)!.steps.length).toBe(8);
-    expect(questById(Q.M4)!.steps.length).toBe(4);
+    expect(questById(Q.M4)!.steps.length).toBe(5);
   });
 
   it("run one: extract, the copper, the process, refuse the freeze, take the private yield, sell the print, Cold claims the hour", () => {

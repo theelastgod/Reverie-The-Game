@@ -5,6 +5,7 @@
  * content never touches state.
  */
 import type { Ctx, Effect, Quest, QuestStep } from "../types";
+import { READINESS_APPEARANCE_MIN, READINESS_PASSING_MIN } from "../constants";
 import { GUEST_SPAWN } from "../map";
 import { C, F, Q, W } from "./ids";
 import { LAST_SEASON_WINK } from "./pois";
@@ -402,18 +403,34 @@ const M4_STEPS: QuestStep[] = [
   {
     id: "prepare",
     title: "Keep the hole",
-    detail: "The Clearing is south of the Wet Grid. With the party still willing, press F at the ring to prepare the ground. E keeps it. Q extracts it.",
+    detail: ctx => `The Clearing is south of the Wet Grid. Nara Vale is at the ring already; she reads the number. With the party still willing, press F at the ring to prepare the ground. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}.`,
     target: "clearing-ring",
     plate: "clearing-ring.jpg",
     done: ctx => has(ctx, F.PREPARE),
     onComplete: [notice("The hole is kept. The Passing is not yet the weather.", "gold"), { kind: "news", text: "A Clearing was prepared." }],
   },
   {
+    // The first stance is the spine's: the rest of life takes one per contest.
+    id: "stance",
+    title: "Keep it or extract it",
+    detail: ctx => `The hole is open and the ring is counting. E keeps it: readiness and restraint, the dwelling vote. Q extracts it: Bestand from the reserve, aura and the weather pay. One stance per contest. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}.`,
+    target: "clearing-ring",
+    plate: "clearing-ring.jpg",
+    done: ctx => chose(ctx, C.CLEARING, "keep") || chose(ctx, C.CLEARING, "extract") || !!ctx.w.clearing.contest?.votes?.[ctx.p.id],
+    onComplete: ctx => [notice(chose(ctx, C.CLEARING, "extract") ? "You extracted the hole. The ring counts that too." : "You kept the hole. The ring counts it.", chose(ctx, C.CLEARING, "extract") ? "hot" : "gold")],
+  },
+  {
     id: "passing",
     title: "The Passing",
-    detail: ctx => (ctx.w.gestell >= 91
-      ? "Gestell is maxed. The hour will not open unless enough Angels hold the ring. Press F at the ring for the Passing when they do."
-      : "Press F at the ring for the Passing. Appearance, absence, hijack, or failed: all of them are written."),
+    detail: ctx => {
+      const r = Math.round(ctx.p.readiness);
+      const read = r >= READINESS_APPEARANCE_MIN ? `Readiness ${r}: a trace is possible.`
+        : r >= READINESS_PASSING_MIN ? `Readiness ${r} of ${READINESS_PASSING_MIN}: the hour can open; a trace wants ${READINESS_APPEARANCE_MIN}.`
+          : `Readiness ${r} of ${READINESS_PASSING_MIN}: short. The hour will not open for you yet; the side hours, refusals and kept nodes raise it, or stand anyway and let it be written.`;
+      return ctx.w.gestell >= 91
+        ? `Gestell is maxed. The hour will not open unless enough Angels hold the ring. Press F at the ring for the Passing when they do. ${read}`
+        : `Press F at the ring for the Passing. Appearance, absence, hijack, or failed: all of them are written. ${read}`;
+    },
     target: "clearing-ring",
     plate: "clearing-ring.jpg",
     done: ctx => has(ctx, F.PASSING),
