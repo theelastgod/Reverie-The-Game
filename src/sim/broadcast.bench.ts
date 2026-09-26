@@ -6,8 +6,11 @@
  * the step-shared snapshot split after the fact (`shared`, the object's
  * second shape), and the frames the object makes now (`frames`: the fast
  * frame every step, the slow side built only when a slow frame is due).
- * Run with `npm run bench`; `vitest run` leaves bench files alone. The
- * numbers are for this CPU; what matters is the ratio and the worst step.
+ * A fourth row, `tick`, is the step without any broadcast: every body's
+ * intent applied and the world ticked, so the broadcast's own cost is the
+ * difference. Run with `npm run bench` (`BENCH_BODIES=160` for more
+ * bodies); `vitest run` leaves bench files alone. The numbers are for this
+ * CPU; what matters is the ratio and the worst step.
  */
 import { bench, describe } from "vitest";
 import { DT } from "./constants";
@@ -17,7 +20,9 @@ import type { WorldState } from "./types";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
 
-const BODIES = 80;
+/** Bodies in the one area of interest; `BENCH_BODIES=160 npm run bench` walks the curve. (The sim's tsconfig has no node types; the bench runs under vitest, where `process` exists.) */
+const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+const BODIES = Math.max(2, Number(env.BENCH_BODIES ?? "80") || 80);
 
 function crowd(n: number): WorldState {
   let w = emptyWorld();
@@ -37,9 +42,10 @@ function walk(w: WorldState, tick: number): WorldState {
   return tickWorld(cur, DT);
 }
 
-type Variant = "old" | "shared" | "frames";
+type Variant = "tick" | "old" | "shared" | "frames";
 
 function broadcast(w: WorldState, tracker: SlowTracker, tick: number, variant: Variant): number {
+  if (variant === "tick") return 0; // the step itself (every body's intent and the world's tick), without a broadcast
   let chars = 0;
   const slowDue = tick % 5 === 0;
   const step = variant === "old" ? null : stepViews(w);
@@ -65,8 +71,8 @@ function broadcast(w: WorldState, tracker: SlowTracker, tick: number, variant: V
   return chars;
 }
 
-describe(`one broadcast to ${BODIES} viewers, walking`, () => {
-  for (const variant of ["old", "shared", "frames"] as Variant[]) {
+describe(`one step with ${BODIES} viewers, walking: the tick alone, then the tick and a broadcast`, () => {
+  for (const variant of ["tick", "old", "shared", "frames"] as Variant[]) {
     let w = crowd(BODIES);
     const tracker = new SlowTracker();
     let tick = 0;

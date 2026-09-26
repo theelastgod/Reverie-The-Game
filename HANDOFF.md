@@ -782,7 +782,11 @@ they are discovered; keep this list honest.
    the city** workflow from the Actions tab on this branch, typing
    `deploy`; it runs the gates, `npm run d1:migrate:remote` (none
    pending) and `npm run deploy`; or (b) the network policy allows
-   `api.cloudflare.com` and the routine runs `npm run deploy` here. The
+   `api.cloudflare.com` and the routine runs `npm run deploy` here; or
+   (c) from any machine where `wrangler` is logged in to the account (the
+   account's other Workers were deployed on 2026-09-26, so one exists):
+   `git checkout claude/game-rebuild-fable-ccwl6i && npm ci && npm run
+   d1:migrate:remote && npm run deploy`. The
    dry run with the real id builds the same bundle (549 KB, 144 KB
    gzipped; 92 site files; bindings WORLD, LOG, ASSETS; `MOCK_LINK "0"`,
    `ANGEL_*` empty). After the deploy: `GET /health` → `{ ok: true, v: 3
