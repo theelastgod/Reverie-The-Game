@@ -31,6 +31,8 @@ export type LoadReport = {
   maxCheckpointMs: number;
   /** Messages dropped unread since the meter began because a socket sent past its budget (a flood, never an honest client). */
   dropped: number;
+  /** Saved guest bodies the hourly sweep deleted since the meter began (unseen for thirty days, no wallet bound). */
+  swept: number;
 };
 
 type Sample = { at: number; v: number };
@@ -69,10 +71,16 @@ export class LoadMeter {
   private stalled = 0;
   private count = 0;
   private droppedCount = 0;
+  private sweptCount = 0;
 
   /** A socket sent past its budget: one message dropped unread. */
   dropped(): void {
     this.droppedCount++;
+  }
+
+  /** The sweep deleted `n` saved guest bodies. */
+  swept(n: number): void {
+    this.sweptCount += n;
   }
 
   /** An alarm fired `lateMs` after it was due and ran `steps` steps; `capped` when the clock dropped time to stay bounded. */
@@ -110,6 +118,7 @@ export class LoadMeter {
       checkpointMs: r(this.checkpoint.avg),
       maxCheckpointMs: r(this.checkpoint.max(at)),
       dropped: this.droppedCount,
+      swept: this.sweptCount,
     };
   }
 }

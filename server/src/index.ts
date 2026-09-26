@@ -43,6 +43,13 @@ const WORLD_NAME = "city-v2";
 const MAX_MESSAGE = 4096;
 const CHALLENGE_PREFIX = "challenge:v1:";
 const INTENT_TTL_MS = 1000;
+/** Beside every saved body, when it was last saved: `seen:v2:<token>` → wall clock ms. */
+const SEEN_PREFIX = "seen:v2:";
+/** A saved guest body that bound no wallet and was not seen this long is swept; an Angel's body and a bound wallet's are kept for good. */
+const SAVED_TTL_MS = 30 * 24 * 3_600_000;
+/** The sweep reads one page of saved bodies at most this often, so it never weighs on a step. */
+const SWEEP_EVERY_MS = 3_600_000;
+const SWEEP_PAGE = 64;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 /** A body's id rides every frame for every viewer in range: twelve hex characters (2.8e14) instead of a 36-character uuid. Saved bodies keep the id they were given. */
 const bodyId = (): string => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
@@ -82,6 +89,7 @@ export function restoreWorld(saved: unknown): WorldState {
 type Session = { id: string; token: string };
 const idle: Intent = { up: false, down: false, left: false, right: false };
 const playerKey = (token: string) => `${PLAYER_PREFIX}${token}`;
+const seenKey = (token: string) => `${SEEN_PREFIX}${token}`;
 
 /**
  * What one socket may send: a token bucket, `MESSAGE_BURST` deep, refilled
@@ -119,6 +127,8 @@ export class ReverieWorld {
   private dirty = false; // an action since the last checkpoint: the next checkpoint is owed before any broadcast
   private owed = false; // an action whose forced broadcast rides the next alarm
   private actionAt = -Infinity; // wall clock of the last broadcast an action forced (a join's or a close's does not count)
+  private sweptAt = 0; // wall clock of the last sweep of saved bodies
+  private sweepAfter: string | undefined; // the sweep's cursor: the last saved-body key it read; undefined starts over
 
   constructor(private readonly ctx: DurableObjectState, private readonly env: Env) {
     this.w = emptyWorld();
@@ -148,9 +158,12 @@ export class ReverieWorld {
 
   private async checkpoint(extra: Record<string, unknown> = {}) {
     const records: Record<string, unknown> = { [WORLD_KEY]: serializeWorld(this.w), ...extra };
+    const seen = Date.now();
     for (const session of this.sessions.values()) {
       const player = this.w.players.get(session.id);
-      if (player) records[playerKey(session.token)] = player;
+      if (!player) continue;
+      records[playerKey(session.token)] = player;
+      records[seenKey(session.token)] = seen;
     }
     const began = Date.now();
     await this.ctx.storage.put(records);
@@ -338,12 +351,54 @@ export class ReverieWorld {
     this.slow.forget(session.id);
     this.withBody(session.id, null);
     this.intentAt.delete(session.id);
-    await this.checkpoint(player ? { [playerKey(session.token)]: player } : {});
+    await this.checkpoint(player ? { [playerKey(session.token)]: player, [seenKey(session.token)]: Date.now() } : {});
     this.broadcast(true);
   }
 
   async webSocketError(ws: WebSocket) {
     await this.webSocketClose(ws);
+  }
+
+  /**
+   * Saved bodies outlive their sockets so a guest can come back, and nothing
+   * else ended them: every guest who opened the city once left a record for
+   * good. Once an hour the object reads one page of saved bodies and deletes
+   * the guests that bound no wallet and were not seen for SAVED_TTL_MS, with
+   * their stamps; an Angel's body and a bound wallet's are kept for good, a
+   * live body is never touched, and a record from before the stamps enters
+   * the clock the first time the sweep reads it. The cursor walks the whole
+   * set a page at a time and starts over at the end.
+   */
+  private async sweep(now: number): Promise<void> {
+    const list = (startAfter?: string) => this.ctx.storage.list<Player>({ prefix: PLAYER_PREFIX, limit: SWEEP_PAGE, startAfter });
+    let page = await list(this.sweepAfter);
+    if (page.size === 0 && this.sweepAfter !== undefined) {
+      this.sweepAfter = undefined;
+      page = await list();
+    }
+    if (page.size === 0) return;
+    const live = new Set([...this.sessions.values()].map(s => s.token));
+    const tokens = [...page.keys()].map(key => key.slice(PLAYER_PREFIX.length));
+    const seen = await this.ctx.storage.get<number>(tokens.map(seenKey));
+    const stamps: Record<string, number> = {};
+    const gone: string[] = [];
+    for (const token of tokens) {
+      if (live.has(token)) continue;
+      const at = seen.get(seenKey(token));
+      if (at === undefined) {
+        stamps[seenKey(token)] = now;
+        continue;
+      }
+      const player = page.get(playerKey(token));
+      if (!player?.guest || player.wallet || now - at < SAVED_TTL_MS) continue;
+      gone.push(playerKey(token), seenKey(token));
+    }
+    if (Object.keys(stamps).length) await this.ctx.storage.put(stamps);
+    if (gone.length) {
+      await this.ctx.storage.delete(gone);
+      this.load.swept(gone.length / 2);
+    }
+    this.sweepAfter = [...page.keys()].at(-1);
   }
 
   private async ensureTick() {
@@ -405,6 +460,10 @@ export class ReverieWorld {
     const owed = this.owed;
     if (owed) this.actionAt = now;
     this.broadcast(owed);
+    if (now - this.sweptAt >= SWEEP_EVERY_MS) {
+      this.sweptAt = now;
+      await this.sweep(now);
+    }
     if (this.w.players.size > 0) await this.setAlarm(Math.max(now + STEP_MS, Date.now() + 1));
     else { this.ticking = false; this.clock.stop(); }
   }

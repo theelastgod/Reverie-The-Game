@@ -302,6 +302,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- The sweep of saved guest bodies (2026-09-26, found reading the storage
+  keys): a saved body outlives its socket so a guest can come back, and
+  nothing else ended it, so every guest who opened the city once left a
+  `player:v2:<token>` record for good, a few KB each, with no bound on
+  how many a visitor (or a loop minting sessions) could leave. Now every
+  checkpoint and every close write `seen:v2:<token>` (the wall clock)
+  beside the record, and once an hour the alarm sweeps one page (64) of
+  saved bodies: a live token is skipped, a record from before the stamps
+  is stamped now and enters the clock, and a guest that bound no wallet
+  and was not seen for thirty days is deleted with its stamp. An Angel's
+  body (a serial) and a bound wallet's are never swept: they are the
+  owner's progress. A cursor walks the whole set a page at a time and
+  starts over at the end, so the sweep never weighs on a step; the count
+  is `swept` on `/world`. Wallet challenges need a live body and are one
+  key per session, overwritten on repeat, so they were already bounded.
 - The object's message budget (2026-09-26, found reading the message
   path): every non-intent message cost the object a full checkpoint (a
   storage put of the world and every player) and a forced broadcast to
@@ -726,6 +741,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The sweep of saved guest bodies (2026-09-26): typecheck, 462 tests (a
+  saved body stamped by an action's checkpoint and by its close; at 31
+  days the sweep deletes the stale guest with its stamp and keeps the
+  Angel, the bound wallet, the guest seen a second ago, the live body and
+  the record from before the stamps, which it stamps; no second sweep a
+  step later; 31 days on the cursor wraps and the once-fresh guest and
+  the once-unstamped record go, the Angel, the wallet and the live body
+  stay; `swept` 3 on the report; the report's shape), the build, the
+  session smoke and the Movement I smoke on a fresh world (16.7 min / 8
+  decisions; `/world` after: 1863 alarms, `dropped` 0, `swept` 0), and
+  the render check at `RENDER_MIN_FPS=5` (landing page with 8 log lines,
+  desktop, phone: nothing off the screen).
 - The object's message budget (2026-09-26): typecheck, 460 tests (an
   action at t=1000 checkpointed and broadcast at once, a second at
   t=1005 coalesced, the alarm at 1050 checkpointing first and

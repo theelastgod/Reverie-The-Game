@@ -5,7 +5,7 @@ describe("LoadMeter", () => {
   it("starts empty", () => {
     expect(new LoadMeter().report(0, 0, 0)).toEqual({
       sessions: 0, bodies: 0, lateMs: 0, maxLateMs: 0, catchUp: 0, maxCatchUp: 0, stalls: 0, broadcastChars: 0, charsPerViewer: 0, alarms: 0,
-      checkpointMs: 0, maxCheckpointMs: 0, dropped: 0,
+      checkpointMs: 0, maxCheckpointMs: 0, dropped: 0, swept: 0,
     });
   });
 

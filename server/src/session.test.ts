@@ -18,6 +18,7 @@ afterEach(() => { vi.useRealTimers(); });
 const token = "12345678-1234-4123-8123-123456789abc";
 const otherToken = "22345678-1234-4123-8123-123456789abc";
 const playerKey = (t: string) => `${PLAYER_PREFIX}${t}`;
+const seenKey = (t: string) => `seen:v2:${t}`;
 
 function socket(id = "a", t = token) {
   return { deserializeAttachment: () => ({ id, token: t }), serializeAttachment: vi.fn(), send: vi.fn(), close: vi.fn() };
@@ -45,13 +46,22 @@ async function worldHarness(world: WorldState | null, sockets: Sock[] = [], extr
   if (world) data.set(WORLD_KEY, serializeWorld(world));
   let ready: Promise<unknown>;
   const storage = {
-    get: vi.fn(async (key: string) => structuredClone(data.get(key))),
+    get: vi.fn(async (key: string | string[]) =>
+      Array.isArray(key)
+        ? new Map(key.filter(k => data.has(k)).map(k => [k, structuredClone(data.get(k))]))
+        : structuredClone(data.get(key))),
     put: vi.fn(async (values: Record<string, unknown>) => {
       for (const [key, value] of Object.entries(values)) data.set(key, structuredClone(value));
     }),
     setAlarm: vi.fn(async () => {}),
     getAlarm: vi.fn(async () => data.get("scheduled") ?? null),
-    delete: vi.fn(async (key: string) => data.delete(key)),
+    delete: vi.fn(async (key: string | string[]) => {
+      const keys = Array.isArray(key) ? key : [key];
+      return keys.filter(k => data.delete(k)).length;
+    }),
+    /** Keys in order, as the real storage lists them: a prefix, a page, a cursor. */
+    list: vi.fn(async ({ prefix = "", limit = Infinity, startAfter = "" }: { prefix?: string; limit?: number; startAfter?: string }) =>
+      new Map([...data.keys()].filter(k => k.startsWith(prefix) && k > startAfter).sort().slice(0, limit).map(k => [k, structuredClone(data.get(k))]))),
   };
   const ctx = {
     storage, getWebSockets: () => sockets, waitUntil: vi.fn(), acceptWebSocket: vi.fn(),
@@ -646,6 +656,57 @@ describe("wallet login", () => {
     await world.webSocketMessage(other as never, '{"t":"intent","intent":{"right":true}}');
     body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { dropped: number } };
     expect(body.load.dropped).toBe(81);
+  });
+
+  it("stamps a saved body when an action checkpoints it and when its socket closes", async () => {
+    const ws = socket();
+    const { world, data } = await worldHarness(saved(spawnGuest("a")), [ws]);
+    vi.setSystemTime(1000);
+    await world.webSocketMessage(ws as never, '{"t":"stance"}');
+    expect(data.get(seenKey(token))).toBe(1000);
+    expect(data.get(playerKey(token))).toMatchObject({ id: "a", stance: "storm" });
+    vi.setSystemTime(1500);
+    await world.webSocketClose(ws as never);
+    expect(data.get(seenKey(token))).toBe(1500);
+    expect(data.get(playerKey(token))).toMatchObject({ id: "a" });
+  });
+
+  it("sweeps a guest unseen for thirty days once an hour, a page at a time; keeps the Angel, the bound wallet, the fresh guest and the live body; a record from before the stamps enters the clock", async () => {
+    const DAY = 86_400_000;
+    const ws = socket();
+    const { world, storage, data } = await worldHarness(saved(spawnGuest("a")), [ws], [
+      [playerKey("g1"), spawnGuest("g1")], [seenKey("g1"), 0], // a guest, unseen for 31 days
+      [playerKey("a1"), angel("a1")], [seenKey("a1"), 0], // an Angel's body, as old
+      [playerKey("w1"), { ...spawnGuest("w1"), wallet: "0xabc" }], [seenKey("w1"), 0], // a guest who bound a wallet
+      [playerKey("f1"), spawnGuest("f1")], [seenKey("f1"), 31 * DAY - 1000], // a guest seen a second ago
+      [playerKey("l1"), spawnGuest("l1")], // a record from before the stamps
+    ]);
+    vi.setSystemTime(31 * DAY);
+    await world.webSocketMessage(ws as never, '{"t":"stance"}'); // the live body is saved and stamped by its action
+    await world.alarm();
+    expect(storage.list).toHaveBeenCalledTimes(1);
+    expect(data.has(playerKey("g1")), "the stale guest is gone").toBe(false);
+    expect(data.has(seenKey("g1")), "with its stamp").toBe(false);
+    for (const t of ["a1", "w1", "f1", "l1"]) expect(data.has(playerKey(t)), `${t} is kept`).toBe(true);
+    expect(data.get(seenKey("l1")), "the old record is stamped now").toBe(31 * DAY);
+    expect(data.get(seenKey(token)), "the live body's checkpoint stamped it").toBe(31 * DAY);
+    expect(data.has(playerKey(token))).toBe(true);
+    let body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { swept: number } };
+    expect(body.load.swept).toBe(1);
+    // a step later: no second sweep inside the hour
+    vi.setSystemTime(31 * DAY + 50);
+    await world.alarm();
+    expect(storage.list).toHaveBeenCalledTimes(1);
+    // thirty-one days on: the cursor is past the end, so the sweep starts over, and the once-fresh guest and the
+    // once-unstamped record are stale now; the Angel, the bound wallet and the live body stay
+    vi.setSystemTime(62 * DAY);
+    await world.alarm();
+    expect(data.has(playerKey("f1"))).toBe(false);
+    expect(data.has(playerKey("l1"))).toBe(false);
+    expect(data.has(seenKey("l1"))).toBe(false);
+    for (const t of ["a1", "w1", token]) expect(data.has(playerKey(t)), `${t} is kept`).toBe(true);
+    body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { swept: number } };
+    expect(body.load.swept).toBe(3);
   });
 
   it("routes the wallet endpoints to the city", async () => {
