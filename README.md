@@ -105,9 +105,16 @@ the render check defaults to `http://127.0.0.1:8788/play/`) and need
 
 `npm run deploy` builds the client with `VITE_BASE=/play/`, stages it into
 `site/play/` with a `release.json`, and deploys the Worker named in
-`wrangler.toml`. Sessions use a host-only HttpOnly cookie; a second tab takes
-over the same body. Actions checkpoint before their snapshot is sent; passive
-simulation checkpoints about once per simulation second.
+`wrangler.toml`; `npm run d1:migrate:remote` first applies any pending
+migration to the account's `reverie-log` database (its id is in
+`wrangler.toml`). The same two steps run from GitHub: the **Deploy the city**
+workflow (`.github/workflows/deploy.yml`) is started by hand from the Actions
+tab with the word `deploy` typed in, runs the typecheck and the tests, then the
+migration and the deploy, and needs the repository secrets
+`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Sessions use a host-only
+HttpOnly cookie; a second tab takes over the same body. Actions checkpoint
+before their snapshot is sent; passive simulation checkpoints about once per
+simulation second.
 
 ## Non-negotiables
 

@@ -299,6 +299,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- The deploy's database side, through the Cloudflare connector
+  (2026-09-26, backlog 2): the owner's Cloudflare MCP connector reaches
+  the account from outside the container (`workers_list` shows the
+  Worker `reverie-the-game` last deployed 2026-09-25; no `reverie-log`
+  existed), so the D1 database was created with it, the first migration
+  applied and recorded the way `wrangler d1 migrations apply` records
+  it, and the id replaced the placeholder in `wrangler.toml`. The
+  connector has no way to upload a Worker, so the deploy itself waits
+  (Backlog 2). `.github/workflows/deploy.yml` is the second way: a
+  manual **Deploy the city** workflow (typed `deploy`; refuses without
+  the two secrets; gates, `d1:migrate:remote`, `npm run deploy`).
+  Nothing deploys on a push.
 - The resistance's Clearing on the Grid (2026-09-26, backlog 6's last
   candidate): a `listing` effect (`effects.ts` → `economy.applyListing`)
   lets the city post a listing under its own seller (`CITY_SELLER`, no
@@ -672,11 +684,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the runtime and keeps port 8788; stop the wrangler `node` process by
   its pid (from `ps -eo pid,comm,args`) before starting another.
 - The deploy bundle: `npx wrangler deploy --dry-run` builds it without
-  the API (541 KB, 142 KB gzipped, 92 site files, the five bindings and
-  variables as `wrangler.toml` states them); `npm run d1:migrate` applies
-  the migrations locally with none pending.
-- Not verified: a deploy (the Cloudflare API is denied by the network policy),
-  the Stage B assets (results host denied), rendered play on real hardware.
+  the API (549 KB, 144 KB gzipped, 92 site files, the five bindings and
+  variables as `wrangler.toml` states them, `env.LOG (reverie-log)` on
+  the real id); `npm run d1:migrate` applies the migrations locally with
+  none pending. On the account (2026-09-26, through the connector): the
+  `reverie-log` database answers `SELECT name, type FROM sqlite_master`
+  with `d1_migrations`, `events` and `events_kind_at`, and
+  `d1_migrations` holds `0001_events.sql`. The Deploy workflow's YAML
+  parses; it has not run (the secrets are the owner's to set).
+- Not verified: a deploy (the Cloudflare API is denied by the network
+  policy and the connector cannot upload a Worker), the Stage B assets
+  (results host denied), rendered play on real hardware.
 
 ## Backlog
 
@@ -698,15 +716,27 @@ they are discovered; keep this list honest.
    page), the four trailer clips (79–82) as extra loops, and the 30 s trailer
    (83) on the landing page in `site/`. Remaining Higgsfield budget after the
    music and trailer: about 255 credits, for replacements only.
-2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
-   (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
-   Verified without the API (2026-09-26): `npx wrangler deploy --dry-run
-   --outdir=<tmp>` builds the Worker bundle (541 KB, 142 KB gzipped; 92
-   site files; bindings WORLD, LOG, ASSETS; `MOCK_LINK "0"`, `ANGEL_*`
-   empty) and `npm run d1:migrate` applies the migrations locally with
-   none pending. At deploy: `wrangler d1 create reverie-log`, its id into
-   `wrangler.toml` (the zero id is a placeholder), `npm run
-   d1:migrate:remote`, then `npm run deploy`.
+2. **Deploy: one step left, and two ways to take it.** The database side
+   is done (2026-09-26, through the owner's Cloudflare connector, which
+   reaches the account although `api.cloudflare.com` is denied from the
+   container): the D1 database `reverie-log` exists
+   (`7243c40d-ba27-40cc-bc48-f9a786980442`), `0001_events.sql` is applied
+   and recorded in its `d1_migrations` table, and the id is in
+   `wrangler.toml`. The account's Worker `reverie-the-game` still runs the
+   build deployed on 2026-09-25, before the log, the wallet challenge, the
+   frames and the campaign density work. What remains is the bundle
+   upload, which the connector cannot do and the container's network
+   denies. Either: (a) the owner sets the repository secrets
+   `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (the values in the
+   session scratchpad `cf.env`; never in the repo) and runs the **Deploy
+   the city** workflow from the Actions tab on this branch, typing
+   `deploy`; it runs the gates, `npm run d1:migrate:remote` (none
+   pending) and `npm run deploy`; or (b) the network policy allows
+   `api.cloudflare.com` and the routine runs `npm run deploy` here. The
+   dry run with the real id builds the same bundle (549 KB, 144 KB
+   gzipped; 92 site files; bindings WORLD, LOG, ASSETS; `MOCK_LINK "0"`,
+   `ANGEL_*` empty). After the deploy: `GET /health` → `{ ok: true, v: 3
+   }`, `scripts/smoke-world.mjs <origin>`, then the load knee (Backlog 4).
 3. **Angel holders from the contract.** The chain read is built and tested
    (`server/src/holders.ts`); it waits on the ERC-721 itself. At deploy, set
    `ANGEL_CONTRACT`, `ANGEL_RPC_URL` (an endpoint the Worker may call) and

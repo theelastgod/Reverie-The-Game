@@ -1,0 +1,50 @@
+# Deploys the checked-out branch to the Worker named in wrangler.toml. Run it by
+# hand from the Actions tab (workflow_dispatch) with the word "deploy" typed in;
+# nothing deploys on a push. It needs two repository secrets, set once under
+# Settings → Secrets and variables → Actions: CLOUDFLARE_API_TOKEN (a token with
+# Workers Scripts, Workers KV/Durable Objects and D1 edit rights) and
+# CLOUDFLARE_ACCOUNT_ID. The token never goes into the repository.
+name: Deploy the city
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to deploy this branch to the Worker in wrangler.toml'
+        required: true
+        default: ""
+
+jobs:
+  deploy:
+    if: ${{ github.event.inputs.confirm == 'deploy' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Refuse without the secrets
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be set as repository secrets." >&2
+            exit 1
+          fi
+      - run: npm ci
+      - name: The gates
+        run: |
+          npm run typecheck
+          npm test
+      - name: Apply any pending D1 migration to reverie-log
+        run: npm run d1:migrate:remote
+      - name: Build the client, stage it, deploy the Worker
+        run: npm run deploy
+      - name: The city answers
+        run: |
+          url="https://reverie-the-game.$(npx wrangler whoami 2>/dev/null | grep -oE '[a-z0-9-]+\.workers\.dev' | head -1 || true)"
+          echo "deployed; check $url/health (workers.dev subdomain as wrangler reports it)"

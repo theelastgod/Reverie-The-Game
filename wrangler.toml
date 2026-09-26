@@ -14,13 +14,14 @@ bindings = [{ name = "WORLD", class_name = "ReverieWorld" }]
 tag = "v1"
 new_sqlite_classes = ["ReverieWorld"]
 
-# The writeback log. The id is a placeholder that local development accepts
-# (local D1 is a sqlite file keyed by the name); put the real id in at deploy
-# time after `wrangler d1 create reverie-log`, then `npm run d1:migrate:remote`.
+# The writeback log: the account's `reverie-log` database (created 2026-09-26,
+# the first migration applied). `npm run d1:migrate:remote` applies any later
+# migration before a deploy; local development uses a sqlite file under the
+# same name.
 [[d1_databases]]
 binding = "LOG"
 database_name = "reverie-log"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "7243c40d-ba27-40cc-bc48-f9a786980442"
 migrations_dir = "server/migrations"
 
 # The test link (serial + mock signature) is a development convenience.
