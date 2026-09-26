@@ -123,6 +123,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never leave the table. `npm run d1:migrate` applies the migration locally;
   the deploy needs `wrangler d1 create reverie-log`, its id in
   `wrangler.toml`, and `npm run d1:migrate:remote`.
+- Load meter, load check and the scale design (2026-09-26, backlog 4).
+  `server/src/load.ts` reads what a Worker can read about its own load
+  (the clock is frozen during compute): how late each alarm fires against
+  the step it asked for, catch-up steps, stalls (`SimulationClock.lastCapped`
+  is new), and the last broadcast's size; `/world` reports it as `load`.
+  `scripts/load-check.mjs` (`npm run test:load`) connects N guests over the
+  real socket, walks them through the Nave with strikes, samples the meter
+  and every bot's snapshot cadence, prints `measure:` lines and passes when
+  20 Hz held. `.rebuild/ZONES.md` keeps the numbers (one object holds 20
+  bodies on this container's workerd, the knee is about 40, 80 falls behind),
+  the cost model (viewers × snapshot size × 20 Hz; a lone viewer's snapshot
+  is already ~10 KB because the slow state rides every tick), the snapshot
+  diet that must come first (a 20 Hz fast frame and a 5 Hz-at-most slow
+  frame, protocol v3, merged in the client), the zone design for after it
+  (what is per zone and what is global, the globals frame and the event
+  boundary, the handoff at a gate with close code 4010, the campaign smoke
+  crossing, the migration from one object behind `ZONES=0`), and why
+  instancing is out (the brief says one shard).
 - Generated-asset slots (2026-09-26, Stage B prep): every Stage B file has a
   place, with today's rendering as the fallback, so the pull is a drop-in.
   `src/assets/gen.ts` loads `assets/gen/manifest.json` once before Phaser
@@ -205,7 +223,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
-- `npm test` — 32 files, 423 tests (2026-09-26): map integrity and reachability, identity,
+- `npm test` — 33 files, 427 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
   visibility, content coverage, side quests (all 33 driven end to end, every
   verb through the prompt, who offers what to whom), two full spine
@@ -262,6 +280,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   handshake's client side is tested with fake EIP-6963 wallets; the local
   Worker answers `/wallet/challenge` (409 without a live session). A real
   wallet in a browser is not verified from this container.
+- Load: 3 meter tests (empty, smoothing and the windowed worst that is
+  forgotten, no negative lateness, stalls, the last broadcast per viewer)
+  and a session test reads `/world`'s report after one late alarm. Live,
+  `scripts/load-check.mjs` against the local Worker: 20 bots, 15 s, snapshot
+  interval mean 47–49 ms (p99 75 ms), alarm late mean 5 ms (worst 47 ms),
+  no stalls, 14.3 KB per viewer per broadcast, PASS twice; 40 bots: mean
+  55 ms but the worst alarm 145 ms late, FAIL; 80 bots: mean 128 ms, a
+  stall, FAIL. This container's workerd, one small CPU.
 - Generated-asset slots: 13 tests pin the manifest loader (the URL and
   no-cache request, one load shared, 404 / network / junk / wrong shape as
   empty, unsafe targets dropped) and the pure slot map (who has a portrait,
@@ -319,12 +345,16 @@ they are discovered; keep this list honest.
    Angel active per body stays the rule (`applyLink` already refuses a serial
    that is walking). Not built: reading beyond the first token of a wallet
    that holds several (the first is the one that walks).
-4. **Per-zone Durable Objects** with handoff at gates. The D1 log is in;
-   zones would share it. Design first: which state is per zone (bodies,
-   enemies, nodes, wreckage) and which stays global (houses, clearing,
-   passing, market, news), how a body crosses a gate (a handoff message with
-   the player record, the old zone closing the socket with a code the client
-   follows), and how the campaign smoke would cross.
+4. **The snapshot diet, then zones.** Designed and measured in
+   `.rebuild/ZONES.md`. Next: protocol v3, a 20 Hz fast frame (`you`
+   trimmed, `players`, `enemies`, `prompt`) and a slow frame sent on change
+   and at most at 5 Hz (everything else), merged in `WorldSocket` so the
+   renderers, the HUD and the smokes keep reading one `Snap`; change
+   detection by per-section signature first, per-section version counters
+   second. Prove it with `scripts/load-check.mjs --bots=40` and `--bots=80`
+   (today 40 slips and 80 falls behind on this container). Zone objects with
+   handoff at the gates come after, behind `ZONES=0`, and only when a real
+   population asks; the design is written.
 5. **Opening density.** Measured 2026-09-26 after the Annex Runner courier
    beat (`scripts/smoke-campaign.mjs` prints `measure:` lines; a later fight
    is floored at 25 s of a person's time, the first at 45 s; keep only runs

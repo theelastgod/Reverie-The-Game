@@ -16,6 +16,7 @@ import { CHALLENGE_TTL_MS, challengeMessage, isAddress, normalizeAddress, recove
 import { serialFor, type HolderCache } from "./holders.ts";
 import { logEventsFor, PUBLIC_LOG_KINDS } from "./log.ts";
 import { LogSink } from "./logSink.ts";
+import { LoadMeter } from "./load.ts";
 import { snapshotFor } from "../../src/sim/snapshot.ts";
 import { isClientMsg, PROTOCOL_VERSION } from "../../src/sim/protocol.ts";
 import type { Hello } from "../../src/sim/protocol.ts";
@@ -90,6 +91,8 @@ export class ReverieWorld {
   private ticking = false;
   private clock = new SimulationClock();
   private readonly sink = new LogSink();
+  private readonly load = new LoadMeter();
+  private alarmDue = 0; // when the pending alarm was asked for, to read its lateness
   private logged: WorldState; // the world as of the last log diff
 
   constructor(private readonly ctx: DurableObjectState, private readonly env: Env) {
@@ -197,7 +200,10 @@ export class ReverieWorld {
     const path = new URL(req.url).pathname;
     if (path === "/wallet/challenge" || path === "/wallet/link") return this.wallet(req, path);
     if (req.headers.get("Upgrade") !== "websocket") {
-      return Response.json({ ok: true, v: PROTOCOL_VERSION, players: this.w.players.size });
+      return Response.json(
+        { ok: true, v: PROTOCOL_VERSION, players: this.w.players.size, load: this.load.report(this.sessions.size, this.w.players.size, Date.now()) },
+        { headers: { "Cache-Control": "no-store" } },
+      );
     }
     const token = sessionToken(req);
     if (!token || !sameOrigin(req)) return new Response("Session required", { status: 403 });
@@ -282,16 +288,23 @@ export class ReverieWorld {
     this.ticking = true;
     this.clock.start(Date.now());
     // A hibernated object's constructor must not replace its pending alarm.
-    if (await this.ctx.storage.getAlarm() === null) await this.ctx.storage.setAlarm(Date.now() + STEP_MS);
+    if (await this.ctx.storage.getAlarm() === null) await this.setAlarm(Date.now() + STEP_MS);
   }
 
-  private advanceWorld(now: number) {
+  private async setAlarm(at: number) {
+    this.alarmDue = at;
+    await this.ctx.storage.setAlarm(at);
+  }
+
+  /** Advances by elapsed server time in fixed steps; returns how many it ran. */
+  private advanceWorld(now: number): number {
     for (const id of this.w.players.keys()) {
       if (now - (this.intentAt.get(id) ?? 0) > INTENT_TTL_MS) this.w.intents.set(id, { ...idle });
     }
     // Advance by elapsed server time rather than counting callbacks; keep fixed physics steps.
     const steps = this.clock.advance(now);
     for (let i = 0; i < steps; i++) this.w = tickWorld(this.w, DT);
+    return steps;
   }
 
   async alarm() {
@@ -301,23 +314,30 @@ export class ReverieWorld {
       return;
     }
     const now = Date.now();
-    this.advanceWorld(now);
+    const steps = this.advanceWorld(now);
+    this.load.alarmed(this.alarmDue ? now - this.alarmDue : 0, steps, this.clock.lastCapped, now);
     if (this.w.now - this.checkpointAt >= 1) await this.checkpoint();
     this.broadcast();
-    if (this.w.players.size > 0) await this.ctx.storage.setAlarm(Math.max(now + STEP_MS, Date.now() + 1));
+    if (this.w.players.size > 0) await this.setAlarm(Math.max(now + STEP_MS, Date.now() + 1));
     else { this.ticking = false; this.clock.stop(); }
   }
 
   /** Every viewer gets their own snapshot: Winke, purse, claims and marks are never shared. */
   private broadcast() {
+    let chars = 0;
+    let viewers = 0;
     for (const [ws, session] of this.sessions) {
       try {
         if (!this.w.players.has(session.id)) continue;
-        ws.send(JSON.stringify(snapshotFor(this.w, session.id)));
+        const payload = JSON.stringify(snapshotFor(this.w, session.id));
+        chars += payload.length;
+        viewers++;
+        ws.send(payload);
       } catch {
         this.ctx.waitUntil(this.webSocketClose(ws as WebSocket));
       }
     }
+    this.load.broadcasted(chars, viewers);
   }
 }
 

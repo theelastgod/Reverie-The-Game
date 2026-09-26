@@ -495,6 +495,23 @@ describe("wallet login", () => {
     expect(on.world["w"].players.get(hello2.id)).toMatchObject({ guest: false, serial: TEST_SERIAL });
   });
 
+  it("reports its load on /world: sessions, bodies, alarm lateness, catch-up, the last broadcast", async () => {
+    const { world } = await worldHarness(null);
+    const ws = socket();
+    await world.join(token, ws as never);
+    vi.setSystemTime(120); // the first alarm was due at 50 ms
+    await world.alarm();
+    const res = await world.fetch(new Request(`${ORIGIN}/world`));
+    expect(res.headers.get("Cache-Control")).toBe("no-store");
+    const body = (await res.json()) as { ok: boolean; players: number; load: Record<string, number> };
+    expect(body.ok).toBe(true);
+    expect(body.players).toBe(1);
+    expect(body.load).toMatchObject({ sessions: 1, bodies: 1, alarms: 1, stalls: 0, catchUp: 2, maxCatchUp: 2 });
+    expect(body.load.lateMs).toBe(70);
+    expect(body.load.broadcastChars).toBeGreaterThan(100);
+    expect(body.load.charsPerViewer).toBe(body.load.broadcastChars);
+  });
+
   it("routes the wallet endpoints to the city", async () => {
     const names: string[] = [];
     const env = {

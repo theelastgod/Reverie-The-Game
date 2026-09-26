@@ -202,6 +202,13 @@ export class LoopSlot { constructor(parent, className, before?); set(target | nu
 export function overlayLoop(root, target, ms = 6000): HTMLVideoElement | null; // a full-screen loop for a moment
 ```
 
+## server/src/load.ts (the object's load meter; `/world` → `load`)
+```ts
+export type LoadReport = { sessions; bodies; lateMs; maxLateMs; catchUp; maxCatchUp; stalls; broadcastChars; charsPerViewer; alarms };
+export class LoadMeter { alarmed(lateMs, steps, capped, at); broadcasted(chars, viewers); report(sessions, bodies, at): LoadReport } // EMA + 10 s windowed max; Workers freeze the clock during compute, so lateness and catch-up are the signal, not step time
+// SimulationClock.lastCapped: true when the last advance dropped time (MAX_CATCHUP_MS). scripts/load-check.mjs reads all of this; .rebuild/ZONES.md keeps the numbers and the scale design.
+```
+
 ## server/src/holders.ts (the Worker only; the client never calls a chain)
 ```ts
 export type HoldersEnv = { ANGEL_HOLDERS?: string; ANGEL_CONTRACT?: string; ANGEL_RPC_URL?: string; ANGEL_TOKEN_OFFSET?: string };

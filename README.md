@@ -83,6 +83,7 @@ npm run build            # typecheck + vite build
 npm run test:smoke       # scripts/smoke-world.mjs: session, hello v2, movement, dodge, reconnect, 4001 takeover
 npm run test:campaign    # scripts/smoke-campaign.mjs: Movement I to the guest lock, link 7777, going under
 npm run test:render      # scripts/render-check.mjs: Chromium screenshots to .rebuild/shots, frame pacing >= 30 fps
+npm run test:load        # scripts/load-check.mjs: 20 bots walk and strike for 20 s; the object must hold 20 Hz (--bots=N to find the knee)
 ```
 
 The three live scripts take an origin argument (default `http://127.0.0.1:8788`;
