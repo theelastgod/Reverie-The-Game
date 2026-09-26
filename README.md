@@ -52,7 +52,8 @@ deploy.
   Storage keys `world:v2` and `player:v2:<token>`; the object is `city-v2`.
 - `src/` (client) — Phaser 3 + Vite + TypeScript, DOM HUD over the canvas. Sends
   intents, renders snapshots.
-- `site/` — the landing page; `site/play/` is the built client (git-ignored).
+- `site/` — the landing page (its `log.js` shows the city's last news lines
+  from `/log/recent`); `site/play/` is the built client (git-ignored).
 - `scripts/` — live checks against a running server.
 
 ## Local run

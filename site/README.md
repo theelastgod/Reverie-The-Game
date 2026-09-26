@@ -1,3 +1,3 @@
 # site/
 
-The landing page for Reverie: The Game (`index.html`, `style.css`, `assets/`), served as the Worker's static assets from `wrangler.toml`. `npm run deploy` builds the client into `site/play/` (git-ignored) and deploys the Worker; `/play/` is the game, `/health` reports the protocol version, `/session` and `/ws` are the server. Nothing but the game is mentioned here.
+The landing page for Reverie: The Game (`index.html`, `style.css`, `assets/`, and `log.js`, which reads the city's public log at `/log/recent?kind=news` into the page's "The city's log" band and leaves the band hidden while there is nothing to show), served as the Worker's static assets from `wrangler.toml`. `npm run deploy` builds the client into `site/play/` (git-ignored) and deploys the Worker; `/play/` is the game, `/health` reports the protocol version, `/session` and `/ws` are the server. Nothing but the game is mentioned here.

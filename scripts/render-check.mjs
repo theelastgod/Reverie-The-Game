@@ -38,6 +38,22 @@ try {
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+
+  // The landing page first, and the city's log on it: when the log route has lines, the band must show them.
+  const root = origin.replace(/play\/?$/, '');
+  if (root !== origin) {
+    await page.goto(root, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForFunction(() => document.getElementById('city-log-band')?.dataset.state === 'done', null, { timeout: 15000 })
+      .catch(() => failures.push('the landing page never finished reading the city log'));
+    const shown = await page.locator('#city-log li').count();
+    const route = await fetch(`${root}log/recent?kind=news&limit=8`).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    const written = route?.ok ? route.events.length : 0;
+    await page.screenshot({ path: join(shots, '00-landing.png'), fullPage: true });
+    console.log(`landing: ${shown} log line(s) shown; the route has ${route ? written : 'no answer'}`);
+    if (written > 0 && shown === 0) failures.push('the city log has lines but the landing page shows none');
+    if (written === 0 && shown > 0) failures.push('the landing page shows log lines the route does not have');
+  }
+
   await page.goto(origin, { waitUntil: 'load', timeout: 30000 });
   await page.waitForSelector('#title', { timeout: 15000 });
   await page.waitForTimeout(800);
@@ -99,4 +115,4 @@ try {
   clearTimeout(deadline);
 }
 if (failures.length) { console.error(`FAIL: ${failures.join('; ')}`); process.exit(1); }
-console.log(`PASS: title, Nave + HUD, dialogue shot, frame pacing >= ${MIN_FPS} fps (screenshots in ${shots})`);
+console.log(`PASS: landing page and its log, title, Nave + HUD, dialogue shot, frame pacing >= ${MIN_FPS} fps (screenshots in ${shots})`);

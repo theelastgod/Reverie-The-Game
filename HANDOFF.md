@@ -299,6 +299,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- The city's log on the landing page (2026-09-26): `site/log.js` reads
+  the public writeback route (`GET /log/recent?kind=news&limit=8`) into a
+  band on `site/index.html` ("The city's log": the last news lines, each
+  with how long ago), as text only; the band stays hidden while the
+  route answers nothing (a city without the log binding, or nothing
+  written yet), so the page is unchanged until the city has written. Pure
+  functions (`ago`, `logLines`) and the mount are tested from
+  `server/src/siteLog.test.ts` with a fake document and fetch;
+  `scripts/render-check.mjs` now opens the landing page first, waits for
+  the band to finish, screenshots it (`00-landing.png`) and fails when
+  the route has lines the page does not show, or the page shows lines the
+  route does not have.
 - Review fixes on the last three changes (2026-09-26, a code review of
   `2e6c233..343b351`, ten findings, all taken): the notices leave the
   wire's `you` altogether (`YOU_OFF_WIRE` in `frames.ts`; `Snap.notices`
@@ -672,6 +684,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The city's log on the landing page (2026-09-26): typecheck, 458 tests
+  (the wording of "ago", the lines kept and left out, the mount with a
+  fake document and fetch: shown as text, hidden on a 404, on nothing
+  written and on a fetch that throws, and a page without the band left
+  alone), the build, the content lint over `site/`, and the render check
+  with its new first step: the landing page shows the two news lines the
+  local log holds (`00-landing.png`, the band under the controls), then
+  the play client as before at `RENDER_MIN_FPS=5`.
 - The review fixes (2026-09-26, last): typecheck, 455 tests (youDue on a
   record field, a dialogue closed by the tick, never on motion, notices
   or the kit's readout, fresh per viewer and after forget; the notices

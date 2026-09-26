@@ -64,6 +64,11 @@ h1 { font-family: var(--display); font-size: clamp(3.5rem, 10vw, 7.5rem); line-h
 .rules { background: var(--lavender); }
 .rules-list { max-width: 52rem; margin: 0; padding-left: 1.4rem; line-height: 1.6; font-weight: 500; }
 .rules-list li { margin-bottom: 0.7rem; }
+.city-log { list-style: none; margin: 0; padding: 0; border: 3px solid var(--ink); max-width: 52rem; }
+.city-log li { display: grid; grid-template-columns: 8.5rem 1fr; gap: 1rem; padding: 0.7rem 0.9rem; border-bottom: 2px solid var(--ink); font-weight: 500; line-height: 1.5; }
+.city-log li:last-child { border-bottom: 0; }
+.city-log .when { color: var(--muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding-top: 0.2rem; }
+#city-log-band[hidden] { display: none; }
 .foot { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; font-family: var(--display); letter-spacing: 0.04em; background: var(--paper); }
 .foot a { color: var(--hot); text-decoration: none; }
 @media (max-width: 800px) {
