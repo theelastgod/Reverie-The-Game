@@ -47,9 +47,19 @@ const INTENT_TTL_MS = 1000;
 const SEEN_PREFIX = "seen:v2:";
 /** A saved guest body that bound no wallet and was not seen this long is swept; an Angel's body and a bound wallet's are kept for good. */
 const SAVED_TTL_MS = 30 * 24 * 3_600_000;
-/** The sweep reads one page of saved bodies at most this often, so it never weighs on a step. */
+/** The sweep reads one page of saved bodies at most this often, after the next step is armed, so it never weighs on a step. */
 const SWEEP_EVERY_MS = 3_600_000;
-const SWEEP_PAGE = 64;
+const SWEEP_PAGE = 64; // bodies per page: with their stamps, 128 keys per delete at most
+/** The sweep's clock and cursor outlive the instance: `sweep:v2` → { at, after? }. A new city waits an hour before its first. */
+const SWEEP_KEY = "sweep:v2";
+/**
+ * Joins are budgeted for the whole object: each costs a checkpoint, a forced
+ * broadcast to every viewer and a hello, and a session cookie is minted for
+ * free, so a bucket per socket alone would be bypassed by reconnecting.
+ * Past the bucket the upgrade is refused with 429 and counted.
+ */
+const JOINS_PER_SECOND = 10;
+const JOIN_BURST = 30;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 /** A body's id rides every frame for every viewer in range: twelve hex characters (2.8e14) instead of a 36-character uuid. Saved bodies keep the id they were given. */
 const bodyId = (): string => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
@@ -107,6 +117,14 @@ const MESSAGES_PER_SECOND = 60;
 const MESSAGE_BURST = 120;
 const ACTION_BROADCAST_MIN_MS = 20;
 type Budget = { tokens: number; at: number };
+/** Refill `budget` to `now` at `rate` a second, up to `burst`, and take one token; false when it has none. */
+function draw(budget: Budget, burst: number, rate: number, now: number): boolean {
+  budget.tokens = Math.min(burst, budget.tokens + Math.max(0, now - budget.at) / 1000 * rate);
+  budget.at = now;
+  if (budget.tokens < 1) return false;
+  budget.tokens -= 1;
+  return true;
+}
 
 /** A WebSocket as this object uses it; narrow so tests can hand in doubles. */
 type Socket = Pick<WebSocket, "send" | "close" | "serializeAttachment" | "deserializeAttachment">;
@@ -124,10 +142,11 @@ export class ReverieWorld {
   private alarmDue = 0; // when the pending alarm was asked for, to read its lateness
   private logged: WorldState; // the world as of the last log diff
   private readonly budgets = new Map<Socket, Budget>(); // what each socket may still send
-  private dirty = false; // an action since the last checkpoint: the next checkpoint is owed before any broadcast
-  private owed = false; // an action whose forced broadcast rides the next alarm
+  private readonly joins: Budget = { tokens: JOIN_BURST, at: 0 }; // what the object still admits in joins
+  private pending = false; // an action since the last broadcast: the next alarm checkpoints first, then broadcasts forced
   private actionAt = -Infinity; // wall clock of the last broadcast an action forced (a join's or a close's does not count)
-  private sweptAt = 0; // wall clock of the last sweep of saved bodies
+  private readonly stamped = new Set<string>(); // tokens whose seen stamp this instance wrote; the close writes it again
+  private sweptAt = 0; // wall clock of the last sweep of saved bodies (from storage; a new city waits an hour)
   private sweepAfter: string | undefined; // the sweep's cursor: the last saved-body key it read; undefined starts over
 
   constructor(private readonly ctx: DurableObjectState, private readonly env: Env) {
@@ -137,6 +156,9 @@ export class ReverieWorld {
       const saved = await this.ctx.storage.get<SavedWorld>(WORLD_KEY);
       this.w = restoreWorld(saved);
       this.logged = this.w;
+      const sweep = await this.ctx.storage.get<{ at: number; after?: string }>(SWEEP_KEY);
+      this.sweptAt = sweep?.at ?? Date.now();
+      this.sweepAfter = sweep?.after;
       const connected = new Set<string>();
       const intents = new Map(this.w.intents);
       for (const ws of this.ctx.getWebSockets()) {
@@ -163,13 +185,15 @@ export class ReverieWorld {
       const player = this.w.players.get(session.id);
       if (!player) continue;
       records[playerKey(session.token)] = player;
-      records[seenKey(session.token)] = seen;
+      if (!this.stamped.has(session.token)) { // the stamp needs no better than the session: once here, again at the close
+        records[seenKey(session.token)] = seen;
+        this.stamped.add(session.token);
+      }
     }
     const began = Date.now();
     await this.ctx.storage.put(records);
     this.load.checkpointed(Date.now() - began, Date.now());
     this.checkpointAt = this.w.now;
-    this.dirty = false;
     // The log reads the difference since the last checkpoint, never per tick; a flush never holds the tick.
     const events = logEventsFor(this.logged, this.w, Date.now());
     this.logged = this.w;
@@ -257,7 +281,8 @@ export class ReverieWorld {
     if (!token || !sameOrigin(req)) return new Response("Session required", { status: 403 });
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
-    await this.join(token, server);
+    const hello = await this.join(token, server);
+    if (!hello) return new Response("Too many joins; try again in a moment", { status: 429, headers: { "Retry-After": "1" } });
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -265,13 +290,15 @@ export class ReverieWorld {
    * Bind a browser session to a body. One active body per session cookie:
    * a newer socket takes over and the older one is closed with 4001.
    */
-  async join(token: string, server: Socket): Promise<Hello> {
+  async join(token: string, server: Socket): Promise<Hello | null> {
+    if (!this.admitJoin(Date.now())) return null;
     return this.ctx.blockConcurrencyWhile(async () => {
       const saved = await this.ctx.storage.get<Player>(playerKey(token));
       const active = [...this.sessions.entries()].find(([, session]) => session.token === token);
       const player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(bodyId(), this.w.now);
       if (active) {
         this.sessions.delete(active[0]);
+        this.budgets.delete(active[0]);
         this.slow.forget(active[1].id); // the new socket starts with a full slow frame
         try { active[0].close(4001, "This Angel is active in another tab"); } catch { /* already gone */ }
       }
@@ -297,21 +324,27 @@ export class ReverieWorld {
       budget = { tokens: MESSAGE_BURST, at: now };
       this.budgets.set(ws, budget);
     }
-    budget.tokens = Math.min(MESSAGE_BURST, budget.tokens + Math.max(0, now - budget.at) / 1000 * MESSAGES_PER_SECOND);
-    budget.at = now;
-    if (budget.tokens < 1) {
-      this.load.dropped();
-      return false;
-    }
-    budget.tokens -= 1;
-    return true;
+    if (draw(budget, MESSAGE_BURST, MESSAGES_PER_SECOND, now)) return true;
+    this.load.dropped();
+    return false;
+  }
+
+  /** True when the object's join bucket has a token; past it the join is refused and counted. */
+  private admitJoin(now: number): boolean {
+    if (draw(this.joins, JOIN_BURST, JOINS_PER_SECOND, now)) return true;
+    this.load.refused();
+    return false;
   }
 
   async webSocketMessage(ws: WebSocket, msg: string | ArrayBuffer) {
     const id = this.sessions.get(ws)?.id;
-    if (!id || typeof msg !== "string" || msg.length > MAX_MESSAGE) return;
+    if (!id) return;
     const now = Date.now();
     if (!this.admit(ws, now)) return;
+    if (typeof msg !== "string" || msg.length > MAX_MESSAGE) { // oversize: its token spent, dropped unread and counted
+      this.load.dropped();
+      return;
+    }
     let data: unknown;
     try {
       data = JSON.parse(msg);
@@ -332,8 +365,7 @@ export class ReverieWorld {
     if (this.w === before) return; // a message that changed nothing (a strike on cooldown, a refused packet) costs nothing more
     // An action is checkpointed before its snapshot is sent. The checkpoint and the forced broadcast are the dear part
     // of a message, so a second action inside ACTION_BROADCAST_MIN_MS of the last one's rides the next alarm instead.
-    this.dirty = true;
-    this.owed = true;
+    this.pending = true;
     if (now - this.actionAt < ACTION_BROADCAST_MIN_MS) return;
     this.actionAt = now;
     await this.checkpoint();
@@ -343,11 +375,12 @@ export class ReverieWorld {
   async webSocketClose(ws: WebSocket, code = 1000, reason = "") {
     // Complete the close handshake, including replaced sockets.
     try { ws.close(code === 1005 || code === 1006 ? 1000 : code, reason); } catch { /* already closed */ }
+    this.budgets.delete(ws); // a replaced socket's too
     const session = this.sessions.get(ws);
     if (!session) return;
     const player = this.w.players.get(session.id);
     this.sessions.delete(ws);
-    this.budgets.delete(ws);
+    this.stamped.delete(session.token);
     this.slow.forget(session.id);
     this.withBody(session.id, null);
     this.intentAt.delete(session.id);
@@ -376,7 +409,10 @@ export class ReverieWorld {
       this.sweepAfter = undefined;
       page = await list();
     }
-    if (page.size === 0) return;
+    if (page.size === 0) {
+      await this.rememberSweep(now);
+      return;
+    }
     const live = new Set([...this.sessions.values()].map(s => s.token));
     const tokens = [...page.keys()].map(key => key.slice(PLAYER_PREFIX.length));
     const seen = await this.ctx.storage.get<number>(tokens.map(seenKey));
@@ -399,6 +435,12 @@ export class ReverieWorld {
       this.load.swept(gone.length / 2);
     }
     this.sweepAfter = [...page.keys()].at(-1);
+    await this.rememberSweep(now);
+  }
+
+  /** The sweep's clock and cursor, kept across instances: an evicted object picks up the page after the last one read. */
+  private rememberSweep(at: number): Promise<void> {
+    return this.ctx.storage.put({ [SWEEP_KEY]: { at, ...(this.sweepAfter !== undefined ? { after: this.sweepAfter } : {}) } });
   }
 
   private async ensureTick() {
@@ -456,16 +498,21 @@ export class ReverieWorld {
     const steps = this.advanceWorld(now);
     this.load.alarmed(this.alarmDue ? now - this.alarmDue : 0, steps, this.clock.lastCapped, now);
     // Passive simulation checkpoints about once a simulation second; an action that rode this alarm is checkpointed first.
-    if (this.dirty || this.w.now - this.checkpointAt >= 1) await this.checkpoint();
-    const owed = this.owed;
+    const owed = this.pending;
+    if (owed || this.w.now - this.checkpointAt >= 1) await this.checkpoint();
     if (owed) this.actionAt = now;
     this.broadcast(owed);
-    if (now - this.sweptAt >= SWEEP_EVERY_MS) {
-      this.sweptAt = now;
-      await this.sweep(now);
-    }
     if (this.w.players.size > 0) await this.setAlarm(Math.max(now + STEP_MS, Date.now() + 1));
     else { this.ticking = false; this.clock.stop(); }
+    // Housekeeping after the next step is armed: the tick never waits on it and never dies with it.
+    if (now - this.sweptAt >= SWEEP_EVERY_MS) {
+      this.sweptAt = now;
+      try {
+        await this.sweep(now);
+      } catch (e) {
+        console.warn("sweep failed", e);
+      }
+    }
   }
 
   /**
@@ -480,7 +527,7 @@ export class ReverieWorld {
   private broadcast(force = false) {
     let chars = 0;
     let viewers = 0;
-    this.owed = false;
+    this.pending = false;
     const slowDue = force || this.w.tick % SLOW_EVERY_TICKS === 0;
     const step = stepViews(this.w); // the views and encodings every viewer of this step shares
     for (const [ws, session] of this.sessions) {

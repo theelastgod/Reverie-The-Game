@@ -33,6 +33,8 @@ export type LoadReport = {
   dropped: number;
   /** Saved guest bodies the hourly sweep deleted since the meter began (unseen for thirty days, no wallet bound). */
   swept: number;
+  /** Joins refused with 429 since the meter began because the object's join bucket was empty. */
+  refused: number;
 };
 
 type Sample = { at: number; v: number };
@@ -72,6 +74,7 @@ export class LoadMeter {
   private count = 0;
   private droppedCount = 0;
   private sweptCount = 0;
+  private refusedCount = 0;
 
   /** A socket sent past its budget: one message dropped unread. */
   dropped(): void {
@@ -81,6 +84,11 @@ export class LoadMeter {
   /** The sweep deleted `n` saved guest bodies. */
   swept(n: number): void {
     this.sweptCount += n;
+  }
+
+  /** A join was refused: the object's join bucket was empty. */
+  refused(): void {
+    this.refusedCount++;
   }
 
   /** An alarm fired `lateMs` after it was due and ran `steps` steps; `capped` when the clock dropped time to stay bounded. */
@@ -119,6 +127,7 @@ export class LoadMeter {
       maxCheckpointMs: r(this.checkpoint.max(at)),
       dropped: this.droppedCount,
       swept: this.sweptCount,
+      refused: this.refusedCount,
     };
   }
 }

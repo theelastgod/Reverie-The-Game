@@ -120,8 +120,11 @@ HttpOnly cookie; a second tab takes over the same body. Actions checkpoint
 before their snapshot is sent, at most once per 20 ms for the object (a second
 action inside that window rides the next alarm, which checkpoints first);
 passive simulation checkpoints about once per simulation second. Each socket
-may send 60 messages a second with a burst of 120; past that a message is
-dropped unread and counted as `dropped` on `/world`.
+may send 60 messages a second with a burst of 120; past that, or over 4096
+characters, a message is dropped unread and counted as `dropped` on `/world`.
+Joins are budgeted for the whole city, 10 a second with a burst of 30; past
+that the upgrade answers 429 (counted as `refused`) and the client retries on
+its backoff.
 
 ## Non-negotiables
 

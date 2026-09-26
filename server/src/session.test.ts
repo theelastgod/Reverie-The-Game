@@ -665,10 +665,61 @@ describe("wallet login", () => {
     await world.webSocketMessage(ws as never, '{"t":"stance"}');
     expect(data.get(seenKey(token))).toBe(1000);
     expect(data.get(playerKey(token))).toMatchObject({ id: "a", stance: "storm" });
+    vi.setSystemTime(1200);
+    await world.webSocketMessage(ws as never, '{"t":"stance"}');
+    expect(data.get(seenKey(token)), "once per session: the second checkpoint writes no stamp").toBe(1000);
+    expect(data.get(playerKey(token))).toMatchObject({ stance: "restraint" });
     vi.setSystemTime(1500);
     await world.webSocketClose(ws as never);
     expect(data.get(seenKey(token))).toBe(1500);
     expect(data.get(playerKey(token))).toMatchObject({ id: "a" });
+  });
+
+  it("refuses a join past the object's bucket with 429 and counts it; the bucket refills; an oversize message is dropped and counted", async () => {
+    const ws = socket();
+    const { world, ctx } = await worldHarness(saved(spawnGuest("a")), [ws]);
+    vi.setSystemTime(1000);
+    for (let i = 0; i < 30; i++) expect(await world.join(`t${i}`, socket(`b${i}`, `t${i}`) as never), `join ${i}`).not.toBeNull();
+    expect(await world.join("t30", socket("b30", "t30") as never), "the 31st join").toBeNull();
+    let body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { refused: number; dropped: number; sessions: number } };
+    expect(body.load.refused).toBe(1);
+    expect(body.load.sessions).toBe(31);
+    // the upgrade answers 429 when the join is refused (the pair the runtime makes is a double here)
+    const g = globalThis as { WebSocketPair?: unknown };
+    g.WebSocketPair = class { 0 = socket("c", token); 1 = socket("s", token); };
+    try {
+      const upgrade = await world.fetch(new Request(`${ORIGIN}/ws`, { headers: { Upgrade: "websocket", Origin: ORIGIN, Cookie: `reverie_session=${token}` } }));
+      expect(upgrade.status).toBe(429);
+      expect(upgrade.headers.get("Retry-After")).toBe("1");
+    } finally {
+      delete g.WebSocketPair;
+    }
+    expect(ctx.acceptWebSocket).toHaveBeenCalledTimes(30);
+    // a tenth of a second later one token is back
+    vi.setSystemTime(1100);
+    expect(await world.join("t31", socket("b31", "t31") as never)).not.toBeNull();
+    // an oversize message spends its token, is dropped unread and counted
+    await world.webSocketMessage(ws as never, `{"t":"stance","pad":"${"x".repeat(5000)}"}`);
+    body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { refused: number; dropped: number; sessions: number } };
+    expect(body.load.dropped).toBe(1);
+    expect(last(ws).you.stance).toBe("restraint");
+  });
+
+  it("a sweep that throws leaves the tick armed and is tried again an hour later", async () => {
+    const DAY = 86_400_000;
+    const ws = socket();
+    const { world, storage, data } = await worldHarness(saved(spawnGuest("a")), [ws], [[playerKey("g1"), spawnGuest("g1")], [seenKey("g1"), 0]]);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    storage.list.mockRejectedValueOnce(new Error("storage down"));
+    vi.setSystemTime(31 * DAY);
+    await expect(world.alarm()).resolves.toBeUndefined();
+    expect(storage.setAlarm).toHaveBeenCalled();
+    expect(data.has(playerKey("g1")), "nothing swept").toBe(true);
+    expect(warn).toHaveBeenCalledTimes(1);
+    vi.setSystemTime(31 * DAY + 3_600_000);
+    await world.alarm();
+    expect(data.has(playerKey("g1")), "swept an hour later").toBe(false);
+    warn.mockRestore();
   });
 
   it("sweeps a guest unseen for thirty days once an hour, a page at a time; keeps the Angel, the bound wallet, the fresh guest and the live body; a record from before the stamps enters the clock", async () => {
@@ -681,10 +732,24 @@ describe("wallet login", () => {
       [playerKey("f1"), spawnGuest("f1")], [seenKey("f1"), 31 * DAY - 1000], // a guest seen a second ago
       [playerKey("l1"), spawnGuest("l1")], // a record from before the stamps
     ]);
+    // a new city waits an hour before its first sweep: the first tick carries none
+    vi.setSystemTime(50);
+    await world.alarm();
+    expect(storage.list).not.toHaveBeenCalled();
     vi.setSystemTime(31 * DAY);
     await world.webSocketMessage(ws as never, '{"t":"stance"}'); // the live body is saved and stamped by its action
     await world.alarm();
     expect(storage.list).toHaveBeenCalledTimes(1);
+    expect(data.get("sweep:v2"), "the clock and the cursor are kept in storage").toEqual({ at: 31 * DAY, after: playerKey("w1") });
+    // a new instance over the same storage picks the clock and the cursor up: no sweep inside the hour, then the page after the cursor
+    const again = await worldHarness(null, [socket()], [...data.entries()].filter(([k]) => k !== WORLD_KEY).concat([[WORLD_KEY, data.get(WORLD_KEY)]]));
+    vi.setSystemTime(31 * DAY + 100);
+    await again.world.alarm();
+    expect(again.storage.list).not.toHaveBeenCalled();
+    vi.setSystemTime(31 * DAY + 3_600_000);
+    await again.world.alarm();
+    expect(again.storage.list.mock.calls[0][0]).toMatchObject({ startAfter: playerKey("w1") });
+    expect(again.storage.list.mock.calls[1][0], "past the end: the page from the top").toMatchObject({ startAfter: undefined });
     expect(data.has(playerKey("g1")), "the stale guest is gone").toBe(false);
     expect(data.has(seenKey("g1")), "with its stamp").toBe(false);
     for (const t of ["a1", "w1", "f1", "l1"]) expect(data.has(playerKey(t)), `${t} is kept`).toBe(true);

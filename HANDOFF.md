@@ -302,6 +302,44 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- Review fixes on the budget and the sweep (2026-09-26, a code review of
+  `8f2ccb8..3305f22`, nine findings, all taken): joins are budgeted for
+  the whole object (30 deep, 10 a second, `draw()` shared with the
+  socket buckets), since a session cookie is minted for free and a
+  reconnect loop would have bypassed the per-socket bucket while each
+  join cost a checkpoint, a forced broadcast and a hello; past it `join`
+  returns null, the upgrade answers 429 with `Retry-After: 1` (the client
+  already backs off 1–10 s), and `/world` counts `refused`. An oversize
+  message spends its token and is counted as dropped (it was neither). A
+  socket replaced by a newer tab drops its bucket (it leaked). The seen
+  stamp is written by a session's first checkpoint in an instance and by
+  the close, not by every checkpoint (that doubled the keys in the hot
+  put for a value read thirty days later). The sweep's clock and cursor
+  live in `sweep:v2` so an evicted instance carries on from the page
+  after the one it read (in memory, every visit restarted at page one
+  and pages past the first were never reached); a new city waits an
+  hour before its first sweep instead of sweeping on its first tick; the
+  sweep runs after the next alarm is armed and inside a try, so a storage
+  error in it can no longer leave the tick dead with `ticking` set.
+  `dirty` and `owed` were one bit: `pending`, read once at the top of
+  the alarm and cleared by any broadcast. The put and delete key limits
+  the review raised do not apply: the object is SQLite-backed
+  (`new_sqlite_classes` in `wrangler.toml`), which the review confirmed
+  against a probe Worker; `SWEEP_PAGE` carries the note. Also settled:
+  the render check's three page errors are the container's proxy
+  certificate on Google Fonts (twice) and the manifest gate's 404 on
+  `assets/gen/manifest.json`, absent by design until Stage B lands; both
+  pages declare their icon, so no favicon request is made. And the
+  campaign smoke's Desk Three fight recovers from a fall: the bot enters
+  it worn by the intake (about 44 hp against a desk that hits for 14),
+  and twice in a row this evening it fell, respawned at the spawn, and
+  the hunt's straight walk at the desk stuck on the pillar at (9,38)
+  while the desk waited at its leash (the diagnostics read "bot at
+  423,1881 hp 100, desk aggro hp 22 at 828,1880"; the third run on the
+  same code passed, and a `TRACE_HUNT=1` trace shows the fight second
+  by second). The smoke now notices a fall or a body far from the desk,
+  waits for the respawn, walks the lanes back (5,36 → 11,36 → the desk
+  lane) and hunts again; the desk keeps the damage it took.
 - The sweep of saved guest bodies (2026-09-26, found reading the storage
   keys): a saved body outlives its socket so a guest can come back, and
   nothing else ended it, so every guest who opened the city once left a
@@ -741,6 +779,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The review fixes on the budget and the sweep (2026-09-26, last):
+  typecheck, 464 tests (thirty joins in one instant admitted and the
+  thirty-first refused, the upgrade answering 429 with `Retry-After`,
+  `refused` 1 on the report, a token back a tenth of a second later; an
+  oversize message dropped and counted; the stamp written by a session's
+  first checkpoint and not its second, then by the close; a new city's
+  first tick carrying no sweep, `sweep:v2` holding the clock and the
+  cursor after one, a second instance over the same storage sweeping
+  nothing inside the hour and then the page after the cursor, wrapping
+  past the end; a sweep whose list throws leaving the alarm armed and
+  the record in place, swept an hour later; the report's shape), the
+  build, the session smoke, the Movement I smoke on a fresh world (16.8
+  min / 8 decisions; `/world` after: `dropped` 0, `refused` 0, `swept`
+  0) after the two falls at Desk Three described in Done, and the render
+  check at `RENDER_MIN_FPS=5` (desktop and phone).
 - The sweep of saved guest bodies (2026-09-26): typecheck, 462 tests (a
   saved body stamped by an action's checkpoint and by its close; at 31
   days the sweep deletes the stale guest with its stamp and keeps the

@@ -262,6 +262,7 @@ async function hunt(state, enemyId, target, done, label, ms = 20000) {
     // Keep walking at it even in reach: a courier keeps walking too, and the strike lands only in front.
     send(state, { t: 'intent', intent: { right: p.x < goal.x - 5, left: p.x > goal.x + 5, down: p.y < goal.y - 5, up: p.y > goal.y + 5 } });
     const close = e && dist(p, e) < 50;
+    if (process.env.TRACE_HUNT && Math.round(Date.now() / 100) % 5 === 0) console.log(`trace ${label}: me ${Math.round(p.x)},${Math.round(p.y)} hp ${p.hp} dead ${p.dead} respawn ${JSON.stringify(p.respawn ?? null)} | ${e ? `${e.state} hp ${e.hp} at ${Math.round(e.x)},${Math.round(e.y)}` : 'no enemy'} | close ${!!close}`);
     if (close && !strikes) { send(state, { t: 'strike' }); strikes = setInterval(() => send(state, { t: 'strike' }), 450); }
     if (!close && strikes) { clearInterval(strikes); strikes = null; }
   }, 100);
@@ -408,7 +409,17 @@ try {
   await settle(me, () => me.snap.enemies.some(e => e.id === 'desk-three' && e.state !== 'dead'), 'desk three staffed', 50000);
   // Walk at the clerk and strike in reach, as at intake: from the lane's end the desk is a tile away on the diagonal, past
   // a strike's reach, and a clerk that does not come to the body (a load run, a fall and a wake elsewhere) was never struck.
-  const fell2 = await hunt(me, 'desk-three', T.deskThree, () => !!you(me).flags['desk-three'], 'desk three falls', 25000);
+  const deskFell = () => !!you(me).flags['desk-three'];
+  let fell2 = await hunt(me, 'desk-three', T.deskThree, deskFell, 'desk three falls', 25000);
+  // The fight is marginal for a bot worn by the intake (about 44 hp against a desk that hits for 14): a fall respawns it at
+  // the spawn, from where a straight walk at the desk sticks on the pillar at (9,38) while the desk waits at its leash.
+  // A person would walk back; so does the bot, along the lanes, and the desk keeps the damage it took.
+  if (!fell2 && (you(me).dead || dist(you(me), T.deskThree) > 300)) {
+    console.log(`note: the bot fell at desk three (now at ${Math.round(you(me).x)},${Math.round(you(me).y)}); walking the lanes back`);
+    await settle(me, () => !you(me).dead, 'respawned', 20000);
+    await walk(me, [at(5, 36), at(11, 36), ...ROUTE.toDeskThree]);
+    fell2 = await hunt(me, 'desk-three', T.deskThree, deskFell, 'desk three falls, second try', 25000);
+  }
   if (!fell2) {
     const p = you(me);
     const desk = (me.snap.enemies ?? []).find(e => e.id === 'desk-three');
