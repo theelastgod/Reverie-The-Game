@@ -47,12 +47,12 @@ const FIX = vi.hoisted(() => {
 vi.mock("./content", () => FIX);
 vi.mock("./content/lines", () => FIX.LINES);
 
-import { AOI_RADIUS, WRECKAGE_TTL_BONUS } from "./constants";
+import { AOI_RADIUS, DT, WRECKAGE_TTL_BONUS } from "./constants";
 import { NPC_HOMES, POSITIONS } from "./map";
 import type { FailedPassing, HistoryMark, Player, WorldState, Wreckage } from "./types";
-import { emptyWorld, spawnGuest } from "./world";
+import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyTalk } from "./dialogue";
-import { npcView, promptFor, publicPlayer, snapshotFor, visibleWreckage } from "./snapshot";
+import { npcView, promptFor, publicPlayer, snapshotFor, stepViews, visibleWreckage } from "./snapshot";
 
 function add(w: WorldState, p: Player): WorldState {
   const players = new Map(w.players);
@@ -177,6 +177,34 @@ describe("snapshotFor", () => {
     expect(typeof view.yieldHint).toBe("number");
     w = { ...w, now: 40 };
     expect(snapshotFor(w, "a").nodes[0].safe).toBe(false);
+  });
+
+  it("shares what every viewer sees the same, and keeps it while the world section stands", () => {
+    let w = add(emptyWorld(), at(angel("a"), NARA.x, NARA.y));
+    w = add(w, at(angel("b", "sky", 43), NARA.x + 20, NARA.y));
+    w = add(w, at(guest("c"), NARA.x + 40, NARA.y));
+    const step = stepViews(w);
+    const a = snapshotFor(w, "a", step);
+    const b = snapshotFor(w, "b", step);
+    // one object per step for the sections nobody sees differently, and one public shape per body
+    for (const k of ["pois", "market", "news", "clearing", "passing", "frozen", "houses"] as const) expect(a[k], k).toBe(b[k]);
+    expect(a.players.find(p => p.id === "c")).toBe(b.players.find(p => p.id === "c"));
+    expect(a.enemies.length && a.enemies[0]).toBe(b.enemies.length && b.enemies[0]);
+    // a viewer snapshotted without the step still sees the same things, as new objects for the bodies
+    const alone = snapshotFor(w, "a");
+    expect(alone).toEqual(a);
+    expect(alone.players.find(p => p.id === "c")).not.toBe(a.players.find(p => p.id === "c"));
+    // a step that changes none of the world sections keeps their identity
+    const stood = snapshotFor(tickWorld(w, DT), "a");
+    for (const k of ["pois", "market", "news", "clearing", "passing", "frozen", "houses"] as const) expect(stood[k], k).toBe(a[k]);
+    // a change to one section is a new object with the change in it, and the others stand
+    const read = { ...w, pois: { ...w.pois, "safety-plaque": { state: "read", by: "a", at: 1, count: 1 } }, news: [...w.news, { text: "A line.", at: 1 }] };
+    const changed = snapshotFor(read, "a");
+    expect(changed.pois).not.toBe(a.pois);
+    expect(changed.pois.find(p => p.id === "safety-plaque")).toEqual({ id: "safety-plaque", state: "read", count: 1 });
+    expect(changed.news).toEqual(["A line."]);
+    expect(changed.market).toBe(a.market);
+    expect(changed.clearing).toBe(a.clearing);
   });
 
   it("uses the NPC's personal override and reports the objective and prompt", () => {

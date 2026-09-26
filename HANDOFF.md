@@ -173,6 +173,28 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   crosses the Care, Annex and Wet gates on foot and prints a second
   `measure:` block. PASS on the first run. The numbers are in Verified and
   Backlog 5.
+- The step's shared views (2026-09-26, backlog 4): `stepViews(w)` in
+  `snapshot.ts` builds once per broadcast what every viewer sees the same
+  (public shapes, enemy and node views, pois, market, news, clearing,
+  passing, frozen, history by serial) plus a frame cache (`frames.ts`:
+  each body's split and each object's JSON for the step); `snapshotFor(w,
+  id, step)` takes it, `splitSnap`, `SlowTracker.diff` and the new
+  `encodeFast` use it, and the object makes one per broadcast. Sections
+  that read one unchanged world section keep their identity across steps,
+  so the tracker reads "unchanged" off identity without a stringify (no
+  version counters: identity is the version). For that the object now
+  replaces the world's collections on a join or a close (`withBody`)
+  instead of mutating them; a body that joined between two frames was the
+  first thing the new views caught (missing from the others' fast frame,
+  the frame threw and the socket closed), and a server test now joins one
+  between two frames. In one process at 80 viewers a broadcast fell from
+  23.3 ms to 4.8 ms mean (`npm run bench`, `src/sim/broadcast.bench.ts`,
+  4.8× less compute, identical bytes); the local 40-bot check now passes
+  three runs in five (worst alarm 80–131 ms, was 159–220 and failing);
+  the local 80-bot check cannot rank the two through the dev proxy (see
+  `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
+  clerk wherever a load run left it and names the clerk's state when it
+  does not fall.
 - Movement III over the wire (2026-09-26): `scripts/smoke-campaign.mjs
   --movement=3` (`npm run test:campaign:3`, 480 s deadline) goes on through
   the Organs door: studies the Strait, the Foundry and the Cable, hears Ord's
@@ -421,6 +443,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   bound, every unreadable-chain shape (down, RPC error, thrown fetch, junk,
   empty body) as unknown and uncached, and the map-then-chain order. No
   real RPC has been called from this container.
+- The step's shared views: `npm run bench` (one process, 80 walking
+  viewers, 3 s each): viewer-by-viewer 23.3 ms per broadcast mean, p99 37
+  ms; the step's shared views 4.8 ms mean, p99 10.6 ms, one 68 ms outlier;
+  identical bytes. 10 new or changed tests: shared identity across viewers
+  and across an unchanged step, a changed section as a new object, the
+  encoder byte for byte against JSON.stringify with and without the cache,
+  the tracker's identity skip and the once-per-step stringify, and the
+  server joining a body between two frames. Local load check after: 40
+  bots PASS three runs in five (worst alarm 80–131 ms, interval mean
+  55–57 ms; before 159–220 / 58–63, no pass); 80 bots not rankable through
+  the dev proxy (multi-second stalls with `Broken pipe` in the wrangler
+  log, p50 intervals under the step). The session smoke, the Movement I
+  smoke and the render check PASS after the change.
 - `scripts/render-check.mjs` PASS: title, Nave with HUD, dialogue screenshots
   in `.rebuild/shots/`; 14.9 fps under this sandbox's software WebGL
   (SwiftShader), so frame pacing on a GPU-backed laptop is still unmeasured.
@@ -457,18 +492,23 @@ they are discovered; keep this list honest.
    Angel active per body stays the rule (`applyLink` already refuses a serial
    that is walking). Not built: reading beyond the first token of a wallet
    that holds several (the first is the one that walks).
-4. **Past 40 bodies, then zones.** The diet and its second pass are in
-   (protocol v3, short ids, `you` split; see Done): 40 bodies hold on this
-   container with the load-check bots sharing its one CPU, 80 fall behind.
-   What is left before zones, measured with `scripts/load-check.mjs
-   --bots=80`: per-section version counters on the world so the slow check
-   skips the stringify (the slow sections are still stringified per viewer
-   every fifth step); a cheaper `snapshotFor` (the POI list, the NPC views
-   and the history filter are rebuilt per viewer per step and could be built
-   once per step and shared); and a second load run on a machine where the
-   bots do not share the Worker's CPU, to know the real knee. Zone objects
-   with handoff at the gates come after, behind `ZONES=0`, and only when a
-   real population asks; the design is written in `.rebuild/ZONES.md`.
+4. **Past 40 bodies, then zones: the object's side is done; the knee
+   needs another machine.** The diet, its second pass and the step's
+   shared views are in (see Done): one broadcast to 80 viewers costs 4.8
+   ms of compute in one process (`npm run bench`), a fifth of before, and
+   the local 40-bot check passes more often than not. What the local
+   check cannot say is where the knee is now: at 80 bots the bots and the
+   Worker share one CPU and `wrangler dev`'s proxy drops writes
+   (`.rebuild/ZONES.md` has the runs). The next measure is
+   `scripts/load-check.mjs --bots=80` (then 120, 160) against a deployed
+   city from a second machine, once the deploy is possible; only that run
+   decides whether zone objects are needed at all. The per-viewer work
+   that remains is the NPC views (personal overrides and offers, ~10 per
+   viewer per step) and the slow sections a viewer sees differently
+   (npcs, nodes, wreckage, graves, objective, side objectives), still
+   stringified per viewer every fifth step. Zone objects with handoff at
+   the gates stay behind `ZONES=0`, designed in `.rebuild/ZONES.md`, and
+   only when a real population asks.
 5. **Opening density.** Measured 2026-09-26 after the Annex Runner courier
    beat (`scripts/smoke-campaign.mjs` prints `measure:` lines; a later fight
    is floored at 25 s of a person's time, the first at 45 s; keep only runs

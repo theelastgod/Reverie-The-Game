@@ -19,6 +19,7 @@
     "test:campaign:3": "node scripts/smoke-campaign.mjs --movement=3",
     "test:load": "node scripts/load-check.mjs",
     "test:render": "node scripts/render-check.mjs",
+    "bench": "vitest bench --run src/sim/broadcast.bench.ts",
     "d1:migrate": "wrangler d1 migrations apply reverie-log --local",
     "d1:migrate:remote": "wrangler d1 migrations apply reverie-log --remote"
   },

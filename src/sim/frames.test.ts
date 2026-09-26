@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DT } from "./constants";
-import { applySlow, mergeFrames, splitPlayer, splitSnap, SlowTracker, YOU_SLOW_KEYS } from "./frames";
+import { applySlow, encodeFast, mergeFrames, newFrameCache, splitPlayer, splitSnap, SlowTracker, YOU_SLOW_KEYS } from "./frames";
 import { FAST_KEYS, PROTOCOL_VERSION, SLOW_KEYS, type Snap } from "./protocol";
-import { snapshotFor } from "./snapshot";
+import { snapshotFor, stepViews } from "./snapshot";
 import { emptyWorld, spawnGuest, tickWorld, type WorldState } from "./world";
 
 function crowd(n = 2): { w: WorldState; snap: Snap } {
@@ -93,6 +93,56 @@ describe("the snapshot diet", () => {
     const [one, two] = state.roster!;
     const renamed = applySlow(next, { t: "slow", v: PROTOCOL_VERSION, roster: [{ ...two, name: "#0042", guest: false }, { ...one, id: "new" }] });
     expect(renamed.roster!.map(r => [r.id, r.name])).toEqual([[one.id, one.name], [two.id, "#0042"], ["new", one.name]]);
+  });
+
+  it("encodes the fast frame byte for byte as JSON.stringify would, from fragments kept per body in the step's cache", () => {
+    const { w, snap } = crowd(6);
+    const step = stepViews(w);
+    const { fast } = splitSnap(snapshotFor(w, "a", step), step.frames);
+    expect(fast.players.length).toBe(5);
+    expect(encodeFast(fast, step.frames)).toBe(JSON.stringify(fast));
+    expect(encodeFast(fast)).toBe(JSON.stringify(fast));
+    // another viewer of the same step shares every body's fragment; the frame still comes out exact
+    const other = splitSnap(snapshotFor(w, "b1", step), step.frames).fast;
+    expect(encodeFast(other, step.frames)).toBe(JSON.stringify(other));
+    expect(JSON.parse(encodeFast(other, step.frames))).toEqual(other);
+    expect(step.frames.fragments.size).toBeGreaterThanOrEqual(6);
+    // a null prompt and an empty crowd encode the same way too
+    const alone = { ...splitSnap(snap).fast, players: [], enemies: [], prompt: null };
+    expect(encodeFast(alone)).toBe(JSON.stringify(alone));
+  });
+
+  it("the tracker reads an unchanged section off its identity, without a stringify, and with the step's cache stringifies a shared section once for every viewer", () => {
+    const { w } = crowd(3);
+    const tracker = new SlowTracker();
+    const first = splitSnap(snapshotFor(w, "a")).slow;
+    expect(tracker.diff("a", first)).not.toBeNull();
+    const spy = vi.spyOn(JSON, "stringify");
+    try {
+      // the same frame again: nothing is stringified at all
+      expect(tracker.diff("a", first)).toBeNull();
+      expect(spy).not.toHaveBeenCalled();
+      // a fresh snapshot of the same world: the shared sections keep their identity and are not stringified again
+      const again = splitSnap(snapshotFor(w, "a")).slow;
+      spy.mockClear();
+      expect(tracker.diff("a", again)).toBeNull();
+      let stringified = spy.mock.calls.map(c => c[0]);
+      for (const k of ["pois", "market", "news", "houses", "clearing", "passing", "frozen"] as const) expect(stringified, k).not.toContain(again[k]);
+      expect(stringified, "youSlow rides on its records' identity").not.toContain(again.youSlow);
+      // two fresh viewers of one step: the second pays nothing for the sections and bodies the first already encoded
+      const step = stepViews(w);
+      const one = splitSnap(snapshotFor(w, "b1", step), step.frames).slow;
+      const two = splitSnap(snapshotFor(w, "b2", step), step.frames).slow;
+      expect(tracker.diff("b1", one, step.frames)).not.toBeNull();
+      spy.mockClear();
+      expect(tracker.diff("b2", two, step.frames)).not.toBeNull();
+      stringified = spy.mock.calls.map(c => c[0]);
+      for (const k of ["pois", "market", "news", "houses", "clearing", "passing", "frozen"] as const) expect(stringified, k).not.toContain(two[k]);
+      // b1's own entry is new to the step (b1 never sees itself); the body both saw is kept
+      for (const r of two.roster!.filter(r => r.id !== "b1")) expect(stringified, `roster ${r.id}`).not.toContain(r);
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it("the tracker sends everything first, nothing when nothing changed, only what changed after, and roster entries only when new to the viewer or changed", () => {

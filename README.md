@@ -88,6 +88,7 @@ npm run test:campaign:2  # the same, then Movement II: shrine, hall, the Annex d
 npm run test:campaign:3  # the same, then Movement III: the three organs, Ord's map, the garden, the forecast glass, Quill's forge, Movement IV (8 min deadline)
 npm run test:render      # scripts/render-check.mjs: Chromium screenshots to .rebuild/shots, frame pacing >= 30 fps
 npm run test:load        # scripts/load-check.mjs: 20 bots walk and strike for 20 s; the object must hold 20 Hz (--bots=N to find the knee)
+npm run bench            # src/sim/broadcast.bench.ts: one broadcast to 80 walking viewers, in-process, viewer-by-viewer vs the step's shared views
 ```
 
 The three live scripts take an origin argument (default `http://127.0.0.1:8788`;

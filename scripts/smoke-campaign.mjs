@@ -341,9 +341,13 @@ try {
   phase('walk: intake');
   await walk(me, ROUTE.toIntake);
   phase('fight: intake');
-  const strikes = setInterval(() => send(me, { t: 'strike' }), 450);
-  try { await wait(me, () => you(me).flags.intake, 'intake clerk falls', 25000); }
-  finally { clearInterval(strikes); }
+  // Walk at the clerk wherever it stands (a load run may have left it dead, returning or on the far side of its leash) and strike in reach.
+  const fell = await hunt(me, 'intake-clerk', T.intake, () => !!you(me).flags.intake, 'intake clerk falls', 40000);
+  if (!fell) {
+    const p = you(me);
+    const clerk = (me.snap.enemies ?? []).find(e => e.id === 'intake-clerk');
+    throw new Error(`intake clerk falls did not complete (bot at ${Math.round(p.x)},${Math.round(p.y)} hp ${p.hp} dead ${p.dead}; clerk ${clerk ? `${clerk.state} hp ${clerk.hp} at ${Math.round(clerk.x)},${Math.round(clerk.y)}` : 'not in view'}; heard: ${p.heard})`);
+  }
   assert.ok(you(me).hp > 0, 'still standing after intake');
 
   // Nodes: the world persists between runs, so each beat takes the first op the Nave still offers

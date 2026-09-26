@@ -17,8 +17,8 @@ import { serialFor, type HolderCache } from "./holders.ts";
 import { logEventsFor, PUBLIC_LOG_KINDS } from "./log.ts";
 import { LogSink } from "./logSink.ts";
 import { LoadMeter } from "./load.ts";
-import { snapshotFor } from "../../src/sim/snapshot.ts";
-import { SlowTracker, splitSnap } from "../../src/sim/frames.ts";
+import { snapshotFor, stepViews } from "../../src/sim/snapshot.ts";
+import { encodeFast, SlowTracker, splitSnap } from "../../src/sim/frames.ts";
 import { isClientMsg, PROTOCOL_VERSION, SLOW_EVERY_TICKS } from "../../src/sim/protocol.ts";
 import type { Hello } from "../../src/sim/protocol.ts";
 import type { Intent, Player, WorldState } from "../../src/sim/types.ts";
@@ -107,6 +107,7 @@ export class ReverieWorld {
       this.w = restoreWorld(saved);
       this.logged = this.w;
       const connected = new Set<string>();
+      const intents = new Map(this.w.intents);
       for (const ws of this.ctx.getWebSockets()) {
         const session = ws.deserializeAttachment() as Session | null;
         if (!session?.token || !this.w.players.has(session.id)) {
@@ -115,11 +116,10 @@ export class ReverieWorld {
         }
         this.sessions.set(ws, session);
         connected.add(session.id);
-        this.w.intents.set(session.id, { ...idle });
+        intents.set(session.id, { ...idle });
       }
-      for (const id of [...this.w.players.keys()]) {
-        if (!connected.has(id)) this.w.players.delete(id);
-      }
+      const players = new Map([...this.w.players].filter(([id]) => connected.has(id)));
+      this.w = { ...this.w, players, intents };
       this.checkpointAt = this.w.now;
       if (connected.size) await this.ensureTick();
     });
@@ -235,8 +235,7 @@ export class ReverieWorld {
       }
       this.ctx.acceptWebSocket(server as WebSocket);
       const id = player.id;
-      this.w.players.set(id, player);
-      this.w.intents.set(id, { ...idle });
+      this.withBody(id, player);
       const session: Session = { id, token };
       this.sessions.set(server, session);
       server.serializeAttachment(session);
@@ -280,8 +279,7 @@ export class ReverieWorld {
     const player = this.w.players.get(session.id);
     this.sessions.delete(ws);
     this.slow.forget(session.id);
-    this.w.players.delete(session.id);
-    this.w.intents.delete(session.id);
+    this.withBody(session.id, null);
     this.intentAt.delete(session.id);
     await this.checkpoint(player ? { [playerKey(session.token)]: player } : {});
     this.broadcast(true);
@@ -304,10 +302,31 @@ export class ReverieWorld {
     await this.ctx.storage.setAlarm(at);
   }
 
+  /**
+   * A body arrives or leaves. The world's collections are replaced, never
+   * mutated in place: the snapshot keeps the views every viewer shares by the
+   * world object's identity, so a world that changed must be a new object.
+   */
+  private withBody(id: string, player: Player | null) {
+    const players = new Map(this.w.players);
+    const intents = new Map(this.w.intents);
+    if (player) {
+      players.set(id, player);
+      intents.set(id, { ...idle });
+    } else {
+      players.delete(id);
+      intents.delete(id);
+    }
+    this.w = { ...this.w, players, intents };
+  }
+
   /** Advances by elapsed server time in fixed steps; returns how many it ran. */
   private advanceWorld(now: number): number {
-    for (const id of this.w.players.keys()) {
-      if (now - (this.intentAt.get(id) ?? 0) > INTENT_TTL_MS) this.w.intents.set(id, { ...idle });
+    const expired = [...this.w.players.keys()].filter(id => now - (this.intentAt.get(id) ?? 0) > INTENT_TTL_MS && Object.values(this.w.intents.get(id) ?? {}).some(Boolean));
+    if (expired.length) {
+      const intents = new Map(this.w.intents);
+      for (const id of expired) intents.set(id, { ...idle });
+      this.w = { ...this.w, intents };
     }
     // Advance by elapsed server time rather than counting callbacks; keep fixed physics steps.
     const steps = this.clock.advance(now);
@@ -340,20 +359,21 @@ export class ReverieWorld {
     let chars = 0;
     let viewers = 0;
     const slowDue = force || this.w.tick % SLOW_EVERY_TICKS === 0;
+    const step = stepViews(this.w); // the views and encodings every viewer of this step shares
     for (const [ws, session] of this.sessions) {
       try {
         if (!this.w.players.has(session.id)) continue;
-        const { fast, slow } = splitSnap(snapshotFor(this.w, session.id));
+        const { fast, slow } = splitSnap(snapshotFor(this.w, session.id, step), step.frames);
         // The roster must cover every body the fast frame moves, so a change in who is in view brings the slow frame forward.
         if (this.slow.rosterDue(session.id, fast) || slowDue || this.slow.fresh(session.id)) {
-          const changed = this.slow.diff(session.id, slow);
+          const changed = this.slow.diff(session.id, slow, step.frames);
           if (changed) {
             const payload = JSON.stringify(changed);
             chars += payload.length;
             ws.send(payload);
           }
         }
-        const payload = JSON.stringify(fast);
+        const payload = encodeFast(fast, step.frames); // each body's fragment is encoded once per step, not once per viewer
         chars += payload.length;
         viewers++;
         ws.send(payload);

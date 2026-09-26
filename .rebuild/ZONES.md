@@ -66,6 +66,49 @@ view (~110 bytes each). The levers left before zones: version counters so
 the slow check skips the stringify, and a `snapshotFor` that builds the
 shared views (POIs, NPCs) once per step instead of once per viewer.
 
+### After the step's shared views (the same day)
+
+Both levers are in, as one change: `stepViews(w)` builds once per
+broadcast what every viewer sees the same (a body's public shape, an
+enemy's view, the node views, the POI list, the market, the news, the
+clearing, the passing, the frozen list, the history by serial) and a frame
+cache that keeps each body's split and each object's JSON for the step, so
+`encodeFast` writes a viewer's fast frame from fragments instead of a
+stringify per viewer; sections that read one unchanged world section keep
+their identity from step to step (the sim never mutates a world in place,
+and the object now replaces its collections on a join or a close), so the
+slow tracker reads "unchanged" off the object's identity without a
+stringify. Version counters were not needed: identity is the version.
+
+Measured in one process, without the wire (`npm run bench`,
+`src/sim/broadcast.bench.ts`: 80 bodies in one area of interest, walking;
+every step snapshots, splits, diffs and encodes for all 80 viewers):
+
+| path | per broadcast mean | p99 | worst |
+|---|---:|---:|---:|
+| one viewer at a time (before) | 23.3 ms | 37 ms | 40 ms |
+| the step's shared views (now) | 4.8 ms | 10.6 ms | 68 ms (one, a collector pause) |
+
+4.8× less compute per step at 80 viewers, identical bytes on the wire.
+With the tick itself the object's step at 80 bodies is now well inside 50
+ms of compute on this CPU.
+
+The local end-to-end check tells less. At 40 bots (bots and Worker on one
+CPU, through `wrangler dev`'s proxy) the alarm's worst lateness came down
+from 159–220 ms (three runs, all FAIL) to 80–131 ms (five runs, three
+PASS), the interval mean from 58–63 to 55–57 ms. At 80 bots the check
+cannot rank the two: the faster object produces frames in bursts that the
+dev proxy and the bots on the same CPU do not drain, the wrangler log
+fills with `write(): Broken pipe` from the proxy, and the alarm shows
+multi-second stalls (2.6–5 s) the slower object never reached, with p50
+intervals under the 50 ms step (catch-up bursts). That is the harness,
+not the object: the bench above is the measure of the object, and the
+real knee is only known from a run where the bots live elsewhere. A first
+try kept the shared views in WeakMaps keyed by the world and the bodies;
+it was replaced by the explicit per-step cache (plain Maps dropped with
+the step) before it could be blamed for the stalls, and the stalls stayed,
+so they are not the collector's ephemerons either.
+
 ## 2. First: the snapshot diet (protocol v3)
 
 Done 2026-09-26 as described below (with one addition: other bodies split

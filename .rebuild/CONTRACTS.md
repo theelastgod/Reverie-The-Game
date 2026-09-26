@@ -171,9 +171,10 @@ export function verbsFor(ctx: Ctx, targetId: string): PromptVerb[]; // available
 
 ## snapshot.ts
 ```ts
-export function snapshotFor(w: WorldState, viewerId: string): Snap; // while the viewer's ruin kit (Face) is active: you.kitReadout = their own marks' lines + counts + last outcome, and each visible Angel wreckage carries passings from its fromHistory
+export function snapshotFor(w: WorldState, viewerId: string, step = stepViews(w)): Snap; // while the viewer's ruin kit (Face) is active: you.kitReadout = their own marks' lines + counts + last outcome, and each visible Angel wreckage carries passings from its fromHistory
+export function stepViews(w: WorldState): StepViews;         // what every viewer of one step shares: public shapes by id, alive enemy views, node views, pois, frozen, market, news, clearing, passing, history by serial, and the frames' cache (frames.ts). A section that reads one unchanged world section keeps its identity across steps (the sim never mutates a world in place; the object replaces its collections). The object makes one per broadcast.
 export function publicPlayer(p: Player, now: number): PublicPlayer;
-export function promptFor(ctx: Ctx): Prompt | null;         // nearest of: npc (personal position, 72px, verbs [F Speak]), poi (reach), node (56: E Extract / Q Keep; hidden if frozen), wreckage (64: F Bury, E Loot [Angels only]), player (96: V Flag/Unflag, T Truce when flagged) — choose the closest; POIs whose verbsFor is empty are skipped
+export function promptFor(ctx: Ctx, npcs = npcViews(ctx)): Prompt | null; // nearest of: npc (personal position, 72px, verbs [F Speak]), poi (reach), node (56: E Extract / Q Keep; hidden if frozen), wreckage (64: F Bury, E Loot [Angels only]), player (96: V Flag/Unflag, T Truce when flagged) — choose the closest; POIs whose verbsFor is empty are skipped
 export function visibleWreckage(w, p): Wreckage[];          // until + perception(p).wreckageBonus (+ storm) ; witness blitz shows all in AOI
 export function npcView(ctx, npc: NpcState): NpcView | null; // apply NPCS[id].personal override; null when not present for this viewer; offers = npcOffers(ctx, def)
 ```
@@ -211,10 +212,12 @@ export type PlayerMotion = Pick<PublicPlayer, "id"|"x"|"y"|"facing"|"hpFrac"|"de
 export type FastFrame = { t: "fast"; v } & Pick<Snap, FastKey> with players: PlayerMotion[];   // every step
 export type SlowFrame = { t: "slow"; v } & Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[]; youSlow?: Partial<YouView> }; // only what changed; roster entries only when new to the viewer or changed
 export const YOU_SLOW_KEYS = ["quests","flags","choices","party","items","claims","history","respawn","wallet","kitReadout"]; // ride the slow frame as youSlow; fast.you carries the rest
-export function splitSnap(snap): { fast, slow };  export function mergeFrames(slow: SlowState, fast): Snap; // you = { ...youSlow, ...fast.you }; a body without a roster entry is left out until it arrives
+export function splitSnap(snap, cache?: FrameCache): { fast, slow };  export function mergeFrames(slow: SlowState, fast): Snap; // you = { ...youSlow, ...fast.you }; a body without a roster entry is left out until it arrives
 export function applySlow(slow: SlowState, frame): SlowState;   // sections replace; the roster merges by id; youSlow replaces
+export type FrameCache = { split: Map<id, {p, motion, roster}>; fragments: Map<object, string> };  export const newFrameCache = (): FrameCache; // one per step (stepViews(w).frames): a body's split and every object's JSON, shared by the step's viewers; plain Maps, dropped with the step
+export function encodeFast(fast, cache?): string;  // byte for byte JSON.stringify(fast); each body's and enemy's fragment from the cache
 // Body ids: the object gives a new body twelve hex characters (bodyId()); saved bodies keep the id they were given.
-export class SlowTracker { fresh(viewer); rosterDue(viewer, fast); diff(viewer, slow): SlowFrame | null; forget(viewer) }
+export class SlowTracker { fresh(viewer); rosterDue(viewer, fast); diff(viewer, slow, cache?): SlowFrame | null; forget(viewer) } // a section that is the object it sent last is unchanged without a stringify; youSlow likewise by its records' identity
 // The object: fast every broadcast; slow when force (after an action, a join, a close) || tick % 5 === 0 || fresh || rosterDue. WorldSocket folds; a new socket starts empty.
 ```
 

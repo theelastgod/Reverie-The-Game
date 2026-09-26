@@ -217,6 +217,31 @@ describe("durable world sessions", () => {
     expect(savedWorld(data).players).toHaveLength(1);
   });
 
+  it("a body that joins between two frames is in the other viewer's next frame, and gone from it when it leaves", async () => {
+    const { world } = await worldHarness(null);
+    const first = socket("a", token);
+    const hello = await world.join(token, first as never);
+    vi.setSystemTime(50);
+    await world.alarm();
+    expect(last(first).players).toEqual([]);
+    // the second body arrives on the same world object the first viewer was just snapshotted from
+    const second = socket("b", otherToken);
+    const other = await world.join(otherToken, second as never);
+    expect(last(first).players.map((p: { id: string }) => p.id), "seen on the join's own broadcast").toEqual([other.id]);
+    vi.setSystemTime(100);
+    await world.alarm();
+    expect(last(first).players.map((p: { id: string }) => p.id), "seen on the next step").toEqual([other.id]);
+    expect(last(second).players.map((p: { id: string }) => p.id)).toEqual([hello.id]);
+    expect(first.close).not.toHaveBeenCalled();
+    expect(second.close).not.toHaveBeenCalled();
+    for (const frame of [...frames(first), ...frames(second)]) expect(["hello", "fast", "slow"]).toContain(frame.t);
+    await world.webSocketClose(second as never);
+    expect(last(first).players).toEqual([]);
+    vi.setSystemTime(150);
+    await world.alarm();
+    expect(last(first).players).toEqual([]);
+  });
+
   it("restores a saved body for a returning session and spawns a guest for a new one", async () => {
     const kept = { ...spawnGuest("kept"), bestand: 12 };
     const { world } = await worldHarness(null, [], [[playerKey(token), kept]]);
