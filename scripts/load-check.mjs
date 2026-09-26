@@ -47,9 +47,9 @@ async function bot(i) {
     if (b.lastAt) b.intervals.push(at - b.lastAt);
     b.lastAt = at;
     if (d.t === 'fast') {
-      const { roster = [], ...sections } = slow;
+      const { roster = [], youSlow = {}, ...sections } = slow;
       const byId = new Map(roster.map(r => [r.id, r]));
-      b.snap = { ...sections, ...d, players: d.players.flatMap(m => (byId.has(m.id) ? [{ ...byId.get(m.id), ...m }] : [])), t: 'snap' };
+      b.snap = { ...sections, ...d, players: d.players.flatMap(m => (byId.has(m.id) ? [{ ...byId.get(m.id), ...m }] : [])), you: { ...youSlow, ...d.you }, t: 'snap' };
     } else b.snap = d;
     b.snaps++;
   });
@@ -112,7 +112,8 @@ const snaps = bots.reduce((a, b) => a + b.snaps, 0);
 const errors = bots.reduce((a, b) => a + b.errors, 0);
 console.log(`measure: ${bots.length} bots for ${SECONDS} s: ${snaps} fast frames, ${(bytes / 1024 / 1024).toFixed(1)} MB down (${((bytes - slowBytes) / Math.max(1, snaps)).toFixed(0)} B per fast frame, ${(slowBytes / 1024).toFixed(0)} KB of slow frames), ${errors} socket errors`);
 console.log(`measure: snapshot interval mean ${mean.toFixed(1)} ms, p50 ${pct(0.5)} ms, p95 ${pct(0.95)} ms, p99 ${pct(0.99)} ms (the step is ${STEP_MS} ms)`);
-console.log(`measure: object: sessions ${last.sessions ?? '?'}, bodies ${last.bodies ?? '?'}, alarm late mean ${last.lateMs ?? '?'} ms, worst ${worstLate} ms; catch-up mean ${last.catchUp ?? '?'} steps, worst ${worstCatchUp}; stalls ${stalls}; ${last.charsPerViewer ?? '?'} chars per viewer per broadcast`);
+const worstCheckpoint = Math.max(0, ...samples.map(s => s.maxCheckpointMs ?? 0));
+console.log(`measure: object: sessions ${last.sessions ?? '?'}, bodies ${last.bodies ?? '?'}, alarm late mean ${last.lateMs ?? '?'} ms, worst ${worstLate} ms; catch-up mean ${last.catchUp ?? '?'} steps, worst ${worstCatchUp}; stalls ${stalls}; checkpoint mean ${last.checkpointMs ?? '?'} ms, worst ${worstCheckpoint} ms; ${last.charsPerViewer ?? '?'} chars per viewer per broadcast`);
 
 for (const b of bots) b.ws.close();
 clearTimeout(deadline);

@@ -22,10 +22,10 @@ function folder() {
       return null;
     }
     if (data.t !== 'fast') return null;
-    const { roster = [], ...sections } = slow;
+    const { roster = [], youSlow = {}, ...sections } = slow;
     const byId = new Map(roster.map(r => [r.id, r]));
     const players = data.players.flatMap(m => (byId.has(m.id) ? [{ ...byId.get(m.id), ...m }] : []));
-    return { ...sections, ...data, players, t: 'snap' };
+    return { ...sections, ...data, players, you: { ...youSlow, ...data.you }, t: 'snap' };
   };
 }
 const deadline = setTimeout(() => { console.error('FAIL: smoke deadline (90 s) exceeded'); process.exit(1); }, 90000);

@@ -209,9 +209,11 @@ export type EnemyView = Pick<Enemy, "id"|"kind"|"name"|"x"|"y"|"hp"|"maxHp"|"sta
 export const FAST_KEYS = ["now","tick","you","players","enemies","prompt"];  export const SLOW_KEYS = [/* every other Snap key */];
 export type PlayerMotion = Pick<PublicPlayer, "id"|"x"|"y"|"facing"|"hpFrac"|"dead"|"dodgeT"|"heavyWindup"|"hitStop">;  export type PlayerRoster = Omit<PublicPlayer, motion keys but id>;
 export type FastFrame = { t: "fast"; v } & Pick<Snap, FastKey> with players: PlayerMotion[];   // every step
-export type SlowFrame = { t: "slow"; v } & Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[] }; // only what changed; roster entries only when new to the viewer or changed
-export function splitSnap(snap): { fast, slow };  export function mergeFrames(slow: SlowState, fast): Snap; // a body without a roster entry is left out until it arrives
-export function applySlow(slow: SlowState, frame): SlowState;   // sections replace; the roster merges by id
+export type SlowFrame = { t: "slow"; v } & Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[]; youSlow?: Partial<YouView> }; // only what changed; roster entries only when new to the viewer or changed
+export const YOU_SLOW_KEYS = ["quests","flags","choices","party","items","claims","history","respawn","wallet","kitReadout"]; // ride the slow frame as youSlow; fast.you carries the rest
+export function splitSnap(snap): { fast, slow };  export function mergeFrames(slow: SlowState, fast): Snap; // you = { ...youSlow, ...fast.you }; a body without a roster entry is left out until it arrives
+export function applySlow(slow: SlowState, frame): SlowState;   // sections replace; the roster merges by id; youSlow replaces
+// Body ids: the object gives a new body twelve hex characters (bodyId()); saved bodies keep the id they were given.
 export class SlowTracker { fresh(viewer); rosterDue(viewer, fast); diff(viewer, slow): SlowFrame | null; forget(viewer) }
 // The object: fast every broadcast; slow when force (after an action, a join, a close) || tick % 5 === 0 || fresh || rosterDue. WorldSocket folds; a new socket starts empty.
 ```

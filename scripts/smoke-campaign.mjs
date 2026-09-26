@@ -113,10 +113,10 @@ async function connect(cookie) {
   let slow = {};
   let lastFast = null;
   const fold = fast => {
-    const { roster = [], ...sections } = slow;
+    const { roster = [], youSlow = {}, ...sections } = slow;
     const byId = new Map(roster.map(r => [r.id, r]));
     const players = fast.players.flatMap(m => (byId.has(m.id) ? [{ ...byId.get(m.id), ...m }] : []));
-    return { ...sections, ...fast, players, t: 'snap' };
+    return { ...sections, ...fast, players, you: { ...youSlow, ...fast.you }, t: 'snap' };
   };
   ws.on('message', raw => {
     let data = JSON.parse(raw.toString());

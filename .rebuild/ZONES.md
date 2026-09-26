@@ -44,10 +44,27 @@ to the area of interest (AOI_RADIUS 1040 px, about 21 tiles).
 | 40 | 56 / 84 / 96 ms | 8 / 80 ms | 7.2 KB (fast 7.6 KB) | 20 Hz held; the knee moved past here |
 | 80 | 117 / 196 / 2701 ms | 347 / 4821 ms | 14.4 KB (fast 12 KB) | behind; the next levers are in §2 |
 
-What is left in a crowd's fast frame: ~150 bytes per body in view, of
-which the 36-character id is 44; `you` whole (~1.1 KB); the enemies in
-view (~110 bytes each). The levers, in order: short wire ids, `you` split
-like the roster, version counters so the slow check skips the stringify.
+### After the second pass (short ids, `you` split; the same day)
+
+| bodies | per fast frame | alarm late mean / worst | checkpoint write | verdict |
+|---:|---:|---|---:|---|
+| 20 | 4.0 KB | 6 / 56 ms | ~1 ms | 20 Hz held |
+| 40 | 6.4 KB | 14–20 / 71–101 ms | 1 ms | at the 100 ms line, run to run |
+| 80 | 9.7 KB | 400–550 / 1500–3100 ms | 2 ms | behind |
+
+Two things to know when reading these. The checkpoint (the world blob plus
+every connected body's record, once a second of world time) costs 1–2 ms
+even at 80 bodies, so the late alarms are compute: one `tickWorld` over
+every body plus one `snapshotFor` and one stringify per viewer. And the
+load check's bots run on the same one CPU as the Worker in this container,
+so every number here is pessimistic; the real knee is higher and is only
+known from a run where the bots live elsewhere.
+
+What is left in a crowd's fast frame: ~105 bytes per body in view (of
+which the id is 20), `you` without its records (~0.7 KB), the enemies in
+view (~110 bytes each). The levers left before zones: version counters so
+the slow check skips the stringify, and a `snapshotFor` that builds the
+shared views (POIs, NPCs) once per step instead of once per viewer.
 
 ## 2. First: the snapshot diet (protocol v3)
 

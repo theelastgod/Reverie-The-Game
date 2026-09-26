@@ -9,10 +9,26 @@
  */
 import {
   FAST_KEYS, MOTION_KEYS, PROTOCOL_VERSION, SLOW_KEYS,
-  type FastFrame, type PlayerMotion, type PlayerRoster, type PublicPlayer, type SlowFrame, type SlowKey, type Snap,
+  type FastFrame, type PlayerMotion, type PlayerRoster, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type YouView,
 } from "./protocol";
 
-export type SlowState = Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[] };
+/** The parts of `you` that change rarely and grow over a campaign; they ride the slow frame as `youSlow`. */
+export const YOU_SLOW_KEYS = ["quests", "flags", "choices", "party", "items", "claims", "history", "respawn", "wallet", "kitReadout"] as const;
+export type YouSlowKey = (typeof YOU_SLOW_KEYS)[number];
+export type YouSlow = Partial<Pick<YouView, YouSlowKey>>;
+
+export type SlowState = Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[]; youSlow?: YouSlow };
+
+export function splitYou(you: YouView): { fast: YouView; slow: YouSlow } {
+  const fast = { ...you } as Record<string, unknown>;
+  const slow = {} as Record<string, unknown>;
+  for (const k of YOU_SLOW_KEYS) {
+    if (!(k in you)) continue;
+    slow[k] = fast[k];
+    delete fast[k];
+  }
+  return { fast: fast as YouView, slow: slow as YouSlow };
+}
 
 export function splitPlayer(p: PublicPlayer): { motion: PlayerMotion; roster: PlayerRoster } {
   const motion = {} as Record<string, unknown>;
@@ -32,6 +48,9 @@ export function splitSnap(snap: Snap): { fast: FastFrame; slow: SlowFrame } {
   const split = snap.players.map(splitPlayer);
   fast.players = split.map(s => s.motion);
   slow.roster = split.map(s => s.roster);
+  const you = splitYou(snap.you);
+  fast.you = you.fast;
+  slow.youSlow = you.slow;
   return { fast, slow };
 }
 
@@ -53,7 +72,9 @@ export function mergeFrames(slow: SlowState, fast: FastFrame): Snap {
     if (r) players.push({ ...r, ...m });
   }
   out.players = players;
+  out.you = { ...(slow.youSlow ?? {}), ...fast.you } as YouView;
   delete (out as { roster?: unknown }).roster;
+  delete (out as { youSlow?: unknown }).youSlow;
   return out;
 }
 
@@ -70,6 +91,7 @@ export function applySlow(slow: SlowState, frame: SlowFrame): SlowState {
   const next = { ...slow };
   for (const k of SLOW_KEYS) if (k in frame) (next as Record<string, unknown>)[k] = frame[k];
   if (frame.roster) next.roster = mergeRoster(slow.roster, frame.roster);
+  if (frame.youSlow) next.youSlow = frame.youSlow;
   return next;
 }
 
@@ -112,6 +134,12 @@ export class SlowTracker {
       seen.set(k, sig);
       if (!out) out = { t: "slow", v: slow.v };
       (out as Record<string, unknown>)[k] = value;
+    }
+    const youSig = JSON.stringify(slow.youSlow);
+    if (seen.get("youSlow" as SlowKey) !== youSig) {
+      seen.set("youSlow" as SlowKey, youSig);
+      if (!out) out = { t: "slow", v: slow.v };
+      out.youSlow = slow.youSlow;
     }
     const known = this.roster.get(viewerId) ?? new Map<string, string>();
     const next = new Map<string, string>();

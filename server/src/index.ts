@@ -44,6 +44,8 @@ const MAX_MESSAGE = 4096;
 const CHALLENGE_PREFIX = "challenge:v1:";
 const INTENT_TTL_MS = 1000;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+/** A body's id rides every frame for every viewer in range: twelve hex characters (2.8e14) instead of a 36-character uuid. Saved bodies keep the id they were given. */
+const bodyId = (): string => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
 
 export function sessionToken(req: Request): string | null {
   const value = req.headers.get("Cookie")?.split(";").map(s => s.trim())
@@ -129,7 +131,9 @@ export class ReverieWorld {
       const player = this.w.players.get(session.id);
       if (player) records[playerKey(session.token)] = player;
     }
+    const began = Date.now();
     await this.ctx.storage.put(records);
+    this.load.checkpointed(Date.now() - began, Date.now());
     this.checkpointAt = this.w.now;
     // The log reads the difference since the last checkpoint, never per tick; a flush never holds the tick.
     const events = logEventsFor(this.logged, this.w, Date.now());
@@ -223,7 +227,7 @@ export class ReverieWorld {
     return this.ctx.blockConcurrencyWhile(async () => {
       const saved = await this.ctx.storage.get<Player>(playerKey(token));
       const active = [...this.sessions.entries()].find(([, session]) => session.token === token);
-      const player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(crypto.randomUUID(), this.w.now);
+      const player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(bodyId(), this.w.now);
       if (active) {
         this.sessions.delete(active[0]);
         this.slow.forget(active[1].id); // the new socket starts with a full slow frame

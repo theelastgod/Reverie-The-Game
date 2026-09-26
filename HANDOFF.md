@@ -144,6 +144,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   80 still fall behind (interval mean 117 ms). Next levers, in
   `.rebuild/ZONES.md`: the 36-character ids are now about a third of a
   crowd's fast frame, `you` still rides whole, then zones.
+- The fast frame's second pass (2026-09-26): new bodies get twelve-hex ids
+  (`bodyId()` in the object; saved bodies keep theirs) instead of 36-character
+  uuids, and `you` splits like the roster (`quests`, `flags`, `choices`,
+  `party`, `items`, `claims`, `history`, `respawn`, `wallet`, `kitReadout`
+  ride the slow frame as `youSlow`, sent when their signature changes,
+  merged under the fast fields by the client and the scripts). The meter
+  also times each checkpoint's write (`checkpointMs`): 1–2 ms at 40 and 80
+  bodies, so the late alarms are compute, not storage. Per fast frame: 4.0
+  KB at 20 bodies, 6.4 KB at 40, 9.7 KB at 80 (from 4.5 / 7.6 / 12 after the
+  first pass, 14.3 / 20.3 / 31.8 before the diet). At 40 the worst alarm
+  now sits at the 100 ms line (71 and 101 ms in two runs) with the bots
+  sharing this container's one CPU with the Worker; 80 still fall behind.
 - Load meter, load check and the scale design (2026-09-26, backlog 4).
   `server/src/load.ts` reads what a Worker can read about its own load
   (the clock is frozen during compute): how late each alarm fires against
@@ -244,7 +256,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
-- `npm test` — 34 files, 435 tests (2026-09-26): map integrity and reachability, identity,
+- `npm test` — 34 files, 436 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
   visibility, content coverage, side quests (all 33 driven end to end, every
   verb through the prompt, who offers what to whom), two full spine
@@ -311,14 +323,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   bots: mean 117 ms, alarm late mean 347 ms, FAIL. Before the diet 40 bots
   failed on a 145 ms alarm and 80 stalled. This container's workerd, one
   small CPU.
-- Protocol v3: 7 frame tests (every Snap key fast or slow exactly once,
-  a body split into motion and roster and joined back exactly, a crowd's
-  split and merge equal to the snapshot, a body without a roster entry left
-  out, the fast frame under 40 % of the snapshot, applySlow merging the
-  roster by id, the tracker's first-full/nothing/only-changed/roster-owed
-  sequence), a socket test folding fast and slow frames and forgetting them
-  on reconnect, and the session tests reading the object's view through the
-  same fold. Both smokes and the load check fold frames the same way.
+- Protocol v3: 8 frame tests (every Snap key fast or slow exactly once,
+  a body split into motion and roster and joined back exactly, `you` split
+  and merged back with the slow records kept under later fast frames, a
+  crowd's split and merge equal to the snapshot, a body without a roster
+  entry left out, the fast frame under 35 % of the snapshot, applySlow
+  merging the roster by id, the tracker's first-full/nothing/only-changed/
+  youSlow-alone/roster-owed sequence), a socket test folding fast and slow
+  frames and forgetting them on reconnect, and the session tests reading the
+  object's view through the same fold. Both smokes and the load check fold
+  frames the same way.
 - Generated-asset slots: 13 tests pin the manifest loader (the URL and
   no-cache request, one load shared, 404 / network / junk / wrong shape as
   empty, unsafe targets dropped) and the pure slot map (who has a portrait,
@@ -376,17 +390,18 @@ they are discovered; keep this list honest.
    Angel active per body stays the rule (`applyLink` already refuses a serial
    that is walking). Not built: reading beyond the first token of a wallet
    that holds several (the first is the one that walks).
-4. **Past 40 bodies, then zones.** The diet is in (protocol v3, see Done);
-   40 bodies hold on this container, 80 fall behind. The next levers, in
-   order, all measured with `scripts/load-check.mjs --bots=80`: short wire
-   ids for bodies (a per-world counter in base 36 carried as `PublicPlayer.id`
-   on the wire, the uuid kept server-side; ids are about a third of a
-   crowd's fast frame), a trimmed `you` (its `quests`, `flags`, `choices`,
-   `party`, `items`, `claims`, `history` and `respawn` into the slow frame,
-   merged by the client like the roster), and per-section version counters
-   on the world so the slow check skips the stringify. Zone objects with
-   handoff at the gates come after, behind `ZONES=0`, and only when a real
-   population asks; the design is written in `.rebuild/ZONES.md`.
+4. **Past 40 bodies, then zones.** The diet and its second pass are in
+   (protocol v3, short ids, `you` split; see Done): 40 bodies hold on this
+   container with the load-check bots sharing its one CPU, 80 fall behind.
+   What is left before zones, measured with `scripts/load-check.mjs
+   --bots=80`: per-section version counters on the world so the slow check
+   skips the stringify (the slow sections are still stringified per viewer
+   every fifth step); a cheaper `snapshotFor` (the POI list, the NPC views
+   and the history filter are rebuilt per viewer per step and could be built
+   once per step and shared); and a second load run on a machine where the
+   bots do not share the Worker's CPU, to know the real knee. Zone objects
+   with handoff at the gates come after, behind `ZONES=0`, and only when a
+   real population asks; the design is written in `.rebuild/ZONES.md`.
 5. **Opening density.** Measured 2026-09-26 after the Annex Runner courier
    beat (`scripts/smoke-campaign.mjs` prints `measure:` lines; a later fight
    is floored at 25 s of a person's time, the first at 45 s; keep only runs

@@ -26,6 +26,9 @@ export type LoadReport = {
   broadcastChars: number;
   charsPerViewer: number;
   alarms: number;
+  /** Wall time of a checkpoint's storage write, ms (the clock does advance across I/O): smoothed and the worst in the window. */
+  checkpointMs: number;
+  maxCheckpointMs: number;
 };
 
 type Sample = { at: number; v: number };
@@ -58,6 +61,7 @@ class Windowed {
 export class LoadMeter {
   private readonly late = new Windowed();
   private readonly catchUp = new Windowed();
+  private readonly checkpoint = new Windowed();
   private lastChars = 0;
   private lastViewers = 0;
   private stalled = 0;
@@ -77,6 +81,11 @@ export class LoadMeter {
     this.lastViewers = viewers;
   }
 
+  /** One checkpoint's write took `ms` of wall time. */
+  checkpointed(ms: number, at: number): void {
+    this.checkpoint.push(Math.max(0, ms), at);
+  }
+
   report(sessions: number, bodies: number, at: number): LoadReport {
     const r = (v: number) => Math.round(v * 100) / 100;
     return {
@@ -90,6 +99,8 @@ export class LoadMeter {
       broadcastChars: this.lastChars,
       charsPerViewer: this.lastViewers ? Math.round(this.lastChars / this.lastViewers) : 0,
       alarms: this.count,
+      checkpointMs: r(this.checkpoint.avg),
+      maxCheckpointMs: r(this.checkpoint.max(at)),
     };
   }
 }

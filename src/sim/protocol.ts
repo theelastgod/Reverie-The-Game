@@ -123,7 +123,7 @@ export type PlayerRoster = Omit<PublicPlayer, Exclude<keyof PlayerMotion, "id">>
 
 export type FastFrame = { t: "fast"; v: typeof PROTOCOL_VERSION } & Omit<Pick<Snap, FastKey>, "players"> & { players: PlayerMotion[] };
 /** Only the sections that changed since the viewer's last slow frame; the first one after a hello carries them all, the roster included. */
-export type SlowFrame = { t: "slow"; v: typeof PROTOCOL_VERSION } & Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[] };
+export type SlowFrame = { t: "slow"; v: typeof PROTOCOL_VERSION } & Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[]; youSlow?: Partial<YouView> };
 
 /** `mockLink`: the test link (serial + mock signature) is accepted by this city; off in production, where wallets go through /wallet. */
 export type Hello = { t: "hello"; v: typeof PROTOCOL_VERSION; id: string; guest: boolean; mockLink: boolean; you: YouView };
