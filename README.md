@@ -32,6 +32,14 @@ satisfies it; `.rebuild/CONTRACTS.md` holds the shared-sim module signatures and
 | J / M / L | client | journal / minimap / ledger (holdings, claims, the Grid) |
 | O · [ · ] | client | mute · volume down · volume up (also the AUDIO chip; kept per browser) |
 
+The Worker also keeps a writeback log in D1 (`LOG` binding, migration in
+`server/migrations/`): links, wallets, the going-under, burials, claims,
+Passings, the credits and every news line, written after checkpoints. `GET
+/log/recent?kind=passing|news|burial|link&limit=20` reads the public kinds.
+`npm run d1:migrate` applies the migration to the local database;
+`npm run d1:migrate:remote` after `wrangler d1 create reverie-log` for a
+deploy.
+
 ## Shape
 
 - `src/sim/**` — DOM-free shared simulation (types, constants, the map, the

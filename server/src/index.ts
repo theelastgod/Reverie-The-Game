@@ -13,6 +13,8 @@ import { DT } from "../../src/sim/constants.ts";
 import { applyAction, applyLink, applyWallet } from "../../src/sim/actions.ts";
 import { LINES } from "../../src/sim/content/index.ts";
 import { CHALLENGE_TTL_MS, challengeMessage, isAddress, normalizeAddress, parseHolders, recoverAddress } from "./wallet.ts";
+import { logEventsFor, PUBLIC_LOG_KINDS } from "./log.ts";
+import { LogSink } from "./logSink.ts";
 import { snapshotFor } from "../../src/sim/snapshot.ts";
 import { isClientMsg, PROTOCOL_VERSION } from "../../src/sim/protocol.ts";
 import type { Hello } from "../../src/sim/protocol.ts";
@@ -24,6 +26,7 @@ type Env = {
   WORLD: DurableObjectNamespace;
   MOCK_LINK?: string; // "1" accepts the test link (serial + mock signature); unset or "0" refuses it
   ANGEL_HOLDERS?: string; // JSON { "0xaddress": serial } until the contract exists
+  LOG?: D1Database; // the writeback log; absent, nothing is written
 };
 
 // workerd accepts only functions and handlers as named exports of the entry module, so these stay module-private.
@@ -82,12 +85,16 @@ export class ReverieWorld {
   private intentAt = new Map<string, number>();
   private ticking = false;
   private clock = new SimulationClock();
+  private readonly sink = new LogSink();
+  private logged: WorldState; // the world as of the last log diff
 
   constructor(private readonly ctx: DurableObjectState, private readonly env: Env) {
     this.w = emptyWorld();
+    this.logged = this.w;
     this.ctx.blockConcurrencyWhile(async () => {
       const saved = await this.ctx.storage.get<SavedWorld>(WORLD_KEY);
       this.w = restoreWorld(saved);
+      this.logged = this.w;
       const connected = new Set<string>();
       for (const ws of this.ctx.getWebSockets()) {
         const session = ws.deserializeAttachment() as Session | null;
@@ -115,6 +122,13 @@ export class ReverieWorld {
     }
     await this.ctx.storage.put(records);
     this.checkpointAt = this.w.now;
+    // The log reads the difference since the last checkpoint, never per tick; a flush never holds the tick.
+    const events = logEventsFor(this.logged, this.w, Date.now());
+    this.logged = this.w;
+    if (events.length) {
+      this.sink.push(events);
+      if (this.env?.LOG) this.ctx.waitUntil(this.sink.flush(this.env.LOG));
+    }
   }
 
   /** The test link is a development convenience: on only when the environment says so. */
@@ -296,9 +310,41 @@ export class ReverieWorld {
   }
 }
 
+const parseDetail = (s: string): unknown => {
+  try {
+    return JSON.parse(s);
+  } catch {
+    return {};
+  }
+};
+
+type LogRow = { at: number; world_now: number; kind: string; player: string; serial: number | null; detail: string };
+
+/** The public log: Passings, news, burials and links, newest first. Claims and wallets never leave the table. */
+async function logRecent(url: URL, env: Env): Promise<Response> {
+  const noStore = { "Cache-Control": "no-store" };
+  if (!env.LOG) return Response.json({ ok: false }, { status: 404, headers: noStore });
+  const kind = url.searchParams.get("kind") ?? "passing";
+  const limit = Number(url.searchParams.get("limit") ?? "20");
+  if (!(PUBLIC_LOG_KINDS as readonly string[]).includes(kind) || !Number.isInteger(limit) || limit < 1 || limit > 50) {
+    return Response.json({ ok: false, reason: "bad-query" }, { status: 400, headers: noStore });
+  }
+  try {
+    const rows = await env.LOG
+      .prepare("SELECT at, world_now, kind, player, serial, detail FROM events WHERE kind = ?1 ORDER BY id DESC LIMIT ?2")
+      .bind(kind, limit)
+      .all<LogRow>();
+    const events = (rows.results ?? []).map(r => ({ at: r.at, worldNow: r.world_now, kind: r.kind, player: r.player, serial: r.serial, detail: parseDetail(r.detail) }));
+    return Response.json({ ok: true, events }, { headers: { "Cache-Control": "public, max-age=15" } });
+  } catch {
+    return Response.json({ ok: false, reason: "log" }, { status: 503, headers: noStore });
+  }
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
+    if (url.pathname === "/log/recent") return logRecent(url, env);
     if (url.pathname === "/health") {
       return Response.json({ ok: true, v: PROTOCOL_VERSION }, { headers: { "Cache-Control": "no-store" } });
     }

@@ -462,3 +462,59 @@ describe("wallet login", () => {
     expect(names).toEqual(["city-v2", "city-v2"]);
   });
 });
+
+// ---------------------------------------------------------------- the writeback log
+
+/** A D1 double that keeps every batch and can answer a read. */
+function logDb(rows: unknown[] = []) {
+  const batches: { sql: string; values: unknown[] }[][] = [];
+  return {
+    batches,
+    prepare: (sql: string) => ({
+      bind: (...values: unknown[]) => ({ sql, values, all: async () => ({ results: rows }) }),
+    }),
+    batch: vi.fn(async (statements: { sql: string; values: unknown[] }[]) => { batches.push(statements); return []; }),
+  };
+}
+
+describe("the writeback log", () => {
+  it("writes what changed after a checkpoint, in the flush the object hands to waitUntil", async () => {
+    const d = logDb();
+    const { world, ctx } = await worldHarness(null, [], [], { ...DEV_ENV, LOG: d as never });
+    const ws = socket();
+    await world.join(token, ws as never);
+    await world.webSocketMessage(ws as never, JSON.stringify({ t: "link", serial: TEST_SERIAL, sig: "mock" }));
+    for (const call of (ctx.waitUntil as ReturnType<typeof vi.fn>).mock.calls) await call[0];
+    const kinds = d.batches.flat().map(s => s.values[2]);
+    expect(kinds).toEqual(["link"]);
+    expect(d.batches[0][0].values).toEqual([0, expect.any(Number), "link", `#${TEST_SERIAL}`, TEST_SERIAL, JSON.stringify({ serial: TEST_SERIAL })]);
+    // movement alone is not an event
+    await world.webSocketMessage(ws as never, JSON.stringify({ t: "intent", intent: { up: true, down: false, left: false, right: false } }));
+    await world.alarm();
+    for (const call of (ctx.waitUntil as ReturnType<typeof vi.fn>).mock.calls) await call[0];
+    expect(d.batches.flat().length).toBe(1);
+  });
+
+  it("writes nothing and never touches waitUntil without the binding", async () => {
+    const { world, ctx } = await worldHarness(null);
+    const ws = socket();
+    await world.join(token, ws as never);
+    await world.webSocketMessage(ws as never, JSON.stringify({ t: "link", serial: TEST_SERIAL, sig: "mock" }));
+    expect(ctx.waitUntil).not.toHaveBeenCalled();
+  });
+
+  it("serves the public kinds newest first and refuses the rest", async () => {
+    const rows = [{ at: 5, world_now: 2, kind: "passing", player: "#0042", serial: 42, detail: JSON.stringify({ outcome: "appearance", hijackedBy: "", count: 1 }) }];
+    const env = { LOG: logDb(rows), ASSETS: { fetch: async () => new Response("asset") }, WORLD: { idFromName: () => "x", get: () => ({ fetch: async () => new Response("world") }) } };
+    const ok = await worker.fetch(new Request("https://game.example/log/recent?kind=passing&limit=5"), env as never);
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get("Cache-Control")).toContain("max-age=15");
+    expect(await ok.json()).toEqual({ ok: true, events: [{ at: 5, worldNow: 2, kind: "passing", player: "#0042", serial: 42, detail: { outcome: "appearance", hijackedBy: "", count: 1 } }] });
+    expect((await worker.fetch(new Request("https://game.example/log/recent?kind=wallet"), env as never)).status).toBe(400);
+    expect((await worker.fetch(new Request("https://game.example/log/recent?kind=claim.filed"), env as never)).status).toBe(400);
+    expect((await worker.fetch(new Request("https://game.example/log/recent?limit=0"), env as never)).status).toBe(400);
+    expect((await worker.fetch(new Request("https://game.example/log/recent?limit=51"), env as never)).status).toBe(400);
+    const none = { ...env, LOG: undefined };
+    expect((await worker.fetch(new Request("https://game.example/log/recent"), none as never)).status).toBe(404);
+  });
+});

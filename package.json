@@ -15,7 +15,9 @@
     "test": "vitest run",
     "test:smoke": "node scripts/smoke-world.mjs",
     "test:campaign": "node scripts/smoke-campaign.mjs",
-    "test:render": "node scripts/render-check.mjs"
+    "test:render": "node scripts/render-check.mjs",
+    "d1:migrate": "wrangler d1 migrations apply reverie-log --local",
+    "d1:migrate:remote": "wrangler d1 migrations apply reverie-log --remote"
   },
   "dependencies": {
     "@noble/curves": "^2.4.0",

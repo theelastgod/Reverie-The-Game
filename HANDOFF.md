@@ -110,6 +110,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   takes the second node (or the third when the second is spent), answers both
   offers, and listens before deciding. Ord reads the pair back once from his
   later line; Nara notices the print in your coat, or the name you kept.
+- Writeback log (2026-09-26): a D1 binding `LOG` with one additive
+  migration (`server/migrations/0001_events.sql`, an append-only `events`
+  table). `server/src/log.ts` diffs two world states into events (link,
+  wallet, under, burial, claim.filed, claim.settled, passing, credits, news)
+  with public names only; `server/src/logSink.ts` queues them (500, oldest
+  dropped and counted) and flushes in batches of 100, keeping the queue on a
+  failure and warning once a minute. The object diffs only when it
+  checkpoints and hands the flush to `waitUntil`; without the binding nothing
+  is written. `GET /log/recent?kind=passing|news|burial|link&limit=1..50`
+  serves the public kinds newest first with a 15 s cache; claims and wallets
+  never leave the table. `npm run d1:migrate` applies the migration locally;
+  the deploy needs `wrangler d1 create reverie-log`, its id in
+  `wrangler.toml`, and `npm run d1:migrate:remote`.
 - Audio system (2026-09-26, Stage B prep): `src/audio/cues.ts` decides the
   bed by district, the music track (title theme on the title and the
   credits; Nave and Annex underscore; Grid underscore on the Wet Grid and the
@@ -158,6 +171,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   latest measure (after the opening beats, fresh world and reused world):
   bot 59 s (walk 49 s, two fights 8 s, talk 1.8 s), 1393 words shown, 7
   decisions, first playthrough estimate 15.0 min.
+- Writeback log: 4 diff tests (every kind, unchanged world, a body that only
+  appeared, rolling news), 4 sink tests (batches, overflow, a failing D1
+  keeps the queue and warns once a minute, one flush in flight), 3 session
+  tests (a mock link writes one row through waitUntil, movement writes none,
+  nothing without the binding, the read route's kinds and limits). Live: the
+  local Worker with the migration applied writes the campaign smoke's link
+  and serves it from `/log/recent?kind=link`.
 - Audio: 15 tests pin the bed by district, the music machine (the pulse
   starts after 0.5 s of contact, stops 4 s after the last, never on a brush,
   drops off the city), every effect diff, and the settings (clamping,
@@ -215,8 +235,12 @@ they are discovered; keep this list honest.
    minutes) and the map becomes an override for test serials only. One Angel
    active per body stays the rule (`applyLink` already refuses a serial that
    is walking).
-4. **Per-zone Durable Objects** with handoff at gates; **D1** writeback log
-   (history, passings, claims) with additive migrations.
+4. **Per-zone Durable Objects** with handoff at gates. The D1 log is in;
+   zones would share it. Design first: which state is per zone (bodies,
+   enemies, nodes, wreckage) and which stays global (houses, clearing,
+   passing, market, news), how a body crosses a gate (a handoff message with
+   the player record, the old zone closing the socket with a code the client
+   follows), and how the campaign smoke would cross.
 5. **Opening density, the last stretch.** Measured 2026-09-25 after the
    opening beats and Ord's reading of the pair (`scripts/smoke-campaign.mjs`
    prints `measure:` lines; a later fight is floored at 25 s of a person's

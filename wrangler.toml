@@ -14,6 +14,15 @@ bindings = [{ name = "WORLD", class_name = "ReverieWorld" }]
 tag = "v1"
 new_sqlite_classes = ["ReverieWorld"]
 
+# The writeback log. The id is a placeholder that local development accepts
+# (local D1 is a sqlite file keyed by the name); put the real id in at deploy
+# time after `wrangler d1 create reverie-log`, then `npm run d1:migrate:remote`.
+[[d1_databases]]
+binding = "LOG"
+database_name = "reverie-log"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "server/migrations"
+
 # The test link (serial + mock signature) is a development convenience.
 # `.dev.vars` turns it on for `wrangler dev`; a deployed city keeps it off and
 # links Angels through /wallet with the holders map below until the contract exists.
