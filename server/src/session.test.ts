@@ -579,6 +579,75 @@ describe("wallet login", () => {
     expect(body.load.charsPerViewer).toBe(body.load.broadcastChars);
   });
 
+  it("an action is checkpointed before its snapshot goes; a second action inside 20 ms rides the next alarm, checkpointed first and broadcast forced", async () => {
+    const ws = socket();
+    const { world, storage } = await worldHarness(saved(angel("a")), [ws]);
+    vi.setSystemTime(1000);
+    const puts = () => storage.put.mock.calls.length;
+    const sends = () => ws.send.mock.calls.length;
+    const before = puts();
+    await world.webSocketMessage(ws as never, '{"t":"stance"}');
+    expect(puts(), "the first action checkpoints at once").toBe(before + 1);
+    expect(last(ws).you.stance).toBe("storm");
+    const sentAfterFirst = sends();
+    vi.setSystemTime(1005);
+    await world.webSocketMessage(ws as never, '{"t":"stance"}');
+    expect(puts(), "a second action inside the window is not checkpointed on its own").toBe(before + 1);
+    expect(sends(), "and not broadcast on its own").toBe(sentAfterFirst);
+    vi.setSystemTime(1050);
+    await world.alarm();
+    expect(puts(), "the alarm checkpoints the coalesced action first").toBe(before + 2);
+    expect(sends()).toBeGreaterThan(sentAfterFirst);
+    expect(last(ws).you.stance, "both actions are in the frame the alarm sent").toBe("restraint");
+    // the checkpoint the alarm wrote carries the action, so a restart would keep it
+    const savedWorld = storage.put.mock.calls[puts() - 1][0] as Record<string, { players: [string, Player][] }>;
+    expect(savedWorld[WORLD_KEY].players.find(([id]) => id === "a")![1].stance).toBe("restraint");
+    // quiet for a while: the next action is immediate again
+    vi.setSystemTime(2000);
+    await world.webSocketMessage(ws as never, '{"t":"stance"}');
+    expect(puts()).toBe(before + 3);
+    expect(last(ws).you.stance).toBe("storm");
+    // a message that changes nothing costs nothing: a strike lands its cooldown, a second strike inside it is a no-op
+    vi.setSystemTime(3000);
+    await world.webSocketMessage(ws as never, '{"t":"strike"}');
+    expect(puts()).toBe(before + 4);
+    const sentAfterStrike = sends();
+    vi.setSystemTime(3100);
+    await world.webSocketMessage(ws as never, '{"t":"strike"}');
+    expect(puts(), "no checkpoint for a no-op").toBe(before + 4);
+    expect(sends(), "no broadcast for a no-op").toBe(sentAfterStrike);
+  });
+
+  it("a flood past the socket's budget is dropped unread and counted on /world; the budget refills with time", async () => {
+    const ws = socket();
+    const { world, storage } = await worldHarness(saved(angel("a")), [ws]);
+    vi.setSystemTime(1000);
+    const before = storage.put.mock.calls.length;
+    for (let i = 0; i < 200; i++) await world.webSocketMessage(ws as never, '{"t":"stance"}');
+    // 120 admitted (an even number of stance flips: back where it began), 80 dropped; the first checkpointed and
+    // broadcast at once, the rest coalesced into the next alarm: two checkpoints for the lot
+    expect(last(ws).you.stance, "the first flip went out at once").toBe("storm");
+    expect(storage.put.mock.calls.length).toBe(before + 1);
+    vi.setSystemTime(1050);
+    await world.alarm();
+    expect(last(ws).you.stance, "the alarm carried the rest").toBe("restraint");
+    expect(storage.put.mock.calls.length).toBe(before + 2);
+    let body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { dropped: number } };
+    expect(body.load.dropped).toBe(80);
+    // half a second later thirty tokens are back: thirty-one messages, one dropped
+    vi.setSystemTime(1500);
+    for (let i = 0; i < 31; i++) await world.webSocketMessage(ws as never, '{"t":"stance"}');
+    body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { dropped: number } };
+    expect(body.load.dropped).toBe(81);
+    // another socket has a budget of its own
+    const other = socket("b", otherToken);
+    await world.join(otherToken, other as never);
+    vi.setSystemTime(1501);
+    await world.webSocketMessage(other as never, '{"t":"intent","intent":{"right":true}}');
+    body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { dropped: number } };
+    expect(body.load.dropped).toBe(81);
+  });
+
   it("routes the wallet endpoints to the city", async () => {
     const names: string[] = [];
     const env = {

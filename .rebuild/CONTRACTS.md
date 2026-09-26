@@ -227,8 +227,9 @@ export class SlowTracker { fresh(viewer); rosterDue(viewer, fast); youDue(viewer
 
 ## server/src/load.ts (the object's load meter; `/world` → `load`)
 ```ts
-export type LoadReport = { sessions; bodies; lateMs; maxLateMs; catchUp; maxCatchUp; stalls; broadcastChars; charsPerViewer; alarms };
-export class LoadMeter { alarmed(lateMs, steps, capped, at); broadcasted(chars, viewers); report(sessions, bodies, at): LoadReport } // EMA + 10 s windowed max; Workers freeze the clock during compute, so lateness and catch-up are the signal, not step time
+export type LoadReport = { sessions; bodies; lateMs; maxLateMs; catchUp; maxCatchUp; stalls; broadcastChars; charsPerViewer; alarms; checkpointMs; maxCheckpointMs; dropped };
+export class LoadMeter { alarmed(lateMs, steps, capped, at); broadcasted(chars, viewers); checkpointed(ms, at); dropped(); report(sessions, bodies, at): LoadReport } // EMA + 10 s windowed max; Workers freeze the clock during compute, so lateness and catch-up are the signal, not step time; dropped counts messages a socket sent past its budget since the meter began
+// The object's message budget (index.ts): a token bucket per socket, MESSAGE_BURST = 120 deep, refilled at MESSAGES_PER_SECOND = 60; a message past it is dropped unread and counted. An action's checkpoint and forced broadcast happen at most once per ACTION_BROADCAST_MIN_MS = 20 of the last action's: inside the window the object marks itself dirty and owed, and the next alarm checkpoints first, then broadcasts forced. A message that changed nothing (applyAction returned the same world) costs nothing past its token. A join's or a close's broadcast opens no window.
 // SimulationClock.lastCapped: true when the last advance dropped time (MAX_CATCHUP_MS). scripts/load-check.mjs reads all of this; .rebuild/ZONES.md keeps the numbers and the scale design.
 ```
 

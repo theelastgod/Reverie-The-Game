@@ -201,7 +201,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   registrable domain, which `workers.dev` on the public suffix list
   prevents; revisit on a custom apex), and a serial is never re-checked
   against the chain after linking (a holder could seal several saved
-  bodies by linking while the others are offline).
+  bodies by linking while the others are offline). Not in the review's
+  list, found later the same day: a socket could make the object
+  checkpoint and broadcast at any rate; bounded since (see the object's
+  message budget, below).
 - A review of the day's diff (2026-09-26, `42ba668..HEAD`, medium effort)
   found one real defect and one line: the ring's `prepare` and `join`
   verbs did not wait for the gate, so an Angel who prepared the ground
@@ -299,6 +302,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- The object's message budget (2026-09-26, found reading the message
+  path): every non-intent message cost the object a full checkpoint (a
+  storage put of the world and every player) and a forced broadcast to
+  every viewer, with nothing bounding it per socket, so one client
+  sending verbs in a loop could make the object write and send at any
+  rate it chose. Now `webSocketMessage` admits a message only from a
+  token bucket per socket (`MESSAGE_BURST` 120 deep, refilled at
+  `MESSAGES_PER_SECOND` 60; an honest client sends an intent per key
+  change and a strike or two a second); past it the message is dropped
+  unread and counted (`load.dropped()` → `dropped` on `/world`). And an
+  action's checkpoint and forced broadcast happen at most once per
+  `ACTION_BROADCAST_MIN_MS` (20) of the last action's: inside the window
+  the object marks itself dirty and owed and returns, and the next alarm
+  checkpoints first, then broadcasts forced, so the invariant (an action
+  is checkpointed before its snapshot goes) holds and nothing is later
+  than one step. A message that changed nothing (a strike on cooldown, a
+  refused packet: `applyAction` returned the same world) costs nothing
+  past its token; a join's or a close's broadcast opens no window, so the
+  first action after either is immediate. The bucket is per socket and
+  dies with it; a hibernation wake starts every socket full.
 - A phone's HUD (2026-09-26): at 390 px wide the play client's HUD ran
   off the right edge (the verb chips), the minimap and the journal's tab
   sat on the wrapped top chips, and the prompt had no room; a
@@ -703,6 +726,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The object's message budget (2026-09-26): typecheck, 460 tests (an
+  action at t=1000 checkpointed and broadcast at once, a second at
+  t=1005 coalesced, the alarm at 1050 checkpointing first and
+  broadcasting forced with the saved world carrying the stance, the
+  window closed by t=2000, a no-op strike costing nothing; 200 stance
+  messages in one instant leaving the first immediate and the rest
+  dropped past the burst, `dropped` 80 on the report, one more after
+  the refill at 1500, a second socket's bucket its own; the report's
+  shape), the build, the session smoke, the whole spine over the wire
+  on a fresh world (`npm run test:campaign:4`: I 8 decisions, II 4 with
+  the Clearing at 40, III 3, IV 3 with the Passing `failed`, the credits
+  reached; `/world` after it: 4819 alarms, `dropped` 0, checkpoints
+  0.44 ms smoothed), and the render check at `RENDER_MIN_FPS=5`
+  (landing page with 8 log lines, desktop, phone: nothing off the
+  screen).
 - A phone's HUD (2026-09-26): typecheck, 458 tests, the build, and the
   render check's new phone pass PASS (nothing off the screen, nothing
   stacked, no sideways scroll) beside the desktop pass and the landing

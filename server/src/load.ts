@@ -29,6 +29,8 @@ export type LoadReport = {
   /** Wall time of a checkpoint's storage write, ms (the clock does advance across I/O): smoothed and the worst in the window. */
   checkpointMs: number;
   maxCheckpointMs: number;
+  /** Messages dropped unread since the meter began because a socket sent past its budget (a flood, never an honest client). */
+  dropped: number;
 };
 
 type Sample = { at: number; v: number };
@@ -66,6 +68,12 @@ export class LoadMeter {
   private lastViewers = 0;
   private stalled = 0;
   private count = 0;
+  private droppedCount = 0;
+
+  /** A socket sent past its budget: one message dropped unread. */
+  dropped(): void {
+    this.droppedCount++;
+  }
 
   /** An alarm fired `lateMs` after it was due and ran `steps` steps; `capped` when the clock dropped time to stay bounded. */
   alarmed(lateMs: number, steps: number, capped: boolean, at: number): void {
@@ -101,6 +109,7 @@ export class LoadMeter {
       alarms: this.count,
       checkpointMs: r(this.checkpoint.avg),
       maxCheckpointMs: r(this.checkpoint.max(at)),
+      dropped: this.droppedCount,
     };
   }
 }

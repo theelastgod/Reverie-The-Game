@@ -83,6 +83,23 @@ type Session = { id: string; token: string };
 const idle: Intent = { up: false, down: false, left: false, right: false };
 const playerKey = (token: string) => `${PLAYER_PREFIX}${token}`;
 
+/**
+ * What one socket may send: a token bucket, `MESSAGE_BURST` deep, refilled
+ * at `MESSAGES_PER_SECOND`. A client's honest rate is an intent on every
+ * key change and a strike or two a second; anything past the bucket is a
+ * flood, dropped unread and counted on `/world`. And an action's checkpoint
+ * and forced broadcast, the dear part of a message, happen at most once per
+ * `ACTION_BROADCAST_MIN_MS` for the object: a second action inside that
+ * window of the last one's rides the next alarm, which checkpoints first
+ * and broadcasts forced, so nothing is lost and nothing is later than a
+ * step. A join's or a close's broadcast opens no window: the first action
+ * after either is immediate.
+ */
+const MESSAGES_PER_SECOND = 60;
+const MESSAGE_BURST = 120;
+const ACTION_BROADCAST_MIN_MS = 20;
+type Budget = { tokens: number; at: number };
+
 /** A WebSocket as this object uses it; narrow so tests can hand in doubles. */
 type Socket = Pick<WebSocket, "send" | "close" | "serializeAttachment" | "deserializeAttachment">;
 
@@ -98,6 +115,10 @@ export class ReverieWorld {
   private readonly slow = new SlowTracker(); // per viewer, which slow sections they already hold
   private alarmDue = 0; // when the pending alarm was asked for, to read its lateness
   private logged: WorldState; // the world as of the last log diff
+  private readonly budgets = new Map<Socket, Budget>(); // what each socket may still send
+  private dirty = false; // an action since the last checkpoint: the next checkpoint is owed before any broadcast
+  private owed = false; // an action whose forced broadcast rides the next alarm
+  private actionAt = -Infinity; // wall clock of the last broadcast an action forced (a join's or a close's does not count)
 
   constructor(private readonly ctx: DurableObjectState, private readonly env: Env) {
     this.w = emptyWorld();
@@ -135,6 +156,7 @@ export class ReverieWorld {
     await this.ctx.storage.put(records);
     this.load.checkpointed(Date.now() - began, Date.now());
     this.checkpointAt = this.w.now;
+    this.dirty = false;
     // The log reads the difference since the last checkpoint, never per tick; a flush never holds the tick.
     const events = logEventsFor(this.logged, this.w, Date.now());
     this.logged = this.w;
@@ -255,9 +277,28 @@ export class ReverieWorld {
     });
   }
 
+  /** True when the socket's bucket has a token for this message; a flood past it is dropped unread and counted. */
+  private admit(ws: Socket, now: number): boolean {
+    let budget = this.budgets.get(ws);
+    if (!budget) {
+      budget = { tokens: MESSAGE_BURST, at: now };
+      this.budgets.set(ws, budget);
+    }
+    budget.tokens = Math.min(MESSAGE_BURST, budget.tokens + Math.max(0, now - budget.at) / 1000 * MESSAGES_PER_SECOND);
+    budget.at = now;
+    if (budget.tokens < 1) {
+      this.load.dropped();
+      return false;
+    }
+    budget.tokens -= 1;
+    return true;
+  }
+
   async webSocketMessage(ws: WebSocket, msg: string | ArrayBuffer) {
     const id = this.sessions.get(ws)?.id;
     if (!id || typeof msg !== "string" || msg.length > MAX_MESSAGE) return;
+    const now = Date.now();
+    if (!this.admit(ws, now)) return;
     let data: unknown;
     try {
       data = JSON.parse(msg);
@@ -268,12 +309,20 @@ export class ReverieWorld {
     if (!this.w.players.has(id)) return;
     if (data.t === "link" && !this.mockLink) return; // the test link is off; wallets go through /wallet
     // Settle elapsed time before a new input; it must not act retroactively during catch-up.
-    this.advanceWorld(Date.now());
+    this.advanceWorld(now);
+    const before = this.w;
     this.w = applyAction(this.w, id, data);
     if (data.t === "intent") {
-      this.intentAt.set(id, Date.now());
+      this.intentAt.set(id, now);
       return;
     }
+    if (this.w === before) return; // a message that changed nothing (a strike on cooldown, a refused packet) costs nothing more
+    // An action is checkpointed before its snapshot is sent. The checkpoint and the forced broadcast are the dear part
+    // of a message, so a second action inside ACTION_BROADCAST_MIN_MS of the last one's rides the next alarm instead.
+    this.dirty = true;
+    this.owed = true;
+    if (now - this.actionAt < ACTION_BROADCAST_MIN_MS) return;
+    this.actionAt = now;
     await this.checkpoint();
     this.broadcast(true);
   }
@@ -285,6 +334,7 @@ export class ReverieWorld {
     if (!session) return;
     const player = this.w.players.get(session.id);
     this.sessions.delete(ws);
+    this.budgets.delete(ws);
     this.slow.forget(session.id);
     this.withBody(session.id, null);
     this.intentAt.delete(session.id);
@@ -350,8 +400,11 @@ export class ReverieWorld {
     const now = Date.now();
     const steps = this.advanceWorld(now);
     this.load.alarmed(this.alarmDue ? now - this.alarmDue : 0, steps, this.clock.lastCapped, now);
-    if (this.w.now - this.checkpointAt >= 1) await this.checkpoint();
-    this.broadcast();
+    // Passive simulation checkpoints about once a simulation second; an action that rode this alarm is checkpointed first.
+    if (this.dirty || this.w.now - this.checkpointAt >= 1) await this.checkpoint();
+    const owed = this.owed;
+    if (owed) this.actionAt = now;
+    this.broadcast(owed);
     if (this.w.players.size > 0) await this.setAlarm(Math.max(now + STEP_MS, Date.now() + 1));
     else { this.ticking = false; this.clock.stop(); }
   }
@@ -368,6 +421,7 @@ export class ReverieWorld {
   private broadcast(force = false) {
     let chars = 0;
     let viewers = 0;
+    this.owed = false;
     const slowDue = force || this.w.tick % SLOW_EVERY_TICKS === 0;
     const step = stepViews(this.w); // the views and encodings every viewer of this step shares
     for (const [ws, session] of this.sessions) {

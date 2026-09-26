@@ -114,8 +114,11 @@ tab with the word `deploy` typed in, runs the typecheck and the tests, then the
 migration and the deploy, and needs the repository secrets
 `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Sessions use a host-only
 HttpOnly cookie; a second tab takes over the same body. Actions checkpoint
-before their snapshot is sent; passive simulation checkpoints about once per
-simulation second.
+before their snapshot is sent, at most once per 20 ms for the object (a second
+action inside that window rides the next alarm, which checkpoints first);
+passive simulation checkpoints about once per simulation second. Each socket
+may send 60 messages a second with a burst of 120; past that a message is
+dropped unread and counted as `dropped` on `/world`.
 
 ## Non-negotiables
 
