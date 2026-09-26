@@ -17,6 +17,7 @@ import { mountJournal, type JournalPanel } from "./journal";
 import { mountMinimap, type MinimapPanel } from "./minimap";
 import { mountLock, type LockPanel } from "./lock";
 import type { WalletOutcome } from "../net/wallet";
+import { audio } from "../audio/bus";
 import { eventRows, mountEvents, type EventsPanel } from "./events";
 import { ledgerModel, mountLedger, type LedgerPanel } from "./ledger";
 
@@ -89,6 +90,7 @@ export class Hud {
   private readonly marqueeTrack: HTMLElement | null;
   private readonly connection: HTMLElement | null;
   private readonly credits: HTMLElement | null;
+  private readonly audioChip: HTMLButtonElement | null;
   private readonly loading: HTMLElement | null;
   private readonly loadingText: HTMLElement | null;
   private readonly loadingPct: HTMLElement | null;
@@ -168,6 +170,7 @@ export class Hud {
     this.marqueeTrack = this.marquee ? q(this.marquee, ".marquee-track") : null;
     this.connection = q(root, "#hud-connection");
     this.credits = q(root, "#hud-credits");
+    this.audioChip = q(root, "#hud-audio");
     this.loading = q(root, "#hud-loading");
     this.loadingText = this.loading ? q(this.loading, ".chip-text") : null;
     this.loadingPct = this.loading ? q(this.loading, ".loading-pct") : null;
@@ -183,6 +186,9 @@ export class Hud {
     this.kit?.addEventListener("click", this.onKit);
     this.promptVerbs?.addEventListener("click", this.onVerb);
     this.credits?.addEventListener("click", this.onCredits);
+    this.audioChip?.addEventListener("click", this.onAudio);
+    audio.onChange = () => this.syncAudio();
+    this.syncAudio();
 
     this.setStatus("connecting");
   }
@@ -251,7 +257,7 @@ export class Hud {
     this.noticeTimer = window.setTimeout(() => this.pruneLocals(), NOTICE_TTL * 1000 + 20);
   }
 
-  toggleJournal(): void { this.journal.toggle(); }
+  toggleJournal(): void { this.journal.toggle(); audio.play("page"); }
   toggleLedger(): void { this.ledgerAuto = false; this.ledger.toggle(); }
   /** From hello: whether this city accepts the test link; the lock panel offers it only then. */
   setMockLink(on: boolean): void { this.lock.setMockLink(on); }
@@ -277,6 +283,8 @@ export class Hud {
     this.kit?.removeEventListener("click", this.onKit);
     this.promptVerbs?.removeEventListener("click", this.onVerb);
     this.credits?.removeEventListener("click", this.onCredits);
+    this.audioChip?.removeEventListener("click", this.onAudio);
+    if (audio.onChange) audio.onChange = null;
     this.dialogue.destroy();
     this.journal.destroy();
     this.minimap.destroy();
@@ -289,7 +297,16 @@ export class Hud {
 
   private readonly onStance = (ev: Event) => { ev.preventDefault(); this.cb.stance(); };
   private readonly onKit = (ev: Event) => { ev.preventDefault(); this.cb.kit(); };
-  private readonly onCredits = () => { show(this.credits, false); };
+  private readonly onCredits = () => { show(this.credits, false); audio.setScene("city"); };
+  private readonly onAudio = () => { audio.toggleMuted(); };
+
+  /** The chip reads the bus: AUDIO ON 80, or AUDIO OFF. */
+  private syncAudio(): void {
+    if (!this.audioChip) return;
+    setText(q(this.audioChip, ".chip-text"), audio.muted ? "AUDIO OFF" : "AUDIO ON");
+    setText(q(this.audioChip, ".chip-small"), `${Math.round(audio.volume * 100)}`);
+    this.audioChip.setAttribute("aria-pressed", audio.muted ? "true" : "false");
+  }
   private readonly onVerb = (ev: MouseEvent) => {
     const btn = (ev.target as HTMLElement | null)?.closest<HTMLButtonElement>("button.verb");
     if (!btn || !this.promptTarget) return;
@@ -557,6 +574,7 @@ export class Hud {
     if (now && !before && !this.creditsSeen) {
       this.creditsSeen = true;
       show(this.credits, true);
+      audio.setScene("credits");
     }
   }
 }

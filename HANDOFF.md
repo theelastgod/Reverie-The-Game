@@ -110,6 +110,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   takes the second node (or the third when the second is spent), answers both
   offers, and listens before deciding. Ord reads the pair back once from his
   later line; Nara notices the print in your coat, or the name you kept.
+- Audio system (2026-09-26, Stage B prep): `src/audio/cues.ts` decides the
+  bed by district, the music track (title theme on the title and the
+  credits; Nave and Annex underscore; Grid underscore on the Wet Grid and the
+  Kerb; the burial elegy at the plot, in the Care and while dead; the rite in
+  the Clearing and the Ring; the beds alone in the Organs; the combat pulse
+  after half a second of a fighting enemy within 320 px, held four seconds
+  past the last contact) and the effects from snapshot diffs (hit, death,
+  keep, extract, wink, under, bury, freeze, appearance, hijack; strike, heavy,
+  dodge and the journal page come from the inputs). `src/audio/bus.ts` is
+  WebAudio behind it: a bed that cross-fades, a track that ducks the bed, one
+  shots with a throttle; the context opens on the title click; every file is
+  fetched once and an absent one is silence forever. Settings live in
+  localStorage; the top row has an AUDIO chip; O mutes, [ and ] step the
+  volume. The generated files are still absent, so the city is silent and
+  identical; when `scripts/pull-generated.mjs` lands them under
+  `public/assets/gen/`, it sounds.
 - Wallet login (2026-09-25, disarmed): the lock panel offers LINK A WALLET.
   The client discovers wallets by EIP-6963 (`window.ethereum` as fallback),
   asks for an account, fetches a nonce from `POST /wallet/challenge`, has the
@@ -142,6 +158,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   latest measure (after the opening beats, fresh world and reused world):
   bot 59 s (walk 49 s, two fights 8 s, talk 1.8 s), 1393 words shown, 7
   decisions, first playthrough estimate 15.0 min.
+- Audio: 15 tests pin the bed by district, the music machine (the pulse
+  starts after 0.5 s of contact, stops 4 s after the last, never on a brush,
+  drops off the city), every effect diff, and the settings (clamping,
+  persistence, a storage that throws). The bus itself is thin and untested;
+  the render check passes with the chip in the top row. No generated file
+  exists in this checkout, so nothing has been heard.
 - Wallet login: 6 session tests drive the object with real secp256k1
   signatures (holder sealed, stranger bound, forged signature refused, nonce
   spent and expired, mock link on/off by environment, worker routing); the
@@ -179,7 +201,9 @@ they are discovered; keep this list honest.
    72–78: the title theme behind the title screen, the Nave and Grid
    underscores by district, the combat pulse while an enemy is in telegraph
    or recovery, the burial elegy at the plot and the Care, the rite in the
-   Clearing; cross-fade with the beds, never both at full level); the four
+   Clearing; cross-fade with the beds, never both at full level: the audio
+   system is built and gated by `assets/gen/manifest.json`, which the pull
+   script writes, so the pull is a drop-in); the four
    trailer clips (79–82) as extra loops, and the 30 s trailer (83) on the
    landing page in `site/`. Remaining Higgsfield budget after the music and
    trailer: about 255 credits, for replacements only.

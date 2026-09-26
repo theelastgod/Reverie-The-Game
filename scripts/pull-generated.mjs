@@ -1,8 +1,8 @@
 // Pull the generated Stage B assets listed in .rebuild/generated-manifest.tsv into
 // public/assets/gen/, post-processing stills to game sizes with sharp.
 // Usage: node scripts/pull-generated.mjs [--only=portraits,props,...]
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
-import { dirname, join, extname } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { dirname, join, extname, relative, sep } from "node:path";
 import sharp from "sharp";
 
 const manifest = readFileSync(".rebuild/generated-manifest.tsv", "utf8")
@@ -52,4 +52,30 @@ for (const item of manifest) {
   }
 }
 console.log(`${ok} pulled, ${failed} failed`);
+
+// The manifest names what exists on disk; the client fetches nothing that is not in it.
+// It is written even when nothing could be pulled, so an unfinished city costs one request.
+async function writeManifest() {
+  const targets = {};
+  const walk = dir => {
+    for (const name of readdirSync(dir)) {
+      const full = join(dir, name);
+      if (statSync(full).isDirectory()) { walk(full); continue; }
+      if (name === "manifest.json") continue;
+      targets[relative(OUT, full).split(sep).join("/")] = { w: 0, h: 0 };
+    }
+  };
+  mkdirSync(OUT, { recursive: true });
+  walk(OUT);
+  for (const target of Object.keys(targets)) {
+    if (!/\.(png|jpe?g)$/i.test(target)) continue;
+    try {
+      const meta = await sharp(join(OUT, target)).metadata();
+      targets[target] = { w: meta.width ?? 0, h: meta.height ?? 0 };
+    } catch { /* an unreadable image stays listed with no size */ }
+  }
+  writeFileSync(join(OUT, "manifest.json"), JSON.stringify({ v: 1, targets }, null, 2) + "\n");
+  console.log(`manifest: ${Object.keys(targets).length} targets`);
+}
+await writeManifest();
 process.exit(failed ? 1 : 0);

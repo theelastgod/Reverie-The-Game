@@ -7,6 +7,7 @@ import { getPreselectedSerial, mountTitle } from "./ui/title";
 import { Hud, type HudCallbacks } from "./ui/hud";
 import { bus } from "./render/bus";
 import { linkWallet } from "./net/wallet";
+import { audio } from "./audio/bus";
 import { BootScene } from "./scenes/BootScene";
 import { CityScene } from "./scenes/CityScene";
 
@@ -46,6 +47,8 @@ let game: Phaser.Game | null = null;
 
 function start(): void {
   if (game) return;
+  audio.unlock();
+  audio.setScene("city");
   const pre = getPreselectedSerial();
   if (pre !== null && Number.isInteger(pre) && pre >= 1 && pre <= 7777) bus.pendingSerial = pre;
   game = new Phaser.Game({

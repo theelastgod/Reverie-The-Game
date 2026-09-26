@@ -7,11 +7,7 @@ import Phaser from "phaser";
 import { FLOOR_FILES, type FloorKey } from "../sim/map";
 import { bus } from "../render/bus";
 import { NPC_SPRITES, TEX, ensureRainTexture, ensureScanlineTexture } from "../render/floors";
-
-export function assetUrl(path: string): string {
-  const base = import.meta.env.BASE_URL || "/";
-  return `${base}assets/${path}`.replace(/([^:]\/)\/+/g, "$1");
-}
+import { assetUrl } from "../ui/format";
 
 export class BootScene extends Phaser.Scene {
   constructor() {

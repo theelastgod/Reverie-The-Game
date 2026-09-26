@@ -86,6 +86,9 @@ canvas { display: block; }
   width: auto;
   display: block;
 }
+.chip-audio { cursor: pointer; font: inherit; letter-spacing: 0.08em; text-transform: uppercase; }
+.chip-audio:focus-visible { outline: 3px solid var(--acid); outline-offset: 2px; }
+.chip-audio[aria-pressed="true"] .chip-text { text-decoration: line-through; color: var(--muted); }
 .chip-tags { display: inline-flex; gap: 4px; }
 .chip-tags:empty { display: none; }
 

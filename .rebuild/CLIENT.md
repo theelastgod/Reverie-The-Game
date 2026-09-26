@@ -9,6 +9,11 @@ computes a number that matters; it may use `src/sim/map.ts` for the level and
 - **scenes/render/net** (owner D1): `src/main.ts`, `src/scenes/BootScene.ts`,
   `src/scenes/CityScene.ts`, `src/render/floors.ts`, `src/render/entities.ts`,
   `src/render/fx.ts`, `src/net/worldSocket.ts`, `src/net/worldSocket.test.ts`,
+`src/audio/cues.ts` (pure: the bed by district, the music machine with its combat
+hysteresis, effects from snapshot diffs), `src/audio/settings.ts` (volume and mute
+under localStorage `reverie.audio`), `src/audio/bus.ts` (WebAudio: one bed that
+cross-fades, one track that ducks it, one-shot effects; absent files are silence,
+fetched once), `src/assets/url.ts` (`genUrl` for `assets/gen/<target>`),
 `src/net/wallet.ts` (EIP-6963 discovery, the challenge/sign/link handshake over
 `/wallet/challenge` and `/wallet/link`, the outcome line), `src/net/wallet.test.ts`.
 - **HUD** (owner D2): `index.html`, `src/ui/hud.css`, `src/ui/hud.ts`,

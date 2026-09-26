@@ -30,6 +30,7 @@ satisfies it; `.rebuild/CONTRACTS.md` holds the shared-sim module signatures and
 | V / T | `flag` / `truce` | Angels only, in flag-legal districts |
 | I | `use` | first paper item (insurance / repair) |
 | J / M / L | client | journal / minimap / ledger (holdings, claims, the Grid) |
+| O · [ · ] | client | mute · volume down · volume up (also the AUDIO chip; kept per browser) |
 
 ## Shape
 

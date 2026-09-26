@@ -11,6 +11,8 @@ import { bus, type SceneActions } from "../render/bus";
 import { Entities } from "../render/entities";
 import { Floors, TEX } from "../render/floors";
 import { Fx } from "../render/fx";
+import { audio } from "../audio/bus";
+import { VOLUME_STEP } from "../audio/settings";
 
 const IDLE: Intent = { up: false, down: false, left: false, right: false };
 const MOVE_KEYS: Record<string, keyof Intent> = {
@@ -58,6 +60,7 @@ export class CityScene extends Phaser.Scene {
   private lastPois = "";
   private lastGates = "";
   private following = false;
+  private heard: Snap | null = null; // the last snapshot the audio bus was given
   private readonly prev: YouDiff = { init: false, dodgeT: 0, hitStop: 0, heavyWindup: 0, winkAt: 0, deaths: 0, under: 0, passing: 0, wink: "" };
   private readonly at = { x: 0, y: 0 };
 
@@ -73,6 +76,7 @@ export class CityScene extends Phaser.Scene {
     this.floors = new Floors(this);
     this.entities = new Entities(this);
     this.fx = new Fx(this);
+    audio.armGesture(window);
     this.entities.events = {
       ledger: (x, y, text, tone) => this.fx.ledger(x, y, text, tone),
       interrupt: (x, y) => this.fx.interrupt(x, y),
@@ -203,6 +207,15 @@ export class CityScene extends Phaser.Scene {
       case "ShiftLeft": case "ShiftRight":
         if (!dialogue && this.held.size) this.dodgeHeld();
         return;
+      case "KeyO":
+        audio.toggleMuted();
+        return;
+      case "BracketLeft":
+        audio.stepVolume(-VOLUME_STEP);
+        return;
+      case "BracketRight":
+        audio.stepVolume(VOLUME_STEP);
+        return;
     }
     if (dialogue) return;
     switch (e.code) {
@@ -264,7 +277,7 @@ export class CityScene extends Phaser.Scene {
 
   private dodgeToward(dir: keyof Intent): void {
     const d = DIR[dir];
-    if (this.net.dodge(d.dx, d.dy)) this.ghost(d.dx, d.dy);
+    if (this.net.dodge(d.dx, d.dy)) { this.ghost(d.dx, d.dy); audio.play("dodge"); }
   }
 
   private dodgeHeld(): void {
@@ -274,7 +287,7 @@ export class CityScene extends Phaser.Scene {
       dy += DIR[k].dy;
     }
     if (!dx && !dy) return;
-    if (this.net.dodge(dx, dy)) this.ghost(Math.sign(dx), Math.sign(dy));
+    if (this.net.dodge(dx, dy)) { this.ghost(Math.sign(dx), Math.sign(dy)); audio.play("dodge"); }
   }
 
   private ghost(dx: number, dy: number): void {
@@ -288,6 +301,7 @@ export class CityScene extends Phaser.Scene {
     const you = this.net.you;
     if (!you || you.dead) return;
     const sent = heavy ? this.net.heavy() : this.net.strike();
+    if (sent) audio.play(heavy ? "heavy" : "strike");
     if (!sent || heavy) return; // the heavy flash fires when its windup resolves
     const at = this.entities.youAt(this.at);
     const f = you.facing;
@@ -323,6 +337,10 @@ export class CityScene extends Phaser.Scene {
   }
 
   private render(snap: Snap): void {
+    if (snap !== this.heard) {
+      audio.update(this.heard, snap);
+      this.heard = snap;
+    }
     this.entities.sync(snap);
     const you = snap.you;
 
