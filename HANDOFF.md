@@ -173,6 +173,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   crosses the Care, Annex and Wet gates on foot and prints a second
   `measure:` block. PASS on the first run. The numbers are in Verified and
   Backlog 5.
+- A review of the day's diff (2026-09-26, `42ba668..HEAD`, medium effort)
+  found one real defect and one line: the ring's `prepare` and `join`
+  verbs did not wait for the gate, so an Angel who prepared the ground
+  before answering Ord could never reach his `gate` node (Ord's route put
+  the ring first once the ground was kept), `C.PARTY` was never set, and
+  the sequential `party` step stalled Movement IV for good. The ring's
+  verbs now wait for the party decision (the stand line says where it is
+  decided), Ord's route puts the gate before the ring, and his ring line
+  says he counts from the gate when you stood alone. A test stands an
+  undecided Angel at a set ring and at an open one, presses prepare to no
+  effect, answers Ord, and prepares. The review found nothing else in the
+  shared views, the frame cache, the tracker's identity skips, the
+  encoder's key order, the ring's ground or the Movement II gates.
 - The Care gate (2026-09-26, backlog 8): a third Movement IV decision on
   the walk from Ione Kade to the ring. Ord waits with the ledger at a new
   station just inside the Clearing at the Care gate (`station:ord-gate`,
@@ -548,6 +561,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - `scripts/render-check.mjs` PASS: title, Nave with HUD, dialogue screenshots
   in `.rebuild/shots/`; 14.9 fps under this sandbox's software WebGL
   (SwiftShader), so frame pacing on a GPU-backed laptop is still unmeasured.
+- The deploy bundle: `npx wrangler deploy --dry-run` builds it without
+  the API (541 KB, 142 KB gzipped, 92 site files, the five bindings and
+  variables as `wrangler.toml` states them); `npm run d1:migrate` applies
+  the migrations locally with none pending.
 - Not verified: a deploy (the Cloudflare API is denied by the network policy),
   the Stage B assets (results host denied), rendered play on real hardware.
 
@@ -573,6 +590,13 @@ they are discovered; keep this list honest.
    music and trailer: about 255 credits, for replacements only.
 2. **Deploy.** `npm run deploy` with the credentials in the session scratchpad
    (`cf.env`, never in the repo). Blocked until `api.cloudflare.com` is reachable.
+   Verified without the API (2026-09-26): `npx wrangler deploy --dry-run
+   --outdir=<tmp>` builds the Worker bundle (541 KB, 142 KB gzipped; 92
+   site files; bindings WORLD, LOG, ASSETS; `MOCK_LINK "0"`, `ANGEL_*`
+   empty) and `npm run d1:migrate` applies the migrations locally with
+   none pending. At deploy: `wrangler d1 create reverie-log`, its id into
+   `wrangler.toml` (the zero id is a placeholder), `npm run
+   d1:migrate:remote`, then `npm run deploy`.
 3. **Angel holders from the contract.** The chain read is built and tested
    (`server/src/holders.ts`); it waits on the ERC-721 itself. At deploy, set
    `ANGEL_CONTRACT`, `ANGEL_RPC_URL` (an endpoint the Worker may call) and

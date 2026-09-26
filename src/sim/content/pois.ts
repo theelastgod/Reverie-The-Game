@@ -1181,7 +1181,8 @@ const CLEARING: PoiConfig[] = [
         key: "F",
         label: "Prepare the ground",
         choice: "prepare",
-        when: ctx => has(ctx, F.MORTALITY) && partyWilling(ctx) && !has(ctx, F.PREPARE) && ringGround(ctx) === "ok",
+        // Who stands in it is decided with Ord at the Care gate first: the spine's step order holds at the ring too.
+        when: ctx => has(ctx, F.MORTALITY) && !!ctx.p.choices[C.PARTY] && partyWilling(ctx) && !has(ctx, F.PREPARE) && ringGround(ctx) === "ok",
         guest: spectate,
         say: "You keep the hole. The party still willing stands in it. The Passing is not yet the weather.",
         effects: [
@@ -1195,7 +1196,7 @@ const CLEARING: PoiConfig[] = [
         key: "F",
         label: "Stand in the open hole",
         choice: "join",
-        when: ctx => has(ctx, F.MORTALITY) && partyWilling(ctx) && !has(ctx, F.PREPARE) && ringGround(ctx) === "open",
+        when: ctx => has(ctx, F.MORTALITY) && !!ctx.p.choices[C.PARTY] && partyWilling(ctx) && !has(ctx, F.PREPARE) && ringGround(ctx) === "open",
         guest: spectate,
         say: "The hole is open already. Somebody prepared it and it has not set. You stand in it with them; the ring counts bodies, not who opened it.",
         effects: [
@@ -1207,10 +1208,11 @@ const CLEARING: PoiConfig[] = [
         key: "F",
         label: "Stand at the ring",
         choice: "look",
-        when: ctx => !has(ctx, F.PREPARE) && !passedThisSeason(ctx) && (!has(ctx, F.MORTALITY) || !partyWilling(ctx) || ringGround(ctx) === "soon" || ringGround(ctx) === "spent"),
+        when: ctx => !has(ctx, F.PREPARE) && !passedThisSeason(ctx) && (!has(ctx, F.MORTALITY) || !ctx.p.choices[C.PARTY] || !partyWilling(ctx) || ringGround(ctx) === "soon" || ringGround(ctx) === "spent"),
         guest: spectate,
         say: ctx => {
           if (!has(ctx, F.MORTALITY)) return "A ring in the asphalt. Keep the hole. The hour is not a character. A mortality act is required first: watch, a burial, or a last word.";
+          if (!ctx.p.choices[C.PARTY]) return "A ring in the asphalt. Ord is at the Care gate with the ledger open: who stands in it is decided there, before the ground.";
           if (!partyWilling(ctx)) return "A ring in the asphalt. The party will not stand. Someone walked. You cannot force the hour alone.";
           if (ringGround(ctx) === "spent") return "A ring in the asphalt. The Clearing's reserve is spent; there is nothing left to open until it fills back, a point at a time.";
           return `A ring in the asphalt. The last hole was contested lately and the asphalt has not set: ${settingSeconds(ctx)} seconds. Wait for the hour, or stand here while it sets.`;

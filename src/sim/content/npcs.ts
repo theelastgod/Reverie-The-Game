@@ -439,8 +439,9 @@ function ordRoute(ctx: Ctx): string {
   if (p.party.ord === "gone") return "gone";
   if (!has(ctx, F.TALKED_ORD)) return "first";
   if (!has(ctx, F.UNDER)) return has(ctx, F.WEATHER_ORD) ? "later" : "weather";
-  if (has(ctx, F.MAP) && has(ctx, F.PREPARE)) return "ring";
+  // The gate comes before the ring: who stands in it is decided before the ground is kept, and the ring's verbs wait for it.
   if (has(ctx, F.MORTALITY) && p.movement >= 4 && !p.choices[C.PARTY]) return "gate";
+  if (has(ctx, F.MAP) && has(ctx, F.PREPARE)) return "ring";
   if (has(ctx, F.MORTALITY) && p.movement >= 4) return "gate-after";
   if (has(ctx, F.MAP)) return "after-map";
   if (has(ctx, F.M3)) {
@@ -683,9 +684,10 @@ const ORD_NODES: Record<string, DialogueNode> = {
       const read = r >= READINESS_APPEARANCE_MIN ? `Readiness ${r}. Over the line for a trace.`
         : r >= READINESS_PASSING_MIN ? `Readiness ${r}. Over the floor of ${READINESS_PASSING_MIN}; a trace is ${READINESS_APPEARANCE_MIN}.`
           : `Readiness ${r} against a floor of ${READINESS_PASSING_MIN}. It will not open for you. I would write that down before you stand, so nobody says the number lied.`;
+      const where = chose(ctx, C.PARTY, "alone") ? "I count from the gate; you are in the ring, alone, as you said." : "I am in the ring. I am counting.";
       return ctx.w.gestell >= 91
         ? `Gestell is maxed. I have to tell you: the hour will not open unless enough of you hold the ring. I cannot make that number smaller by wanting it. Nobody can. ${read}`
-        : `I am in the ring. I am counting. ${read} If the hour opens I will write it down honest. If it does not I will write that. Press F when the party is ready.`;
+        : `${where} ${read} If the hour opens I will write it down honest. If it does not I will write that. Press F when ${chose(ctx, C.PARTY, "alone") ? "you are" : "the party is"} ready.`;
     },
     wink: "A solo cannot force the hour. He knows the arithmetic and hates it.",
   },

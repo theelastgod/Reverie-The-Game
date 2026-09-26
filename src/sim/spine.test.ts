@@ -760,18 +760,36 @@ function throughTheCredits(w0: WorldState): WorldState {
 // ---------------------------------------------------------------- the ring's ground
 
 describe("the ring's ground follows the hole", () => {
-  /** An Angel with the act done and the party willing, standing at the ring of a world whose Clearing is as given. */
-  function atTheRing(clearing: Partial<WorldState["clearing"]>, ring?: string): WorldState {
+  /** An Angel with the act done, the gate decided and the party willing, standing at the ring of a world whose Clearing is as given. */
+  function atTheRing(clearing: Partial<WorldState["clearing"]>, ring?: string, gate: "with" | "alone" | "" = "with"): WorldState {
     const w = emptyWorld();
     const p: Player = {
       ...spawnGuest(ME), guest: false, serial: 42, name: "#0042", house: "sky", messenger: "witness", winkSchool: "omen", auraSeed: 12, aura: 12,
-      movement: 4, flags: { [F.ANGEL]: 1, [F.UNDER]: 1, [F.GARDEN]: 1, [F.MORTALITY]: 1 },
-      party: { nara: "with", quill: "with", ord: "with" }, quests: { [Q.M1]: 15, [Q.M2]: 10, [Q.M3]: 8, [Q.M4]: 1 },
+      movement: 4, flags: { [F.ANGEL]: 1, [F.UNDER]: 1, [F.TALKED_ORD]: 1, [F.MAP]: 1, [F.GARDEN]: 1, [F.MORTALITY]: 1, ...(gate ? { [F.GATE]: 1 } : {}) },
+      choices: gate ? { [C.PARTY]: gate } : {},
+      party: { nara: "with", quill: "with", ord: "with" }, quests: { [Q.M1]: 15, [Q.M2]: 10, [Q.M3]: 8, [Q.M4]: gate ? 2 : 1 },
     };
     const pois = ring ? { ...w.pois, "clearing-ring": { state: ring, by: "other", at: w.now, count: 1 } } : w.pois;
     return goTo(add({ ...w, clearing: { ...w.clearing, ...clearing }, pois }, p), ME, "clearing-ring");
   }
   const offered = (w: WorldState) => verbsFor({ w, p: me(w), now: w.now }, "clearing-ring").map(v => v.choice);
+
+  it("waits for the gate: before Ord's question is answered the ring only stands, whatever the ground, and Ord still asks it", () => {
+    const w = atTheRing({}, undefined, "");
+    expect(offered(w)).toEqual(["look"]);
+    expect(me(interact(w, ME, "clearing-ring", "prepare")).flags[F.PREPARE]).toBeUndefined();
+    expect(me(interact(w, ME, "clearing-ring", "look")).heard).toContain("decided there, before the ground");
+    const open = atTheRing({ open: true, openedAt: 50, contest: { active: true, keep: 1, extract: 0, endsAt: 500, votes: { other: "keep" } } }, "open", "");
+    expect(offered(open)).toEqual(["look"]);
+    // Ord asks at the gate whatever the ring's state, and after the answer the ring opens up
+    expect(me(talkTo(w, ME, "ord")).dialogue?.node).toBe("gate");
+    const decided = closeAll(choose(talkTo(w, ME, "ord"), ME, "alone"), ME);
+    expect(offered(goTo(decided, ME, "clearing-ring"))).toContain("prepare");
+    // alone and prepared: Ord counts from the gate and says so
+    const prepared = interact(goTo(decided, ME, "clearing-ring"), ME, "clearing-ring", "prepare");
+    expect(npcView({ w: prepared, p: me(prepared), now: prepared.now }, prepared.npcs.ord)?.state).toBe("gate");
+    expect(me(talkTo(prepared, ME, "ord")).dialogue?.text).toContain("I count from the gate");
+  });
 
   it("prepares a set, unspent ring and opens the hole", () => {
     const w = atTheRing({});

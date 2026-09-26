@@ -116,7 +116,7 @@ const T4 = {
 // (46,63) (52,61) (58,63) (60,67) (58,71) (52,73) (46,71) (44,67); the Care gate is x 34..36 rows 66..68.
 const ROUTE4 = {
   toIone: [at(59, 48), at(59, 52), at(53, 52), at(53, 56), at(53, 59), at(50, 60), at(50, 64), at(48, 66), at(40, 66), at(36, 67), at(33, 67)],
-  toGate: [at(36, 67)],
+  toGate: [at(36, 67), at(39, 67)], // through the gate tiles (still the Care) to a tile inside the Clearing, a tile past Ord
   toRing: [at(40, 66), at(48, 66), at(50, 66)],
 };
 
