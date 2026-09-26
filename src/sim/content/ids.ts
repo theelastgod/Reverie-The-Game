@@ -24,6 +24,7 @@ export const F = {
   BULLETIN: "bulletin", // took the hour's number off the Annex Runner (optional; the plaque reads it)
   TALKED_SEXTON: "talked:sexton", // Movement II: Pim Ashe at the wake, beside the Care shrine
   TALKED_OFFICER: "talked:officer", // Movement II: Corvin Slate in the Annex corridor, before the freeze desk
+  TITHE: "tithe", // Movement II: decided the hour's tithe at the Annex tax window
   UNDER: "under", // went under (gate flag: nave↔care)
   ANGEL: "angel", // linked an Angel (guest is false)
   CARE: "care", // entered the Care
@@ -61,6 +62,7 @@ export const C = {
   WEATHER: "weather", // "stability" | "process" | "end"
   ANNEX: "annex:weather", // "held" | "hungry": what you told the Officer you want the weather to be, before the desk
   FREEZE: "freeze", // "signed" | "refused"
+  TITHE: "tithe", // "paid" | "rode": the hour's tithe at the tax window, paid now into your House or left to the weather
   OPERATOR: "operator", // "take" | "refuse"
   FORGE: "forge", // "spot" | "sell"
   MORTALITY: "mortality", // "watch" | "burial" | "lastword"

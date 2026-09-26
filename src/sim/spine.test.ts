@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
  * end of world as world, signs the freeze, refuses the yield, buries the
  * garden, spots the copy, and reaches every outcome the Passing can have.
  */
-import { DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_REFUSE, TEST_SERIAL } from "./constants";
+import { DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_REFUSE, TEST_SERIAL, TITHE_COST } from "./constants";
 import { POSITIONS, blockedFor, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
@@ -462,16 +462,36 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
     expect(w.frozen.nave).toBeUndefined();
   }
 
+  // The tax window on the way back: pay the hour's tithe now, or let the weather take it at the node
+  expect(snapshotFor(w, ME).objective).toMatchObject({ step: "tithe", target: POSITIONS["tax-window"] });
+  const beforeTithe = me(w).bestand;
+  const standingBefore = w.houses.standing;
+  w = tick(interact(goTo(w, ME, "tax-window"), ME, "tax-window", o.freeze === "sign" ? "ride" : "pay"));
+  expectStep(w, Q.M2, 6);
+  expect(me(w).flags[F.TITHE]).toBe(1);
+  if (o.freeze === "sign") {
+    expect(me(w).choices[C.TITHE]).toBe("rode");
+    expect(me(w).bestand).toBe(beforeTithe);
+    expect(w.houses.standing).toEqual(standingBefore);
+  } else {
+    expect(me(w).choices[C.TITHE]).toBe("paid");
+    expect(me(w).bestand).toBe(beforeTithe - TITHE_COST);
+    expect(w.flags["sunk:tithe"]).toBe(TITHE_COST);
+    expect(JSON.stringify(w.houses.standing)).not.toBe(JSON.stringify(standingBefore));
+  }
+  expect(verbsFor({ w, p: me(w), now: w.now }, "tax-window").map(v => v.choice), "decided once").not.toContain("pay");
+  expect(verbsFor({ w, p: me(w), now: w.now }, "tax-window").map(v => v.choice)).not.toContain("ride");
+
   const history = snapshotFor(w, ME).objective!;
   expect(history.step).toBe("history");
   expect(history.target).toEqual(POSITIONS["history:7777"]);
   w = tick(interact(goTo(w, ME, "care-shrine"), ME, "care-shrine", "history"));
-  expectStep(w, Q.M2, 6);
+  expectStep(w, Q.M2, 7);
   expect(me(w).flags[F.HISTORY]).toBe(1);
   expect(snapshotFor(w, ME).history.map(m => m.serial)).toEqual([TEST_SERIAL]);
 
   w = tick(interact(goTo(w, ME, "listing-board"), ME, "listing-board", "read"));
-  expectStep(w, Q.M2, 7);
+  expectStep(w, Q.M2, 8);
   expect(me(w).flags[F.BOARD]).toBe(1);
   expect(w.flags[W.CLEARING_LISTED]).toBe(1);
   expect(w.pois["listing-board"].state).toBe("clearing-listed");
@@ -501,7 +521,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
     expect(snapshotFor(w, ME).npcs.some(n => n.id === "vesper")).toBe(false);
   } else {
     w = tick(interact(goTo(w, ME, "operator-desk"), ME, "operator-desk", "refuse"));
-    expectStep(w, Q.M2, 8);
+    expectStep(w, Q.M2, 9);
     expect(me(w).choices[C.OPERATOR]).toBe("refuse");
     expect(me(w).flags[F.M3]).toBeUndefined();
     expect(me(w).current).toBe("");
@@ -683,7 +703,7 @@ describe("the private yield is decided once", () => {
 describe("the spine, played through", () => {
   it("has four movements of the authored length", () => {
     expect(questById(Q.M1)!.steps.length).toBe(15);
-    expect(questById(Q.M2)!.steps.length).toBe(9);
+    expect(questById(Q.M2)!.steps.length).toBe(10);
     expect(questById(Q.M3)!.steps.length).toBe(7);
     expect(questById(Q.M4)!.steps.length).toBe(4);
   });

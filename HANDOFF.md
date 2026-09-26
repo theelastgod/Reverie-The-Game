@@ -144,6 +144,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   80 still fall behind (interval mean 117 ms). Next levers, in
   `.rebuild/ZONES.md`: the 36-character ids are now about a third of a
   crowd's fast frame, `you` still rides whole, then zones.
+- The tax window as a decision (2026-09-26, backlog 6): a spine step
+  `tithe` between the freeze and the history. At the Annex tax window (7,22),
+  an Angel who has read their hall decides this hour's tithe once: E pays it
+  now (`TITHE_COST` Bestand into the `tithe` sink, one standing to their
+  House, `C.TITHE` paid), Q lets it ride (`C.TITHE` rode; the node takes it
+  at the weather's rate); the window's read line remembers. Movement II is
+  ten steps. The smoke's Movement II walks the window on the way back from
+  the desk and pays when the purse allows (the window also carries a side
+  hour's verb on E, so the smoke picks the spine's verbs by choice).
 - Movement II beats (2026-09-26, backlog 6): two spine steps on the route.
   `sexton`: Pim Ashe beside the shrine meets an Angel at the wake (a `wake`
   node whatever they said to him before: you are a line in the Care's book,
@@ -313,12 +322,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   latest measure (after the courier beat, a full run on a reused world):
   bot 67 s (walk 48 s, three fights 16 s, talk 1.8 s), 1524 words shown, 8
   decisions, first playthrough estimate 16.7 min. With `--movement=2`
-  (2026-09-26, after the sexton and Officer beats): Movement II PASS, bot
-  69 s (walk 68 s: hall 6 s, the Annex 19 s, the desk 2 s, back to the
-  shrine 16 s, the board 19 s, the operator 5 s; talk and verbs 1.8 s), 1196
-  words (dialogue 492, spoken 382, journal 194, notices 128), 3 decisions,
-  estimate 10.7 min on the spine alone (was 664 words, 2 decisions, 7.0 min
-  before the beats).
+  (2026-09-26, after the sexton, Officer and tax-window beats): Movement II
+  PASS, bot 79 s (walk 78 s: hall 6 s, the Annex 20 s, the desk 2 s, the
+  window 9 s, back to the shrine 17 s, the board 19 s, the operator 5 s; talk
+  and verbs 1.9 s), 1369 words (dialogue 492, spoken 446, journal 281,
+  notices 150), 4 decisions, estimate 12.6 min on the spine alone (664
+  words, 2 decisions, 7.0 min before the beats; 1196 / 3 / 10.7 before the
+  window). One run right after a worker restart failed at the intake fight
+  ("intake clerk falls did not complete") and passed on the rerun; not
+  reproduced, not root-caused.
 - Writeback log: 4 diff tests (every kind, unchanged world, a body that only
   appeared, rolling news), 4 sink tests (batches, overflow, a failing D1
   keeps the queue and warns once a minute, one flush in flight), 3 session
@@ -439,19 +451,15 @@ they are discovered; keep this list honest.
    a run right after another may note it was not met. Nothing further is
    planned here; re-measure after any change to Movement I and keep the
    numbers here.
-6. **Movement II density, the rest.** Measured 2026-09-26 over the wire
-   after the sexton and Officer beats: 10.7 min on the spine alone (was
-   7.0), 1196 words, three decisions (the corridor, the freeze, the yield);
-   68 s of bot walking, the Annex round trip still 35 s of it. Target: 12–15
-   min with four or five decisions. Candidates left, in the order they are
-   met: the tax window (7,22) in the Annex as a decision on the way back
-   (pay the tithe now against the hall's number, or let it ride and hear it
-   at the Cold desk later); the history mark spoken as a reversal (the
-   shrine's Q says what the prior hour did, in the mark's own line, and asks
-   whether to keep it); the board with a second listing that moves the
-   market, so the "resistance" has a price you can watch. Each is a spine
-   step or a gated line, with the campaign smoke's Movement II measure kept
-   here after every change.
+6. **Movement II density: at target.** Measured 2026-09-26 over the wire
+   after the sexton, Officer and tax-window beats: 12.6 min on the spine
+   alone (was 7.0), 1369 words, four decisions (the corridor, the freeze,
+   the tithe, the yield); 78 s of bot walking. Inside the 12–15 min target
+   with four decisions. One candidate left, optional: the listing board
+   with a second listing that moves the market (a world listing effect the
+   engine does not have yet), so the "resistance" has a price you can watch.
+   Movements III and IV are unmeasured over the wire; extending the smoke
+   through the Organs (`--movement=3`) is the next measure to take.
 7. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

@@ -61,6 +61,7 @@ const T2 = {
   hall: at(7, 71),             // hall-mortals (serial 7777 is House of Mortals)
   officer: at(17, 13),         // home:officer, Corvin Slate, in the Annex corridor
   desk: at(17, 6),             // safety-desk, the Annex
+  window: at(7, 22),           // tax-window, west of the corridor past the cubicles
   board: at(58, 38),           // listing-board, the Wet Grid
   operator: at(64, 50),        // operator-desk; Vesper stands at 65,50
 };
@@ -68,7 +69,8 @@ const ROUTE2 = {
   toHall: [at(13, 63), at(13, 71), at(9, 71)],
   hallToOfficer: [at(13, 71), at(13, 63), at(17, 58), at(17, 50), at(17, 30), at(17, 27), at(17, 15)],
   officerToDesk: [at(17, 11), at(17, 7)],
-  deskToShrine: [at(17, 11), at(17, 27), at(17, 30), at(17, 50), at(17, 58), at(17, 62)],
+  deskToWindow: [at(17, 11), at(17, 23), at(9, 22)],
+  windowToShrine: [at(17, 23), at(17, 27), at(17, 30), at(17, 50), at(17, 58), at(17, 62)],
   shrineToBoard: [at(17, 58), at(17, 50), at(17, 42), at(35, 42), at(38, 41), at(58, 41), at(58, 39)],
   boardToOperator: [at(58, 41), at(64, 44), at(64, 48), at(64, 50)],
 };
@@ -475,9 +477,20 @@ try {
     assert.equal(you(me).choices.freeze, 'refused', 'the freeze was refused');
     assert.match(you(me).heard, /You said held in the corridor/, 'the desk remembers the corridor');
 
+    // The tax window on the way back: pay the hour's tithe now when the purse allows, else let it ride.
+    phase('II walk: window');
+    await walk(me, ROUTE2.deskToWindow);
+    await stand(me, T2.window);
+    read.decisions++;
+    phase('II verb: tithe');
+    // The window also carries a side hour's verb on E, so pick the spine's verbs by their choice, not their key.
+    const canPay = you(me).bestand >= 4;
+    await useVerb(me, 'tax-window', verbs => verbs.find(v => v.choice === (canPay ? 'pay' : 'ride')), () => !!you(me).flags.tithe, 'the tithe decided');
+    assert.equal(you(me).choices.tithe, canPay ? 'paid' : 'rode', 'the tithe was decided');
+
     // The history: a prior hour of this serial stands in the Care; Q at the shrine faces it.
     phase('II walk: shrine again');
-    await walk(me, ROUTE2.deskToShrine);
+    await walk(me, ROUTE2.windowToShrine);
     await stand(me, T2.shrine);
     phase('II verb: history');
     if ((me.snap.history ?? []).some(m => m.serial === 7777)) {
@@ -498,12 +511,15 @@ try {
     phase('II talk: vesper');
     await converse(me, 'vesper', 'operator');
     assert.equal(you(me).choices.operator, 'take', 'took the private yield');
-    await wait(me, () => you(me).flags.m3 === 1 && you(me).movement === 3, 'Movement III opens', 6000);
+    await wait(me, () => you(me).flags.m3 === 1 && you(me).movement === 3, 'Movement III opens', 6000).catch(error => {
+      const p = you(me);
+      throw new Error(`${error.message} (movement ${p.movement}, m3 ${p.flags.m3}, quests ${JSON.stringify(p.quests)}, operator ${p.choices.operator}, tithe ${p.choices.tithe}, history ${p.flags.history}, board ${p.flags.board}; heard: ${p.heard})`);
+    });
     assert.equal(you(me).current, 'cold', 'Cold is a current');
 
     phase('end II');
     reportTwo(T1, read1, from);
-    console.log('PASS: Movement II — the shrine, Pim Ashe at the wake, the hall, Corvin Slate in the corridor, the freeze refused, the history faced, the board read, the private yield taken → Movement III');
+    console.log('PASS: Movement II — the shrine, Pim Ashe at the wake, the hall, Corvin Slate in the corridor, the freeze refused, the tithe decided, the history faced, the board read, the private yield taken → Movement III');
   }
 
   clearTimeout(deadline);

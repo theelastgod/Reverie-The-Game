@@ -249,6 +249,15 @@ const M2_STEPS: QuestStep[] = [
     onComplete: ctx => [notice(chose(ctx, C.FREEZE, "signed") ? "You bought time. You spent an hour." : "The Nave stays a mouth. The Passing stays possible.", chose(ctx, C.FREEZE, "signed") ? "sky" : "gold")],
   },
   {
+    id: "tithe",
+    title: "The rate is the weather",
+    detail: "The tax window is west of the corridor, past the cubicles. F reads the rate. E pays this hour's tithe now, into your House's standing before the weather takes it. Q lets it ride.",
+    target: "tax-window",
+    plate: "safety-annex.jpg",
+    done: ctx => has(ctx, F.TITHE),
+    onComplete: ctx => [notice(chose(ctx, C.TITHE, "paid") ? "Paid before it was taken. Your House stands a little higher." : "You let it ride. The weather will take its share at the node.", chose(ctx, C.TITHE, "paid") ? "sky" : "ink")],
+  },
+  {
     id: "history",
     title: "A prior hour",
     detail: ctx => (hasHistoryMark(ctx)

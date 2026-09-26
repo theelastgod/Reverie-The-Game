@@ -4,10 +4,10 @@
  * sink, once-flag, spoken line, and the Effects the engine applies.
  * Sacred POIs are "spectate" for guests: a refusal, never a lecture.
  */
-import type { Ctx, Effect, PoiConfig, PoiVerb, WinkBySchool } from "../types";
+import type { Ctx, Effect, Fourfold, PoiConfig, PoiVerb, WinkBySchool } from "../types";
 import {
   AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_PRESENT, FREEZE_FEE, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
-  OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, UPKEEP_COST,
+  OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, TITHE_COST, UPKEEP_COST,
 } from "../constants";
 import { weatherBand } from "../protocol";
 import { C, F, W, seasonPassingFlag } from "./ids";
@@ -752,8 +752,41 @@ const ANNEX: PoiConfig[] = [
         say: ctx => {
           const tax = gestellTax(ctx.w.gestell);
           const earth = ctx.p.house === "earth" ? ` House of Earth pays ${Math.max(0, tax - 2)} on ground nodes.` : "";
-          return `Tax window. Current tax ${tax} percent on every extraction, taken before the yield reaches your hand.${earth} The rate is the weather divided by four. Nobody at this window set it.`;
+          const decided = chose(ctx, C.TITHE, "paid") ? " Your tithe for this hour is in the ledger, paid before it was taken."
+            : chose(ctx, C.TITHE, "rode") ? " You let this hour's tithe ride. The node will take it, at whatever the weather is then." : "";
+          return `Tax window. Current tax ${tax} percent on every extraction, taken before the yield reaches your hand.${earth} The rate is the weather divided by four. Nobody at this window set it.${decided}`;
         },
+      },
+      // Movement II: an Angel who has read their hall decides this hour's tithe once. Paying is the hall's tithe by another window; riding is the weather's.
+      {
+        key: "E",
+        label: `Pay this hour's tithe (${TITHE_COST})`,
+        choice: "pay",
+        when: ctx => has(ctx, F.HALL) && !!ctx.p.house && !has(ctx, F.TITHE),
+        guest: spectate,
+        cost: { bestand: TITHE_COST, sink: "tithe" },
+        once: F.TITHE,
+        say: ctx => `Paid. ${TITHE_COST} Bestand, before the weather could take it at the node. The clerk writes ${HOUSE_NAME[ctx.p.house] ?? "your House"} beside it. Standing is what a House calls money that arrived early.`,
+        effects: ctx => [
+          { kind: "choice", key: C.TITHE, value: "paid" },
+          { kind: "standing", house: ctx.p.house as Fourfold, delta: 1 },
+          { kind: "wink", text: "The tithe was always going to be taken. Paying it first only changes who writes your name." },
+          { kind: "notice", text: `Tithe paid early. ${HOUSE_NAME[ctx.p.house] ?? "Your House"} stands a little higher.`, tone: "sky" },
+        ],
+      },
+      {
+        key: "Q",
+        label: "Let it ride",
+        choice: "ride",
+        when: ctx => has(ctx, F.HALL) && !!ctx.p.house && !has(ctx, F.TITHE),
+        guest: spectate,
+        once: F.TITHE,
+        say: "You let it ride. The clerk does not write anything; the node will, at whatever the weather is when you next extract. Nobody at this window set the rate, and nobody here can hold it for you.",
+        effects: [
+          { kind: "choice", key: C.TITHE, value: "rode" },
+          { kind: "wink", text: "Riding is a bet on the weather easing. The weather has never once been asked." },
+          { kind: "notice", text: "The tithe rides. The node will take its share.", tone: "ink" },
+        ],
       },
     ],
   },
