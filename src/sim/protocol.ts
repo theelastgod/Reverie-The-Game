@@ -72,7 +72,8 @@ export type NpcView = NpcState & { name: string; role: string; sprite: string; p
 export type PoiView = { id: string; state: string; count: number };
 
 /** `kitReadout` is the Ruin-angel kit reading the viewer's own history while Face is active. */
-export type YouView = Omit<Player, "items" | "claims"> & { items: Item[]; claims: Claim[]; kitReadout?: string[] };
+/** The record's `notices` never ride in `you` on the wire: `Snap.notices` is their section (`YOU_OFF_WIRE` in frames.ts). */
+export type YouView = Omit<Player, "items" | "claims" | "notices"> & { items: Item[]; claims: Claim[]; notices?: Notice[]; kitReadout?: string[] };
 
 export type Snap = {
   t: "snap";

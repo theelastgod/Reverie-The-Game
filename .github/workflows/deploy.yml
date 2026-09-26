@@ -3,7 +3,10 @@
 # nothing deploys on a push. It needs two repository secrets, set once under
 # Settings → Secrets and variables → Actions: CLOUDFLARE_API_TOKEN (a token with
 # Workers Scripts, Workers KV/Durable Objects and D1 edit rights) and
-# CLOUDFLARE_ACCOUNT_ID. The token never goes into the repository.
+# CLOUDFLARE_ACCOUNT_ID. The token never goes into the repository, and here it
+# reaches only the two steps that talk to Cloudflare, never the install or the
+# tests. The client is built and staged before the database is touched, so a
+# build that fails leaves the live Worker and its schema as they were.
 name: Deploy the city
 
 on:
@@ -20,8 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:
       - uses: actions/checkout@v4
@@ -30,8 +31,11 @@ jobs:
           node-version: 22
           cache: npm
       - name: Refuse without the secrets
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
         run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+          if [ "$HAS_TOKEN" != "true" ] || [ "$HAS_ACCOUNT" != "true" ]; then
             echo "CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be set as repository secrets." >&2
             exit 1
           fi
@@ -40,11 +44,23 @@ jobs:
         run: |
           npm run typecheck
           npm test
+      - name: Build the client and stage it
+        run: |
+          npm run build:play
+          node scripts/stage-play.mjs
       - name: Apply any pending D1 migration to reverie-log
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npm run d1:migrate:remote
-      - name: Build the client, stage it, deploy the Worker
-        run: npm run deploy
+      - name: Deploy the Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy 2>&1 | tee deploy.log
       - name: The city answers
         run: |
-          url="https://reverie-the-game.$(npx wrangler whoami 2>/dev/null | grep -oE '[a-z0-9-]+\.workers\.dev' | head -1 || true)"
-          echo "deployed; check $url/health (workers.dev subdomain as wrangler reports it)"
+          url=$(grep -oE 'https://[a-z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          if [ -z "$url" ]; then echo "wrangler printed no workers.dev URL; read deploy.log above" >&2; exit 1; fi
+          echo "deployed at $url"
+          curl -fsS --retry 5 --retry-delay 3 "$url/health"

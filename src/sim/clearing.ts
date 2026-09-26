@@ -9,7 +9,6 @@ import {
   CLEARING_EXTRACT,
   CLEARING_HOLD_ANGELS,
   CLEARING_HOLD_SCALE,
-  CLEARING_PRICE_MOVE,
   CLEARING_RADIUS,
   CLEARING_RESERVE,
   GESTELL_CLEARING_HOLD,
@@ -31,7 +30,7 @@ import { POSITIONS, nearPoint } from "./map";
 import { weatherBand } from "./protocol";
 import { C, F, W, seasonPassingFlag } from "./content/ids";
 import { LINES } from "./content";
-import { CLEARING_LISTING } from "./content/market";
+import { moveClearing } from "./content/market";
 import { notice, pushNews, say } from "./world";
 import { applyListing, earn } from "./economy";
 
@@ -324,7 +323,7 @@ export function applyPassing(w: WorldState, id: string): WorldState {
   };
   next = setPlayer(next, me);
   // The resistance re-prices its Clearing on every rite, once the board has been read: a hole that opened is worth more, one that failed less.
-  next = applyListing(next, { id: CLEARING_LISTING, delta: (CLEARING_PRICE_MOVE as Record<string, number>)[outcome] ?? 0 });
+  if (outcome) next = applyListing(next, moveClearing(outcome));
 
   switch (outcome) {
     case "appearance": {

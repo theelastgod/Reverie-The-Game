@@ -14,17 +14,22 @@ import {
 
 /**
  * The parts of `you` that change rarely and grow over a campaign; they ride
- * the slow frame as `youSlow`. The open dialogue and the notices are here
- * too: they change only when something lands on the viewer, and the object
- * sends a slow frame at once after the viewer acts, so they lose nothing.
+ * the slow frame as `youSlow`. The open dialogue is here too: it changes
+ * when the viewer acts (the object sends a slow frame at once) or when the
+ * tick closes it (a death), and `SlowTracker.youDue` brings the slow frame
+ * forward the step any of these fields changes, so nothing is later.
  */
-export const YOU_SLOW_KEYS = ["quests", "flags", "choices", "party", "items", "claims", "history", "respawn", "wallet", "dialogue", "notices", "kitReadout"] as const;
+export const YOU_SLOW_KEYS = ["quests", "flags", "choices", "party", "items", "claims", "history", "respawn", "wallet", "dialogue", "kitReadout"] as const;
 export type YouSlowKey = (typeof YOU_SLOW_KEYS)[number];
 export type YouSlow = Partial<Pick<YouView, YouSlowKey>>;
+/** The record's fields the wire's `you` never carries: the snapshot has a section of its own for them (`Snap.notices`). */
+export const YOU_OFF_WIRE = ["notices"] as const;
+/** The record fields `youDue` watches: every slow key that is the viewer's own record (the kit's readout is built per frame). */
+const YOU_RECORD_KEYS = YOU_SLOW_KEYS.filter(k => k !== "kitReadout");
 
 export type SlowState = Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[]; youSlow?: YouSlow };
 
-/** `you` in two, the fast part without the slow keys. (One native copy and a few deletes measured faster than a copy key by key; `framesFor` goes one step further for the object.) */
+/** `you` in two, the fast part without the slow keys and without what never rides. (One native copy and a few deletes measured faster than a copy key by key; `framesFor` goes one step further for the object.) */
 export function splitYou(you: YouView): { fast: YouView; slow: YouSlow } {
   const fast = { ...you } as Record<string, unknown>;
   const slow = {} as Record<string, unknown>;
@@ -33,6 +38,7 @@ export function splitYou(you: YouView): { fast: YouView; slow: YouSlow } {
     slow[k] = fast[k];
     delete fast[k];
   }
+  for (const k of YOU_OFF_WIRE) delete fast[k];
   return { fast: fast as YouView, slow: slow as YouSlow };
 }
 
@@ -116,7 +122,9 @@ export const motionIds = (fast: FastFrame): string => fast.players.map(p => p.id
 /**
  * The last slow state folded with a fast frame: one `Snap`, as the renderers
  * read it. Missing slow sections are left absent; a body whose roster entry
- * has not arrived yet is left out until it does.
+ * has not arrived yet is left out until it does. A key the fast `you`
+ * carries as `undefined` (the object leaves the slow keys in that way; JSON
+ * drops them, an in-process fold must too) never covers the slow record.
  */
 export function mergeFrames(slow: SlowState, fast: FastFrame): Snap {
   const out = { ...slow, t: "snap", v: fast.v } as unknown as Snap;
@@ -128,7 +136,10 @@ export function mergeFrames(slow: SlowState, fast: FastFrame): Snap {
     if (r) players.push({ ...r, ...m });
   }
   out.players = players;
-  out.you = { ...(slow.youSlow ?? {}), ...fast.you } as YouView;
+  const you = { ...(slow.youSlow ?? {}) } as Record<string, unknown>;
+  const fastYou = fast.you as unknown as Record<string, unknown>;
+  for (const k in fastYou) if (fastYou[k] !== undefined) you[k] = fastYou[k];
+  out.you = you as unknown as YouView;
   delete (out as { roster?: unknown }).roster;
   delete (out as { youSlow?: unknown }).youSlow;
   return out;
@@ -166,10 +177,36 @@ export class SlowTracker {
   private readonly refs = new Map<string, Map<string, unknown>>(); // the objects last sent, by section and by youSlow key
   private readonly roster = new Map<string, Map<string, { sig: string; ref: PlayerRoster }>>(); // per body: the signature sent and the entry object last seen
   private readonly ids = new Map<string, string>();
+  private readonly records = new Map<string, Map<string, unknown>>(); // the viewer's own record fields as last asked about
 
   /** True until the viewer has been sent its first slow frame. */
   fresh(viewerId: string): boolean {
     return !this.sent.has(viewerId);
+  }
+
+  /**
+   * True the step one of the viewer's own record fields is a new object
+   * (a dialogue the tick closed at a death, a print that decayed, a quest
+   * the tick advanced): the slow frame is due now, not at the fifth step.
+   * Asked every step, before `diff`; a handful of identity compares. The
+   * sim never mutates a record in place, so identity is the change.
+   */
+  youDue(viewerId: string, you: YouView): boolean {
+    let kept = this.records.get(viewerId);
+    if (!kept) {
+      kept = new Map();
+      this.records.set(viewerId, kept);
+    }
+    let due = false;
+    const record = you as unknown as Record<string, unknown>;
+    for (const k of YOU_RECORD_KEYS) {
+      const v = record[k];
+      if (kept.get(k) !== v) {
+        kept.set(k, v);
+        due = true;
+      }
+    }
+    return due;
   }
 
   /** True when the bodies a fast frame moves are not the ones it moved last time: the roster may owe an entry, so a slow frame is due now. */
@@ -254,5 +291,6 @@ export class SlowTracker {
     this.refs.delete(viewerId);
     this.roster.delete(viewerId);
     this.ids.delete(viewerId);
+    this.records.delete(viewerId);
   }
 }

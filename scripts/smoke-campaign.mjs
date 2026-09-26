@@ -207,7 +207,7 @@ async function connect(cookie) {
       const y = data.you;
       readOnce('spoken', y.heard);
       readOnce('spoken', y.wink);
-      for (const n of y.notices ?? []) readOnce('notices', n.text);
+      for (const n of data.notices ?? []) readOnce('notices', n.text); // the notices are a section of their own; the wire's `you` never carries them
       if (data.objective) { readOnce('journal', data.objective.title); readOnce('journal', data.objective.detail); }
       if (y.dialogue) { readOnce('dialogue', y.dialogue.text); readOnce('dialogue', y.dialogue.wink); for (const c of y.dialogue.choices) readOnce('dialogue', c.label); }
     }

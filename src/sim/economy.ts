@@ -13,6 +13,7 @@ import {
   BANK_FEE,
   CLAIM_AMOUNT,
   CLAIM_CAP,
+  CITY_SELLER,
   CLAIM_HOLD,
   COPY_PRICE,
   EXHIBIT_DECAY,
@@ -22,6 +23,8 @@ import {
   GESTELL_KEEP,
   KIT_DURATION,
   LISTING_FEE,
+  LISTING_PRICE_MAX,
+  LISTING_PRICE_MIN,
   MAX_HP,
   NARA_THRESHOLD,
   NODE_CHARGES,
@@ -377,7 +380,7 @@ export function applyMarket(
       if (!held) return speak(w, p, MARKET_NO_ITEM);
       if (held.kind !== "exhibition" || held.bound) return speak(w, p, MARKET_NOT_EXHIBITION);
       const price = args.price ?? 0;
-      if (!Number.isInteger(price) || price < 1 || price > 999) return speak(w, p, MARKET_BAD_PRICE);
+      if (!Number.isInteger(price) || price < LISTING_PRICE_MIN || price > LISTING_PRICE_MAX) return speak(w, p, MARKET_BAD_PRICE);
       const fee = kitActive(p, "iridescent", w.now) ? 0 : LISTING_FEE;
       const paid = spend(w, id, fee, "listing");
       if (!paid) return speak(w, p, LINES.CANT_AFFORD);
@@ -427,11 +430,6 @@ export function applyMarket(
   }
 }
 
-/** The seller id of a listing the city posts: no body on the Grid sells it, so nobody buys it and nobody cancels it. */
-export const CITY_SELLER = "";
-const PRICE_MIN = 1;
-const PRICE_MAX = 999;
-
 /**
  * A listing the city posts or re-prices: a price to watch, not a sale.
  * Posted once per id (`seller`, `item`, `price`; a second post leaves the
@@ -443,13 +441,13 @@ export function applyListing(w: WorldState, e: { id: string; seller?: string; it
   const index = w.market.findIndex(l => l.id === e.id);
   if (index < 0) {
     if (!e.seller || !e.item || e.price === undefined) return w;
-    const price = clamp(Math.round(e.price), PRICE_MIN, PRICE_MAX);
+    const price = clamp(Math.round(e.price), LISTING_PRICE_MIN, LISTING_PRICE_MAX);
     const listing: Listing = { id: e.id, sellerId: CITY_SELLER, sellerName: e.seller, item: { ...e.item, qty: 1 }, price, at: w.now };
     return pushNews({ ...w, market: [...w.market, listing] }, MARKET_CITY_LISTED(e.seller, e.item.name, price));
   }
   const cur = w.market[index];
   if (cur.sellerId !== CITY_SELLER || !e.delta) return w;
-  const price = clamp(Math.round(cur.price + e.delta), PRICE_MIN, PRICE_MAX);
+  const price = clamp(Math.round(cur.price + e.delta), LISTING_PRICE_MIN, LISTING_PRICE_MAX);
   if (price === cur.price) return w;
   const market = w.market.slice();
   market[index] = { ...cur, price, at: w.now };

@@ -360,8 +360,10 @@ export class ReverieWorld {
    * Every viewer gets their own snapshot: Winke, purse, claims and marks are
    * never shared. The fast frame goes every time; the slow sections go when
    * they changed, checked every SLOW_EVERY_TICKS steps, at once for a viewer
-   * who has none yet, and at once when `force` (after an action). On the
-   * steps between, a viewer's slow side is not even built.
+   * who has none yet, at once when `force` (after an action), and at once
+   * when the viewer's own record changed under them on a tick (a death
+   * closing a dialogue) or the bodies in view changed. On the steps between,
+   * a viewer's slow side is not even built.
    */
   private broadcast(force = false) {
     let chars = 0;
@@ -370,10 +372,13 @@ export class ReverieWorld {
     const step = stepViews(this.w); // the views and encodings every viewer of this step shares
     for (const [ws, session] of this.sessions) {
       try {
-        if (!this.w.players.has(session.id)) continue;
+        const player = this.w.players.get(session.id);
+        if (!player) continue;
         const { fast, slow } = framesFor(this.w, session.id, step);
-        // The roster must cover every body the fast frame moves, so a change in who is in view brings the slow frame forward.
-        if (this.slow.rosterDue(session.id, fast) || slowDue || this.slow.fresh(session.id)) {
+        // Both checks run every step so their memory stays current; the roster must cover every body the fast frame moves.
+        const rosterDue = this.slow.rosterDue(session.id, fast);
+        const youDue = this.slow.youDue(session.id, player);
+        if (rosterDue || youDue || slowDue || this.slow.fresh(session.id)) {
           const changed = this.slow.diff(session.id, slow(), step.frames);
           if (changed) {
             const payload = JSON.stringify(changed);

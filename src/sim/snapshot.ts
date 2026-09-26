@@ -6,16 +6,16 @@
  * history marks go only to their owner; failed Passings only to Ruin-sight,
  * Storm stance or the House of Sky.
  */
-import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
+import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, CITY_SELLER, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
 import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
 import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type EnemyView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView } from "./protocol";
 import type { Ctx, Enemy, FailedPassing, HistoryMark, NpcState, Player, PoiConfig, Prompt, PromptVerb, Wreckage, WorldState, YieldNode } from "./types";
-import { CITY_SELLER, nodeYield } from "./economy";
+import { nodeYield } from "./economy";
 import { perception } from "./houses";
 import { npcOffers, objectiveFor, sideObjectivesFor } from "./quests";
 import { NODE_REACH, NPC_REACH, PLAYER_REACH, POI_REACH, WRECKAGE_REACH, nodeVerbs, npcVerbs, playerVerbs, poiVerbs, wreckageVerbs } from "./interact";
-import { newFrameCache, splitPlayer, YOU_SLOW_KEYS, type FrameCache, type YouSlow } from "./frames";
+import { newFrameCache, splitPlayer, YOU_OFF_WIRE, YOU_SLOW_KEYS, type FrameCache, type YouSlow } from "./frames";
 
 const MARKET_TOP = 12;
 
@@ -447,7 +447,9 @@ export function snapshotFor(w: WorldState, viewerId: string, step: StepViews = s
   const fast = viewerFast(w, viewerId, step);
   const slow = viewerSlow(fast);
   const p = fast.ctx.p;
-  let you = youOf(p);
+  // The wire's `you` never carries what the snapshot has a section for (the notices); the frames leave it out the same way.
+  let you: YouView = { ...youOf(p) };
+  for (const k of YOU_OFF_WIRE) delete you[k];
   if (slow.kitReadout) you = { ...you, kitReadout: slow.kitReadout };
   return {
     t: "snap",
@@ -476,8 +478,8 @@ export type ViewerFrames = { fast: FastFrame; slow: () => SlowFrame };
 export function framesFor(w: WorldState, viewerId: string, step: StepViews = stepViews(w)): ViewerFrames {
   const view = viewerFast(w, viewerId, step);
   const split = view.players.map(pub => splitPlayer(pub, step.frames));
-  // `you` in two as `splitYou` does, but in one native copy with the slow keys left in as `undefined`, which JSON leaves
-  // out: the frame's bytes are the same and the copy costs half. The frame is only ever encoded, never merged in-process.
+  // `you` in two as `splitYou` does, but in one native copy with the slow keys (and what never rides) left in as `undefined`,
+  // which JSON leaves out: the frame's bytes are the same and the copy costs half. `mergeFrames` skips them too.
   const record = youOf(view.ctx.p) as unknown as Record<string, unknown>;
   const youFast = { ...record };
   const youSlow: Record<string, unknown> = {};
@@ -486,6 +488,7 @@ export function framesFor(w: WorldState, viewerId: string, step: StepViews = ste
     youSlow[k] = record[k];
     youFast[k] = undefined;
   }
+  for (const k of YOU_OFF_WIRE) youFast[k] = undefined;
   const fast: FastFrame = {
     t: "fast",
     v: PROTOCOL_VERSION,

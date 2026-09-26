@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { DT } from "./constants";
-import { applySlow, encodeFast, mergeFrames, newFrameCache, splitPlayer, splitSnap, SlowTracker, YOU_SLOW_KEYS } from "./frames";
+import { applySlow, encodeFast, mergeFrames, newFrameCache, splitPlayer, splitSnap, SlowTracker, YOU_OFF_WIRE, YOU_SLOW_KEYS } from "./frames";
 import { FAST_KEYS, PROTOCOL_VERSION, SLOW_KEYS, type Snap } from "./protocol";
 import { framesFor, snapshotFor, stepViews } from "./snapshot";
 import { emptyWorld, spawnGuest, tickWorld, type WorldState } from "./world";
@@ -48,16 +48,20 @@ describe("the snapshot diet", () => {
     expect((merged as { roster?: unknown }).roster).toBeUndefined();
   });
 
-  it("splits you: the campaign's growing records, the open dialogue and the notices ride the slow frame and merge back under the fast fields", () => {
-    const { snap } = crowd();
+  it("splits you: the campaign's growing records and the open dialogue ride the slow frame and merge back under the fast fields; the notices never ride in you at all", () => {
+    const { w, snap } = crowd();
     const { fast, slow } = splitSnap(snap);
     expect(YOU_SLOW_KEYS).toContain("dialogue");
-    expect(YOU_SLOW_KEYS).toContain("notices");
+    expect(YOU_SLOW_KEYS).not.toContain("notices");
+    expect(YOU_OFF_WIRE).toContain("notices");
+    expect("notices" in snap.you).toBe(false);
+    expect(snap.notices).toBe(w.players.get("a")!.notices); // the section has them
     expect(Object.keys(fast.you)).toEqual(Object.keys(snap.you).filter(k => !(YOU_SLOW_KEYS as readonly string[]).includes(k)));
     for (const k of YOU_SLOW_KEYS) {
       expect(k in fast.you, `${k} left the fast frame`).toBe(false);
       expect(k in slow.youSlow!, `${k} rides the slow frame`).toBe(k in snap.you);
     }
+    expect("notices" in slow.youSlow!).toBe(false);
     expect(fast.you.x).toBe(snap.you.x);
     expect(fast.you.hp).toBe(snap.you.hp);
     expect(mergeFrames(applySlow({}, slow), fast).you).toEqual(snap.you);
@@ -67,9 +71,34 @@ describe("the snapshot diet", () => {
     expect(merged.you.x).toBe(snap.you.x + 5);
     expect(merged.you.flags).toEqual(snap.you.flags);
     expect(merged.you.items).toEqual(snap.you.items);
+    // a fast you that carries a slow key as undefined (the object's frames do) never covers the record
+    const blank = { ...fast, you: { ...fast.you, items: undefined, dialogue: undefined, flags: undefined } as unknown as typeof fast.you };
+    const kept = mergeFrames(applySlow({}, slow), blank);
+    expect(kept.you.items).toEqual(snap.you.items);
+    expect(kept.you.flags).toEqual(snap.you.flags);
+    expect("dialogue" in kept.you).toBe(true);
   });
 
-  it("framesFor gives the frames splitSnap(snapshotFor) gives, bytes included: a guest's private line hidden, the open dialogue and notices in youSlow, the Ruin kit's readout with them", () => {
+  it("youDue: the step one of the viewer's own record fields is a new object, the slow frame is due; motion, notices and the kit's readout never make it due", () => {
+    const { w } = crowd();
+    const tracker = new SlowTracker();
+    const p = w.players.get("a")!;
+    expect(tracker.youDue("a", p)).toBe(true); // nothing asked before
+    expect(tracker.youDue("a", p)).toBe(false);
+    expect(tracker.youDue("a", { ...p, x: p.x + 3, hp: p.hp - 1 })).toBe(false);
+    expect(tracker.youDue("a", { ...p, notices: [...p.notices] })).toBe(false);
+    expect(tracker.youDue("a", { ...p, kitReadout: ["a line"] })).toBe(false);
+    const talking = { ...p, dialogue: { npc: "nara", node: "meet", speaker: "Nara Vale", portrait: "nara.jpg", text: "Hello.", wink: "", choices: [] } };
+    expect(tracker.youDue("a", talking)).toBe(true);
+    expect(tracker.youDue("a", talking)).toBe(false);
+    expect(tracker.youDue("a", { ...talking, dialogue: null }), "closed by the tick").toBe(true);
+    expect(tracker.youDue("a", { ...talking, dialogue: null, items: [] })).toBe(true);
+    expect(tracker.youDue("b", p)).toBe(true); // another viewer starts fresh
+    tracker.forget("a");
+    expect(tracker.youDue("a", p)).toBe(true);
+  });
+
+  it("framesFor gives the frames splitSnap(snapshotFor) gives, bytes included: a guest's private line hidden, the open dialogue in youSlow, the notices in their section only, the Ruin kit's readout with them", () => {
     let w = emptyWorld();
     const players = new Map(w.players);
     const a = spawnGuest("a");
@@ -95,8 +124,10 @@ describe("the snapshot diet", () => {
     expect(guest.fast.you.notices).toBeUndefined();
     expect(Object.keys(JSON.parse(encodeFast(guest.fast, step.frames)).you)).not.toContain("dialogue");
     expect(guest.slow().youSlow!.dialogue).toEqual({ ...dialogue, wink: "" });
-    expect(guest.slow().youSlow!.notices).toBe(w.players.get("a")!.notices);
-    expect(guest.slow().youSlow!.notices![0]).toEqual({ text: "A notice.", at: 0, tone: "ink" });
+    expect("notices" in guest.slow().youSlow!).toBe(false);
+    expect(guest.slow().notices).toBe(w.players.get("a")!.notices);
+    expect(guest.slow().notices[0]).toEqual({ text: "A notice.", at: 0, tone: "ink" });
+    expect(Object.keys(JSON.parse(encodeFast(guest.fast, step.frames)).you)).not.toContain("notices");
     expect(framesFor(w, "b1", step).slow().youSlow!.kitReadout).toEqual(["Passings 0. Buried 0. Looted 0. Fell 0 times."]);
     expect("kitReadout" in framesFor(w, "b2", step).slow().youSlow!).toBe(false);
   });

@@ -138,10 +138,14 @@ step). So:
   (JSON drops them), measured at less than half of any key-by-key copy;
   `splitYou` keeps its spread and deletes, which measured faster than a
   key-by-key copy too.
-- The open dialogue and the notices ride `youSlow`: for a body in
-  conversation the fast frame falls from ~1.9 KB to ~1.3 KB, and a lone
-  viewer's from 1352 to ~1290 bytes; the action that opens or answers a
-  dialogue sends the slow frame at once, so nothing is later.
+- The open dialogue rides `youSlow`, and the notices leave the wire's
+  `you` altogether (`Snap.notices` is their section; they were sent
+  twice): for a body in conversation the fast frame falls from ~1.9 KB
+  to ~1.3 KB, and a lone viewer's from 1352 to ~1290 bytes. The action
+  that opens or answers a dialogue sends the slow frame at once, and
+  `SlowTracker.youDue` brings it forward the step a record field changes
+  under the viewer on a tick (a death closing the dialogue), so nothing
+  is later than before.
 - A body's roster entry keeps its identity from step to step while its
   roster fields stand (`newFrameCache(last)` carries the last step's
   splits), and a tracker whose roster is entry for entry the object it

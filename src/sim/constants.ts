@@ -111,6 +111,10 @@ export const UPKEEP_COST = 5;
 export const TITHE_COST = 4;
 export const FREEZE_FEE = 15;
 export const LISTING_FEE = 2;
+export const LISTING_PRICE_MIN = 1; // the stall's bounds, for a player's print and for the city's own listing alike
+export const LISTING_PRICE_MAX = 999;
+/** The seller id of a listing the city posts: no body on the Grid sells it, so nobody buys it and nobody cancels it. */
+export const CITY_SELLER = "";
 export const FUNERAL_COST = 5;
 export const FORGE_COST = 6;
 export const COPY_PRICE = 9;

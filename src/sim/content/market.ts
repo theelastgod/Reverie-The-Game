@@ -16,8 +16,10 @@ export const CLEARING_ITEM: Item = { id: "city:clearing", kind: "exhibition", na
 /** The board's price for a Clearing, or null before anyone has read the board. */
 export const clearingPrice = (w: WorldState): number | null => w.market.find(l => l.id === CLEARING_LISTING)?.price ?? null;
 
-/** Post the Clearing at its opening price; a second read leaves the price where the city moved it. */
-export const listClearing = (): Effect => ({ kind: "listing", id: CLEARING_LISTING, seller: RESISTANCE, item: CLEARING_ITEM, price: CLEARING_LIST_PRICE });
+export type ListingEffect = Extract<Effect, { kind: "listing" }>;
 
-/** Move the Clearing's price by what the city did; nothing moves before the board has been read. */
-export const moveClearing = (move: keyof typeof CLEARING_PRICE_MOVE): Effect => ({ kind: "listing", id: CLEARING_LISTING, delta: CLEARING_PRICE_MOVE[move] });
+/** Post the Clearing at its opening price; a second read leaves the price where the city moved it. */
+export const listClearing = (): ListingEffect => ({ kind: "listing", id: CLEARING_LISTING, seller: RESISTANCE, item: CLEARING_ITEM, price: CLEARING_LIST_PRICE });
+
+/** Move the Clearing's price by what the city did (a Passing's outcome is one such move); nothing moves before the board has been read. */
+export const moveClearing = (move: keyof typeof CLEARING_PRICE_MOVE): ListingEffect => ({ kind: "listing", id: CLEARING_LISTING, delta: CLEARING_PRICE_MOVE[move] });

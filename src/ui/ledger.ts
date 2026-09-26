@@ -5,7 +5,7 @@
  */
 import type { Snap } from "../sim/protocol";
 import type { Claim, Item, Listing } from "../sim/types";
-import { BANK_FEE, CLAIM_AMOUNT, CLAIM_CAP, LISTING_FEE } from "../sim/constants";
+import { BANK_FEE, CITY_SELLER, CLAIM_AMOUNT, CLAIM_CAP, LISTING_FEE } from "../sim/constants";
 import { num, setText, show } from "./format";
 
 export type ItemRow = { id: string; name: string; qty: number; note: string; listable: boolean };
@@ -65,7 +65,7 @@ export function ledgerModel(snap: Pick<Snap, "now" | "you" | "market">): LedgerM
     ? "The desk does not see a guest."
     : `F files a claim from the purse · E banks the purse (${Math.round(BANK_FEE * 100)}% fee) · Q takes a ready claim into the vault`;
   const listings: ListingRow[] = (snap.market ?? []).map((l: Listing) => {
-    const city = l.sellerId === "";
+    const city = l.sellerId === CITY_SELLER;
     return {
       id: l.id,
       seller: l.sellerName,

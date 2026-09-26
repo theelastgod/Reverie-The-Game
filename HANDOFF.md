@@ -299,6 +299,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- Review fixes on the last three changes (2026-09-26, a code review of
+  `2e6c233..343b351`, ten findings, all taken): the notices leave the
+  wire's `you` altogether (`YOU_OFF_WIRE` in `frames.ts`; `Snap.notices`
+  was already the section the HUD reads, so they went twice, and every
+  notice push or expiry re-sent the whole `youSlow`); `SlowTracker
+  .youDue(viewer, you)` brings the slow frame forward the step one of the
+  viewer's own record fields is a new object, so a dialogue the tick
+  closes at a death, a print that decays or a quest the tick advances
+  reaches the client at once and not at the fifth step (the object asks
+  it every step beside `rosterDue`); `mergeFrames` skips a fast-`you` key
+  carried as `undefined`, so an in-process fold of the object's frames
+  keeps the record; the Deploy workflow scopes the two secrets to the
+  migration and deploy steps (never the install or the tests), builds and
+  stages the client before it touches the database, deploys with
+  `wrangler deploy` and then reads `/health` at the URL wrangler printed;
+  `CITY_SELLER`, `LISTING_PRICE_MIN` and `LISTING_PRICE_MAX` live in
+  `constants.ts` and the ledger, the economy and the snapshot all read
+  them; `applyPassing` re-prices through `moveClearing(outcome)`, typed,
+  instead of a cast. The campaign smoke counts the notices from their
+  section.
 - The deploy's database side, through the Cloudflare connector
   (2026-09-26, backlog 2): the owner's Cloudflare MCP connector reaches
   the account from outside the container (`workers_list` shows the
@@ -341,8 +361,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `poiVerbs`, `nodeVerbs`, `wreckageVerbs`, `npcVerbs` in `interact.ts`;
   `verbsFor` dispatches), a guest or locked viewer gathering no bodies;
   `fast.you` is one native copy with the slow keys left undefined for
-  JSON to drop; the open dialogue and the notices ride `youSlow` (a body
-  in conversation sends a third less per fast frame); a body's roster
+  JSON to drop; the open dialogue rides `youSlow` and the notices leave
+  the wire's `you` (their section carries them; a body in conversation
+  sends a third less per fast frame); a body's roster
   entry keeps its identity while its fields stand, and a tracker whose
   roster is entry for entry what it saw owes nothing. Bytes identical to
   `splitSnap(snapshotFor(...))`, held by a test encoded and folded back.
@@ -651,6 +672,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The review fixes (2026-09-26, last): typecheck, 455 tests (youDue on a
+  record field, a dialogue closed by the tick, never on motion, notices
+  or the kit's readout, fresh per viewer and after forget; the notices
+  absent from the wire's `you` and present in their section, in the split
+  and in the frames alike; a fast `you` carrying slow keys as undefined
+  never covering the record on merge), the build, the session smoke, the
+  Movement I smoke on a fresh world (notices counted from their section:
+  161 words, as before), the render check at `RENDER_MIN_FPS=5`, the
+  workflow's YAML parsing.
 - The resistance's Clearing on the Grid (2026-09-26, later still):
   typecheck, 454 tests (the listing posted once and moved within bounds
   with its news lines, a buy and a cancel refused, decay leaving it, a
