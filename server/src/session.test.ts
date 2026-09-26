@@ -412,22 +412,46 @@ describe("wallet login", () => {
   const HOLDER = keyOf(1); // 0x7e5f…5bdf, serial 42 in DEV_ENV
   const STRANGER = keyOf(9);
 
-  async function challenge(world: ReverieWorld, t = token): Promise<string> {
-    const res = await world.fetch(post("/wallet/challenge", t));
+  /** A challenge for one address: the message names this city's host and origin, the address, the chain and the nonce. */
+  async function challenge(world: ReverieWorld, priv: Uint8Array = HOLDER, t = token): Promise<string> {
+    const res = await world.fetch(post("/wallet/challenge", t, { address: addressOf(priv) }));
     expect(res.status).toBe(200);
     const body = (await res.json()) as { ok: boolean; message: string };
+    expect(body.message.split("\n")[0]).toBe("game.example wants you to sign in with your Ethereum account:");
+    expect(body.message.split("\n")[1]).toBe(addressOf(priv));
+    expect(body.message).toContain("URI: https://game.example");
     expect(body.message).toContain("Nonce:");
     expect(body.message).toContain("costs nothing");
     return body.message;
   }
 
-  it("issues a challenge only to a live same-origin session, by POST", async () => {
+  it("issues a challenge only to a live same-origin session, by POST, for an address", async () => {
     const { world } = await worldHarness(null);
-    expect((await world.fetch(post("/wallet/challenge", token))).status).toBe(409);
+    expect((await world.fetch(post("/wallet/challenge", token, { address: addressOf(HOLDER) }))).status).toBe(409);
     await world.join(token, socket() as never);
     expect((await world.fetch(new Request(`${ORIGIN}/wallet/challenge`, { headers: { Cookie: `reverie_session=${token}` } }))).status).toBe(405);
-    expect((await world.fetch(post("/wallet/challenge", token, undefined, "https://elsewhere.example"))).status).toBe(403);
+    expect((await world.fetch(post("/wallet/challenge", token, { address: addressOf(HOLDER) }, "https://elsewhere.example"))).status).toBe(403);
+    expect((await world.fetch(post("/wallet/challenge", token))).status).toBe(400);
+    expect((await world.fetch(post("/wallet/challenge", token, { address: "0x1234" }))).status).toBe(400);
     await challenge(world);
+  });
+
+  it("a challenge issued for one address seals no other, and a signature over another site's text seals nothing", async () => {
+    const { world } = await worldHarness(null);
+    const ws = socket();
+    await world.join(token, ws as never);
+    // the challenge was for the holder's address: a stranger's own valid signature over it does not link the stranger
+    let message = await challenge(world, HOLDER);
+    const swapped = await world.fetch(post("/wallet/link", token, { address: addressOf(STRANGER), signature: ethSign(message, STRANGER) }));
+    expect(swapped.status).toBe(403);
+    expect(await swapped.json()).toEqual({ ok: false, reason: "bad-signature" });
+    expect(last(ws).you).toMatchObject({ guest: true, wallet: "" });
+    // the same nonce and address, but the text a lookalike site would show: the city rebuilds its own and the signer does not match
+    message = await challenge(world, HOLDER);
+    const phished = message.replace("game.example wants", "phish.example wants").replace("URI: https://game.example", "URI: https://phish.example");
+    const elsewhere = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(phished, HOLDER) }));
+    expect(elsewhere.status).toBe(403);
+    expect(last(ws).you).toMatchObject({ guest: true, wallet: "" });
   });
 
   it("seals the body with the holder's serial after a valid signature, and spends the nonce", async () => {
@@ -435,7 +459,7 @@ describe("wallet login", () => {
     const ws = socket();
     const hello = await world.join(token, ws as never);
     expect(hello.mockLink).toBe(true);
-    const message = await challenge(world);
+    const message = await challenge(world, HOLDER);
     const res = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER).toUpperCase().replace("0X", "0x"), signature: ethSign(message, HOLDER) }));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, address: addressOf(HOLDER), serial: 42 });
@@ -453,7 +477,7 @@ describe("wallet login", () => {
     const { world } = await worldHarness(null);
     const ws = socket();
     await world.join(token, ws as never);
-    const message = await challenge(world);
+    const message = await challenge(world, STRANGER);
     const res = await world.fetch(post("/wallet/link", token, { address: addressOf(STRANGER), signature: ethSign(message, STRANGER) }));
     expect(await res.json()).toEqual({ ok: true, address: addressOf(STRANGER), serial: null });
     const you = last(ws).you;
@@ -464,14 +488,14 @@ describe("wallet login", () => {
     const { world } = await worldHarness(null);
     const ws = socket();
     await world.join(token, ws as never);
-    let message = await challenge(world);
+    let message = await challenge(world, HOLDER);
     const forged = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, STRANGER) }));
     expect(forged.status).toBe(403);
     expect(await forged.json()).toEqual({ ok: false, reason: "bad-signature" });
     expect(last(ws).you).toMatchObject({ guest: true, wallet: "" });
-    message = await challenge(world);
+    message = await challenge(world, HOLDER);
     expect((await world.fetch(post("/wallet/link", token, { address: "0x1234", signature: ethSign(message, HOLDER) }))).status).toBe(400);
-    message = await challenge(world);
+    message = await challenge(world, HOLDER);
     vi.setSystemTime(11 * 60 * 1000);
     const stale = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
     expect(stale.status).toBe(409);
@@ -495,7 +519,7 @@ describe("wallet login", () => {
       await world.join(token, ws as never);
       // the chain is down: nothing changes, the nonce is spent, the client is told why
       down = true;
-      let message = await challenge(world);
+      let message = await challenge(world, STRANGER);
       const refused = await world.fetch(post("/wallet/link", token, { address: addressOf(STRANGER), signature: ethSign(message, STRANGER) }));
       expect(refused.status).toBe(503);
       expect(await refused.json()).toEqual({ ok: false, reason: "chain" });
@@ -503,7 +527,7 @@ describe("wallet login", () => {
       expect(rpc).toHaveBeenCalledTimes(1);
       // the chain answers: balance 1, first token 7
       down = false;
-      message = await challenge(world);
+      message = await challenge(world, STRANGER);
       const res = await world.fetch(post("/wallet/link", token, { address: addressOf(STRANGER), signature: ethSign(message, STRANGER) }));
       expect(await res.json()).toEqual({ ok: true, address: addressOf(STRANGER), serial: 7 });
       expect(last(ws).you).toMatchObject({ guest: false, serial: 7, name: "#0007", wallet: addressOf(STRANGER) });
@@ -514,7 +538,7 @@ describe("wallet login", () => {
       // the map still wins, without a chain call
       const ws2 = socket("b", otherToken);
       await world.join(otherToken, ws2 as never);
-      message = await challenge(world, otherToken);
+      message = await challenge(world, HOLDER, otherToken);
       const mapped = await world.fetch(post("/wallet/link", otherToken, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
       expect(await mapped.json()).toEqual({ ok: true, address: addressOf(HOLDER), serial: 42 });
       expect(rpc).toHaveBeenCalledTimes(3);

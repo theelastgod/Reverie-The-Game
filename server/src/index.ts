@@ -153,13 +153,16 @@ export class ReverieWorld {
   private readonly holders: HolderCache = new Map();
 
   /**
-   * Wallet login, disarmed. POST /wallet/challenge issues a nonce to this
-   * session; POST /wallet/link takes { address, signature } over that nonce,
-   * recovers the signer, and seals the live body with the serial the holders
-   * map assigns (or, with a contract configured, the one the chain says it
-   * holds), or binds the address to the guest when it holds no Angel. When
-   * the chain cannot be read the link is refused with 503 and nothing
-   * changes. The nonce is spent on first use and expires on its own.
+   * Wallet login, disarmed. POST /wallet/challenge { address } issues a
+   * nonce to this session, bound to that address and to this city's domain
+   * in the message (EIP-4361 shape); POST /wallet/link { address, signature }
+   * rebuilds the message from the stored challenge and the request's own
+   * origin, recovers the signer, requires it to be the address the
+   * challenge was issued for, and seals the live body with the serial the
+   * holders map assigns (or, with a contract configured, the one the chain
+   * says it holds), or binds the address to the guest when it holds no
+   * Angel. When the chain cannot be read the link is refused with 503 and
+   * nothing changes. The nonce is spent on first use and expires on its own.
    */
   private async wallet(req: Request, path: string): Promise<Response> {
     const headers = { "Cache-Control": "no-store" };
@@ -170,24 +173,28 @@ export class ReverieWorld {
     const live = token ? [...this.sessions.values()].find(s => s.token === token) : undefined;
     if (!token || !live || !this.w.players.has(live.id)) return refuse(409, "no-session");
     const key = `${CHALLENGE_PREFIX}${token}`;
-    if (path === "/wallet/challenge") {
-      const nonce = crypto.randomUUID();
-      const at = Date.now();
-      await this.ctx.storage.put({ [key]: { nonce, at } });
-      return Response.json({ ok: true, message: challengeMessage(nonce, at) }, { headers });
-    }
     let body: { address?: unknown; signature?: unknown } = {};
     try {
       body = (await req.json()) as typeof body;
     } catch {
       return refuse(400, "bad-json");
     }
-    const challenge = await this.ctx.storage.get<{ nonce: string; at: number }>(key);
-    await this.ctx.storage.delete(key);
-    if (!challenge || Date.now() - challenge.at > CHALLENGE_TTL_MS) return refuse(409, "no-challenge");
     if (!isAddress(body.address)) return refuse(400, "bad-address");
     const address = normalizeAddress(body.address);
-    const signer = recoverAddress(challengeMessage(challenge.nonce, challenge.at), body.signature);
+    const url = new URL(req.url);
+    const bind = { domain: url.host, uri: url.origin, address };
+    if (path === "/wallet/challenge") {
+      const nonce = crypto.randomUUID();
+      const at = Date.now();
+      await this.ctx.storage.put({ [key]: { nonce, at, address } });
+      return Response.json({ ok: true, message: challengeMessage(nonce, at, bind) }, { headers });
+    }
+    const challenge = await this.ctx.storage.get<{ nonce: string; at: number; address?: string }>(key);
+    await this.ctx.storage.delete(key);
+    if (!challenge || Date.now() - challenge.at > CHALLENGE_TTL_MS) return refuse(409, "no-challenge");
+    // The signature must be over the challenge issued for this very address: a nonce asked for one address seals no other.
+    if (challenge.address !== address) return refuse(403, "bad-signature");
+    const signer = recoverAddress(challengeMessage(challenge.nonce, challenge.at, bind), body.signature);
     if (!signer || signer !== address) return refuse(403, "bad-signature");
     const serial = await serialFor(address, this.env ?? {}, (input, init) => fetch(input, init), Date.now(), this.holders);
     if (serial === undefined) return refuse(503, "chain");

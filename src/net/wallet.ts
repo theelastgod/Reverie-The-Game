@@ -67,9 +67,15 @@ export async function linkWallet(fetcher: typeof fetch = (...a) => fetch(...a), 
   }
   if (!ADDRESS.test(address)) return { ok: false, reason: "rejected" };
 
+  // The challenge is issued for this address and names the city's domain, so the wallet shows both and a signature phished elsewhere is worthless here.
   let message = "";
   try {
-    const r = await fetcher("/wallet/challenge", { method: "POST", credentials: "same-origin" });
+    const r = await fetcher("/wallet/challenge", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address }),
+    });
     if (r.status === 409) return { ok: false, reason: "no-session" };
     if (!r.ok) return { ok: false, reason: "network", detail: String(r.status) };
     message = ((await r.json()) as { message?: string }).message ?? "";

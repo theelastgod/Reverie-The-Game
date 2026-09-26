@@ -173,6 +173,35 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   crosses the Care, Annex and Wet gates on foot and prints a second
   `measure:` block. PASS on the first run. The numbers are in Verified and
   Backlog 5.
+- A security review of the branch (2026-09-26; a finder over every trust
+  boundary, then a false-positive pass per finding): nothing at high
+  confidence. Two things below the bar were fixed anyway, before a deploy.
+  The wallet challenge carried no domain, URI, chain or address, so a
+  signature phished on a lookalike page (plain text, nothing for the wallet
+  to compare) could have sealed a stranger's body as the victim's Angel;
+  low while nothing is armed, but the challenge now has the Sign-In with
+  Ethereum shape (`<host> wants you to sign in with your Ethereum account:`
+  / the address / the purpose line / URI, Version, Chain ID 8453, Nonce,
+  Issued At, Expiration Time), `POST /wallet/challenge { address }` issues
+  it for that address, and `/wallet/link` rebuilds it from the request's
+  own origin and the stored challenge and requires the signer to be that
+  address; a wallet shows the domain and can warn, and a signature over
+  another site's text or a challenge issued for another address seals
+  nothing (tests for both). And `applyTruce` required no flag on the
+  caller, so any Angel within 96 px could unflag a flagged neighbour and
+  freeze a duel; it now needs the caller flagged and not under a truce
+  (the prompt's rule, kept by the server; a test presses it from outside).
+  The review confirmed sound: cookie sessions and the same-origin checks,
+  the packet validator, the takeover, the parameterized D1 log and its
+  public kinds, every verb acting on the session's own body, the market
+  and claims desk rules, the snapshot's projection of other bodies, and the
+  client's DOM (textContent only, no eval, no location reads). Noted, not
+  changed: the object accepts any well-formed UUID as a session token it
+  never minted (fixation would need a cookie planted on the same
+  registrable domain, which `workers.dev` on the public suffix list
+  prevents; revisit on a custom apex), and a serial is never re-checked
+  against the chain after linking (a holder could seal several saved
+  bodies by linking while the others are offline).
 - A review of the day's diff (2026-09-26, `42ba668..HEAD`, medium effort)
   found one real defect and one line: the ring's `prepare` and `join`
   verbs did not wait for the gate, so an Angel who prepared the ground
@@ -388,10 +417,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `public/assets/gen/`, it sounds.
 - Wallet login (2026-09-25, disarmed): the lock panel offers LINK A WALLET.
   The client discovers wallets by EIP-6963 (`window.ethereum` as fallback),
-  asks for an account, fetches a nonce from `POST /wallet/challenge`, has the
-  wallet `personal_sign` the challenge text (hex-encoded), and posts the
-  signature to `POST /wallet/link`. The Durable Object recovers the signer
-  (EIP-191 hash, secp256k1 recovery through `@noble/curves`), spends the
+  asks for an account, fetches a challenge for that address from `POST
+  /wallet/challenge { address }` (since 2026-09-26 a Sign-In with Ethereum
+  message naming the city's host, the address, the chain and the nonce),
+  has the wallet `personal_sign` the challenge text (hex-encoded), and
+  posts the signature to `POST /wallet/link`. The Durable Object rebuilds
+  the message from its own origin, recovers the signer (EIP-191 hash,
+  secp256k1 recovery through `@noble/curves`), requires it to be the
+  challenge's address, spends the
   nonce (ten-minute life), and either seals the live body with the serial the
   `ANGEL_HOLDERS` map assigns (a wallet proof through `applyLink`) or binds
   the address to the guest and says so. The test link (serial + `mock`) is
@@ -561,6 +594,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - `scripts/render-check.mjs` PASS: title, Nave with HUD, dialogue screenshots
   in `.rebuild/shots/`; 14.9 fps under this sandbox's software WebGL
   (SwiftShader), so frame pacing on a GPU-backed laptop is still unmeasured.
+- After the wallet challenge change (2026-09-26): typecheck, 448 tests, the
+  build, the session smoke and the Movement I smoke PASS; the render check
+  passes its screenshots and reads 8 fps on the container the session
+  resumed in that afternoon (its SwiftShader is slower than the morning's,
+  which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
+  30 is the real-hardware bar).
 - The deploy bundle: `npx wrangler deploy --dry-run` builds it without
   the API (541 KB, 142 KB gzipped, 92 site files, the five bindings and
   variables as `wrangler.toml` states them); `npm run d1:migrate` applies

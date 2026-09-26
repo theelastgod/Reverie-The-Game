@@ -195,6 +195,27 @@ describe("PvP consent", () => {
     expect(applyFlag(later, "a").players.get("a")!.flagged).toBe(true);
   });
 
+  it("only a flagged Angel can call a truce, and not while one already holds: nobody unflags a stranger from outside", () => {
+    // an unflagged neighbour presses truce at a flagged Angel: nothing moves on either body
+    const w = faceOff(angel("a", 1), angel("b", 2, { flagged: true }));
+    const pressed = applyTruce(w, "a");
+    expect(pressed.players.get("b")!.flagged).toBe(true);
+    expect(pressed.players.get("b")!.truceUntil).toBe(0);
+    expect(pressed.players.get("a")!.truceUntil).toBe(0);
+    expect(pressed.players.get("a")!.heard).toBe("Both Angels must flag.");
+    // a duel in progress cannot be frozen by a third body standing by
+    const dueling = faceOff(angel("a", 1, { flagged: true }), angel("b", 2, { flagged: true }));
+    const third = put(dueling, { ...angel("c", 3), x: dueling.players.get("a")!.x + 40, y: dueling.players.get("a")!.y });
+    const meddled = applyTruce(third, "c");
+    expect(meddled.players.get("a")!.flagged).toBe(true);
+    expect(meddled.players.get("b")!.flagged).toBe(true);
+    // under a truce of its own, a body cannot call another
+    let held = applyTruce(dueling, "a");
+    held = put(held, { ...held.players.get("b")!, flagged: true });
+    held = put(held, { ...held.players.get("a")!, flagged: true });
+    expect(applyTruce(held, "a").players.get("a")!.heard).toBe("The truce holds.");
+  });
+
   it("the practice patch blocks PvP", () => {
     let w = emptyWorld();
     w = put(w, angel("a", 1, { ...ARENA, x: ARENA.x - 15, flagged: true, facing: { dx: 1, dy: 0 } }));

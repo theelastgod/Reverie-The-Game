@@ -9,6 +9,8 @@ import { keccak_256 } from "@noble/hashes/sha3.js";
 import { ANGEL_SUPPLY } from "../../src/sim/constants.ts";
 
 export const CHALLENGE_TTL_MS = 10 * 60 * 1000;
+/** Base mainnet: where the Angels stand. The chain id is in the message so a wallet can show it; nothing is sent to it. */
+export const CHAIN_ID = 8453;
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 
 export function isAddress(s: unknown): s is string {
@@ -17,16 +19,30 @@ export function isAddress(s: unknown): s is string {
 
 export const normalizeAddress = (a: string): string => a.toLowerCase();
 
-/** The text a wallet signs: human-readable, single purpose, bound to one session by the nonce. */
-export function challengeMessage(nonce: string, issuedAt: number): string {
+/** What a challenge is bound to: the city's host and origin (from the request the object served) and the address that asked. */
+export type ChallengeBinding = { domain: string; uri: string; address: string };
+
+/**
+ * The text a wallet signs, in the Sign-In with Ethereum shape (EIP-4361):
+ * human-readable, single purpose, and bound to this city's domain, to the
+ * signer's own address, to the chain and to one session by the nonce. A
+ * wallet shows the domain and can warn when it is not the page asking; a
+ * signature a stranger phished elsewhere names their site and their
+ * address, and neither will match what the city rebuilds.
+ */
+export function challengeMessage(nonce: string, issuedAt: number, bind: ChallengeBinding): string {
   return [
-    "Reverie: The Game",
+    `${bind.domain} wants you to sign in with your Ethereum account:`,
+    bind.address,
     "",
-    "Link an Angel to this session.",
-    "This signature costs nothing and moves nothing.",
+    "Reverie: The Game. Link an Angel to this session. This signature costs nothing and moves nothing.",
     "",
+    `URI: ${bind.uri}`,
+    "Version: 1",
+    `Chain ID: ${CHAIN_ID}`,
     `Nonce: ${nonce}`,
-    `Issued: ${new Date(issuedAt).toISOString()}`,
+    `Issued At: ${new Date(issuedAt).toISOString()}`,
+    `Expiration Time: ${new Date(issuedAt + CHALLENGE_TTL_MS).toISOString()}`,
   ].join("\n");
 }
 

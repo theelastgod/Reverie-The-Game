@@ -615,13 +615,15 @@ export function applyFlag(w: WorldState, id: string): WorldState {
   return cur;
 }
 
-/** Both unflag. Seconds, not a stick. */
+/** Both unflag. Seconds, not a stick. Only a flagged Angel can call one: the prompt's rule, kept by the server. */
 export function applyTruce(w: WorldState, id: string): WorldState {
   const p = w.players.get(id);
   if (!p || p.dead || p.guest || p.locked) return w;
+  const now = w.now;
+  if (!p.flagged) return setPlayer(w, say(p, LINES.PVP_FLAG_REQUIRED, now));
+  if (p.truceUntil > now) return setPlayer(w, say(p, LINES.TRUCE_ACTIVE, now));
   const other = nearestPlayer(w, p, 96, q => q.id !== id && q.flagged && !q.guest && !q.locked && !q.dead);
   if (!other) return w;
-  const now = w.now;
   const until = now + TRUCE_SECONDS;
   let cur = setPlayer(w, say({ ...p, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));
   cur = setPlayer(cur, say({ ...other, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));

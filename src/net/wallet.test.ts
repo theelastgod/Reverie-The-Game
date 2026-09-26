@@ -68,6 +68,7 @@ describe("the handshake", () => {
     expect(Buffer.from(hex.slice(2), "hex").toString("utf8")).toBe("Reverie: The Game\nNonce: n1");
     expect(sign.params![1]).toBe(ADDR);
     expect(calls.map(c => c.url)).toEqual(["/wallet/challenge", "/wallet/link"]);
+    expect(JSON.parse(String(calls[0].init?.body)), "the challenge is asked for this address").toEqual({ address: ADDR });
     expect(JSON.parse(String(calls[1].init?.body))).toEqual({ address: ADDR, signature: "0xsig" });
     expect(walletLine(out)).toContain("#0042");
   });

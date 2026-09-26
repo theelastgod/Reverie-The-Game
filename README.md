@@ -68,7 +68,10 @@ Play at http://127.0.0.1:5175. Link the test Angel from the title or the lock
 panel (serial 7777, mock signature; offered only while `MOCK_LINK=1`, which
 `.dev.vars` sets for `wrangler dev`). A deployed city links Angels through a
 wallet instead: the lock panel's LINK A WALLET asks an EIP-6963 wallet for one
-`personal_sign` over a server nonce, the Worker recovers the signer, and the
+`personal_sign` over a Sign-In-with-Ethereum message (the city's domain, the
+address, the chain, a server nonce, a ten-minute window), the Worker rebuilds
+that message from its own origin and the challenge it issued for that
+address, recovers the signer, requires it to be that address, and the
 serial comes from the `ANGEL_HOLDERS` map in `wrangler.toml` until the
 contract exists; with `ANGEL_CONTRACT` and `ANGEL_RPC_URL` set, the Worker
 reads ownership from the chain instead (two `eth_call`s, cached five minutes
