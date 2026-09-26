@@ -292,4 +292,19 @@ describe("promptFor", () => {
     w = add(w, { ...at(guest("g"), hot.x + 10, hot.y), district: "wet" });
     expect(promptFor({ w, p: me(w, "g"), now: 0 })).toBeNull();
   });
+
+  it("in a crowd within reach, the nearest body with a verb wins; nearer bodies without one, and the fallen, are passed over", () => {
+    const hot = POSITIONS["hot-street"];
+    let w = add(emptyWorld(), { ...at(angel("a"), hot.x, hot.y), district: "wet" });
+    w = add(w, { ...at(guest("g"), hot.x + 20, hot.y), district: "wet" }); // a guest: nothing an Angel can do with them
+    w = add(w, { ...at(angel("d", "sky", 44), hot.x + 40, hot.y), district: "wet", dead: true });
+    w = add(w, { ...at(angel("b", "sky", 43), hot.x + 60, hot.y), district: "wet" });
+    w = add(w, { ...at(angel("c", "sky", 45), hot.x + 70, hot.y), district: "wet" });
+    const p = promptFor({ w, p: me(w, "a"), now: 0 })!;
+    expect(p).toMatchObject({ targetId: "b", targetKind: "player", name: me(w, "b").name });
+    expect(p.verbs.map(v => v.key)).toEqual(["V"]);
+    // the guest sees the nearest Angel, not the farther one, and nothing of the fallen
+    w = add(w, { ...at(me(w, "g"), hot.x + 50, hot.y) });
+    expect(promptFor({ w, p: me(w, "g"), now: 0 })).toBeNull();
+  });
 });

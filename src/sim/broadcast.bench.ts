@@ -1,16 +1,18 @@
 /**
  * The object's broadcast path, timed in one process without the wire: 80
  * bodies in one area of interest, walking; every step snapshots, splits,
- * diffs and encodes for every viewer. Two variants: the calls one viewer at
- * a time (`old`, what the object did before the step's shared views) and the
- * step-shared calls the object makes now (`new`). Run with `npm run bench`;
- * `vitest run` leaves bench files alone. The numbers are for this CPU; what
- * matters is the ratio and the worst step.
+ * diffs and encodes for every viewer. Three variants: the calls one viewer
+ * at a time (`old`, what the object did before the step's shared views),
+ * the step-shared snapshot split after the fact (`shared`, the object's
+ * second shape), and the frames the object makes now (`frames`: the fast
+ * frame every step, the slow side built only when a slow frame is due).
+ * Run with `npm run bench`; `vitest run` leaves bench files alone. The
+ * numbers are for this CPU; what matters is the ratio and the worst step.
  */
 import { bench, describe } from "vitest";
 import { DT } from "./constants";
 import { encodeFast, SlowTracker, splitSnap } from "./frames";
-import { snapshotFor, stepViews } from "./snapshot";
+import { framesFor, snapshotFor, stepViews } from "./snapshot";
 import type { WorldState } from "./types";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
@@ -35,17 +37,27 @@ function walk(w: WorldState, tick: number): WorldState {
   return tickWorld(cur, DT);
 }
 
-type Variant = "old" | "new";
+type Variant = "old" | "shared" | "frames";
 
 function broadcast(w: WorldState, tracker: SlowTracker, tick: number, variant: Variant): number {
   let chars = 0;
   const slowDue = tick % 5 === 0;
-  const step = variant === "new" ? stepViews(w) : null;
+  const step = variant === "old" ? null : stepViews(w);
   for (const id of w.players.keys()) {
-    const snap = step ? snapshotFor(w, id, step) : snapshotFor(w, id);
-    const { fast, slow } = step ? splitSnap(snap, step.frames) : splitSnap(snap);
+    let fast;
+    let slow;
+    if (variant === "frames" && step) {
+      const frames = framesFor(w, id, step);
+      fast = frames.fast;
+      slow = frames.slow;
+    } else {
+      const snap = step ? snapshotFor(w, id, step) : snapshotFor(w, id);
+      const parts = step ? splitSnap(snap, step.frames) : splitSnap(snap);
+      fast = parts.fast;
+      slow = () => parts.slow;
+    }
     if (tracker.rosterDue(id, fast) || slowDue || tracker.fresh(id)) {
-      const changed = step ? tracker.diff(id, slow, step.frames) : tracker.diff(id, slow);
+      const changed = step ? tracker.diff(id, slow(), step.frames) : tracker.diff(id, slow());
       if (changed) chars += JSON.stringify(changed).length;
     }
     chars += step ? encodeFast(fast, step.frames).length : JSON.stringify(fast).length;
@@ -54,7 +66,7 @@ function broadcast(w: WorldState, tracker: SlowTracker, tick: number, variant: V
 }
 
 describe(`one broadcast to ${BODIES} viewers, walking`, () => {
-  for (const variant of ["old", "new"] as Variant[]) {
+  for (const variant of ["old", "shared", "frames"] as Variant[]) {
     let w = crowd(BODIES);
     const tracker = new SlowTracker();
     let tick = 0;

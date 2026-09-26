@@ -299,6 +299,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- The viewer's own side (2026-09-26, backlog 4, the per-viewer work that
+  remained): profiled first, and the cost was not the NPC views the plan
+  named but the prompt, the `you` split, the fast encode and the
+  tracker's roster maps. `framesFor(w, id, step)` (`snapshot.ts`) now
+  gives the object the fast frame and a slow thunk it calls only when a
+  slow frame is due, so four steps in five build no per-viewer slow side
+  at all (NPC offers, nodes, wreckage, graves, marks, objectives, the
+  kit's readout); the prompt gathers what is in reach by distance and
+  reads verbs nearest first from the kind's own function (`playerVerbs`,
+  `poiVerbs`, `nodeVerbs`, `wreckageVerbs`, `npcVerbs` in `interact.ts`;
+  `verbsFor` dispatches), a guest or locked viewer gathering no bodies;
+  `fast.you` is one native copy with the slow keys left undefined for
+  JSON to drop; the open dialogue and the notices ride `youSlow` (a body
+  in conversation sends a third less per fast frame); a body's roster
+  entry keeps its identity while its fields stand, and a tracker whose
+  roster is entry for entry what it saw owes nothing. Bytes identical to
+  `splitSnap(snapshotFor(...))`, held by a test encoded and folded back.
+  Bench on this container: viewer-by-viewer 20.2 ms, the shared views
+  6.9 ms, the frames 5.2 ms per broadcast to 80 walking viewers; the
+  profile and the wire bound (847 KB per step at that density) are in
+  `.rebuild/ZONES.md`.
 - Movement III over the wire (2026-09-26): `scripts/smoke-campaign.mjs
   --movement=3` (`npm run test:campaign:3`, 480 s deadline) goes on through
   the Organs door: studies the Strait, the Foundry and the Cable, hears Ord's
@@ -600,6 +621,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The viewer's own side (2026-09-26, later): typecheck, 451 tests (three
+  new: the frames against the split snapshot, encoded and folded back,
+  with a guest's hidden line, an open dialogue, notices and the kit's
+  readout; a body's roster entry keeping its identity across a step and
+  the tracker owing nothing for it; the prompt in a crowd passing over
+  bodies without a verb and the fallen), the build, `npm run bench`
+  (frames 5.2 ms vs shared 6.9 ms vs old 20.2 ms on this container), the
+  session smoke PASS, the Movement I smoke PASS twice on fresh worlds
+  (16.6–16.7 min estimate) after one run that stopped at Desk Three's
+  fall (25 s of strikes, the clerk did not fall; not seen again, and
+  nothing in the change touches combat), the render check PASS at
+  `RENDER_MIN_FPS=5` (8.3 fps, this container's SwiftShader). A local
+  note: `pkill -x workerd` does not stop `wrangler dev`, which respawns
+  the runtime and keeps port 8788; stop the wrangler `node` process by
+  its pid (from `ps -eo pid,comm,args`) before starting another.
 - The deploy bundle: `npx wrangler deploy --dry-run` builds it without
   the API (541 KB, 142 KB gzipped, 92 site files, the five bindings and
   variables as `wrangler.toml` states them); `npm run d1:migrate` applies
@@ -645,22 +681,25 @@ they are discovered; keep this list honest.
    that is walking). Not built: reading beyond the first token of a wallet
    that holds several (the first is the one that walks).
 4. **Past 40 bodies, then zones: the object's side is done; the knee
-   needs another machine.** The diet, its second pass and the step's
-   shared views are in (see Done): one broadcast to 80 viewers costs 4.8
-   ms of compute in one process (`npm run bench`), a fifth of before, and
-   the local 40-bot check passes more often than not. What the local
-   check cannot say is where the knee is now: at 80 bots the bots and the
-   Worker share one CPU and `wrangler dev`'s proxy drops writes
-   (`.rebuild/ZONES.md` has the runs). The next measure is
-   `scripts/load-check.mjs --bots=80` (then 120, 160) against a deployed
-   city from a second machine, once the deploy is possible; only that run
-   decides whether zone objects are needed at all. The per-viewer work
-   that remains is the NPC views (personal overrides and offers, ~10 per
-   viewer per step) and the slow sections a viewer sees differently
-   (npcs, nodes, wreckage, graves, objective, side objectives), still
-   stringified per viewer every fifth step. Zone objects with handoff at
-   the gates stay behind `ZONES=0`, designed in `.rebuild/ZONES.md`, and
-   only when a real population asks.
+   needs another machine.** The diet, its second pass, the step's
+   shared views and the viewer's own side are in (see Done): one
+   broadcast to 80 viewers in one area of interest costs about 5 ms of
+   compute in one process on this container (`npm run bench`; the
+   viewer-by-viewer path costs four times that), and the local 40-bot
+   check passes more often than not. What the local check cannot say is
+   where the knee is now: at 80 bots the bots and the Worker share one
+   CPU and `wrangler dev`'s proxy drops writes (`.rebuild/ZONES.md` has
+   the runs). The next measure is `scripts/load-check.mjs --bots=80`
+   (then 120, 160) against a deployed city from a second machine, once
+   the deploy is possible; only that run decides whether zone objects
+   are needed at all. No per-viewer compute lever is left that is worth
+   a change before that run: what remains per viewer is the fast encode
+   (the fan-out itself, 79 fragments joined per viewer) and, for Angels
+   in a mob, the prompt's candidates; at that density the broadcast is
+   847 KB per step (17 MB/s), so the wire binds first, which argues for
+   zones or a smaller area of interest, not for more diet. Zone objects
+   with handoff at the gates stay behind `ZONES=0`, designed in
+   `.rebuild/ZONES.md`, and only when a real population asks.
 5. **Opening density.** Measured 2026-09-26 after the Annex Runner courier
    beat (`scripts/smoke-campaign.mjs` prints `measure:` lines; a later fight
    is floored at 25 s of a person's time, the first at 45 s; keep only runs

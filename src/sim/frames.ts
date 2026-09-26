@@ -12,13 +12,19 @@ import {
   type FastFrame, type PlayerMotion, type PlayerRoster, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type YouView,
 } from "./protocol";
 
-/** The parts of `you` that change rarely and grow over a campaign; they ride the slow frame as `youSlow`. */
-export const YOU_SLOW_KEYS = ["quests", "flags", "choices", "party", "items", "claims", "history", "respawn", "wallet", "kitReadout"] as const;
+/**
+ * The parts of `you` that change rarely and grow over a campaign; they ride
+ * the slow frame as `youSlow`. The open dialogue and the notices are here
+ * too: they change only when something lands on the viewer, and the object
+ * sends a slow frame at once after the viewer acts, so they lose nothing.
+ */
+export const YOU_SLOW_KEYS = ["quests", "flags", "choices", "party", "items", "claims", "history", "respawn", "wallet", "dialogue", "notices", "kitReadout"] as const;
 export type YouSlowKey = (typeof YOU_SLOW_KEYS)[number];
 export type YouSlow = Partial<Pick<YouView, YouSlowKey>>;
 
 export type SlowState = Partial<Pick<Snap, SlowKey>> & { roster?: PlayerRoster[]; youSlow?: YouSlow };
 
+/** `you` in two, the fast part without the slow keys. (One native copy and a few deletes measured faster than a copy key by key; `framesFor` goes one step further for the object.) */
 export function splitYou(you: YouView): { fast: YouView; slow: YouSlow } {
   const fast = { ...you } as Record<string, unknown>;
   const slow = {} as Record<string, unknown>;
@@ -39,22 +45,35 @@ export function splitYou(you: YouView): { fast: YouView; slow: YouSlow } {
  * is left for the collector to chase. The sim never mutates what it has
  * snapshotted.
  */
+type Split = { p: PublicPlayer; motion: PlayerMotion; roster: PlayerRoster };
 export type FrameCache = {
-  split: Map<string, { p: PublicPlayer; motion: PlayerMotion; roster: PlayerRoster }>;
+  split: Map<string, Split>;
   fragments: Map<object, string>;
+  /** The last step's splits: a body whose roster fields all stand keeps its roster entry's identity from step to step, so a tracker owes nothing for it without a stringify. */
+  prev: Map<string, Split> | null;
 };
-export const newFrameCache = (): FrameCache => ({ split: new Map(), fragments: new Map() });
+export const newFrameCache = (last?: FrameCache | null): FrameCache => ({ split: new Map(), fragments: new Map(), prev: last?.split ?? null });
+
+const MOTION = new Set<string>(MOTION_KEYS);
+type Record_ = Record<string, unknown>;
+const standsAs = (roster: PlayerRoster, p: PublicPlayer): boolean => {
+  for (const k in roster) if ((roster as Record_)[k] !== (p as Record_)[k]) return false;
+  return true;
+};
 
 export function splitPlayer(p: PublicPlayer, cache?: FrameCache): { motion: PlayerMotion; roster: PlayerRoster } {
   const kept = cache?.split.get(p.id);
   if (kept && kept.p === p) return kept;
-  const motion = {} as Record<string, unknown>;
-  const roster = {} as Record<string, unknown>;
-  for (const [k, v] of Object.entries(p)) {
-    if ((MOTION_KEYS as readonly string[]).includes(k)) motion[k] = v;
-    if (k === "id" || !(MOTION_KEYS as readonly string[]).includes(k)) roster[k] = v;
+  const before = cache?.prev?.get(p.id);
+  const keep = before && standsAs(before.roster, p) ? before.roster : null;
+  const motion = {} as Record_;
+  const roster = {} as Record_;
+  for (const k in p) {
+    const v = (p as Record_)[k];
+    if (MOTION.has(k)) motion[k] = v;
+    if (!keep && (k === "id" || !MOTION.has(k))) roster[k] = v;
   }
-  const out = { p, motion: motion as PlayerMotion, roster: roster as PlayerRoster };
+  const out: Split = { p, motion: motion as PlayerMotion, roster: keep ?? (roster as PlayerRoster) };
   cache?.split.set(p.id, out);
   return out;
 }
@@ -145,8 +164,7 @@ export function applySlow(slow: SlowState, frame: SlowFrame): SlowState {
 export class SlowTracker {
   private readonly sent = new Map<string, Map<SlowKey, string>>();
   private readonly refs = new Map<string, Map<string, unknown>>(); // the objects last sent, by section and by youSlow key
-  private readonly roster = new Map<string, Map<string, string>>();
-  private readonly rosterRefs = new Map<string, Map<string, PlayerRoster>>(); // the entry objects last seen, by body
+  private readonly roster = new Map<string, Map<string, { sig: string; ref: PlayerRoster }>>(); // per body: the signature sent and the entry object last seen
   private readonly ids = new Map<string, string>();
 
   /** True until the viewer has been sent its first slow frame. */
@@ -196,24 +214,34 @@ export class SlowTracker {
         out.youSlow = slow.youSlow;
       }
     }
-    const known = this.roster.get(viewerId) ?? new Map<string, string>();
-    const knownRefs = this.rosterRefs.get(viewerId) ?? new Map<string, PlayerRoster>();
-    const next = new Map<string, string>();
-    const nextRefs = new Map<string, PlayerRoster>();
-    const owed: PlayerRoster[] = [];
-    for (const r of slow.roster ?? []) {
-      nextRefs.set(r.id, r);
-      const keptSig = known.get(r.id);
-      if (keptSig !== undefined && knownRefs.get(r.id) === r) {
-        next.set(r.id, keptSig); // the same entry object: unchanged without a stringify
-        continue;
+    const roster = slow.roster ?? [];
+    const known = this.roster.get(viewerId);
+    // The same bodies, each the same entry object as last time: nothing owed, nothing rebuilt.
+    let stands = known !== undefined && known.size === roster.length;
+    if (stands) {
+      for (const r of roster) {
+        const kept = known!.get(r.id);
+        if (!kept || kept.ref !== r) {
+          stands = false;
+          break;
+        }
       }
-      const sig = fragmentOf(r, cache);
-      next.set(r.id, sig);
-      if (keptSig !== sig) owed.push(r);
     }
-    this.roster.set(viewerId, next);
-    this.rosterRefs.set(viewerId, nextRefs);
+    const owed: PlayerRoster[] = [];
+    if (!stands) {
+      const next = new Map<string, { sig: string; ref: PlayerRoster }>();
+      for (const r of roster) {
+        const kept = known?.get(r.id);
+        if (kept && kept.ref === r) {
+          next.set(r.id, kept); // the same entry object: unchanged without a stringify
+          continue;
+        }
+        const sig = fragmentOf(r, cache);
+        next.set(r.id, { sig, ref: r });
+        if (!kept || kept.sig !== sig) owed.push(r);
+      }
+      this.roster.set(viewerId, next);
+    }
     if (owed.length) {
       if (!out) out = { t: "slow", v: slow.v };
       out.roster = owed;
@@ -225,7 +253,6 @@ export class SlowTracker {
     this.sent.delete(viewerId);
     this.refs.delete(viewerId);
     this.roster.delete(viewerId);
-    this.rosterRefs.delete(viewerId);
     this.ids.delete(viewerId);
   }
 }

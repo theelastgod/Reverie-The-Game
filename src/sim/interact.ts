@@ -6,7 +6,7 @@
  */
 import { DISTRICT_BY_ID, POSITIONS, nearPoint } from "./map";
 import { LINES, NPCS, POI_CONFIGS } from "./content";
-import type { Ctx, Player, PoiConfig, PoiVerb, PromptVerb, WorldState } from "./types";
+import type { Ctx, Player, PoiConfig, PoiVerb, PromptVerb, WorldState, Wreckage, YieldNode } from "./types";
 import { say } from "./world";
 import { applyNode, applyClaims, applyForge, spend } from "./economy";
 import { applyBounty, applyTithe } from "./houses";
@@ -132,51 +132,68 @@ export function applyInteract(w: WorldState, id: string, targetId: string, choic
 }
 
 /** The verbs a prompt may show for a target right now. Denied verbs are omitted for guests; spectated ones still show and refuse. */
-export function verbsFor(ctx: Ctx, targetId: string): PromptVerb[] {
+// ---------------------------------------------------------------- the verbs a thing offers this viewer
+
+const SPEAK: PromptVerb[] = [{ key: "F", label: "Speak", choice: "talk" }];
+
+/** A person who is present: speak. */
+export const npcVerbs = (): PromptVerb[] => SPEAK.slice();
+
+export function nodeVerbs(ctx: Ctx, node: YieldNode): PromptVerb[] {
   const { w, p } = ctx;
+  if (isFrozen(w, node.district) || p.locked) return [];
+  const out: PromptVerb[] = [];
+  if (node.charges > 0) out.push({ key: "E", label: "Extract", choice: "extract" });
+  if (!node.kept) out.push({ key: "Q", label: "Keep", choice: "keep" });
+  return out;
+}
 
-  if (NPCS[targetId] && w.npcs[targetId]) return [{ key: "F", label: "Speak", choice: "talk" }];
+export function wreckageVerbs(ctx: Ctx, wreck: Wreckage): PromptVerb[] {
+  const { w, p } = ctx;
+  if (wreck.buried || p.locked || !visibleWreckage(w, p).some(r => r.id === wreck.id)) return [];
+  const out: PromptVerb[] = [{ key: "F", label: "Bury", choice: "bury" }];
+  if (!p.guest && !wreck.looted && (wreck.bestand > 0 || wreck.items.length > 0)) out.push({ key: "E", label: "Loot", choice: "loot" });
+  return out;
+}
 
-  const node = w.nodes.find(n => n.id === targetId);
-  if (node) {
-    if (isFrozen(w, node.district) || p.locked) return [];
-    const out: PromptVerb[] = [];
-    if (node.charges > 0) out.push({ key: "E", label: "Extract", choice: "extract" });
-    if (!node.kept) out.push({ key: "Q", label: "Keep", choice: "keep" });
-    return out;
+/** Another body: a Ruin duel, the flag, a truce. Nothing between guests, the locked or the fallen. */
+export function playerVerbs(ctx: Ctx, other: Player): PromptVerb[] {
+  const { w, p } = ctx;
+  if (other.id === p.id || p.guest || p.locked || other.guest || other.locked || other.dead) return [];
+  const out: PromptVerb[] = [];
+  if (!duelBlockReason(p, other, w)) {
+    const offered = !!other.duel && !other.duel.accepted && other.duel.with === p.id && other.duel.until > w.now;
+    out.push({ key: "F", label: offered ? "Answer the duel" : "Ruin duel", choice: "duel" });
   }
+  if (DISTRICT_BY_ID[p.district].flagLegal && p.truceUntil <= w.now) out.push({ key: "V", label: p.flagged ? "Unflag" : "Flag", choice: "flag" });
+  if (p.flagged && other.flagged) out.push({ key: "T", label: "Truce", choice: "truce" });
+  return out;
+}
 
-  const wreck = w.wreckage.find(r => r.id === targetId);
-  if (wreck) {
-    if (wreck.buried || p.locked || !visibleWreckage(w, p).some(r => r.id === wreck.id)) return [];
-    const out: PromptVerb[] = [{ key: "F", label: "Bury", choice: "bury" }];
-    if (!p.guest && !wreck.looted && (wreck.bestand > 0 || wreck.items.length > 0)) out.push({ key: "E", label: "Loot", choice: "loot" });
-    return out;
-  }
-
-  const other = w.players.get(targetId);
-  if (other && other.id !== p.id) {
-    if (p.guest || p.locked || other.guest || other.locked || other.dead) return [];
-    const out: PromptVerb[] = [];
-    if (!duelBlockReason(p, other, w)) {
-      const offered = !!other.duel && !other.duel.accepted && other.duel.with === p.id && other.duel.until > w.now;
-      out.push({ key: "F", label: offered ? "Answer the duel" : "Ruin duel", choice: "duel" });
-    }
-    if (DISTRICT_BY_ID[p.district].flagLegal && p.truceUntil <= w.now) out.push({ key: "V", label: p.flagged ? "Unflag" : "Flag", choice: "flag" });
-    if (p.flagged && other.flagged) out.push({ key: "T", label: "Truce", choice: "truce" });
-    return out;
-  }
-
-  const cfg = POI_CONFIGS[targetId];
-  if (!cfg) return [];
+/** A POI's authored verbs that are available to this viewer, the first per key. */
+export function poiVerbs(ctx: Ctx, cfg: PoiConfig): PromptVerb[] {
   const out: PromptVerb[] = [];
   const taken = new Set<string>();
   for (const v of cfg.verbs) {
     if (taken.has(v.key)) continue;
     if (!verbAvailable(ctx, v)) continue;
-    if (p.guest && (v.guest ?? "allow") === "deny") continue;
+    if (ctx.p.guest && (v.guest ?? "allow") === "deny") continue;
     taken.add(v.key);
     out.push({ key: v.key, label: v.label, choice: v.choice });
   }
   return out;
+}
+
+/** The verbs of a thing by its id, whatever kind it is; the prompt, which knows the kind, calls the kind's own. */
+export function verbsFor(ctx: Ctx, targetId: string): PromptVerb[] {
+  const { w } = ctx;
+  if (NPCS[targetId] && w.npcs[targetId]) return npcVerbs();
+  const node = w.nodes.find(n => n.id === targetId);
+  if (node) return nodeVerbs(ctx, node);
+  const wreck = w.wreckage.find(r => r.id === targetId);
+  if (wreck) return wreckageVerbs(ctx, wreck);
+  const other = w.players.get(targetId);
+  if (other) return playerVerbs(ctx, other);
+  const cfg = POI_CONFIGS[targetId];
+  return cfg ? poiVerbs(ctx, cfg) : [];
 }

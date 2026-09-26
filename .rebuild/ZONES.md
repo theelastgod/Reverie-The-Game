@@ -109,6 +109,62 @@ it was replaced by the explicit per-step cache (plain Maps dropped with
 the step) before it could be blamed for the stalls, and the stalls stayed,
 so they are not the collector's ephemerons either.
 
+### The viewer's own side (the same day, later)
+
+Profiled before touching anything (80 walking viewers in one process,
+`performance.now` around each part): the per-viewer cost was not where
+the plan guessed (NPC views 0.5 ms, the per-viewer slow sections' JSON
+0.2 ms) but in the prompt (1.4 ms: `verbsFor` for every body within
+reach, and for a guest that is every body), the `you` split (1.8 ms in
+`splitSnap`: a spread and ten deletes per viewer), the fast encode (2.3
+ms: 79 fragments joined per viewer, which is the fan-out itself) and the
+tracker's roster bookkeeping (four Maps rebuilt per viewer per slow
+step). So:
+
+- `framesFor(w, id, step)` replaces `splitSnap(snapshotFor(...))` in the
+  object: the fast frame now, the slow frame as a thunk the object calls
+  only when a slow frame is due. On four steps in five the viewer's slow
+  side (the persons' offers, the nodes, the wreckage, the graves, the
+  marks, the objectives, the kit's readout) is not built at all. The
+  bytes are what `splitSnap(snapshotFor(...))` gives; a test holds them
+  equal, encoded and folded back.
+- The prompt gathers everything within reach by distance first, then
+  reads verbs nearest first and stops at the first thing with one; the
+  verbs come from the kind's own function (`playerVerbs(ctx, other)` and
+  the rest) with the thing in hand, not by id through three finds. A
+  guest or a locked viewer gathers no bodies. The POI list with its
+  places and reaches is gathered once.
+- `fast.you` is one native copy with the slow keys left `undefined`
+  (JSON drops them), measured at less than half of any key-by-key copy;
+  `splitYou` keeps its spread and deletes, which measured faster than a
+  key-by-key copy too.
+- The open dialogue and the notices ride `youSlow`: for a body in
+  conversation the fast frame falls from ~1.9 KB to ~1.3 KB, and a lone
+  viewer's from 1352 to ~1290 bytes; the action that opens or answers a
+  dialogue sends the slow frame at once, so nothing is later.
+- A body's roster entry keeps its identity from step to step while its
+  roster fields stand (`newFrameCache(last)` carries the last step's
+  splits), and a tracker whose roster is entry for entry the object it
+  saw last owes nothing and rebuilds nothing.
+
+Measured (`npm run bench`, the same 80 walking viewers; this container
+is slower than the morning's, so the rows are for one run):
+
+| path | per broadcast mean | p99 | worst |
+|---|---:|---:|---:|
+| one viewer at a time (`old`) | 20.2 ms | 31 ms | 33 ms |
+| the step's shared views, split after (`shared`) | 6.9 ms | 14.7 ms | 16.5 ms |
+| the frames, the slow side when due (`frames`) | 5.2 ms | 14.6 ms | 18.0 ms |
+
+Per part, the frames path (80 guests): the fast encode 1.5 ms, the fast
+frame 1.4 ms (of which `you` 0.4, the prompt 0.4), the tracker 0.4, the
+slow side 0.3, the step's shared views 0.1: 4.7 ms with the profiler's
+own overhead. With 80 Angels (every body a candidate for a flag) the
+prompt is 1.5 ms and the whole 7.7 ms. The broadcast itself is 847 KB
+per step at that density, 17 MB/s at 20 Hz: with 80 bodies in one area
+of interest the wire is the bound long before the compute, which is the
+case for zones (or a smaller area of interest), not for more diet.
+
 ## 2. First: the snapshot diet (protocol v3)
 
 Done 2026-09-26 as described below (with one addition: other bodies split

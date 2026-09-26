@@ -9,13 +9,13 @@
 import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
 import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
-import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type EnemyView, type NodeView, type NpcView, type PoiView, type PublicPlayer, type Snap, type WreckageView, type YouView } from "./protocol";
-import type { Ctx, Enemy, FailedPassing, HistoryMark, NpcState, Player, Prompt, Wreckage, WorldState, YieldNode } from "./types";
+import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type EnemyView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView } from "./protocol";
+import type { Ctx, Enemy, FailedPassing, HistoryMark, NpcState, Player, PoiConfig, Prompt, PromptVerb, Wreckage, WorldState, YieldNode } from "./types";
 import { nodeYield } from "./economy";
 import { perception } from "./houses";
 import { npcOffers, objectiveFor, sideObjectivesFor } from "./quests";
-import { NODE_REACH, NPC_REACH, PLAYER_REACH, POI_REACH, WRECKAGE_REACH, verbsFor } from "./interact";
-import { newFrameCache, type FrameCache } from "./frames";
+import { NODE_REACH, NPC_REACH, PLAYER_REACH, POI_REACH, WRECKAGE_REACH, nodeVerbs, npcVerbs, playerVerbs, poiVerbs, wreckageVerbs } from "./interact";
+import { newFrameCache, splitPlayer, YOU_SLOW_KEYS, type FrameCache, type YouSlow } from "./frames";
 
 const MARKET_TOP = 12;
 
@@ -57,8 +57,8 @@ export function publicPlayer(p: Player, now: number): PublicPlayer {
   };
 }
 
-/** The NPC as this viewer sees them: the shared state under the authored personal override. Null when absent for them. */
-export function npcView(ctx: Ctx, npc: NpcState): NpcView | null {
+/** Where the person stands for this viewer: the shared state under the authored personal override. Null when absent for them. */
+function npcStateFor(ctx: Ctx, npc: NpcState): NpcState | null {
   const def = NPCS[npc.id];
   if (!def) return null;
   let merged: NpcState = npc;
@@ -71,8 +71,29 @@ export function npcView(ctx: Ctx, npc: NpcState): NpcView | null {
       }
     }
   }
-  if (!merged.present) return null;
-  return { ...merged, name: def.name, role: def.role, sprite: def.sprite, party: ctx.p.party[npc.id] ?? "none", offers: npcOffers(ctx, def) };
+  return merged.present ? merged : null;
+}
+
+/** The person's standing for this viewer, present ones only: what the prompt needs of them, without their offers. */
+function npcStatesFor(ctx: Ctx): NpcState[] {
+  const out: NpcState[] = [];
+  for (const npc of Object.values(ctx.w.npcs)) {
+    const state = npcStateFor(ctx, npc);
+    if (state) out.push(state);
+  }
+  return out;
+}
+
+/** The view of a person who is present for the viewer: who they are, and whether they have an hour to hand over (`npcOffers`, the dear part). */
+function npcViewOf(ctx: Ctx, state: NpcState): NpcView {
+  const def = NPCS[state.id];
+  return { ...state, name: def.name, role: def.role, sprite: def.sprite, party: ctx.p.party[state.id] ?? "none", offers: npcOffers(ctx, def) };
+}
+
+/** The NPC as this viewer sees them: the shared state under the authored personal override. Null when absent for them. */
+export function npcView(ctx: Ctx, npc: NpcState): NpcView | null {
+  const state = npcStateFor(ctx, npc);
+  return state ? npcViewOf(ctx, state) : null;
 }
 
 /** Wreckage this viewer can see: until, plus the House / messenger bonus, plus the storm; a Witness blitz shows all. */
@@ -84,60 +105,82 @@ export function visibleWreckage(w: WorldState, p: Player): Wreckage[] {
 
 // ---------------------------------------------------------------- prompt
 
-type Candidate = { d: number; prompt: Prompt };
+/** A thing within reach, before its verbs are read: they, and a POI's label, are read only as far as the one that wins. */
+type Candidate = { d: number; targetId: string; targetKind: Prompt["targetKind"]; name: string | ((ctx: Ctx) => string); verbs: () => PromptVerb[] };
+
+/** What the prompt needs of a person: where they stand for this viewer. An `NpcView` is one. */
+export type NpcPlace = Pick<NpcState, "id" | "x" | "y">;
+
+/** Every placed POI with its reach squared, gathered once: authored content that does not move. */
+type PoiPlace = { cfg: PoiConfig; x: number; y: number; r2: number };
+let POI_PLACES: PoiPlace[] | null = null;
+function poiPlaces(): PoiPlace[] {
+  if (!POI_PLACES) {
+    POI_PLACES = [];
+    for (const cfg of Object.values(POI_CONFIGS)) {
+      const pos = POSITIONS[cfg.id];
+      if (!pos) continue;
+      const reach = cfg.reach ?? POI_REACH;
+      POI_PLACES.push({ cfg, x: pos.x, y: pos.y, r2: reach * reach });
+    }
+  }
+  return POI_PLACES;
+}
 
 /** The NPCs as this viewer sees them, present ones only. */
 export function npcViews(ctx: Ctx): NpcView[] {
-  const out: NpcView[] = [];
-  for (const npc of Object.values(ctx.w.npcs)) {
-    const view = npcView(ctx, npc);
-    if (view) out.push(view);
-  }
-  return out;
+  return npcStatesFor(ctx).map(state => npcViewOf(ctx, state));
 }
 
-/** The nearest interactable thing and its keys. POIs without an available verb are skipped. `npcs` are the viewer's own NPC views when the caller has them already. */
-export function promptFor(ctx: Ctx, npcs: NpcView[] = npcViews(ctx)): Prompt | null {
+/**
+ * The nearest interactable thing and its keys. Everything within reach is
+ * gathered by distance first; verbs are read nearest first and only until
+ * one thing has a verb to offer (a POI without an available verb, or a body
+ * the viewer cannot flag or duel, is passed over for the next), so a crowd
+ * within reach costs one verb lookup, not one per body. `npcs` are the
+ * viewer's own NPC standings when the caller has them already.
+ */
+export function promptFor(ctx: Ctx, npcs: readonly NpcPlace[] = npcStatesFor(ctx)): Prompt | null {
   const { w, p } = ctx;
-  let best: Candidate | null = null;
-  const offer = (d: number, prompt: Prompt) => {
-    if (prompt.verbs.length === 0) return;
-    if (!best || d < best.d) best = { d, prompt };
-  };
+  const found: Candidate[] = [];
 
-  for (const view of npcs) {
-    const d = d2(p.x, p.y, view.x, view.y);
-    if (d <= NPC_REACH * NPC_REACH) offer(d, { targetId: view.id, targetKind: "npc", name: view.name, verbs: verbsFor(ctx, view.id) });
+  for (const npc of npcs) {
+    const d = d2(p.x, p.y, npc.x, npc.y);
+    if (d <= NPC_REACH * NPC_REACH && w.npcs[npc.id]) found.push({ d, targetId: npc.id, targetKind: "npc", name: NPCS[npc.id]?.name ?? npc.id, verbs: npcVerbs });
   }
 
-  for (const cfg of Object.values(POI_CONFIGS)) {
-    const pos = POSITIONS[cfg.id];
-    if (!pos) continue;
-    const reach = cfg.reach ?? POI_REACH;
-    const d = d2(p.x, p.y, pos.x, pos.y);
-    if (d > reach * reach) continue;
-    const name = typeof cfg.label === "function" ? cfg.label(ctx) : cfg.label;
-    offer(d, { targetId: cfg.id, targetKind: "poi", name, verbs: verbsFor(ctx, cfg.id) });
+  for (const { cfg, x, y, r2 } of poiPlaces()) {
+    const d = d2(p.x, p.y, x, y);
+    if (d <= r2) found.push({ d, targetId: cfg.id, targetKind: "poi", name: cfg.label, verbs: () => poiVerbs(ctx, cfg) });
   }
 
   for (const n of w.nodes) {
     const d = d2(p.x, p.y, n.x, n.y);
-    if (d <= NODE_REACH * NODE_REACH) offer(d, { targetId: n.id, targetKind: "node", name: "Yield node", verbs: verbsFor(ctx, n.id) });
+    if (d <= NODE_REACH * NODE_REACH) found.push({ d, targetId: n.id, targetKind: "node", name: "Yield node", verbs: () => nodeVerbs(ctx, n) });
   }
 
   for (const r of visibleWreckage(w, p)) {
     if (r.buried) continue;
     const d = d2(p.x, p.y, r.x, r.y);
-    if (d <= WRECKAGE_REACH * WRECKAGE_REACH) offer(d, { targetId: r.id, targetKind: "wreckage", name: `Wreckage · ${r.fromName}`, verbs: verbsFor(ctx, r.id) });
+    if (d <= WRECKAGE_REACH * WRECKAGE_REACH) found.push({ d, targetId: r.id, targetKind: "wreckage", name: `Wreckage · ${r.fromName}`, verbs: () => wreckageVerbs(ctx, r) });
   }
 
-  for (const o of w.players.values()) {
-    if (o.id === p.id || o.dead) continue;
-    const d = d2(p.x, p.y, o.x, o.y);
-    if (d <= PLAYER_REACH * PLAYER_REACH) offer(d, { targetId: o.id, targetKind: "player", name: o.name, verbs: verbsFor(ctx, o.id) });
+  // Nothing passes between guests, the locked and the fallen; a viewer who can do nothing with a body gathers none.
+  if (!p.guest && !p.locked) {
+    for (const o of w.players.values()) {
+      if (o.id === p.id || o.dead || o.guest || o.locked) continue;
+      const d = d2(p.x, p.y, o.x, o.y);
+      if (d <= PLAYER_REACH * PLAYER_REACH) found.push({ d, targetId: o.id, targetKind: "player", name: o.name, verbs: () => playerVerbs(ctx, o) });
+    }
   }
 
-  return best ? (best as Candidate).prompt : null;
+  if (found.length > 1) found.sort((a, b) => a.d - b.d); // stable: at one distance the kind gathered first stands
+  for (const c of found) {
+    const verbs = c.verbs();
+    if (verbs.length === 0) continue;
+    return { targetId: c.targetId, targetKind: c.targetKind, name: typeof c.name === "function" ? c.name(ctx) : c.name, verbs };
+  }
+  return null;
 }
 
 /** What the Face reads off an Angel's own log: the marks they can see, then the counts, then the last outcome. */
@@ -209,7 +252,7 @@ const keptPassing = new Keep<WorldState["passing"], Keep<number, Snap["passing"]
 const keptHistory = new Keep<WorldState["history"], Map<number, HistoryMark[]>>();
 const keptNodes = new Keep<WorldState["nodes"], NodeView[]>();
 let keptFrozen: string[] = [];
-let lastFragments: Map<object, string> | null = null; // the last step's encodings, for the sections that stand
+let lastFrames: FrameCache | null = null; // the last step's cache: the encodings of the sections that stand, and the bodies' splits
 const NO_FAILED: FailedPassing[] = [];
 
 const nodeView = (n: YieldNode, now: number): NodeView => ({ ...n, safe: n.announcedUntil > now });
@@ -240,7 +283,7 @@ export function stepViews(w: WorldState): StepViews {
     return marks;
   };
 
-  const frames = newFrameCache();
+  const frames = newFrameCache(lastFrames); // a body whose roster fields stand keeps its roster entry from the last step
   const shared: StepViews = {
     players,
     enemies,
@@ -255,45 +298,79 @@ export function stepViews(w: WorldState): StepViews {
     frames,
   };
   // A section that stood since the last step keeps its encoding too.
-  if (lastFragments) {
+  if (lastFrames) {
     for (const o of [shared.pois, shared.frozen, shared.market, shared.news, shared.clearing, shared.passing, w.houses, w.failed, NO_FAILED] as object[]) {
-      const s = lastFragments.get(o);
+      const s = lastFrames.fragments.get(o);
       if (s !== undefined) frames.fragments.set(o, s);
     }
   }
-  lastFragments = frames.fragments;
+  lastFrames = frames;
   return shared;
 }
 
 // ---------------------------------------------------------------- the snapshot
 
-/** The viewer's snapshot. `step` is the views this step shares; the server passes one for every viewer of a broadcast. */
-export function snapshotFor(w: WorldState, viewerId: string, step: StepViews = stepViews(w)): Snap {
+/**
+ * The viewer's side of one step, in two parts. The fast part is what moves
+ * every step: the bodies and enemies in the area of interest, where each
+ * person stands for this viewer, and the prompt. The slow part is the rest:
+ * the persons with their offers, the nodes, the wreckage, the graves, the
+ * marks, the objectives, and the Ruin kit's readout; it is built only when
+ * a slow frame is due (`framesFor`), or for a whole `Snap`.
+ */
+type ViewerFast = {
+  ctx: Ctx;
+  step: StepViews;
+  near: (x: number, y: number) => boolean;
+  players: PublicPlayer[];
+  enemies: EnemyView[];
+  npcs: NpcState[];
+  prompt: Prompt | null;
+};
+
+type ViewerSlow = {
+  npcs: NpcView[];
+  nodes: NodeView[];
+  wreckage: WreckageView[];
+  graves: WorldState["graves"];
+  history: HistoryMark[];
+  failed: FailedPassing[];
+  objective: Snap["objective"];
+  sideObjectives: Snap["sideObjectives"];
+  kitReadout?: string[];
+};
+
+function viewerFast(w: WorldState, viewerId: string, step: StepViews): ViewerFast {
   const p = w.players.get(viewerId);
   if (!p) throw new Error(`snapshotFor: unknown viewer ${viewerId}`);
   const now = w.now;
   const ctx: Ctx = { w, p, now };
   const r2 = AOI_RADIUS * AOI_RADIUS;
   const near = (x: number, y: number) => d2(p.x, p.y, x, y) <= r2;
-  const shared = step;
 
   const players: PublicPlayer[] = [];
   for (const o of w.players.values()) {
     if (o.id === p.id || !near(o.x, o.y)) continue;
     // A body the step's map does not know was put into the world after its views were built; it is still drawn.
-    players.push(shared.players.get(o.id) ?? publicPlayer(o, now));
+    players.push(step.players.get(o.id) ?? publicPlayer(o, now));
   }
 
   const enemies: EnemyView[] = [];
-  for (const { e, view } of shared.enemies) if (near(e.x, e.y)) enemies.push(view);
+  for (const { e, view } of step.enemies) if (near(e.x, e.y)) enemies.push(view);
 
-  const npcs = npcViews(ctx);
+  const npcs = npcStatesFor(ctx);
+  return { ctx, step, near, players, enemies, npcs, prompt: promptFor(ctx, npcs) };
+}
+
+function viewerSlow(fast: ViewerFast): ViewerSlow {
+  const { ctx, step, near } = fast;
+  const { w, p, now } = ctx;
 
   const cybernetic = kitActive(p, "cybernetic", now);
   const nodes: NodeView[] = [];
   w.nodes.forEach((n, i) => {
     if (!near(n.x, n.y)) return;
-    nodes.push(cybernetic ? { ...shared.nodes[i], yieldHint: nodeYield(w, p, n), chargesHint: n.charges } : shared.nodes[i]);
+    nodes.push(cybernetic ? { ...step.nodes[i], yieldHint: nodeYield(w, p, n), chargesHint: n.charges } : step.nodes[i]);
   });
 
   const facing = kitActive(p, "ruin", now); // the Ruin-angel kit reads the written-back log: theirs and the fallen's
@@ -309,45 +386,121 @@ export function snapshotFor(w: WorldState, viewerId: string, step: StepViews = s
     wreckage.push(view);
   }
 
-  const history = p.serial === null ? shared.historyFor(-1) : shared.historyFor(p.serial);
+  const history = p.serial === null ? step.historyFor(-1) : step.historyFor(p.serial);
   const seesFailed = !p.guest && (p.messenger === "ruin" || p.stance === "storm" || p.house === "sky");
-  const failed = seesFailed ? w.failed : NO_FAILED;
   const graves = w.graves.filter(g => near(g.x, g.y));
 
-  // Winke never leave for a guest, whatever content did.
-  let you: YouView = p.guest
-    ? { ...p, wink: "", dialogue: p.dialogue ? { ...p.dialogue, wink: "" } : null }
-    : p;
-  if (facing) you = { ...you, kitReadout: kitReadout(p, history.map(m => m.line)) };
+  const out: ViewerSlow = {
+    npcs: fast.npcs.map(state => npcViewOf(ctx, state)),
+    nodes,
+    wreckage,
+    graves: graves.length === w.graves.length ? w.graves : graves,
+    history,
+    failed: seesFailed ? w.failed : NO_FAILED,
+    objective: objectiveFor(ctx),
+    sideObjectives: sideObjectivesFor(ctx),
+  };
+  if (facing) out.kitReadout = kitReadout(p, history.map(m => m.line));
+  return out;
+}
 
+/** The slow sections of the viewer's snapshot, in the protocol's order. */
+function sectionsOf(fast: ViewerFast, slow: ViewerSlow): Pick<Snap, SlowKey> {
+  const { w, p } = fast.ctx;
+  const shared = fast.step;
   return {
-    t: "snap",
-    v: PROTOCOL_VERSION,
-    now,
-    tick: w.tick,
     gestell: w.gestell,
     weather: WEATHER_LABEL[weatherBand(w.gestell)],
     weatherNamed: w.weatherNamed,
     frozen: shared.frozen,
     district: p.district,
-    you,
-    players,
-    enemies,
-    npcs,
-    nodes,
-    wreckage,
-    graves: graves.length === w.graves.length ? w.graves : graves,
+    npcs: slow.npcs,
+    nodes: slow.nodes,
+    wreckage: slow.wreckage,
+    graves: slow.graves,
     pois: shared.pois,
-    history,
-    failed,
+    history: slow.history,
+    failed: slow.failed,
     houses: w.houses,
     clearing: shared.clearing,
     passing: shared.passing,
     market: shared.market,
     news: shared.news,
-    prompt: promptFor(ctx, npcs),
-    objective: objectiveFor(ctx),
-    sideObjectives: sideObjectivesFor(ctx),
+    objective: slow.objective,
+    sideObjectives: slow.sideObjectives,
     notices: p.notices,
   };
+}
+
+/** The viewer's own record as they may see it: Winke never leave for a guest, whatever content did. The record itself when nothing has to be hidden. */
+function youOf(p: Player): YouView {
+  if (!p.guest || (!p.wink && !p.dialogue?.wink)) return p;
+  return { ...p, wink: "", dialogue: p.dialogue ? { ...p.dialogue, wink: "" } : null };
+}
+
+/** The viewer's snapshot. `step` is the views this step shares; the server passes one for every viewer of a broadcast. */
+export function snapshotFor(w: WorldState, viewerId: string, step: StepViews = stepViews(w)): Snap {
+  const fast = viewerFast(w, viewerId, step);
+  const slow = viewerSlow(fast);
+  const p = fast.ctx.p;
+  let you = youOf(p);
+  if (slow.kitReadout) you = { ...you, kitReadout: slow.kitReadout };
+  return {
+    t: "snap",
+    v: PROTOCOL_VERSION,
+    now: w.now,
+    tick: w.tick,
+    you,
+    players: fast.players,
+    enemies: fast.enemies,
+    prompt: fast.prompt,
+    ...sectionsOf(fast, slow),
+  };
+}
+
+export type ViewerFrames = { fast: FastFrame; slow: () => SlowFrame };
+
+/**
+ * The viewer's frames for one step: the fast frame now, the slow frame when
+ * asked for. The object asks only when a slow frame is due (every fifth
+ * step, after an action, for a new socket, or when the bodies in view
+ * changed), so on the steps between, the viewer's slow side (the persons'
+ * offers, the nodes, the wreckage, the marks, the objectives) is not built
+ * at all. The frames are what `splitSnap(snapshotFor(...))` gives, byte for
+ * byte, with every body's split and fragment from the step's cache.
+ */
+export function framesFor(w: WorldState, viewerId: string, step: StepViews = stepViews(w)): ViewerFrames {
+  const view = viewerFast(w, viewerId, step);
+  const split = view.players.map(pub => splitPlayer(pub, step.frames));
+  // `you` in two as `splitYou` does, but in one native copy with the slow keys left in as `undefined`, which JSON leaves
+  // out: the frame's bytes are the same and the copy costs half. The frame is only ever encoded, never merged in-process.
+  const record = youOf(view.ctx.p) as unknown as Record<string, unknown>;
+  const youFast = { ...record };
+  const youSlow: Record<string, unknown> = {};
+  for (const k of YOU_SLOW_KEYS) {
+    if (!(k in record)) continue;
+    youSlow[k] = record[k];
+    youFast[k] = undefined;
+  }
+  const fast: FastFrame = {
+    t: "fast",
+    v: PROTOCOL_VERSION,
+    now: w.now,
+    tick: w.tick,
+    you: youFast as unknown as YouView,
+    players: split.map(s => s.motion),
+    enemies: view.enemies,
+    prompt: view.prompt,
+  };
+  const slow = (): SlowFrame => {
+    const rest = viewerSlow(view);
+    return {
+      t: "slow",
+      v: PROTOCOL_VERSION,
+      ...sectionsOf(view, rest),
+      roster: split.map(s => s.roster),
+      youSlow: (rest.kitReadout ? { ...youSlow, kitReadout: rest.kitReadout } : youSlow) as YouSlow,
+    };
+  };
+  return { fast, slow };
 }

@@ -17,8 +17,8 @@ import { serialFor, type HolderCache } from "./holders.ts";
 import { logEventsFor, PUBLIC_LOG_KINDS } from "./log.ts";
 import { LogSink } from "./logSink.ts";
 import { LoadMeter } from "./load.ts";
-import { snapshotFor, stepViews } from "../../src/sim/snapshot.ts";
-import { encodeFast, SlowTracker, splitSnap } from "../../src/sim/frames.ts";
+import { framesFor, snapshotFor, stepViews } from "../../src/sim/snapshot.ts";
+import { encodeFast, SlowTracker } from "../../src/sim/frames.ts";
 import { isClientMsg, PROTOCOL_VERSION, SLOW_EVERY_TICKS } from "../../src/sim/protocol.ts";
 import type { Hello } from "../../src/sim/protocol.ts";
 import type { Intent, Player, WorldState } from "../../src/sim/types.ts";
@@ -360,7 +360,8 @@ export class ReverieWorld {
    * Every viewer gets their own snapshot: Winke, purse, claims and marks are
    * never shared. The fast frame goes every time; the slow sections go when
    * they changed, checked every SLOW_EVERY_TICKS steps, at once for a viewer
-   * who has none yet, and at once when `force` (after an action).
+   * who has none yet, and at once when `force` (after an action). On the
+   * steps between, a viewer's slow side is not even built.
    */
   private broadcast(force = false) {
     let chars = 0;
@@ -370,10 +371,10 @@ export class ReverieWorld {
     for (const [ws, session] of this.sessions) {
       try {
         if (!this.w.players.has(session.id)) continue;
-        const { fast, slow } = splitSnap(snapshotFor(this.w, session.id, step), step.frames);
+        const { fast, slow } = framesFor(this.w, session.id, step);
         // The roster must cover every body the fast frame moves, so a change in who is in view brings the slow frame forward.
         if (this.slow.rosterDue(session.id, fast) || slowDue || this.slow.fresh(session.id)) {
-          const changed = this.slow.diff(session.id, slow, step.frames);
+          const changed = this.slow.diff(session.id, slow(), step.frames);
           if (changed) {
             const payload = JSON.stringify(changed);
             chars += payload.length;
