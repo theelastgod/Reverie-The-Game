@@ -123,6 +123,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never leave the table. `npm run d1:migrate` applies the migration locally;
   the deploy needs `wrangler d1 create reverie-log`, its id in
   `wrangler.toml`, and `npm run d1:migrate:remote`.
+- The Annex Runner as a courier (2026-09-26, backlog 5's optional beat).
+  Enemies can walk an authored route: `ENEMY_SPAWNS.route` (px points,
+  walked as a cycle from home while idle; `Enemy.leg` is the point in hand;
+  the route is content, never saved), the leash reads the distance from the
+  route polyline (`strayOf`), a return walks to the point in hand, a respawn
+  starts the cycle over. A struck enemy answers whoever struck it last before
+  anyone inside its aggro radius. New kind `courier` (aggro 0: never starts a
+  fight; hp 36, speed 130). The Annex Runner is one: the Annex gate (17,30)
+  down the west corridor to the funeral street (6,47) and back, carrying the
+  Office of Safety's real number for the hour. Felled, every participant gets
+  `F.BULLETIN` and the line (`LINES.FALL_LINES`, keyed by the fall flag). At
+  the plaque the slip reads the rounded Gestell; naming it stability folds
+  the slip away, either other name pins the number under the word for
+  everyone (`W.BULLETIN_POSTED`, a news line, the read and reread say so).
+  Ord's weather line and the journal's naming step point at the Runner. The
+  campaign smoke hunts it on the way back (an optional beat: a note when it
+  is not met) and counts the pin as a decision.
 - Angel holders from the chain (2026-09-26, disarmed): `server/src/holders.ts`.
   With `ANGEL_CONTRACT` and `ANGEL_RPC_URL` set, `/wallet/link` reads the
   signer's Angel with two `eth_call`s over JSON-RPC (ERC-721 Enumerable:
@@ -167,7 +184,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
-- `npm test` — 29 files, 405 tests (2026-09-26): map integrity and reachability, identity,
+- `npm test` — 30 files, 410 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
   visibility, content coverage, side quests (all 33 driven end to end, every
   verb through the prompt, who offers what to whom), two full spine
@@ -195,10 +212,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   server about a quarter second after `site/` changes (a fresh
   `stage-play`) and a reload drops the object mid-run, so both smokes wait
   for three quiet probes before connecting and the campaign smoke fails fast
-  when the snapshot stream stalls for three seconds;
-  latest measure (after the opening beats, fresh world and reused world):
-  bot 59 s (walk 49 s, two fights 8 s, talk 1.8 s), 1393 words shown, 7
-  decisions, first playthrough estimate 15.0 min.
+  when the snapshot stream stalls for three seconds. Once, after many
+  reloads in a row, workerd itself died ("Fatal uncaught kj::Exception:
+  SQLite failed; database is locked: SQLITE_BUSY_RECOVERY") and left an
+  orphaned `workerd serve` holding the local Durable Object's sqlite; the
+  cure is `pkill -x workerd` (kill -9 any survivor that is not a child of the
+  new wrangler), then start `wrangler dev` again and wait for `/world`;
+  latest measure (after the courier beat, a full run on a reused world):
+  bot 67 s (walk 48 s, three fights 16 s, talk 1.8 s), 1524 words shown, 8
+  decisions, first playthrough estimate 16.7 min.
 - Writeback log: 4 diff tests (every kind, unchanged world, a body that only
   appeared, rolling news), 4 sink tests (batches, overflow, a failing D1
   keeps the queue and warns once a minute, one flush in flight), 3 session
@@ -219,6 +241,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   handshake's client side is tested with fake EIP-6963 wallets; the local
   Worker answers `/wallet/challenge` (409 without a live session). A real
   wallet in a browser is not verified from this container.
+- Enemy routes: 5 tests pin the Runner's authored cycle and leg 0 at home,
+  the walk around the cycle, that a courier never starts a fight and answers
+  its striker, the leash measured from the corridor (a point on the route is
+  no stray) with the return to the point in hand and the respawn on leg 0,
+  and the fall handing the slip and its line to every participant. The spine's
+  first playthrough fells the Runner and pins the number; the second names
+  without it and pins nothing.
 - Holders from the chain: 8 tests pin the calldata of both calls, word
   decoding, the offset and supply bounds, the five-minute cache and its
   bound, every unreadable-chain shape (down, RPC error, thrown fetch, junk,
@@ -277,16 +306,17 @@ they are discovered; keep this list honest.
    passing, market, news), how a body crosses a gate (a handoff message with
    the player record, the old zone closing the socket with a code the client
    follows), and how the campaign smoke would cross.
-5. **Opening density, the last stretch.** Measured 2026-09-25 after the
-   opening beats and Ord's reading of the pair (`scripts/smoke-campaign.mjs`
-   prints `measure:` lines; a later fight is floored at 25 s of a person's
-   time, the first at 45 s): bot 58.9 s (walk 48.9 s, fights 8.2 s, talk
-   1.8 s), 1393 words on the critical path (dialogue 687, spoken 161, journal
-   392, notices 153), seven decisions; estimated first playthrough 15.0 min,
-   the low end of the 15–20 target (was 10.2). Optional beat left: the Annex
-   Runner as a courier on the way back to the plaque (needs a route state for
-   enemies, not just an aggro radius). Re-measure after any change and keep
-   the numbers here.
+5. **Opening density.** Measured 2026-09-26 after the Annex Runner courier
+   beat (`scripts/smoke-campaign.mjs` prints `measure:` lines; a later fight
+   is floored at 25 s of a person's time, the first at 45 s; keep only runs
+   without a `spent` note): bot 67 s (walk 48 s, three fights 16 s, talk
+   1.8 s), 1524 words on the critical path (dialogue 725, spoken 228, journal
+   416, notices 155), eight decisions; estimated first playthrough 16.7–16.8
+   min, inside the 15–20 target (was 15.0 before the courier, 10.2 before the
+   opening beats). The Runner is optional and respawns 60 s after a fall, so
+   a run right after another may note it was not met. Nothing further is
+   planned here; re-measure after any change to Movement I and keep the
+   numbers here.
 6. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

@@ -187,10 +187,14 @@ Desk Three (the second fight: wait for the red, interrupt) → second node (the
 city reads the pair) → Quill at the Wet gate (print your face, or keep the
 name) → Ord at the Annex gate (enter the honest ledger, or stay off it) → Nara
 on the funeral street: hear the memorial recorder, then preserve the voice /
-dismantle the copper, burial → name the
+dismantle the copper, burial → (optional) the Annex Runner on the west
+corridor, a courier that never starts a fight, carrying Safety's real number
+for the hour on a slip → name the
 weather at the Safety plaque (stability / the process / the end of world as
-world) → the going-under threshold: guests lock ("A guest cannot prepare the
-ground."), Angels die-as-death and wake in the Care.
+world; with the slip, stability folds it away and either other name pins the
+number under the word for everyone) → the going-under threshold: guests lock
+("A guest cannot prepare the ground."), Angels die-as-death and wake in the
+Care.
 
 **II — Techno-Feudal.** The Care shrine → your House hall (tax, who owns the
 nodes) → Safety desk: sign a freeze (protects the Nave, starves the Passing) or

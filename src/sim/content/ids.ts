@@ -21,6 +21,7 @@ export const F = {
   WEATHER_ORD: "weather:ord",
   WEATHER_NARA: "weather:nara",
   WEATHER_NAMED: "weather:named", // gave the weather a name at the plaque
+  BULLETIN: "bulletin", // took the hour's number off the Annex Runner (optional; the plaque reads it)
   UNDER: "under", // went under (gate flag: nave↔care)
   ANGEL: "angel", // linked an Angel (guest is false)
   CARE: "care", // entered the Care
@@ -74,6 +75,7 @@ export const W = {
   IONE_GONE: "ioneGone",
   MEMORIAL_VOICE: "memorialVoice", // 1 = the recorder still plays
   WEATHER_NAMES: "weatherNames", // count of arrivals who named it
+  BULLETIN_POSTED: "bulletinPosted", // 1 = someone pinned the Annex's own number under the plaque's word
   FREEZES: "freezes",
   PASSINGS: "passings",
 } as const;

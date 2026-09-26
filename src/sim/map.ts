@@ -264,13 +264,19 @@ export const NPC_STATIONS: Record<string, NpcHome> = Object.fromEntries([
   home("ione-clearing", "clearing", 52, 65),
 ].map(h => [h.id, h]));
 
-export type EnemySpawn = { id: string; kind: EnemyKind; district: DistrictId; x: number; y: number; name: string; tint: "lavender" | "wine" | "sky" | "paper"; fallFlag?: string };
+export type EnemySpawn = {
+  id: string; kind: EnemyKind; district: DistrictId; x: number; y: number; name: string; tint: "lavender" | "wine" | "sky" | "paper";
+  fallFlag?: string;
+  route?: Vec[]; // px points walked in a cycle while idle, starting from home; the leash and the return use the current point
+};
 const spawn = (id: string, kind: EnemyKind, district: DistrictId, tx: number, ty: number, name: string, tint: EnemySpawn["tint"], fallFlag?: string): EnemySpawn =>
   ({ id, kind, district, ...at(tx, ty), name, tint, ...(fallFlag ? { fallFlag } : {}) });
+const routed = (s: EnemySpawn, ...tiles: [number, number][]): EnemySpawn => ({ ...s, route: tiles.map(([tx, ty]) => at(tx, ty)) });
 export const ENEMY_SPAWNS: EnemySpawn[] = [
   spawn("intake-clerk", "intake", "nave", 13, 42, "Intake Clerk", "lavender"),
   spawn("desk-three", "clerk", "nave", 21, 38, "Desk Three", "lavender", "desk-three"), // F.DESK_THREE: the second fight of the opening
-  spawn("annex-runner", "clerk", "nave", 26, 43, "Annex Runner", "lavender"),
+  // The Office of Safety's courier: the Annex gate to the funeral street and back, down the west corridor, with the hour's number. F.BULLETIN when felled.
+  routed(spawn("annex-runner", "courier", "nave", 17, 30, "Annex Runner", "lavender", "bulletin"), [6, 30], [6, 47], [6, 30], [17, 30]),
   spawn("practice-dummy", "dummy", "nave", 28, 33, "Practice dummy", "paper"),
   spawn("enforcer-1", "enforcer", "wet", 40, 50, "Cold desk · one", "wine"),
   spawn("enforcer-2", "enforcer", "wet", 44, 52, "Cold desk · two", "wine"),
@@ -283,6 +289,8 @@ export const ENEMY_SPAWNS: EnemySpawn[] = [
   spawn("cable-enforcer", "enforcer", "organs", 96, 50, "Cold desk · cable", "wine"),
   spawn("ring-warden", "warden", "ring", 80, 16, "Warden of the Ring", "sky"),
 ];
+
+export const SPAWN_BY_ID: Record<string, EnemySpawn> = Object.fromEntries(ENEMY_SPAWNS.map(s => [s.id, s]));
 
 export const GUEST_SPAWN: Vec & { district: DistrictId } = { ...at(5, 42), district: "nave" };
 

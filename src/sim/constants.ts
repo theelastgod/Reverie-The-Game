@@ -46,8 +46,9 @@ export const ENEMY = {
   warden: { hp: 90, damage: 20, telegraph: 0.8, recovery: 1.0, aggro: 110, reach: 52, speed: 90, respawn: 60 },
   enforcer: { hp: 70, damage: 18, telegraph: 0.5, recovery: 0.7, aggro: 130, reach: 48, speed: 150, respawn: 50 },
   dummy: { hp: 60, damage: 0, telegraph: 0, recovery: 0, aggro: 0, reach: 0, speed: 0, respawn: 0 },
+  courier: { hp: 36, damage: 10, telegraph: 0.5, recovery: 0.8, aggro: 0, reach: 40, speed: 130, respawn: 60 }, // walks its route; never starts a fight, answers one
 } as const;
-export const ENEMY_LEASH = 320; // px from home before an enemy gives up and walks back
+export const ENEMY_LEASH = 320; // px from its anchor (home, or the current point of its route) before an enemy gives up and walks back
 
 // Death and wreckage
 export const UNBANKED_DROP = 0.3;

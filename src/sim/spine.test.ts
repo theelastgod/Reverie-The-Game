@@ -139,9 +139,26 @@ function fightDeskThree(w: WorldState, id: string): WorldState {
   return cur;
 }
 
+/** Catch the Annex Runner on its corridor and strike it until it falls: a courier answers only a fight, so the body stands in its way each swing. */
+function fellRunner(w: WorldState, id: string): WorldState {
+  let cur = w;
+  for (let i = 0; i < 40 && !(me(cur, id).flags[F.BULLETIN] ?? 0); i++) {
+    const runner = cur.enemies.find(e => e.id === "annex-runner")!;
+    expect(runner.state, "the Runner is on its corridor").not.toBe("dead");
+    cur = place(cur, id, runner.x - 40, runner.y);
+    cur = act(cur, id, { t: "strike" });
+    cur = tick(cur, 10);
+  }
+  expect(me(cur, id).flags[F.BULLETIN], "the Runner fell with this body in it").toBe(1);
+  expect(me(cur, id).heard).toBe(LINES.FALL_LINES.bulletin);
+  expect(cur.enemies.find(e => e.id === "annex-runner")?.state).toBe("dead");
+  expect(me(cur, id).dead).toBe(false);
+  return cur;
+}
+
 // ---------------------------------------------------------------- Movement I
 
-type Opening = { node: "extract" | "keep"; extra: string[]; memorial: "copper" | "voice"; weather: "stability" | "process" | "end" };
+type Opening = { node: "extract" | "keep"; extra: string[]; memorial: "copper" | "voice"; weather: "stability" | "process" | "end"; bulletin?: boolean };
 
 /** Movement I up to and including the first use of the threshold. Returns the world right after that press. */
 function movementOne(w0: WorldState, o: Opening): WorldState {
@@ -282,14 +299,30 @@ function movementOne(w0: WorldState, o: Opening): WorldState {
   expectStep(w, Q.M1, 13);
   expect(me(w).flags[F.WEATHER_NARA]).toBe(1);
 
+  // the optional courier on the way back: the hour's number, off the Runner
+  if (o.bulletin) w = fellRunner(w, ME);
+
   // name it
   w = goTo(w, ME, "safety-plaque");
-  w = tick(interact(w, ME, "safety-plaque", o.weather));
+  w = interact(w, ME, "safety-plaque", o.weather);
+  if (o.bulletin) {
+    expect(me(w).heard, "the naming reads the slip").toContain(o.weather === "stability" ? "fold the slip away" : "pin the slip under the word");
+    expect(me(w).heard).toContain(String(Math.round(w.gestell)));
+  }
+  w = tick(w);
   expectStep(w, Q.M1, 14);
   expect(me(w).choices[C.WEATHER]).toBe(o.weather);
   expect(me(w).flags[F.WEATHER_NAMED]).toBe(1);
   expect(w.pois["safety-plaque"].state).toBe("named");
   expect(w.flags[W.WEATHER_NAMES]).toBe(1);
+  if (o.bulletin && o.weather !== "stability") {
+    expect(w.flags[W.BULLETIN_POSTED]).toBe(1);
+    expect(w.news.some(n => n.text.includes("pinned the Annex's own number"))).toBe(true);
+    expect(me(interact(w, ME, "safety-plaque", "reread")).heard).toContain("pinned in someone's hand");
+  } else {
+    expect(w.flags[W.BULLETIN_POSTED]).toBeUndefined();
+    expect(w.news.some(n => n.text.includes("pinned"))).toBe(false);
+  }
   expect(snapshotFor(w, ME).objective).toMatchObject({ quest: Q.M1, step: "going-under" });
 
   // the threshold
@@ -630,7 +663,7 @@ describe("the spine, played through", () => {
 
   it("run one: extract, the copper, the process, refuse the freeze, take the private yield, sell the print, Cold claims the hour", () => {
     let w = add(emptyWorld(), spawnGuest(ME));
-    w = movementOne(w, { node: "extract", extra: [], memorial: "copper", weather: "process" });
+    w = movementOne(w, { node: "extract", extra: [], memorial: "copper", weather: "process", bulletin: true });
     expect(me(w).extracted, "both nodes extracted").toBe(2);
     expect(w.flags[W.EXTRACTIONS]).toBe(2);
     w = guestLockAndLink(w);

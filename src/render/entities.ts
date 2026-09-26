@@ -75,6 +75,7 @@ const ENEMY_FEEL: Record<Enemy["kind"], { size: number; gait: number }> = {
   warden: { size: 1.14, gait: 0.65 },
   enforcer: { size: 0.94, gait: 1.45 },
   dummy: { size: 1, gait: 0 },
+  courier: { size: 0.9, gait: 1.7 },
 };
 
 /** Fx hooks Entities raises from snapshot diffs; the scene wires them to Fx. */

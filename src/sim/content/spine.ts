@@ -173,7 +173,7 @@ const M1_STEPS: QuestStep[] = [
   {
     id: "name",
     title: "Name the weather",
-    detail: "At the Office of Safety plaque: F names it stability. E names it the process. Q names it the end of world as world. The plaque will not change. You will.",
+    detail: "At the Office of Safety plaque: F names it stability. E names it the process. Q names it the end of world as world. The plaque will not change. You will. The Annex Runner carries the hour's real figure down the west corridor on a slip; taken off the Runner, it reads at the plaque.",
     target: "safety-plaque",
     plate: "safety-annex.jpg",
     done: ctx => has(ctx, F.WEATHER_NAMED),

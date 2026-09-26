@@ -29,7 +29,8 @@ const T = {
   under: at(16, 52),           // going-under
 };
 // Walking lanes that avoid the pillar columns (x 9, 16, 23 on rows 32..47 step 3),
-// the low walls (x 13 rows 49..53; x 24 rows 50..53) and the clerks' aggro (Desk Three at 21,38; Annex Runner at 26,43).
+// the low walls (x 13 rows 49..53; x 24 rows 50..53) and Desk Three's aggro (21,38). The Annex Runner walks the west
+// corridor (17,30 → 6,30 → 6,47 and back) and never starts a fight; the bot hunts it on the way back to the plaque.
 const ROUTE = {
   toIntake: [at(11, 42)],
   toNode: [at(11, 36)],
@@ -155,6 +156,28 @@ async function approach(state, target, within = 10) {
   finally { clearInterval(drive); send(state, { t: 'intent', intent: {} }); }
 }
 const walk = async (state, points) => { for (const point of points) await approach(state, point); };
+
+/**
+ * Walk toward `target` until an enemy is in view and standing, then chase it and strike whenever it
+ * is in reach, until `done`. A courier never starts the fight, so the bot has to. Resolves false when
+ * the time runs out (the enemy was not on this stretch, or fell to someone else).
+ */
+async function hunt(state, enemyId, target, done, label, ms = 20000) {
+  let strikes = null;
+  const drive = setInterval(() => {
+    const p = you(state);
+    if (!p || state.ws.readyState !== WebSocket.OPEN) return;
+    const e = (state.snap.enemies ?? []).find(x => x.id === enemyId && x.state !== 'dead');
+    const goal = e ?? target;
+    // Keep walking at it even in reach: a courier keeps walking too, and the strike lands only in front.
+    send(state, { t: 'intent', intent: { right: p.x < goal.x - 5, left: p.x > goal.x + 5, down: p.y < goal.y - 5, up: p.y > goal.y + 5 } });
+    const close = e && dist(p, e) < 50;
+    if (close && !strikes) { send(state, { t: 'strike' }); strikes = setInterval(() => send(state, { t: 'strike' }), 450); }
+    if (!close && strikes) { clearInterval(strikes); strikes = null; }
+  }, 100);
+  try { return await settle(state, done, label, ms); }
+  finally { clearInterval(drive); if (strikes) clearInterval(strikes); send(state, { t: 'intent', intent: {} }); }
+}
 /**
  * Stand inside an interaction's reach (56 px for nodes and plots, 72 for people). The lanes end a
  * tile (48 px) from their target and a stop 10 px past the lane's end is out of reach; step in first.
@@ -305,9 +328,19 @@ try {
   phase('talk: nara weather');
   await converse(me, 'nara', 'weather:nara');
 
+  // The Annex Runner walks the west corridor with the hour's number; take it on the way back (optional: it may be down already).
+  phase('fight: runner');
+  await walk(me, ROUTE.toPlaque.slice(0, 1));
+  const slip = await hunt(me, 'annex-runner', at(6, 30), () => !!you(me).flags.bulletin, 'the Runner falls');
+  if (slip) read.decisions++; // pin the number or fold it away
+  else {
+    const seen = (me.snap.enemies ?? []).find(e => e.id === 'annex-runner');
+    console.log(`note: the Annex Runner was not met on the corridor (bot at ${Math.round(you(me).x)},${Math.round(you(me).y)}; runner ${seen ? `${Math.round(seen.x)},${Math.round(seen.y)} ${seen.state} hp ${seen.hp}` : 'not in view: down or elsewhere'}); the slip beat is skipped`);
+  }
+
   // Name the weather at the Safety plaque.
   phase('walk: plaque');
-  await walk(me, ROUTE.toPlaque);
+  await walk(me, ROUTE.toPlaque.slice(1));
   await stand(me, T.plaque);
   read.decisions++;
   phase('verb: plaque');
@@ -315,6 +348,7 @@ try {
   assert.ok(you(me).flags['weather:ord'] && you(me).flags['weather:nara'], 'Ord and Nara each gave their weather');
   await useVerb(me, 'safety-plaque', verbs => verbs.find(v => v.key === 'E') ?? verbs.find(v => v.key === 'F'), () => !!you(me).flags['weather:named'], 'name the weather');
   assert.ok(you(me).choices.weather, 'the weather has a name');
+  if (slip) assert.match(you(me).heard, /pin the slip under the word|fold the slip away/, 'the slip was read at the naming');
 
   // The going-under threshold locks a guest.
   phase('walk: threshold');

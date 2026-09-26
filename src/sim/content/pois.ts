@@ -54,19 +54,31 @@ const spectate: PoiVerb["guest"] = "spectate";
 
 // ---------------------------------------------------------------- the Nave of Tubes
 
+/** The slip off the Annex Runner: Safety's own number for the hour, which the plaque never prints. */
+const slipNumber = (ctx: Ctx): number => Math.round(ctx.w.gestell);
+const bulletinLine = (ctx: Ctx): string => (has(ctx, F.BULLETIN) && !has(ctx, F.WEATHER_NAMED)
+  ? ` The slip in your coat is Safety's own, sealed for the funeral street. It does not say stability. It says ${slipNumber(ctx)}.`
+  : "");
+const pinnedLine = (ctx: Ctx): string => ((ctx.w.flags[W.BULLETIN_POSTED] ?? 0) > 0 ? " Under the word, pinned in someone's hand: the Annex's own number." : "");
+
 const weatherNameVerb = (key: PoiVerb["key"], choice: "stability" | "process" | "end", label: string): PoiVerb => ({
   key,
   label,
   choice,
   when: ctx => has(ctx, F.WEATHER_SAFETY) && has(ctx, F.WEATHER_ORD) && has(ctx, F.WEATHER_NARA) && !has(ctx, F.WEATHER_NAMED),
   guest: "allow",
-  say: WEATHER_NAMED[choice],
-  effects: [
+  say: ctx => WEATHER_NAMED[choice] + (!has(ctx, F.BULLETIN) ? ""
+    : choice === "stability" ? ` You fold the slip away. The word stays on the plaque; the number, ${slipNumber(ctx)}, stays in your coat.`
+    : ` You pin the slip under the word. It says ${slipNumber(ctx)}. Both stay up; anyone who reads the plaque now reads the number too.`),
+  effects: ctx => [
     { kind: "choice", key: C.WEATHER, value: choice },
     { kind: "flag", key: F.WEATHER_NAMED },
     { kind: "poi", id: "safety-plaque", state: "named" },
     { kind: "worldCount", key: W.WEATHER_NAMES, delta: 1 },
     { kind: "notice", text: "You named the weather. The city can address you now.", tone: "gold" },
+    ...(has(ctx, F.BULLETIN) && choice !== "stability"
+      ? [{ kind: "worldFlag", key: W.BULLETIN_POSTED, value: 1 } as const, { kind: "news", text: "An arrival pinned the Annex's own number under the word stability." } as const]
+      : []),
   ],
 });
 
@@ -83,9 +95,10 @@ const NAVE: PoiConfig[] = [
         when: ctx => !has(ctx, F.WEATHER_SAFETY),
         guest: "allow",
         once: F.WEATHER_SAFETY,
-        say: ctx => poiState(ctx, "safety-plaque") === "named"
+        say: ctx => (poiState(ctx, "safety-plaque") === "named"
           ? "Office of Safety. Stability was the name they sold. Someone struck it. The weather has another name now. Speak with the living before you pick one."
-          : "Office of Safety. This district is stable. Extraction is civic duty. Do not name the weather otherwise. Under it, smaller: do not name it from a plaque. Speak with the living.",
+          : "Office of Safety. This district is stable. Extraction is civic duty. Do not name the weather otherwise. Under it, smaller: do not name it from a plaque. Speak with the living.")
+          + pinnedLine(ctx) + bulletinLine(ctx),
         effects: [{ kind: "notice", text: "Safety calls it stability. Two more names to hear.", tone: "ink" }],
       },
       weatherNameVerb("F", "stability", "Name it: stability"),
@@ -99,7 +112,8 @@ const NAVE: PoiConfig[] = [
         guest: "allow",
         say: ctx => (has(ctx, F.WEATHER_NAMED)
           ? `Office of Safety. You called it ${ctx.p.choices[C.WEATHER] === "end" ? "the end of world as world" : ctx.p.choices[C.WEATHER] === "process" ? "the process" : "stability"}. The plaque still says stability. Plaques do.`
-          : "Office of Safety. Stability, it says. You have one name. Ord and Nara have the other two. Do not name it from a plaque."),
+          : "Office of Safety. Stability, it says. You have one name. Ord and Nara have the other two. Do not name it from a plaque.")
+          + pinnedLine(ctx) + bulletinLine(ctx),
       },
     ],
   },

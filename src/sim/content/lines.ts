@@ -40,6 +40,10 @@ export const DUEL_COPY = "A ruin duel. The grave is the ring. The kit does not s
 export const SPECTATE_COPY = "You watched a ruin duel. Aura thickens a little. The cap holds.";
 export const STORM_PRESS = "Storm. You pressed the geared. Restraint burns for it.";
 export const STORM_FALLEN = "Storm. The fallen keep their rags. You took less.";
+/** What every participant hears when a fall hands them a flag, keyed by that flag (ENEMY_SPAWNS.fallFlag). */
+export const FALL_LINES: Record<string, string> = {
+  bulletin: "The Runner drops. A folded slip: the Office of Safety's number for this hour, sealed for the funeral street. It is in your coat now.",
+};
 
 // ---------------------------------------------------------------- kits
 

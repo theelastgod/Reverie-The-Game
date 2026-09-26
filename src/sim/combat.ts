@@ -15,7 +15,7 @@ import { circleHitsWalls, DISTRICT_BY_ID, inPatch } from "./map";
 import { F } from "./content/ids";
 import { weatherBand } from "./protocol";
 import type { DuelState, Enemy, Player, Vec, WorldState, Wreckage } from "./types";
-import { enemyStats } from "./enemies";
+import { anchorOf, enemyStats, routeOf, strayOf } from "./enemies";
 import { damageFor, heavyFor, killPlayer, notice, pushNews, say } from "./world";
 import { applyNode, earn } from "./economy";
 import * as LINES from "./content/lines";
@@ -126,29 +126,40 @@ function tickEnemy(w: WorldState, e0: Enemy, dt: number): { e: Enemy; w: WorldSt
     return { e, w };
   }
 
+  const route = routeOf(e);
+  const anchor = anchorOf(e);
+
   if (e.state === "dead") {
     if (e.respawnAt > now) return { e, w };
     if (e.kind === "intake" && !freshArrivalNear(w, e.home)) return { e, w };
-    return { e: { ...e, x: e.home.x, y: e.home.y, hp: e.maxHp, state: "idle", t: 0, targetId: "", participants: [] }, w };
+    return { e: { ...e, x: e.home.x, y: e.home.y, hp: e.maxHp, state: "idle", t: 0, targetId: "", participants: [], ...(route ? { leg: 0 } : {}) }, w };
   }
 
   if (e.state === "return") {
-    const pos = walkToward(e, e.home, stats.speed * dt, 0);
+    const pos = walkToward(e, anchor, stats.speed * dt, 0);
     e = { ...e, x: pos.x, y: pos.y };
-    if (within(e, e.home, HOME_EPSILON)) e = { ...e, x: e.home.x, y: e.home.y, hp: e.maxHp, state: "idle", t: 0, targetId: "", participants: [] };
+    if (within(e, anchor, HOME_EPSILON)) e = { ...e, x: anchor.x, y: anchor.y, hp: e.maxHp, state: "idle", t: 0, targetId: "", participants: [] };
     return { e, w };
   }
 
-  // Anything else that wandered past its leash walks home.
-  if (!within(e, e.home, ENEMY_LEASH)) return { e: { ...e, state: "return", t: 0, targetId: "" }, w };
+  // Anything else that wandered past its leash walks back to where it belongs: home, or the point of its route it was walking toward.
+  if (strayOf(e) > ENEMY_LEASH) return { e: { ...e, state: "return", t: 0, targetId: "" }, w };
 
   if (e.state === "idle") {
     if (e.kind === "intake" && (e.hp < e.maxHp || e.participants.length) && !freshArrivalNear(w, e.home)) {
       // An abandoned shift resets; nobody inherits a wounded clerk.
       e = { ...e, hp: e.maxHp, participants: [] };
     }
-    const target = nearestPlayer(w, e, stats.aggro, alive);
-    if (target) e = { ...e, state: "aggro", targetId: target.id, t: 0 };
+    // Whoever struck it last is answered first; otherwise whoever is inside its aggro radius.
+    const struck = e.hp < e.maxHp ? [...e.participants].reverse().map(pid => w.players.get(pid)).find(q => alive(q) && within(e, q, ENEMY_LEASH / 2)) : undefined;
+    const target = struck ?? nearestPlayer(w, e, stats.aggro, alive);
+    if (target) return { e: { ...e, state: "aggro", targetId: target.id, t: 0 }, w };
+    if (route) {
+      // Walk the route: one point at a time, around again at the end.
+      const pos = walkToward(e, anchor, stats.speed * dt, 0);
+      e = { ...e, x: pos.x, y: pos.y };
+      if (within(e, anchor, HOME_EPSILON)) e = { ...e, x: anchor.x, y: anchor.y, leg: ((e.leg ?? 0) + 1) % route.length };
+    }
     return { e, w };
   }
 
@@ -328,10 +339,14 @@ function hitEnemy(w: WorldState, attacker: Player, e: Enemy, dmg: number): World
   cur = { ...cur, wreckage: [...cur.wreckage, wreck] };
   const fallFlag = e.kind === "intake" ? F.INTAKE : e.fallFlag;
   if (fallFlag) {
+    const line = LINES.FALL_LINES[fallFlag];
     const players = new Map(cur.players);
     for (const pid of participants) {
       const q = players.get(pid);
-      if (q && !(q.flags[fallFlag] ?? 0)) players.set(pid, { ...q, flags: { ...q.flags, [fallFlag]: 1 } });
+      if (q && !(q.flags[fallFlag] ?? 0)) {
+        const flagged = { ...q, flags: { ...q.flags, [fallFlag]: 1 } };
+        players.set(pid, line ? say(flagged, line, now) : flagged);
+      }
     }
     cur = { ...cur, players };
   }

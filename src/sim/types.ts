@@ -159,7 +159,7 @@ export type Player = {
 /** How a serial was proven: the disarmed mock, or a wallet signature the server verified before calling the sim. */
 export type LinkProof = { kind: "mock" } | { kind: "wallet"; address: string };
 
-export type EnemyKind = "clerk" | "intake" | "warden" | "enforcer" | "dummy";
+export type EnemyKind = "clerk" | "intake" | "warden" | "enforcer" | "dummy" | "courier";
 export type EnemyState = "idle" | "aggro" | "telegraph" | "recover" | "return" | "dead";
 export type Enemy = {
   id: string;
@@ -178,6 +178,7 @@ export type Enemy = {
   respawnAt: number;
   tint: "lavender" | "wine" | "sky" | "paper";
   fallFlag?: string; // personal flag every participant gets when it falls (the Intake Clerk credits by kind)
+  leg?: number; // for an enemy with an authored route (ENEMY_SPAWNS.route): the point it walks toward while idle
 };
 
 export type YieldNode = {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Enemy, Intent, Player, WorldState } from "./types";
 
 vi.mock("./content/lines", () => ({
+  FALL_LINES: { bulletin: "The Runner drops. The slip is in your coat now." },
   GUEST_LOCK: "A guest cannot prepare the ground.",
   DODGE_COPY: "You stepped through the strike.",
   DODGE_WHIFF: "Your strike crossed an empty space.",

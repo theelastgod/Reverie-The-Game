@@ -59,9 +59,12 @@ export function respawnPoint(p: Player): Vec & { district: DistrictId }; // p.re
 
 ## enemies.ts
 ```ts
-export function initialEnemies(): Enemy[];                 // one per ENEMY_SPAWNS, state "idle"
+export function initialEnemies(): Enemy[];                 // one per ENEMY_SPAWNS, state "idle"; leg 0 when the spawn has a route
 export function spawnEnemy(spawn: EnemySpawn, now: number, name?: string): Enemy;
-export function enemyStats(kind: EnemyKind): typeof ENEMY[EnemyKind];
+export function enemyStats(kind: EnemyKind): typeof ENEMY[EnemyKind]; // kinds: clerk, intake, warden, enforcer, dummy, courier (aggro 0: never starts a fight, answers its striker)
+export function routeOf(e: { id }): Vec[] | null;          // ENEMY_SPAWNS[id].route: px points walked as a cycle from home while idle; content, never saved with the world
+export function anchorOf(e: Enemy): Vec;                   // the route point in hand (route[leg]) or home: where a return walks to
+export function strayOf(e: Enemy): number;                 // distance from the route polyline (home + route, cyclic) or from home; the leash (ENEMY_LEASH) reads this
 ```
 
 ## combat.ts

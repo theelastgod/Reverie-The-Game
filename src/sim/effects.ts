@@ -27,6 +27,7 @@ const ENEMY_NAMES: Record<EnemyKind, string> = {
   warden: "Warden",
   enforcer: "Cold desk",
   dummy: "Practice dummy",
+  courier: "Courier",
 };
 const ENEMY_TINTS: Record<EnemyKind, Enemy["tint"]> = {
   clerk: "lavender",
@@ -34,6 +35,7 @@ const ENEMY_TINTS: Record<EnemyKind, Enemy["tint"]> = {
   warden: "sky",
   enforcer: "wine",
   dummy: "paper",
+  courier: "lavender",
 };
 
 // ---------------------------------------------------------------- helpers

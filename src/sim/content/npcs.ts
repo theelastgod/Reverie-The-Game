@@ -437,7 +437,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   weather: {
     id: "weather",
-    text: "The process. Not stability. Stability is what you call a thing when you are paid by the thing. The process is what it is when you count it. It goes up. It does not care what you call it. Nara will give you a third word. Hers is the one that hurts.",
+    text: "The process. Not stability. Stability is what you call a thing when you are paid by the thing. The process is what it is when you count it. It goes up. It does not care what you call it. Safety knows the number; it sends a runner down the west corridor every hour with the figure on a slip, so the funeral street can dig to schedule. The slip is honest. The runner is only fast. Nara will give you a third word. Hers is the one that hurts.",
     effects: [{ kind: "flag", key: F.WEATHER_ORD }],
     wink: "The number is honest. Honest is not the same as kind.",
     next: ordLedger,
