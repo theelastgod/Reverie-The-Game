@@ -17,6 +17,7 @@
     "test:campaign": "node scripts/smoke-campaign.mjs",
     "test:campaign:2": "node scripts/smoke-campaign.mjs --movement=2",
     "test:campaign:3": "node scripts/smoke-campaign.mjs --movement=3",
+    "test:campaign:4": "node scripts/smoke-campaign.mjs --movement=4",
     "test:load": "node scripts/load-check.mjs",
     "test:render": "node scripts/render-check.mjs",
     "bench": "vitest bench --run src/sim/broadcast.bench.ts",

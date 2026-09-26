@@ -2,16 +2,18 @@
 // links the test Angel and goes under. With --movement=2 it goes on through
 // Movement II (the Care shrine, the hall, the Annex desk, the history, the
 // board, Vesper) to the Organs door; with --movement=3 through the Organs, the
-// garden, the Kerb's glass and Quill's forge to Movement IV. Run against local Wrangler:
+// garden, the bell, the Kerb's glass and Quill's forge to Movement IV; with
+// --movement=4 through Ione Kade's last word, the ring prepared and a Passing to
+// the credits. Run against local Wrangler:
 //   npx wrangler dev --port 8788      (in another shell)
-//   node scripts/smoke-campaign.mjs [origin] [--movement=2|3]
-// Default origin http://127.0.0.1:8788. Deadline 90 s; 240 s with Movement II; 480 s with III.
+//   node scripts/smoke-campaign.mjs [origin] [--movement=2|3|4]
+// Default origin http://127.0.0.1:8788. Deadline 90 s; 240 s with Movement II; 480 s with III; 600 s with IV.
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
 
 const origin = process.argv.find(a => a.startsWith('http')) ?? 'http://127.0.0.1:8788';
 const MOVEMENT = Number((process.argv.find(a => a.startsWith('--movement=')) ?? '').split('=')[1] || 1);
-const DEADLINE_S = MOVEMENT >= 3 ? 480 : MOVEMENT >= 2 ? 240 : 90;
+const DEADLINE_S = MOVEMENT >= 4 ? 600 : MOVEMENT >= 3 ? 480 : MOVEMENT >= 2 ? 240 : 90;
 const deadline = setTimeout(() => { console.error(`FAIL: campaign deadline (${DEADLINE_S} s) exceeded`); process.exit(1); }, DEADLINE_S * 1000);
 
 // Tile coordinates duplicated from src/sim/map.ts (Nave of Tubes, 48 px tiles).
@@ -103,6 +105,16 @@ const ROUTE3 = {
   toBell: [at(19, 70), at(17, 70), at(17, 63), at(17, 58), at(17, 50), at(17, 30), at(17, 27), at(17, 15), at(20, 14), at(33, 14), at(35, 13), at(38, 13), at(40, 10), at(52, 10), at(52, 6)],
   bellToGlass: [at(52, 6), at(52, 10), at(58, 10)],
   toForge: [at(58, 10), at(49, 19), at(49, 23), at(53, 26), at(53, 27), at(53, 30), at(53, 38), at(58, 41)],
+};
+const T4 = {
+  ione: at(31, 67),            // home:ione, the bench at the edge of the Care's garden
+  ring: at(52, 67),            // clearing-ring
+};
+// The Wet Grid's Clearing gate is x 52..54 rows 55..57 (Angels only); the Clearing's pillars ring the centre at
+// (46,63) (52,61) (58,63) (60,67) (58,71) (52,73) (46,71) (44,67); the Care gate is x 34..36 rows 66..68.
+const ROUTE4 = {
+  toIone: [at(59, 48), at(59, 52), at(53, 52), at(53, 56), at(53, 59), at(50, 60), at(50, 64), at(48, 66), at(40, 66), at(36, 67), at(33, 67)],
+  toRing: [at(36, 67), at(40, 66), at(48, 66), at(50, 66)],
 };
 
 const sockets = [];
@@ -654,6 +666,46 @@ try {
     phase('end III');
     reportMovement('III', T2s, read2, from);
     console.log('PASS: Movement III — the Strait, the Foundry, the Cable, Ord\'s map, the garden buried, last season in the glass, the copy spotted → Movement IV');
+  }
+
+  if (MOVEMENT >= 4) {
+    const T4s = Date.now();
+    const read4 = { ...read };
+    const from = phases.length;
+
+    // Ione Kade on the bench at the edge of the Care's garden: the last word is a mortality act, and she does not return.
+    phase('IV walk: ione');
+    await walk(me, ROUTE4.toIone);
+    await stand(me, T4.ione, 72);
+    assert.equal(me.snap.district, 'care', 'through the Clearing to the Care gate');
+    read.decisions++;
+    phase('IV talk: ione');
+    await converse(me, 'ione', 'mortality');
+    assert.equal(you(me).choices.mortality, 'lastword', 'the last word');
+    assert.ok(!(me.snap.npcs ?? []).some(n => n.id === 'ione'), 'Ione Kade does not return');
+
+    // The ring: prepare the ground with the party still willing, then the Passing, whatever it writes.
+    phase('IV walk: ring');
+    await walk(me, ROUTE4.toRing);
+    await stand(me, T4.ring, 64);
+    assert.equal(me.snap.district, 'clearing', 'in the Clearing');
+    phase('IV verb: prepare');
+    await useVerb(me, 'clearing-ring', verbs => verbs.find(v => v.choice === 'prepare'), () => !!you(me).flags.prepare, 'prepare the ground');
+    assert.equal(me.snap.clearing?.open, true, 'the hole is open');
+    phase('IV verb: passing');
+    const readiness = you(me).readiness;
+    await useVerb(me, 'clearing-ring', verbs => verbs.find(v => v.choice === 'pass'), () => !!you(me).flags.passing, 'the Passing');
+    const outcome = you(me).choices.passing;
+    assert.ok(['appearance', 'absence', 'hijack', 'failed'].includes(outcome), `an outcome was written (${outcome})`);
+    await wait(me, () => you(me).movement === 5 && !!you(me).flags.credits, 'the credits', 6000).catch(error => {
+      const p = you(me);
+      throw new Error(`${error.message} (movement ${p.movement}, credits ${p.flags.credits}, passing ${p.flags.passing}, outcome ${outcome}; heard: ${p.heard})`);
+    });
+    console.log(`measure: Movement IV outcome ${outcome} at readiness ${readiness} (the rite needs 60; appearance 80); current ${you(me).current || 'none'}; party ${JSON.stringify(you(me).party)}; gestell ${Math.round(me.snap.gestell)}`);
+
+    phase('end IV');
+    reportMovement('IV', T4s, read4, from);
+    console.log(`PASS: Movement IV — Ione Kade's last word, the ring prepared, the Passing (${outcome}), the credits → the rest is the city`);
   }
 
   clearTimeout(deadline);
