@@ -327,6 +327,20 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- The Stage B pull rehearsed (2026-09-27): `scripts/pull-generated.mjs`
+  had never run against anything, and it is the first thing to run when
+  the results host opens (Backlog 1), so a failure then would cost the
+  hour. It now takes `PULL_ORIGIN` (every url's origin replaced),
+  `PULL_MANIFEST` and `PULL_OUT`, and `server/src/pullGenerated.test.ts`
+  stands up a stub of the results host (a 1200 by 2000 portrait, a
+  sprite that is mostly empty around a 100 px square, a video and an
+  audio file as bytes, and a missing file), runs the script as a child
+  process, and checks that the portrait lands as a jpeg within 640 by
+  1136, the sprite is trimmed to its ink, the video and the audio arrive
+  byte for byte, the missing file is one counted failure that fails the
+  run, and `manifest.json` lists the four that landed with the images'
+  sizes and zeros for the rest. The script's defaults are unchanged;
+  the real pull is still `node scripts/pull-generated.mjs`.
 - A security review of the day's server changes (2026-09-27, the
   message budget, the sweep, the join budgets, the world record and
   their review fixes, `8f2ccb8..0e0377b`; a finder over every untrusted
@@ -919,6 +933,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The Stage B pull rehearsal (2026-09-27): typecheck, 468 tests (the
+  new one runs the script as a child process against a stub host: the
+  portrait bounded and jpeg, the sprite trimmed, the video and the audio
+  byte for byte, the missing file counted and the run failed on it, the
+  manifest listing the four that landed with the images' sizes), and
+  the build.
 - The deploy bundle after the day's server changes (2026-09-27, `npx
   wrangler deploy --dry-run`): 558 KB, 147 KB gzipped, 94 site files,
   bindings WORLD (the Durable Object), LOG (the D1 database), ASSETS,
@@ -1121,7 +1141,8 @@ they are discovered; keep this list honest.
    `scripts/pull-generated.mjs`). Blocked until `d8j0ntlcm91z4.cloudfront.net`
    is reachable from the container. The slots are built (see Done: the
    manifest gate, portraits, sprites, seals, badges, plates, loops, props, and
-   the whole audio system), so the remaining work is: `node
+   the whole audio system), and the pull script is rehearsed against a
+   stub host (2026-09-27, see Done), so the remaining work is: `node
    scripts/pull-generated.mjs`, review each result in the render check's
    screenshots and drop anything off-style (delete the file; the manifest is
    rewritten from disk), then the leftovers with no slot yet: grave slabs and

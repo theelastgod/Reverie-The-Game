@@ -1,15 +1,19 @@
 // Pull the generated Stage B assets listed in .rebuild/generated-manifest.tsv into
 // public/assets/gen/, post-processing stills to game sizes with sharp.
 // Usage: node scripts/pull-generated.mjs [--only=portraits,props,...]
+// For a rehearsal against a stub host (server/src/pullGenerated.test.ts): PULL_ORIGIN replaces every url's origin,
+// PULL_MANIFEST names another manifest, PULL_OUT another output directory.
 import { mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, extname, relative, sep } from "node:path";
 import sharp from "sharp";
 
-const manifest = readFileSync(".rebuild/generated-manifest.tsv", "utf8")
+const origin = process.env.PULL_ORIGIN;
+const source = url => (origin ? new URL(new URL(url).pathname + new URL(url).search, origin).href : url);
+const manifest = readFileSync(process.env.PULL_MANIFEST ?? ".rebuild/generated-manifest.tsv", "utf8")
   .split("\n").filter(l => l && !l.startsWith("#"))
-  .map(l => { const [index, kind, target, url] = l.split("\t"); return { index: Number(index), kind, target, url }; });
+  .map(l => { const [index, kind, target, url] = l.split("\t"); return { index: Number(index), kind, target, url: source(url) }; });
 const only = (process.argv.find(a => a.startsWith("--only=")) ?? "").slice(7).split(",").filter(Boolean);
-const OUT = "public/assets/gen";
+const OUT = process.env.PULL_OUT ?? "public/assets/gen";
 
 /** Output rules by target prefix: [maxWidth, maxHeight, format, quality]. */
 function rule(target) {
