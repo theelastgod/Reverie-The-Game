@@ -830,6 +830,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the assets binding (a runtime handing over a new binding per request
   would only cost one asset read per health call, and a module-level
   cache would leak between tests), and the release's disclosure (above).
+- Security review (2026-09-27, later) of the seven commits since the last
+  one (`0bf9460..ec2a29b`): no finding at the review's bar (>80%
+  confidence of real exploitability). Checked: `/health`'s release read
+  (a constant path through the assets binding, the same bytes already
+  public at `/play/release.json`, two string fields re-emitted as JSON,
+  the memory derived only from the bundle, the session and origin guards
+  on the other routes untouched); the Deploy workflow (the two secrets
+  reach only the two `deploy`-gated steps, the check path runs with none
+  and uploads nothing, `workflow_dispatch` only, the poll step's `url`
+  from a strict regex over wrangler's own log and `live` only compared
+  quoted and echoed); the pull script's overrides (environment variables,
+  the manifest committed); the session smoke's release check (a CLI
+  argument, a local file); the lockfile (every new `resolved` on the npm
+  registry, no new install scripts, `sharp` from prebuilt optional
+  packages). Noted, pre-existing and not findings: `.dev.vars` is tracked
+  and holds only the mock flag and a well-known test address; the two
+  actions are tag-pinned, not SHA-pinned.
 
 ## Verified (2026-09-25, integration)
 
