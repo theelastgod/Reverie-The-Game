@@ -872,6 +872,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The whole spine over the wire after the world record and its review
+  fixes (2026-09-27, `npm run test:campaign:4` on a fresh world): I 15.7
+  min / 7 decisions (the optional Runner beat not met this run), II 12.5
+  / 4 (the Clearing at 40), III 11.4 / 3, IV 7.4 / 3 with the Passing
+  `failed` at readiness 52 as designed, the credits reached; `/world`
+  after: 5260 alarms, checkpoints 0.25 ms, `dropped` 0, `swept` 0,
+  `refused` 0. Then the 40-bot load check for the checkpoint under load:
+  1.05 ms mean, 3 ms worst (was 1.2–1.4; walking bots still write their
+  records, the world blob no longer carries them); its timing bars missed
+  on this container as before (interval mean 82.2 ms, worst alarm 485
+  ms, one stall), which `.rebuild/ZONES.md` already treats as the
+  container's noise, not the object's.
 - The review fixes on the world record (2026-09-27, latest): typecheck,
   467 tests (a record with fewer fields restored through the migration
   and given its quest on the first tick, a dodge in flight dropped; a

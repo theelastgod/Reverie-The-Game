@@ -60,7 +60,14 @@ to the area of interest (AOI_RADIUS 1040 px, about 21 tiles).
 Two things to know when reading these. The checkpoint (the world blob plus
 every connected body's record, once a second of world time) costs 1–2 ms
 even at 80 bodies, so the late alarms are compute: one `tickWorld` over
-every body plus one `snapshotFor` and one stringify per viewer. And the
+every body plus one `snapshotFor` and one stringify per viewer. Since
+2026-09-27 the world blob carries no bodies and a body's record is written
+only when its object changed (`.rebuild/CONTRACTS.md`, the world record);
+with 40 walking bots every body changes every tick, so the checkpoint still
+writes 40 records and reads 1.05 ms mean (3 ms worst) against 1.2–1.4
+before, while a city of standing bodies writes only the world; under an
+action's checkpoint (up to fifty a second in a fight) the rows written are
+the bodies that moved, not the population. And the
 load check's bots run on the same one CPU as the Worker in this container,
 so every number here is pessimistic; the real knee is higher and is only
 known from a run where the bots live elsewhere.
