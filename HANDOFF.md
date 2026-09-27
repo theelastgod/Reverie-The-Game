@@ -4,6 +4,31 @@ State of the rebuild. Read `DESIGN.md` first, then `.rebuild/CONTRACTS.md`
 (shared-sim signatures) and `.rebuild/CLIENT.md` (client contract). The master
 brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
+## Where things stand (2026-09-27)
+
+- **Built and verified on this branch:** the whole campaign (four movements,
+  eighteen decisions, about 48 minutes on the spine) plays over the wire on a
+  fresh world; 467 tests, the session smoke, the campaign smoke and the
+  Playwright render check (desktop and phone) pass; the Worker bundles
+  (`wrangler deploy --dry-run`: 558 KB, 147 KB gzipped, 94 site files, the
+  bindings WORLD, LOG, ASSETS and the `ANGEL_*` variables empty). The server
+  since the 26th: a message and join budget, an hourly sweep of stale guest
+  bodies, a world record without bodies and body records written only when
+  they change, each reviewed and security-reviewed (see Done).
+- **Two steps only you can take** (Backlog 1 and 2 have the detail): the
+  Stage B art waits on the results host being reachable from a machine that
+  runs `node scripts/pull-generated.mjs`; the deploy waits on either the
+  **Deploy the city** workflow with the two repository secrets set, or
+  `git checkout claude/game-rebuild-fable-ccwl6i && npm ci && npm run
+  d1:migrate:remote && npm run deploy` from any machine where `wrangler` is
+  logged in. The account's Worker still runs the build of 2026-09-25.
+- **One call for you** (Backlog 5): no heal stands between the intake and
+  Desk Three, so a worn body meets the desk at about 44 hp; a player who
+  strikes first or dodges wins, and the bot falls about one run in five.
+- **The hourly routine** probes the two hosts, then takes a Backlog item or a
+  discovered one, with tests, the gates, the smokes, a commit and a push to
+  this branch, and reports here and to you. `main` is never pushed.
+
 ## Architecture pointers
 
 - `DESIGN.md` — how the rebuilt code satisfies the brief: one city map, the
@@ -894,6 +919,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The deploy bundle after the day's server changes (2026-09-27, `npx
+  wrangler deploy --dry-run`): 558 KB, 147 KB gzipped, 94 site files,
+  bindings WORLD (the Durable Object), LOG (the D1 database), ASSETS,
+  `MOCK_LINK "0"` and the `ANGEL_*` variables empty; the bundle builds
+  and the settings read as the deploy needs them.
 - The whole spine over the wire after the world record and its review
   fixes (2026-09-27, `npm run test:campaign:4` on a fresh world): I 15.7
   min / 7 decisions (the optional Runner beat not met this run), II 12.5
@@ -1121,9 +1151,9 @@ they are discovered; keep this list honest.
    account's other Workers were deployed on 2026-09-26, so one exists):
    `git checkout claude/game-rebuild-fable-ccwl6i && npm ci && npm run
    d1:migrate:remote && npm run deploy`. The
-   dry run with the real id builds the same bundle (549 KB, 144 KB
-   gzipped; 92 site files; bindings WORLD, LOG, ASSETS; `MOCK_LINK "0"`,
-   `ANGEL_*` empty). After the deploy: `GET /health` → `{ ok: true, v: 3
+   dry run with the real id builds the same bundle (2026-09-27, after the
+   day's server changes: 558 KB, 147 KB gzipped; 94 site files; bindings
+   WORLD, LOG, ASSETS; `MOCK_LINK "0"`, `ANGEL_*` empty). After the deploy: `GET /health` → `{ ok: true, v: 3
    }`, `scripts/smoke-world.mjs <origin>`, then the load knee (Backlog 4).
 3. **Angel holders from the contract.** The chain read is built and tested
    (`server/src/holders.ts`); it waits on the ERC-721 itself. At deploy, set
