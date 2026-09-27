@@ -104,7 +104,7 @@ The three live scripts take an origin argument (default `http://127.0.0.1:8788`;
 the render check defaults to `http://127.0.0.1:8788/play/`) and need
 `npm run dev:world` running with a built client staged in `site/play/`
 (`npm run build:play && node scripts/stage-play.mjs`). `GET /health` returns
-`{ ok: true, v: 2 }`.
+`{ ok: true, v: 3 }`.
 
 ## Deploy
 
@@ -113,10 +113,15 @@ the render check defaults to `http://127.0.0.1:8788/play/`) and need
 `wrangler.toml`; `npm run d1:migrate:remote` first applies any pending
 migration to the account's `reverie-log` database (its id is in
 `wrangler.toml`). The same two steps run from GitHub: the **Deploy the city**
-workflow (`.github/workflows/deploy.yml`) is started by hand from the Actions
-tab with the word `deploy` typed in, runs the typecheck and the tests, then the
-migration and the deploy, and needs the repository secrets
-`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. Sessions use a host-only
+workflow (`.github/workflows/deploy.yml`) is started by hand with the word
+`deploy` typed in, runs the typecheck and the tests, then the migration and
+the deploy, and needs the repository secrets `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID`; typed `check` instead it runs the install, the gates,
+the client build and a dry-run bundle on GitHub's runner with no secrets and
+deploys nothing. GitHub registers workflows from the default branch only, so
+the file must be on `main` before either mode can be started; from there the
+Actions tab runs it, or `gh workflow run deploy.yml --ref <branch> -f
+confirm=deploy` (or `confirm=check`) runs a branch's copy. Sessions use a host-only
 HttpOnly cookie; a second tab takes over the same body. Actions checkpoint
 before their snapshot is sent, at most once per 20 ms for the object (a second
 action inside that window rides the next alarm, which checkpoints first);

@@ -23,7 +23,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   **Deploy the city** workflow with the two repository secrets set, or
   `git checkout claude/game-rebuild-fable-ccwl6i && npm ci && npm run
   d1:migrate:remote && npm run deploy` from any machine where `wrangler` is
-  logged in. The account's Worker still runs the build of 2026-09-25.
+  logged in. The workflow needs one thing first: GitHub registers workflows
+  from the default branch only, and `main` has none, so until this branch
+  is on `main` neither the Actions tab nor the API can start it (checked
+  2026-09-27: the API answers 404). `main` is an ancestor of this branch, so
+  `git push origin claude/game-rebuild-fable-ccwl6i:main` fast-forwards it
+  with no merge; that push is yours to make, never the routine's. The
+  account's Worker still runs the build of 2026-09-25.
 - **One call for you** (Backlog 5): no heal stands between the intake and
   Desk Three, so a worn body meets the desk at about 44 hp; a player who
   strikes first or dodges wins, and the bot falls about one run in five.
@@ -593,7 +599,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   (Backlog 2). `.github/workflows/deploy.yml` is the second way: a
   manual **Deploy the city** workflow (typed `deploy`; refuses without
   the two secrets; gates, `d1:migrate:remote`, `npm run deploy`).
-  Nothing deploys on a push.
+  Nothing deploys on a push. Since 2026-09-27 it also takes `check`:
+  the install, the gates, the client build and stage and a dry-run
+  bundle on GitHub's runner, no secrets, nothing deployed, so the
+  pipeline can be proven before the first deploy. It cannot run yet:
+  GitHub registers workflows from the default branch only and `main`
+  carries none, so the API answers 404 for it until the branch is on
+  `main` (Backlog 2 says how). The check's steps were run here instead
+  (Verified). Also found that day: `sharp`, which the pull script and
+  its rehearsal need, reached the tree only through wrangler's
+  miniflare; it is now named in `devDependencies`.
 - The resistance's Clearing on the Grid (2026-09-26, backlog 6's last
   candidate): a `listing` effect (`effects.ts` → `economy.applyListing`)
   lets the city post a listing under its own seller (`CITY_SELLER`, no
@@ -1160,9 +1175,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   object mid-run; the first Movement I run of the day failed at its first
   step ("socket closed") because a script edit landed during it, and the
   second run, left alone, passed.
+- The Deploy workflow's `check` mode (2026-09-27): its YAML parses (ten
+  steps, the job gated on `deploy` or `check`), and its five steps run
+  here in sequence as the runner would run them, from a clean `npm ci`
+  (the lockfile now naming `sharp`): typecheck, 468 tests, the client
+  build under `VITE_BASE=/play/`, the stage, `wrangler deploy --dry-run`
+  into `.wrangler/check` (558 KB, 147 KB gzipped, 94 site files); 33 s
+  in all. Not run on GitHub: the dispatch through the GitHub connector
+  on this branch answered 404, and `list_workflows` reports none, because
+  GitHub registers workflows from the default branch only and `main`
+  carries no `.github` at all; the first run waits on the branch reaching
+  `main` (Backlog 2).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
-  (results host denied), rendered play on real hardware.
+  (results host denied), rendered play on real hardware, the Deploy
+  workflow on GitHub's runner (above).
 
 ## Backlog
 
@@ -1198,9 +1225,20 @@ they are discovered; keep this list honest.
    denies. Either: (a) the owner sets the repository secrets
    `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (the values in the
    session scratchpad `cf.env`; never in the repo) and runs the **Deploy
-   the city** workflow from the Actions tab on this branch, typing
-   `deploy`; it runs the gates, `npm run d1:migrate:remote` (none
-   pending) and `npm run deploy`; or (b) the network policy allows
+   the city** workflow on this branch, typing `deploy`; it runs the
+   gates, `npm run d1:migrate:remote` (none pending) and `npm run
+   deploy`. One step before that: GitHub registers workflows from the
+   default branch only, and `main` has none, so the file must reach
+   `main` before the Actions tab or the API can start it (the routine
+   tried a dispatch on this branch through the GitHub connector on
+   2026-09-27 and the API answered 404, as it does for any workflow
+   absent from the default branch). `main` (`b5062cb`) is an ancestor of
+   this branch, so `git push origin claude/game-rebuild-fable-ccwl6i:main`
+   fast-forwards it with nothing to merge; the routine never pushes
+   `main`, so that push is the owner's. Once there, typing `check` first
+   runs the install, the gates, the client build and a dry-run bundle on
+   GitHub's runner with no secrets and deploys nothing (its steps pass
+   here; see Verified); then `deploy`; or (b) the network policy allows
    `api.cloudflare.com` and the routine runs `npm run deploy` here; or
    (c) from any machine where `wrangler` is logged in to the account (the
    account's other Workers were deployed on 2026-09-26, so one exists):
