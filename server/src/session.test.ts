@@ -397,21 +397,38 @@ describe("browser session boundary", () => {
   });
   it("names the staged release on /health, read once through the assets binding, and stays silent without one", async () => {
     const health = (env: unknown) => worker.fetch(new Request("https://game.example/health"), env as never).then(r => r.json());
-    const asked: string[] = [];
-    let answer = () => Response.json({ revision: "abc123", builtAt: "2026-09-27T11:00:00.000Z" });
-    const ASSETS = { fetch: async (req: Request) => { asked.push(new URL(req.url).pathname); return answer(); } };
-    expect(await health({ ASSETS })).toEqual({ ok: true, v: PROTOCOL_VERSION, release: { revision: "abc123", builtAt: "2026-09-27T11:00:00.000Z" } });
-    answer = () => new Response("not any more", { status: 404 });
-    expect(await health({ ASSETS }), "a good read is remembered for the binding").toMatchObject({ release: { revision: "abc123" } });
-    expect(asked).toEqual(["/play/release.json"]);
-    // nothing staged: no release, and the next call asks again
-    const missing = { fetch: async () => new Response("no", { status: 404 }) };
-    expect(await health({ ASSETS: missing })).toEqual({ ok: true, v: PROTOCOL_VERSION });
-    // a malformed file, or one with the fields missing, names nothing
-    expect(await health({ ASSETS: { fetch: async () => new Response("{not json") } })).toEqual({ ok: true, v: PROTOCOL_VERSION });
-    expect(await health({ ASSETS: { fetch: async () => Response.json({ revision: 7 }) } })).toEqual({ ok: true, v: PROTOCOL_VERSION });
-    // a binding that throws is a missing release, not a failed health
-    expect(await health({ ASSETS: { fetch: async () => { throw new Error("down"); } } })).toEqual({ ok: true, v: PROTOCOL_VERSION });
+    const silent = { ok: true, v: PROTOCOL_VERSION };
+    /** An assets binding that answers as told and counts how often it was asked. */
+    const binding = (answer: () => Response) => {
+      const b = { asked: 0, path: "", fetch: async (req: Request) => { b.asked++; b.path = new URL(req.url).pathname; return answer(); } };
+      return b;
+    };
+    let staged = () => Response.json({ revision: "abc123", builtAt: "2026-09-27T11:00:00.000Z" });
+    const good = binding(() => staged());
+    expect(await health({ ASSETS: good })).toEqual({ ...silent, release: { revision: "abc123", builtAt: "2026-09-27T11:00:00.000Z" } });
+    staged = () => new Response("not any more", { status: 404 });
+    expect(await health({ ASSETS: good }), "a good read is remembered for the binding").toMatchObject({ release: { revision: "abc123" } });
+    expect([good.asked, good.path]).toEqual([1, "/play/release.json"]);
+    // nothing staged (a 404) names nothing, and is remembered: an isolate's assets never change
+    const missing = binding(() => new Response("no", { status: 404 }));
+    expect(await health({ ASSETS: missing })).toEqual(silent);
+    expect(await health({ ASSETS: missing })).toEqual(silent);
+    expect(missing.asked).toBe(1);
+    // a malformed file, or one with the fields missing, names nothing and is remembered too
+    const malformed = binding(() => new Response("{not json"));
+    expect(await health({ ASSETS: malformed })).toEqual(silent);
+    expect(await health({ ASSETS: malformed })).toEqual(silent);
+    expect(malformed.asked).toBe(1);
+    expect(await health({ ASSETS: binding(() => Response.json({ revision: 7 })) })).toEqual(silent);
+    // a binding that throws or fails is a missing release, not a failed health, and is asked again next time
+    const down = binding(() => { throw new Error("down"); });
+    expect(await health({ ASSETS: down })).toEqual(silent);
+    expect(await health({ ASSETS: down })).toEqual(silent);
+    expect(down.asked).toBe(2);
+    const failing = binding(() => new Response("later", { status: 503 }));
+    expect(await health({ ASSETS: failing })).toEqual(silent);
+    expect(await health({ ASSETS: failing })).toEqual(silent);
+    expect(failing.asked).toBe(2);
   });
 });
 

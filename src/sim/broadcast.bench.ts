@@ -80,7 +80,7 @@ function broadcast(w: WorldState, tracker: SlowTracker, tick: number, variant: V
 
 describe(`one step with ${BODIES} viewers, walking: the tick alone, then the tick and a broadcast`, () => {
   test("the four variants", async ({ bench }) => {
-    const row = <V extends Variant>(variant: V) => {
+    const row = (variant: Variant) => {
       let w = crowd(BODIES);
       const tracker = new SlowTracker();
       let tick = 0;

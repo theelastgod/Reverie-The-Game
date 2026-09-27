@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 468 tests, the session smoke, the campaign smoke and the
+  fresh world; 469 tests, the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone) pass; the Worker bundles
   (`wrangler deploy --dry-run`: 558 KB, 147 KB gzipped, 94 site files, the
   bindings WORLD, LOG, ASSETS and the `ANGEL_*` variables empty). The server
@@ -810,7 +810,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   whatever wrangler printed, and `scripts/smoke-world.mjs` prints the
   release and, against the local Worker, requires it to be the one staged
   in `site/play`. Until now the only sign of what was live was the
-  Worker's modified time.
+  Worker's modified time. The release is public, as the client's
+  `release.json` already was.
+- Review fixes on the day's five commits (2026-09-27, later; the review
+  ran over `8a58d98..d764605`): the workflow's revision check polls
+  `/health` for up to a minute with `jq` (the new version takes a moment
+  to reach every edge, and a one-shot substring match failed a healthy
+  city on any reformatting); a 404 or a malformed `release.json` is
+  remembered per binding like a good read, so a city with nothing staged
+  costs no asset subrequest per health call (a binding that throws or
+  answers 5xx is still asked again, and the test now counts the asks);
+  the session smoke's release check gates on a loopback origin however
+  it is spelled and finds `site/play/release.json` from the script, so
+  neither an explicit local origin nor another working directory skips
+  it silently; the bench's unused generic is gone; the bench warning
+  vitest 5 printed on every run is suppressed in `vitest.config.ts`
+  (under `test.benchmark`; at the top level it is ignored), the header
+  note being the explanation that stays. Not taken: the WeakMap keyed on
+  the assets binding (a runtime handing over a new binding per request
+  would only cost one asset read per health call, and a module-level
+  cache would leak between tests), and the release's disclosure (above).
 
 ## Verified (2026-09-25, integration)
 
@@ -1209,6 +1228,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   hand against the local Worker (the staged commit accepted, a foreign
   one refused); the render check PASS at `RENDER_MIN_FPS=5`
   (8.1 fps). The workflow's YAML parses with the new last step.
+- The review fixes (2026-09-27, later): typecheck; 469 tests (the
+  health test now counts the binding's asks: one for a good read, one
+  for a 404, one for a malformed file, two for a binding that throws
+  and two for a 503); the build; `npm run bench` without the warning
+  (frames 5.4 ms); the workflow's YAML parses; the polling revision
+  check rehearsed by hand against the local Worker (the staged commit
+  accepted on the first try, a wrong one refused after the tries, and
+  an unreachable city refused with "names nothing" on every try); the
+  session smoke PASS against the default origin and against
+  `http://localhost:8788`, the release check running for both; the
+  Movement I smoke PASS on a fresh world (bot 71 s, 1525 words, 8
+  decisions, 16.7 min estimate); the render
+  check PASS at `RENDER_MIN_FPS=5` (8.2 fps).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware, the Deploy

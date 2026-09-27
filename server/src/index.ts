@@ -643,25 +643,32 @@ async function logRecent(url: URL, env: Env): Promise<Response> {
 }
 
 type Release = { revision: string; builtAt: string };
-/** The staged client's release, once per assets binding (a deploy is a new isolate, a local reload too). */
-const releases = new WeakMap<Env["ASSETS"], Release>();
+/** The staged client's release per assets binding: a release, or null for none staged (as fixed as the isolate). */
+const releases = new WeakMap<Env["ASSETS"], Release | null>();
 
 /**
  * The release `scripts/stage-play.mjs` wrote beside the client (`/play/release.json`: the commit and the build time),
  * read through the assets binding so `/health` names the build that is live. Null when nothing is staged, the file
- * is malformed or the binding is absent; only a good read is remembered, so a passing failure is asked again.
+ * is malformed or the binding is absent. An isolate's assets never change (a deploy or a local reload is a new
+ * isolate), so a 404 and a malformed file are remembered like a good read and a city with no staged client costs no
+ * subrequest per health call; a binding that throws or answers 5xx is asked again next time. Should a runtime hand
+ * over a new binding object per request, the memory misses and a health call costs one asset read, nothing worse.
  */
 async function readRelease(env: Env, url: URL): Promise<Release | null> {
   const assets = env.ASSETS;
   if (!assets) return null;
-  const known = releases.get(assets);
-  if (known) return known;
+  if (releases.has(assets)) return releases.get(assets) ?? null;
   try {
     const res = await assets.fetch(new Request(new URL("/play/release.json", url)));
+    if (res.status === 404) {
+      releases.set(assets, null);
+      return null;
+    }
     if (!res.ok) return null;
-    const body = (await res.json()) as Partial<Release> | null;
-    if (!body || typeof body.revision !== "string" || typeof body.builtAt !== "string") return null;
-    const release = { revision: body.revision, builtAt: body.builtAt };
+    const body = (await res.json().catch(() => null)) as Partial<Release> | null;
+    const release = body && typeof body.revision === "string" && typeof body.builtAt === "string"
+      ? { revision: body.revision, builtAt: body.builtAt }
+      : null;
     releases.set(assets, release);
     return release;
   } catch {

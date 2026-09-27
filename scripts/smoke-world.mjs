@@ -44,11 +44,16 @@ assert.equal(health.status, 200, 'health');
 const healthBody = await health.json();
 assert.equal(healthBody.ok, true, 'health ok');
 assert.equal(healthBody.v, PROTOCOL_VERSION, 'health protocol version');
-// The Worker names the staged client's release; against the local Worker it must be the release staged here.
+// The Worker names the staged client's release; a local Worker (loopback, however the origin was spelled) must name
+// the release staged in this checkout's site/play, found from this script so the working directory does not matter.
 if (healthBody.release) console.log(`release: ${healthBody.release.revision} built ${healthBody.release.builtAt}`);
-if (!process.argv[2] && existsSync('site/play/release.json')) {
-  const staged = JSON.parse(readFileSync('site/play/release.json', 'utf8'));
+const loopback = /^https?:\/\/(127\.0\.0\.1|localhost|\[::1\])(:\d+)?\/?$/.test(origin);
+const stagedRelease = new URL('../site/play/release.json', import.meta.url);
+if (loopback && existsSync(stagedRelease)) {
+  const staged = JSON.parse(readFileSync(stagedRelease, 'utf8'));
   assert.deepEqual(healthBody.release, staged, 'health names the release staged in site/play');
+} else if (loopback) {
+  console.log('release: nothing staged in site/play, so the health release is not checked');
 }
 
 const response = await fetch(`${origin}/session`, { method: 'POST', headers: { Origin: origin } });
