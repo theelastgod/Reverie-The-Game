@@ -1,3 +1,5 @@
+// A test of site/log.js that lives here on purpose: site/ is the directory wrangler deploys as public assets
+// (wrangler.toml [assets]), so a test file beside the module would be served to every visitor.
 import { describe, expect, it, vi } from "vitest";
 import { ago, logLines, mountCityLog } from "../../site/log.js";
 

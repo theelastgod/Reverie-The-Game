@@ -45,8 +45,9 @@ jobs:
           npm run typecheck
           npm test
       - name: Build the client and stage it
+        # The gates typechecked already; this is `npm run build:play` without its second typecheck.
         run: |
-          npm run build:play
+          VITE_BASE=/play/ npx vite build
           node scripts/stage-play.mjs
       - name: Apply any pending D1 migration to reverie-log
         env:
@@ -54,6 +55,8 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npm run d1:migrate:remote
       - name: Deploy the Worker
+        # An explicit bash shell runs with pipefail, so a failed deploy fails the step even though tee succeeds.
+        shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

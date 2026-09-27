@@ -11,7 +11,8 @@ const origin = process.argv[2] ?? 'http://127.0.0.1:8788/play/';
 const shots = '.rebuild/shots';
 // A GPU-less sandbox (SwiftShader) rasterises the canvas in software at ~16 fps; set RENDER_MIN_FPS to run there.
 const MIN_FPS = Number(process.env.RENDER_MIN_FPS ?? 30);
-const deadline = setTimeout(() => { console.error('FAIL: render-check deadline (120 s) exceeded'); process.exit(1); }, 120000);
+// Two page loads on the landing page and two city boots (desktop, then phone) on software WebGL: four minutes is the bound.
+const deadline = setTimeout(() => { console.error('FAIL: render-check deadline (240 s) exceeded'); process.exit(1); }, 240000);
 
 function findChromium() {
   const roots = [process.env.PLAYWRIGHT_BROWSERS_PATH, '/opt/pw-browsers', join(process.env.HOME ?? '', '.cache/ms-playwright')].filter(Boolean);
@@ -47,7 +48,8 @@ try {
       .catch(() => failures.push('the landing page never finished reading the city log'));
     const shown = await page.locator('#city-log li').count();
     const route = await fetch(`${root}log/recent?kind=news&limit=8`).then(r => (r.ok ? r.json() : null)).catch(() => null);
-    const written = route?.ok ? route.events.length : 0;
+    const written = route?.ok && Array.isArray(route.events) ? route.events.length : 0;
+    if (route?.ok && !Array.isArray(route.events)) failures.push('the log route answered without an events array');
     await page.screenshot({ path: join(shots, '00-landing.png'), fullPage: true });
     console.log(`landing: ${shown} log line(s) shown; the route has ${route ? written : 'no answer'}`);
     if (written > 0 && shown === 0) failures.push('the city log has lines but the landing page shows none');
@@ -114,6 +116,9 @@ try {
   // closes first: two cities rendering in software at once starve each other's boot.
   await page.close();
   const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const phoneErrors = [];
+  phone.on('pageerror', e => phoneErrors.push(String(e)));
+  phone.on('console', m => { if (m.type() === 'error') phoneErrors.push(m.text()); });
   try {
     if (root !== origin) {
       await phone.goto(root, { waitUntil: 'load', timeout: 30000 });
@@ -152,6 +157,11 @@ try {
     if (fit.off.length) failures.push(`phone: off the screen: ${fit.off.join('; ')}`);
     if (fit.stacked.length) failures.push(`phone: ${fit.stacked.join('; ')}`);
     if (fit.scrollW > fit.w) failures.push(`phone: the page scrolls sideways (${fit.scrollW} > ${fit.w})`);
+    // A script error the HUD throws only at this width (a layout that divides by a zero size, a missing element) is a
+    // failure the boxes cannot show; the desktop pass only prints its errors, since its list also holds the proxy's.
+    const phoneOnly = phoneErrors.filter(e => !errors.includes(e));
+    if (phoneErrors.length) console.log(`phone page errors: ${phoneErrors.slice(0, 5).join(' | ')}`);
+    if (phoneOnly.some(e => !/Failed to load resource/.test(e))) failures.push(`phone: script error(s) the desktop pass did not have: ${phoneOnly.filter(e => !/Failed to load resource/.test(e)).slice(0, 3).join(' | ')}`);
   } finally {
     await phone.close();
   }

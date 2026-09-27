@@ -951,17 +951,20 @@ canvas { display: block; }
    the journal's tab sit under them at the right, the prompt and the heard line take the width above the bars, the verb
    chips wrap, and the keyboard hints go. */
 @media (max-width: 600px) {
+  /* --below-top is where the top chips end plus a gap: the HUD measures them (hud.ts) since a long name or a weather
+     chip can wrap them to a fourth row; 150px fits three rows and stands until the first measure. */
+  #hud { --below-top: 150px; }
   .hud-top { gap: 6px; }
   .hud-top .chip { min-height: 32px; padding: 0 8px; font-size: 10px; gap: 6px; }
-  .hud-left { top: 150px; width: calc(100vw - 32px - 146px); }
-  .minimap { top: 150px; }
+  .hud-left { top: var(--below-top); width: calc(100vw - 32px - 146px); }
+  .minimap { top: var(--below-top); }
   .minimap canvas { width: 130px; height: 100px; }
-  .journal { top: 262px; width: 130px; max-height: calc(100vh - 262px - var(--marquee-h) - 220px); }
+  .journal { top: calc(var(--below-top) + 112px); width: 130px; max-height: calc(100vh - var(--below-top) - 112px - var(--marquee-h) - 220px); }
   .journal-tab { font-size: 10px; padding: 6px 8px; }
-  .journal.open { top: 150px; left: var(--gutter); right: var(--gutter); width: auto; max-height: calc(100vh - 150px - var(--marquee-h) - 220px); }
+  .journal.open { top: var(--below-top); left: var(--gutter); right: var(--gutter); width: auto; max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 220px); }
   .events { top: auto; bottom: calc(var(--marquee-h) + 16px + 44px + 136px + 56px + 56px); }
   .event { min-width: 0; max-width: calc(100vw - 32px); }
-  .ledger-panel { top: 150px; width: calc(100vw - 32px); max-height: calc(100vh - 150px - var(--marquee-h) - 220px); }
+  .ledger-panel { top: var(--below-top); width: calc(100vw - 32px); max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 220px); }
   .bars { width: 200px; padding: 6px 10px 8px; gap: 4px; bottom: calc(var(--marquee-h) + 16px + 44px); }
   .hud-verbs { right: var(--gutter); flex-wrap: wrap; gap: 6px; }
   .hud-verbs .chip { min-height: 36px; padding: 0 8px; font-size: 10px; }

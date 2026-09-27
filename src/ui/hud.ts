@@ -130,6 +130,16 @@ export class Hud {
   constructor(root: HTMLElement, callbacks: HudCallbacks) {
     this.root = root;
     this.cb = callbacks;
+    // A phone seats the minimap and the journal's tab under the top chips (hud.css, --below-top), and the chips wrap:
+    // measure where they end, so a fourth row (a long name, a weather chip) moves everything under them down.
+    const top = q(root, "#hud-top");
+    if (top && typeof ResizeObserver !== "undefined") {
+      const below = () => {
+        const bottom = top.getBoundingClientRect().bottom;
+        if (bottom > 0) root.style.setProperty("--below-top", `${Math.ceil(bottom) + 12}px`);
+      };
+      new ResizeObserver(below).observe(top);
+    }
 
     this.identity = q(root, "#hud-identity");
     this.identityText = this.identity ? q(this.identity, ".chip-text") : null;

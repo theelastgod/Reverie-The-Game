@@ -302,6 +302,31 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- Review fixes on the landing log, the bench and the phone HUD
+  (2026-09-27, a code review of `343b351..8f2ccb8`, eleven findings,
+  eight taken): the Deploy workflow's `wrangler deploy | tee` step ran
+  without pipefail, so a failed deploy passed the step on tee's exit
+  (an explicit `shell: bash` runs with pipefail); the workflow's build
+  no longer typechecks a second time after the gates (`vite build` with
+  `VITE_BASE`). The render check's process deadline is four minutes
+  (two landing loads and two software-rendered city boots could pass
+  two); the phone page now has the same error listeners as the desktop
+  page, and a script error the phone page alone throws fails the run;
+  the landing step guards the log route's shape. The bench's `frames`
+  row asks `youDue` every step as the object does, so its curve covers
+  that path (40 bodies: 1.85 ms mean, as before). The phone HUD's
+  offsets under the top chips were a fixed 150 px, three rows; the HUD
+  now measures where the chips end (`ResizeObserver` on `#hud-top`
+  setting `--below-top` on `#hud`), so a fourth row (a long name, a
+  weather chip) moves the minimap, the journal's tab, the ledger and the
+  left column down instead of under the chips; CONTRACTS' `mergeFrames`
+  line no longer contradicts the undefined rule; `siteLog.test.ts` says
+  why it lives under `server/src` (`site/` is deployed as public
+  assets). Three findings were not taken, on inspection: the
+  `if (outcome)` guard in `applyPassing` is live (`PassingOutcome`
+  includes `""`); the snapshot's `you` copy is always needed (every
+  Player carries `notices`, the off-wire key); the test's location
+  stands for the reason above.
 - The load check under the join budget (2026-09-27): every bot of
   `scripts/load-check.mjs` joins from one address, so past the address's
   burst (30 at once, then 10 a second) the city answers 429; a bot now
@@ -807,6 +832,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The review fixes on the landing log, the bench and the phone HUD
+  (2026-09-27): typecheck, 464 tests, the build, the workflow's YAML
+  parsing, `BENCH_BODIES=40 npm run bench` with the frames row asking
+  youDue (1.85 ms mean, 4.3× the tick alone), and the render check at
+  `RENDER_MIN_FPS=5` on the rebuilt bundle: desktop, then the phone
+  with the chips measured (three rows, the minimap and the journal's tab
+  seated under them in `06-phone-nave.png`), its page errors printed
+  (the proxy's certificate on the fonts and the manifest gate's 404,
+  the same as the desktop's, so not failed).
 - The whole spine over the wire after the sweep, the review fixes and
   the per-address budget (2026-09-27, `npm run test:campaign:4` on a
   fresh world): I 16.7 min / 8 decisions, II 12.5 / 4 (the Clearing at

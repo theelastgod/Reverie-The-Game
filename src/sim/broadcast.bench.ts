@@ -62,7 +62,10 @@ function broadcast(w: WorldState, tracker: SlowTracker, tick: number, variant: V
       fast = parts.fast;
       slow = () => parts.slow;
     }
-    if (tracker.rosterDue(id, fast) || slowDue || tracker.fresh(id)) {
+    // As the object does: both checks run every step so their memory stays current (the old paths have no youDue).
+    const rosterDue = tracker.rosterDue(id, fast);
+    const youDue = variant === "frames" ? tracker.youDue(id, w.players.get(id)!) : false;
+    if (rosterDue || youDue || slowDue || tracker.fresh(id)) {
       const changed = step ? tracker.diff(id, slow(), step.frames) : tracker.diff(id, slow());
       if (changed) chars += JSON.stringify(changed).length;
     }
