@@ -8,13 +8,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 467 tests, the session smoke, the campaign smoke and the
+  fresh world; 468 tests, the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone) pass; the Worker bundles
   (`wrangler deploy --dry-run`: 558 KB, 147 KB gzipped, 94 site files, the
   bindings WORLD, LOG, ASSETS and the `ANGEL_*` variables empty). The server
   since the 26th: a message and join budget, an hourly sweep of stale guest
   bodies, a world record without bodies and body records written only when
-  they change, each reviewed and security-reviewed (see Done).
+  they change, each reviewed and security-reviewed (see Done). The dev
+  tools are current (vite 8, vitest 5, wrangler 4.141; `npm audit` reads
+  0 for production and dev dependencies alike).
 - **Two steps only you can take** (Backlog 1 and 2 have the detail): the
   Stage B art waits on the results host being reachable from a machine that
   runs `node scripts/pull-generated.mjs`; the deploy waits on either the
@@ -765,6 +767,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `wrangler dev`, `wrangler.toml` deploys it off; `hello.mockLink` tells the
   lock panel whether to offer it, and the title offers it only on localhost.
   Never a seed, never a transaction, never a chain call.
+- Dependency hygiene (2026-09-27): `npm audit` had five findings, all in
+  the dev tools (vitest critical, vite high, esbuild, vite-node and
+  `@vitest/mocker` moderate; the production dependencies had none) and
+  all fixed only past a major. Taken: vite 5 → 8 (Rolldown bundles the
+  client now; the same 40 output files, `index.html` equal modulo hashes,
+  the script 1.30 MB minified where vite 5 wrote 1.59 MB) and vitest 2 → 5
+  (the 468 tests ran unchanged; the benchmark API moved into a test's
+  context, so `src/sim/broadcast.bench.ts` registers its four rows with
+  `bench()` and compares them in one `bench.compare()`, and `npm run
+  bench` asks for the verbose reporter, where the table now prints). In
+  range: wrangler 4.125 → 4.141, playwright-core 1.56 → 1.63, ws and the
+  workers types. The audit reads 0. Vitest 5's module runner turns
+  imports into getters and warns that the bench crosses them often; the
+  absolute bench numbers read about a fifth higher than under vitest 2
+  (frames 6.2 ms, old 26.5 ms on this container; the ratios hold), so
+  compare bench numbers within one vitest major. Not taken: phaser 4 and
+  typescript 7, majors no finding needs (Backlog 9).
 
 ## Verified (2026-09-25, integration)
 
@@ -1126,6 +1145,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   with `d1_migrations`, `events` and `events_kind_at`, and
   `d1_migrations` holds `0001_events.sql`. The Deploy workflow's YAML
   parses; it has not run (the secrets are the owner's to set).
+- The dev tools brought current (2026-09-27): typecheck; 468 tests under
+  vitest 5 (36 files, 7 s); `npm run build:play` under vite 8 and the
+  stage (the same 40 files, `index.html` equal modulo hashes); `npm run
+  bench` (tick 1.5 ms, frames 6.2, shared 10.1, old 26.5 mean on this
+  container; see Done for why these read higher than the earlier rows);
+  the session smoke PASS and the Movement I smoke PASS on a fresh world
+  under wrangler 4.141 (bot 79 s, 1530 words, 8 decisions, 16.8 min
+  estimate); the render check PASS at `RENDER_MIN_FPS=5` (8.8 fps,
+  desktop and phone); the deploy dry run unchanged (558 KB, 147 KB
+  gzipped, 94 site files). One local note: `wrangler dev` reloads on a
+  `package.json` change as it does on a `site/` change (a touch of a doc,
+  a `src/` file or a vitest run does not), and the reload drops the
+  object mid-run; the first Movement I run of the day failed at its first
+  step ("socket closed") because a script edit landed during it, and the
+  second run, left alone, passed.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware.
@@ -1274,7 +1308,13 @@ they are discovered; keep this list honest.
    16.7 min / 8 decisions, II 12.5 / 4, III 11.5 / 3, IV 7.3 / 3; the
    whole campaign is about 48 min of a first playthrough on the spine
    alone, with 18 decisions.
-9. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+9. **Majors not taken.** `npm outdated` (2026-09-27) lists phaser 4.2 and
+   typescript 7.0; no audit finding needs either, the client is written
+   against Phaser 3.90's API and the typecheck against tsc 5, so each is
+   a port to plan, not a bump. Take one only with the render check and
+   the whole spine over the wire behind it. `npm audit` is worth a look
+   each month; the dev tools were brought current on 2026-09-27 (Done).
+10. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 
 ## Rules

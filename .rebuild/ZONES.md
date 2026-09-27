@@ -94,7 +94,12 @@ stringify. Version counters were not needed: identity is the version.
 
 Measured in one process, without the wire (`npm run bench`,
 `src/sim/broadcast.bench.ts`: 80 bodies in one area of interest, walking;
-every step snapshots, splits, diffs and encodes for all 80 viewers):
+every step snapshots, splits, diffs and encodes for all 80 viewers). The
+numbers on this page were read under vitest 2; vitest 5 (since
+2026-09-27) runs the bench through a module runner whose import getters
+the sim crosses often, and reads about a fifth higher on the same
+container (frames 6.2 ms, old 26.5 ms), the ratios unchanged, so compare
+runs within one vitest major:
 
 | path | per broadcast mean | p99 | worst |
 |---|---:|---:|---:|

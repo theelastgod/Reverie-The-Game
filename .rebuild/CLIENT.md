@@ -1,6 +1,6 @@
 # Client contract (src/, index.html)
 
-The client is Phaser 3.90 + Vite 5 + TypeScript, DOM HUD over the canvas. It
+The client is Phaser 3.90 + Vite 8 + TypeScript, DOM HUD over the canvas. It
 renders `Snap` (see `src/sim/protocol.ts`) and sends `ClientMsg`. It never
 computes a number that matters; it may use `src/sim/map.ts` for the level and
 `src/sim/constants.ts` for cosmetic timing.

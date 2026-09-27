@@ -10,9 +10,13 @@
  * intent applied and the world ticked, so the broadcast's own cost is the
  * difference. Run with `npm run bench` (`BENCH_BODIES=160` for more
  * bodies); `vitest run` leaves bench files alone. The numbers are for this
- * CPU; what matters is the ratio and the worst step.
+ * CPU; what matters is the ratio and the worst step. (Vitest 5 registers
+ * benchmarks from a test's context and compares them in one table; its
+ * module runner turns imports into getters, which the sim crosses often,
+ * so absolute numbers read higher than under vitest 2 and are comparable
+ * only within one vitest major.)
  */
-import { bench, describe } from "vitest";
+import { describe, test } from "vitest";
 import { DT } from "./constants";
 import { encodeFast, SlowTracker, splitSnap } from "./frames";
 import { framesFor, snapshotFor, stepViews } from "./snapshot";
@@ -75,13 +79,16 @@ function broadcast(w: WorldState, tracker: SlowTracker, tick: number, variant: V
 }
 
 describe(`one step with ${BODIES} viewers, walking: the tick alone, then the tick and a broadcast`, () => {
-  for (const variant of ["tick", "old", "shared", "frames"] as Variant[]) {
-    let w = crowd(BODIES);
-    const tracker = new SlowTracker();
-    let tick = 0;
-    bench(variant, () => {
-      w = walk(w, tick++);
-      broadcast(w, tracker, tick, variant);
-    }, { time: 3000, warmupTime: 500 });
-  }
+  test("the four variants", async ({ bench }) => {
+    const row = <V extends Variant>(variant: V) => {
+      let w = crowd(BODIES);
+      const tracker = new SlowTracker();
+      let tick = 0;
+      return bench(variant, () => {
+        w = walk(w, tick++);
+        broadcast(w, tracker, tick, variant);
+      });
+    };
+    await bench.compare(row("tick"), row("old"), row("shared"), row("frames"), { time: 3000, warmupTime: 500 });
+  });
 });
