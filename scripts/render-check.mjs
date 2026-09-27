@@ -72,20 +72,46 @@ try {
   }, null, { timeout: 20000 }).catch(() => failures.push('connection chip never reported online'));
   await page.waitForTimeout(500);
 
-  // Walk right for two seconds.
+  // Walk north two seconds (the guest spawns at tile 5,42; the fourth Nave node stands at 6,34 and the first at
+  // 11,36, while the Intake Clerk waits eight tiles east, a fight with no verb), then east, until something in
+  // reach offers a verb, so the exchange below does not depend on where the first walk happened to end. The
+  // Nave's people all stand past the intake, so near the spawn the verb is a node's (E extract, Q keep), which
+  // answers with a notice rather than a dialogue; either is the prompt's loop through the server and back.
   await page.mouse.click(683, 384);
-  await page.keyboard.down('KeyD');
-  await page.waitForTimeout(2000);
-  await page.keyboard.up('KeyD');
-  await page.waitForTimeout(300);
-  await page.screenshot({ path: join(shots, '02-nave.png') });
-
-  // If something is in reach, use its F verb and capture the exchange.
-  const promptText = (await page.locator('#hud-prompt').textContent().catch(() => '')) ?? '';
-  if (/\bF\b/.test(promptText)) {
-    await page.keyboard.press('KeyF');
-    await page.waitForTimeout(700);
+  const readPrompt = async () => (await page.locator('#hud-prompt').textContent().catch(() => '')) ?? '';
+  const readVerbs = () => page.evaluate(() => [...document.querySelectorAll('#hud-prompt .prompt-verbs button')]
+    .map(b => ({ key: (b.querySelector('kbd')?.textContent ?? '').trim(), label: (b.textContent ?? '').replace(/^\s*[A-Z]\s*/, '').trim() }))
+    .filter(v => /^[A-Z]$/.test(v.key))).catch(() => []);
+  let promptText = '';
+  let verbs = [];
+  let leg = 0;
+  for (const [key, ms] of [['KeyW', 2000], ['KeyD', 1500], ['KeyD', 1500], ['KeyW', 1000]]) {
+    await page.keyboard.down(key);
+    await page.waitForTimeout(ms);
+    await page.keyboard.up(key);
+    await page.waitForTimeout(300);
+    if (leg++ === 0) await page.screenshot({ path: join(shots, '02-nave.png') });
+    promptText = await readPrompt();
+    verbs = await readVerbs();
+    if (verbs.length) break;
   }
+
+  // Use the first verb in reach and require a visible answer: a dialogue opened or a notice posted.
+  let exchange = 'nothing in reach';
+  if (verbs.length) {
+    // The notices list is capped, so its count can stay flat when a line arrives; the HUD keys the list by its lines.
+    const noticesKey = () => page.locator('#hud-notices').getAttribute('data-key').catch(() => null);
+    const noticesBefore = await noticesKey();
+    await page.keyboard.press(`Key${verbs[0].key}`);
+    await page.waitForTimeout(900);
+    const dialogueOpen = await page.evaluate(() => { const d = document.querySelector('#hud-dialogue'); return !!d && !d.hidden; });
+    const noticed = (await noticesKey()) !== noticesBefore;
+    exchange = dialogueOpen ? `a dialogue after ${verbs[0].label}` : noticed ? `a notice after ${verbs[0].label}` : `no visible answer to ${verbs[0].label}`;
+    if (!dialogueOpen && !noticed) failures.push(`the prompt's ${verbs[0].label} verb changed nothing visible`);
+  } else {
+    failures.push('nothing offered a verb within the walk; the prompt loop went unexercised');
+  }
+  console.log(`exchange: ${exchange}`);
   await page.screenshot({ path: join(shots, '03-dialogue.png') });
 
   // What assistive technology is told: the dialogue is a dialog named by its speaker, the notices and the
@@ -210,4 +236,4 @@ try {
   clearTimeout(deadline);
 }
 if (failures.length) { console.error(`FAIL: ${failures.join('; ')}`); process.exit(1); }
-console.log(`PASS: landing page and its log, title, Nave + HUD, dialogue shot, frame pacing >= ${MIN_FPS} fps, the phone's HUD in its screen (screenshots in ${shots})`);
+console.log(`PASS: landing page and its log, title, Nave + HUD, a verb answered, frame pacing >= ${MIN_FPS} fps, the phone's HUD in its screen (screenshots in ${shots})`);

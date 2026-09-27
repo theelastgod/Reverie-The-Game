@@ -42,6 +42,10 @@ export function mountMinimap(root: HTMLElement): MinimapPanel {
   mark.onload = () => { markReady = true; };
   mark.src = assetUrl("wing-star.png");
 
+  // Under reduced motion the objective's ring stands still at its mean size instead of pulsing.
+  const motion = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
+  const reduced = () => !!motion?.matches;
+
   const draw = (snap: Snap, now: number) => {
     if (!ctx) return;
     ctx.clearRect(0, 0, W, H);
@@ -120,7 +124,7 @@ export function mountMinimap(root: HTMLElement): MinimapPanel {
     // objective, pulsing
     const target = snap.objective?.target;
     if (target) {
-      const pulse = 0.5 + 0.5 * Math.sin(now / 240);
+      const pulse = reduced() ? 0.5 : 0.5 + 0.5 * Math.sin(now / 240);
       ctx.strokeStyle = SKY;
       ctx.lineWidth = 1;
       ctx.globalAlpha = 0.5 + 0.5 * pulse;

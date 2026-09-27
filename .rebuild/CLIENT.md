@@ -111,7 +111,8 @@ every snapshot): your district, the objective with its bearing in words and
 its district when not yours, and what is under a freeze. The ledger is
 labelled; the prompt is a labelled group whose verbs are buttons, as the
 dialogue's choices are. `hud.css` honours `prefers-reduced-motion` (the
-marquee, the credits roll, the notices and the fades stop). `src/ui/a11y.test.ts`
+marquee, the credits roll, the notices and the fades stop), and so does the
+minimap (the objective's ring stands still). `src/ui/a11y.test.ts`
 reads the static attributes off `index.html`; the render check reads them
 in the browser with the live values, the map's sentence included. Not done:
 moving focus into an opened dialogue and back (the scene owns the keys 1–4

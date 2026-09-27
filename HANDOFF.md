@@ -874,6 +874,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   check reads the label in the browser and fails when it does not name
   the district the chip shows. Found on the way: `hud.css` already
   honours `prefers-reduced-motion`, so Backlog 10 no longer asks for it.
+- The render check's exchange made dependable, and the minimap under
+  reduced motion (2026-09-27, later): the check used to walk right for
+  two seconds and press F only if something happened to be in reach, and
+  east of the spawn stands the Intake Clerk, a fight with no verb, so its
+  "dialogue shot" had never once opened a dialogue. Now it walks north
+  (the fourth Nave node at 6,34 and the first at 11,36 stand that way,
+  the clerk east) and then east until the prompt offers a verb, presses
+  the first one, and fails unless a dialogue opens or the notices change;
+  near the spawn that is a node's EXTRACT answered by a notice, since the
+  Nave's people all stand past the intake, and the check says which it
+  got. The minimap's objective ring stands still at its mean size when
+  the browser asks for reduced motion, the last moving thing the HUD drew
+  under that setting.
 
 ## Verified (2026-09-25, integration)
 
@@ -1301,6 +1314,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `RENDER_MIN_FPS=5` (8.1 fps) reading the label in the browser: "City
   map. You are in Nave of Tubes. The objective, Your name in the ledger,
   is here."
+- The render check's exchange (2026-09-27, later): typecheck, 475 tests
+  and the build unchanged (the minimap's reduced-motion branch has no
+  unit test; it reads `matchMedia` once); the render check PASS at
+  `RENDER_MIN_FPS=5` (7.2 fps) on a fresh world, its walk ending at a
+  yield node (prompt "YIELD NODE, E EXTRACT, Q KEEP"), EXTRACT answered
+  by a notice, HP untouched at 100 (the old walk met the clerk and read
+  72–86), the map's label "lies south-east, 9 tiles" from there.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1481,9 +1501,9 @@ they are discovered; keep this list honest.
    button would take Space and Enter first; decide who owns them before
    moving focus); a way to reach the prompt's verbs and the journal by
    keyboard alone from the canvas (Tab order is the DOM's today); the
-   minimap's objective pulse and the canvas fx under reduced motion; and
-   a pass with a screen reader on real hardware, which this container
-   cannot do.
+   scene's canvas fx under reduced motion (the HUD's own motion, the
+   minimap's pulse included, already stops); and a pass with a screen
+   reader on real hardware, which this container cannot do.
 11. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 
