@@ -865,6 +865,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   rows in `.rebuild/ZONES.md`, and the timing bars miss on this
   container's own hiccups as they did before (a single late alarm fails
   the worst bar); the numbers are in ZONES, and nothing is a regression.
+- The map in text (2026-09-27, later; Backlog 10's next step): the
+  minimap canvas's label is the map in a sentence, `mapLabel` in
+  `src/ui/format.ts`, set on every snapshot: your district, the
+  objective with its bearing in words (direction, tiles, and its
+  district when not yours; "is here" within reach), or no objective,
+  and what is under a freeze. Unit-tested on the sentence; the render
+  check reads the label in the browser and fails when it does not name
+  the district the chip shows. Found on the way: `hud.css` already
+  honours `prefers-reduced-motion`, so Backlog 10 no longer asks for it.
 
 ## Verified (2026-09-25, integration)
 
@@ -1286,6 +1295,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   72/100, Aura 0/100, Restraint 61/100, Readiness 0/100 in that run;
   the dialogue happened to be closed, so the speaker naming was read by
   the markup test alone). The load check re-read is in Done and ZONES.
+- The map in text (2026-09-27, later): typecheck; 475 tests (two new on
+  the sentence: another district named, here, no objective, a freeze);
+  the build and the play build staged; the render check PASS at
+  `RENDER_MIN_FPS=5` (8.1 fps) reading the label in the browser: "City
+  map. You are in Nave of Tubes. The objective, Your name in the ledger,
+  is here."
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1456,18 +1471,19 @@ they are discovered; keep this list honest.
    a port to plan, not a bump. Take one only with the render check and
    the whole spine over the wire behind it. `npm audit` is worth a look
    each month; the dev tools were brought current on 2026-09-27 (Done).
-10. **Assistive technology, the rest.** The markup says what it is (Done,
-   2026-09-27, later; `.rebuild/CLIENT.md` has the list). Left: focus
-   moving into an opened dialogue's first choice and back to the canvas
-   on close, without a focused button double-firing the scene's 1–4 and
-   Esc keys (the scene reads keys on `document`, so a focused button
-   would take Space and Enter first; decide who owns them before
+10. **Assistive technology, the rest.** The markup says what it is and
+   the map speaks (Done, 2026-09-27, later; `.rebuild/CLIENT.md` has the
+   list), and `hud.css` already honours `prefers-reduced-motion` (the
+   marquee, the credits roll, the notices and the fades stop). Left:
+   focus moving into an opened dialogue's first choice and back to the
+   canvas on close, without a focused button double-firing the scene's
+   1–4 and Esc keys (the scene reads keys on `document`, so a focused
+   button would take Space and Enter first; decide who owns them before
    moving focus); a way to reach the prompt's verbs and the journal by
    keyboard alone from the canvas (Tab order is the DOM's today); the
-   minimap's canvas describing the eight districts and the bearing in
-   text; a reduced-motion setting for the marquee and the fades
-   (`prefers-reduced-motion`); and a pass with a screen reader on real
-   hardware, which this container cannot do.
+   minimap's objective pulse and the canvas fx under reduced motion; and
+   a pass with a screen reader on real hardware, which this container
+   cannot do.
 11. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

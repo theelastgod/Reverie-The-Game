@@ -107,8 +107,14 @@ try {
       noticesLive: document.querySelector('#hud-notices')?.getAttribute('aria-live'),
       connectionRole: document.querySelector('#hud-connection')?.getAttribute('role'),
       meters,
+      map: document.querySelector('#hud-minimap canvas')?.getAttribute('aria-label') ?? '',
+      district: (document.querySelector('#hud-district .chip-text')?.textContent ?? '').trim(),
     };
   });
+  // The map's sentence names the district the chip shows.
+  if (!a11y.map.startsWith('City map.') || !a11y.district || !a11y.map.toUpperCase().includes(a11y.district.toUpperCase())) {
+    failures.push(`the map's label "${a11y.map}" does not name the district "${a11y.district}"`);
+  }
   if (a11y.dialogRole !== 'dialog') failures.push('the dialogue panel is not a dialog');
   if (a11y.dialogOpen && !a11y.speakerNamed) failures.push('the open dialogue names no speaker for assistive tech');
   if (a11y.noticesLive !== 'polite') failures.push('the notices are not a live region');
@@ -118,7 +124,7 @@ try {
     if (m.role !== 'meter' || !m.name) failures.push(`bar ${m.name ?? '?'} is not a named meter`);
     if (!(m.max > 0) || m.now < 0 || m.now > m.max || m.now !== m.shown) failures.push(`meter ${m.name}: value ${m.now} of ${m.max}, shows ${m.shown}`);
   }
-  console.log(`a11y: dialog ${a11y.dialogOpen ? 'open, named' : 'closed'}; meters ${a11y.meters.map(m => `${m.name} ${m.now}/${m.max}`).join(', ')}`);
+  console.log(`a11y: dialog ${a11y.dialogOpen ? 'open, named' : 'closed'}; meters ${a11y.meters.map(m => `${m.name} ${m.now}/${m.max}`).join(', ')}; map "${a11y.map}"`);
 
   // Frame pacing over three seconds.
   const fps = await page.evaluate(() => new Promise(resolve => {

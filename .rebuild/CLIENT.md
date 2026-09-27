@@ -105,10 +105,15 @@ its heading. What changes on its own is a live region: the connection chip
 (`role="status"`), the events strip, the notices, the heard line, the
 dialogue's text, the lock's note. The four bars are `role="meter"` with a
 name and a range, and `Hud.setBar` keeps `aria-valuenow` and
-`aria-valuemax` on the row equal to the number shown. The map canvas and the
-ledger are labelled; the prompt is a labelled group whose verbs are buttons,
-as the dialogue's choices are. `src/ui/a11y.test.ts` reads these off
-`index.html`; the render check reads them in the browser with the live
-values. Not done: moving focus into an opened dialogue and back (the scene
-owns the keys 1–4 and Esc, so a focused button must not double-fire), and
-the news marquee, which stays silent by design.
+`aria-valuemax` on the row equal to the number shown. The map canvas's label
+is the map in a sentence (`mapLabel` in `format.ts`, set by the minimap on
+every snapshot): your district, the objective with its bearing in words and
+its district when not yours, and what is under a freeze. The ledger is
+labelled; the prompt is a labelled group whose verbs are buttons, as the
+dialogue's choices are. `hud.css` honours `prefers-reduced-motion` (the
+marquee, the credits roll, the notices and the fades stop). `src/ui/a11y.test.ts`
+reads the static attributes off `index.html`; the render check reads them
+in the browser with the live values, the map's sentence included. Not done:
+moving focus into an opened dialogue and back (the scene owns the keys 1–4
+and Esc, so a focused button must not double-fire), and the news marquee,
+which stays silent by design.

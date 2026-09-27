@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  auraTier, bearingTo, dodgeLine, formatSerial, identityLine, joinNews, kitLine, kitVerb, ledgerLine, marqueeSeconds,
+  auraTier, bearingTo, dodgeLine, formatSerial, identityLine, joinNews, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
   pad2, parseSerial, pct, questLabel, questRows, roman, seconds, stanceLine, statusLine,
 } from "./format";
 import { TILE } from "../sim/map";
@@ -127,6 +127,25 @@ describe("bearingTo", () => {
   });
   it("has no bearing without a target", () => {
     expect(bearingTo({ x: 0, y: 0 }, null)).toBe("NO BEARING");
+  });
+});
+
+describe("mapLabel", () => {
+  const objective = (target: { x: number; y: number; district: "nave" | "care" } | null) =>
+    ({ quest: "m1-diagnosis", step: "intake", title: "Your name in the ledger", detail: "", target, plate: "", movement: 1 as const });
+  it("names your district and the objective's bearing in words, with its district when it is not yours", () => {
+    expect(mapLabel({ district: "nave", frozen: [], objective: objective({ x: TILE * 10, y: 0, district: "nave" }), you: { x: 0, y: 0 } }))
+      .toBe("City map. You are in Nave of Tubes. The objective, Your name in the ledger, lies east, 10 tiles.");
+    expect(mapLabel({ district: "nave", frozen: [], objective: objective({ x: 0, y: TILE * 40, district: "care" }), you: { x: 0, y: 0 } }))
+      .toBe("City map. You are in Nave of Tubes. The objective, Your name in the ledger, lies south, 40 tiles, in The Care.");
+  });
+  it("says here, no objective, and what is under a freeze", () => {
+    expect(mapLabel({ district: "nave", frozen: [], objective: objective({ x: 20, y: 0, district: "nave" }), you: { x: 0, y: 0 } }))
+      .toBe("City map. You are in Nave of Tubes. The objective, Your name in the ledger, is here.");
+    expect(mapLabel({ district: "care", frozen: ["nave"], objective: null, you: { x: 0, y: 0 } }))
+      .toBe("City map. You are in The Care. No objective. Under a freeze: Nave of Tubes.");
+    expect(mapLabel({ district: "nave", frozen: [], objective: objective(null), you: { x: 0, y: 0 } }))
+      .toBe("City map. You are in Nave of Tubes. The objective: Your name in the ledger.");
   });
 });
 

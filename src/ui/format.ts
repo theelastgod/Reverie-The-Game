@@ -5,7 +5,7 @@
  */
 import { bearing as mapBearing, DISTRICT_BY_ID } from "../sim/map";
 import { ANGEL_SUPPLY, AURA_DIM, TEST_SERIAL } from "../sim/constants";
-import type { DistrictId, House, Messenger, Vec } from "../sim/types";
+import type { DistrictId, House, Messenger, Objective, Vec } from "../sim/types";
 
 /** "#0042" for a serial; "GUEST" for none. */
 export function formatSerial(serial: number | null | undefined): string {
@@ -142,6 +142,30 @@ export function bearingTo(from: Vec & { district?: DistrictId }, target: (Vec & 
     return `${b} · ${districtName(target.district).toUpperCase()}`;
   }
   return b;
+}
+
+const COMPASS: Record<string, string> = { E: "east", SE: "south-east", S: "south", SW: "south-west", W: "west", NW: "north-west", N: "north", NE: "north-east" };
+
+/**
+ * The map as a sentence, for the minimap canvas's label: your district, the objective with its bearing in words
+ * (direction, tiles, and its district when not yours), and any district under a freeze.
+ */
+export function mapLabel(snap: { district: DistrictId; frozen: readonly string[]; objective: Objective | null; you: Vec }): string {
+  const parts = [`City map. You are in ${districtName(snap.district)}.`];
+  const target = snap.objective?.target;
+  if (snap.objective && target) {
+    const raw = mapBearing(snap.you, target);
+    if (raw === "HERE") parts.push(`The objective, ${snap.objective.title}, is here.`);
+    else {
+      const [dir, tiles] = raw.split(" · ");
+      const where = target.district !== snap.district ? `, in ${districtName(target.district)}` : "";
+      parts.push(`The objective, ${snap.objective.title}, lies ${COMPASS[dir] ?? dir.toLowerCase()}, ${tiles.toLowerCase()}${where}.`);
+    }
+  } else if (snap.objective) parts.push(`The objective: ${snap.objective.title}.`);
+  else parts.push("No objective.");
+  const frozen = snap.frozen.map(id => districtName(id as DistrictId));
+  if (frozen.length) parts.push(`Under a freeze: ${frozen.join(", ")}.`);
+  return parts.join(" ");
 }
 
 /** "m1-diagnosis" → "I · DIAGNOSIS"; "bury-the-garden" → "BURY THE GARDEN". */

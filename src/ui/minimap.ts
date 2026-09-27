@@ -5,7 +5,7 @@
  */
 import { DISTRICTS, GATES, TILE, WORLD_H, WORLD_W } from "../sim/map";
 import type { Snap } from "../sim/protocol";
-import { assetUrl } from "./format";
+import { assetUrl, mapLabel, setAttr } from "./format";
 
 export type MinimapPanel = {
   update(snap: Snap): void;
@@ -153,6 +153,8 @@ export function mountMinimap(root: HTMLElement): MinimapPanel {
   return {
     update(snap) {
       latest = snap;
+      // The map in a sentence for assistive technology, kept current whether or not the panel is shown.
+      setAttr(canvas, "aria-label", mapLabel(snap));
       if (!panel || panel.hidden) return;
       const now = performance.now();
       if (now - lastDraw < MIN_INTERVAL) return;
