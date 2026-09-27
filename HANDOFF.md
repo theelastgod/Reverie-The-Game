@@ -302,6 +302,28 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- Review fixes on the world record (2026-09-27, a code review of
+  `127eb19`, seven findings, all taken): a body restored from its record
+  bypassed the shape migration that every saved thing goes through, so
+  a record from an older build (a missing field after a deploy) could
+  throw on the first tick and stall the city; the constructor and
+  `join()` now read a record through `migratePlayer`, which also drops
+  the transient state (a dodge in flight, a kit, a duel) as the old path
+  did, and a partial record fills in. A body back from its record counts
+  as written (the migration is the same on every read), so a rejoin no
+  longer rewrites the body it just read; the close writes the leaving
+  body only when it changed and its stamp always; the constructor's
+  three sequential reads are one multi-get; `saved` and `stamped` are
+  updated after the put lands, so a put that threw leaves every body
+  owed to the next checkpoint (a test throws one); the restore test now
+  proves a restored body is not rewritten by forcing a checkpoint from
+  another socket; README and CONTRACTS say the stamp is when the session
+  was last seen live, not when the body was saved. Found on the way: a
+  body's first tick hands it the opening quest and its notice, so a
+  record saved before that is written once more, by design. And the
+  campaign smoke's Desk Three recovery now extends the run's deadline
+  by the minute it spends (a fall this evening walked back and passed
+  the fight, then the 90 s deadline cut the run).
 - Bodies out of the world record (2026-09-27, found reading the
   checkpoint): every checkpoint wrote `world:v2` with every body
   embedded, one row that grew with the population (a few KB a body; the
@@ -850,6 +872,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The review fixes on the world record (2026-09-27, latest): typecheck,
+  467 tests (a record with fewer fields restored through the migration
+  and given its quest on the first tick, a dodge in flight dropped; a
+  restored body not rewritten when another socket's action checkpoints;
+  the close writing a stamp and not an unchanged body; the rejoin
+  writing a stamp and not the body it read; a put that throws leaving
+  the body to the next alarm's checkpoint), the build, the session
+  smoke, the Movement I smoke on a fresh world twice (one run fell at
+  Desk Three, walked back, passed the fight and then hit the old 90 s
+  deadline, which the recovery now extends; the next run 16.6 min / 8
+  decisions, checkpoints 0.25 ms), and the render check at
+  `RENDER_MIN_FPS=5` (desktop and phone).
 - Bodies out of the world record (2026-09-27): typecheck, 466 tests (a
   first checkpoint writing the world, both bodies and both stamps with
   the world record carrying no bodies, a second writing the world and

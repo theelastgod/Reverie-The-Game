@@ -173,26 +173,31 @@ export class ReverieWorld {
     this.w = emptyWorld();
     this.logged = this.w;
     this.ctx.blockConcurrencyWhile(async () => {
-      const saved = await this.ctx.storage.get<SavedWorld>(WORLD_KEY);
-      this.w = restoreWorld(saved);
+      // One read for the world, the sweep's clock and every hibernated socket's body record. A body comes from its
+      // record, through the shape migration like anything saved; a world saved before the records stood alone still
+      // carries its bodies, so that is the fallback.
+      const sockets = this.ctx.getWebSockets().map(ws => [ws, ws.deserializeAttachment() as Session | null] as const);
+      const keys = sockets.flatMap(([, s]) => (s?.token ? [playerKey(s.token)] : []));
+      const stored = await this.ctx.storage.get<unknown>([WORLD_KEY, SWEEP_KEY, ...keys]);
+      this.w = restoreWorld(stored.get(WORLD_KEY));
       this.logged = this.w;
-      const sweep = await this.ctx.storage.get<{ at: number; after?: string }>(SWEEP_KEY);
+      const sweep = stored.get(SWEEP_KEY) as { at: number; after?: string } | undefined;
       this.sweptAt = sweep?.at ?? Date.now();
       this.sweepAfter = sweep?.after;
-      // Every hibernated socket's body comes from its own record; a world saved before the records stood alone
-      // still carries its bodies, so that is the fallback.
-      const sockets = this.ctx.getWebSockets().map(ws => [ws, ws.deserializeAttachment() as Session | null] as const);
-      const records = await this.ctx.storage.get<Player>(sockets.flatMap(([, s]) => (s?.token ? [playerKey(s.token)] : [])));
       const players = new Map<string, Player>();
       const intents = new Map(this.w.intents);
       for (const [ws, session] of sockets) {
-        const body = session?.token ? records.get(playerKey(session.token)) ?? this.w.players.get(session.id) : undefined;
+        const key = session?.token ? playerKey(session.token) : "";
+        const record = key ? stored.get(key) : undefined;
+        const body = record !== undefined ? migratePlayer(record, session!.id, this.w.now) : session ? this.w.players.get(session.id) : undefined;
         if (!session?.token || !body) {
           ws.close(1012, "Reconnect to restore your place");
           continue;
         }
         players.set(body.id, body);
-        if (records.has(playerKey(session.token))) this.saved.set(body.id, body); // a body from the old world's embedding has no record yet: the next checkpoint writes it
+        // A body from its record is as its record has it (the migration is the same on every read); one from the old
+        // world's embedding has no record yet, so the next checkpoint writes it.
+        if (record !== undefined) this.saved.set(body.id, body);
         this.sessions.set(ws, { id: body.id, token: session.token });
         intents.set(body.id, { ...idle });
       }
@@ -205,20 +210,25 @@ export class ReverieWorld {
   private async checkpoint(extra: Record<string, unknown> = {}) {
     const records: Record<string, unknown> = { [WORLD_KEY]: serializeCity(this.w), ...extra };
     const seen = Date.now();
+    const written: [string, Player][] = [];
+    const stamping: string[] = [];
     for (const session of this.sessions.values()) {
       const player = this.w.players.get(session.id);
       if (!player) continue;
       if (this.saved.get(session.id) !== player) { // the sim replaces a body's object when it changes: the same one stands
         records[playerKey(session.token)] = player;
-        this.saved.set(session.id, player);
+        written.push([session.id, player]);
       }
       if (!this.stamped.has(session.token)) { // the stamp needs no better than the session: once here, again at the close
         records[seenKey(session.token)] = seen;
-        this.stamped.add(session.token);
+        stamping.push(session.token);
       }
     }
     const began = Date.now();
     await this.ctx.storage.put(records);
+    // Only a write that landed counts: a put that threw leaves every body owed to the next checkpoint.
+    for (const [id, player] of written) this.saved.set(id, player);
+    for (const token of stamping) this.stamped.add(token);
     this.load.checkpointed(Date.now() - began, Date.now());
     this.checkpointAt = this.w.now;
     // The log reads the difference since the last checkpoint, never per tick; a flush never holds the tick.
@@ -320,9 +330,12 @@ export class ReverieWorld {
   async join(token: string, server: Socket, address = "local"): Promise<Hello | null> {
     if (!this.admitJoin(address, Date.now())) return null;
     return this.ctx.blockConcurrencyWhile(async () => {
-      const saved = await this.ctx.storage.get<Player>(playerKey(token));
+      const record = await this.ctx.storage.get<unknown>(playerKey(token));
+      const saved = record !== undefined ? migratePlayer(record, bodyId(), this.w.now) : undefined; // the shape migration, as on every read
       const active = [...this.sessions.entries()].find(([, session]) => session.token === token);
       const player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(bodyId(), this.w.now);
+      // A body back from its record is as its record has it: the join's checkpoint need not write it again.
+      if (player === saved) this.saved.set(player.id, player);
       if (active) {
         this.sessions.delete(active[0]);
         this.budgets.delete(active[0]);
@@ -415,13 +428,16 @@ export class ReverieWorld {
     const session = this.sessions.get(ws);
     if (!session) return;
     const player = this.w.players.get(session.id);
+    // The leaving body is written when it changed since its last write, and its stamp always.
+    const leaving: Record<string, unknown> = player ? { [seenKey(session.token)]: Date.now() } : {};
+    if (player && this.saved.get(session.id) !== player) leaving[playerKey(session.token)] = player;
     this.sessions.delete(ws);
     this.stamped.delete(session.token);
     this.saved.delete(session.id);
     this.slow.forget(session.id);
     this.withBody(session.id, null);
     this.intentAt.delete(session.id);
-    await this.checkpoint(player ? { [playerKey(session.token)]: player, [seenKey(session.token)]: Date.now() } : {});
+    await this.checkpoint(leaving);
     this.broadcast(true);
   }
 

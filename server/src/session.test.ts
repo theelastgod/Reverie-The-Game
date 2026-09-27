@@ -6,7 +6,7 @@ import { LINES } from "../../src/sim/content";
 
 const WORLD_KEY = "world:v2";
 const PLAYER_PREFIX = "player:v2:";
-import { emptyWorld, spawnGuest } from "../../src/sim/world";
+import { emptyWorld, spawnGuest, tickWorld } from "../../src/sim/world";
 import { DODGE_COOLDOWN, DODGE_DURATION, RESTRAINT_DODGE_BONUS, RESTRAINT_MAX, TEST_SERIAL } from "../../src/sim/constants";
 import { PROTOCOL_VERSION, type FastFrame } from "../../src/sim/protocol";
 import { applySlow, mergeFrames, type SlowState } from "../../src/sim/frames";
@@ -809,18 +809,62 @@ describe("wallet login", () => {
     expect(data.get(playerKey(token))).toMatchObject({ stance: "restraint" });
   });
 
-  it("restores a hibernated socket's body from its record, and closes one with neither a record nor an embedded body", async () => {
+  it("restores a hibernated socket's body from its record through the migration, never rewriting it unchanged; closes one with neither a record nor an embedded body", async () => {
     const ws = socket("a", token);
-    const orphan = socket("zz", otherToken);
-    const { world, data } = await worldHarness(saved(), [ws, orphan], [[playerKey(token), { ...spawnGuest("a"), bestand: 5, banked: 9 }]]);
+    const b = socket("b", otherToken);
+    const partial = socket("c", "t-c");
+    const orphan = socket("zz", "t-zz");
+    // A body's first tick hands it the opening quest and its notice, so a record as a body stands after that (and
+    // at full restraint, with no timer running) is one the ticks leave alone.
+    const settled = (id: string) => ({ ...tickWorld(saved(spawnGuest(id)), 0.05).players.get(id)!, restraint: RESTRAINT_MAX });
+    const { world, storage, data } = await worldHarness(saved(), [ws, b, partial, orphan], [
+      [playerKey(token), { ...settled("a"), bestand: 5, banked: 9, dodgeT: 0.3 }],
+      [playerKey(otherToken), settled("b")],
+      [playerKey("t-c"), { id: "c", bestand: 3 }], // a record from a build with fewer fields: the migration fills it, the first tick gives it its quest
+    ]);
     expect(orphan.close).toHaveBeenCalledWith(1012, expect.any(String));
     expect(ws.close).not.toHaveBeenCalled();
     vi.setSystemTime(200);
     await world.alarm();
-    expect(last(ws).you).toMatchObject({ id: "a", bestand: 5, banked: 9 });
+    expect(last(ws).you, "the record's fields, its transient dodge dropped by the migration").toMatchObject({ id: "a", bestand: 5, banked: 9, dodgeT: 0 });
+    expect(last(partial).you, "the partial record filled in by the migration").toMatchObject({ id: "c", bestand: 3, hp: 100, movement: 1, quests: {} });
     expect(last(ws).players.map((p: { id: string }) => p.id)).not.toContain("zz");
-    // the restored body was not rewritten: the record stands as it was
-    expect(data.get(playerKey(token))).toMatchObject({ bestand: 5 });
+    // b acts: its checkpoint writes the world, b, c (its first quest) and the first stamps, and not a, which stands as
+    // its record has it
+    vi.setSystemTime(1000);
+    await world.webSocketMessage(b as never, '{"t":"stance"}');
+    let put = storage.put.mock.calls.at(-1)![0] as Record<string, unknown>;
+    expect(Object.keys(put).sort()).toEqual([playerKey(otherToken), playerKey("t-c"), seenKey(token), seenKey(otherToken), seenKey("t-c"), WORLD_KEY].sort());
+    expect(data.get(playerKey("t-c")), "c's record now carries its quest").toMatchObject({ id: "c", bestand: 3, quests: { "m1-diagnosis": 0 } });
+    // a leaves unchanged: the close writes its stamp and not its body
+    vi.setSystemTime(1100);
+    await world.webSocketClose(ws as never);
+    put = storage.put.mock.calls.at(-1)![0] as Record<string, unknown>;
+    expect(Object.keys(put).sort(), "the close: the world and a's stamp").toEqual([seenKey(token), WORLD_KEY].sort());
+    expect(data.get(playerKey(token)), "the record stands as it was").toMatchObject({ bestand: 5, dodgeT: 0.3 });
+    // a comes back: the join's checkpoint writes the world and a's stamp, and not the body it just read
+    vi.setSystemTime(1200);
+    const again = socket("a", token);
+    expect(await world.join(token, again as never)).toMatchObject({ id: "a" });
+    put = storage.put.mock.calls.at(-1)![0] as Record<string, unknown>;
+    expect(Object.keys(put).sort(), "the join: the world and a's stamp").toEqual([seenKey(token), WORLD_KEY].sort());
+    expect(last(again).you).toMatchObject({ id: "a", bestand: 5 });
+  });
+
+  it("a put that throws leaves the body owed to the next checkpoint", async () => {
+    const ws = socket();
+    const { world, storage } = await worldHarness(saved(spawnGuest("a")), [ws]);
+    vi.setSystemTime(1000);
+    storage.put.mockRejectedValueOnce(new Error("storage down"));
+    await expect(world.webSocketMessage(ws as never, '{"t":"stance"}')).rejects.toThrow("storage down");
+    // the action stands in memory and is still pending; the next alarm checkpoints it, body included, although
+    // its object has not changed since the put that failed
+    vi.setSystemTime(1050);
+    await world.alarm();
+    const put = storage.put.mock.calls.at(-1)![0] as Record<string, unknown>;
+    expect(Object.keys(put)).toContain(playerKey(token));
+    expect((put[playerKey(token)] as Player).stance).toBe("storm");
+    expect(last(ws).you.stance).toBe("storm");
   });
 
   it("routes the wallet endpoints to the city", async () => {

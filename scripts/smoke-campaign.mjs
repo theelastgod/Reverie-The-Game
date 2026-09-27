@@ -14,7 +14,16 @@ import { WebSocket } from 'ws';
 const origin = process.argv.find(a => a.startsWith('http')) ?? 'http://127.0.0.1:8788';
 const MOVEMENT = Number((process.argv.find(a => a.startsWith('--movement=')) ?? '').split('=')[1] || 1);
 const DEADLINE_S = MOVEMENT >= 4 ? 600 : MOVEMENT >= 3 ? 480 : MOVEMENT >= 2 ? 240 : 90;
-const deadline = setTimeout(() => { console.error(`FAIL: campaign deadline (${DEADLINE_S} s) exceeded`); process.exit(1); }, DEADLINE_S * 1000);
+let deadlineAt = Date.now() + DEADLINE_S * 1000;
+const onDeadline = () => { console.error(`FAIL: campaign deadline (${Math.round((deadlineAt - started) / 1000)} s) exceeded`); process.exit(1); };
+const started = Date.now();
+let deadline = setTimeout(onDeadline, DEADLINE_S * 1000);
+/** A detour the run did not plan (a fall walked back from) gets its own time, so the deadline still bounds the run. */
+function extendDeadline(seconds) {
+  clearTimeout(deadline);
+  deadlineAt += seconds * 1000;
+  deadline = setTimeout(onDeadline, Math.max(0, deadlineAt - Date.now()));
+}
 
 // Tile coordinates duplicated from src/sim/map.ts (Nave of Tubes, 48 px tiles).
 // Keep in sync with POI_LIST / NODE_LIST / NPC_HOMES / ENEMY_SPAWNS / GUEST_SPAWN.
@@ -416,6 +425,7 @@ try {
   // A person would walk back; so does the bot, along the lanes, and the desk keeps the damage it took.
   if (!fell2 && (you(me).dead || dist(you(me), T.deskThree) > 300)) {
     console.log(`note: the bot fell at desk three (now at ${Math.round(you(me).x)},${Math.round(you(me).y)}); walking the lanes back`);
+    extendDeadline(60); // the respawn wait, the walk back and the second fight
     await settle(me, () => !you(me).dead, 'respawned', 20000);
     await walk(me, [at(5, 36), at(11, 36), ...ROUTE.toDeskThree]);
     fell2 = await hunt(me, 'desk-three', T.deskThree, deskFell, 'desk three falls, second try', 25000);
