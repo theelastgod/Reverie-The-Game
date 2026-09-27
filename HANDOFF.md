@@ -302,6 +302,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- The load check under the join budget (2026-09-27): every bot of
+  `scripts/load-check.mjs` joins from one address, so past the address's
+  burst (30 at once, then 10 a second) the city answers 429; a bot now
+  waits it out with a growing pause and tries again, as the client's
+  backoff does, and the "connected" line says how many joins were
+  refused. Proven with 45 upgrades opened at once from one address: 25
+  refused and retried, all 45 connected in 2.2 s, the city's `refused`
+  25. The sequential local check at 40 bots never trips it (2.6 s for
+  40, under the burst plus the refill); the deployed runs at 120 and
+  160 (Backlog 4) would, and now pass through it. The 120-bot run on
+  this container times out on the join phase alone (each join's
+  checkpoint and broadcast grow with the city), as `.rebuild/ZONES.md`
+  already says of 80.
 - The join budget per address (2026-09-26, found reading the last change
   again): one bucket for the whole city meant one script joining in a
   loop refused every honest player's join too, a denial the budget
@@ -794,6 +807,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- The whole spine over the wire after the sweep, the review fixes and
+  the per-address budget (2026-09-27, `npm run test:campaign:4` on a
+  fresh world): I 16.7 min / 8 decisions, II 12.5 / 4 (the Clearing at
+  40), III 11.4 / 3, IV 7.4 / 3 with the Passing `failed` at readiness
+  52 as designed, the credits reached; `/world` after: 5054 alarms,
+  `dropped` 0, `swept` 0, `refused` 0. The load check's retry: 45
+  upgrades at once from one address, 25 refused and retried, 45
+  connected in 2.2 s; the fixed script connects 40 bots in 1.8–2.6 s.
+  The local 40-bot check itself ran three times on this container:
+  interval means 80.9, 83.2 and 79.0 ms against the 80 bar, worst alarms
+  201, 455 and 149 ms against 100 (the 26th's runs gave 80–131 at best
+  and passed three in five); checkpoints 1.2–1.4 ms as before. Noisier
+  than the day before, not attributable from here: the object's
+  per-message work grew by a bucket draw, and the deployed run (Backlog
+  4) is the measure that counts.
 - The join budget per address (2026-09-26, latest): typecheck, 464 tests
   (thirty joins from one address admitted and its thirty-first refused
   while another address joins; sixty from everyone and the city's
@@ -1014,7 +1042,16 @@ they are discovered; keep this list honest.
    opening beats). The Runner is optional and respawns 60 s after a fall, so
    a run right after another may note it was not met. Nothing further is
    planned here; re-measure after any change to Movement I and keep the
-   numbers here.
+   numbers here. One observation for the owner (2026-09-27), not a
+   change: there is no passive regen and no heal on the route between
+   the intake and Desk Three, so a body that took the intake's hits
+   reaches the desk at about 44 hp against a clerk with 44 hp that hits
+   for 14; the bot, which does not dodge, falls there about one run in
+   five (the smoke now walks back and finishes), while a player who
+   strikes first (22 a strike, two to fell it) or dodges the 0.6 s
+   telegraph wins. If that is meant as the opening's first real test, it
+   stands; if it is meant to be gentler, the first node's `keep` could
+   carry a `heal` effect like the shrine's, a one-line content change.
 6. **Movement II density: at target.** Measured 2026-09-26 over the wire
    after the sexton, Officer and tax-window beats: 12.6 min on the spine
    alone (was 7.0), 1369 words, four decisions (the corridor, the freeze,

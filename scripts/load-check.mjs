@@ -25,10 +25,29 @@ for (let quiet = 0, i = 0; quiet < 3; i++) {
   if (quiet < 3) await sleep(500);
 }
 
+/**
+ * Open the socket, waiting out a 429: the city budgets joins per address (30 at once, then 10 a second) and every bot
+ * here shares one, so past the burst a bot waits like the client does (its backoff) and tries again.
+ */
+async function upgrade(cookie, tries = 12) {
+  for (let attempt = 1; ; attempt++) {
+    const ws = new WebSocket(origin.replace(/^http/, 'ws') + '/ws', { headers: { Cookie: cookie, Origin: origin } });
+    try {
+      await new Promise((resolve, reject) => { ws.once('open', resolve); ws.once('error', reject); });
+      return { ws, attempt };
+    } catch (e) {
+      if (attempt >= tries || !/429/.test(e.message)) throw e;
+      refusedJoins++;
+      await sleep(250 * attempt);
+    }
+  }
+}
+let refusedJoins = 0;
+
 async function bot(i) {
   const res = await fetch(`${origin}/session`, { method: 'POST', headers: { Origin: origin } });
   const cookie = res.headers.get('set-cookie').split(';')[0];
-  const ws = new WebSocket(origin.replace(/^http/, 'ws') + '/ws', { headers: { Cookie: cookie, Origin: origin } });
+  const { ws } = await upgrade(cookie);
   const b = { i, ws, snap: null, snaps: 0, lastAt: 0, intervals: [], errors: 0, bytes: 0, slowBytes: 0 };
   let slow = {};
   ws.on('error', () => { b.errors++; });
@@ -53,7 +72,6 @@ async function bot(i) {
     } else b.snap = d;
     b.snaps++;
   });
-  await new Promise((resolve, reject) => { ws.once('open', resolve); ws.once('error', reject); });
   return b;
 }
 
@@ -63,7 +81,7 @@ for (let i = 0; i < BOTS; i++) {
   try { bots.push(await bot(i)); } catch (e) { console.log(`note: bot ${i} could not connect: ${e.message}`); }
   if (i % 10 === 9) await sleep(100);
 }
-console.log(`connected ${bots.length} bots in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+console.log(`connected ${bots.length} bots in ${((Date.now() - t0) / 1000).toFixed(1)} s${refusedJoins ? ` (${refusedJoins} joins refused with 429 and retried: the address's budget)` : ''}`);
 
 // Each bot wanders: a heading held for a second or two, then another; a strike when an enemy is close.
 const drive = setInterval(() => {

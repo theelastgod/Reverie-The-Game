@@ -14,9 +14,14 @@ without re-deriving it.
 them at random through the Nave with strikes when an enemy is near, and
 samples the object's own load meter (`/world` → `load`, from
 `server/src/load.ts`: alarm lateness, catch-up steps, stalls, broadcast
-size) and every bot's snapshot cadence. On this container's local workerd
-(one small CPU; production Durable Objects are faster, but the shape of the
-curve is what matters):
+size) and every bot's snapshot cadence. Every bot joins from one address,
+and the city budgets joins per address (30 at once, then 10 a second; the
+city's own bucket 60 and 30), so past the burst a bot's upgrade answers 429
+and the bot waits it out and tries again; the "connected" line counts those.
+A run from a second machine against the deployed city (below) passes
+through the same budget: 120 bots take about ten seconds to join. On this
+container's local workerd (one small CPU; production Durable Objects are
+faster, but the shape of the curve is what matters):
 
 | bodies | snapshot interval mean / p95 / p99 | alarm late mean / worst | per-viewer broadcast | verdict |
 |---:|---|---|---:|---|
