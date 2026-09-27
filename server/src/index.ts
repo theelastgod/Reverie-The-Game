@@ -642,12 +642,40 @@ async function logRecent(url: URL, env: Env): Promise<Response> {
   }
 }
 
+type Release = { revision: string; builtAt: string };
+/** The staged client's release, once per assets binding (a deploy is a new isolate, a local reload too). */
+const releases = new WeakMap<Env["ASSETS"], Release>();
+
+/**
+ * The release `scripts/stage-play.mjs` wrote beside the client (`/play/release.json`: the commit and the build time),
+ * read through the assets binding so `/health` names the build that is live. Null when nothing is staged, the file
+ * is malformed or the binding is absent; only a good read is remembered, so a passing failure is asked again.
+ */
+async function readRelease(env: Env, url: URL): Promise<Release | null> {
+  const assets = env.ASSETS;
+  if (!assets) return null;
+  const known = releases.get(assets);
+  if (known) return known;
+  try {
+    const res = await assets.fetch(new Request(new URL("/play/release.json", url)));
+    if (!res.ok) return null;
+    const body = (await res.json()) as Partial<Release> | null;
+    if (!body || typeof body.revision !== "string" || typeof body.builtAt !== "string") return null;
+    const release = { revision: body.revision, builtAt: body.builtAt };
+    releases.set(assets, release);
+    return release;
+  } catch {
+    return null;
+  }
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
     if (url.pathname === "/log/recent") return logRecent(url, env);
     if (url.pathname === "/health") {
-      return Response.json({ ok: true, v: PROTOCOL_VERSION }, { headers: { "Cache-Control": "no-store" } });
+      const release = await readRelease(env, url);
+      return Response.json({ ok: true, v: PROTOCOL_VERSION, ...(release ? { release } : {}) }, { headers: { "Cache-Control": "no-store" } });
     }
     if (url.pathname === "/session") {
       if (req.method !== "POST") return new Response("POST required", { status: 405 });

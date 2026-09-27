@@ -2,6 +2,7 @@
 // to the same body, single-tab takeover (4001) and one body per session.
 // Usage: node scripts/smoke-world.mjs [origin]   (default http://127.0.0.1:8788)
 import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
 import { WebSocket } from 'ws';
 
 const origin = process.argv[2] ?? 'http://127.0.0.1:8788';
@@ -40,7 +41,15 @@ for (let quiet = 0, i = 0; quiet < 3; i++) {
 
 const health = await fetch(`${origin}/health`);
 assert.equal(health.status, 200, 'health');
-assert.deepEqual(await health.json(), { ok: true, v: PROTOCOL_VERSION }, 'health body');
+const healthBody = await health.json();
+assert.equal(healthBody.ok, true, 'health ok');
+assert.equal(healthBody.v, PROTOCOL_VERSION, 'health protocol version');
+// The Worker names the staged client's release; against the local Worker it must be the release staged here.
+if (healthBody.release) console.log(`release: ${healthBody.release.revision} built ${healthBody.release.builtAt}`);
+if (!process.argv[2] && existsSync('site/play/release.json')) {
+  const staged = JSON.parse(readFileSync('site/play/release.json', 'utf8'));
+  assert.deepEqual(healthBody.release, staged, 'health names the release staged in site/play');
+}
 
 const response = await fetch(`${origin}/session`, { method: 'POST', headers: { Origin: origin } });
 assert.equal(response.status, 204, 'session creation');

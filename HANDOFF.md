@@ -29,7 +29,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   2026-09-27: the API answers 404). `main` is an ancestor of this branch, so
   `git push origin claude/game-rebuild-fable-ccwl6i:main` fast-forwards it
   with no merge; that push is yours to make, never the routine's. The
-  account's Worker still runs the build of 2026-09-25.
+  account's Worker still runs the build of 2026-09-25; once this branch
+  is deployed, `GET /health` on the city names the commit it runs.
 - **One call for you** (Backlog 5): no heal stands between the intake and
   Desk Three, so a worn body meets the desk at about 44 hp; a player who
   strikes first or dodges wins, and the bot falls about one run in five.
@@ -799,6 +800,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   (frames 6.2 ms, old 26.5 ms on this container; the ratios hold), so
   compare bench numbers within one vitest major. Not taken: phaser 4 and
   typescript 7, majors no finding needs (Backlog 9).
+- `/health` names the live build (2026-09-27): the Worker reads the
+  staged client's `/play/release.json` (the commit and the build time
+  `scripts/stage-play.mjs` writes) through the assets binding, once per
+  binding, and answers `{ ok, v, release: { revision, builtAt } }`;
+  nothing staged, a malformed file or a binding that fails leaves
+  `release` out and is asked again next time. The Deploy workflow's last
+  step now fails a deploy whose city does not name the run's commit,
+  whatever wrangler printed, and `scripts/smoke-world.mjs` prints the
+  release and, against the local Worker, requires it to be the one staged
+  in `site/play`. Until now the only sign of what was live was the
+  Worker's modified time.
 
 ## Verified (2026-09-25, integration)
 
@@ -1186,10 +1198,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   GitHub registers workflows from the default branch only and `main`
   carries no `.github` at all; the first run waits on the branch reaching
   `main` (Backlog 2).
+- `/health` naming the release (2026-09-27): typecheck; 469 tests (one
+  new: a release read once through the binding and remembered, none
+  without a staged file, a malformed file, a binding that throws); the
+  build and the play build staged; against the local Worker on a fresh
+  world, `GET /health` answers the staged `release.json` byte for byte
+  and the session smoke PASS with that check in it; the Movement I smoke
+  PASS on a fresh world (bot 106 s with 56 s of fights, 1530 words, 8
+  decisions, 16.9 min estimate); the workflow's last step rehearsed by
+  hand against the local Worker (the staged commit accepted, a foreign
+  one refused); the render check PASS at `RENDER_MIN_FPS=5`
+  (8.1 fps). The workflow's YAML parses with the new last step.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware, the Deploy
-  workflow on GitHub's runner (above).
+  workflow on GitHub's runner (above), and so the revision check at the
+  end of a real deploy.
 
 ## Backlog
 
@@ -1246,8 +1270,11 @@ they are discovered; keep this list honest.
    d1:migrate:remote && npm run deploy`. The
    dry run with the real id builds the same bundle (2026-09-27, after the
    day's server changes: 558 KB, 147 KB gzipped; 94 site files; bindings
-   WORLD, LOG, ASSETS; `MOCK_LINK "0"`, `ANGEL_*` empty). After the deploy: `GET /health` → `{ ok: true, v: 3
-   }`, `scripts/smoke-world.mjs <origin>`, then the load knee (Backlog 4).
+   WORLD, LOG, ASSETS; `MOCK_LINK "0"`, `ANGEL_*` empty). After the
+   deploy: `GET /health` → `{ ok: true, v: 3, release: { revision,
+   builtAt } }` with `revision` the commit deployed (the workflow's last
+   step checks this itself; by hand, compare with `git rev-parse HEAD`),
+   then `scripts/smoke-world.mjs <origin>`, then the load knee (Backlog 4).
 3. **Angel holders from the contract.** The chain read is built and tested
    (`server/src/holders.ts`); it waits on the ERC-721 itself. At deploy, set
    `ANGEL_CONTRACT`, `ANGEL_RPC_URL` (an endpoint the Worker may call) and

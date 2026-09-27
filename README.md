@@ -104,7 +104,9 @@ The three live scripts take an origin argument (default `http://127.0.0.1:8788`;
 the render check defaults to `http://127.0.0.1:8788/play/`) and need
 `npm run dev:world` running with a built client staged in `site/play/`
 (`npm run build:play && node scripts/stage-play.mjs`). `GET /health` returns
-`{ ok: true, v: 3 }`.
+`{ ok: true, v: 3, release: { revision, builtAt } }`, the release being the
+staged client's `release.json` read through the assets binding (absent when
+nothing is staged), so a deploy can be checked against the commit it came from.
 
 ## Deploy
 
