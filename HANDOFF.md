@@ -302,6 +302,28 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- A security review of the day's server changes (2026-09-27, the
+  message budget, the sweep, the join budgets, the world record and
+  their review fixes, `8f2ccb8..0e0377b`; a finder over every untrusted
+  input to its sink, at the >80% bar): no finding. Checked and sound:
+  every `player:v2:` and `seen:v2:` key is built from a token that
+  passed the session cookie's UUID check or from a key the sweep itself
+  listed, and `CF-Connecting-IP` keys only the in-memory join map, never
+  storage, a header or a body; the sweep deletes only a token not in
+  `sessions` with a numeric stamp thirty days old on a record whose
+  `guest` is true and `wallet` empty (a raw, unmigrated record with
+  `guest` missing is kept; a missing stamp is written, not treated as
+  stale), live tokens are always in `sessions` because the constructor
+  rebuilds them before any alarm, and the object's input gates keep a
+  join from landing between the sweep's list and its delete; a record
+  under token T can only carry an id the server assigned to T's own
+  session, and the socket attachment is server-serialized; an action
+  inside the 20 ms window stays in memory and is written by the next
+  checkpoint with no path by which another player reads or is charged
+  for it; `/world` gained three integer counters and the 429 answer has
+  fixed headers; the deploy step, the scripts and the HUD variable take
+  no new untrusted input. The one thing a spoofed address could touch is
+  the join bucket, rate limiting, which the review's brief excludes.
 - Review fixes on the world record (2026-09-27, a code review of
   `127eb19`, seven findings, all taken): a body restored from its record
   bypassed the shape migration that every saved thing goes through, so
