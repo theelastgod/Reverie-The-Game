@@ -7,7 +7,7 @@ import { LINES } from "../../src/sim/content";
 const WORLD_KEY = "world:v2";
 const PLAYER_PREFIX = "player:v2:";
 import { emptyWorld, spawnGuest } from "../../src/sim/world";
-import { DODGE_COOLDOWN, DODGE_DURATION, RESTRAINT_DODGE_BONUS, TEST_SERIAL } from "../../src/sim/constants";
+import { DODGE_COOLDOWN, DODGE_DURATION, RESTRAINT_DODGE_BONUS, RESTRAINT_MAX, TEST_SERIAL } from "../../src/sim/constants";
 import { PROTOCOL_VERSION, type FastFrame } from "../../src/sim/protocol";
 import { applySlow, mergeFrames, type SlowState } from "../../src/sim/frames";
 import type { Player, WorldState } from "../../src/sim/types";
@@ -224,7 +224,8 @@ describe("durable world sessions", () => {
     expect(snap.you.id).toBe(hello.id);
     expect(snap.players.filter((p: { id: string }) => p.id === hello.id)).toHaveLength(0);
     expect(first.send.mock.calls.length).toBe(sendsBeforeTakeover);
-    expect(savedWorld(data).players).toHaveLength(1);
+    expect(data.get(playerKey(token)), "one body, one record").toMatchObject({ id: hello.id });
+    expect(savedWorld(data).players, "the world record carries no bodies").toHaveLength(0);
   });
 
   it("a body that joins between two frames is in the other viewer's next frame, and gone from it when it leaves", async () => {
@@ -476,7 +477,7 @@ describe("wallet login", () => {
     const you = last(ws).you;
     expect(you).toMatchObject({ guest: false, serial: 42, name: "#0042", wallet: addressOf(HOLDER) });
     expect(you.flags.angel).toBe(1);
-    expect(savedWorld(data).players[0][1]).toMatchObject({ serial: 42, wallet: addressOf(HOLDER) });
+    expect(data.get(playerKey(token))).toMatchObject({ serial: 42, wallet: addressOf(HOLDER) });
     // the nonce was spent
     const again = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
     expect(again.status).toBe(409);
@@ -541,7 +542,7 @@ describe("wallet login", () => {
       const res = await world.fetch(post("/wallet/link", token, { address: addressOf(STRANGER), signature: ethSign(message, STRANGER) }));
       expect(await res.json()).toEqual({ ok: true, address: addressOf(STRANGER), serial: 7 });
       expect(last(ws).you).toMatchObject({ guest: false, serial: 7, name: "#0007", wallet: addressOf(STRANGER) });
-      expect(savedWorld(data).players[0][1]).toMatchObject({ serial: 7 });
+      expect(data.get(playerKey(token))).toMatchObject({ serial: 7 });
       expect(rpc).toHaveBeenCalledTimes(3);
       expect((rpc.mock.calls[1][1] as RequestInit).method).toBe("POST");
       expect(JSON.parse(String((rpc.mock.calls[1][1] as RequestInit).body))).toMatchObject({ method: "eth_call", params: [{ to: CHAIN_ENV.ANGEL_CONTRACT }, "latest"] });
@@ -610,8 +611,8 @@ describe("wallet login", () => {
     expect(sends()).toBeGreaterThan(sentAfterFirst);
     expect(last(ws).you.stance, "both actions are in the frame the alarm sent").toBe("restraint");
     // the checkpoint the alarm wrote carries the action, so a restart would keep it
-    const savedWorld = storage.put.mock.calls[puts() - 1][0] as Record<string, { players: [string, Player][] }>;
-    expect(savedWorld[WORLD_KEY].players.find(([id]) => id === "a")![1].stance).toBe("restraint");
+    const written = storage.put.mock.calls[puts() - 1][0] as Record<string, Player>;
+    expect(written[playerKey(token)].stance).toBe("restraint");
     // quiet for a while: the next action is immediate again
     vi.setSystemTime(2000);
     await world.webSocketMessage(ws as never, '{"t":"stance"}');
@@ -787,6 +788,39 @@ describe("wallet login", () => {
     for (const t of ["a1", "w1", token]) expect(data.has(playerKey(t)), `${t} is kept`).toBe(true);
     body = (await (await world.fetch(new Request(`${ORIGIN}/world`))).json()) as { load: { swept: number } };
     expect(body.load.swept).toBe(3);
+  });
+
+  it("keeps bodies out of the world record and writes a body's record only when it changed; a body from an embedded world is written once", async () => {
+    const a = socket("a", token);
+    const b = socket("b", otherToken);
+    // b stands still at full restraint with no timers running: the tick keeps its object, so it is written once and no more
+    const { world, storage, data } = await worldHarness(saved(spawnGuest("a"), { ...spawnGuest("b"), restraint: RESTRAINT_MAX }), [a, b]);
+    vi.setSystemTime(1000);
+    await world.webSocketMessage(a as never, '{"t":"stance"}');
+    let put = storage.put.mock.calls.at(-1)![0] as Record<string, unknown>;
+    expect(Object.keys(put).sort(), "the first checkpoint: the world, both bodies (b came from the old embedding), both stamps")
+      .toEqual([playerKey(token), playerKey(otherToken), seenKey(token), seenKey(otherToken), WORLD_KEY].sort());
+    expect((put[WORLD_KEY] as { players: unknown[] }).players, "the world record carries no bodies").toEqual([]);
+    expect(data.get(playerKey(otherToken))).toMatchObject({ id: "b" });
+    vi.setSystemTime(1100);
+    await world.webSocketMessage(a as never, '{"t":"stance"}');
+    put = storage.put.mock.calls.at(-1)![0] as Record<string, unknown>;
+    expect(Object.keys(put).sort(), "the second: the world and the body that changed").toEqual([playerKey(token), WORLD_KEY].sort());
+    expect(data.get(playerKey(token))).toMatchObject({ stance: "restraint" });
+  });
+
+  it("restores a hibernated socket's body from its record, and closes one with neither a record nor an embedded body", async () => {
+    const ws = socket("a", token);
+    const orphan = socket("zz", otherToken);
+    const { world, data } = await worldHarness(saved(), [ws, orphan], [[playerKey(token), { ...spawnGuest("a"), bestand: 5, banked: 9 }]]);
+    expect(orphan.close).toHaveBeenCalledWith(1012, expect.any(String));
+    expect(ws.close).not.toHaveBeenCalled();
+    vi.setSystemTime(200);
+    await world.alarm();
+    expect(last(ws).you).toMatchObject({ id: "a", bestand: 5, banked: 9 });
+    expect(last(ws).players.map((p: { id: string }) => p.id)).not.toContain("zz");
+    // the restored body was not rewritten: the record stands as it was
+    expect(data.get(playerKey(token))).toMatchObject({ bestand: 5 });
   });
 
   it("routes the wallet endpoints to the city", async () => {

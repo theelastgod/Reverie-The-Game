@@ -302,6 +302,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `.rebuild/ZONES.md`). The campaign smoke's intake fight now hunts the
   clerk wherever a load run left it and names the clerk's state when it
   does not fall.
+- Bodies out of the world record (2026-09-27, found reading the
+  checkpoint): every checkpoint wrote `world:v2` with every body
+  embedded, one row that grew with the population (a few KB a body; the
+  2 MB row cap near 600), and every live body's record beside it, up to
+  fifty times a second under actions since the budget: write
+  amplification, and rows written are what the object is billed for.
+  Now `serializeCity` writes the world with no bodies, and a checkpoint
+  writes a body's record only when its object is not the one last
+  written: the sim keeps a body's object when nothing changed (its
+  step, its timers, its drift and its district each return the same
+  object), so a body standing still at full restraint costs no row and
+  a walking or fighting one costs its own. The constructor restores
+  every hibernated socket's body from its record in one multi-get; a
+  world saved before this change (bodies embedded) is the fallback, and
+  a body that came that way is written to its record at the next
+  checkpoint, so the old shape migrates itself on the first tick after
+  a deploy. The close still writes the leaving body. Checkpoints on the
+  Movement I smoke: 0.25 ms smoothed, from 0.44.
 - Review fixes on the landing log, the bench and the phone HUD
   (2026-09-27, a code review of `343b351..8f2ccb8`, eleven findings,
   eight taken): the Deploy workflow's `wrangler deploy | tee` step ran
@@ -832,6 +850,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resumed in that afternoon (its SwiftShader is slower than the morning's,
   which gave 15; `RENDER_MIN_FPS=5` for that container, 10 for the other,
   30 is the real-hardware bar).
+- Bodies out of the world record (2026-09-27): typecheck, 466 tests (a
+  first checkpoint writing the world, both bodies and both stamps with
+  the world record carrying no bodies, a second writing the world and
+  the body that acted and not the one standing still; a hibernated
+  socket's body restored from its record, untouched, and a socket with
+  neither a record nor an embedded body closed with 1012; the legacy
+  embedded world still restoring; the wallet, takeover and coalescing
+  tests reading the records), the build, the session smoke (its saved
+  reconnect over the wire), the Movement I smoke on a fresh world (15.8
+  min / 8 decisions; checkpoints 0.25 ms), and the render check at
+  `RENDER_MIN_FPS=5` (desktop and phone).
 - The review fixes on the landing log, the bench and the phone HUD
   (2026-09-27): typecheck, 464 tests, the build, the workflow's YAML
   parsing, `BENCH_BODIES=40 npm run bench` with the frames row asking

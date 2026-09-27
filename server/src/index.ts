@@ -95,6 +95,17 @@ export function serializeWorld(w: WorldState): SavedWorld {
 }
 
 /**
+ * The world as the object checkpoints it: without the bodies. Each live body
+ * has its own record (`player:v2:<token>`), written only when it changed, and
+ * the constructor restores the bodies of hibernated sockets from those, so the
+ * world record stays the size of the city and not of its population. A world
+ * saved before this (bodies embedded) still restores: see the constructor.
+ */
+export function serializeCity(w: WorldState): SavedWorld {
+  return serializeWorld({ ...w, players: new Map() });
+}
+
+/**
  * A checkpoint from any earlier build restores through the shape migration:
  * level and content collections come from the current defaults with the saved
  * progress merged back, players are normalized, transient state is dropped.
@@ -154,6 +165,7 @@ export class ReverieWorld {
   private pending = false; // an action since the last broadcast: the next alarm checkpoints first, then broadcasts forced
   private actionAt = -Infinity; // wall clock of the last broadcast an action forced (a join's or a close's does not count)
   private readonly stamped = new Set<string>(); // tokens whose seen stamp this instance wrote; the close writes it again
+  private readonly saved = new Map<string, Player>(); // by body id, the object last written to its record: the same one needs no write
   private sweptAt = 0; // wall clock of the last sweep of saved bodies (from storage; a new city waits an hour)
   private sweepAfter: string | undefined; // the sweep's cursor: the last saved-body key it read; undefined starts over
 
@@ -167,32 +179,39 @@ export class ReverieWorld {
       const sweep = await this.ctx.storage.get<{ at: number; after?: string }>(SWEEP_KEY);
       this.sweptAt = sweep?.at ?? Date.now();
       this.sweepAfter = sweep?.after;
-      const connected = new Set<string>();
+      // Every hibernated socket's body comes from its own record; a world saved before the records stood alone
+      // still carries its bodies, so that is the fallback.
+      const sockets = this.ctx.getWebSockets().map(ws => [ws, ws.deserializeAttachment() as Session | null] as const);
+      const records = await this.ctx.storage.get<Player>(sockets.flatMap(([, s]) => (s?.token ? [playerKey(s.token)] : [])));
+      const players = new Map<string, Player>();
       const intents = new Map(this.w.intents);
-      for (const ws of this.ctx.getWebSockets()) {
-        const session = ws.deserializeAttachment() as Session | null;
-        if (!session?.token || !this.w.players.has(session.id)) {
+      for (const [ws, session] of sockets) {
+        const body = session?.token ? records.get(playerKey(session.token)) ?? this.w.players.get(session.id) : undefined;
+        if (!session?.token || !body) {
           ws.close(1012, "Reconnect to restore your place");
           continue;
         }
-        this.sessions.set(ws, session);
-        connected.add(session.id);
-        intents.set(session.id, { ...idle });
+        players.set(body.id, body);
+        if (records.has(playerKey(session.token))) this.saved.set(body.id, body); // a body from the old world's embedding has no record yet: the next checkpoint writes it
+        this.sessions.set(ws, { id: body.id, token: session.token });
+        intents.set(body.id, { ...idle });
       }
-      const players = new Map([...this.w.players].filter(([id]) => connected.has(id)));
       this.w = { ...this.w, players, intents };
       this.checkpointAt = this.w.now;
-      if (connected.size) await this.ensureTick();
+      if (players.size) await this.ensureTick();
     });
   }
 
   private async checkpoint(extra: Record<string, unknown> = {}) {
-    const records: Record<string, unknown> = { [WORLD_KEY]: serializeWorld(this.w), ...extra };
+    const records: Record<string, unknown> = { [WORLD_KEY]: serializeCity(this.w), ...extra };
     const seen = Date.now();
     for (const session of this.sessions.values()) {
       const player = this.w.players.get(session.id);
       if (!player) continue;
-      records[playerKey(session.token)] = player;
+      if (this.saved.get(session.id) !== player) { // the sim replaces a body's object when it changes: the same one stands
+        records[playerKey(session.token)] = player;
+        this.saved.set(session.id, player);
+      }
       if (!this.stamped.has(session.token)) { // the stamp needs no better than the session: once here, again at the close
         records[seenKey(session.token)] = seen;
         this.stamped.add(session.token);
@@ -398,6 +417,7 @@ export class ReverieWorld {
     const player = this.w.players.get(session.id);
     this.sessions.delete(ws);
     this.stamped.delete(session.token);
+    this.saved.delete(session.id);
     this.slow.forget(session.id);
     this.withBody(session.id, null);
     this.intentAt.delete(session.id);

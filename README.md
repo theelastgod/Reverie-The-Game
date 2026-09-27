@@ -49,8 +49,9 @@ deploy.
   before broadcast, per-viewer snapshots as protocol v3 frames (a fast frame
   every step, a slow frame only for what changed; `src/sim/frames.ts` splits
   and folds), single-tab ownership (code 4001), a load report on `/world`.
-  Storage keys `world:v2` and `player:v2:<token>` (with `seen:v2:<token>`,
-  when the body was last saved); the object is `city-v2`. Once an hour it
+  Storage keys `world:v2` (the city without its bodies) and
+  `player:v2:<token>` (each body, written only when it changed, with
+  `seen:v2:<token>`, when it was last saved); the object is `city-v2`. Once an hour it
   sweeps a page of saved guest bodies unseen for thirty days that bound no
   wallet; an Angel's body and a bound wallet's are kept for good.
 - `src/` (client) — Phaser 3 + Vite + TypeScript, DOM HUD over the canvas. Sends
