@@ -114,6 +114,25 @@ try {
   console.log(`exchange: ${exchange}`);
   await page.screenshot({ path: join(shots, '03-dialogue.png') });
 
+  // Keyboard reach: from the canvas, Shift+Tab enters the HUD's controls (the browser starts from their end),
+  // another Shift+Tab moves within them, and Escape hands the keys back to the game (focus leaves the HUD).
+  const focusedControl = () => page.evaluate(() => {
+    const a = document.activeElement;
+    const hud = document.getElementById('hud');
+    return a && hud && hud.contains(a) && a !== hud ? `${a.tagName.toLowerCase()}#${a.id || a.className.split(' ')[0]}` : '';
+  });
+  await page.mouse.click(683, 384);
+  await page.keyboard.press('Shift+Tab');
+  const first = await focusedControl();
+  await page.keyboard.press('Shift+Tab');
+  const second = await focusedControl();
+  await page.keyboard.press('Escape');
+  const after = await focusedControl();
+  if (!first) failures.push('Shift+Tab from the canvas focused nothing in the HUD');
+  else if (!second || second === first) failures.push(`a second Shift+Tab did not move focus within the HUD (${first} → ${second || 'nothing'})`);
+  if (after) failures.push(`Escape left focus on ${after}`);
+  console.log(`keyboard: Shift+Tab → ${first || 'nothing'}, again → ${second || 'nothing'}, Escape → ${after || 'the game'}`);
+
   // What assistive technology is told: the dialogue is a dialog named by its speaker, the notices and the
   // connection chip are live, and every bar is a meter whose value is the number it shows.
   const a11y = await page.evaluate(() => {

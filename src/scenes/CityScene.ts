@@ -15,6 +15,7 @@ import { audio } from "../audio/bus";
 import { VOLUME_STEP } from "../audio/settings";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
+import { browserOwns, hudControlFocused } from "../ui/keys";
 
 const IDLE: Intent = { up: false, down: false, left: false, right: false };
 const MOVE_KEYS: Record<string, keyof Intent> = {
@@ -179,6 +180,10 @@ export class CityScene extends Phaser.Scene {
 
   private keyDown(e: KeyboardEvent): void {
     if (isTyping(e.target)) return;
+    // A HUD control with focus (reached by Shift+Tab from the canvas) keeps the keys that work it: Tab and
+    // Shift+Tab move focus, Space and Enter activate, Escape hands the keys back to the game. See ../ui/keys.ts.
+    const focused = hudControlFocused(document.activeElement, document.getElementById("hud"));
+    if (browserOwns(e.code, e.shiftKey, focused)) return;
     const you = this.net.you;
     const dialogue = !!you?.dialogue;
     const move = MOVE_KEYS[e.code];
@@ -196,6 +201,7 @@ export class CityScene extends Phaser.Scene {
         if (!dialogue) this.net.stance();
         return;
       case "Escape":
+        if (focused) { (document.activeElement as HTMLElement | null)?.blur(); return; }
         if (dialogue) this.net.close();
         return;
       case "Digit1": case "Digit2": case "Digit3": case "Digit4":

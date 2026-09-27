@@ -86,7 +86,9 @@ turns 1; names only the game).
 - Input: WASD/arrows intent at every update (only when `document.hasFocus()`
   and no dialogue is open — dialogue open still sends idle intent);
   Shift+direction → dodge; click / Space → strike; R / Shift+click → heavy;
-  Tab → stance (prevent default); K → kit; F → prompt verb F (talk when the
+  Tab → stance (prevent default; Shift+Tab is the browser's and moves focus
+  into the HUD's controls, where Tab, Space and Enter are the browser's too
+  and Escape blurs back to the game: `src/ui/keys.ts`); K → kit; F → prompt verb F (talk when the
   prompt target is an NPC); E / Q → prompt verbs E / Q; 1–4 → choose;
   Esc → close; V → flag; T → truce; I → use; J → journal; M → minimap.
 - 60 fps target: no per-tile GameObjects; reuse sprites by id; cull labels.
@@ -114,7 +116,12 @@ dialogue's choices are. `hud.css` honours `prefers-reduced-motion` (the
 marquee, the credits roll, the notices and the fades stop), and so does the
 minimap (the objective's ring stands still). `src/ui/a11y.test.ts`
 reads the static attributes off `index.html`; the render check reads them
-in the browser with the live values, the map's sentence included. Not done:
-moving focus into an opened dialogue and back (the scene owns the keys 1–4
-and Esc, so a focused button must not double-fire), and the news marquee,
-which stays silent by design.
+in the browser with the live values, the map's sentence included. Keyboard
+reach: every verb has a key, and the HUD's buttons repeat them; a keyboard
+or switch user who needs the buttons themselves enters them with Shift+Tab
+from the canvas, moves among them with Tab and Shift+Tab, activates with
+Space or Enter, and leaves with Escape (`src/ui/keys.ts` decides who owns a
+press; the render check walks that path). Not done: moving focus into an
+opened dialogue on its own (a player who tabbed in stays in; the choices
+are reachable either way), and the news marquee, which stays silent by
+design.

@@ -887,6 +887,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   got. The minimap's objective ring stands still at its mean size when
   the browser asks for reduced motion, the last moving thing the HUD drew
   under that setting.
+- Keyboard reach for the HUD's controls (2026-09-27, later; Backlog
+  10's next step): the scene swallowed every Tab for the stance, so a
+  keyboard user could never move focus into the HUD's buttons at all.
+  Now plain Tab on the canvas is still the stance; Shift+Tab is the
+  browser's and moves focus into the HUD's controls (from their end, as
+  the browser does); with a control focused, Tab and Shift+Tab move among
+  them, Space and Enter activate the focused one, Escape hands the keys
+  back to the game (the scene blurs it), and the game's other keys keep
+  working, so a player who tabbed to the journal can still walk.
+  `src/ui/keys.ts` decides who owns a press (unit-tested: the canvas,
+  Shift+Tab, a focused control, Space and Enter, the game's own keys);
+  the render check walks the path in the browser (Shift+Tab focuses a
+  HUD button, another moves within, Escape leaves).
 
 ## Verified (2026-09-25, integration)
 
@@ -1321,6 +1334,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   yield node (prompt "YIELD NODE, E EXTRACT, Q KEEP"), EXTRACT answered
   by a notice, HP untouched at 100 (the old walk met the clerk and read
   72–86), the map's label "lies south-east, 9 tiles" from there.
+- Keyboard reach (2026-09-27, later): typecheck; 479 tests (four new on
+  who owns a press); the build and the play build staged; the render
+  check PASS at `RENDER_MIN_FPS=5` (8.3 fps) walking the path in the
+  browser: Shift+Tab from the canvas focused the stance button, another
+  Shift+Tab the journal's tab, Escape left focus on the game; the
+  exchange and the map's label as before.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1491,18 +1510,15 @@ they are discovered; keep this list honest.
    a port to plan, not a bump. Take one only with the render check and
    the whole spine over the wire behind it. `npm audit` is worth a look
    each month; the dev tools were brought current on 2026-09-27 (Done).
-10. **Assistive technology, the rest.** The markup says what it is and
-   the map speaks (Done, 2026-09-27, later; `.rebuild/CLIENT.md` has the
-   list), and `hud.css` already honours `prefers-reduced-motion` (the
-   marquee, the credits roll, the notices and the fades stop). Left:
-   focus moving into an opened dialogue's first choice and back to the
-   canvas on close, without a focused button double-firing the scene's
-   1–4 and Esc keys (the scene reads keys on `document`, so a focused
-   button would take Space and Enter first; decide who owns them before
-   moving focus); a way to reach the prompt's verbs and the journal by
-   keyboard alone from the canvas (Tab order is the DOM's today); the
-   scene's canvas fx under reduced motion (the HUD's own motion, the
-   minimap's pulse included, already stops); and a pass with a screen
+10. **Assistive technology, the rest.** The markup says what it is, the
+   map speaks, and the HUD's controls have keyboard reach (Done,
+   2026-09-27, later; `.rebuild/CLIENT.md` has the list), and `hud.css`
+   already honours `prefers-reduced-motion` (the marquee, the credits
+   roll, the notices, the fades and the minimap's pulse stop). Left:
+   focus moving into an opened dialogue's first choice on its own and
+   back to the canvas on close (today a player who tabbed into the HUD
+   stays there; the choices are reachable either way, by key or by Tab);
+   the scene's canvas fx under reduced motion; and a pass with a screen
    reader on real hardware, which this container cannot do.
 11. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
