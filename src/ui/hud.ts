@@ -10,7 +10,7 @@ import { AURA_MAX, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_MAX, RESTRAINT_MAX
 import { F } from "../sim/content/ids";
 import {
   auraTier, districtFourfold, districtName, dodgeLine, identityLine, joinNews, kitLine, ledgerLine, marqueeSeconds, num, pct,
-  setClass, setText, show, stanceLine, statusLine, weatherLine,
+  setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine,
 } from "./format";
 import { mountDialogue, type DialoguePanel } from "./dialogue";
 import { mountJournal, type JournalPanel } from "./journal";
@@ -432,10 +432,13 @@ export class Hud {
     this.setBar(b.readiness, readiness, READINESS_MAX);
   }
 
-  private setBar(bar: { fill: HTMLElement | null; value: HTMLElement | null }, value: number, max: number): void {
+  private setBar(bar: { row: HTMLElement | null; fill: HTMLElement | null; value: HTMLElement | null }, value: number, max: number): void {
     const width = `${pct(value, max).toFixed(1)}%`;
     if (bar.fill && bar.fill.style.width !== width) bar.fill.style.width = width;
     setText(bar.value, num(value));
+    // The row is a meter for assistive tech: its value and ceiling follow the numbers shown.
+    setAttr(bar.row, "aria-valuenow", String(value));
+    setAttr(bar.row, "aria-valuemax", String(max));
   }
 
   private updateStance(snap: Snap): void {

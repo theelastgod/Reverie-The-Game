@@ -90,19 +90,19 @@
       </aside>
 
       <div id="hud-bars" class="panel bars">
-        <div class="bar" data-bar="hp">
+        <div class="bar" data-bar="hp" role="meter" aria-label="HP" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
           <div class="bar-head"><span class="bar-label">HP</span><span class="bar-value">100</span></div>
           <div class="bar-track"><div class="bar-fill"></div></div>
         </div>
-        <div class="bar" data-bar="aura">
+        <div class="bar" data-bar="aura" role="meter" aria-label="Aura" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <div class="bar-head"><span class="bar-label">AURA</span><span class="bar-value">0</span></div>
           <div class="bar-track"><div class="bar-fill"></div></div>
         </div>
-        <div class="bar" data-bar="restraint">
+        <div class="bar" data-bar="restraint" role="meter" aria-label="Restraint" aria-valuemin="0" aria-valuemax="100" aria-valuenow="60">
           <div class="bar-head"><span class="bar-label">RESTRAINT</span><span class="bar-value">60</span></div>
           <div class="bar-track"><div class="bar-fill"></div></div>
         </div>
-        <div class="bar" data-bar="readiness">
+        <div class="bar" data-bar="readiness" role="meter" aria-label="Readiness" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
           <div class="bar-head"><span class="bar-label">READINESS</span><span class="bar-value">0</span></div>
           <div class="bar-track"><div class="bar-fill"></div></div>
         </div>
@@ -114,9 +114,9 @@
         <div id="hud-dodge" class="chip chip-dodge"><span class="chip-text">SHIFT + MOVE · DODGE</span></div>
       </div>
 
-      <div id="hud-heard" class="chip heard" hidden></div>
+      <div id="hud-heard" class="chip heard" aria-live="polite" hidden></div>
 
-      <div id="hud-prompt" class="panel prompt interactive" hidden>
+      <div id="hud-prompt" class="panel prompt interactive" role="group" aria-label="In reach" hidden>
         <span class="prompt-name"></span>
         <div class="prompt-verbs"></div>
       </div>
@@ -130,19 +130,19 @@
 
       <aside id="hud-ledger-panel" class="panel interactive ledger-panel" hidden aria-label="Ledger"></aside>
 
-      <div id="hud-dialogue" class="panel interactive dialogue" hidden>
+      <div id="hud-dialogue" class="panel interactive dialogue" role="dialog" aria-labelledby="dlg-speaker" aria-describedby="dlg-text" hidden>
         <img class="dlg-portrait" src="/assets/guest.jpg" alt="" />
         <div class="dlg-body">
-          <div class="dlg-speaker">—</div>
-          <p class="dlg-text"></p>
+          <div id="dlg-speaker" class="dlg-speaker">—</div>
+          <p id="dlg-text" class="dlg-text" aria-live="polite"></p>
           <div class="dlg-wink" hidden><span class="wink-tag">WINK</span><span class="dlg-wink-text"></span></div>
           <div class="dlg-choices"></div>
         </div>
       </div>
 
-      <div id="hud-lock" class="panel interactive lock" hidden>
+      <div id="hud-lock" class="panel interactive lock" role="dialog" aria-labelledby="lock-title" hidden>
         <img class="lock-mark" src="/assets/wing-star.png" alt="" width="72" height="72" />
-        <h2 class="lock-title">A GUEST CANNOT PREPARE THE GROUND</h2>
+        <h2 id="lock-title" class="lock-title">A GUEST CANNOT PREPARE THE GROUND</h2>
         <p class="lock-copy">The going-under is not failure. It is the structure of the readiness itself. Angels die as death and wake in the Care. Guests stop here.</p>
         <p class="lock-copy lock-copy-small">You may remain in the Nave and watch. A wallet signs one line to link an Angel; the signature costs nothing and moves nothing. No mint, no chain, no settlement.</p>
         <div class="lock-actions">
@@ -159,7 +159,7 @@
         <p class="lock-note" aria-live="polite" hidden></p>
       </div>
 
-      <div id="hud-credits" class="credits interactive" hidden>
+      <div id="hud-credits" class="credits interactive" role="dialog" aria-label="Credits" hidden>
         <div class="credits-roll">
           <div class="credits-line credits-mark"><img src="/assets/wing-star.png" alt="" width="120" height="120" /></div>
           <div class="credits-line">REVERIE: THE GAME</div>

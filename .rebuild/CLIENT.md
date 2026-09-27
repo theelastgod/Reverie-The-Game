@@ -96,3 +96,19 @@ turns 1; names only the game).
 `you`; `snap` replaces `snap`; reconnect with backoff (1 s → 10 s); code 4001 =
 "elsewhere" (another tab); `sendIntent` throttled to 250 ms unless changed;
 typed senders for every `ClientMsg`. Status exposed for the HUD.
+
+## Assistive technology (the HUD's markup)
+The HUD is DOM, so it can say what it is. The title, the dialogue, the lock
+and the credits are `role="dialog"`, the dialogue named by its speaker
+(`aria-labelledby`) and described by its line (`aria-describedby`), the lock by
+its heading. What changes on its own is a live region: the connection chip
+(`role="status"`), the events strip, the notices, the heard line, the
+dialogue's text, the lock's note. The four bars are `role="meter"` with a
+name and a range, and `Hud.setBar` keeps `aria-valuenow` and
+`aria-valuemax` on the row equal to the number shown. The map canvas and the
+ledger are labelled; the prompt is a labelled group whose verbs are buttons,
+as the dialogue's choices are. `src/ui/a11y.test.ts` reads these off
+`index.html`; the render check reads them in the browser with the live
+values. Not done: moving focus into an opened dialogue and back (the scene
+owns the keys 1–4 and Esc, so a focused button must not double-fire), and
+the news marquee, which stays silent by design.

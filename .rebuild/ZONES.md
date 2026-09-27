@@ -57,6 +57,18 @@ to the area of interest (AOI_RADIUS 1040 px, about 21 tiles).
 | 40 | 6.4 KB | 14–20 / 71–101 ms | 1 ms | at the 100 ms line, run to run |
 | 80 | 9.7 KB | 400–550 / 1500–3100 ms | 2 ms | behind |
 
+Re-read 2026-09-27 after the dev tools moved (wrangler 4.125 → 4.141, a
+newer local workerd) and the bodies left the world record: at 20 bots the
+interval mean is 58 ms (p95 85, p99 96), the alarm 7.6 ms late on average
+with one 225 ms worst and one stall, the checkpoint 0.53 ms, 3.8 KB per fast
+frame; at 40 bots the interval mean is 91 ms (p95 154, p99 244), the alarm
+76 ms late on average with a 605 ms worst, no stall, the checkpoint 1.09 ms,
+6.2 KB per fast frame. The same shape as the rows above on this container:
+the per-viewer bytes and the checkpoint cost are unchanged, the timing bars
+miss on the container's own hiccups (a single late alarm fails the worst
+bar), and nothing here is a regression to chase; the knee is still the
+deployed run's to find.
+
 Two things to know when reading these. The checkpoint (the world blob plus
 every connected body's record, once a second of world time) costs 1–2 ms
 even at 80 bodies, so the late alarms are compute: one `tickWorld` over

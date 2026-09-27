@@ -88,6 +88,38 @@ try {
   }
   await page.screenshot({ path: join(shots, '03-dialogue.png') });
 
+  // What assistive technology is told: the dialogue is a dialog named by its speaker, the notices and the
+  // connection chip are live, and every bar is a meter whose value is the number it shows.
+  const a11y = await page.evaluate(() => {
+    const dialogue = document.querySelector('#hud-dialogue');
+    const speaker = document.getElementById(dialogue?.getAttribute('aria-labelledby') ?? '');
+    const meters = [...document.querySelectorAll('#hud-bars .bar')].map(bar => ({
+      name: bar.getAttribute('aria-label'),
+      role: bar.getAttribute('role'),
+      now: Number(bar.getAttribute('aria-valuenow')),
+      max: Number(bar.getAttribute('aria-valuemax')),
+      shown: Number(bar.querySelector('.bar-value')?.textContent),
+    }));
+    return {
+      dialogRole: dialogue?.getAttribute('role'),
+      dialogOpen: !!dialogue && !dialogue.hidden,
+      speakerNamed: !!speaker && (speaker.textContent ?? '').trim().length > 0,
+      noticesLive: document.querySelector('#hud-notices')?.getAttribute('aria-live'),
+      connectionRole: document.querySelector('#hud-connection')?.getAttribute('role'),
+      meters,
+    };
+  });
+  if (a11y.dialogRole !== 'dialog') failures.push('the dialogue panel is not a dialog');
+  if (a11y.dialogOpen && !a11y.speakerNamed) failures.push('the open dialogue names no speaker for assistive tech');
+  if (a11y.noticesLive !== 'polite') failures.push('the notices are not a live region');
+  if (a11y.connectionRole !== 'status') failures.push('the connection chip is not a status');
+  if (a11y.meters.length !== 4) failures.push(`${a11y.meters.length} bars, not 4`);
+  for (const m of a11y.meters) {
+    if (m.role !== 'meter' || !m.name) failures.push(`bar ${m.name ?? '?'} is not a named meter`);
+    if (!(m.max > 0) || m.now < 0 || m.now > m.max || m.now !== m.shown) failures.push(`meter ${m.name}: value ${m.now} of ${m.max}, shows ${m.shown}`);
+  }
+  console.log(`a11y: dialog ${a11y.dialogOpen ? 'open, named' : 'closed'}; meters ${a11y.meters.map(m => `${m.name} ${m.now}/${m.max}`).join(', ')}`);
+
   // Frame pacing over three seconds.
   const fps = await page.evaluate(() => new Promise(resolve => {
     let frames = 0;

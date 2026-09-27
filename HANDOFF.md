@@ -847,6 +847,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   packages). Noted, pre-existing and not findings: `.dev.vars` is tracked
   and holds only the mock flag and a well-known test address; the two
   actions are tag-pinned, not SHA-pinned.
+- The HUD's markup for assistive technology, first step (2026-09-27,
+  later): the dialogue, the lock and the credits are dialogs (the
+  dialogue named by its speaker and described by its line, the lock by
+  its heading; the title already was), the heard line and the dialogue's
+  text join the live regions the connection chip, the events strip and
+  the notices already were, the four bars are meters whose
+  `aria-valuenow` and `aria-valuemax` `Hud.setBar` keeps equal to the
+  numbers shown, and the prompt is a labelled group. `src/ui/a11y.test.ts`
+  reads the static attributes off `index.html`; the render check reads
+  the dialog, the live regions and the four meters in the browser and
+  fails when a meter's value is not the number it shows. Written up in
+  `.rebuild/CLIENT.md`; what is left is Backlog 10.
+- The load check re-read under wrangler 4.141 (2026-09-27, later; the
+  first server-side read since the dev tools moved): at 20 and 40 bots
+  the per-viewer bytes and the checkpoint cost are unchanged from the
+  rows in `.rebuild/ZONES.md`, and the timing bars miss on this
+  container's own hiccups as they did before (a single late alarm fails
+  the worst bar); the numbers are in ZONES, and nothing is a regression.
 
 ## Verified (2026-09-25, integration)
 
@@ -1258,11 +1276,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Movement I smoke PASS on a fresh world (bot 71 s, 1525 words, 8
   decisions, 16.7 min estimate); the render
   check PASS at `RENDER_MIN_FPS=5` (8.2 fps).
+- The HUD's markup for assistive technology (2026-09-27, later):
+  typecheck; 473 tests (four new, reading the dialogs, the live regions,
+  the meters and the labels off `index.html`); the build and the play
+  build staged; the render check PASS at `RENDER_MIN_FPS=5` (7.9 fps)
+  with its new reading of the live attributes in the browser: the
+  dialogue a dialog, the notices live, the connection chip a status,
+  the four meters named with values equal to the numbers shown (HP
+  72/100, Aura 0/100, Restraint 61/100, Readiness 0/100 in that run;
+  the dialogue happened to be closed, so the speaker naming was read by
+  the markup test alone). The load check re-read is in Done and ZONES.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
-  (results host denied), rendered play on real hardware, the Deploy
-  workflow on GitHub's runner (above), and so the revision check at the
-  end of a real deploy.
+  (results host denied), rendered play on real hardware (a screen
+  reader included), the Deploy workflow on GitHub's runner (above), and
+  so the revision check at the end of a real deploy.
 
 ## Backlog
 
@@ -1428,7 +1456,19 @@ they are discovered; keep this list honest.
    a port to plan, not a bump. Take one only with the render check and
    the whole spine over the wire behind it. `npm audit` is worth a look
    each month; the dev tools were brought current on 2026-09-27 (Done).
-10. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+10. **Assistive technology, the rest.** The markup says what it is (Done,
+   2026-09-27, later; `.rebuild/CLIENT.md` has the list). Left: focus
+   moving into an opened dialogue's first choice and back to the canvas
+   on close, without a focused button double-firing the scene's 1–4 and
+   Esc keys (the scene reads keys on `document`, so a focused button
+   would take Space and Enter first; decide who owns them before
+   moving focus); a way to reach the prompt's verbs and the journal by
+   keyboard alone from the canvas (Tab order is the DOM's today); the
+   minimap's canvas describing the eight districts and the bearing in
+   text; a reduced-motion setting for the marquee and the fades
+   (`prefers-reduced-motion`); and a pass with a screen reader on real
+   hardware, which this container cannot do.
+11. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 
 ## Rules

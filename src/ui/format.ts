@@ -226,6 +226,10 @@ export function setClass(el: Element | null, name: string, on: boolean): void {
   if (el && el.classList.contains(name) !== on) el.classList.toggle(name, on);
 }
 
+export function setAttr(el: Element | null, name: string, value: string): void {
+  if (el && el.getAttribute(name) !== value) el.setAttribute(name, value);
+}
+
 /** URL of a file under public/assets, respecting the deploy base (the game ships under /play/). */
 export function assetUrl(file: string, base: string = (import.meta.env && import.meta.env.BASE_URL) || "/"): string {
   return base.replace(/\/?$/, "/") + "assets/" + file.replace(/^\/+/, "");
