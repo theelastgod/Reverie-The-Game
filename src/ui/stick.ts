@@ -14,6 +14,8 @@ export const STICK_REACH = 40;
 /** A press no longer than this, that travels less than TAP_MOVE, is a tap. */
 export const TAP_MS = 250;
 export const TAP_MOVE = 10;
+/** A second finger held this long while the stick is held is a heavy strike; lifted sooner, a light one. */
+export const HEAVY_MS = 350;
 
 // A direction counts when its component exceeds this share of the drag: eight sectors of 45 degrees.
 const SECTOR = Math.sin(Math.PI / 8);
@@ -38,6 +40,15 @@ export function knobOffset(dx: number, dy: number, reach = STICK_REACH): { x: nu
 /** A press that ends quickly without travelling is a tap (a strike), not a walk. */
 export function isTap(heldMs: number, travelled: number, maxMs = TAP_MS, maxMove = TAP_MOVE): boolean {
   return heldMs <= maxMs && travelled < maxMove;
+}
+
+/**
+ * What a second finger does: down while the stick is held, it is a light strike if it lifts before HEAVY_MS and a
+ * heavy one the moment it has been held that long (the scene fires the heavy on a timer while the finger is still
+ * down, so the windup is felt at once, and then lets the lift pass).
+ */
+export function secondFinger(heldMs: number, maxMs = HEAVY_MS): "strike" | "heavy" {
+  return heldMs < maxMs ? "strike" : "heavy";
 }
 
 /** The dodge direction: the way the intent points, else the way the body faces; null when neither points anywhere. */

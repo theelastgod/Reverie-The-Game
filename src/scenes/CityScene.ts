@@ -16,7 +16,7 @@ import { VOLUME_STEP } from "../audio/settings";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
 import { browserOwns, escapeDoes, hudControlFocused } from "../ui/keys";
-import { STILL, dodgeDirection, isTap, knobOffset, mergeIntent, stickIntent } from "../ui/stick";
+import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, secondFinger, stickIntent } from "../ui/stick";
 
 const IDLE: Intent = { up: false, down: false, left: false, right: false };
 const MOVE_KEYS: Record<string, keyof Intent> = {
@@ -60,6 +60,8 @@ export class CityScene extends Phaser.Scene {
   /** The touch stick (src/ui/stick.ts): the finger that planted it, where, how far it has dragged, when it landed. */
   private stick: { id: number; ox: number; oy: number; at: number; travelled: number } | null = null;
   private stickIntent: Intent = STILL;
+  /** A second finger down while the stick is held: a light strike when it lifts early, a heavy one at HEAVY_MS. */
+  private second: { id: number; at: number; timer: number; fired: boolean } | null = null;
   private lastSeq = -1;
   private lastBand: WeatherBand | null = null;
   private lastRain = "";
@@ -304,15 +306,36 @@ export class CityScene extends Phaser.Scene {
 
   // ------------------------------------------------------------ the touch stick
 
-  /** A finger on the canvas plants the stick where it lands; a second finger while it is held is a strike. */
+  /**
+   * A finger on the canvas plants the stick where it lands. A second finger while it is held is a strike: light
+   * when it lifts before HEAVY_MS, heavy the moment it has been held that long (fired on a timer, so the windup
+   * is felt while the finger is still down; its lift then does nothing).
+   */
   private touchDown(p: Phaser.Input.Pointer): void {
     if (this.stick) {
-      this.strike(false);
+      if (this.second) return; // a third finger: nothing
+      const timer = window.setTimeout(() => {
+        const s = this.second;
+        if (!s || s.id !== p.id || s.fired) return;
+        s.fired = true;
+        this.strike(true);
+      }, HEAVY_MS);
+      this.second = { id: p.id, at: performance.now(), timer, fired: false };
       return;
     }
     this.stick = { id: p.id, ox: p.x, oy: p.y, at: performance.now(), travelled: 0 };
     this.stickIntent = STILL;
     bus.hud?.showStick(p.x, p.y);
+  }
+
+  /** The second finger lifts: a light strike unless the heavy already fired. */
+  private secondUp(p: Phaser.Input.Pointer): boolean {
+    const s = this.second;
+    if (!s || p.id !== s.id) return false;
+    window.clearTimeout(s.timer);
+    this.second = null;
+    if (!s.fired && secondFinger(performance.now() - s.at) === "strike") this.strike(false);
+    return true;
   }
 
   private pointerMove(p: Phaser.Input.Pointer): void {
@@ -328,6 +351,7 @@ export class CityScene extends Phaser.Scene {
 
   /** The finger lifts: a tap was a strike, a drag was a walk that ends now. */
   private pointerUp(p: Phaser.Input.Pointer): void {
+    if (this.secondUp(p)) return;
     const s = this.stick;
     if (!s || p.id !== s.id) return;
     this.dropStick();
@@ -336,6 +360,10 @@ export class CityScene extends Phaser.Scene {
   }
 
   private dropStick(): void {
+    if (this.second) {
+      window.clearTimeout(this.second.timer);
+      this.second = null;
+    }
     if (!this.stick) return;
     this.stick = null;
     this.stickIntent = STILL;

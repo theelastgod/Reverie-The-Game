@@ -8,9 +8,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 499 tests, the session smoke, the campaign smoke and the
+  fresh world; 500 tests, the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
-  with Nara Vale, a node, and the phone's touch stick) pass; the Worker bundles
+  with Nara Vale, a node, and the phone's touch stick with its strike and
+  heavy) pass; the Worker bundles
   (`wrangler deploy --dry-run`: 558 KB, 147 KB gzipped, 94 site files, the
   bindings WORLD, LOG, ASSETS and the `ANGEL_*` variables empty). The server
   since the 26th: a message and join budget, an hourly sweep of stale guest
@@ -1010,7 +1011,20 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   corridor's top wall, or into the low wall east of Nara's home, stops at
   the same place whatever the drift, so every later leg is short and the
   nodes and Nara are reached every run (a leg walked by time alone had
-  missed her one run in a few). Not by touch yet: a heavy strike.
+  missed her one run in a few).
+- The heavy by touch (2026-09-28, later; Backlog 11's last client item).
+  The second finger, down while the stick is held, is now a light strike
+  when it lifts before 350 ms and a heavy the moment it has been held that
+  long: the scene fires the heavy on a timer while the finger is still
+  down, so the windup is felt at once, and the lift then does nothing
+  (`secondFinger` and `HEAVY_MS` in `src/ui/stick.ts`; the scene's
+  `second` record with its timer, cleared when the stick drops or the
+  canvas blurs; a third finger does nothing). The render check's phone
+  pass now reads the wire (an init script notes the kind of every
+  message the client sends) and asks: a second finger held 600 ms on the
+  dragging stick sent exactly one `heavy`, its lift sent nothing, and a
+  tap on the canvas sent exactly one `strike`. The docs' touch rows and
+  the client contract say so.
 
 ## Verified (2026-09-25, integration)
 
@@ -1529,6 +1543,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   true, touch points 1", the stick planted and lifted, the drag walked,
   the dodge chip pressed to "STEP · 0.4s". Three probe runs of the
   anchored Nara leg read the same prompt and bearing each time.
+- The heavy by touch (2026-09-28, later): typecheck; 500 tests (one new
+  on the second finger's decision at 0, 349, 350 and 2000 ms); the build
+  and the play build staged; the render check PASS at `RENDER_MIN_FPS=5`
+  with the wire read on the phone: "second finger held → sent [heavy],
+  lifted → sent []; tap → sent [strike]", the stick planted and lifted,
+  the drag walked, the dodge chip to "STEP · 0.4s", no phone-only script
+  error.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1708,12 +1729,11 @@ they are discovered; keep this list honest.
    reader on real hardware, which this container cannot do (the journal
    is a named landmark with a named quest list since 2026-09-28).
 11. **One-stick mobile, the rest.** The stick, the tap, the second
-   finger and the dodge button are in (Done, 2026-09-28) and the render
-   check drives them with real touch events. Left: a heavy strike by
-   touch (a long press on the second finger is the natural shape; the
-   heavy's windup and interrupt are the server's, so it is a client
-   gesture only), and a pass on a real phone, which this container
-   cannot do (Chromium's touch emulation is what the check has).
+   finger's strike and heavy (a hold of 350 ms) and the dodge button are
+   in (Done, 2026-09-28) and the render check drives them with real touch
+   events and reads what they send. Left: a pass on a real phone, which
+   this container cannot do (Chromium's touch emulation is what the check
+   has; the heavy's hold length in particular wants a thumb's judgement).
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

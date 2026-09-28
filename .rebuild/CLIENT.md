@@ -98,12 +98,14 @@ turns 1; names only the game).
   finger down on the canvas plants a stick where it lands (`Hud.showStick`),
   a drag from there is the eight-way intent the keys send (45-degree
   sectors past a 14 px dead zone; the knob follows within 40 px), lifting
-  ends it; a press of at most 250 ms that travelled under 10 px is a strike,
-  a second finger down while the stick is held is a strike too; the dodge
-  chip is a button on coarse pointers (`pointer: coarse`, text "DODGE") and
-  dodges the way the stick or the keys point, else the way the body faces.
-  The prompt's verbs, the stance, the kit and the dialogue's choices are
-  buttons already. Not by touch yet: a heavy strike.
+  ends it; a press of at most 250 ms that travelled under 10 px is a strike;
+  a second finger down while the stick is held is a light strike when it
+  lifts before 350 ms and a heavy one the moment it has been held that
+  long (fired on a timer, so the windup is felt at once); the dodge chip is
+  a button on coarse pointers (`pointer: coarse`, text "DODGE") and dodges
+  the way the stick or the keys point, else the way the body faces. The
+  prompt's verbs, the stance, the kit and the dialogue's choices are
+  buttons already.
 - 60 fps target: no per-tile GameObjects; reuse sprites by id; cull labels.
 
 ## Network (D1)

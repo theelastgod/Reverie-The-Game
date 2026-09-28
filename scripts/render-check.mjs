@@ -278,6 +278,16 @@ try {
   const phoneErrors = [];
   phone.on('pageerror', e => phoneErrors.push(String(e)));
   phone.on('console', m => { if (m.type() === 'error') phoneErrors.push(m.text()); });
+  // A strike and a heavy leave no line in the HUD, so the phone pass reads the wire: every message the client
+  // sends is noted by its kind, and the touch step asks what a tap and a held second finger sent.
+  await phone.addInitScript(() => {
+    window.__sent = [];
+    const send = WebSocket.prototype.send;
+    WebSocket.prototype.send = function (data) {
+      try { window.__sent.push(JSON.parse(String(data)).t); } catch { /* not a message of ours */ }
+      return send.call(this, data);
+    };
+  });
   try {
     if (root !== origin) {
       await phone.goto(root, { waitUntil: 'load', timeout: 30000 });
@@ -335,10 +345,13 @@ try {
     if (motion.marquee !== 'no marquee' && motion.marquee !== 'none') failures.push(`the marquee still animates under reduced motion (${motion.marquee})`);
 
     // The one-stick touch scheme, with real touch events: a finger down on the canvas plants the stick, a drag
-    // north walks (the map's sentence moves the objective), the finger up hides it, a tap is a strike (no line to
-    // read; the script-error check covers it), and the dodge chip is a button whose press starts the cooldown.
+    // north walks (the map's sentence moves the objective), a second finger held while the stick is down sends a
+    // heavy and its lift sends nothing, the first finger up hides the stick, a tap sends a strike, and the dodge
+    // chip is a button whose press starts the cooldown.
     const mapLabel = () => phone.evaluate(() => document.querySelector('#hud-minimap canvas')?.getAttribute('aria-label') ?? '');
     const stickShown = () => phone.evaluate(() => !document.getElementById('hud-stick')?.hidden);
+    const sentSince = mark => phone.evaluate(from => window.__sent.slice(from).filter(t => t !== 'intent'), mark);
+    const sentCount = () => phone.evaluate(() => window.__sent.length);
     const cdp = await phone.context().newCDPSession(phone);
     const mapBefore = await mapLabel();
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 195, y: 470 }] });
@@ -347,12 +360,22 @@ try {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 195, y: 400 }] });
     await phone.waitForTimeout(1200);
     await phone.screenshot({ path: join(shots, '07-phone-stick.png') });
+    // The second finger, held past the heavy threshold (350 ms) while the first still drags.
+    const beforeHeavy = await sentCount();
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 195, y: 400, id: 0 }, { x: 300, y: 600, id: 1 }] });
+    await phone.waitForTimeout(600);
+    const heldSent = await sentSince(beforeHeavy);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [{ x: 195, y: 400, id: 0 }] });
+    await phone.waitForTimeout(200);
+    const liftSent = (await sentSince(beforeHeavy)).slice(heldSent.length);
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await phone.waitForTimeout(400);
     const lifted = !(await stickShown());
     const mapAfter = await mapLabel();
+    const beforeTap = await sentCount();
     await phone.touchscreen.tap(260, 470);
     await phone.waitForTimeout(300);
+    const tapSent = await sentSince(beforeTap);
     const dodgeChip = phone.locator('#hud-dodge');
     const dodgeVisible = await dodgeChip.isVisible();
     if (dodgeVisible) await dodgeChip.tap();
@@ -360,10 +383,13 @@ try {
     const dodgeText = (await dodgeChip.textContent().catch(() => '')) ?? '';
     const dodgeState = await phone.evaluate(() => { const d = document.getElementById('hud-dodge'); return `coarse ${matchMedia('(pointer: coarse)').matches}, display ${d ? getComputedStyle(d).display : 'no chip'}`; });
     const walked = mapAfter !== mapBefore;
-    console.log(`touch: stick ${planted ? 'planted' : 'not planted'}, ${lifted ? 'lifted' : 'still shown'}; drag north ${walked ? 'walked' : 'did not walk'} ("${mapBefore.replace(/^.*objective, /, '')}" → "${mapAfter.replace(/^.*objective, /, '')}"); dodge chip ${dodgeVisible ? `pressed → "${dodgeText.trim()}"` : `not shown (${dodgeState})`}`);
+    console.log(`touch: stick ${planted ? 'planted' : 'not planted'}, ${lifted ? 'lifted' : 'still shown'}; drag north ${walked ? 'walked' : 'did not walk'} ("${mapBefore.replace(/^.*objective, /, '')}" → "${mapAfter.replace(/^.*objective, /, '')}"); second finger held → sent [${heldSent}], lifted → sent [${liftSent}]; tap → sent [${tapSent}]; dodge chip ${dodgeVisible ? `pressed → "${dodgeText.trim()}"` : `not shown (${dodgeState})`}`);
     if (!planted) failures.push('a finger on the canvas did not plant the stick');
     if (!lifted) failures.push('the stick stayed after the finger lifted');
     if (!walked) failures.push('a drag on the stick did not walk the body');
+    if (heldSent.join() !== 'heavy') failures.push(`a second finger held on the stick sent [${heldSent}], not one heavy`);
+    if (liftSent.length) failures.push(`the second finger's lift after a heavy sent [${liftSent}]`);
+    if (tapSent.join() !== 'strike') failures.push(`a tap on the canvas sent [${tapSent}], not one strike`);
     if (!dodgeVisible) failures.push(`the dodge chip is not a visible button on a coarse pointer (${dodgeState})`);
     else if (!/STEP/.test(dodgeText)) failures.push(`the dodge button did not start a cooldown ("${dodgeText.trim()}")`);
     if (fit.off.length) failures.push(`phone: off the screen: ${fit.off.join('; ')}`);
@@ -384,4 +410,4 @@ try {
   clearTimeout(deadline);
 }
 if (failures.length) { console.error(`FAIL: ${failures.join('; ')}`); process.exit(1); }
-console.log(`PASS: landing page and its log, title, Nave + HUD, a dialogue with focus and a node's answer, keyboard reach, frame pacing >= ${MIN_FPS} fps, the phone's HUD in its screen under reduced motion, the touch stick and the dodge button (screenshots in ${shots})`);
+console.log(`PASS: landing page and its log, title, Nave + HUD, a dialogue with focus and a node's answer, keyboard reach, frame pacing >= ${MIN_FPS} fps, the phone's HUD in its screen under reduced motion, the touch stick with its tap, its second finger's heavy and the dodge button (screenshots in ${shots})`);

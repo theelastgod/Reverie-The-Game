@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STILL, dodgeDirection, isTap, knobOffset, mergeIntent, stickIntent } from "./stick";
+import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, secondFinger, stickIntent } from "./stick";
 
 const only = (...on: (keyof typeof STILL)[]) => ({ ...STILL, ...Object.fromEntries(on.map(k => [k, true])) });
 
@@ -42,6 +42,15 @@ describe("isTap", () => {
     expect(isTap(250, 9)).toBe(true);
     expect(isTap(300, 3)).toBe(false);
     expect(isTap(120, 10)).toBe(false);
+  });
+});
+
+describe("secondFinger", () => {
+  it("is a light strike lifted early and a heavy one held to the threshold", () => {
+    expect(secondFinger(0)).toBe("strike");
+    expect(secondFinger(HEAVY_MS - 1)).toBe("strike");
+    expect(secondFinger(HEAVY_MS)).toBe("heavy");
+    expect(secondFinger(2000)).toBe("heavy");
   });
 });
 
