@@ -250,9 +250,10 @@ try {
 
   // A phone, 390 by 844: the landing page, then the city. Nothing of the HUD may run off the screen, the page must not
   // scroll sideways, and the minimap and the journal's tab must sit under the top chips, not on them. The desktop page
-  // closes first: two cities rendering in software at once starve each other's boot.
+  // closes first: two cities rendering in software at once starve each other's boot. This pass also asks for reduced
+  // motion, so the HUD's CSS branch and the canvas's (a strike flash and a dodge fading in place) run in a browser.
   await page.close();
-  const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
   const phoneErrors = [];
   phone.on('pageerror', e => phoneErrors.push(String(e)));
   phone.on('console', m => { if (m.type() === 'error') phoneErrors.push(m.text()); });
@@ -291,6 +292,23 @@ try {
     });
     await phone.screenshot({ path: join(shots, '06-phone-nave.png') });
     console.log(`phone: ${fit.off.length} element(s) off the screen, ${fit.stacked.length} stacked${fit.off.length ? `: ${fit.off.join('; ')}` : ''}${fit.stacked.length ? `: ${fit.stacked.join('; ')}` : ''}`);
+    // Under reduced motion: the page sees the query, the marquee's animation is off, and a strike and a dodge (the
+    // canvas's fade-in-place branches) run without a script error, which the phone-only error check below catches.
+    await phone.keyboard.press('Space');
+    await phone.keyboard.down('Shift');
+    await phone.keyboard.press('KeyD');
+    await phone.keyboard.up('Shift');
+    await phone.waitForTimeout(500);
+    const motion = await phone.evaluate(() => {
+      const marquee = document.querySelector('.marquee-text');
+      return {
+        reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
+        marquee: marquee ? getComputedStyle(marquee).animationName : 'no marquee',
+      };
+    });
+    console.log(`reduced motion: query ${motion.reduced ? 'seen' : 'not seen'}; marquee animation ${motion.marquee}`);
+    if (!motion.reduced) failures.push('the phone pass asked for reduced motion and the page did not see it');
+    if (motion.marquee !== 'no marquee' && motion.marquee !== 'none') failures.push(`the marquee still animates under reduced motion (${motion.marquee})`);
     if (fit.off.length) failures.push(`phone: off the screen: ${fit.off.join('; ')}`);
     if (fit.stacked.length) failures.push(`phone: ${fit.stacked.join('; ')}`);
     if (fit.scrollW > fit.w) failures.push(`phone: the page scrolls sideways (${fit.scrollW} > ${fit.w})`);

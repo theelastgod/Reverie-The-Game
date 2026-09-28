@@ -955,6 +955,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   get (2026-09-28, later): a Shift+Tab row, and a paragraph on the panels
   that take focus, the live regions, the meters, the map's sentence and
   reduced motion, pointing at `.rebuild/CLIENT.md` for the list.
+- Reduced motion read in a browser, and the journal named (2026-09-28,
+  later): the render check's phone pass now asks Chromium for
+  `prefers-reduced-motion: reduce`, presses Space and Shift+D after the
+  HUD is up (a strike flash and a dodge, the canvas's fade-in-place
+  branches), and fails unless the page sees the query, the marquee's
+  animation is `none`, and no script error appears that the desktop pass
+  did not have. The journal `aside` carries `aria-label="Field notes"` (a
+  named landmark) and its open quests `aria-label="Open quests"` (a named
+  list); the markup test reads both.
 
 ## Verified (2026-09-25, integration)
 
@@ -1416,7 +1425,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Worker (nothing in reach) and passed on the rerun; the new route is
   planned from the map and nudged, and has not missed in seven walks.
   The reduced-motion branches of `Fx` and `Entities` are read by unit
-  tests of their decisions only; no browser run here sets the query.
+  tests of their decisions; the render check's phone pass sets the query
+  in a browser since later that day (below).
 - The lock, the credits and the title (2026-09-28, later): typecheck;
   490 tests (the markup test reads two more attributes); the build and
   the play build staged;
@@ -1441,6 +1451,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the viewer's flags), so a fresh guest finds Nara at her home on any
   world, and the render check's first exchange does not depend on what
   other players did.
+- Reduced motion in the browser (2026-09-28, later): typecheck; 490
+  tests (the markup test reads the journal's labels too); the build and
+  the play build staged; the render check PASS at `RENDER_MIN_FPS=5` (7.8
+  fps; 64 s wall clock for the whole check) with the phone pass under
+  reduced motion: "query seen; marquee animation none", a strike and a
+  dodge run under it with no phone-only script error, the HUD's boxes
+  unchanged (0 off the screen, 0 stacked). The desktop pass stays
+  without the query, so both branches of the canvas run in one check.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

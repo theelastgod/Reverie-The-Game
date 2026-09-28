@@ -50,10 +50,13 @@ describe("the HUD's markup for assistive technology", () => {
       has(opening, "aria-valuenow=");
     }
   });
-  it("labels the map and the ledger, and groups what is in reach", () => {
+  it("labels the map, the ledger and the journal, and groups what is in reach", () => {
     expect(html).toMatch(/<canvas[^>]*aria-label="City map"/);
     has(tag("hud-ledger-panel"), "aria-label=");
     has(tag("hud-prompt"), 'role="group"');
     has(tag("hud-prompt"), "aria-label=");
+    expect(tag("hud-journal")).toMatch(/^<aside\b/); // a complementary landmark
+    has(tag("hud-journal"), "aria-label=");
+    expect(html).toMatch(/<ul[^>]*class="journal-quests"[^>]*aria-label=/); // the open quests are a named list
   });
 });

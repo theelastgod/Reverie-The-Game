@@ -111,8 +111,9 @@ name and a range, and `Hud.setBar` keeps `aria-valuenow` and
 is the map in a sentence (`mapLabel` in `format.ts`, set by the minimap on
 every snapshot): your district, the objective with its bearing in words and
 its district when not yours, and what is under a freeze. The ledger is
-labelled; the prompt is a labelled group whose verbs are buttons, as the
-dialogue's choices are. `hud.css` honours `prefers-reduced-motion` (the
+labelled; the journal is a labelled `aside` (a landmark) whose open quests
+are a labelled list; the prompt is a labelled group whose verbs are
+buttons, as the dialogue's choices are. `hud.css` honours `prefers-reduced-motion` (the
 marquee, the credits roll, the notices and the fades stop), and so do the
 minimap (the objective's ring stands still) and the canvas
 (`src/render/motion.ts`: the camera never shakes, a strike flash, a ledger
