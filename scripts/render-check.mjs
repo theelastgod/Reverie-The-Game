@@ -79,10 +79,16 @@ try {
   await page.mouse.click(683, 384);
   const tileMs = (1000 * 48) / 170;
   const hold = async (key, ms) => { await page.keyboard.down(key); await page.waitForTimeout(ms); await page.keyboard.up(key); await page.waitForTimeout(350); };
-  const readPrompt = async () => (await page.locator('#hud-prompt').textContent().catch(() => '')) ?? '';
-  const readVerbs = () => page.evaluate(() => [...document.querySelectorAll('#hud-prompt .prompt-verbs button')]
-    .map(b => ({ key: (b.querySelector('kbd')?.textContent ?? '').trim(), label: (b.textContent ?? '').replace(/^\s*[A-Z]\s*/, '').trim() }))
-    .filter(v => /^[A-Z]$/.test(v.key))).catch(() => []);
+  // The HUD hides the prompt when nothing is in reach and leaves the last name and buttons in the DOM, so a hidden
+  // prompt reads as empty here; otherwise a thing walked away from would still seem in reach.
+  const readPrompt = () => page.evaluate(() => { const p = document.querySelector('#hud-prompt'); return p && !p.hidden ? (p.textContent ?? '') : ''; }).catch(() => '');
+  const readVerbs = () => page.evaluate(() => {
+    const p = document.querySelector('#hud-prompt');
+    if (!p || p.hidden) return [];
+    return [...p.querySelectorAll('.prompt-verbs button')]
+      .map(b => ({ key: (b.querySelector('kbd')?.textContent ?? '').trim(), label: (b.textContent ?? '').replace(/^\s*[A-Z]\s*/, '').trim() }))
+      .filter(v => /^[A-Z]$/.test(v.key));
+  }).catch(() => []);
   const dialogueShown = () => page.evaluate(() => { const d = document.querySelector('#hud-dialogue'); return !!d && !d.hidden; });
   const focusedName = () => page.evaluate(() => { const a = document.activeElement; return !a || a === document.body ? 'the game' : `${a.tagName.toLowerCase()}#${a.id || a.className.split(' ')[0]}`; });
   const readA11y = () => page.evaluate(() => {
@@ -106,16 +112,21 @@ try {
       district: (document.querySelector('#hud-district .chip-text')?.textContent ?? '').trim(),
     };
   });
+  /** Walks the legs, then nudges by half tiles until a wanted verb shows; the nudges taken are kept on the result. */
   const walkTo = async (legs, wanted, nudgeKey, nudges) => {
     for (const [key, tiles] of legs) await hold(key, tiles * tileMs);
     let verbs = await readVerbs();
-    for (let i = 0; i < nudges && !verbs.some(v => wanted.test(v.label)); i++) {
+    let nudged = 0;
+    for (; nudged < nudges && !verbs.some(v => wanted.test(v.label)); nudged++) {
       await hold(nudgeKey, tileMs / 2);
       verbs = await readVerbs();
     }
+    verbs.nudged = nudged;
     return verbs;
   };
-  let verbs = await walkTo([['KeyD', 2.8], ['KeyS', 6.5]], /speak/i, 'KeyS', 4);
+  // Aimed a tile short of her reach and nudged south through it: a leg walked a little long would pass her, and
+  // nudges from there would only walk away.
+  let verbs = await walkTo([['KeyD', 2.8], ['KeyS', 5.5]], /speak/i, 'KeyS', 8);
   await page.screenshot({ path: join(shots, '02-nave.png') });
   let promptText = await readPrompt();
   const speak = verbs.find(v => /speak/i.test(v.label));
@@ -158,10 +169,20 @@ try {
 
   // Then a node, whose verb answers without a dialogue (an extract is a heard line and a ledger change; a keep, a
   // heard line; a refusal, a heard line too): two tiles west to the x 6 lane (the courier's corridor, clear from
-  // row 48 up to 30) and north to the fourth Nave node at 6,34.
-  verbs = await walkTo([['KeyA', 2], ['KeyW', 14.5]], /extract|keep/i, 'KeyW', 6);
+  // row 48 up to row 30, walled to the east between), thirteen tiles north, short of the fourth Nave node at
+  // 6,34, then half tiles north until the prompt offers the node's verbs or the CRT altar's WATCH at 5,31, the
+  // landmark at the corridor's top. The altar means the fourth node offered nothing (a keep holds until someone
+  // extracts, and charges come back one per 300 s; two checks in a row on a lived-in world leave it so): then
+  // the first node at 11,36, by the crossing at row 30 (north to it, five tiles east, six south, nudged south).
+  const isNodeVerb = v => /extract|keep/i.test(v.label);
+  verbs = await walkTo([['KeyA', 2], ['KeyW', 13]], /extract|keep|watch/i, 'KeyW', 12);
+  let nodeName = 'the fourth node';
+  if (!verbs.some(isNodeVerb)) {
+    verbs = await walkTo([['KeyW', 1.5], ['KeyD', 5], ['KeyS', 6]], /extract|keep/i, 'KeyS', 4);
+    nodeName = 'the first node (the fourth offered nothing)';
+  }
   promptText = await readPrompt();
-  const nodeVerb = verbs.find(v => /extract|keep/i.test(v.label)) ?? verbs[0];
+  const nodeVerb = verbs.find(isNodeVerb);
   let node = 'nothing in reach';
   if (nodeVerb) {
     // The notices list is capped, so its count can stay flat when a line arrives; the HUD keys the list by its lines.
@@ -179,10 +200,10 @@ try {
     if (after.ledger !== before.ledger) seen.push(`the ledger reads "${after.ledger}"`);
     if (after.notices !== before.notices) seen.push('a notice');
     if (await dialogueShown()) seen.push('a dialogue');
-    node = seen.length ? `after ${nodeVerb.label}: ${seen.join(', ')}` : `no visible answer to ${nodeVerb.label}`;
+    node = seen.length ? `after ${nodeVerb.label} at ${nodeName}: ${seen.join(', ')}` : `no visible answer to ${nodeVerb.label} at ${nodeName}`;
     if (!seen.length) failures.push(`the node's ${nodeVerb.label} verb changed nothing visible`);
   } else {
-    failures.push(`nothing offered a verb at the node (prompt: ${JSON.stringify(promptText.trim())})`);
+    failures.push(`neither Nave node offered a verb (prompt: ${JSON.stringify(promptText.trim())})`);
   }
   console.log(`node: ${node}`);
 

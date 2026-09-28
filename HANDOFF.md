@@ -964,6 +964,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   did not have. The journal `aside` carries `aria-label="Field notes"` (a
   named landmark) and its open quests `aria-label="Open quests"` (a named
   list); the markup test reads both.
+- The render check's node exchange made dependable on a lived-in world
+  (2026-09-28, later). Found by running the check three times in a row:
+  the fourth Nave node offers EXTRACT, then KEEP, then nothing (a keep
+  holds until someone extracts and charges come back one per 300 s), and
+  the third run failed. Two causes fixed. The check read the prompt's
+  buttons off the DOM while the HUD had hidden the prompt (the HUD hides
+  it when nothing is in reach and leaves the last name and buttons in
+  place), so a thing walked away from still seemed in reach and its key
+  was pressed at nothing; a hidden prompt now reads as empty. And there
+  was no second node: now the walk north stops short of the fourth node
+  and nudges until the prompt offers its verbs or the CRT altar's WATCH
+  at 5,31 (the landmark at the corridor's top, which means the node
+  offered nothing), and from the altar goes by the row 30 crossing to
+  the first node at 11,36. Nara's leg is aimed a tile short and nudged
+  through her reach, since a leg walked long passed her once and the
+  nudges then walked away. The dry-run bundle re-read after the day's
+  client commits: 558.62 KiB, 147.16 KiB gzipped, 94 site files, the
+  bindings as before.
 
 ## Verified (2026-09-25, integration)
 
@@ -1459,6 +1477,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   dodge run under it with no phone-only script error, the HUD's boxes
   unchanged (0 off the screen, 0 stacked). The desktop pass stays
   without the query, so both branches of the canvas run in one check.
+- The node exchange on a lived-in world (2026-09-28, later): the render
+  check PASS five times in a row at `RENDER_MIN_FPS=5` after the fix:
+  the fourth node EXTRACT, then KEEP, then three runs on the first node
+  ("the fourth offered nothing"), each with a heard line and the ledger
+  reading 8; Nara's dialogue and the focus path every time. Before the
+  fix, the third run in a row failed on a stale WATCH read off the hidden
+  prompt, and one run missed Nara's reach (the leg walked long).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
