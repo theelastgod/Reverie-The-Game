@@ -951,6 +951,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   learned `SMOKE_COOKIE` (play a browser's session) and `SMOKE_STOP=lock`
   (stop at the guest lock and leave the guest there), which is how the
   lock panel was read in a real browser (Verified).
+- The README's Controls say what the keyboard and assistive technology
+  get (2026-09-28, later): a Shift+Tab row, and a paragraph on the panels
+  that take focus, the live regions, the meters, the map's sentence and
+  reduced motion, pointing at `.rebuild/CLIENT.md` for the list.
 
 ## Verified (2026-09-25, integration)
 
@@ -1428,6 +1432,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Nave" pressed with Enter hid the panel and sent focus to the game. The
   credits' focus is the same keeper and is not read in a browser here (a
   whole campaign stands before them).
+- The Movement I smoke after the smoke script's two switches (2026-09-28,
+  later): `npm run test:campaign` PASS on the lived-in local world (bot 91
+  s: walk 44 s, fights 43 s; 1531 words; 8 decisions; 16.9 min estimate,
+  in the 15–20 target), the default path untouched by `SMOKE_COOKIE` and
+  `SMOKE_STOP`. Read on the way: no content effect moves Nara's, Quill's
+  or Ord's shared position (their moves are personal overrides keyed on
+  the viewer's flags), so a fresh guest finds Nara at her home on any
+  world, and the render check's first exchange does not depend on what
+  other players did.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

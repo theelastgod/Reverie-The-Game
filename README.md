@@ -31,6 +31,18 @@ satisfies it; `.rebuild/CONTRACTS.md` holds the shared-sim module signatures and
 | I | `use` | first paper item (insurance / repair) |
 | J / M / L | client | journal / minimap / ledger (holdings, claims, the Grid) |
 | O · [ · ] | client | mute · volume down · volume up (also the AUDIO chip; kept per browser) |
+| Shift+Tab | browser | from the canvas, focus enters the HUD's controls; Tab and Shift+Tab move among them, Space and Enter press the focused one, Esc hands the keys back to the game |
+
+Every verb has a key, and the HUD's buttons repeat them. A dialogue, the
+guest lock and the credits take focus when they appear, so a screen reader
+announces them with their name (the dialogue by its speaker and line); Tab
+reaches their controls, and closing them gives focus back to where it was.
+The title's Enter button has focus at boot. The connection chip, the
+notices, the heard line and the events strip are live regions; the four
+bars are meters; the map is also a sentence on the minimap. Under the
+system's reduced-motion setting the marquee, the fades, the minimap's
+pulse and the canvas's shakes and swells stand still. `.rebuild/CLIENT.md`
+has the list.
 
 The Worker also keeps a writeback log in D1 (`LOG` binding, migration in
 `server/migrations/`): links, wallets, the going-under, burials, claims,
