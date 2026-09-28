@@ -4,12 +4,13 @@ State of the rebuild. Read `DESIGN.md` first, then `.rebuild/CONTRACTS.md`
 (shared-sim signatures) and `.rebuild/CLIENT.md` (client contract). The master
 brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
-## Where things stand (2026-09-27)
+## Where things stand (2026-09-28)
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 469 tests, the session smoke, the campaign smoke and the
-  Playwright render check (desktop and phone) pass; the Worker bundles
+  fresh world; 490 tests, the session smoke, the campaign smoke and the
+  Playwright render check (desktop and phone, now through a real dialogue
+  with Nara Vale and a node) pass; the Worker bundles
   (`wrangler deploy --dry-run`: 558 KB, 147 KB gzipped, 94 site files, the
   bindings WORLD, LOG, ASSETS and the `ANGEL_*` variables empty). The server
   since the 26th: a message and join budget, an hourly sweep of stale guest
@@ -900,6 +901,42 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Shift+Tab, a focused control, Space and Enter, the game's own keys);
   the render check walks the path in the browser (Shift+Tab focuses a
   HUD button, another moves within, Escape leaves).
+- Focus into an opened dialogue and back, and the canvas under reduced
+  motion (2026-09-28; Backlog 10's last two items this container can
+  do). An opened dialogue now takes focus itself (`#hud-dialogue` has
+  `tabindex="-1"`, so a screen reader announces the dialog with its
+  speaker and line): Tab reaches its first choice, digits and Enter
+  choose, and when the next line replaces a focused choice the panel
+  takes focus back. The panel and not the first choice, so a strike key
+  held as a dialogue opens cannot pick a decision. Escape inside the
+  dialogue closes it (`escapeDoes`: a focused control outside the
+  dialogue still just blurs), and the close returns focus to the HUD
+  control that had it when the dialogue opened, else to the canvas
+  (`focusAfterClose`; the return waits until the panel is hidden, since
+  the open dialogue hides the prompt and the bars and a hidden control
+  cannot take focus, which a first browser probe caught). Both decisions
+  are unit-tested in `keys.test.ts`. The canvas honours
+  `prefers-reduced-motion` (`src/render/motion.ts`, unit-tested): the
+  camera never shakes; a strike flash, a ledger tick, the Wink ripple,
+  the interrupt ring and the hijack scanlines fade in place (`stillTween`
+  drops a tween's moving keys); the going-under's wing-star holds its
+  size; the rings and lights that pulse hold their mean (`pulseAt`); an
+  idle body does not breathe and an Angel's aura does not turn; camera
+  fades and flashes stay. The minimap reads the same query through
+  `reducedMotion`. The render check now opens a real dialogue every run:
+  Nara Vale stands at her home (8,49), seven tiles south and three east
+  of the guest spawn with nothing in the way, and any present person
+  offers Speak; the check walks there by time (170 px/s, 48 px tiles,
+  nudged by half tiles until the verb shows), speaks, reads the dialog
+  with its speaker while open, then proves the focus path (the panel
+  took focus, Tab reached a choice, Escape closed it through the server,
+  focus went back to the game), and only then walks the x 6 lane north
+  to the node at 6,34 for the verb-without-a-dialogue exchange, whose
+  answer is a heard line and a ledger change (the earlier check waited
+  for a notice, which an extract does not post; it had passed on a
+  notice that happened to arrive). The keyboard step names a control by
+  its text when it has no id, so the prompt's two verb buttons read as
+  two controls.
 
 ## Verified (2026-09-25, integration)
 
@@ -1340,6 +1377,28 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   browser: Shift+Tab from the canvas focused the stance button, another
   Shift+Tab the journal's tab, Escape left focus on the game; the
   exchange and the map's label as before.
+- Dialogue focus and the canvas under reduced motion (2026-09-28):
+  typecheck; 490 tests (eleven new: the media query read live and
+  absent, `stillTween` keeping the fade and dropping the movement,
+  `pulseAt` holding its mean, `escapeDoes` and `focusAfterClose`, the
+  dialogue's `tabindex`); the build and the play build staged. A browser
+  probe (scratchpad, five runs) before the check was rewritten: the
+  dialogue took focus with the focus ring visible, Tab reached the first
+  of three choices, Enter took it and the next line handed focus back to
+  the panel, Escape closed it and focus went to the game; with the
+  prompt's verb button focused at open time, focus first failed to
+  return to it (the fix above) and returns after it. The render check
+  PASS twice in a row at `RENDER_MIN_FPS=5` (8.0 and 8.1 fps) with the
+  new route: "a dialogue after SPEAK", the dialog open and named, the
+  focus path as above, the node's EXTRACT answered by "Yield. 8 Bestand
+  after the tax of 10" and the ledger reading 8 (the second run found
+  the node spent and KEEP answered "You leave it unspent"), Shift+Tab
+  focusing a verb button or the stance, another moving on. Before the
+  rewrite the old blind walk failed once on the first run after a fresh
+  Worker (nothing in reach) and passed on the rerun; the new route is
+  planned from the map and nudged, and has not missed in seven walks.
+  The reduced-motion branches of `Fx` and `Entities` are read by unit
+  tests of their decisions only; no browser run here sets the query.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1511,15 +1570,14 @@ they are discovered; keep this list honest.
    the whole spine over the wire behind it. `npm audit` is worth a look
    each month; the dev tools were brought current on 2026-09-27 (Done).
 10. **Assistive technology, the rest.** The markup says what it is, the
-   map speaks, and the HUD's controls have keyboard reach (Done,
-   2026-09-27, later; `.rebuild/CLIENT.md` has the list), and `hud.css`
-   already honours `prefers-reduced-motion` (the marquee, the credits
-   roll, the notices, the fades and the minimap's pulse stop). Left:
-   focus moving into an opened dialogue's first choice on its own and
-   back to the canvas on close (today a player who tabbed into the HUD
-   stays there; the choices are reachable either way, by key or by Tab);
-   the scene's canvas fx under reduced motion; and a pass with a screen
-   reader on real hardware, which this container cannot do.
+   map speaks, the HUD's controls have keyboard reach, an opened dialogue
+   takes focus and gives it back, and the HUD, the minimap and the canvas
+   all honour `prefers-reduced-motion` (Done, 2026-09-27 and 28;
+   `.rebuild/CLIENT.md` has the list). Left: the same focus move for the
+   other dialogs that appear on their own, the guest lock panel at the
+   going-under and the credits (a keyboard user reaches them by Shift+Tab
+   today); and a pass with a screen reader on real hardware, which this
+   container cannot do.
 11. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

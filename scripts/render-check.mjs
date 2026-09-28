@@ -72,70 +72,20 @@ try {
   }, null, { timeout: 20000 }).catch(() => failures.push('connection chip never reported online'));
   await page.waitForTimeout(500);
 
-  // Walk north two seconds (the guest spawns at tile 5,42; the fourth Nave node stands at 6,34 and the first at
-  // 11,36, while the Intake Clerk waits eight tiles east, a fight with no verb), then east, until something in
-  // reach offers a verb, so the exchange below does not depend on where the first walk happened to end. The
-  // Nave's people all stand past the intake, so near the spawn the verb is a node's (E extract, Q keep), which
-  // answers with a notice rather than a dialogue; either is the prompt's loop through the server and back.
+  // Two exchanges through the server and back, walked by time (170 px/s over 48 px tiles, src/sim/constants.ts),
+  // each leg nudged by half tiles until the verb shows. First Nara Vale at her home (8,49): seven tiles south and
+  // three east of the guest spawn (5,42) with nothing in the way (the pillar columns start at x 9, the Intake
+  // Clerk's aggro at 13,42 reaches five tiles), and any present person offers Speak, which opens a dialogue.
   await page.mouse.click(683, 384);
+  const tileMs = (1000 * 48) / 170;
+  const hold = async (key, ms) => { await page.keyboard.down(key); await page.waitForTimeout(ms); await page.keyboard.up(key); await page.waitForTimeout(350); };
   const readPrompt = async () => (await page.locator('#hud-prompt').textContent().catch(() => '')) ?? '';
   const readVerbs = () => page.evaluate(() => [...document.querySelectorAll('#hud-prompt .prompt-verbs button')]
     .map(b => ({ key: (b.querySelector('kbd')?.textContent ?? '').trim(), label: (b.textContent ?? '').replace(/^\s*[A-Z]\s*/, '').trim() }))
     .filter(v => /^[A-Z]$/.test(v.key))).catch(() => []);
-  let promptText = '';
-  let verbs = [];
-  let leg = 0;
-  for (const [key, ms] of [['KeyW', 2000], ['KeyD', 1500], ['KeyD', 1500], ['KeyW', 1000]]) {
-    await page.keyboard.down(key);
-    await page.waitForTimeout(ms);
-    await page.keyboard.up(key);
-    await page.waitForTimeout(300);
-    if (leg++ === 0) await page.screenshot({ path: join(shots, '02-nave.png') });
-    promptText = await readPrompt();
-    verbs = await readVerbs();
-    if (verbs.length) break;
-  }
-
-  // Use the first verb in reach and require a visible answer: a dialogue opened or a notice posted.
-  let exchange = 'nothing in reach';
-  if (verbs.length) {
-    // The notices list is capped, so its count can stay flat when a line arrives; the HUD keys the list by its lines.
-    const noticesKey = () => page.locator('#hud-notices').getAttribute('data-key').catch(() => null);
-    const noticesBefore = await noticesKey();
-    await page.keyboard.press(`Key${verbs[0].key}`);
-    await page.waitForTimeout(900);
-    const dialogueOpen = await page.evaluate(() => { const d = document.querySelector('#hud-dialogue'); return !!d && !d.hidden; });
-    const noticed = (await noticesKey()) !== noticesBefore;
-    exchange = dialogueOpen ? `a dialogue after ${verbs[0].label}` : noticed ? `a notice after ${verbs[0].label}` : `no visible answer to ${verbs[0].label}`;
-    if (!dialogueOpen && !noticed) failures.push(`the prompt's ${verbs[0].label} verb changed nothing visible`);
-  } else {
-    failures.push('nothing offered a verb within the walk; the prompt loop went unexercised');
-  }
-  console.log(`exchange: ${exchange}`);
-  await page.screenshot({ path: join(shots, '03-dialogue.png') });
-
-  // Keyboard reach: from the canvas, Shift+Tab enters the HUD's controls (the browser starts from their end),
-  // another Shift+Tab moves within them, and Escape hands the keys back to the game (focus leaves the HUD).
-  const focusedControl = () => page.evaluate(() => {
-    const a = document.activeElement;
-    const hud = document.getElementById('hud');
-    return a && hud && hud.contains(a) && a !== hud ? `${a.tagName.toLowerCase()}#${a.id || a.className.split(' ')[0]}` : '';
-  });
-  await page.mouse.click(683, 384);
-  await page.keyboard.press('Shift+Tab');
-  const first = await focusedControl();
-  await page.keyboard.press('Shift+Tab');
-  const second = await focusedControl();
-  await page.keyboard.press('Escape');
-  const after = await focusedControl();
-  if (!first) failures.push('Shift+Tab from the canvas focused nothing in the HUD');
-  else if (!second || second === first) failures.push(`a second Shift+Tab did not move focus within the HUD (${first} → ${second || 'nothing'})`);
-  if (after) failures.push(`Escape left focus on ${after}`);
-  console.log(`keyboard: Shift+Tab → ${first || 'nothing'}, again → ${second || 'nothing'}, Escape → ${after || 'the game'}`);
-
-  // What assistive technology is told: the dialogue is a dialog named by its speaker, the notices and the
-  // connection chip are live, and every bar is a meter whose value is the number it shows.
-  const a11y = await page.evaluate(() => {
+  const dialogueShown = () => page.evaluate(() => { const d = document.querySelector('#hud-dialogue'); return !!d && !d.hidden; });
+  const focusedName = () => page.evaluate(() => { const a = document.activeElement; return !a || a === document.body ? 'the game' : `${a.tagName.toLowerCase()}#${a.id || a.className.split(' ')[0]}`; });
+  const readA11y = () => page.evaluate(() => {
     const dialogue = document.querySelector('#hud-dialogue');
     const speaker = document.getElementById(dialogue?.getAttribute('aria-labelledby') ?? '');
     const meters = [...document.querySelectorAll('#hud-bars .bar')].map(bar => ({
@@ -156,6 +106,110 @@ try {
       district: (document.querySelector('#hud-district .chip-text')?.textContent ?? '').trim(),
     };
   });
+  const walkTo = async (legs, wanted, nudgeKey, nudges) => {
+    for (const [key, tiles] of legs) await hold(key, tiles * tileMs);
+    let verbs = await readVerbs();
+    for (let i = 0; i < nudges && !verbs.some(v => wanted.test(v.label)); i++) {
+      await hold(nudgeKey, tileMs / 2);
+      verbs = await readVerbs();
+    }
+    return verbs;
+  };
+  let verbs = await walkTo([['KeyD', 2.8], ['KeyS', 6.5]], /speak/i, 'KeyS', 4);
+  await page.screenshot({ path: join(shots, '02-nave.png') });
+  let promptText = await readPrompt();
+  const speak = verbs.find(v => /speak/i.test(v.label));
+  let exchange = 'no one in reach';
+  let focusStep = 'no dialogue opened; skipped';
+  let a11y = null;
+  if (speak) {
+    await page.keyboard.press(`Key${speak.key}`);
+    const opened = await page.waitForFunction(() => { const d = document.querySelector('#hud-dialogue'); return !!d && !d.hidden; }, null, { timeout: 5000 }).then(() => true).catch(() => false);
+    await page.waitForTimeout(300);
+    exchange = opened ? `a dialogue after ${speak.label}` : `no dialogue after ${speak.label}`;
+    if (!opened) failures.push(`${speak.label} opened no dialogue`);
+    await page.screenshot({ path: join(shots, '03-dialogue.png') });
+    if (opened) {
+      a11y = await readA11y(); // with the dialogue open: a dialog named by its speaker
+      // The opened dialogue takes focus itself (the verb was pressed from the canvas, so nothing else had it):
+      // Tab reaches its first choice, Escape closes it through the server (a Continue node's close advances to
+      // the next line first, so Escape repeats until the panel is gone), and focus goes back to the game.
+      const onPanel = await page.evaluate(() => document.activeElement?.id === 'hud-dialogue');
+      await page.keyboard.press('Tab');
+      const onChoice = await page.evaluate(() => !!document.activeElement?.matches('#hud-dialogue .dlg-choices button'));
+      let closed = false;
+      for (let i = 0; i < 6 && !closed; i++) {
+        await page.keyboard.press('Escape');
+        closed = await page.waitForFunction(() => document.querySelector('#hud-dialogue')?.hidden === true, null, { timeout: 1500 }).then(() => true).catch(() => false);
+      }
+      const back = await focusedName();
+      if (!onPanel) failures.push('the opened dialogue did not take focus');
+      if (!onChoice) failures.push('Tab from the dialogue did not reach its first choice');
+      if (!closed) failures.push('Escape inside the dialogue did not close it');
+      else if (back !== 'the game') failures.push(`focus stayed on ${back} after the dialogue closed`);
+      focusStep = `${onPanel ? 'the dialogue took focus' : 'focus not taken'}, Tab → ${onChoice ? 'its first choice' : 'elsewhere'}, Escape → ${closed ? 'closed' : 'still open'}, focus → ${back}`;
+    }
+  } else {
+    failures.push(`no one offered Speak at Nara's home (prompt: ${JSON.stringify(promptText.trim())})`);
+    await page.screenshot({ path: join(shots, '03-dialogue.png') });
+  }
+  console.log(`exchange: ${exchange}`);
+  console.log(`dialogue focus: ${focusStep}`);
+
+  // Then a node, whose verb answers without a dialogue (an extract is a heard line and a ledger change; a keep, a
+  // heard line; a refusal, a heard line too): two tiles west to the x 6 lane (the courier's corridor, clear from
+  // row 48 up to 30) and north to the fourth Nave node at 6,34.
+  verbs = await walkTo([['KeyA', 2], ['KeyW', 14.5]], /extract|keep/i, 'KeyW', 6);
+  promptText = await readPrompt();
+  const nodeVerb = verbs.find(v => /extract|keep/i.test(v.label)) ?? verbs[0];
+  let node = 'nothing in reach';
+  if (nodeVerb) {
+    // The notices list is capped, so its count can stay flat when a line arrives; the HUD keys the list by its lines.
+    const answer = () => page.evaluate(() => ({
+      notices: document.querySelector('#hud-notices')?.getAttribute('data-key') ?? '',
+      heard: (document.querySelector('#hud-heard')?.textContent ?? '').trim(),
+      ledger: (document.querySelector('#hud-ledger')?.textContent ?? '').trim(),
+    }));
+    const before = await answer();
+    await page.keyboard.press(`Key${nodeVerb.key}`);
+    await page.waitForTimeout(900);
+    const after = await answer();
+    const seen = [];
+    if (after.heard && after.heard !== before.heard) seen.push(`heard "${after.heard}"`);
+    if (after.ledger !== before.ledger) seen.push(`the ledger reads "${after.ledger}"`);
+    if (after.notices !== before.notices) seen.push('a notice');
+    if (await dialogueShown()) seen.push('a dialogue');
+    node = seen.length ? `after ${nodeVerb.label}: ${seen.join(', ')}` : `no visible answer to ${nodeVerb.label}`;
+    if (!seen.length) failures.push(`the node's ${nodeVerb.label} verb changed nothing visible`);
+  } else {
+    failures.push(`nothing offered a verb at the node (prompt: ${JSON.stringify(promptText.trim())})`);
+  }
+  console.log(`node: ${node}`);
+
+  // Keyboard reach: from the canvas, Shift+Tab enters the HUD's controls (the browser starts from their end),
+  // another Shift+Tab moves within them, and Escape hands the keys back to the game (focus leaves the HUD).
+  const focusedControl = () => page.evaluate(() => {
+    const a = document.activeElement;
+    const hud = document.getElementById('hud');
+    if (!a || !hud || !hud.contains(a) || a === hud) return '';
+    // Named by id, else by class and text, so two verb buttons (E, Q) read as different controls.
+    return a.id ? `${a.tagName.toLowerCase()}#${a.id}` : `${a.tagName.toLowerCase()}.${a.className.split(' ')[0]} "${(a.textContent ?? '').replace(/\s+/g, ' ').trim()}"`;
+  });
+  await page.mouse.click(683, 384);
+  await page.keyboard.press('Shift+Tab');
+  const first = await focusedControl();
+  await page.keyboard.press('Shift+Tab');
+  const second = await focusedControl();
+  await page.keyboard.press('Escape');
+  const after = await focusedControl();
+  if (!first) failures.push('Shift+Tab from the canvas focused nothing in the HUD');
+  else if (!second || second === first) failures.push(`a second Shift+Tab did not move focus within the HUD (${first} → ${second || 'nothing'})`);
+  if (after) failures.push(`Escape left focus on ${after}`);
+  console.log(`keyboard: Shift+Tab → ${first || 'nothing'}, again → ${second || 'nothing'}, Escape → ${after || 'the game'}`);
+
+  // What assistive technology is told: the dialogue is a dialog named by its speaker (read while it was open,
+  // above), the notices and the connection chip are live, and every bar is a meter whose value is the number it shows.
+  if (!a11y) a11y = await readA11y();
   // The map's sentence names the district the chip shows.
   if (!a11y.map.startsWith('City map.') || !a11y.district || !a11y.map.toUpperCase().includes(a11y.district.toUpperCase())) {
     failures.push(`the map's label "${a11y.map}" does not name the district "${a11y.district}"`);
@@ -255,4 +309,4 @@ try {
   clearTimeout(deadline);
 }
 if (failures.length) { console.error(`FAIL: ${failures.join('; ')}`); process.exit(1); }
-console.log(`PASS: landing page and its log, title, Nave + HUD, a verb answered, frame pacing >= ${MIN_FPS} fps, the phone's HUD in its screen (screenshots in ${shots})`);
+console.log(`PASS: landing page and its log, title, Nave + HUD, a dialogue with focus and a node's answer, keyboard reach, frame pacing >= ${MIN_FPS} fps, the phone's HUD in its screen (screenshots in ${shots})`);

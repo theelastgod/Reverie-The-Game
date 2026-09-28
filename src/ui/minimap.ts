@@ -5,6 +5,7 @@
  */
 import { DISTRICTS, GATES, TILE, WORLD_H, WORLD_W } from "../sim/map";
 import type { Snap } from "../sim/protocol";
+import { reducedMotion } from "../render/motion";
 import { assetUrl, mapLabel, setAttr } from "./format";
 
 export type MinimapPanel = {
@@ -43,8 +44,7 @@ export function mountMinimap(root: HTMLElement): MinimapPanel {
   mark.src = assetUrl("wing-star.png");
 
   // Under reduced motion the objective's ring stands still at its mean size instead of pulsing.
-  const motion = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
-  const reduced = () => !!motion?.matches;
+  const reduced = reducedMotion();
 
   const draw = (snap: Snap, now: number) => {
     if (!ctx) return;

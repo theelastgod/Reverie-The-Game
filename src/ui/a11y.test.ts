@@ -21,6 +21,7 @@ describe("the HUD's markup for assistive technology", () => {
     has(tag("hud-dialogue"), 'role="dialog"');
     has(tag("hud-dialogue"), 'aria-labelledby="dlg-speaker"');
     has(tag("hud-dialogue"), 'aria-describedby="dlg-text"');
+    has(tag("hud-dialogue"), 'tabindex="-1"'); // it takes focus when it opens (src/ui/dialogue.ts)
     tag("dlg-speaker");
     tag("dlg-text");
     has(tag("hud-lock"), 'role="dialog"');

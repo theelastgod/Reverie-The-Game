@@ -113,15 +113,28 @@ every snapshot): your district, the objective with its bearing in words and
 its district when not yours, and what is under a freeze. The ledger is
 labelled; the prompt is a labelled group whose verbs are buttons, as the
 dialogue's choices are. `hud.css` honours `prefers-reduced-motion` (the
-marquee, the credits roll, the notices and the fades stop), and so does the
-minimap (the objective's ring stands still). `src/ui/a11y.test.ts`
+marquee, the credits roll, the notices and the fades stop), and so do the
+minimap (the objective's ring stands still) and the canvas
+(`src/render/motion.ts`: the camera never shakes, a strike flash, a ledger
+tick, the Wink ripple, the interrupt ring and the hijack scanlines fade in
+place instead of growing, rising or drifting, the going-under's wing-star
+holds its size, the rings and lights that pulse hold their mean, an idle
+body does not breathe and an Angel's aura does not turn; camera fades and
+flashes stay, since they do not move). `src/ui/a11y.test.ts`
 reads the static attributes off `index.html`; the render check reads them
 in the browser with the live values, the map's sentence included. Keyboard
 reach: every verb has a key, and the HUD's buttons repeat them; a keyboard
 or switch user who needs the buttons themselves enters them with Shift+Tab
 from the canvas, moves among them with Tab and Shift+Tab, activates with
 Space or Enter, and leaves with Escape (`src/ui/keys.ts` decides who owns a
-press; the render check walks that path). Not done: moving focus into an
-opened dialogue on its own (a player who tabbed in stays in; the choices
-are reachable either way), and the news marquee, which stays silent by
-design.
+press; the render check walks that path). An opened dialogue takes focus
+itself (`#hud-dialogue` has `tabindex="-1"`, so the dialog is announced
+with its speaker and line): Tab reaches its first choice, the digits and
+Enter choose, and when the next line replaces a focused choice the panel
+takes focus back. The panel rather than the first choice, so a strike key
+held as a dialogue opens cannot pick a decision. Escape inside the
+dialogue closes it (`escapeDoes`), and the close returns focus to the HUD
+control that had it when the dialogue opened, else to the canvas
+(`focusAfterClose`; the prompt and the bars are hidden while a dialogue
+is open, so the return waits until the panel is hidden). Not done: the
+news marquee, which stays silent by design.

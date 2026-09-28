@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { browserOwns, hudControlFocused } from "./keys";
+import { browserOwns, escapeDoes, focusAfterClose, hudControlFocused } from "./keys";
 
-/** A fake element: what it matches and whom it contains. */
-function el(selectorsMatched: string[], children: object[] = []) {
+/** A fake element: what it matches, whom it contains, and whether it is still in the document. */
+function el(selectorsMatched: string[], children: object[] = [], isConnected = true) {
   const node = {
     children,
+    isConnected,
     matches: (selector: string) => selector.split(",").some(part => selectorsMatched.includes(part.trim())),
     contains(other: object): boolean {
       return other === node || children.some(c => c === other || (c as { contains?: (o: object) => boolean }).contains?.(other) === true);
@@ -12,6 +13,7 @@ function el(selectorsMatched: string[], children: object[] = []) {
   };
   return node;
 }
+const asEl = (node: object | null) => node as unknown as Element;
 
 describe("hudControlFocused", () => {
   const button = el(["button"]);
@@ -47,5 +49,43 @@ describe("browserOwns", () => {
       expect(browserOwns(code, false, true), code).toBe(false);
       expect(browserOwns(code, false, false), code).toBe(false);
     }
+  });
+});
+
+describe("escapeDoes", () => {
+  it("blurs a focused control outside the dialogue, whether or not a dialogue is open", () => {
+    expect(escapeDoes(true, false, false)).toBe("blur");
+    expect(escapeDoes(true, false, true)).toBe("blur");
+  });
+  it("closes an open dialogue from inside it or from the canvas", () => {
+    expect(escapeDoes(true, true, true)).toBe("close");
+    expect(escapeDoes(false, false, true)).toBe("close");
+  });
+  it("does nothing on the canvas with no dialogue", () => {
+    expect(escapeDoes(false, false, false)).toBe("none");
+  });
+});
+
+describe("focusAfterClose", () => {
+  const choice = el(["button"]);
+  const panel = el(["[tabindex]"], [choice]);
+  const journalTab = el(["button"]);
+  const gone = el(["button"], [], false);
+  const hud = el([], [journalTab, panel]);
+  const body = el([]);
+  it("leaves focus alone when it is not inside the dialogue", () => {
+    expect(focusAfterClose(asEl(body), asEl(journalTab), asEl(panel), asEl(hud))).toBe("none");
+    expect(focusAfterClose(null, asEl(journalTab), asEl(panel), asEl(hud))).toBe("none");
+  });
+  it("returns focus to the HUD control that had it when the dialogue opened", () => {
+    expect(focusAfterClose(asEl(panel), asEl(journalTab), asEl(panel), asEl(hud))).toBe("opener");
+    expect(focusAfterClose(asEl(choice), asEl(journalTab), asEl(panel), asEl(hud))).toBe("opener");
+  });
+  it("blurs to the canvas when the opener was the page, the HUD itself, the dialogue, or is gone", () => {
+    expect(focusAfterClose(asEl(panel), asEl(body), asEl(panel), asEl(hud))).toBe("blur");
+    expect(focusAfterClose(asEl(panel), null, asEl(panel), asEl(hud))).toBe("blur");
+    expect(focusAfterClose(asEl(panel), asEl(hud), asEl(panel), asEl(hud))).toBe("blur");
+    expect(focusAfterClose(asEl(choice), asEl(panel), asEl(panel), asEl(hud))).toBe("blur");
+    expect(focusAfterClose(asEl(panel), asEl(gone), asEl(panel), asEl(hud))).toBe("blur");
   });
 });

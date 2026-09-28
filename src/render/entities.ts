@@ -11,6 +11,7 @@ import { DISTRICT_BY_ID, PATCHES, POIS, POI_LIST, TILE } from "../sim/map";
 import type { EnemyView, NodeView, NpcView, PublicPlayer, Snap, WreckageView, YouView } from "../sim/protocol";
 import type { Messenger, Stance } from "../sim/types";
 import { COLOR, DEPTH, NPC_SPRITES, TEX, UI_FONT, bodyDepth } from "./floors";
+import { pulseAt, reducedMotion } from "./motion";
 import { propTarget, spriteFor } from "../assets/slots";
 import { genTex } from "../scenes/BootScene";
 
@@ -135,9 +136,12 @@ export class Entities {
   private youBody: Body | null = null;
   private youHp = -1;
   events: EntityEvents | null = null;
+  /** Under reduced motion the pulses hold their mean, idle bodies do not breathe and the aura does not turn. */
+  private readonly reduced: () => boolean;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, reduced: () => boolean = reducedMotion()) {
     this.scene = scene;
+    this.reduced = reduced;
     this.ground = scene.add.graphics().setDepth(DEPTH.ground);
   }
 
@@ -425,7 +429,7 @@ export class Entities {
     } else {
       // Settle the walk cycle so the next step starts from the ground.
       b.phase = 0;
-      sy = 1 + BREATH * Math.sin(this.time * 0.0022 + b.seed);
+      if (!this.reduced()) sy = 1 + BREATH * Math.sin(this.time * 0.0022 + b.seed);
     }
     if (b.frozen) {
       sx *= SQUASH_X;
@@ -437,7 +441,7 @@ export class Entities {
     img.setAngle(lean);
     if (b.aura) {
       b.aura.setPosition(b.x, b.y - 2);
-      b.aura.angle = (this.time * 0.012) % 360;
+      b.aura.angle = this.reduced() ? 0 : (this.time * 0.012) % 360;
     }
   }
 
@@ -453,8 +457,7 @@ export class Entities {
     g.clear();
     const snap = this.snap;
     if (!snap) return;
-    const t = this.time / 1000;
-    const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 1.6);
+    const pulse = pulseAt(this.reduced(), this.time / 1000);
     const you = this.youLike;
 
     // Shadows first, under everything else on the ground layer.

@@ -2,11 +2,13 @@
  * Transient effects driven by diffs of `you` between snapshots and by input.
  * Strike flash, dodge afterimages, hit-stop, the Wink shimmer, the death
  * fade, the going-under wipe and the Passing outcome flash. Everything here
- * is cosmetic; nothing computes a number that matters.
+ * is cosmetic; nothing computes a number that matters. Under reduced motion
+ * (see ./motion.ts) the shakes are skipped and each effect fades in place.
  */
 import Phaser from "phaser";
 import type { PassingOutcome } from "../sim/types";
 import { COLOR, DEPTH, TEX, UI_FONT } from "./floors";
+import { reducedMotion, stillTween } from "./motion";
 
 const STRIKE_MS = 120;
 const GHOST_MS = 240;
@@ -23,9 +25,11 @@ export class Fx {
   private readonly wingText: Phaser.GameObjects.Text;
   private readonly scan: Phaser.GameObjects.TileSprite;
   private underTween: Phaser.Tweens.Tween | null = null;
+  private readonly reduced: () => boolean;
 
-  constructor(scene: Phaser.Scene) {
+  constructor(scene: Phaser.Scene, reduced: () => boolean = reducedMotion()) {
     this.scene = scene;
+    this.reduced = reduced;
     this.shimmer = scene.add.circle(0, 0, 12).setStrokeStyle(2, COLOR.champagneLight, 1).setDepth(DEPTH.fx).setVisible(false);
     this.veil = scene.add.rectangle(0, 0, 10, 10, COLOR.void, 1).setScrollFactor(0).setDepth(DEPTH.fx + 5).setVisible(false);
     this.wing = scene.add.image(0, 0, TEX.wingStar).setScrollFactor(0).setDepth(DEPTH.fx + 6).setDisplaySize(160, 160).setVisible(false);
@@ -64,7 +68,7 @@ export class Fx {
     const size = heavy ? 96 : 56;
     img.setPosition(x, y).setDisplaySize(size, size).setAlpha(1).setAngle(Math.random() * 360).setVisible(true);
     img.setTint(heavy ? COLOR.champagneLight : 0xffffff);
-    this.scene.tweens.add({
+    this.scene.tweens.add(stillTween(this.reduced(), {
       targets: img,
       alpha: 0,
       displayWidth: size * (heavy ? 1.6 : 1.3),
@@ -72,7 +76,7 @@ export class Fx {
       duration: heavy ? STRIKE_MS * 1.6 : STRIKE_MS,
       ease: "Quad.Out",
       onComplete: () => img!.setVisible(false),
-    });
+    }));
   }
 
   /** Two ghosts of your body left behind the dash. */
@@ -90,8 +94,9 @@ export class Fx {
     }
   }
 
-  /** A short shake for the hit-stop; the sprite freeze itself lives in Entities. */
+  /** A short shake for the hit-stop; the sprite freeze itself lives in Entities. None under reduced motion. */
   hitStop(): void {
+    if (this.reduced()) return;
     this.scene.cameras.main.shake(60, 0.0022);
   }
 
@@ -110,15 +115,16 @@ export class Fx {
       this.ledgers.push(t);
     }
     t.setText(text).setColor(Fx.LEDGER_TONE[tone]).setPosition(Math.round(x + (Math.random() - 0.5) * 16), Math.round(y)).setAlpha(1).setVisible(true);
-    this.scene.tweens.add({ targets: t, y: y - 26, alpha: 0, duration: 520, ease: "Quad.Out", onComplete: () => t!.setVisible(false) });
+    this.scene.tweens.add(stillTween(this.reduced(), { targets: t, y: y - 26, alpha: 0, duration: 520, ease: "Quad.Out", onComplete: () => t!.setVisible(false) }));
   }
 
   /** A heavy cut a telegraph: a sky ring bursts outward and the word lands. */
   interrupt(x: number, y: number): void {
-    const ring = this.scene.add.circle(x, y - 2, 14).setStrokeStyle(2.5, COLOR.sky, 1).setDepth(DEPTH.fx).setScale(1, 0.6);
-    this.scene.tweens.add({ targets: ring, radius: 52, alpha: 0, duration: 380, ease: "Cubic.Out", onComplete: () => ring.destroy() });
+    const reduced = this.reduced();
+    const ring = this.scene.add.circle(x, y - 2, reduced ? 36 : 14).setStrokeStyle(2.5, COLOR.sky, 1).setDepth(DEPTH.fx).setScale(1, 0.6);
+    this.scene.tweens.add(stillTween(reduced, { targets: ring, radius: 52, alpha: 0, duration: 380, ease: "Cubic.Out", onComplete: () => ring.destroy() }));
     this.ledger(x, y - 56, "INTERRUPT", "sky");
-    this.scene.cameras.main.shake(40, 0.0016);
+    if (!reduced) this.scene.cameras.main.shake(40, 0.0016);
   }
 
   // ------------------------------------------------------------ private lines and states
@@ -126,8 +132,9 @@ export class Fx {
   /** A champagne ripple under you when a Wink arrives. */
   wink(x: number, y: number): void {
     const s = this.shimmer;
-    s.setPosition(x, y - 2).setRadius(10).setAlpha(0.9).setScale(1, 0.55).setVisible(true);
-    this.scene.tweens.add({ targets: s, radius: 54, alpha: 0, duration: SHIMMER_MS, ease: "Cubic.Out", onComplete: () => s.setVisible(false) });
+    const reduced = this.reduced();
+    s.setPosition(x, y - 2).setRadius(reduced ? 36 : 10).setAlpha(0.9).setScale(1, 0.55).setVisible(true);
+    this.scene.tweens.add(stillTween(reduced, { targets: s, radius: 54, alpha: 0, duration: SHIMMER_MS, ease: "Cubic.Out", onComplete: () => s.setVisible(false) }));
   }
 
   /** Fade to void and back. */
@@ -152,7 +159,8 @@ export class Fx {
       ease: "Quad.In",
       onComplete: () => {
         this.scene.tweens.add({ targets: [this.wing, this.wingText], alpha: 1, duration: UNDER_MS * 0.2 });
-        this.scene.tweens.add({ targets: this.wing, scale: wingScale * 1.1, duration: UNDER_MS * 0.5, ease: "Sine.InOut" });
+        // The wing-star's slow swell is the one movement here; under reduced motion it holds its size.
+        if (!this.reduced()) this.scene.tweens.add({ targets: this.wing, scale: wingScale * 1.1, duration: UNDER_MS * 0.5, ease: "Sine.InOut" });
         this.scene.time.delayedCall(UNDER_MS * 0.55, () => {
           this.scene.tweens.add({
             targets: [this.veil, this.wing, this.wingText],
@@ -185,7 +193,7 @@ export class Fx {
         this.fitOverlays();
         const s = this.scan;
         s.setTint(COLOR.wine).setAlpha(0.6).setVisible(true);
-        this.scene.tweens.add({ targets: s, alpha: 0, tilePositionY: 64, duration: 1600, ease: "Quad.In", onComplete: () => s.setVisible(false) });
+        this.scene.tweens.add(stillTween(this.reduced(), { targets: s, alpha: 0, tilePositionY: 64, duration: 1600, ease: "Quad.In", onComplete: () => s.setVisible(false) }));
         cam.flash(200, 122, 16, 40);
         break;
       }

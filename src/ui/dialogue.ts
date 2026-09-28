@@ -2,9 +2,17 @@
  * The dialogue panel: portrait, speaker in Anton, text, a Wink in void and
  * champagne when the viewer is allowed one, numbered choices 1–4, Continue.
  * Esc is handled by the scene; this panel only reports clicks.
+ *
+ * Focus: an opened dialogue takes it (the panel itself, a dialog named by its
+ * speaker, so assistive technology reads the line; the choices are one Tab
+ * away, and a held strike key cannot pick a decision). A choice that had
+ * focus when the next line replaced it hands focus back to the panel. On
+ * close, focus returns to the HUD control that had it when the dialogue
+ * opened, else to the canvas (see `focusAfterClose` in keys.ts).
  */
 import type { DialogueView } from "../sim/types";
 import { assetUrl, setText, show } from "./format";
+import { focusAfterClose } from "./keys";
 import { gen, pickGen } from "../assets/gen";
 import { portraitFor } from "../assets/slots";
 
@@ -26,6 +34,9 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
   let signature = "";
   let currentPortrait = "";
   let isOpen = false;
+  /** What had focus when the dialogue opened; focus goes back there on close when it is a HUD control. */
+  let opener: Element | null = null;
+  const focusPanel = () => panel?.focus({ preventScroll: true });
 
   const onChoicesClick = (ev: MouseEvent) => {
     const t = (ev.target as HTMLElement | null)?.closest<HTMLButtonElement>("button[data-choice]");
@@ -73,8 +84,14 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
         if (isOpen) {
           isOpen = false;
           signature = "";
+          const back = opener;
+          opener = null;
+          const where = focusAfterClose(document.activeElement, back, panel, root);
+          if (where === "blur") (document.activeElement as HTMLElement | null)?.blur();
           show(panel, false);
           root.classList.remove("dialogue-open");
+          // Only now: the open dialogue hides the prompt and the bars (hud.css), and a hidden control cannot take focus.
+          if (where === "opener") (back as HTMLElement).focus({ preventScroll: true });
         }
         return;
       }
@@ -92,11 +109,18 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
       const hasWink = view.wink.trim().length > 0;
       show(winkBox, hasWink);
       setText(winkText, hasWink ? view.wink : "");
+      // A choice with focus is about to be replaced by the next line's; the panel takes focus back afterwards.
+      const active = document.activeElement;
+      const onChoice = isOpen && !!active && active !== panel && panel.contains(active);
       buildChoices(view);
       if (!isOpen) {
         isOpen = true;
+        opener = active;
         show(panel, true);
         root.classList.add("dialogue-open");
+        focusPanel();
+      } else if (onChoice) {
+        focusPanel();
       }
     },
     destroy() {

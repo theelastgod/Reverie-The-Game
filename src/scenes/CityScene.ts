@@ -15,7 +15,7 @@ import { audio } from "../audio/bus";
 import { VOLUME_STEP } from "../audio/settings";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
-import { browserOwns, hudControlFocused } from "../ui/keys";
+import { browserOwns, escapeDoes, hudControlFocused } from "../ui/keys";
 
 const IDLE: Intent = { up: false, down: false, left: false, right: false };
 const MOVE_KEYS: Record<string, keyof Intent> = {
@@ -200,10 +200,15 @@ export class CityScene extends Phaser.Scene {
         e.preventDefault();
         if (!dialogue) this.net.stance();
         return;
-      case "Escape":
-        if (focused) { (document.activeElement as HTMLElement | null)?.blur(); return; }
-        if (dialogue) this.net.close();
+      case "Escape": {
+        // An opened dialogue holds focus itself (its choices too); Escape there closes it, and the close returns focus.
+        const panel = document.getElementById("hud-dialogue");
+        const inside = !!panel && panel.contains(document.activeElement);
+        const does = escapeDoes(focused, inside, dialogue);
+        if (does === "blur") (document.activeElement as HTMLElement | null)?.blur();
+        else if (does === "close") this.net.close();
         return;
+      }
       case "Digit1": case "Digit2": case "Digit3": case "Digit4":
       case "Numpad1": case "Numpad2": case "Numpad3": case "Numpad4": {
         if (!dialogue || !you) return;

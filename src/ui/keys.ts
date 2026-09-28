@@ -23,3 +23,25 @@ export function browserOwns(code: string, shiftKey: boolean, focused: boolean): 
   if (code === "Space" || code === "Enter") return focused;
   return false;
 }
+
+/**
+ * What Escape does. A HUD control outside the dialogue hands the keys back (the scene blurs it). Inside the
+ * dialogue, or with no control focused, Escape closes the dialogue when one is open (closing returns focus, see
+ * `focusAfterClose`). Otherwise nothing.
+ */
+export function escapeDoes(focused: boolean, insideDialogue: boolean, dialogueOpen: boolean): "blur" | "close" | "none" {
+  if (focused && !insideDialogue) return "blur";
+  if (dialogueOpen) return "close";
+  return "none";
+}
+
+/**
+ * Where focus goes when the dialogue closes. Nothing when it is not inside the dialogue (a player who chose by
+ * key from the canvas never left it). Else back to the HUD control that had it when the dialogue opened, when
+ * that control is still in the HUD; else to the canvas (a blur, so the page's body has it).
+ */
+export function focusAfterClose(active: Element | null, opener: Element | null, panel: Element, hud: Element): "opener" | "blur" | "none" {
+  if (!active || !panel.contains(active)) return "none";
+  if (opener && opener !== hud && opener.isConnected && hud.contains(opener) && !panel.contains(opener)) return "opener";
+  return "blur";
+}
