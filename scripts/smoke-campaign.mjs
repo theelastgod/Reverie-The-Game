@@ -7,6 +7,9 @@
 // the credits. Run against local Wrangler:
 //   npx wrangler dev --port 8788      (in another shell)
 //   node scripts/smoke-campaign.mjs [origin] [--movement=2|3|4]
+// SMOKE_COOKIE=<cookie> plays an existing session instead of a new guest's (a browser's, read from its cookie
+// jar); SMOKE_STOP=lock stops at the guest lock and leaves the guest there, so that browser, reloaded, shows the
+// lock panel (the scratchpad's lock probe used both to read the panel's focus in a real browser).
 // Default origin http://127.0.0.1:8788. Deadline 90 s; 240 s with Movement II; 480 s with III; 600 s with IV.
 import assert from 'node:assert/strict';
 import { WebSocket } from 'ws';
@@ -225,6 +228,9 @@ async function connect(cookie) {
   return state;
 }
 async function newSession() {
+  // SMOKE_COOKIE plays an existing session (a browser's, read from its cookie jar) instead of a new guest's.
+  const given = process.env.SMOKE_COOKIE;
+  if (given) return { cookie: given, state: await connect(given) };
   const response = await fetch(`${origin}/session`, { method: 'POST', headers: { Origin: origin } });
   assert.equal(response.status, 204, 'session cookie');
   const cookie = response.headers.get('set-cookie').split(';')[0];
@@ -515,6 +521,14 @@ try {
   assert.equal(you(me).guest, true, 'still a guest');
   assert.equal(you(me).wink, '', 'a guest never gets a Wink');
   assert.equal(you(me).aura, 0, 'guest aura stays 0');
+  if (process.env.SMOKE_STOP === 'lock') {
+    // Leave the guest locked at the threshold (a browser on the same session then shows the lock panel).
+    report();
+    console.log('PASS: Movement I to the guest lock; stopped there (SMOKE_STOP=lock)');
+    clearTimeout(deadline);
+    for (const ws of sockets) ws.close();
+    process.exit(0);
+  }
   send(me, { t: 'interact', targetId: 'claims-desk', choice: 'file' });
   await sleep(300);
   assert.equal(you(me).claims.length, 0, 'a guest cannot claim');

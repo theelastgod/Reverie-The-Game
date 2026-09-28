@@ -937,6 +937,20 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   notice that happened to arrive). The keyboard step names a control by
   its text when it has no id, so the prompt's two verb buttons read as
   two controls.
+- The guest lock, the credits and the title take focus too (2026-09-28,
+  later; Backlog 10's last container-side item). The dialogue's focus
+  handling moved into `src/ui/focus.ts`, a keeper per panel (`take`,
+  `retake`, `holds`, `release(hide)`; the DOM side of `focusAfterClose`),
+  and the guest lock panel and the credits use it: the lock takes focus
+  when it appears (a dialog named by its heading; Tab reaches the wallet
+  button; Escape hands the keys back and the panel stays; "remain in the
+  Nave" or the unlock give focus back), and the credits take focus when
+  they roll and close on Enter, Space or Escape as on a click (the hint
+  says so), giving focus back. The title's Enter button has focus at
+  boot, so a screen reader lands on the way in. `scripts/smoke-campaign.mjs`
+  learned `SMOKE_COOKIE` (play a browser's session) and `SMOKE_STOP=lock`
+  (stop at the guest lock and leave the guest there), which is how the
+  lock panel was read in a real browser (Verified).
 
 ## Verified (2026-09-25, integration)
 
@@ -1399,6 +1413,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   planned from the map and nudged, and has not missed in seven walks.
   The reduced-motion branches of `Fx` and `Entities` are read by unit
   tests of their decisions only; no browser run here sets the query.
+- The lock, the credits and the title (2026-09-28, later): typecheck;
+  490 tests (the markup test reads two more attributes); the build and
+  the play build staged;
+  the render check PASS at `RENDER_MIN_FPS=5` (7.3 fps) with the dialogue
+  path unchanged through the shared keeper. A browser probe (scratchpad
+  `lock-probe.mjs`): the title's Enter button had focus at load; the
+  browser entered as a guest, the campaign bot played that session to
+  the guest lock (`SMOKE_COOKIE`, `SMOKE_STOP=lock`; the browser read
+  "open in another tab" and, as designed, did not reconnect on its own),
+  and after a reload on the same cookie the lock panel appeared and took
+  focus with the ring visible, Tab reached the wallet button, Escape
+  handed the keys back, Shift+Tab returned to the HUD, and "remain in the
+  Nave" pressed with Enter hid the panel and sent focus to the game. The
+  credits' focus is the same keeper and is not read in a browser here (a
+  whole campaign stands before them).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1570,14 +1599,14 @@ they are discovered; keep this list honest.
    the whole spine over the wire behind it. `npm audit` is worth a look
    each month; the dev tools were brought current on 2026-09-27 (Done).
 10. **Assistive technology, the rest.** The markup says what it is, the
-   map speaks, the HUD's controls have keyboard reach, an opened dialogue
-   takes focus and gives it back, and the HUD, the minimap and the canvas
-   all honour `prefers-reduced-motion` (Done, 2026-09-27 and 28;
-   `.rebuild/CLIENT.md` has the list). Left: the same focus move for the
-   other dialogs that appear on their own, the guest lock panel at the
-   going-under and the credits (a keyboard user reaches them by Shift+Tab
-   today); and a pass with a screen reader on real hardware, which this
-   container cannot do.
+   map speaks, the HUD's controls have keyboard reach, the dialogue, the
+   guest lock and the credits take focus when they appear and give it
+   back, the title's way in has focus at boot, and the HUD, the minimap
+   and the canvas all honour `prefers-reduced-motion` (Done, 2026-09-27
+   and 28; `.rebuild/CLIENT.md` has the list). Left: a pass with a screen
+   reader on real hardware, which this container cannot do; the journal's
+   quests as a list with a heading is a candidate if that pass asks for
+   it.
 11. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

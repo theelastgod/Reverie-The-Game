@@ -16,6 +16,7 @@ import { mountDialogue, type DialoguePanel } from "./dialogue";
 import { mountJournal, type JournalPanel } from "./journal";
 import { mountMinimap, type MinimapPanel } from "./minimap";
 import { mountLock, type LockPanel } from "./lock";
+import { focusKeeper, type FocusKeeper } from "./focus";
 import type { WalletOutcome } from "../net/wallet";
 import { audio } from "../audio/bus";
 import { eventRows, mountEvents, type EventsPanel } from "./events";
@@ -95,6 +96,7 @@ export class Hud {
   private readonly marqueeTrack: HTMLElement | null;
   private readonly connection: HTMLElement | null;
   private readonly credits: HTMLElement | null;
+  private readonly creditsFocus: FocusKeeper;
   private readonly audioChip: HTMLButtonElement | null;
   private readonly loading: HTMLElement | null;
   private readonly loadingText: HTMLElement | null;
@@ -195,6 +197,7 @@ export class Hud {
     this.marqueeTrack = this.marquee ? q(this.marquee, ".marquee-track") : null;
     this.connection = q(root, "#hud-connection");
     this.credits = q(root, "#hud-credits");
+    this.creditsFocus = focusKeeper(this.credits, root);
     this.audioChip = q(root, "#hud-audio");
     this.loading = q(root, "#hud-loading");
     this.loadingText = this.loading ? q(this.loading, ".chip-text") : null;
@@ -211,6 +214,7 @@ export class Hud {
     this.kit?.addEventListener("click", this.onKit);
     this.promptVerbs?.addEventListener("click", this.onVerb);
     this.credits?.addEventListener("click", this.onCredits);
+    this.credits?.addEventListener("keydown", this.onCreditsKey);
     this.audioChip?.addEventListener("click", this.onAudio);
     audio.onChange = () => this.syncAudio();
     this.syncAudio();
@@ -308,6 +312,7 @@ export class Hud {
     this.kit?.removeEventListener("click", this.onKit);
     this.promptVerbs?.removeEventListener("click", this.onVerb);
     this.credits?.removeEventListener("click", this.onCredits);
+    this.credits?.removeEventListener("keydown", this.onCreditsKey);
     this.audioChip?.removeEventListener("click", this.onAudio);
     if (audio.onChange) audio.onChange = null;
     this.dialogue.destroy();
@@ -322,7 +327,17 @@ export class Hud {
 
   private readonly onStance = (ev: Event) => { ev.preventDefault(); this.cb.stance(); };
   private readonly onKit = (ev: Event) => { ev.preventDefault(); this.cb.kit(); };
-  private readonly onCredits = () => { show(this.credits, false); audio.setScene("city"); };
+  /** The credits close on a click, or on Enter, Space or Escape while they hold focus; focus goes back where it was. */
+  private readonly onCredits = () => {
+    this.creditsFocus.release(() => show(this.credits, false));
+    audio.setScene("city");
+  };
+  private readonly onCreditsKey = (ev: KeyboardEvent) => {
+    if (ev.code !== "Enter" && ev.code !== "Space" && ev.code !== "Escape") return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    this.onCredits();
+  };
   private readonly onAudio = () => { audio.toggleMuted(); };
 
   /** The chip reads the bus: AUDIO ON 80, or AUDIO OFF. */
@@ -610,6 +625,7 @@ export class Hud {
     if (now && !before && !this.creditsSeen) {
       this.creditsSeen = true;
       show(this.credits, true);
+      this.creditsFocus.take();
       audio.setScene("credits");
     }
   }

@@ -127,14 +127,19 @@ reach: every verb has a key, and the HUD's buttons repeat them; a keyboard
 or switch user who needs the buttons themselves enters them with Shift+Tab
 from the canvas, moves among them with Tab and Shift+Tab, activates with
 Space or Enter, and leaves with Escape (`src/ui/keys.ts` decides who owns a
-press; the render check walks that path). An opened dialogue takes focus
-itself (`#hud-dialogue` has `tabindex="-1"`, so the dialog is announced
-with its speaker and line): Tab reaches its first choice, the digits and
-Enter choose, and when the next line replaces a focused choice the panel
-takes focus back. The panel rather than the first choice, so a strike key
-held as a dialogue opens cannot pick a decision. Escape inside the
-dialogue closes it (`escapeDoes`), and the close returns focus to the HUD
-control that had it when the dialogue opened, else to the canvas
+press; the render check walks that path). A panel that appears on its own
+takes focus itself (`src/ui/focus.ts`, a keeper per panel; each has
+`tabindex="-1"`, so the dialog is announced with its name): the dialogue
+(named by its speaker, described by its line; Tab reaches its first
+choice, the digits and Enter choose, and when the next line replaces a
+focused choice the panel takes focus back; the panel rather than the
+first choice, so a strike key held as a dialogue opens cannot pick a
+decision), the guest lock (named by its heading; Tab reaches the wallet
+button; Escape hands the keys back and the panel stays), and the credits
+(Enter, Space or Escape close them, as a click does). Escape inside the
+dialogue closes it (`escapeDoes`), and every close returns focus to the
+HUD control that had it when the panel appeared, else to the canvas
 (`focusAfterClose`; the prompt and the bars are hidden while a dialogue
-is open, so the return waits until the panel is hidden). Not done: the
-news marquee, which stays silent by design.
+is open, so the return waits until the panel is hidden). The title's
+Enter button has focus at boot. Not done: the news marquee, which stays
+silent by design.

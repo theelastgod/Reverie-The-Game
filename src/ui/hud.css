@@ -843,8 +843,9 @@ canvas { display: block; }
 .choice .cap { border: 0; padding: 9px 9px; }
 .choice:hover { background: var(--grid); }
 .choice:focus-visible { outline: 3px solid var(--acid); outline-offset: 1px; }
-/* An opened dialogue takes focus itself (its choices are one Tab away); the ring shows only to the keyboard. */
-#hud-dialogue:focus-visible { outline: 3px solid var(--acid); outline-offset: 2px; }
+/* A panel that appears on its own takes focus itself (its controls are one Tab away); the ring shows only to the keyboard. */
+#hud-dialogue:focus-visible, #hud-lock:focus-visible { outline: 3px solid var(--acid); outline-offset: 2px; }
+#hud-credits:focus-visible { outline: 3px solid var(--acid); outline-offset: -3px; }
 .choice.continue { align-self: flex-end; padding-right: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 11px; }
 #hud.dialogue-open #hud-bars,
 #hud.dialogue-open #hud-verbs,

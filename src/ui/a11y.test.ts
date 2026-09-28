@@ -26,9 +26,11 @@ describe("the HUD's markup for assistive technology", () => {
     tag("dlg-text");
     has(tag("hud-lock"), 'role="dialog"');
     has(tag("hud-lock"), 'aria-labelledby="lock-title"');
+    has(tag("hud-lock"), 'tabindex="-1"'); // it takes focus when it appears (src/ui/lock.ts)
     tag("lock-title");
     has(tag("hud-credits"), 'role="dialog"');
     has(tag("hud-credits"), 'aria-label=');
+    has(tag("hud-credits"), 'tabindex="-1"'); // it takes focus when it rolls, and Enter, Space or Escape close it (src/ui/hud.ts)
   });
   it("announces what changes on its own", () => {
     has(tag("hud-connection"), 'role="status"');

@@ -68,6 +68,9 @@ export function mountTitle(onEnter: () => void): void {
 
   serialInput?.addEventListener("input", () => serialInput.classList.remove("invalid"));
   if (serialInput && !serialInput.value) serialInput.value = String(TEST_SERIAL);
+  // The way in has focus from the start: a screen reader lands on the title's dialog and its button, and one
+  // Enter enters (any key would, but the button is what the page says).
+  enterBtn?.focus({ preventScroll: true });
 
   enterBtn?.addEventListener("click", ev => { ev.stopPropagation(); enter(null); });
   linkBtn?.addEventListener("click", ev => { ev.stopPropagation(); link(); });

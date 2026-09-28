@@ -3,8 +3,11 @@
  * PREPARE THE GROUND", a wallet button, and, only where the city accepts it,
  * a test-link button with a serial input 1–7777. Guests may remain in the
  * Nave as spectators. The wallet's outcome is one line under the actions.
+ * The panel takes focus when it appears (a dialog named by its heading; Tab
+ * reaches the wallet button) and gives it back when it goes, see ./focus.ts.
  */
 import { formatSerial, parseSerial, TEST_SERIAL } from "./format";
+import { focusKeeper } from "./focus";
 import { walletLine, type WalletOutcome } from "../net/wallet";
 import { loopFor } from "../assets/slots";
 import { LoopSlot } from "./loops";
@@ -28,6 +31,7 @@ export function mountLock(root: HTMLElement, onLink: (serial: number) => void, o
   const note = panel?.querySelector<HTMLElement>(".lock-note") ?? null;
   // The generated guest-lock loop, above the title, while the panel is up.
   const loop = new LoopSlot(panel, "lock-loop", panel?.querySelector(".lock-title") ?? null);
+  const focus = focusKeeper(panel, root);
   let dismissed = false;
   let busy = false;
 
@@ -73,7 +77,8 @@ export function mountLock(root: HTMLElement, onLink: (serial: number) => void, o
     ev.stopPropagation();
     if (ev.key === "Enter") { ev.preventDefault(); link(); }
   };
-  const onStay = () => { dismissed = true; if (panel) panel.hidden = true; };
+  const hidePanel = () => { if (panel) panel.hidden = true; };
+  const onStay = () => { dismissed = true; focus.release(hidePanel); };
 
   input?.addEventListener("input", onInput);
   input?.addEventListener("keydown", onKey);
@@ -88,9 +93,10 @@ export function mountLock(root: HTMLElement, onLink: (serial: number) => void, o
       dismissed = false;
       if (panel) panel.hidden = false;
       loop.set(loopFor("guest-lock"));
+      focus.take();
     },
     hide() {
-      if (panel) panel.hidden = true;
+      focus.release(hidePanel);
       dismissed = false;
       say("");
       loop.set(null);
