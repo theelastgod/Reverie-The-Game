@@ -650,6 +650,12 @@ canvas { display: block; }
 .chip-dodge { background: var(--grid); }
 .chip-dodge.cooling { color: var(--muted); }
 
+/* The touch stick: a ring planted where a finger lands on the canvas and a knob that follows it (src/ui/stick.ts). */
+.stick { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 40; }
+.stick[hidden] { display: none; }
+.stick-ring { position: absolute; left: -48px; top: -48px; width: 96px; height: 96px; box-sizing: border-box; border: 2px solid var(--paper); border-radius: 50%; background: rgba(10, 10, 10, 0.35); opacity: 0.6; }
+.stick-knob { position: absolute; left: -20px; top: -20px; width: 40px; height: 40px; border-radius: 50%; background: var(--paper); opacity: 0.85; transform: translate(var(--kx, 0px), var(--ky, 0px)); }
+
 /* heard line and prompt (bottom centre) */
 .heard {
   position: absolute;
@@ -976,6 +982,11 @@ canvas { display: block; }
   .prompt { bottom: calc(var(--marquee-h) + 16px + 44px + 136px); }
   .heard { bottom: calc(var(--marquee-h) + 16px + 44px + 136px + 56px); }
   .dialogue { bottom: calc(var(--marquee-h) + 16px + 8px); }
+}
+
+/* A finger has no Shift: the dodge chip is a button on coarse pointers, at every width (after the block above, so it wins there). */
+@media (pointer: coarse) {
+  .chip-dodge { display: inline-flex; }
 }
 
 @media (max-height: 700px) {

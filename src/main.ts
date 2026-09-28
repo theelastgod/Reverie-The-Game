@@ -35,6 +35,7 @@ const callbacks: HudCallbacks = {
   flag: () => bus.actions?.flag(),
   truce: () => bus.actions?.truce(),
   use: () => bus.actions?.use(),
+  dodge: () => bus.actions?.dodge(),
   market: (op, args) => bus.actions?.market(op, args),
 };
 

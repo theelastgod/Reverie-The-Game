@@ -16,6 +16,7 @@ export type SceneActions = {
   flag: () => void;
   truce: () => void;
   use: () => void;
+  dodge: () => void; // the HUD's dodge button: the way the stick or the keys point, else the facing
   market: (op: "list" | "buy" | "cancel", args: { itemId?: string; listingId?: string; price?: number }) => void;
 };
 

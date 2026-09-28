@@ -202,8 +202,10 @@ export function weatherLine(label: string): string {
 }
 
 /** Dodge chip text. */
-export function dodgeLine(cooldown: number): string {
-  return cooldown > 0 ? `STEP · ${seconds(cooldown)}` : "SHIFT + MOVE · DODGE";
+/** The dodge chip's text; on a touch screen the chip is the button, so it says only what it does. */
+export function dodgeLine(cooldown: number, touch = false): string {
+  if (cooldown > 0) return `STEP · ${seconds(cooldown)}`;
+  return touch ? "DODGE" : "SHIFT + MOVE · DODGE";
 }
 
 /** Stance chip text with the burn hint. */

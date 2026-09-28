@@ -16,6 +16,7 @@ import { VOLUME_STEP } from "../audio/settings";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
 import { browserOwns, escapeDoes, hudControlFocused } from "../ui/keys";
+import { STILL, dodgeDirection, isTap, knobOffset, mergeIntent, stickIntent } from "../ui/stick";
 
 const IDLE: Intent = { up: false, down: false, left: false, right: false };
 const MOVE_KEYS: Record<string, keyof Intent> = {
@@ -56,6 +57,9 @@ export class CityScene extends Phaser.Scene {
 
   private readonly held = new Set<keyof Intent>();
   private readonly intent: Intent = { up: false, down: false, left: false, right: false };
+  /** The touch stick (src/ui/stick.ts): the finger that planted it, where, how far it has dragged, when it landed. */
+  private stick: { id: number; ox: number; oy: number; at: number; travelled: number } | null = null;
+  private stickIntent: Intent = STILL;
   private lastSeq = -1;
   private lastBand: WeatherBand | null = null;
   private lastRain = "";
@@ -108,7 +112,11 @@ export class CityScene extends Phaser.Scene {
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.onBlur);
+    this.input.addPointer(1); // two fingers at once: the stick and a strike
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (p: Phaser.Input.Pointer) => this.pointerDown(p));
+    this.input.on(Phaser.Input.Events.POINTER_MOVE, (p: Phaser.Input.Pointer) => this.pointerMove(p));
+    this.input.on(Phaser.Input.Events.POINTER_UP, (p: Phaser.Input.Pointer) => this.pointerUp(p));
+    this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, (p: Phaser.Input.Pointer) => this.pointerUp(p));
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.teardown());
     this.events.once(Phaser.Scenes.Events.DESTROY, () => this.teardown());
   }
@@ -143,6 +151,7 @@ export class CityScene extends Phaser.Scene {
       flag: () => this.net.flag(),
       truce: () => this.net.truce(),
       use: () => this.useFirstPaper(),
+      dodge: () => this.dodgeButton(),
       market: (op, args) => this.net.market(op, args),
     };
   }
@@ -279,13 +288,66 @@ export class CityScene extends Phaser.Scene {
 
   private blur(): void {
     this.held.clear();
+    this.dropStick();
     this.net.sendIntent(IDLE);
   }
 
   private pointerDown(p: Phaser.Input.Pointer): void {
     if (!document.hasFocus() || this.net.you?.dialogue) return;
+    if (p.wasTouch) {
+      this.touchDown(p);
+      return;
+    }
     const ev = p.event as MouseEvent | undefined;
     this.strike(!!ev && ev.shiftKey);
+  }
+
+  // ------------------------------------------------------------ the touch stick
+
+  /** A finger on the canvas plants the stick where it lands; a second finger while it is held is a strike. */
+  private touchDown(p: Phaser.Input.Pointer): void {
+    if (this.stick) {
+      this.strike(false);
+      return;
+    }
+    this.stick = { id: p.id, ox: p.x, oy: p.y, at: performance.now(), travelled: 0 };
+    this.stickIntent = STILL;
+    bus.hud?.showStick(p.x, p.y);
+  }
+
+  private pointerMove(p: Phaser.Input.Pointer): void {
+    const s = this.stick;
+    if (!s || p.id !== s.id) return;
+    const dx = p.x - s.ox;
+    const dy = p.y - s.oy;
+    s.travelled = Math.max(s.travelled, Math.hypot(dx, dy));
+    this.stickIntent = stickIntent(dx, dy);
+    const k = knobOffset(dx, dy);
+    bus.hud?.moveStick(k.x, k.y);
+  }
+
+  /** The finger lifts: a tap was a strike, a drag was a walk that ends now. */
+  private pointerUp(p: Phaser.Input.Pointer): void {
+    const s = this.stick;
+    if (!s || p.id !== s.id) return;
+    this.dropStick();
+    if (isTap(performance.now() - s.at, s.travelled)) this.strike(false);
+    this.sendIntent();
+  }
+
+  private dropStick(): void {
+    if (!this.stick) return;
+    this.stick = null;
+    this.stickIntent = STILL;
+    bus.hud?.hideStick();
+  }
+
+  /** The HUD's dodge button: the way the stick or the keys point, else the way the body faces. */
+  private dodgeButton(): void {
+    const you = this.net.you;
+    if (!you || you.dialogue) return;
+    const d = dodgeDirection(mergeIntent(this.intent, this.stickIntent), you.facing);
+    if (d && this.net.dodge(d.dx, d.dy)) { this.ghost(d.dx, d.dy); audio.play("dodge"); }
   }
 
   private dodgeToward(dir: keyof Intent): void {
@@ -346,7 +408,7 @@ export class CityScene extends Phaser.Scene {
     i.down = !still && this.held.has("down");
     i.left = !still && this.held.has("left");
     i.right = !still && this.held.has("right");
-    this.net.sendIntent(i);
+    this.net.sendIntent(still ? i : mergeIntent(i, this.stickIntent));
   }
 
   private render(snap: Snap): void {

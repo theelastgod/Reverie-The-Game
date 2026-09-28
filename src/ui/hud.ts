@@ -31,6 +31,7 @@ export type HudCallbacks = {
   wallet: () => Promise<WalletOutcome>; // the wallet handshake; the lock panel shows the outcome line
   interact: (targetId: string, choice: string) => void; // prompt verb clicked (touch/mouse)
   stance: () => void; kit: () => void; flag: () => void; truce: () => void; use: () => void;
+  dodge: () => void; // the dodge chip pressed (a finger has no Shift): the way the stick points, else the facing
   market: (op: "list" | "buy" | "cancel", args: { itemId?: string; listingId?: string; price?: number }) => void;
 };
 
@@ -85,6 +86,10 @@ export class Hud {
   private readonly kitBadge: HTMLImageElement;
   private readonly dodge: HTMLElement | null;
   private readonly dodgeText: HTMLElement | null;
+  private readonly stick: HTMLElement | null;
+  private readonly stickKnob: HTMLElement | null;
+  /** A coarse pointer (a finger): the dodge chip is the button and says only what it does. */
+  private readonly touch: boolean;
   private readonly prompt: HTMLElement | null;
   private readonly promptName: HTMLElement | null;
   private readonly promptVerbs: HTMLElement | null;
@@ -186,6 +191,9 @@ export class Hud {
     this.kitText?.before(this.kitBadge);
     this.dodge = q(root, "#hud-dodge");
     this.dodgeText = this.dodge ? q(this.dodge, ".chip-text") : null;
+    this.stick = q(root, "#hud-stick");
+    this.stickKnob = this.stick ? q(this.stick, ".stick-knob") : null;
+    this.touch = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
     this.prompt = q(root, "#hud-prompt");
     this.promptName = this.prompt ? q(this.prompt, ".prompt-name") : null;
     this.promptVerbs = this.prompt ? q(this.prompt, ".prompt-verbs") : null;
@@ -212,6 +220,7 @@ export class Hud {
 
     this.stance?.addEventListener("click", this.onStance);
     this.kit?.addEventListener("click", this.onKit);
+    this.dodge?.addEventListener("click", this.onDodge);
     this.promptVerbs?.addEventListener("click", this.onVerb);
     this.credits?.addEventListener("click", this.onCredits);
     this.credits?.addEventListener("keydown", this.onCreditsKey);
@@ -310,6 +319,7 @@ export class Hud {
     window.clearTimeout(this.statusTimer);
     this.stance?.removeEventListener("click", this.onStance);
     this.kit?.removeEventListener("click", this.onKit);
+    this.dodge?.removeEventListener("click", this.onDodge);
     this.promptVerbs?.removeEventListener("click", this.onVerb);
     this.credits?.removeEventListener("click", this.onCredits);
     this.credits?.removeEventListener("keydown", this.onCreditsKey);
@@ -327,6 +337,28 @@ export class Hud {
 
   private readonly onStance = (ev: Event) => { ev.preventDefault(); this.cb.stance(); };
   private readonly onKit = (ev: Event) => { ev.preventDefault(); this.cb.kit(); };
+  private readonly onDodge = (ev: Event) => { ev.preventDefault(); this.cb.dodge(); };
+
+  // ------------------------------------------------------------ the touch stick (drawn here, decided in the scene)
+
+  /** Plants the stick's ring where a finger landed, in page pixels. */
+  showStick(x: number, y: number): void {
+    if (!this.stick) return;
+    this.stick.style.left = `${x}px`;
+    this.stick.style.top = `${y}px`;
+    this.moveStick(0, 0);
+    show(this.stick, true);
+  }
+
+  /** Moves the knob by an offset from the ring's centre (already clamped by the scene). */
+  moveStick(dx: number, dy: number): void {
+    this.stickKnob?.style.setProperty("--kx", `${dx}px`);
+    this.stickKnob?.style.setProperty("--ky", `${dy}px`);
+  }
+
+  hideStick(): void {
+    show(this.stick, false);
+  }
   /** The credits close on a click, or on Enter, Space or Escape while they hold focus; focus goes back where it was. */
   private readonly onCredits = () => {
     this.creditsFocus.release(() => show(this.credits, false));
@@ -487,7 +519,7 @@ export class Hud {
 
   private updateDodge(snap: Snap): void {
     const cd = Math.ceil(snap.you.dodgeCd * 10) / 10;
-    const text = dodgeLine(cd);
+    const text = dodgeLine(cd, this.touch);
     if (text === this.dodgeSig) return;
     this.dodgeSig = text;
     setText(this.dodgeText, text);

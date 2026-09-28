@@ -30,6 +30,7 @@ export type HudCallbacks = {
   link: (serial: number) => void;         // mock Angel link from the lock panel or the title
   interact: (targetId: string, choice: string) => void; // prompt verb clicked (touch/mouse)
   stance: () => void; kit: () => void; flag: () => void; truce: () => void; use: () => void;
+  dodge: () => void;                      // the dodge chip pressed (a finger has no Shift)
 };
 export class Hud {
   constructor(root: HTMLElement, callbacks: HudCallbacks);
@@ -38,6 +39,7 @@ export class Hud {
   update(snap: Snap): void;                            // every snapshot; cheap diffing inside
   flash(text: string, tone?: "ink" | "gold" | "hot" | "acid" | "sky"): void; // transient notice
   toggleJournal(): void; toggleMinimap(): void;
+  showStick(x: number, y: number): void; moveStick(dx: number, dy: number): void; hideStick(): void; // the touch stick's ring and knob
   destroy(): void;
 }
 ```
@@ -49,7 +51,8 @@ boot overlay; the title overlay exposes `window.__reverieStart?.()`-free API:
 HUD element ids (D2 creates them; D1 never touches DOM except through `Hud`):
 `hud`, `title`, `hud-top` (chips: identity, district, weather, ledger),
 `hud-bars` (hp, aura, restraint, readiness), `hud-stance`, `hud-kit`,
-`hud-dodge`, `hud-prompt` (nearest interaction with key caps),
+`hud-dodge` (a button on coarse pointers), `hud-stick` (the touch stick's ring
+and knob, planted where a finger lands), `hud-prompt` (nearest interaction with key caps),
 `hud-heard` (spoken line), `hud-wink` (private line, void/gold),
 `hud-notices`, `hud-marquee` (news ticker), `hud-dialogue` (portrait, speaker,
 text, wink, choices), `hud-journal` (field notes: plate, movement, title,
@@ -91,6 +94,16 @@ turns 1; names only the game).
   and Escape blurs back to the game: `src/ui/keys.ts`); K → kit; F → prompt verb F (talk when the
   prompt target is an NPC); E / Q → prompt verbs E / Q; 1–4 → choose;
   Esc → close; V → flag; T → truce; I → use; J → journal; M → minimap.
+  Touch (`src/ui/stick.ts`, pure and unit-tested; the scene applies it): a
+  finger down on the canvas plants a stick where it lands (`Hud.showStick`),
+  a drag from there is the eight-way intent the keys send (45-degree
+  sectors past a 14 px dead zone; the knob follows within 40 px), lifting
+  ends it; a press of at most 250 ms that travelled under 10 px is a strike,
+  a second finger down while the stick is held is a strike too; the dodge
+  chip is a button on coarse pointers (`pointer: coarse`, text "DODGE") and
+  dodges the way the stick or the keys point, else the way the body faces.
+  The prompt's verbs, the stance, the kit and the dialogue's choices are
+  buttons already. Not by touch yet: a heavy strike.
 - 60 fps target: no per-tile GameObjects; reuse sprites by id; cull labels.
 
 ## Network (D1)

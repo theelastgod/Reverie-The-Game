@@ -124,9 +124,9 @@ try {
     verbs.nudged = nudged;
     return verbs;
   };
-  // Aimed a tile short of her reach and nudged south through it: a leg walked a little long would pass her, and
-  // nudges from there would only walk away.
-  let verbs = await walkTo([['KeyD', 2.8], ['KeyS', 5.5]], /speak/i, 'KeyS', 8);
+  // Anchored on the low wall at x 13 (rows 49 to 53): south past her row, east into the wall (an over-walk stops
+  // there whatever the drift), four tiles west; a leg walked by time alone missed her reach one run in a few.
+  let verbs = await walkTo([['KeyS', 8], ['KeyD', 10], ['KeyA', 4]], /speak/i, 'KeyW', 4);
   await page.screenshot({ path: join(shots, '02-nave.png') });
   let promptText = await readPrompt();
   const speak = verbs.find(v => /speak/i.test(v.label));
@@ -168,17 +168,17 @@ try {
   console.log(`dialogue focus: ${focusStep}`);
 
   // Then a node, whose verb answers without a dialogue (an extract is a heard line and a ledger change; a keep, a
-  // heard line; a refusal, a heard line too): two tiles west to the x 6 lane (the courier's corridor, clear from
-  // row 48 up to row 30, walled to the east between), thirteen tiles north, short of the fourth Nave node at
-  // 6,34, then half tiles north until the prompt offers the node's verbs or the CRT altar's WATCH at 5,31, the
-  // landmark at the corridor's top. The altar means the fourth node offered nothing (a keep holds until someone
-  // extracts, and charges come back one per 300 s; two checks in a row on a lived-in world leave it so): then
-  // the first node at 11,36, by the crossing at row 30 (north to it, five tiles east, six south, nudged south).
+  // heard line; a refusal, a heard line too). Two tiles west to the x 6 lane (the courier's corridor, clear from
+  // row 48 up to row 30 and walled to the east between), then north into the wall at the corridor's top: an
+  // over-walk stops there whatever the drift so far, so the wall is the anchor every later leg starts from.
+  // Four tiles south is the fourth Nave node at 6,34. When it offers nothing (a keep holds until someone
+  // extracts and charges come back one per 300 s, which two checks in a row on a lived-in world leave it in),
+  // back to the wall, five tiles east along the row 30 crossing and six south is the first node at 11,36.
   const isNodeVerb = v => /extract|keep/i.test(v.label);
-  verbs = await walkTo([['KeyA', 2], ['KeyW', 13]], /extract|keep|watch/i, 'KeyW', 12);
+  verbs = await walkTo([['KeyA', 2], ['KeyW', 22], ['KeyS', 4]], /extract|keep/i, 'KeyS', 4);
   let nodeName = 'the fourth node';
   if (!verbs.some(isNodeVerb)) {
-    verbs = await walkTo([['KeyW', 1.5], ['KeyD', 5], ['KeyS', 6]], /extract|keep/i, 'KeyS', 4);
+    verbs = await walkTo([['KeyW', 8], ['KeyD', 5], ['KeyS', 6]], /extract|keep/i, 'KeyS', 4);
     nodeName = 'the first node (the fourth offered nothing)';
   }
   promptText = await readPrompt();
@@ -282,7 +282,9 @@ try {
     if (root !== origin) {
       await phone.goto(root, { waitUntil: 'load', timeout: 30000 });
       await phone.waitForFunction(() => document.getElementById('city-log-band')?.dataset.state === 'done', null, { timeout: 15000 }).catch(() => {});
-      await phone.screenshot({ path: join(shots, '05-phone-landing.png'), fullPage: true });
+      // Not fullPage: a full-page shot resizes the emulated screen and Chromium drops the touch emulation with it
+      // (maxTouchPoints 0, pointer: coarse false from then on), and the touch step below needs both.
+      await phone.screenshot({ path: join(shots, '05-phone-landing.png') });
     }
     await phone.goto(origin, { waitUntil: 'load', timeout: 30000 });
     await phone.waitForSelector('#title', { timeout: 15000 });
@@ -290,6 +292,7 @@ try {
     if (await enterPhone.count()) await enterPhone.click(); else await phone.keyboard.press('Enter');
     await phone.waitForSelector('#hud:not([hidden])', { timeout: 30000 });
     await phone.waitForTimeout(1500);
+    console.log(`phone pointer: ${await phone.evaluate(() => `coarse ${matchMedia('(pointer: coarse)').matches}, touch points ${navigator.maxTouchPoints}, width ${window.innerWidth}`)}`);
     const fit = await phone.evaluate(() => {
       const w = window.innerWidth;
       const h = window.innerHeight;
@@ -330,6 +333,39 @@ try {
     console.log(`reduced motion: query ${motion.reduced ? 'seen' : 'not seen'}; marquee animation ${motion.marquee}`);
     if (!motion.reduced) failures.push('the phone pass asked for reduced motion and the page did not see it');
     if (motion.marquee !== 'no marquee' && motion.marquee !== 'none') failures.push(`the marquee still animates under reduced motion (${motion.marquee})`);
+
+    // The one-stick touch scheme, with real touch events: a finger down on the canvas plants the stick, a drag
+    // north walks (the map's sentence moves the objective), the finger up hides it, a tap is a strike (no line to
+    // read; the script-error check covers it), and the dodge chip is a button whose press starts the cooldown.
+    const mapLabel = () => phone.evaluate(() => document.querySelector('#hud-minimap canvas')?.getAttribute('aria-label') ?? '');
+    const stickShown = () => phone.evaluate(() => !document.getElementById('hud-stick')?.hidden);
+    const cdp = await phone.context().newCDPSession(phone);
+    const mapBefore = await mapLabel();
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 195, y: 470 }] });
+    await phone.waitForTimeout(100);
+    const planted = await stickShown();
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 195, y: 400 }] });
+    await phone.waitForTimeout(1200);
+    await phone.screenshot({ path: join(shots, '07-phone-stick.png') });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await phone.waitForTimeout(400);
+    const lifted = !(await stickShown());
+    const mapAfter = await mapLabel();
+    await phone.touchscreen.tap(260, 470);
+    await phone.waitForTimeout(300);
+    const dodgeChip = phone.locator('#hud-dodge');
+    const dodgeVisible = await dodgeChip.isVisible();
+    if (dodgeVisible) await dodgeChip.tap();
+    await phone.waitForTimeout(500);
+    const dodgeText = (await dodgeChip.textContent().catch(() => '')) ?? '';
+    const dodgeState = await phone.evaluate(() => { const d = document.getElementById('hud-dodge'); return `coarse ${matchMedia('(pointer: coarse)').matches}, display ${d ? getComputedStyle(d).display : 'no chip'}`; });
+    const walked = mapAfter !== mapBefore;
+    console.log(`touch: stick ${planted ? 'planted' : 'not planted'}, ${lifted ? 'lifted' : 'still shown'}; drag north ${walked ? 'walked' : 'did not walk'} ("${mapBefore.replace(/^.*objective, /, '')}" → "${mapAfter.replace(/^.*objective, /, '')}"); dodge chip ${dodgeVisible ? `pressed → "${dodgeText.trim()}"` : `not shown (${dodgeState})`}`);
+    if (!planted) failures.push('a finger on the canvas did not plant the stick');
+    if (!lifted) failures.push('the stick stayed after the finger lifted');
+    if (!walked) failures.push('a drag on the stick did not walk the body');
+    if (!dodgeVisible) failures.push(`the dodge chip is not a visible button on a coarse pointer (${dodgeState})`);
+    else if (!/STEP/.test(dodgeText)) failures.push(`the dodge button did not start a cooldown ("${dodgeText.trim()}")`);
     if (fit.off.length) failures.push(`phone: off the screen: ${fit.off.join('; ')}`);
     if (fit.stacked.length) failures.push(`phone: ${fit.stacked.join('; ')}`);
     if (fit.scrollW > fit.w) failures.push(`phone: the page scrolls sideways (${fit.scrollW} > ${fit.w})`);
@@ -348,4 +384,4 @@ try {
   clearTimeout(deadline);
 }
 if (failures.length) { console.error(`FAIL: ${failures.join('; ')}`); process.exit(1); }
-console.log(`PASS: landing page and its log, title, Nave + HUD, a dialogue with focus and a node's answer, keyboard reach, frame pacing >= ${MIN_FPS} fps, the phone's HUD in its screen (screenshots in ${shots})`);
+console.log(`PASS: landing page and its log, title, Nave + HUD, a dialogue with focus and a node's answer, keyboard reach, frame pacing >= ${MIN_FPS} fps, the phone's HUD in its screen under reduced motion, the touch stick and the dodge button (screenshots in ${shots})`);

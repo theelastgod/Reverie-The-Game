@@ -111,6 +111,8 @@ describe("kit, stance, dodge", () => {
   it("builds the dodge chip", () => {
     expect(dodgeLine(0)).toBe("SHIFT + MOVE · DODGE");
     expect(dodgeLine(0.6)).toBe("STEP · 0.6s");
+    expect(dodgeLine(0, true), "a finger has no Shift").toBe("DODGE");
+    expect(dodgeLine(0.6, true)).toBe("STEP · 0.6s");
   });
 });
 

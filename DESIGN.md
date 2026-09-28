@@ -138,6 +138,7 @@ See `src/sim/types.ts`. Summary:
 |---|---|---|
 | WASD / arrows | `intent` | 170 px/s, wall collision with substeps, personal gates |
 | Shift + direction | `dodge` | 0.18 s at 440 px/s, 0.9 s cooldown, +0.06 s window in Restraint; i-frames only during the dash, against clerks and against people; no attacks during it |
+| Touch: a drag from where the finger lands; a tap or a second finger; the DODGE chip | `intent` / `strike` / `dodge` | the one-stick scheme (`src/ui/stick.ts`): the same eight-way intent the keys send, the same strike, the dodge the way the stick points or the body faces; no new message, so the server's rules above are the whole story |
 | click / Space | `strike` | light: 22 dmg, 56 px reach, 0.42 s; hit-stop extends cooldown by 0.08 s |
 | R / Shift+click | `heavy` | 34 dmg, 64 px reach, 1.1 s; 0.25 s windup during which the player cannot dodge; interrupts an enemy telegraph and forces recovery |
 | Tab | `stance` | toggle Restraint ⇄ Storm. Storm burns restraint 1/s, shows wreckage, presses "geared" targets (bestand ≥ 60 unbanked) by the climate band (+15% clear, +25% mixed, +35% fat, +40% meltdown), −25% vs the already-fallen; no kit, messenger, House or serial term. Restraint: see Winke, better dodge, −20% node yield |

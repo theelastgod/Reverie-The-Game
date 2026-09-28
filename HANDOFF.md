@@ -8,9 +8,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 490 tests, the session smoke, the campaign smoke and the
-  Playwright render check (desktop and phone, now through a real dialogue
-  with Nara Vale and a node) pass; the Worker bundles
+  fresh world; 499 tests, the session smoke, the campaign smoke and the
+  Playwright render check (desktop and phone, through a real dialogue
+  with Nara Vale, a node, and the phone's touch stick) pass; the Worker bundles
   (`wrangler deploy --dry-run`: 558 KB, 147 KB gzipped, 94 site files, the
   bindings WORLD, LOG, ASSETS and the `ANGEL_*` variables empty). The server
   since the 26th: a message and join budget, an hourly sweep of stale guest
@@ -982,6 +982,35 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   nudges then walked away. The dry-run bundle re-read after the day's
   client commits: 558.62 KiB, 147.16 KiB gzipped, 94 site files, the
   bindings as before.
+- One-stick mobile (2026-09-28, later; the brief's "one-stick mobile
+  later, not a v1 blocker", taken now that the phone HUD fits and the
+  Backlog's container-side items are done). `src/ui/stick.ts`, pure and
+  unit-tested: a finger down on the canvas plants a stick where it lands,
+  a drag from there is the eight-way intent the keys send (45-degree
+  sectors past a 14 px dead zone; the knob follows within 40 px), lifting
+  ends it; a press of at most 250 ms that travelled under 10 px is a
+  strike, and a second finger down while the stick is held is a strike
+  too; the dodge chip is a button on coarse pointers (`pointer: coarse`,
+  labelled "DODGE"; a mouse can press it too) and dodges the way the
+  stick or the keys point, else the way the body faces. The scene applies
+  it (`touchDown`, `pointerMove`, `pointerUp`, `dodgeButton`; the keys
+  and the stick merge into one intent; a second Phaser pointer for two
+  fingers); the HUD draws the ring and the knob (`#hud-stick`,
+  `showStick`/`moveStick`/`hideStick`, paper on void) and gained the
+  `dodge` callback. No new message: the server's rules are the whole
+  story. The render check's phone pass now sends real touch events
+  through CDP: the stick plants, a drag north walks (the map's sentence
+  moves the objective), the finger up hides it, a tap strikes, the dodge
+  button starts the cooldown (`07-phone-stick.png` shows the ring). Found
+  on the way and fixed: a full-page screenshot on the phone made
+  Chromium drop the touch emulation (no touch points, no coarse pointer
+  from then on), so the phone landing shot is a plain one; a CSS edit
+  had closed the phone block early (three rules moved back). And the
+  check's two walks now start from walls: an over-walk into the
+  corridor's top wall, or into the low wall east of Nara's home, stops at
+  the same place whatever the drift, so every later leg is short and the
+  nodes and Nara are reached every run (a leg walked by time alone had
+  missed her one run in a few). Not by touch yet: a heavy strike.
 
 ## Verified (2026-09-25, integration)
 
@@ -1484,6 +1513,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   reading 8; Nara's dialogue and the focus path every time. Before the
   fix, the third run in a row failed on a stale WATCH read off the hidden
   prompt, and one run missed Nara's reach (the leg walked long).
+- One-stick mobile (2026-09-28, later): typecheck; 499 tests (nine new
+  on the stick's decisions: the dead zone, the four directions, the
+  diagonals' sectors, the drag's length, the knob's clamp, a tap, the
+  dodge direction, the merge; the dodge chip's touch label joins an
+  existing one); the build and the play build staged; the session smoke
+  PASS. A phone-sized browser probe with CDP touch events first (the
+  stick planted, the knob at 0, −40 during the drag, seven tiles walked
+  north in 1.5 s, hidden on lift, the dodge button's cooldown running,
+  no page error), then the render check PASS twice in a row at
+  `RENDER_MIN_FPS=5` with the touch step and the wall-anchored walks:
+  Nara's dialogue and the focus path both runs, the node's answer both
+  runs (the first node, the fourth having been left kept and empty by
+  the runs before), the phone pass under reduced motion with "coarse
+  true, touch points 1", the stick planted and lifted, the drag walked,
+  the dodge chip pressed to "STEP · 0.4s". Three probe runs of the
+  anchored Nara leg read the same prompt and bearing each time.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1660,10 +1705,16 @@ they are discovered; keep this list honest.
    back, the title's way in has focus at boot, and the HUD, the minimap
    and the canvas all honour `prefers-reduced-motion` (Done, 2026-09-27
    and 28; `.rebuild/CLIENT.md` has the list). Left: a pass with a screen
-   reader on real hardware, which this container cannot do; the journal's
-   quests as a list with a heading is a candidate if that pass asks for
-   it.
-11. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
+   reader on real hardware, which this container cannot do (the journal
+   is a named landmark with a named quest list since 2026-09-28).
+11. **One-stick mobile, the rest.** The stick, the tap, the second
+   finger and the dodge button are in (Done, 2026-09-28) and the render
+   check drives them with real touch events. Left: a heavy strike by
+   touch (a long press on the second finger is the natural shape; the
+   heavy's windup and interrupt are the server's, so it is a client
+   gesture only), and a pass on a real phone, which this container
+   cannot do (Chromium's touch emulation is what the check has).
+12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 
 ## Rules
