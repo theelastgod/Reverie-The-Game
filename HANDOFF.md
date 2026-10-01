@@ -1025,6 +1025,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   dragging stick sent exactly one `heavy`, its lift sent nothing, and a
   tap on the canvas sent exactly one `strike`. The docs' touch rows and
   the client contract say so.
+- The gates on GitHub for every push (2026-10-01; discovered: no workflow
+  had ever run in the repository, and the Deploy workflow's `check` cannot
+  start until `main` carries it). `.github/workflows/gates.yml` runs on
+  `push` from the pushed branch's own copy (GitHub takes a push-triggered
+  workflow from the pushed ref; only a dispatched one is registered from
+  the default branch): `npm ci`, the typecheck, the tests, the client
+  build and stage, and a dry-run bundle of the Worker, no secrets,
+  nothing deployed; a newer push cancels a run still going, so a branch's
+  mark is its latest commit's. The Deploy workflow's `check` stays as a
+  hand-run of the same steps; its header and the README say which runs
+  when.
 
 ## Verified (2026-09-25, integration)
 
@@ -1560,7 +1571,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 Prioritized. The autonomous routine takes the top unfinished item, finishes it
 with tests, runs the gates, commits, pushes, and moves it to Done. Add items as
-they are discovered; keep this list honest.
+they are discovered; keep this list honest. As of 2026-10-01 items 1–12 are
+the owner's, a real device's or the network's to finish; the routine takes
+the discovered items from 13 on and adds what it finds.
 
 1. **Generated assets (Stage B).** 68 results exist in the owner's Higgsfield
    account (manifest: `.rebuild/generated-manifest.tsv`, pull script:
@@ -1603,7 +1616,9 @@ they are discovered; keep this list honest.
    `main`, so that push is the owner's. Once there, typing `check` first
    runs the install, the gates, the client build and a dry-run bundle on
    GitHub's runner with no secrets and deploys nothing (its steps pass
-   here; see Verified); then `deploy`; or (b) the network policy allows
+   here; see Verified; since 2026-10-01 the same steps run by themselves
+   on every push from `gates.yml`, which needs no step on `main`, so
+   `check` adds only a hand-run); then `deploy`; or (b) the network policy allows
    `api.cloudflare.com` and the routine runs `npm run deploy` here; or
    (c) from any machine where `wrangler` is logged in to the account (the
    account's other Workers were deployed on 2026-09-26, so one exists):
@@ -1736,6 +1751,19 @@ they are discovered; keep this list honest.
    has; the heavy's hold length in particular wants a thumb's judgement).
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
+13. **The generated manifest's 404.** The client asks for
+   `/assets/gen/manifest.json` before Phaser boots (`src/assets/gen.ts`;
+   the audio bus asks again) and, with no Stage B assets staged,
+   `public/assets/gen/` does not exist and the Worker answers 404: the
+   client reads that as an empty manifest by design, but the browser
+   logs a failed request on every load, in production as in the render
+   check (listed there as a known page error since 2026-09-26). An empty
+   manifest committed at `public/assets/gen/manifest.json` (`{ "v": 1,
+   "targets": {} }`, what `pull-generated.mjs` writes with nothing
+   pulled) would end it. Check that the lint and `hasGen` treat it as no
+   assets, that the pull script overwrites it and the test still passes,
+   and that the render check's known-error list shrinks to the fonts'
+   proxy certificate.
 
 ## Rules
 

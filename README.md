@@ -113,6 +113,11 @@ npm run test:load        # scripts/load-check.mjs: 20 bots walk and strike for 2
 npm run bench            # src/sim/broadcast.bench.ts: one broadcast to 80 walking viewers, in-process: viewer-by-viewer, the step's shared views, the frames with the slow side built only when due
 ```
 
+On GitHub, every push runs the typecheck, the tests, the client build and
+stage, and a dry-run bundle of the Worker (`.github/workflows/gates.yml`,
+taken from the pushed branch itself, no secrets, nothing deployed); the
+Actions tab lists the runs and each commit carries its mark.
+
 The three live scripts take an origin argument (default `http://127.0.0.1:8788`;
 the render check defaults to `http://127.0.0.1:8788/play/`) and need
 `npm run dev:world` running with a built client staged in `site/play/`
@@ -133,8 +138,9 @@ workflow (`.github/workflows/deploy.yml`) is started by hand with the word
 the deploy, and needs the repository secrets `CLOUDFLARE_API_TOKEN` and
 `CLOUDFLARE_ACCOUNT_ID`; typed `check` instead it runs the install, the gates,
 the client build and a dry-run bundle on GitHub's runner with no secrets and
-deploys nothing. GitHub registers workflows from the default branch only, so
-the file must be on `main` before either mode can be started; from there the
+deploys nothing (the push-run gates above do the same by themselves). GitHub
+registers dispatched workflows from the default branch only, so the file must
+be on `main` before either mode can be started; from there the
 Actions tab runs it, or `gh workflow run deploy.yml --ref <branch> -f
 confirm=deploy` (or `confirm=check`) runs a branch's copy. Sessions use a host-only
 HttpOnly cookie; a second tab takes over the same body. Actions checkpoint

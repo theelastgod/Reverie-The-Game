@@ -1,11 +1,13 @@
 # Deploys the checked-out branch to the Worker named in wrangler.toml, or, with
 # "check" typed in, proves the pipeline on GitHub's runners without touching
 # Cloudflare: the install, the gates, the client build and stage, and a dry-run
-# bundle of the Worker, no secrets needed. Nothing runs on a push. GitHub
-# registers workflows from the default branch only: while this file lives on a
-# feature branch alone, neither the Actions tab nor the API (404) can start it.
-# Once it is on main, the tab's "Run workflow" button runs it, and the CLI can
-# run the branch's copy:
+# bundle of the Worker, no secrets needed. Nothing here runs on a push: the
+# same check runs by itself on every push from gates.yml, which GitHub takes
+# from the pushed branch; "check" is a hand-run of those steps. GitHub
+# registers dispatched workflows from the default branch only: while this file
+# lives on a feature branch alone, neither the Actions tab nor the API (404)
+# can start it. Once it is on main, the tab's "Run workflow" button runs it,
+# and the CLI can run the branch's copy:
 #   gh workflow run deploy.yml --ref <branch> -f confirm=check   (or confirm=deploy)
 # A deploy needs two repository secrets, set once under Settings → Secrets and
 # variables → Actions: CLOUDFLARE_API_TOKEN (a token with Workers Scripts,

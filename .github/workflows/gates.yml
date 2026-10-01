@@ -1,0 +1,45 @@
+# Runs the gates on every push, from the pushed branch's own copy of this file.
+# GitHub takes a push-triggered workflow from the ref that was pushed, so this
+# runs for a feature branch the default branch has never carried; a dispatched
+# workflow (deploy.yml) is registered from the default branch only, which is
+# why this one exists. The steps are deploy.yml's "check": the install, the
+# typecheck, the tests, the client build and stage, and a dry-run bundle of
+# the Worker written to the runner and never sent. No secrets, nothing
+# deployed, nothing touched on Cloudflare. A push that lands while a run is
+# still going cancels that run, so a branch's check is always its latest
+# commit's. The Actions tab lists the runs; each commit carries its mark.
+name: The gates
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  group: gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Typecheck the client and the Worker
+        run: npm run typecheck
+      - name: The tests
+        run: npm test
+      - name: Build the client and stage it
+        # The typecheck ran already; this is `npm run build:play` without its second one.
+        run: |
+          VITE_BASE=/play/ npx vite build
+          node scripts/stage-play.mjs
+      - name: Bundle the Worker without deploying
+        # The same bundle a deploy would upload, written to the runner and never sent.
+        run: npx wrangler deploy --dry-run --outdir .wrangler/check
