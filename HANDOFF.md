@@ -4,7 +4,7 @@ State of the rebuild. Read `DESIGN.md` first, then `.rebuild/CONTRACTS.md`
 (shared-sim signatures) and `.rebuild/CLIENT.md` (client contract). The master
 brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
-## Where things stand (2026-09-28)
+## Where things stand (2026-10-01)
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
@@ -18,7 +18,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   bodies, a world record without bodies and body records written only when
   they change, each reviewed and security-reviewed (see Done). The dev
   tools are current (vite 8, vitest 5, wrangler 4.141; `npm audit` reads
-  0 for production and dev dependencies alike).
+  0 for production and dev dependencies alike). Since 2026-10-01 every
+  push runs the typecheck, the tests, the client build and a dry-run
+  bundle on GitHub's runner by itself (`.github/workflows/gates.yml`, no
+  secrets, nothing deployed); the Actions tab shows the mark on each
+  commit, and the first run passed in half a minute.
 - **Two steps only you can take** (Backlog 1 and 2 have the detail): the
   Stage B art waits on the results host being reachable from a machine that
   runs `node scripts/pull-generated.mjs`; the deploy waits on either the
@@ -1035,7 +1039,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   nothing deployed; a newer push cancels a run still going, so a branch's
   mark is its latest commit's. The Deploy workflow's `check` stays as a
   hand-run of the same steps; its header and the README say which runs
-  when.
+  when. The first run's one warning (the v4 checkout and setup-node
+  actions target Node 20, which the runners have deprecated) moved both
+  workflows to the v5 actions on the follow-up push.
 
 ## Verified (2026-09-25, integration)
 
@@ -1561,11 +1567,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   lifted → sent []; tap → sent [strike]", the stick planted and lifted,
   the drag walked, the dodge chip to "STEP · 0.4s", no phone-only script
   error.
+- The gates on GitHub (2026-10-01): the push of `d217e34` started run 1
+  of **The gates** on `ubuntu-latest` by itself (the repository's first
+  workflow run), and every step passed in 30 s: `npm ci` 9 s, the
+  typecheck 5 s, the tests 6 s (40 files, 500 tests, the same count as
+  here), the client build 0.8 s and the stage, the dry-run bundle 2 s
+  (558.62 KiB, 147.16 KiB gzipped, 93 site files, the bindings WORLD,
+  LOG, ASSETS, `MOCK_LINK "0"`, the `ANGEL_*` variables empty). Read
+  through the GitHub connector (the run's jobs and its log). The
+  follow-up push carries this entry and the v5 actions; the Actions tab
+  holds its run. Locally the same day: typecheck, 500 tests, the build.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
-  reader included), the Deploy workflow on GitHub's runner (above), and
-  so the revision check at the end of a real deploy.
+  reader included), the Deploy workflow's own deploy steps on GitHub's
+  runner (its check steps are the gates workflow's, which ran, above),
+  and so the revision check at the end of a real deploy.
 
 ## Backlog
 
