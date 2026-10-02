@@ -615,6 +615,7 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
   expect(me(w).flags[F.MAP]).toBe(1);
   expect(me(w).choices[C.MAP]).toBe(o.cut);
   expect(me(talkTo(w, ME, "ord")).dialogue?.text, "Ord remembers the cut").toContain(o.cut === "strait" ? "You said the water." : o.cut === "whole" ? "You said nowhere." : "You said the");
+  expect(w.news.some(n => n.text.includes("told Ord's ledger they would cut it")), "the cut is news").toBe(true);
   w = closeAll(w, ME);
 
   // the cold desk posts the cut organ's hour first; drawn whole, they come as they are
@@ -657,21 +658,49 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
   expect(me(w).heard).toContain("once, on the way to the glass");
   expect(me(w).quests["side-kerb-omen-glass"], "the sky hour woke on the strike").toBe(0);
 
+  // before the glass, Ord sends you to it; he is not there yet
+  expect(me(talkTo(w, ME, "ord")).dialogue?.text).toContain("Face the glass; I will be at it.");
+  w = closeAll(w, ME);
+  expect(npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!.state).not.toBe("glass");
+
   w = tick(use(w, "forecast-glass", "season"));
   expectStep(w, Q.M3, 7);
   expect(me(w).flags[F.FAILED]).toBe(1);
+  expect(me(w).heard).toContain("the recorders still standing in it");
 
+  // the glass faced, Ord is beside it with the figure: last season was captured, not short; read once, then he is at the gate again
+  const ordAtGlass = npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!;
+  expect(ordAtGlass).toMatchObject({ state: "glass", x: POSITIONS["station:ord-glass"].x, y: POSITIONS["station:ord-glass"].y });
+  w = talkTo(w, ME, "ord");
+  expect(me(w).dialogue?.node).toBe("figure");
+  expect(me(w).dialogue?.text).toContain("It was not short of anything.");
+  w = closeAll(w, ME);
+  expect(me(w).flags[F.FIGURE]).toBe(1);
+  expect(npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!.state).not.toBe("glass");
+  expect(me(talkTo(w, ME, "ord")).dialogue?.node).toBe("figure-after");
+  w = closeAll(w, ME);
+
+  // Quill hands over the print from the Grid with your own serial in the margin; after the choice, the plate she would not cut
   if (o.forge === "sell") {
     w = interact(goTo(w, ME, "forge-tray"), ME, "forge-tray", "hear");
     expect(me(w).dialogue?.node).toBe("forge-lesson");
+    expect(me(w).dialogue?.text).toContain(`Read the margin. ${me(w).name}.`);
     expect(w.pois["forge-tray"].state).toBe("warm");
-    w = closeAll(choose(w, ME, "sell"), ME);
+    w = act(choose(w, ME, "sell"), ME, { t: "close" });
+    expect(me(w).dialogue?.node, "the plate follows the print").toBe("forge-plate");
+    w = choose(w, ME, "margin");
+    expect(me(w).dialogue?.text).toContain("I sold them the margin.");
+    w = closeAll(w, ME);
     expect(me(w).items.find(i => i.id === "copy:wink")).toMatchObject({ kind: "exhibition", qty: 1 });
     expect(me(w).fakeWinke).toBe(1);
   } else {
     w = talkTo(w, ME, "quill");
     expect(me(w).dialogue?.node).toBe("forge-lesson");
-    w = closeAll(choose(w, ME, "spot"), ME);
+    w = act(choose(w, ME, "spot"), ME, { t: "close" });
+    expect(me(w).dialogue?.node, "the plate follows the lesson").toBe("forge-plate");
+    w = choose(w, ME, "him");
+    expect(me(w).dialogue?.text).toContain("Only time I've been quoted and not paid.");
+    w = closeAll(w, ME);
     expect(me(w).items.some(i => i.id === "copy:wink")).toBe(false);
     expect(me(w).fakeWinke).toBe(0);
   }

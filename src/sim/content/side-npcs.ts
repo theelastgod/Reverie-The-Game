@@ -215,6 +215,7 @@ const omen: NpcDef = {
         { id: "buy", label: "Sell me an hour.", when: ({ p }) => !offered(p, SQ.HOURS), next: "hours" },
         { id: "bell", label: "Does the bell strike?", when: ({ p }) => !offered(p, SQ.HOUR), next: "hour" },
         { id: "struck", label: "It struck.", when: ({ p }) => atStep(p, SQ.HOUR, 1), next: "hour-told" },
+        { id: "once", label: "I struck it once, on the way.", when: ({ p }) => has(p, F.BELL) && !has(p, SF.BELL_TOLD), next: "struck" },
         { id: "confront", label: "The hour I bought did not come.", when: ({ p }) => atStep(p, SQ.HOURS, 2), next: "hours-confront" },
         { id: "front", label: "There is a front behind the band.", when: ({ p }) => atStep(p, SQ.FRONT, 1), next: "front-report" },
         { id: "season", label: "Last season's hole.", when: ({ p }) => atStep(p, SQ.SEASON, 1), next: "season-report" },
@@ -238,6 +239,12 @@ const omen: NpcDef = {
       text: "\"It struck.\" She looks at the bell for the first time since you met her. \"For you. Once. That is not on any schedule I have.\" She puts the slip in her pocket. \"Then the schedule is wrong about one thing.\"",
       wink: "The bell you did not hear is the one that rang. She heard this one. It ruins her whole trade.",
       effects: [flag(SF.HOUR_TOLD)],
+    }),
+    // Movement III's strike, the one sound the Concern cannot schedule, told to the woman who copies its schedule.
+    struck: node({
+      id: "struck",
+      text: "\"Once. On the way to the glass.\" She looks at the bell and then at the slip in her hand. \"That is not on anything I copied.\"",
+      effects: [flag(SF.BELL_TOLD)],
     }),
     "hours-confront": node({
       id: "hours-confront",

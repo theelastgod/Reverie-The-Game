@@ -7,7 +7,8 @@ import { GUEST_SPAWN, NPC_HOMES, POI_LIST, POSITIONS } from "../map";
 import { AURA_DIM, M3_DOOR_PRICE, OPERATOR_YIELD, RESTRAINT_START, TEST_SERIAL } from "../constants";
 import { C, F, POI_STATES, Q, W } from "./ids";
 import { NPCS } from "./npcs";
-import { POI_CONFIGS } from "./pois";
+import { LAST_SEASON_WINK as POIS_LAST_SEASON, POI_CONFIGS } from "./pois";
+import { SIDE_NPCS } from "./side-npcs";
 import { SPINE } from "./spine";
 import * as LINES from "./lines";
 
@@ -280,6 +281,31 @@ describe("POI configs", () => {
       expect(JSON.stringify(verb.effects)).toContain(`"value":"${choice}"`);
       expect(JSON.stringify(NPCS.nara.nodes[node].effects)).toContain(`"value":"${choice}"`);
     }
+  });
+
+  it("keeps the hour bell's one strike for Movement III, and the glass remembers the recorders", () => {
+    // Struck in the second hour it would finish III.6 before the hour exists and open the House of Sky's hour early.
+    const strike = POI_CONFIGS["hour-bell"].verbs.find(v => v.choice === "strike")!;
+    expect(strike.when!(CTXS.find(c => c.name === "angel sky M2 signed")!.ctx)).toBe(false);
+    expect(strike.when!(CTXS.find(c => c.name === "angel divinities M3 refuse")!.ctx)).toBe(true);
+    // Last season's hole has the recorders in it: the glass says so, and every school's hint points at them.
+    const season = POI_CONFIGS["forecast-glass"].verbs.find(v => v.choice === "season")!;
+    expect(season.say).toContain("the recorders still standing in it");
+    for (const school of ["hint", "dwelling", "process", "surface"] as const) expect(POIS_LAST_SEASON[school]).toMatch(/recorded|recorders|taken|copied/);
+    // The Cable names the catalog; the cold desk reads the weather by the city's word, not the HUD's.
+    const cable = POI_CONFIGS["organ-cable"].verbs.find(v => v.choice === "study")!;
+    const m3 = CTXS.find(c => c.name === "angel divinities M3 refuse")!.ctx;
+    const sayOf = (v: PoiVerb, ctx: Ctx): string => (typeof v.say === "function" ? v.say(ctx) : v.say ?? "");
+    expect(sayOf(cable, m3)).toContain("the light is the catalog");
+    expect(sayOf(POI_CONFIGS["cold-desk"].verbs[0], m3)).toMatch(/^Cold desk\. The weather at \d+\./);
+    // The strike told to the omen-reader, once: the hub offers it only with the flag and only until she has heard it.
+    const hub = SIDE_NPCS.omen.nodes.hub.choices!;
+    const offersOnce = (ctx: Ctx): boolean => hub.some(c => c.id === "once" && (!c.when || c.when(ctx)));
+    const m2 = CTXS.find(c => c.name === "angel sky M2 signed")!.ctx;
+    expect(offersOnce(m2)).toBe(false);
+    const struck = { ...m3, p: { ...m3.p, flags: { ...m3.p.flags, [F.BELL]: 1 } } };
+    expect(offersOnce(struck)).toBe(true);
+    expect(offersOnce({ ...struck, p: { ...struck.p, flags: { ...struck.p.flags, "side:bell:told": 1 } } })).toBe(false);
   });
 
   it("names the weather with three verbs once all three names are heard", () => {

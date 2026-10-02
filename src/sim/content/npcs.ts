@@ -176,7 +176,7 @@ const NARA_NODES: Record<string, DialogueNode> = {
   },
   "garden-silent": {
     id: "garden-silent",
-    text: "Nara Vale looks at the garden that used to be a hole. The node you turned on in the first hour. She will not speak until it is in the ground. Press F at the garden.",
+    text: (ctx) => `Nara Vale looks at the garden that used to be a hole. ${chose(ctx, C.FIRST_NODE, "keep") ? "The node the city turned on while you kept yours." : "The node you turned on in the first hour."} She will not speak until it is in the ground. Press F at the garden.`,
     wink: "You took a hole and called it weather. It came back as earth. Only burial makes it world again.",
   },
   "garden-plate": {
@@ -372,17 +372,18 @@ const QUILL_NODES: Record<string, DialogueNode> = {
   },
   "forge-lesson": {
     id: "forge-lesson",
-    text: "Quill fans two hints. One was buried. One was printed. The printed one lists. The buried one opens. I can teach the difference. I can also sell the print. Pick. I will not think less of you either way. I will think exactly the same amount.",
+    // The reversal lands in her hand: the print from the Grid has the player's own serial in the margin, and the hint on it is the one they woke to.
+    text: (ctx) => `Quill fans two hints. One was buried. One was printed. Look at the edge. A buried hint has dirt in the grain. A print has a margin. The printed one lists. The buried one opens. She hands you the printed one, still cool from the Grid. It came in this morning with the rest. Read the margin. ${ctx.p.name}. The hint on it is the one you woke to in the Care. Everything you heard, they have. I'm sorry. I'd have charged more. Now. Take it, or learn to spot it. I will not think less of you either way. I will think exactly the same amount.`,
     wink: "The hint can be forged. Exhibition Winke travel. Cult Winke stay in the hand that buried.",
     choices: [
       { id: "spot", label: "Teach me to spot the copy.", when: ctx => !has(ctx, F.FORGE), next: "forge-spot" },
-      { id: "sell", label: "Sell me the print.", when: ctx => !has(ctx, F.FORGE), next: "forge-sell" },
+      { id: "sell", label: "Take the print.", when: ctx => !has(ctx, F.FORGE), next: "forge-sell" },
       { id: "think", label: "Let me think." },
     ],
   },
   "forge-spot": {
     id: "forge-spot",
-    text: "Look at the edge. A buried hint has dirt in the grain. A print has a margin. You keep the eye. The cult hint does not list. Copies will not open the hole. The tray is warm if you want to try your hand.",
+    text: "She takes it back and does not put it on the tray. Look at the edge once more, so you keep the eye: dirt in the grain, or a margin. The cult hint does not list. Copies will not open the hole. The tray is warm if you want to try your hand.",
     effects: [
       { kind: "choice", key: C.FORGE, value: "spot" },
       { kind: "flag", key: F.FORGE },
@@ -390,10 +391,11 @@ const QUILL_NODES: Record<string, DialogueNode> = {
       { kind: "readiness", delta: 2 },
       { kind: "notice", text: "You can spot a copy. The tray will show you.", tone: "ink" },
     ],
+    next: "forge-plate",
   },
   "forge-sell": {
     id: "forge-sell",
-    text: "Sold. A copy of a hint. It lists. It decays. It will not open anything and it will look wonderful doing it. Aura thins when you hold a print of the sacred. Everybody does it once.",
+    text: "Taken. Your own hint, printed. It lists. It decays. It will not open anything and it will look wonderful doing it. Aura thins when you hold a print of the sacred. Everybody does it once.",
     effects: [
       { kind: "choice", key: C.FORGE, value: "sell" },
       { kind: "flag", key: F.FORGE },
@@ -402,6 +404,24 @@ const QUILL_NODES: Record<string, DialogueNode> = {
       { kind: "aura", delta: -1 },
       { kind: "notice", text: "A printed hint. Exhibition. It decays.", tone: "hot" },
     ],
+    next: "forge-plate",
+  },
+  "forge-plate": {
+    id: "forge-plate",
+    text: "Before you go. Two things. The Concern asked me to cut one more plate: the margin for a ring. The frame the recorders look at a hole through. I said no. First thing I have ever said no to; I had to sit down after. They'll find somebody. It'll be worse than mine. And Vesper's got a new line. Not remorse, inventory. She got it off him. Everyone on this street is quoting him and nobody's been paid.",
+    choices: [
+      { id: "margin", label: "Whose margin is it?", next: "forge-margin" },
+      { id: "him", label: "Him?", next: "forge-caul" },
+      { id: "enough", label: "Enough." },
+    ],
+  },
+  "forge-margin": {
+    id: "forge-margin",
+    text: "Mine. I sold them the margin. They sold the margin to the city. Years ago; a technique, on a sheet, for a price I was pleased with at the time. I don't do their margins. I don't have to. That is what selling a thing means. She wipes the plate.",
+  },
+  "forge-caul": {
+    id: "forge-caul",
+    text: "He asked me once what a hint looked like. I told him. He wrote it down. Only time I've been quoted and not paid.",
   },
   "forge-after": {
     id: "forge-after",
@@ -448,6 +468,8 @@ function ordRoute(ctx: Ctx): string {
   if (has(ctx, F.MORTALITY) && p.movement >= 4 && !p.choices[C.PARTY]) return "gate";
   if (has(ctx, F.MAP) && has(ctx, F.PREPARE)) return "ring";
   if (has(ctx, F.MORTALITY) && p.movement >= 4) return "gate-after";
+  // The glass faced: the figure for last season is his to read there, once; after it he is back at the gate until the act.
+  if (has(ctx, F.MAP) && has(ctx, F.FAILED)) return has(ctx, F.FIGURE) ? "figure-after" : "figure";
   if (has(ctx, F.MAP)) return "after-map";
   if (has(ctx, F.M3)) {
     return has(ctx, F.STRAIT) && has(ctx, F.FOUNDRY) && has(ctx, F.CABLE) ? "map" : "organs";
@@ -464,12 +486,13 @@ const mapEffects = (cut: "strait" | "foundry" | "cable" | "whole"): Effect[] => 
   { kind: "flag", key: F.MAP },
   { kind: "readiness", delta: 2 },
   { kind: "notice", text: cut === "whole" ? "Ord's map, drawn whole. Three organs, one weather." : `Ord's map. You would cut it at the ${cut === "strait" ? "water" : cut === "foundry" ? "heat" : "light"}. The cold desk will post that organ first.`, tone: "sky" },
+  { kind: "news", text: `An Angel told Ord's ledger they would cut it ${cut === "whole" ? "nowhere" : `at the ${cut === "strait" ? "water" : cut === "foundry" ? "heat" : "light"}`}.` },
 ];
 
 const honestNumber = (ctx: Ctx): string => {
   const g = Math.round(ctx.w.gestell);
   const tax = Math.floor(Math.max(0, Math.min(100, g)) / 4);
-  return `Gestell ${g}. Tax ${tax} percent on every node. The number goes up because people extract. I will not pretty it.`;
+  return `The process, at ${g}. Tax ${tax} percent on every node. The number goes up because people extract. I will not pretty it.`;
 };
 
 /** After the weather, Ord opens the second ledger, once. */
@@ -597,7 +620,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   map: {
     id: "map",
-    text: "Strait, Foundry, Cable. Extract in the Strait and the Foundry lights. The Foundry lights and the Cable drinks. There is no country here. There is only the process. The node you turned on in the Nave in the first hour: it is a garden now. That is not a map. That is the same map. Ord turns it to you. If you could cut it once, where? I will write down what you say. The cold desk reads what I write.",
+    text: (ctx) => `Strait, Foundry, Cable. The water. The heat. The light. Extraction here lights a factory there. Extract in the Strait and the Foundry lights. The Foundry lights and the Cable drinks. There is no country here. There is only the process. ${chose(ctx, C.FIRST_NODE, "keep") ? "The node the city turned on while you kept yours" : "The node you turned on in the Nave in the first hour"}: it is a garden now. That is not a map. That is the same map. Ord turns it to you. Tell me where you would cut it, and I'll tell you who goes dark. I will write down what you say. The cold desk reads what I write.`,
     wink: "Extraction here lights a factory there. You are the wire. He is asking where you would cut yourself.",
     choices: [
       { id: "strait", label: "At the water. Stop the Strait.", when: ctx => !has(ctx, F.MAP), next: "map-strait" },
@@ -637,8 +660,30 @@ const ORD_NODES: Record<string, DialogueNode> = {
       const said = cut === "strait" ? "You said the water. " : cut === "foundry" ? "You said the heat. " : cut === "cable" ? "You said the light. " : cut === "whole" ? "You said nowhere. " : "";
       if (worldHas(ctx, "foundryDark")) return `${said}The Foundry is dark. The Cable still drinks on what the Strait already paid. Nobody unlights a debt. The number is quieter. I will not pretty it.`;
       if (ctx.w.pois["organ-strait"]?.state === "refused") return `${said}You refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.`;
-      return `${said}The map is drawn. Quill has something for you on the Grid about hints and what they cost to copy. Then the Clearing. I will be there if the number lets me.`;
+      return `${said}The map is drawn. The Kerb first. Face the glass; I will be at it. I have a line to read you there. Then Quill, on the Grid, about hints and what they cost to copy.`;
     },
+    choices: [
+      { id: "number", label: "Give me the number.", next: "number" },
+      { id: "leave", label: "Enough." },
+    ],
+  },
+  // The figure, at the glass: last season was not short of anything. It was captured, and he counted it; it is why he is at a gate.
+  figure: {
+    id: "figure",
+    text: "Ord does not look at the glass. He has it by heart. \"Four hundred and six in the ring. The glass at sixty-one; that is the city's figure, not a body's. The weather at seventy-three. Third minute: a trace crossed. I wrote that line the way I wrote every line. Then the next one came across my desk, on the Concern's paper, and I wrote that too: taken. One. That is the figure. It was not short of anything. I counted it, and I walked to a gate the same week, and I have been at one since.\" He closes the book on his finger. \"The reel at the altar is that line. It is a sample. It is also my handwriting.\"",
+    wink: "The count. He said he left on principle. He left on this line.",
+    effects: [
+      { kind: "flag", key: F.FIGURE },
+      { kind: "notice", text: "Ord's figure: last season was captured, not short. He counted it.", tone: "ink" },
+    ],
+    choices: [
+      { id: "number", label: "Give me the number.", next: "number" },
+      { id: "leave", label: "Enough." },
+    ],
+  },
+  "figure-after": {
+    id: "figure-after",
+    text: "The figure is read. The weather did not move for it; I did not expect it to. Quill has something for you on the Grid. Then the Care, and the act.",
     choices: [
       { id: "number", label: "Give me the number.", next: "number" },
       { id: "leave", label: "Enough." },
@@ -967,6 +1012,8 @@ export const NPCS: Record<string, NpcDef> = {
       // From the mortality act on he is at the Care gate with the ledger; after the ground is kept, in the ring with the party or still at the gate, alone.
       if (has(ctx, F.PREPARE) && has(ctx, F.MAP) && !has(ctx, F.PASSING)) return chose(ctx, C.PARTY, "alone") ? { ...station("ord-gate"), state: "gate" } : { ...station("ord-clearing"), state: "clearing" };
       if (has(ctx, F.MORTALITY) && p.movement >= 4 && !has(ctx, F.PASSING)) return { ...station("ord-gate"), state: "gate" };
+      // The glass faced, he is beside it with the ledger open at last season until the figure is read; then the gate again.
+      if (has(ctx, F.MAP) && has(ctx, F.FAILED) && !has(ctx, F.FIGURE)) return { ...station("ord-glass"), state: "glass" };
       if ((p.movement >= 3 || has(ctx, F.M3)) && !has(ctx, F.MAP)) return { ...station("ord-strait"), state: "strait" };
       return null;
     },

@@ -637,7 +637,7 @@ const CARE: PoiConfig[] = [
         guest: spectate,
         say: ctx => (poiState(ctx, "wreckage-garden") === "buried"
           ? "The garden has been buried. You stay beside it until the city stops counting your time. Nara Vale will speak."
-          : "The Clearing from the first hour is wreckage now. You put it in the ground. Nara Vale will speak."),
+          : "The node from the first hour is wreckage now. You put it in the ground. Nara Vale will speak."),
         effects: [
           { kind: "flag", key: F.GARDEN },
           { kind: "flag", key: F.M3 },
@@ -830,15 +830,15 @@ const ANNEX: PoiConfig[] = [
 
 // ---------------------------------------------------------------- the Kerb of Hours
 
-/** Last season's hole, by school. Each points at what is not there; none names it. */
+/** Last season's hole, by school. Each points at the recorders standing in it; none says who put them there. */
 export const LAST_SEASON_WINK: WinkBySchool = {
   default: "You face the wreckage. The storm is at your back. That is the whole stance.",
-  hint: "A hole where nobody stood is still a door. It was held open for no one.",
+  hint: "A hole with four hundred in it was still a door. Something came through. The recorders were standing where it went.",
   wreckage: "You face the wreckage. The storm is at your back. That is the whole stance.",
   omen: "The front came and went while the glass showed a number. The number was not wrong. It was not the weather.",
-  dwelling: "The hole needed people in it. There were none. Rooms do not hold themselves.",
-  process: "The ledger has the season as a line: opened, unheld, closed. The line is honest. Honest is not the same as enough.",
-  surface: "Last season's hole lists for nothing. It is the one thing on the Kerb that could not be copied.",
+  dwelling: "The hole had people in it, and it held. A room can be held and still be recorded from the door.",
+  process: "The ledger has the season as a line: opened, held, crossed, taken. The line is honest. Honest is not the same as enough.",
+  surface: "Last season's hole lists for ninety seconds at a time. It is the one thing on the Kerb that has already been copied.",
 };
 
 /** The glass is the Concern's calendar as much as the city's weather: its line is posted in every meter's face, with no time on it yet. */
@@ -879,6 +879,8 @@ const KERB: PoiConfig[] = [
         key: "F",
         label: "Strike the bell",
         choice: "strike",
+        // The one strike is Movement III's, on the way to the glass; struck earlier it would finish that step and open the House of Sky's hour before the hour exists.
+        when: ctx => ctx.p.movement >= 3,
         guest: spectate,
         // The line is read after the effects land, so the flag it set cannot gate it: the glass not yet faced is "on the way".
         say: ctx => (ctx.p.movement >= 3 && !has(ctx, F.FAILED)
@@ -912,7 +914,7 @@ const KERB: PoiConfig[] = [
         choice: "season",
         when: ctx => ctx.p.movement >= 3 && !has(ctx, F.FAILED),
         guest: spectate,
-        say: "In the glass, behind the forecast: last season's Passing failed. The hour went by. The city kept the weather. There is a hole in the Clearing where nobody stood. You watched. You did not loot it.",
+        say: "In the glass, behind the forecast: last season's Passing failed. The hour went by. The city kept the weather. There is a hole in the Clearing with the recorders still standing in it. You watched. You did not loot it.",
         effects: [
           { kind: "flag", key: F.FAILED },
           { kind: "poi", id: "forecast-glass", state: "lit" },
@@ -1134,7 +1136,7 @@ const ORGANS: PoiConfig[] = [
         guest: spectate,
         say: ctx => (poiState(ctx, "organ-cable") === "quiet"
           ? "The Cable. Someone kept a node. The hum is less. The Foundry notices."
-          : "The Cable. Signal as flesh. The Strait is already paying for this light."),
+          : "The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here."),
         effects: [{ kind: "flag", key: F.CABLE }, { kind: "notice", text: "The Cable drinks what the Strait paid. Ord will draw it.", tone: "sky" }],
       },
     ],
@@ -1154,7 +1156,7 @@ const ORGANS: PoiConfig[] = [
           const g = Math.round(ctx.w.gestell);
           const ex = ctx.w.flags[W.EXTRACTIONS] ?? 0;
           const bu = ctx.w.flags[W.BURIALS] ?? 0;
-          return `Cold desk. Gestell ${g}. Extractions ${ex}. Burials ${bu}. Tax ${gestellTax(g)} percent. Nobody at this desk will pretty it.`;
+          return `Cold desk. The weather at ${g}. Extractions ${ex}. Burials ${bu}. Tax ${gestellTax(g)} percent. Nobody at this desk will pretty it.`;
         },
       },
     ],

@@ -60,8 +60,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   II are in the running game (the Concern named in the first two hours'
   lines, Caul's body at the back of the altar aisle, the waking hint in
   the Care, the lease on the hall plaques, "funded by A. Caul" on the
-  freeze form, the oval light speaking by serial at Vesper's desk);
-  Movement III is next.
+  freeze form, the oval light speaking by serial at Vesper's desk), and
+  Movement III (the catalog named at the Cable, Ord's figure at the
+  glass, the recorders in last season's hole, Quill's print with your
+  serial in the margin and the plate she would not cut); Movement IV
+  is next.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1354,6 +1357,43 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   where the synopsis puts them. The lint
   reads the file; the README names it; Backlog A names it as the source
   of Phases A, B and D.
+- Backlog A, Phase A, Movement III (2026-10-02, night): the Concern in
+  the third hour, content only, on the shipped steps, the script's
+  III.1 to III.8 as the source. The Cable's study says the light is the
+  catalog, every altar in the Nave drawing its reel from it (the flicker
+  sentence waits for Phase C's weave); the cold desk and Ord read the
+  weather by the city's words, never the HUD's; Ord's map carries the
+  synopsis's line ("Tell me where you would cut it, and I'll tell you
+  who goes dark"), names the garden as the city's node for a keeper,
+  and each cut is news; after the map he sends you to the glass and
+  waits beside it (a new station, `ord-glass`) with the figure: last
+  season was not short of anything, it was captured, four hundred and
+  six in the ring, a trace crossed in the third minute and the next
+  line came across his desk on the Concern's paper, taken; he counted
+  it and walked to a gate the same week (`figure`, F.FIGURE, then
+  `figure-after` at the gate until the act). The glass itself shows the
+  hole with the recorders still standing in it, and every school's hint
+  there points at them. Nara's garden line names the keeper's node too,
+  and the garden's earth is a node, not a Clearing. The hour bell's one
+  strike is gated to Movement III (struck in the second hour it finished
+  III.6 before the hour existed and opened the House of Sky's hour
+  early), and Halla Voss hears it once: "That is not on anything I
+  copied." Quill hands over the print from the Grid with your own serial
+  in the margin, the hint on it the one you woke to; after the print is
+  taken or the copy spotted she says the Concern asked her to cut one
+  more plate, the margin for a ring, and she said no, the first thing
+  she ever said no to (`forge-plate`, `forge-margin`, `forge-caul`).
+  Her forge choices keep the shipped mechanics until Phase B turns the
+  sale into a listing and the spot into a pull. Tests: the strike's
+  gate by movement, the glass's say and hints, the Cable's and the cold
+  desk's words, the omen-reader's hub offering the strike once; the
+  Movement III walk now reads Ord before and at the glass, the figure
+  once, the serial in Quill's lesson and the plate after either choice.
+  `SCRIPT.md`'s tags for these lines now read shipped since Phase A,
+  Movement III, with the Phase A variant noted where the script's line
+  waits for Phase B. Next for Phase A: Movement IV (Nara's three numbers
+  and her confession at the ring, Ord's gate line, Ione's word, Caul's
+  placement on the Grid's gate tile).
 
 ## Verified (2026-09-25, integration)
 
@@ -2029,6 +2069,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   only; no server, client or content code touched, so no smoke and no
   render check. Fifteen shipped lines picked at random from the script
   were found word for word in the code.
+- Backlog A, Phase A, Movement III (2026-10-02, night): typecheck, 507
+  tests in 41 files, the build, the play build and the stage; on a
+  fresh local world the Movement III campaign smoke passed end to end
+  (the Strait, the Foundry, the Cable, Ord's map, the garden buried,
+  the bell, last season in the glass, the copy spotted, into Movement
+  IV; 100.6 s of bot time, 1,379 words shown), and the render check at
+  `RENDER_MIN_FPS=5` passed on desktop and phone, run alone.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2060,8 +2107,11 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    gates, the session smoke, the campaign smoke for the movement touched
    and the render check, and each recorded here:
    - **Phase A, the company in the mouth of the city** (content only;
-     Movements I and II landed 2026-10-02 evening, see Done; Movement III
-     is the next firing's work, then IV): the
+     Movements I, II and III landed 2026-10-02, see Done; Movement IV
+     is the next firing's work, from `SCRIPT.md` IV.1 to IV.8's lines
+     tagged revised that need no new system: Nara's `brink` with three
+     numbers and `lid`, Ord's `ring` with the bodies, the credits as
+     shipped, Caul's body on the Grid's gate tile with no line yet): the
      company (the Concern) and its chief (Anselm Caul) named in the lines of
      Ord, Quill, Corvin Slate and Vesper Hale, on the clerks' badges and the
      vans' HUD labels, on the freeze form, the hall's lease plaque, the

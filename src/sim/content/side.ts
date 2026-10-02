@@ -114,6 +114,7 @@ export const SF = {
   // kerb
   HOUR_WAITED: "side:hour:waited", // counter
   HOUR_TOLD: "side:hour:told",
+  BELL_TOLD: "side:bell:told", // Movement III's one strike, told to the omen-reader: not on anything she copied
   FRONT_READ: "side:front:read",
   FRONT_TOLD: "side:front:told",
   HOURS_BOUGHT: "side:hours:bought",

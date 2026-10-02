@@ -256,6 +256,7 @@ export const NPC_STATIONS: Record<string, NpcHome> = Object.fromEntries([
   home("nara-clearing", "clearing", 50, 66),
   home("nara-care", "care", 15, 61),
   home("ord-strait", "organs", 78, 40),
+  home("ord-glass", "kerb", 62, 10), // beside the forecast glass, the ledger open at last season, until the figure is read
   home("ord-cable", "organs", 95, 40),
   home("ord-clearing", "clearing", 54, 66),
   home("ord-gate", "clearing", 38, 67), // just inside the Clearing at the Care gate: the ledger before the ring

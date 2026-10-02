@@ -42,6 +42,7 @@ export const F = {
   GARDEN: "garden", // buried the wreckage garden
   BELL: "bell", // Movement III: struck the hour bell once on the way to the glass
   FAILED: "failed", // saw a failed Passing
+  FIGURE: "figure", // Movement III: heard Ord's figure for last season at the glass (it was captured, not short)
   FORGE: "forge", // decided copies with Quill
   PREPARE: "prepare", // prepared the Clearing
   BRINK: "brink", // Movement IV: heard Nara at the ring before the ground was kept, with the readiness read
