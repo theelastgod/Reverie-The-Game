@@ -17,8 +17,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   since the 26th: a message and join budget, an hourly sweep of stale guest
   bodies, a world record without bodies and body records written only when
   they change, each reviewed and security-reviewed (see Done). The dev
-  tools are current (vite 8, vitest 5, wrangler 4.141; `npm audit` reads
-  0 for production and dev dependencies alike). Since 2026-10-01 every
+  tools are current (vite 8.3, vitest 5, wrangler 4.146 since 2026-10-02;
+  `npm audit` reads 0 for production and dev dependencies alike; the two
+  majors left, phaser 4 and TypeScript 7, are Backlog 13). Since 2026-10-01 every
   push runs the typecheck, the tests, the client build and a dry-run
   bundle on GitHub's runner by itself (`.github/workflows/gates.yml`, no
   secrets, nothing deployed); the Actions tab shows the mark on each
@@ -1065,6 +1066,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   stage with the manifest deleted, which it fails naming the manifest, and
   against the new stage, which passes with the proxy's two certificate
   errors on Google Fonts as the only ones left.
+- Dependencies refreshed within their ranges (2026-10-02; discovered: `npm
+  audit` had gone from 0 to 3 advisories, one high, all in `undici` under
+  `miniflare` under wrangler 4.141, dev-only, fixed by wrangler 4.143 and
+  up). `npm audit fix` and `npm update` moved the lockfile only
+  (`package.json`'s ranges already allowed every step): wrangler 4.146.0
+  (miniflare 5.20261001.0-alpha, undici 7.29.1), `@cloudflare/workers-types`
+  5.20261002.1, sharp 0.35.5, vite 8.3.2, vitest 5.0.3; `npm audit` reads 0
+  again. Not taken, and recorded in Backlog 13: the two majors `npm
+  outdated` shows (phaser 4.2.1 and TypeScript 7.0.2), each a migration
+  rather than a bump.
 
 ## Verified (2026-09-25, integration)
 
@@ -1616,6 +1627,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   client asked for: http://127.0.0.1:8788/play/assets/gen/manifest.json`
   (wrangler dev answered 500 for a file removed from under its asset list;
   a stage that never had it answers 404; the rule catches both).
+- The dependency refresh (2026-10-02, wrangler 4.146, vite 8.3.2, vitest
+  5.0.3, sharp 0.35.5, the workers types): `npm audit` 0, typecheck, 502
+  tests, the build; the local Worker restarted on a fresh world under
+  wrangler 4.146 (its `/health` names the head commit after the stage);
+  the session smoke passed (health, hello v3, fast and slow frames, live
+  ticks, movement, the timed dodge, junk ignored, saved reconnect, guest
+  identity, single-tab ownership); the dry-run bundle is unchanged (558.62
+  KiB, 147.16 KiB gzipped, the same bindings); the render check at
+  `RENDER_MIN_FPS=5` passed on desktop and phone (9.4 fps under
+  SwiftShader; the two font refusals the only page errors). Movement I
+  over the wire (`npm run test:campaign`) passed on a fresh world with the
+  Worker to itself (8 decisions, 1525 words shown, the intake fight 7.1 s,
+  Desk Three 31.6 s, link 7777, the going-under into the Care). A first
+  run of it, started while the render check drove its own body on the
+  same world, failed at the intake (the bot 159 px short of a clerk at
+  full hp after 40 s, nothing hit): the two checks share one city and
+  one CPU, so the smokes run one at a time from now on; the rerun alone
+  is the measure.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1629,8 +1658,7 @@ Prioritized. The autonomous routine takes the top unfinished item, finishes it
 with tests, runs the gates, commits, pushes, and moves it to Done. Add items as
 they are discovered; keep this list honest. As of 2026-10-02 items 1–12 are
 the owner's, a real device's or the network's to finish; the routine takes
-the discovered items that follow them and adds what it finds (none open at
-the moment: 13, the generated manifest's 404, is done).
+the discovered items that follow them and adds what it finds.
 
 1. **Generated assets (Stage B).** 68 results exist in the owner's Higgsfield
    account (manifest: `.rebuild/generated-manifest.tsv`, pull script:
@@ -1808,6 +1836,16 @@ the moment: 13, the generated manifest's 404, is done).
    has; the heavy's hold length in particular wants a thumb's judgement).
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
+13. **The two majors.** `npm outdated` (2026-10-02) shows phaser 3.90 →
+   4.2.1 and TypeScript 5.9 → 7.0.2; everything else is at its range's
+   latest and `npm audit` reads 0. Each is a migration, not a bump: Phaser 4
+   changes the renderer and parts of the scene and loader API the client
+   leans on (`src/scenes`, `src/render`), and TypeScript 7 is the Go port
+   with its own set of removed options and stricter checks. Take one at a
+   time, on its own commit, with the gates, the session smoke and the
+   render check before and after; if either costs more than a firing or
+   moves frame pacing, revert and record why here. Not urgent: no advisory
+   names either.
 
 ## Rules
 
