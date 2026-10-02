@@ -1164,6 +1164,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   must not turn a push red; what the summary gives is the step held, the
   bytes per viewer and the checkpoint cost on a clean machine with every
   push, beside the container's rows in `.rebuild/ZONES.md`.
+- The fonts self-hosted (2026-10-02; discovered: both pages fetched Anton
+  and Space Grotesk from Google on every load, a preconnect and a
+  stylesheet from fonts.googleapis.com and the files from fonts.gstatic.com,
+  a third-party request the container's proxy refuses, an offline or
+  blocking browser never gets, and the render check listed as its last
+  known page errors). Now `public/fonts/` carries the four latin faces as
+  fontsource's woff2 builds (Anton 400, Space Grotesk 400, 500, 700;
+  58 KB in all; `@fontsource/anton` and `@fontsource/space-grotesk` 5.3.0,
+  fetched once and not kept as a dependency) with their SIL Open Font
+  License files beside them, and `public/fonts.css` declares the faces
+  with `font-display: swap` and the latin unicode-range. The client's
+  `index.html` links `/fonts.css` (Vite rewrites it to `/play/fonts.css`
+  on the play build and copies the files) and the landing page links
+  `play/fonts.css`, so the staged client is the one source. The content
+  lint gains a test: neither page reaches a font or script CDN, both link
+  the self-hosted stylesheet, the four faces are the ones named and each
+  file and licence exists. No new art: the same two faces the pages have
+  set since the rebuild, served from the city instead of Google.
 
 ## Verified (2026-09-25, integration)
 
@@ -1802,6 +1820,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   no stall, the checkpoint 0.34 ms, 3865 B per fast frame; so every bar
   the container misses, a clean machine holds. The render check there
   ran at 15.2 fps this time.
+- The fonts self-hosted (2026-10-02): typecheck, 503 tests (the new lint
+  test among them), the play build (Vite rewrote the link to
+  `/play/fonts.css` and copied `fonts/` into `dist`), the stage; the
+  local Worker answers `/play/fonts.css` as `text/css` and the woff2
+  files as `font/woff2`; the render check at `RENDER_MIN_FPS=5` passed on
+  desktop and phone (11.3 fps) and, for the first time in this container,
+  printed no page error at all on either pass: the two certificate
+  refusals on Google Fonts that stood as the known errors since
+  2026-09-26 are gone because nothing asks Google anything. The landing
+  page's screenshot shows the display face at last (the title and the
+  section heads in Anton, the body in Space Grotesk), where every earlier
+  shot here had the fallbacks.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

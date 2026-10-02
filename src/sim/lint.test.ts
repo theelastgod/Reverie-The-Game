@@ -62,4 +62,20 @@ describe("standalone game lint", () => {
     }
     expect(missing, missing.join("\n")).toEqual([]);
   });
+
+  it("a page load asks nothing of a third party: the fonts are self-hosted and every face's file exists", () => {
+    // Both pages set Anton and Space Grotesk; the faces come from public/fonts.css (served with the client, which the
+    // landing page links as play/fonts.css), never from fonts.googleapis.com or fonts.gstatic.com.
+    const third = /https?:\/\/[^"'\s]*(googleapis|gstatic|typekit|fonts\.bunny|cdn\.jsdelivr|unpkg|cdnjs)[^"'\s]*/g;
+    for (const page of ["index.html", "site/index.html"]) {
+      const html = readFileSync(page, "utf8");
+      expect(html.match(third) ?? [], `${page} reaches out`).toEqual([]);
+      expect(html, `${page} links the self-hosted faces`).toMatch(/href="(\/|play\/)fonts\.css"/);
+    }
+    const css = readFileSync("public/fonts.css", "utf8");
+    const faces = [...css.matchAll(/font-family:\s*"([^"]+)";[^}]*?font-weight:\s*(\d+);[^}]*?url\("([^"]+)"\)/g)].map(m => ({ family: m[1], weight: m[2], file: m[3] }));
+    expect(faces.map(f => `${f.family} ${f.weight}`)).toEqual(["Anton 400", "Space Grotesk 400", "Space Grotesk 500", "Space Grotesk 700"]);
+    for (const f of faces) expect(existsSync(`public/${f.file}`), `${f.file} on disk`).toBe(true);
+    for (const licence of ["LICENSE-anton", "LICENSE-space-grotesk"]) expect(readFileSync(`public/fonts/${licence}`, "utf8")).toContain("SIL Open Font License");
+  });
 });

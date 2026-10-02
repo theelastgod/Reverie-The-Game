@@ -70,7 +70,10 @@ deploy.
 - `src/` (client) — Phaser 4 + Vite + TypeScript, DOM HUD over the canvas. Sends
   intents, renders snapshots.
 - `site/` — the landing page (its `log.js` shows the city's last news lines
-  from `/log/recent`); `site/play/` is the built client (git-ignored).
+  from `/log/recent`); `site/play/` is the built client (git-ignored). Both
+  pages set their two faces from `public/fonts.css` (Anton and Space
+  Grotesk, self-hosted under the OFL in `public/fonts/`, served with the
+  client): a page load asks nothing of a third party.
 - `scripts/` — live checks against a running server.
 
 ## Local run
