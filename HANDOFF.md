@@ -23,7 +23,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   push runs the typecheck, the tests, the client build and a dry-run
   bundle on GitHub's runner by itself (`.github/workflows/gates.yml`, no
   secrets, nothing deployed); the Actions tab shows the mark on each
-  commit, and the first run passed in half a minute. Since 2026-10-02 the
+  commit, and the first run passed in half a minute. Since 2026-10-02 a
+  second job on the same push serves the built client from a local
+  Worker on the runner and runs the session smoke and the render check
+  there, keeping the screenshots as an artifact. Since 2026-10-02 the
   client's first request (the generated-asset manifest) is answered, by
   an empty manifest committed until the Stage B pull overwrites it, and
   the render check fails on any file the city's own origin fails to serve.
@@ -1106,6 +1109,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   same day, so no regression the check can see. Phaser 4's filters,
   lighting and tint modes are now available to the client if a later item
   wants them; nothing uses them yet.
+- The live checks on GitHub's runner (2026-10-02; discovered: the session
+  smoke and the render check had only ever run in this container, on its
+  one CPU and its preinstalled Chromium, so a clean machine had never
+  served the built client or driven its wire). `gates.yml` gains a second
+  job, `live`, on its own runner beside `gates`: `npm ci`, the client built
+  with `VITE_BASE=/play/` and staged (so `release.json` exists for `/health`
+  and the smoke's revision check), the log's migration applied to the
+  runner's own SQLite (`npm run d1:migrate`, local), `wrangler dev --port
+  8788 --local` in the background until `/health` answers (90 s bound, the
+  Worker's log printed on a miss), then `npm run test:smoke` over the wire
+  and `RENDER_MIN_FPS=5 npm run test:render` in the runner image's Google
+  Chrome, which the check now launches by path when `RENDER_CHROMIUM` names
+  a browser (`scripts/render-check.mjs`; without it, the preinstalled
+  Chromium as before, and the step falls back to `playwright-core install
+  chromium` on an image without Chrome). The screenshots and the Worker's
+  log are kept as the run's `render-check` artifact for fourteen days, on
+  success or failure, so the city as a clean machine rendered it can be
+  looked at from the Actions tab. No secrets, nothing on Cloudflare; the
+  campaign smokes stay local (Movement I alone is a quarter of an hour).
+  The README's release-checks paragraph says so.
 
 ## Verified (2026-09-25, integration)
 

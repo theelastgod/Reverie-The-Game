@@ -115,8 +115,12 @@ npm run bench            # src/sim/broadcast.bench.ts: one broadcast to 80 walki
 
 On GitHub, every push runs the typecheck, the tests, the client build and
 stage, and a dry-run bundle of the Worker (`.github/workflows/gates.yml`,
-taken from the pushed branch itself, no secrets, nothing deployed); the
-Actions tab lists the runs and each commit carries its mark.
+taken from the pushed branch itself, no secrets, nothing deployed), and on
+a second runner the built client under a local Worker (`wrangler dev`, the
+log's migration on the runner's own SQLite): the session smoke over the
+wire and the render check in the runner's Chrome, its screenshots kept as
+the run's `render-check` artifact for two weeks. The Actions tab lists the
+runs and each commit carries its mark.
 
 The three live scripts take an origin argument (default `http://127.0.0.1:8788`;
 the render check defaults to `http://127.0.0.1:8788/play/`) and need

@@ -8,6 +8,11 @@
 # deployed, nothing touched on Cloudflare. A push that lands while a run is
 # still going cancels that run, so a branch's check is always its latest
 # commit's. The Actions tab lists the runs; each commit carries its mark.
+# A second job, "live", runs beside it on its own runner: the built client
+# staged and served by a local Worker (wrangler dev, nothing on Cloudflare),
+# then the session smoke over the wire and the Playwright render check in the
+# runner's Chrome, whose screenshots the run keeps as an artifact. The
+# campaign smokes stay local (Movement I alone is a quarter of an hour).
 name: The gates
 
 on:
@@ -43,3 +48,56 @@ jobs:
       - name: Bundle the Worker without deploying
         # The same bundle a deploy would upload, written to the runner and never sent.
         run: npx wrangler deploy --dry-run --outdir .wrangler/check
+
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the client and stage it
+        # The gates job typechecks; this one serves. The stage writes release.json, which /health and the smoke read.
+        run: |
+          VITE_BASE=/play/ npx vite build
+          node scripts/stage-play.mjs
+      - name: The local Worker
+        # The log's migration on the runner's own SQLite, then wrangler dev in the background until /health answers.
+        # Local only: no account, no token, nothing on Cloudflare.
+        run: |
+          npm run d1:migrate
+          (npx wrangler dev --port 8788 --local > wrangler.log 2>&1 &)
+          for i in $(seq 1 45); do
+            if curl -fsS -m 3 http://127.0.0.1:8788/health; then echo; exit 0; fi
+            sleep 2
+          done
+          echo "the Worker did not answer /health in 90 s" >&2; cat wrangler.log >&2; exit 1
+      - name: The session smoke
+        run: npm run test:smoke
+      - name: A browser for the render check
+        # The runner image carries Google Chrome; the check launches it by path. Without it, Playwright's own Chromium.
+        run: |
+          if [ -x /usr/bin/google-chrome ]; then
+            echo "RENDER_CHROMIUM=/usr/bin/google-chrome" >> "$GITHUB_ENV"
+            /usr/bin/google-chrome --version
+          else
+            PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD= npx playwright-core install chromium
+          fi
+      - name: The render check
+        # Software WebGL on the runner, as in the container: the pacing bound is the sandbox's, not a GPU's.
+        run: RENDER_MIN_FPS=5 npm run test:render
+      - name: Keep the screenshots and the Worker's log
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: render-check
+          path: |
+            .rebuild/shots/
+            wrangler.log
+          if-no-files-found: ignore
+          retention-days: 14

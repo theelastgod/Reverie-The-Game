@@ -30,7 +30,8 @@ function findChromium() {
 }
 
 mkdirSync(shots, { recursive: true });
-const executablePath = findChromium();
+// RENDER_CHROMIUM names a browser outright (GitHub's runner has Chrome at /usr/bin/google-chrome); else the preinstalled one.
+const executablePath = process.env.RENDER_CHROMIUM || findChromium();
 console.log(`chromium: ${executablePath ?? '(playwright default)'}`);
 const browser = await chromium.launch({ executablePath, headless: true, args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
 const failures = [];
