@@ -1795,7 +1795,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   runtime's doing. The worst-alarm and stall bars fail on this
   container's hiccups as they always have (one 369 ms alarm and a stall
   at 20; a 352 ms alarm and two stalls at 40); nothing is a regression.
-  The numbers are in `.rebuild/ZONES.md`.
+  The numbers are in `.rebuild/ZONES.md`. The same check on GitHub's
+  runner, from the push of `c0be78d` (the live job's summary and its
+  log): 20 bots at 20 Hz, PASS outright, the interval mean 50.8 ms (p95
+  56, p99 58), the alarm 2.4 ms late on average with a 50 ms worst and
+  no stall, the checkpoint 0.34 ms, 3865 B per fast frame; so every bar
+  the container misses, a clean machine holds. The render check there
+  ran at 15.2 fps this time.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

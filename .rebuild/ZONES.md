@@ -81,7 +81,10 @@ above; the timing at 40 is much better than the 4.141 read (a 91 ms mean and
 not the Worker's. The worst-alarm and stall bars still fail on the
 container's hiccups, as before. The same check runs on GitHub's runner on
 every push since this date, as numbers in the live job's summary, not a gate
-(`gates.yml`).
+(`gates.yml`); its first run there passed outright: 20 bots at 20 Hz, the
+interval mean 50.8 ms (p95 56, p99 58), the alarm 2.4 ms late on average
+with a 50 ms worst and no stall, the checkpoint 0.34 ms, 3865 B per fast
+frame. Every bar this container misses, that machine holds.
 
 Two things to know when reading these. The checkpoint (the world blob plus
 every connected body's record, once a second of world time) costs 1–2 ms
