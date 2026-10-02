@@ -13,6 +13,7 @@ import type { Messenger, Stance } from "../sim/types";
 import { COLOR, DEPTH, NPC_SPRITES, TEX, UI_FONT, bodyDepth } from "./floors";
 import { pulseAt, reducedMotion } from "./motion";
 import { propTarget, spriteFor } from "../assets/slots";
+import { npcLabel } from "./labels";
 import { genTex } from "../scenes/BootScene";
 
 export const LABEL_RANGE = 180;
@@ -717,7 +718,8 @@ export class Entities {
       for (const n of snap.npcs) {
         const b = this.npcs.get(n.id);
         if (!b || !n.present || !near(b.x, b.y)) continue;
-        this.label(`n:${n.id}`, n.offers && n.party !== "with" ? `${n.name} · has an hour` : n.name, b.x, b.y - 74, "#e8d5a3");
+        const l = npcLabel(n);
+        this.label(`n:${n.id}`, l.text, b.x, b.y - 74, l.color);
       }
       for (const n of snap.nodes) {
         if (!near(n.x, n.y)) continue;

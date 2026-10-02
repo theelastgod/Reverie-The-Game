@@ -42,8 +42,10 @@ export const STORM_PRESS = "Storm. You pressed the geared. Restraint burns for i
 export const STORM_FALLEN = "Storm. The fallen keep their rags. You took less.";
 /** What every participant hears when a fall hands them a flag, keyed by that flag (ENEMY_SPAWNS.fallFlag). */
 export const FALL_LINES: Record<string, string> = {
-  bulletin: "The Runner drops. A folded slip: the Office of Safety's number for this hour, sealed for the funeral street. It is in your coat now.",
+  bulletin: "The Runner drops. A folded slip: the Office of Safety's number for this hour, on the Concern's paper, sealed for the funeral street. It is in your coat now.",
 };
+/** The first hint of an Angel's life, waiting in the Care on waking. A guest at the lip hears nothing. */
+export const WAKING_WINK = "They have your name. You went under where the book could not follow. It will follow now.";
 
 // ---------------------------------------------------------------- kits
 

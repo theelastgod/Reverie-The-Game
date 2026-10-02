@@ -73,9 +73,14 @@ const spectate: PoiVerb["guest"] = "spectate";
 /** The slip off the Annex Runner: Safety's own number for the hour, which the plaque never prints. */
 const slipNumber = (ctx: Ctx): number => Math.round(ctx.w.gestell);
 const bulletinLine = (ctx: Ctx): string => (has(ctx, F.BULLETIN) && !has(ctx, F.WEATHER_NAMED)
-  ? ` The slip in your coat is Safety's own, sealed for the funeral street. It does not say stability. It says ${slipNumber(ctx)}.`
+  ? ` The slip in your coat is Safety's own, on the Concern's paper, sealed for the funeral street. It does not say stability. It says ${slipNumber(ctx)}.`
   : "");
-const pinnedLine = (ctx: Ctx): string => ((ctx.w.flags[W.BULLETIN_POSTED] ?? 0) > 0 ? " Under the word, pinned in someone's hand: the Annex's own number." : "");
+/** Whoever reads the plaque after a pinning reads the figure too (W.BULLETIN_NUMBER; a world saved before it carries only the pin). */
+const pinnedLine = (ctx: Ctx): string => {
+  if ((ctx.w.flags[W.BULLETIN_POSTED] ?? 0) <= 0) return "";
+  const n = ctx.w.flags[W.BULLETIN_NUMBER];
+  return ` Under the word, pinned in someone's hand: the Annex's own number${n === undefined ? "" : `, ${n}`}.`;
+};
 
 const weatherNameVerb = (key: PoiVerb["key"], choice: "stability" | "process" | "end", label: string): PoiVerb => ({
   key,
@@ -93,7 +98,11 @@ const weatherNameVerb = (key: PoiVerb["key"], choice: "stability" | "process" | 
     { kind: "worldCount", key: W.WEATHER_NAMES, delta: 1 },
     { kind: "notice", text: "You named the weather. The city can address you now.", tone: "gold" },
     ...(has(ctx, F.BULLETIN) && choice !== "stability"
-      ? [{ kind: "worldFlag", key: W.BULLETIN_POSTED, value: 1 } as const, { kind: "news", text: "An arrival pinned the Annex's own number under the word stability." } as const]
+      ? [
+        { kind: "worldFlag", key: W.BULLETIN_POSTED, value: 1 } as const,
+        { kind: "worldFlag", key: W.BULLETIN_NUMBER, value: slipNumber(ctx) } as const,
+        { kind: "news", text: `An arrival pinned the Annex's own number, ${slipNumber(ctx)}, under the word stability.` } as const,
+      ]
       : []),
   ],
 });
@@ -145,9 +154,9 @@ const NAVE: PoiConfig[] = [
         guest: "allow",
         effects: ctx => (has(ctx, F.TALKED_NARA) ? [{ kind: "flag", key: F.HEARD_RECORDER }] : []),
         say: ctx => {
-          if (!has(ctx, F.TALKED_NARA)) return "A recorder on a crate. A voice in it, mid-sentence, on a loop. Nara holds the grave open west of here. Speak with her first.";
+          if (!has(ctx, F.TALKED_NARA)) return "A recorder on a crate. A woman's voice in it, one word on a loop. Nara holds the grave open west of here. Speak with her first.";
           if (poiState(ctx, "memorial-recorder") === "dismantled") return "The recorder is open. The coil is gone. The voice stopped mid-breath and did not start again. The copper is in a coffin.";
-          return "A voice. It is reading a list of names, and its own is not on it. Between the words there is a silence that is also on the loop.";
+          return "A woman's voice, on a loop. One word, then the quiet, then the word again. The unit is older than the crate it sits on, and somebody keeps it running.";
         },
       },
       {

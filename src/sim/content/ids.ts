@@ -87,6 +87,7 @@ export const W = {
   MEMORIAL_VOICE: "memorialVoice", // 1 = the recorder still plays
   WEATHER_NAMES: "weatherNames", // count of arrivals who named it
   BULLETIN_POSTED: "bulletinPosted", // 1 = someone pinned the Annex's own number under the plaque's word
+  BULLETIN_NUMBER: "bulletinNumber", // the figure that was pinned, for whoever reads the plaque next
   FREEZES: "freezes",
   PASSINGS: "passings",
 } as const;

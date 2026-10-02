@@ -329,6 +329,25 @@ describe("dialogue", () => {
     expect(NPCS.vesper.party || NPCS.ione.party).toBe(false);
   });
 
+  it("Anselm Caul is a guest at the back of the altar aisle in Movement I: present at a distance, gone within reach, gone after the going-under", () => {
+    const def = NPCS.caul;
+    expect(def.sprite).toBe("guest");
+    expect(def.portrait).toBe("guest.jpg");
+    expect(def.party).toBe(false);
+    const home = NPC_HOMES.caul;
+    expect(home.district).toBe("nave");
+    const shared = { id: "caul", x: home.x, y: home.y, district: home.district, present: true, state: "home" } as const;
+    const far = CTXS.find(c => c.name === "guest fresh")!.ctx;
+    expect(Math.hypot(far.p.x - home.x, far.p.y - home.y)).toBeGreaterThan(160);
+    expect(def.personal!(far, shared)).toBeNull();
+    const near = { ...far, p: { ...far.p, x: home.x + 40, y: home.y } };
+    expect(def.personal!(near, shared)).toMatchObject({ present: false });
+    const angelInOne = CTXS.find(c => c.name === "angel M1 named")!.ctx;
+    expect(def.personal!({ ...angelInOne, p: { ...angelInOne.p, x: far.p.x, y: far.p.y } }, shared)).toBeNull();
+    const under = CTXS.find(c => c.name === "angel 7777 M2 fresh")!.ctx;
+    expect(def.personal!({ ...under, p: { ...under.p, x: far.p.x, y: far.p.y } }, shared)).toMatchObject({ present: false });
+  });
+
   it("the party notices you acting on a Wink they cannot see, once per Wink", () => {
     const recent = CTXS.find(c => c.name === "angel recent wink")!.ctx;
     for (const id of ["nara", "quill", "ord"]) {

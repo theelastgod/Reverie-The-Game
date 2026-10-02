@@ -9,6 +9,7 @@ import { READINESS_APPEARANCE_MIN, READINESS_PASSING_MIN } from "../constants";
 import { GUEST_SPAWN } from "../map";
 import { C, F, Q, W } from "./ids";
 import { LAST_SEASON_WINK } from "./pois";
+import { WAKING_WINK } from "./lines";
 
 const has = (ctx: Ctx, key: string): boolean => (ctx.p.flags[key] ?? 0) > 0;
 const chose = (ctx: Ctx, key: string, value: string): boolean => ctx.p.choices[key] === value;
@@ -492,6 +493,8 @@ export const SPINE: Quest[] = [
     guestLegal: false,
     available: ctx => !ctx.p.guest && ctx.p.movement >= 2,
     steps: M2_STEPS,
+    // The first hint of an Angel's life waits in the Care on waking, never at the lip: a guest hears none.
+    onStart: [{ kind: "wink", text: WAKING_WINK }],
     onFinish: [{ kind: "movement", value: 3 }, notice("Movement III. Geopolitics.", "ink")],
     changes: "spine",
   },

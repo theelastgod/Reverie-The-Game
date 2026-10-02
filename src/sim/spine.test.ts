@@ -19,6 +19,7 @@ import { C, F, Q, W } from "./content/ids";
 import { CLEARING_LISTING } from "./content/market";
 import { verbsFor } from "./interact";
 import { LINES } from "./content";
+import { WAKING_WINK } from "./content/lines";
 import type { Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
@@ -326,8 +327,9 @@ function movementOne(w0: WorldState, o: Opening): WorldState {
   expect(w.flags[W.WEATHER_NAMES]).toBe(1);
   if (o.bulletin && o.weather !== "stability") {
     expect(w.flags[W.BULLETIN_POSTED]).toBe(1);
-    expect(w.news.some(n => n.text.includes("pinned the Annex's own number"))).toBe(true);
-    expect(me(interact(w, ME, "safety-plaque", "reread")).heard).toContain("pinned in someone's hand");
+    expect(w.flags[W.BULLETIN_NUMBER], "the figure is pinned with the pin").toBe(Math.round(w.gestell));
+    expect(w.news.some(n => n.text.includes(`pinned the Annex's own number, ${Math.round(w.gestell)},`))).toBe(true);
+    expect(me(interact(w, ME, "safety-plaque", "reread")).heard).toContain(`pinned in someone's hand: the Annex's own number, ${Math.round(w.gestell)}.`);
   } else {
     expect(w.flags[W.BULLETIN_POSTED]).toBeUndefined();
     expect(w.news.some(n => n.text.includes("pinned"))).toBe(false);
@@ -406,6 +408,9 @@ function guestLockAndLink(w0: WorldState): WorldState {
   expect(blockedFor(p, CARE_GATE.tx, CARE_GATE.ty)).toBe(false);
   w = tick(w);
   expectStep(w, Q.M2, 0);
+  // The test serial is a Wink seed, so the school's extra line rides behind the authored one.
+  expect(me(w).wink, "the first hint of an Angel's life waits in the Care, not at the lip").toContain(WAKING_WINK);
+  expect(snapshotFor(w, ME).you.wink).toContain(WAKING_WINK);
   expect(snapshotFor(w, ME).objective).toMatchObject({ quest: Q.M2, step: "shrine", movement: 2 });
   return w;
 }

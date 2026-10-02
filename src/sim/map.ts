@@ -245,6 +245,7 @@ export const NPC_HOMES: Record<string, NpcHome> = Object.fromEntries([
   home("keeper", "ring", 82, 12),
   home("sexton", "care", 18, 64),
   home("desk", "organs", 92, 35),
+  home("caul", "nave", 25, 47), // the back of the altar aisle: a guest's body, gone by the time anyone reaches it (npcs.ts)
 ].map(h => [h.id, h]));
 
 /** Where NPCs go when content moves them. Ids are stable. */

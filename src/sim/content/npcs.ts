@@ -93,14 +93,14 @@ const NARA_NODES: Record<string, DialogueNode> = {
   },
   who: {
     id: "who",
-    text: "A clerk. Fourteen years at a yield desk. They counted what the street gave up and signed it as civic duty. The Gestell took the street and then it took the counting. Nobody strikes a clerk in the end. The weather does.",
+    text: "A clerk. Fourteen years at a yield desk. They counted what the street gave up and signed it as civic duty. The man who sat at the next desk for those fourteen years sent money for the funeral. I sent it back. Nobody pays for this one. The Gestell took the street and then it took the counting. Nobody strikes a clerk in the end. The weather does.",
     next: "memorial",
   },
   memorial: {
     id: "memorial",
     text: (ctx) => (has(ctx, F.HEARD_RECORDER)
       ? "You heard it. Its copper would close the coffin. Leave the voice running, or give its body to this one. I won't choose for you."
-      : "A voice survived in that recorder, on a crate east of here. Its copper would close the coffin. Go and hear it first. I won't choose for you, and I won't let you choose deaf."),
+      : "A voice in that recorder, on a crate east of here. It is the oldest thing on this street and I keep it running. Its copper would close the coffin. Go and hear it first. I won't choose for you, and I won't let you choose deaf."),
     wink: "A voice or a vessel. Neither one pays. That is the point of the street.",
     choices: [
       { id: "voice", label: "Leave the voice running.", when: ctx => !has(ctx, F.MEMORIAL) && has(ctx, F.HEARD_RECORDER), next: "memorial-voice" },
@@ -311,7 +311,7 @@ const QUILL_NODES: Record<string, DialogueNode> = {
   },
   owners: {
     id: "owners",
-    text: "The Houses, on paper. The weather, in fact. Go through the east gate to the Wet Grid and stand at the listing board when you have eyes for it. You do not yet. Come back with a grave on you.",
+    text: "The Houses, on paper. The weather, in fact. The altars play prints with margins. She laughs and does not explain. Go through the east gate to the Wet Grid and stand at the listing board when you have eyes for it. You do not yet. Come back with a grave on you.",
     wink: "The Wet Grid looks like freedom. It is a stall. The sky is already priced.",
     next: quillOffer,
   },
@@ -488,7 +488,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   first: {
     id: "first",
-    text: "Ord. I was Safety. I signed freezes. I am here now so the number stays honest. Safety calls it stability. I call it the process. The number goes up because you extract. I will not pretty it.",
+    text: "Ord. I was Safety. I signed freezes. The Concern owns the numbers. Safety counts them. I counted them. That is why I am at a gate and not a desk, and why the number stays honest. Safety calls it stability. I call it the process. The number goes up because you extract. I will not pretty it.",
     wink: "He left Safety. He did not leave the ledger. Nobody leaves the ledger.",
     effects: [{ kind: "flag", key: F.TALKED_ORD }, { kind: "party", npc: "ord", state: "with" }],
     choices: [
@@ -499,7 +499,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   weather: {
     id: "weather",
-    text: "The process. Not stability. Stability is what you call a thing when you are paid by the thing. The process is what it is when you count it. It goes up. It does not care what you call it. Safety knows the number; it sends a runner down the west corridor every hour with the figure on a slip, so the funeral street can dig to schedule. The slip is honest. The runner is only fast. Nara will give you a third word. Hers is the one that hurts.",
+    text: "The process. Not stability. Stability is what you call a thing when you are paid by the thing. The process is what it is when you count it. It goes up. It does not care what you call it. Safety knows the number; it sends a runner down the west corridor every hour with the figure on a slip, so the funeral street can dig to schedule. The slip is honest. The runner is only fast. The paper is the Concern's; Safety ran out of its own years ago. Nara will give you a third word. Hers is the one that hurts.",
     effects: [{ kind: "flag", key: F.WEATHER_ORD }],
     wink: "The number is honest. Honest is not the same as kind.",
     next: ordLedger,
@@ -524,7 +524,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   "ledger-no": {
     id: "ledger-no",
-    text: "\"Off it.\" He closes the book. \"Then the number is one short and honest about that too. Safety's ledger has you anyway. It has everyone.\"",
+    text: "\"Off it.\" He closes the book. \"Then the number is one short and honest about that too. The Concern's ledger has you anyway. The clerk wrote you in before you struck anyone. It has everyone.\"",
     effects: [
       { kind: "choice", key: C.ORD_LEDGER, value: "off" },
       { kind: "notice", text: "Off the honest ledger. Safety's has you anyway.", tone: "ink" },
@@ -532,7 +532,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   nodes: {
     id: "nodes",
-    text: "Standing-reserve. A place that has been told what it is for. E extracts: Bestand in your hand, one point on the weather. Q keeps: nothing in your hand, readiness, the weather eases. Both are honest. Only one of them is paid.",
+    text: "Standing-reserve. A place that has been told what it is for, with the Concern's meter on it. E extracts: Bestand in your hand, one point on the weather. Q keeps: nothing in your hand, readiness, the weather eases. Both are honest. Only one of them is paid.",
     next: "weather",
   },
   later: {
@@ -866,9 +866,43 @@ const IONE_NODES: Record<string, DialogueNode> = {
   },
 };
 
+// ================================================================ ANSELM CAUL — a guest
+
+/**
+ * The Concern's chief is a guest in every rule the server has: the guest's sprite and portrait, no aura, the GUEST label
+ * (the client's labels module), and never inside the Care, the Clearing or the Organs. In Movement I he is a body at the
+ * back of the altar aisle, watching the kneelers; he is gone by the time anyone is close enough to speak, so the one
+ * node below is never opened. The room behind the glass (III) and the Grid's gate (IV) come with their beats.
+ */
+const CAUL_ABSENT_RADIUS = 160; // px; NPC_REACH is 72
+
+const CAUL_NODES: Record<string, DialogueNode> = {
+  first: {
+    id: "first",
+    text: "A paper-white body with no halo, watching the kneelers and not the screen. By the time you are close enough to speak there is nobody there.",
+  },
+};
+
 // ================================================================ roster
 
 export const NPCS: Record<string, NpcDef> = {
+  caul: {
+    id: "caul",
+    name: "Anselm Caul",
+    role: "Chief executive",
+    home: "home:caul",
+    portrait: "guest.jpg",
+    sprite: "guest",
+    party: false,
+    personal: (ctx: Ctx, shared: NpcState): NpcOverride => {
+      const { p } = ctx;
+      if (p.movement >= 2 || has(ctx, F.UNDER)) return { present: false, state: "gone" };
+      if (Math.hypot(p.x - shared.x, p.y - shared.y) < CAUL_ABSENT_RADIUS) return { present: false, state: "gone" };
+      return null;
+    },
+    entry: () => "first",
+    nodes: CAUL_NODES,
+  },
   nara: {
     id: "nara",
     name: "Nara Vale",

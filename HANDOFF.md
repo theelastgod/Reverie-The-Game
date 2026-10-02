@@ -56,8 +56,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Reverie and the last; the four movements keep their ids and gain the
   conspiracy; the four Passing outcomes are written with Caul's
   recorders at the lip of the ring. Backlog A is the rebuild around it,
-  in four phases, which the routine takes from its next firing. Nothing
-  in the running game changed yet.
+  in four phases, and the routine has begun: Phase A's Movement I is in
+  the running game (the Concern named in the first hour's lines, Caul's
+  body at the back of the altar aisle, the waking hint in the Care);
+  Movement II is next.
 - **The hourly routine** probes the two hosts, then takes a Backlog item or a
   discovered one, with tests, the gates, the smokes, a commit and a push to
   this branch, and reports here and to you. `main` is never pushed.
@@ -1245,6 +1247,36 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   owner, noted by a judge and left as written: the token and the
   company's product share the name Reverie, which is the story's point
   and a commercial decision only you can make.
+- Backlog A, Phase A, Movement I (2026-10-02, evening): the Concern in
+  the mouth of the first hour, content only, on the shipped steps. Ord
+  names the company the way you name weather ("The Concern owns the
+  numbers. Safety counts them. I counted them. That is why I am at a gate
+  and not a desk"), says the runner's slip is on the Concern's paper, and
+  the ledger that has everyone is the Concern's; Quill says the altars
+  play prints with margins and does not explain; Nara sent back the
+  neighbour's purse ("Nobody pays for this one") and keeps the recorder
+  running herself, the oldest thing on her street, a woman's voice saying
+  one word on a loop; the Runner's slip is on the Concern's paper, and a
+  pinned figure is kept in the world (`W.BULLETIN_NUMBER`) so the news and
+  the plaque's line carry the number for whoever reads it next. The first
+  hint of an Angel's life now waits in the Care on waking (`WAKING_WINK`,
+  Movement II's `onStart`; the going-under step's own completion never
+  fires for an Angel, since the movement changes first and the quest
+  finishes by skipping the step, so the shipped "An Angel went under"
+  news line is a dead branch, left as it was). Anselm Caul is in the
+  roster as a guest in every rule: the guest's sprite and portrait, home
+  at the back of the altar aisle (`home:caul`, Nave 25,47), present only
+  in Movement I and only while the viewer is farther than 160 px (gone by
+  the time anyone can speak; `NPC_REACH` is 72), the GUEST label in the
+  guest's colour through the client's new `src/render/labels.ts`
+  (`npcLabel`, a per-NPC override), never a party member. A saved world
+  gains him through the migration's merge of the roster's homes. Tests:
+  content (present far, gone near, gone after the going-under; the
+  roster's node graph still resolves for him), spine (the pinned figure
+  in the flag, the news and the reread; the waking hint on the snapshot
+  after going under), labels. Next for Phase A: Movement II (the hall's
+  lease plaque, the freeze form's "funded by", Corvin's and Vesper's
+  lines, the Kerb's hour as the product's lie), then III and IV.
 
 ## Verified (2026-09-25, integration)
 
@@ -1895,6 +1927,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   page's screenshot shows the display face at last (the title and the
   section heads in Anton, the body in Space Grotesk), where every earlier
   shot here had the fallbacks.
+- Backlog A, Phase A, Movement I (2026-10-02, evening): typecheck, 506
+  tests in 41 files (three new: Caul's presence rules, the pinned figure
+  and the waking hint, the labels module), the play build and the stage;
+  on a fresh local world the session smoke passed, the Movement I
+  campaign smoke passed end to end (intake, nodes, Ord, Quill, Nara, the
+  recorder, the burial, the weather named, the guest lock, the link, the
+  going-under into the Care and Movement II), and the render check at
+  `RENDER_MIN_FPS=5` passed on desktop and phone (11.2 fps). The render
+  check's first run, started straight after the campaign smoke on the
+  same world, failed its dialogue step with an empty prompt at Nara's
+  home; the re-run alone passed, the same CPU-load flake noted before
+  (the smokes run one at a time here).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1920,7 +1964,9 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    take them in order, one movement at a time, each landing with the
    gates, the session smoke, the campaign smoke for the movement touched
    and the render check, and each recorded here:
-   - **Phase A, the company in the mouth of the city** (content only): the
+   - **Phase A, the company in the mouth of the city** (content only;
+     Movement I landed 2026-10-02 evening, see Done; Movement II is the
+     next firing's work, then III and IV): the
      company (the Concern) and its chief (Anselm Caul) named in the lines of
      Ord, Quill, Corvin Slate and Vesper Hale, on the clerks' badges and the
      vans' HUD labels, on the freeze form, the hall's lease plaque, the
