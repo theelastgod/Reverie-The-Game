@@ -12,7 +12,8 @@ the going-under.
 
 Developers: the master brief is `PROMPT.md`; `SYNOPSIS.md` is the story the
 rebuild follows (where it and the brief disagree about what happens on screen,
-the synopsis wins); `DESIGN.md` says how the code satisfies it;
+the synopsis wins) and `SCRIPT.md` is its every spoken line, each marked
+shipped, revised or new; `DESIGN.md` says how the code satisfies it;
 `.rebuild/CONTRACTS.md` holds the shared-sim module signatures and
 `.rebuild/CLIENT.md` the client contract; `HANDOFF.md` is the state of the build.
 

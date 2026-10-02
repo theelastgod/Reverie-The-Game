@@ -62,6 +62,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the Care, the lease on the hall plaques, "funded by A. Caul" on the
   freeze form, the oval light speaking by serial at Vesper's desk);
   Movement III is next.
+- **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
+  "Write the script of dialogue"). Every spoken line of the four
+  movements, scene by scene in the synopsis's order, with the speaker,
+  the node, the choices, the Winke, Caul's lines, the things that speak,
+  the four Passing endings and the credits; then every side hour whole.
+  Each line is tagged shipped (in the code today, word for word),
+  revised (the shipped line with a change, said in a few words) or new
+  (not yet written), so the routine's Phase A, B and D work is to make
+  the code say what the script says, line by line. It is inside the
+  content lint's roots.
 - **The hourly routine** probes the two hosts, then takes a Backlog item or a
   discovered one, with tests, the gates, the smokes, a commit and a push to
   this branch, and reports here and to you. `main` is never pushed.
@@ -1308,6 +1318,42 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   (Ord's figure at the glass, the recorders in last season's hole, the
   Foundry as the catalog's heat, Quill's margin with the player's serial
   and her refusal to cut the ring's plate), then IV.
+- `SCRIPT.md` (2026-10-02, the owner's request of that evening: "Write
+  the script of dialogue"): the dialogue script of the whole game, about
+  36,000 words. A front matter (how to read it, the voice, the people
+  with their jobs and lies, the fixed lines), then the four movements
+  beat by beat in the synopsis's order: each beat with its step, its
+  place and plate and whether a guest can play it, then every node a
+  player can reach from it with its choices and its branches by prior
+  choice (the taker's and the refuser's, the guest's and the Angel's,
+  the numbered and the blank plate), the Winke by school, Caul's every
+  line, the things that speak with their verbs, the consequences in
+  brackets, and the beat's reversal landing in a line; the four Passing
+  outcomes with every character's after line, the recorder crew's
+  exchange and the credits; then an appendix with all thirty-three side
+  hours whole (the five who hand them out, each verb's line in step
+  order, the branches, the Winke, the reports back, the one line Phase
+  D changes). Every line is tagged shipped, revised or new, and a
+  revised or new tag says in a few words what changed or which phase
+  lands it; the server's numbers stay in braces. Written by five
+  writers (a movement each and the side hours), each draft read
+  adversarially against the synopsis, the shipped lines and the sim
+  (status tags true, node ids real, trees reachable, numbers the
+  server's, nobody lecturing, Caul never lying, the synopsis's lines
+  verbatim), and revised on every finding that held: sixty-four, among
+  them Quill naming the company before Ord, a strike in II that would
+  have completed III.6 and opened the Sky hour early, Caul's oval
+  speech contradicting Halla's shipped line, the reader's post and the
+  light put out writing the same key with no gate, Ord unable to reach
+  the room behind the glass, Vesper's two nodes unreachable for the
+  taker, the Foundry rake auto-skipped for anyone who darkened it on
+  the spine, the Concentrator's desk close never offered, the appendix
+  first written one line per hour. Caul's nine lines are each said
+  once: the four the synopsis leaves unplaced go to the hour on the
+  Kerb, the room behind the glass and the lip of the ring; the rest are
+  where the synopsis puts them. The lint
+  reads the file; the README names it; Backlog A names it as the source
+  of Phases A, B and D.
 
 ## Verified (2026-09-25, integration)
 
@@ -1978,6 +2024,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the board read, the private yield taken through Vesper's dialogue with
   the oval's line opening after it, into Movement III), and the render
   check at `RENDER_MIN_FPS=5` passed on desktop and phone, run alone.
+- `SCRIPT.md` (2026-10-02, evening): typecheck, 506 tests in 41 files
+  with the content lint reading the script, the client build. Words
+  only; no server, client or content code touched, so no smoke and no
+  render check. Fifteen shipped lines picked at random from the script
+  were found word for word in the code.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1999,7 +2050,12 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    company with a psychopathic chief, the themes embodied and never named,
    the existing art reused). The synopsis is written and is the script the
    rebuild follows; where it and `PROMPT.md` or `DESIGN.md` disagree about
-   what happens on screen, the synopsis wins. Its §10 lists the phases;
+   what happens on screen, the synopsis wins. `SCRIPT.md` is its every
+   spoken line, tagged shipped, revised or new: Phases A, B and D land
+   it line by line (a beat's header there says which step, flag, gate
+   or station the lines need, and the rebuild adds nothing the script
+   does not say), and a line the script tags shipped must stay as it
+   is. Its §10 lists the phases;
    take them in order, one movement at a time, each landing with the
    gates, the session smoke, the campaign smoke for the movement touched
    and the render check, and each recorded here:
