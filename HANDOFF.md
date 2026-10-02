@@ -48,7 +48,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Desk Three, so a worn body meets the desk at about 44 hp; a player who
   strikes first or dodges wins, and the bot falls about one run in five.
 - **The story is now `SYNOPSIS.md`** (your brief of 2026-10-02, the
-  afternoon). The enemy has a name and a shape: Standing, the company
+  afternoon). The enemy has a name and a shape: the Concern, the company
   that owns the numbers, and Anselm Caul, its chief, who is a guest (he
   never went under, so he cannot hear a hint, enter the Care or the
   Clearing, or be struck, and he bought the ground he could not
@@ -1195,9 +1195,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   set since the rebuild, served from the city instead of Google.
 - `SYNOPSIS.md` (2026-10-02, the owner's brief of that afternoon): the
   story the rebuild follows. The enemy the brief asked for, given a name
-  and a shape inside the systems the game already has: Standing, the
-  company that owns the numbers and sells the city its wonder at four
-  counters (the freeze, the Kerb's slip, the private hour, the print), and
+  and a shape inside the systems the game already has: the Concern, the
+  company that owns the numbers and sells the city its wonder at three
+  counters (the freeze, the Kerb's slip, the print) and buys the player's
+  own hour at a fourth (Vesper's desk), and
   Anselm Caul, its chief, drawn with the guest's own sprite and portrait
   because he is a guest: he never went under, so the server's rules for the
   poorest arrival protect and bar him (no hints, no Care, no Clearing, not
@@ -1213,7 +1214,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   existing art; §10 the rebuild in four phases (Backlog A). Written from
   the brief, the design, the current spine and the cast's lines, with a
   panel of four independent treatments and their adversarial judges
-  consulted for what to keep.
+  consulted for what to keep. Revised the same evening on the panel's
+  converged findings: Caul given a seat across the desk (III.7, the room
+  behind the forecast glass, the reader's post or the light struck dark,
+  the count of dark lights as a city-wide switch) and a turn in action
+  before the Passing (IV.5, the launch: the weather driven up on every
+  HUD by the company's own extraction); the product played before it is
+  refused (II.9, Halla's hour at three Bestand); the guest's hint at the
+  lip moved to the waking in the Care (II.1), since a guest hears none;
+  the recorder's provenance (Nara keeps it running at the first grave she
+  dug); Nara's refusal of the company's purse (I.7); Quill's refusal to cut
+  the ring's plate; the brake-and-throttle shape of the company (paid when
+  the city takes and when it stops); Caul's comedy by accident; Safety's
+  Hijack given its line. `SYNOPSIS.md` is inside the content lint's roots.
 
 ## Verified (2026-09-25, integration)
 
@@ -1890,25 +1903,34 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    gates, the session smoke, the campaign smoke for the movement touched
    and the render check, and each recorded here:
    - **Phase A, the company in the mouth of the city** (content only): the
-     company (Standing) and its chief (Anselm Caul) named in the lines of
+     company (the Concern) and its chief (Anselm Caul) named in the lines of
      Ord, Quill, Corvin Slate and Vesper Hale, on the clerks' badges and the
      vans' HUD labels, on the freeze form, the hall's lease plaque, the
      forecast glass and the news; Caul as an NPC body that is a guest in
      every rule the server already has (the guest sprite and portrait, aura
      0, not loot, barred by the personal gates), at the back of the Nave's
-     altar aisle in Movement I and at the lip of the Clearing in IV, and as
-     a voice at the altar, at the hour and in Vesper's office; Nara's
-     confession at the plate; Ord's figure at the failed Passing; Quill's
-     margin on the listing and the serial in the player's own print; the
-     recorder's voice as Ione Kade's; "reverie" in both of its senses.
+     altar aisle in Movement I, in the room behind the forecast glass in
+     III and at the lip of the Clearing in IV, and as a voice at the altar,
+     at the hour and in Vesper's office; Nara's refusal of the purse and
+     her confession at the plate; Ord's figure at the glass; Quill's margin
+     on the listing and the serial in the player's own print; the
+     recorder's voice as Ione Kade's and the first hint moved from the lip
+     to the waking in the Care (a guest hears none); Halla's hour played as
+     the product; "reverie" in both of its senses.
    - **Phase B, the new beats as steps**: the altar as a readable POI in
      the Nave (I.9); the oval's line by serial in Vesper's office (II.10);
-     the catalog reversal as a step with a choice and the hot-street
-     consequence (III.8); the recorders at the Clearing with Caul's last
-     offer (IV.5); the Hijack outcome's altar reel for the whole server.
+     the room behind the glass as a step with a choice and the Kerb's
+     consequences (III.7); the catalog reversal as a step with a choice and
+     the hot-street consequence (III.8); the launch as a step kept against
+     (IV.5); the recorders at the Clearing with Caul's last offer (IV.6);
+     the Hijack outcome's altar reel for the whole server.
    - **Phase C, the shared-world weave**: the Cable's darkening flickering
      the altars server-wide; the listing's seller exposed by Quill; Ord's
-     figure on the news; the Appearance's blank tape as a server event.
+     figure on the news; the count of dark lights on the Kerb as world
+     state and the glass's date withheld past a threshold; the launch as a
+     scheduled world event before the season's Passing (the weather driven
+     up for the hour, the hot street flagged, the listing's buyer named);
+     the Appearance's blank tape as a server event.
    - **Phase D, the side quests re-pointed**: ids kept, one change each,
      the company behind every clerk, desk, van, hour and copy they touch.
    The rules that do not move: persistent ids stay; the server owns every
