@@ -10,8 +10,10 @@ economy (Bestand) whose every earner has a sink. 7,777 Angels. `$REVERIE` on
 Base ships last and disarmed. Guests play Movement I in the browser and lock at
 the going-under.
 
-Developers: the master brief is `PROMPT.md`; `DESIGN.md` says how the code
-satisfies it; `.rebuild/CONTRACTS.md` holds the shared-sim module signatures and
+Developers: the master brief is `PROMPT.md`; `SYNOPSIS.md` is the story the
+rebuild follows (where it and the brief disagree about what happens on screen,
+the synopsis wins); `DESIGN.md` says how the code satisfies it;
+`.rebuild/CONTRACTS.md` holds the shared-sim module signatures and
 `.rebuild/CLIENT.md` the client contract; `HANDOFF.md` is the state of the build.
 
 ## Controls

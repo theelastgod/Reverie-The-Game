@@ -47,6 +47,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - **One call for you** (Backlog 5): no heal stands between the intake and
   Desk Three, so a worn body meets the desk at about 44 hp; a player who
   strikes first or dodges wins, and the bot falls about one run in five.
+- **The story is now `SYNOPSIS.md`** (your brief of 2026-10-02, the
+  afternoon). The enemy has a name and a shape: Standing, the company
+  that owns the numbers, and Anselm Caul, its chief, who is a guest (he
+  never went under, so he cannot hear a hint, enter the Care or the
+  Clearing, or be struck, and he bought the ground he could not
+  prepare). The party has wants and lies; Ione Kade's word is the first
+  Reverie and the last; the four movements keep their ids and gain the
+  conspiracy; the four Passing outcomes are written with Caul's
+  recorders at the lip of the ring. Backlog A is the rebuild around it,
+  in four phases, which the routine takes from its next firing. Nothing
+  in the running game changed yet.
 - **The hourly routine** probes the two hosts, then takes a Backlog item or a
   discovered one, with tests, the gates, the smokes, a commit and a push to
   this branch, and reports here and to you. `main` is never pushed.
@@ -1182,6 +1193,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the self-hosted stylesheet, the four faces are the ones named and each
   file and licence exists. No new art: the same two faces the pages have
   set since the rebuild, served from the city instead of Google.
+- `SYNOPSIS.md` (2026-10-02, the owner's brief of that afternoon): the
+  story the rebuild follows. The enemy the brief asked for, given a name
+  and a shape inside the systems the game already has: Standing, the
+  company that owns the numbers and sells the city its wonder at four
+  counters (the freeze, the Kerb's slip, the private hour, the print), and
+  Anselm Caul, its chief, drawn with the guest's own sprite and portrait
+  because he is a guest: he never went under, so the server's rules for the
+  poorest arrival protect and bar him (no hints, no Care, no Clearing, not
+  loot), and "A guest cannot prepare the ground" is his origin and his
+  plan. The party given wants, lies and the scenes that rewrite the plot
+  (Nara's hand on the first recording; Quill's margin; Ord's figure from
+  the first capture); Ione Kade's word as the first Reverie and the last;
+  the four movements kept, each hour with a reversal, a name and a world
+  change, the altar, the hour on the Kerb, the map, the plate, the catalog
+  with the player's serial in the margin, the recorders at the lip of the
+  ring; the four Passing outcomes written through Caul's tape. Themes as
+  verbs, never named; no studio or film anywhere; every scene mapped to
+  existing art; §10 the rebuild in four phases (Backlog A). Written from
+  the brief, the design, the current spine and the cast's lines, with a
+  panel of four independent treatments and their adversarial judges
+  consulted for what to keep.
 
 ## Verified (2026-09-25, integration)
 
@@ -1845,7 +1877,44 @@ Prioritized. The autonomous routine takes the top unfinished item, finishes it
 with tests, runs the gates, commits, pushes, and moves it to Done. Add items as
 they are discovered; keep this list honest. As of 2026-10-02 items 1–8 and
 10–12 are the owner's, a real device's or the network's to finish, and 9 is
-done; the routine takes whatever it discovers, and adds what it finds.
+done; item A is the owner's new direction and the routine's work from now
+on; after it, the routine takes whatever it discovers, and adds what it finds.
+
+A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
+   a story of the quality the master brief asks for, the enemy a shadow
+   company with a psychopathic chief, the themes embodied and never named,
+   the existing art reused). The synopsis is written and is the script the
+   rebuild follows; where it and `PROMPT.md` or `DESIGN.md` disagree about
+   what happens on screen, the synopsis wins. Its §10 lists the phases;
+   take them in order, one movement at a time, each landing with the
+   gates, the session smoke, the campaign smoke for the movement touched
+   and the render check, and each recorded here:
+   - **Phase A, the company in the mouth of the city** (content only): the
+     company (Standing) and its chief (Anselm Caul) named in the lines of
+     Ord, Quill, Corvin Slate and Vesper Hale, on the clerks' badges and the
+     vans' HUD labels, on the freeze form, the hall's lease plaque, the
+     forecast glass and the news; Caul as an NPC body that is a guest in
+     every rule the server already has (the guest sprite and portrait, aura
+     0, not loot, barred by the personal gates), at the back of the Nave's
+     altar aisle in Movement I and at the lip of the Clearing in IV, and as
+     a voice at the altar, at the hour and in Vesper's office; Nara's
+     confession at the plate; Ord's figure at the failed Passing; Quill's
+     margin on the listing and the serial in the player's own print; the
+     recorder's voice as Ione Kade's; "reverie" in both of its senses.
+   - **Phase B, the new beats as steps**: the altar as a readable POI in
+     the Nave (I.9); the oval's line by serial in Vesper's office (II.10);
+     the catalog reversal as a step with a choice and the hot-street
+     consequence (III.8); the recorders at the Clearing with Caul's last
+     offer (IV.5); the Hijack outcome's altar reel for the whole server.
+   - **Phase C, the shared-world weave**: the Cable's darkening flickering
+     the altars server-wide; the listing's seller exposed by Quill; Ord's
+     figure on the news; the Appearance's blank tape as a server event.
+   - **Phase D, the side quests re-pointed**: ids kept, one change each,
+     the company behind every clerk, desk, van, hour and copy they touch.
+   The rules that do not move: persistent ids stay; the server owns every
+   number; no new art (Caul is the guest's art and must never get more);
+   nothing of a studio or a film anywhere; no theory named; the fairness
+   tests, the guest lock and the four Passing outcomes as they are.
 
 1. **Generated assets (Stage B).** 68 results exist in the owner's Higgsfield
    account (manifest: `.rebuild/generated-manifest.tsv`, pull script:
