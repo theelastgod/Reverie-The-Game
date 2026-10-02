@@ -1716,6 +1716,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   --dry-run` 558.62 KiB, unchanged. Not run: the campaign smokes (the
   server and the protocol did not change; the smokes drive the wire, not
   the renderer).
+- The live checks on GitHub's runner (2026-10-02): the push of `d46e2f4`
+  ran both jobs of **The gates**, `gates` and `live`, green on the first
+  try. In `live`, read through the connector: `0001_events.sql` applied to
+  the runner's local D1; the Worker answered `/health` on the second poll
+  (about four seconds) naming the pushed commit; the session smoke passed
+  over the wire (31 s); the runner image's Google Chrome 154.0.8037.57 was
+  found by path and the render check passed in 52 s at 11.9 fps under
+  SwiftShader with no page error at all (the fonts load there; the two
+  certificate refusals are this container's proxy), the landing page
+  showing 0 log lines because the runner's log is empty; the `render-check`
+  artifact uploaded 8 files (5.8 MB: the seven screenshots and the Worker's
+  log). The rehearsal here beforehand: the same steps in this container,
+  the Worker up in six seconds, the smoke and the render check passing
+  with the browser named by path (10.8 fps). One warning to carry: the
+  runner forces `actions/upload-artifact@v5` from Node 20 to 24; a later
+  major of that action will end it.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
