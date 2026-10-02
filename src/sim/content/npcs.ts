@@ -366,7 +366,7 @@ const QUILL_NODES: Record<string, DialogueNode> = {
     text: ctx => {
       const price = clearingPrice(ctx.w);
       const today = price === null || price === CLEARING_LIST_PRICE ? "Forty Bestand." : `Forty Bestand when I wrote it; ${price} on the board today.`;
-      return `Quill listed a Clearing. ${today} Copies travel. The hole does not. The people who say they are against the process are pricing it. I am not against anything. I just print faster. That is the difference and it is not in my favour.`;
+      return `Quill listed a Clearing. ${today} On commission: the buyer sent paper and a price and I never met them. Whoever the resistance is, they bought their paper from the same man I did. Nicer lighting than the company. Same electrician. Copies travel. The hole does not. The people who say they are against the process are pricing it. I am not against anything. I just print faster. That is the difference and it is not in my favour.`;
     },
     wink: "The resistance is a stall with better lighting.",
   },
@@ -567,7 +567,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   hall: {
     id: "hall",
-    text: "You went under. Now read your hall. It will tell you the tax and it will not tell you who set it. The Houses own the nodes on paper. The weather owns them in fact. The tax is climate. Read it anyway. Numbers you have read are harder to lie to you.",
+    text: "You went under. Now read your hall. It will tell you the tax and it will not tell you who set it. The Houses own the nodes on paper. The Concern holds the paper and leases them back. The weather owns them in fact. The tax is climate. Read it anyway. Numbers you have read are harder to lie to you.",
     choices: [
       { id: "number", label: "Give me the number.", next: "number" },
       { id: "leave", label: "I will read it." },
@@ -754,7 +754,8 @@ const VESPER_NODES: Record<string, DialogueNode> = {
   },
   take: {
     id: "take",
-    text: "You took the private yield. Cold is a current, not a costume. The Organs door is paid for out of it; I keep the door's price back and open it. Nara Vale has stopped speaking to you; she will start again when you pay a funeral. I would not wait. Sextons keep accounts too.",
+    text: "You took the private yield. Cold is a current, not a costume. The Organs door is paid for out of it; I keep the door's price back and open it. Nara Vale has gone to the garden; she will not speak until it is in the ground. I would not wait. Sextons keep accounts too.",
+    next: "oval-taken",
     effects: [
       { kind: "choice", key: C.OPERATOR, value: "take" },
       { kind: "bestand", delta: OPERATOR_YIELD, earner: "operator" },
@@ -773,6 +774,7 @@ const VESPER_NODES: Record<string, DialogueNode> = {
   refuse: {
     id: "refuse",
     text: "You refused. Go back to the wreckage garden and bury what our work destroyed. Then take the Organs door. There is another way through. It is slower and it has your hands in it.",
+    next: "oval-refused",
     effects: [
       { kind: "choice", key: C.OPERATOR, value: "refuse" },
       { kind: "readiness", delta: READINESS_REFUSE },
@@ -780,6 +782,19 @@ const VESPER_NODES: Record<string, DialogueNode> = {
       moveClearing("refused"), // an hour not for sale: the price gives a little
       { kind: "notice", text: "You refused the private yield. Readiness. The garden opens the door.", tone: "gold" },
     ],
+  },
+  // The oval light on her wall is the Concern's eye and voice. As you leave it speaks, by serial, for the first time, and it knows which way you went.
+  "oval-taken": {
+    id: "oval-taken",
+    speaker: "caul",
+    text: (ctx) => `As you leave, the oval light on the wall speaks, by your serial, for the first time. "${ctx.p.name}. You sold it. I will buy the rest."`,
+    wink: "The light knows your serial. It has known it since the clerk wrote it down.",
+  },
+  "oval-refused": {
+    id: "oval-refused",
+    speaker: "caul",
+    text: (ctx) => `As you leave, the oval light on the wall speaks, by your serial, for the first time. "${ctx.p.name}. You keep things. It is a lovely habit. I'd like to buy it."`,
+    wink: "The light knows your serial. It has known it since the clerk wrote it down.",
   },
   taken: {
     id: "taken",

@@ -87,7 +87,7 @@ const officer: NpcDef = {
     }),
     corridor: node({
       id: "corridor",
-      text: ({ p }) => `${has(p, SF.OFFICER_MET) ? "He is in the corridor this time, between the gate and the desk, and he does not step aside." : "\"Corvin Slate. Officer of Safety.\" He is in the corridor between the gate and the desk, and he does not step aside."} "You have read your hall. Good. The desk ahead will sell you a freeze: fifteen Bestand, the Nave holds for half an hour, nobody goes under in it. I sign them. I will tell you what the plaque does not, because the desk will not ask: while the Nave holds, the Passing goes hungry. A held district feeds nothing. Peace is a kind of weather.\" He waits. "Tell me what you want the weather to be. Then go and sign, or do not."`,
+      text: ({ p }) => `${has(p, SF.OFFICER_MET) ? "He is in the corridor this time, between the gate and the desk, and he does not step aside." : "\"Corvin Slate. Officer of Safety.\" He is in the corridor between the gate and the desk, and he does not step aside."} "You have read your hall. Good. The desk ahead will sell you a freeze: fifteen Bestand, the Nave holds for half an hour, nobody goes under in it. I sign them. They come on the Concern's paper; they are mine when I sign them. I will tell you what the plaque does not, because the desk will not ask: while the Nave holds, the Passing goes hungry. A held district feeds nothing. Peace is a kind of weather.\" He waits. "Tell me what you want the weather to be. Then go and sign, or do not."`,
       wink: "He is asking you to say it out loud so that the form has a witness. The form is the point. The witness is you.",
       effects: [flag(SF.OFFICER_MET), tally(SF.OFFICER_VISITS)],
       choices: [
@@ -204,7 +204,7 @@ const omen: NpcDef = {
     read: node({
       id: "read",
       text: "\"The front. Behind the band the glass shows there is a front, and I can see its edge.\" She says this to everyone. She does not say it to the glass.",
-      wink: "The forecast is a lie with a time on it. She reads the time off a Safety schedule. The front she can actually see, she has never sold.",
+      wink: "The forecast is a lie with a time on it. She reads the time off the Concern's schedule, which Safety carries. The front she can actually see, she has never sold.",
       choices: [{ id: "back", label: "Understood.", next: "hub" }],
     }),
     hub: node({
@@ -241,7 +241,7 @@ const omen: NpcDef = {
     }),
     "hours-confront": node({
       id: "hours-confront",
-      text: "\"It did not come.\" She takes the slip back. \"No. The times are Safety's bell schedule. I copy them. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it.\" She tears the slip. \"I am going to stand at the glass. I will read the front, which I can see, for nothing, which is what it is worth.\"",
+      text: "\"It did not come.\" She takes the slip back. \"No. The times are the Concern's bell schedule; Safety carries it and I copy it. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it, and the time was theirs.\" She tears the slip. \"I am going to stand at the glass. I will read the front, which I can see, for nothing, which is what it is worth.\"",
       effects: [flag(SF.HOURS_CONFRONTED)],
     }),
     "front-report": node({
@@ -390,7 +390,7 @@ const sexton: NpcDef = {
     }),
     wake: node({
       id: "wake",
-      text: ({ p }) => `${has(p, SF.SEXTON_MET) ? "He was digging when you woke; he does not stop." : "\"Pim Ashe. I dig for Nara Vale.\" He was digging when you woke; he does not stop."} "You are in the book now. Name, hour, the district you went under from. Angels wake here and get a line. Guests stop at the lip and get nothing, which is also a kind of line." He wipes the shovel. "Every grave in the Care has a name. She says so. So it is so." The ledger corner in his coat says something else.`,
+      text: ({ p }) => `${has(p, SF.SEXTON_MET) ? "He was digging when you woke; he does not stop." : "\"Pim Ashe. I dig for Nara Vale.\" He was digging when you woke; he does not stop."} "You are in the book now. Name, hour, the district you went under from. Angels wake here and get a line. Guests stop at the lip and get nothing, which is also a kind of line. It is the one book in the city the Concern does not own." He wipes the shovel. "Every grave in the Care has a name. She says so. So it is so." The ledger corner in his coat says something else.`,
       wink: "Twelve numbers in a ledger he keeps because she will not. You are the newest line in a book that only gets shorter when someone does their job.",
       effects: [flag(F.TALKED_SEXTON), flag(SF.SEXTON_MET), tally(SF.SEXTON_VISITS)],
       choices: [

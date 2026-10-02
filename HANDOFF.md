@@ -56,10 +56,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Reverie and the last; the four movements keep their ids and gain the
   conspiracy; the four Passing outcomes are written with Caul's
   recorders at the lip of the ring. Backlog A is the rebuild around it,
-  in four phases, and the routine has begun: Phase A's Movement I is in
-  the running game (the Concern named in the first hour's lines, Caul's
-  body at the back of the altar aisle, the waking hint in the Care);
-  Movement II is next.
+  in four phases, and the routine has begun: Phase A's Movements I and
+  II are in the running game (the Concern named in the first two hours'
+  lines, Caul's body at the back of the altar aisle, the waking hint in
+  the Care, the lease on the hall plaques, "funded by A. Caul" on the
+  freeze form, the oval light speaking by serial at Vesper's desk);
+  Movement III is next.
 - **The hourly routine** probes the two hosts, then takes a Backlog item or a
   discovered one, with tests, the gates, the smokes, a commit and a push to
   this branch, and reports here and to you. `main` is never pushed.
@@ -1277,6 +1279,35 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   after going under), labels. Next for Phase A: Movement II (the hall's
   lease plaque, the freeze form's "funded by", Corvin's and Vesper's
   lines, the Kerb's hour as the product's lie), then III and IV.
+- Backlog A, Phase A, Movement II (2026-10-02, later): the Concern in the
+  second hour, content only, on the shipped steps and side hours. The
+  hall plaques say the nodes are the House's on paper and the paper is
+  the Concern's (the House rents back what it owns), and the hall's Wink
+  and Ord's hall line say the same; the freeze form carries its own small
+  line, "funded by A. Caul", under the signature (the sign line, the desk
+  re-read, the news), and Corvin says in the corridor that the forms come
+  on the Concern's paper and are his when he signs them; the tax window
+  remits to the Concern; Pim's book at the wake is the one book in the
+  city the Concern does not own; the listing board and Quill both say
+  the Clearing was listed on commission for a buyer she never met, with
+  her "nicer lighting than the company, same electrician"; Halla's slips
+  are the Concern's bell schedule, which Safety carries and she copies,
+  and the bought hour's notice says the slip was the Concern's time; the
+  forecast glass carries the Concern's posted line, the next hour with
+  no time on it yet. The oval light on Vesper's wall speaks as you leave
+  her desk, by serial, through Caul's own portrait (a `speaker: "caul"`
+  node on Vesper's take and refuse, and the desk's E and Q verbs open the
+  same node after the stale offer window closes), branched on the hour
+  sold: "You sold it. I will buy the rest." or "You keep things. It is a
+  lovely habit. I'd like to buy it." The private yield's line about Nara
+  now says what the sim does: she goes to the garden and will not speak
+  until it is in the ground (the shipped "until you pay a funeral" was
+  never true on that path). Tests: the stale-window test now expects the
+  oval's node with Caul as speaker and the guest's portrait, and a raw
+  choose on it still pays nothing twice. Next for Phase A: Movement III
+  (Ord's figure at the glass, the recorders in last season's hole, the
+  Foundry as the catalog's heat, Quill's margin with the player's serial
+  and her refusal to cut the ring's plate), then IV.
 
 ## Verified (2026-09-25, integration)
 
@@ -1939,6 +1970,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   same world, failed its dialogue step with an empty prompt at Nara's
   home; the re-run alone passed, the same CPU-load flake noted before
   (the smokes run one at a time here).
+- Backlog A, Phase A, Movement II (2026-10-02, later): typecheck, 506
+  tests in 41 files, the play build and the stage; on a fresh local
+  world the session smoke passed, the Movement II campaign smoke passed
+  end to end (the shrine, Pim Ashe at the wake, the hall, Corvin Slate in
+  the corridor, the freeze refused, the tithe decided, the history faced,
+  the board read, the private yield taken through Vesper's dialogue with
+  the oval's line opening after it, into Movement III), and the render
+  check at `RENDER_MIN_FPS=5` passed on desktop and phone, run alone.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1965,8 +2004,8 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    gates, the session smoke, the campaign smoke for the movement touched
    and the render check, and each recorded here:
    - **Phase A, the company in the mouth of the city** (content only;
-     Movement I landed 2026-10-02 evening, see Done; Movement II is the
-     next firing's work, then III and IV): the
+     Movements I and II landed 2026-10-02 evening, see Done; Movement III
+     is the next firing's work, then IV): the
      company (the Concern) and its chief (Anselm Caul) named in the lines of
      Ord, Quill, Corvin Slate and Vesper Hale, on the clerks' badges and the
      vans' HUD labels, on the freeze form, the hall's lease plaque, the

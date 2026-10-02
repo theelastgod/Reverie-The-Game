@@ -416,7 +416,7 @@ const WET: PoiConfig[] = [
         choice: "read",
         guest: spectate,
         // The say is read after the effects: the first read posts the Clearing and reads its opening price; a later read reads where the city moved it.
-        say: ctx => `Quill listed a Clearing. ${clearingPrice(ctx.w) ?? CLEARING_LIST_PRICE} Bestand, the resistance's price today. Copies travel. The hole does not. Below it, smaller hands: keep-groups, hold-rates, a schedule of who will stand in which hole for what. The number is on the Grid now, in your ledger, and it moves when the city does.`,
+        say: ctx => `Quill listed a Clearing, on commission, for a buyer she never met. ${clearingPrice(ctx.w) ?? CLEARING_LIST_PRICE} Bestand, the resistance's price today. Copies travel. The hole does not. Below it, smaller hands: keep-groups, hold-rates, a schedule of who will stand in which hole for what. The number is on the Grid now, in your ledger, and it moves when the city does.`,
         effects: [
           { kind: "flag", key: F.BOARD },
           { kind: "worldFlag", key: W.CLEARING_LISTED, value: 1 },
@@ -471,7 +471,7 @@ const WET: PoiConfig[] = [
         when: ctx => has(ctx, F.HALL) && !has(ctx, F.OPERATOR),
         guest: spectate,
         once: F.OPERATOR,
-        say: "You took the private yield. Cold is a current, not a costume. The Organs door is paid for out of it. Nara Vale has stopped speaking to you.",
+        say: "You took the private yield. Cold is a current, not a costume. The Organs door is paid for out of it. Nara Vale has gone to the garden and will not speak until it is in the ground.",
         effects: [
           { kind: "choice", key: C.OPERATOR, value: "take" },
           { kind: "bestand", delta: OPERATOR_YIELD, earner: "operator" },
@@ -484,6 +484,7 @@ const WET: PoiConfig[] = [
           { kind: "poi", id: "operator-desk", state: "closed" },
           moveClearing("taken"), // Cold bought an hour: the resistance's Clearing is worth more
           { kind: "notice", text: `Private yield. ${OPERATOR_YIELD} Bestand, ${M3_DOOR_PRICE} of it to the Organs door. The door is open.`, tone: "hot" },
+          { kind: "dialogue", npc: "vesper", node: "oval-taken" }, // the oval light on her wall speaks, by serial, as you leave
         ],
       },
       {
@@ -499,6 +500,7 @@ const WET: PoiConfig[] = [
           { kind: "readiness", delta: READINESS_REFUSE },
           moveClearing("refused"), // an hour not for sale: the price gives a little
           { kind: "notice", text: "You refused the private yield. Readiness. The garden opens the door.", tone: "gold" },
+          { kind: "dialogue", npc: "vesper", node: "oval-refused" }, // the oval light on her wall speaks, by serial, as you leave
         ],
       },
     ],
@@ -694,11 +696,11 @@ const hall = (house: "mortals" | "sky" | "divinities" | "earth", plaque: string,
         choice: "read",
         when: ctx => ctx.p.house === house,
         guest: spectate,
-        say: ctx => `${plaque} Tithe ${gestellTax(ctx.w.gestell)} percent. The nodes belong to the process. The tax is climate. It will never make you hit harder.`,
+        say: ctx => `${plaque} Tithe ${gestellTax(ctx.w.gestell)} percent. The nodes are the House's on paper; the paper is the Concern's, and the House rents back what it owns. The tax is climate. It will never make you hit harder.`,
         effects: [
           { kind: "flag", key: F.HALL },
           { kind: "poi", id, state: "lit" },
-          { kind: "wink", text: "Who owns the nodes: the Houses on paper, and the weather in fact." },
+          { kind: "wink", text: "Who owns the nodes: the Houses on paper, the Concern on the paper's back, and the weather in fact." },
           { kind: "notice", text: `${HOUSE_NAME[house]}. Your hall is lit.`, tone: "sky" },
         ],
       },
@@ -733,14 +735,14 @@ const ANNEX: PoiConfig[] = [
         guest: spectate,
         cost: { bestand: FREEZE_FEE, sink: "freeze" },
         once: F.FREEZE,
-        say: ctx => "You signed the freeze. Fifteen Bestand. The Nave holds. The Passing will go hungry. Peace is a kind of weather."
+        say: ctx => "You signed the freeze. Fifteen Bestand. The Nave holds. The Passing will go hungry. Peace is a kind of weather. Under your signature, smaller, a line the form came with: funded by A. Caul."
           + (chose(ctx, C.ANNEX, "hungry") ? " You said hungry in the corridor. The signature says otherwise. Safety keeps both." : ""),
         effects: [
           { kind: "choice", key: C.FREEZE, value: "signed" },
           { kind: "freeze", district: "nave", seconds: 1800 },
           { kind: "poi", id: "safety-desk", state: "frozen" },
           { kind: "wink", text: "You bought time. You spent an hour. The signature does not get it back." },
-          { kind: "news", text: "A freeze was signed at the Annex. The Nave holds for half an hour." },
+          { kind: "news", text: "A freeze was signed at the Annex, on the Concern's paper. The Nave holds for half an hour." },
         ],
       },
       {
@@ -767,8 +769,8 @@ const ANNEX: PoiConfig[] = [
         say: ctx => {
           if (!has(ctx, F.HALL)) return "Safety Annex. Fifteen Bestand. Sign here. The district holds. The hour does not. The Annex will not take a name that has not read the hall.";
           return chose(ctx, C.FREEZE, "signed")
-            ? "Your signature, in the ledger. The Nave held for half an hour on it. The Passing went hungry for the same half hour."
-            : "Your refusal, in the ledger. They keep those too. Safety keeps everything. It is what keeping means to them.";
+            ? "Your signature, in the ledger, over the form's own small line: funded by A. Caul. The Nave held for half an hour on it. The Passing went hungry for the same half hour."
+            : "Your refusal, in the ledger. They keep those too. Safety keeps everything. It is what keeping means to them. The ledger's paper is the Concern's; the keeping is Safety's.";
         },
       },
     ],
@@ -788,7 +790,7 @@ const ANNEX: PoiConfig[] = [
           const earth = ctx.p.house === "earth" ? ` House of Earth pays ${Math.max(0, tax - 2)} on ground nodes.` : "";
           const decided = chose(ctx, C.TITHE, "paid") ? " Your tithe for this hour is in the ledger, paid before it was taken."
             : chose(ctx, C.TITHE, "rode") ? " You let this hour's tithe ride. The node will take it, at whatever the weather is then." : "";
-          return `Tax window. Current tax ${tax} percent on every extraction, taken before the yield reaches your hand.${earth} The rate is the weather divided by four. Nobody at this window set it.${decided}`;
+          return `Tax window. Current tax ${tax} percent on every extraction, taken before the yield reaches your hand.${earth} The rate is the weather divided by four. Nobody at this window set it, and nobody at this window keeps it: the window remits to the Concern.${decided}`;
         },
       },
       // Movement II: an Angel who has read their hall decides this hour's tithe once. Paying is the hall's tithe by another window; riding is the weather's.
@@ -839,12 +841,14 @@ export const LAST_SEASON_WINK: WinkBySchool = {
   surface: "Last season's hole lists for nothing. It is the one thing on the Kerb that could not be copied.",
 };
 
+/** The glass is the Concern's calendar as much as the city's weather: its line is posted in every meter's face, with no time on it yet. */
+const CALENDAR_LINE = " Under the band, in the same face as every meter in the city, a line the Concern posts: the next hour, with no time on it yet.";
 const forecastLine = (ctx: Ctx): string => {
   const band = weatherBand(ctx.w.gestell);
   const base = WEATHER_LABELS[band];
-  if (ctx.p.house !== "sky") return `Forecast glass. ${base}`;
+  if (ctx.p.house !== "sky") return `Forecast glass. ${base}${CALENDAR_LINE}`;
   const drift = ctx.w.gestell > GESTELL_BASELINE + 0.5 ? "The drift is down: the weather eases toward baseline." : ctx.w.gestell < GESTELL_BASELINE - 0.5 ? "The drift is up: the weather climbs toward baseline." : "No drift. The weather sits at baseline.";
-  return `Forecast glass. ${base} ${drift} Only Sky sees the front.`;
+  return `Forecast glass. ${base} ${drift} Only Sky sees the front.${CALENDAR_LINE}`;
 };
 
 const KERB: PoiConfig[] = [

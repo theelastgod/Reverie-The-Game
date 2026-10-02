@@ -873,7 +873,9 @@ describe("the private yield is decided once", () => {
     w = interact(w, ME, "operator-desk", "take");
     expect(me(w).flags[F.OPERATOR]).toBe(1);
     expect(me(w).bestand).toBe(OPERATOR_YIELD - M3_DOOR_PRICE);
-    expect(me(w).dialogue, "a verb on the world closes the stale window").toBeNull();
+    // The verb closes the stale offer window and opens the oval's line: the Concern's chief, by serial, through the guest's portrait.
+    expect(me(w).dialogue, "the stale window is gone; the oval speaks").toMatchObject({ npc: "vesper", node: "oval-taken", speaker: "Anselm Caul", portrait: "guest.jpg", choices: [] });
+    expect(me(w).dialogue?.text).toContain(`${me(w).name}. You sold it. I will buy the rest.`);
     w = act(w, ME, { t: "choose", choiceId: "take" });
     expect(me(w).bestand).toBe(OPERATOR_YIELD - M3_DOOR_PRICE);
     expect(w.flags["earned:operator"]).toBe(OPERATOR_YIELD);

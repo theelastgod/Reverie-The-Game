@@ -994,7 +994,7 @@ const KERB: Quest[] = [
         target: "hour-bell",
         plate: "wing-star.png",
         done: ({ p }) => has(p, SF.HOURS_WAITED),
-        onComplete: [notice("The bought hour did not come. The bell is on Safety's schedule. So is she.")],
+        onComplete: [notice("The bought hour did not come. The slip was the Concern's time; the bell is on a schedule nobody signed. So is she.")],
       }),
       step({
         id: "confront",
