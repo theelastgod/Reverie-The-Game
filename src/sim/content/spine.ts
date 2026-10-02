@@ -8,7 +8,6 @@ import type { Ctx, Effect, Quest, QuestStep } from "../types";
 import { READINESS_APPEARANCE_MIN, READINESS_PASSING_MIN } from "../constants";
 import { GUEST_SPAWN } from "../map";
 import { C, F, Q, W } from "./ids";
-import { LAST_SEASON_WINK } from "./pois";
 import { WAKING_WINK } from "./lines";
 
 const has = (ctx: Ctx, key: string): boolean => (ctx.p.flags[key] ?? 0) > 0;
@@ -23,17 +22,8 @@ const hasHistoryMark = (ctx: Ctx): boolean => ctx.p.serial !== null && ctx.w.his
 
 /** Ruin-sight, the Storm and the House of Sky see last season's hole itself; the rest read it off the glass. */
 const seesFailed = (ctx: Ctx): boolean => !ctx.p.guest && (ctx.p.messenger === "ruin" || ctx.p.stance === "storm" || ctx.p.house === "sky");
-const HOLE_REACH = 64;
-const failedMarkNear = (ctx: Ctx): boolean => ctx.w.failed.some(f => Math.hypot(f.x - ctx.p.x, f.y - ctx.p.y) <= HOLE_REACH);
-const nearestFailedMark = (ctx: Ctx): string | undefined => {
-  let best: string | undefined;
-  let bestD = Infinity;
-  for (const f of ctx.w.failed) {
-    const d = Math.hypot(f.x - ctx.p.x, f.y - ctx.p.y);
-    if (d < bestD) { bestD = d; best = f.id; }
-  }
-  return best;
-};
+/** Last season's hole, where the seed ground beside it carries the verb: the Clearing's mark, not the Ring's. */
+const holeInClearing = (ctx: Ctx): boolean => ctx.w.failed.some(f => f.district === "clearing");
 
 const notice = (text: string, tone: "ink" | "gold" | "hot" | "acid" | "sky" = "ink"): Effect => ({ kind: "notice", text, tone });
 
@@ -362,21 +352,20 @@ const M3_STEPS: QuestStep[] = [
   {
     id: "failed",
     title: "Last season",
-    detail: ctx => (seesFailed(ctx) && ctx.w.failed.length > 0
-      ? "You can see the hole itself: last season's Passing failed there. Stand at it. The forecast glass on the Kerb shows it too; press F there."
-      : "On the Kerb of Hours, the forecast glass. Press F to face last season's Passing. Ruin-sight, the Storm and the House of Sky would show you the hole itself."),
-    target: ctx => (seesFailed(ctx) && nearestFailedMark(ctx)) || "forecast-glass",
+    // The glass for everyone; the hole itself for those who can see it, by standing at the seed ground beside it (pois.ts). Then the room behind the
+    // glass, at the top of the Kerb past the hour clerks: the step waits for the first "What did it look like" across Anselm Caul's desk.
+    detail: ctx => (has(ctx, F.CAUL_OFFER) && !ctx.p.choices[C.GLASS]
+      ? "His offer stands. Read the glass for him, or put the light out: Q at the oval on the wall. The room has no other way out of it."
+      : has(ctx, F.FAILED)
+        ? "The forecast glass has a room behind it, at the top of the Kerb past the hour clerks. Someone in it would like a word."
+        : seesFailed(ctx) && holeInClearing(ctx)
+          ? "You can see the hole itself: last season's Passing failed in the Clearing. The seed ground south-east of the ring stands over it; press F there. The forecast glass on the Kerb shows it too; press F there."
+          : "On the Kerb of Hours, the forecast glass. Press F to face last season's Passing. Ruin-sight, the Storm and the House of Sky would show you the hole itself."),
+    target: ctx => (has(ctx, F.CAUL_OFFER) && !ctx.p.choices[C.GLASS] ? "oval-glass" : has(ctx, F.FAILED) ? "station:caul-glass" : seesFailed(ctx) && holeInClearing(ctx) ? "seed-4" : "forecast-glass"),
     plate: "failed-passing.jpg",
-    // The glass for everyone; the hole itself for those who can see it, by standing at it.
-    done: ctx => has(ctx, F.FAILED) || (seesFailed(ctx) && failedMarkNear(ctx)),
-    onComplete: ctx => (has(ctx, F.FAILED)
-      ? [notice("Last season's Passing failed. The city kept the weather.", "sky")]
-      : [
-          { kind: "flag", key: F.FAILED },
-          { kind: "wink", text: LAST_SEASON_WINK },
-          { kind: "readiness", delta: 2 },
-          notice("Last season's Passing failed here. The hour went by. You did not loot it.", "sky"),
-        ]),
+    // The glass faced (or the hole stood at), then the room: the step ends on the reader's post or the light put out, never on a walk out.
+    done: ctx => has(ctx, F.FAILED) && !!ctx.p.choices[C.GLASS],
+    onComplete: () => [notice("The room behind the glass. He asked what it looked like. The city kept the weather either way.", "sky")],
   },
   {
     id: "forge",

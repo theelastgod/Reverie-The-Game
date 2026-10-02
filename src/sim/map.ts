@@ -90,6 +90,8 @@ export const BOXES: BoxDef[] = [
   { id: "room-hall-mortals", rect: R(3, 68, 9, 8), door: { side: "e", at: 71 }, district: "care" },
   { id: "room-freeze", rect: R(14, 4, 7, 6), door: { side: "s", at: 17 }, district: "annex" },
   { id: "room-hall-sky", rect: R(60, 16, 8, 8), door: { side: "w", at: 19 }, district: "kerb" },
+  // The room behind the forecast glass, at the top of the Kerb past the hour clerks: Anselm Caul's desk, the oval on its wall, Ord with the ledger.
+  { id: "room-glass", rect: R(62, 2, 6, 4), door: { side: "s", at: 64 }, district: "kerb" },
   { id: "room-shrine-1", rect: R(74, 5, 5, 5), door: { side: "s", at: 76 }, district: "ring" },
   { id: "room-shrine-2", rect: R(84, 5, 5, 5), door: { side: "s", at: 86 }, district: "ring" },
   { id: "room-shrine-3", rect: R(94, 5, 5, 5), door: { side: "s", at: 96 }, district: "ring" },
@@ -138,6 +140,7 @@ export const PATCHES: PatchDef[] = [
   { id: "patch-hall-mortals", floor: "hall", rect: R(4, 69, 7, 6), district: "care" },
   { id: "patch-garden", floor: "garden", rect: R(20, 66, 11, 9), district: "care" },
   { id: "patch-hall-sky", floor: "hall", rect: R(61, 17, 6, 6), district: "kerb" },
+  { id: "patch-glass-room", floor: "operator", rect: R(63, 3, 4, 2), district: "kerb" },
   { id: "patch-shrine-1", floor: "under", rect: R(75, 6, 3, 3), district: "ring" },
   { id: "patch-shrine-2", floor: "under", rect: R(85, 6, 3, 3), district: "ring" },
   { id: "patch-shrine-3", floor: "under", rect: R(95, 6, 3, 3), district: "ring" },
@@ -190,6 +193,7 @@ export const POI_LIST: PoiDef[] = [
   poi("omen-terrace", "terrace", "kerb", 44, 10, "Omen terrace"),
   poi("hour-bell", "bell", "kerb", 52, 4, "Hour bell"),
   poi("forecast-glass", "forecast", "kerb", 60, 10, "Forecast glass"),
+  poi("oval-glass", "office", "kerb", 66, 4, "Oval light"), // on the wall of the room behind the glass: the one thing of Caul's in the city a hand can reach
   poi("hall-sky", "hall", "kerb", 64, 19, "House of Sky hall"),
   // Gold Ring
   poi("shrine-1", "shrine", "ring", 76, 7, "Shrine of the first bell"),
@@ -256,7 +260,8 @@ export const NPC_STATIONS: Record<string, NpcHome> = Object.fromEntries([
   home("nara-clearing", "clearing", 50, 66),
   home("nara-care", "care", 15, 61),
   home("ord-strait", "organs", 78, 40),
-  home("ord-glass", "kerb", 62, 10), // beside the forecast glass, the ledger open at last season, until the figure is read
+  home("ord-glass", "kerb", 63, 3), // in the room behind the forecast glass, the ledger open at last season, until the glass is decided
+  home("caul-glass", "kerb", 65, 3), // Anselm Caul at his desk in the room behind the glass, Movement III
   home("ord-cable", "organs", 95, 40),
   home("ord-clearing", "clearing", 54, 66),
   home("ord-gate", "clearing", 38, 67), // just inside the Clearing at the Care gate: the ledger before the ring

@@ -16,6 +16,7 @@ import { CLEARING_LIST_PRICE, CLEARING_PRICE_MOVE, DT, FREEZE_FEE, M3_DOOR_PRICE
 import { POSITIONS, blockedFor, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
+import { SIDE_PLACES } from "./content/side";
 import { CLEARING_LISTING } from "./content/market";
 import { verbsFor } from "./interact";
 import { LINES } from "./content";
@@ -664,21 +665,84 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
   expect(npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!.state).not.toBe("glass");
 
   w = tick(use(w, "forecast-glass", "season"));
-  expectStep(w, Q.M3, 7);
+  expectStep(w, Q.M3, 6);
   expect(me(w).flags[F.FAILED]).toBe(1);
   expect(me(w).heard).toContain("the recorders still standing in it");
+  expect(snapshotFor(w, ME).objective, "the step now points at the room behind the glass").toMatchObject({ step: "failed", target: POSITIONS["station:caul-glass"] });
 
   // the glass faced, Ord is beside it with the figure: last season was captured, not short; read once, then he is at the gate again
   const ordAtGlass = npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!;
   expect(ordAtGlass).toMatchObject({ state: "glass", x: POSITIONS["station:ord-glass"].x, y: POSITIONS["station:ord-glass"].y });
-  w = talkTo(w, ME, "ord");
-  expect(me(w).dialogue?.node).toBe("figure");
+
+  // the forge taken first takes Ord back to the gate, and the jump from Caul's menu goes with him (a fork; the walk below keeps the order)
+  {
+    const early = closeAll(choose(talkTo(w, ME, "quill"), ME, o.forge), ME);
+    expect(me(early).flags[F.FORGE]).toBe(1);
+    expect(npcView({ w: early, p: me(early), now: early.now }, early.npcs.ord)!.state).not.toBe("glass");
+    expect(me(talkTo(early, ME, "caul")).dialogue?.choices.map(c => c.id), "no jump to a man who has left the room").not.toContain("figure");
+  }
+
+  // the room behind the glass: Anselm Caul in person, the sample, the offer; a reader on one run, the light put out on the other
+  expect(npcView({ w, p: me(w), now: w.now }, w.npcs.caul)).toMatchObject({ state: "glass", x: POSITIONS["station:caul-glass"].x, y: POSITIONS["station:caul-glass"].y });
+  w = talkTo(w, ME, "caul");
+  expect(me(w).dialogue?.node).toBe("glass");
+  expect(me(w).dialogue?.text).toContain(me(w).name);
+  expect(me(w).dialogue?.text).toContain(me(w).choices[C.FIRST_NODE] === "keep" ? "You kept the first node." : "You extracted at the first node.");
+  w = choose(w, ME, "figure");
+  expect(me(w).dialogue, "a choice can hand the window to another person").toMatchObject({ npc: "ord", node: "figure" });
   expect(me(w).dialogue?.text).toContain("It was not short of anything.");
-  w = closeAll(w, ME);
   expect(me(w).flags[F.FIGURE]).toBe(1);
-  expect(npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!.state).not.toBe("glass");
-  expect(me(talkTo(w, ME, "ord")).dialogue?.node).toBe("figure-after");
+  w = choose(w, ME, "back");
+  expect(me(w).dialogue, "and back across the desk").toMatchObject({ npc: "caul", node: "offer" });
+  expect(me(w).flags[F.CAUL_MET]).toBe(1);
+  expect(me(w).flags[F.CAUL_OFFER]).toBe(1);
   w = closeAll(w, ME);
+  expect(npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!.state, "he stays in the room until the glass is decided").toBe("glass");
+  expect(me(talkTo(w, ME, "ord")).dialogue?.node, "the figure once; then his later line").toBe("figure-after");
+  w = closeAll(w, ME);
+  w = talkTo(w, ME, "caul");
+  expect(me(w).dialogue?.node, "the offer stands until it is decided").toBe("offer");
+  if (o.forge === "sell") {
+    w = choose(w, ME, "reader");
+    expect(me(w).dialogue?.node).toBe("reader");
+    expect(me(w).choices[C.GLASS]).toBe("read");
+    expect(me(w).current).toBe("cold");
+    expect(w.flags[W.GLASS_LINES]).toBe(1);
+    w = act(w, ME, { t: "close" });
+    expect(me(w).dialogue?.node, "then the question").toBe("looked");
+    w = choose(w, ME, "told");
+    expect(me(w).flags[F.TOLD_CAUL]).toBe(1);
+    w = closeAll(w, ME);
+    expect(me(use(w, "forecast-glass", "read")).heard, "the reader reads the glass the way the company sees it").toMatch(/Your line is in it, the length of your readiness. The city\x27s figure: \d+\. In the hole: \d+\./);
+    const verbs = snapshotFor(goTo(w, ME, "oval-glass"), ME).prompt?.verbs.map(v => v.choice) ?? [];
+    expect(verbs, "a reader is never offered the light").not.toContain("dark");
+  } else {
+    w = choose(w, ME, "no");
+    expect(me(w).dialogue?.node).toBe("declined");
+    w = act(w, ME, { t: "close" });
+    expect(me(w).dialogue?.node).toBe("looked");
+    w = closeAll(choose(w, ME, "untold"), ME);
+    expect(me(w).choices[C.GLASS]).toBeUndefined();
+    expectStep(tick(w), Q.M3, 6);
+    expect(snapshotFor(w, ME).objective, "the light is the other way out of the room").toMatchObject({ step: "failed", target: POSITIONS["oval-glass"] });
+    // the light put out: readiness, a dark light for everyone, the omen-reader at the glass, and his voice in the dark
+    w = use(w, "oval-glass", "dark");
+    expect(me(w).choices[C.GLASS]).toBe("dark");
+    expect(w.flags[W.DARK_LIGHTS]).toBe(1);
+    expect(w.npcs.omen).toMatchObject({ state: "glass", x: SIDE_PLACES["omen-glass"].x, y: SIDE_PLACES["omen-glass"].y });
+    expect(w.news.some(n => n.text === "A light went out behind the forecast glass. 1 is dark.")).toBe(true);
+    expect(me(w).dialogue, "his voice in the dark").toMatchObject({ npc: "caul", node: "dark" });
+    w = closeAll(w, ME);
+    w = talkTo(w, ME, "omen");
+    expect(me(w).dialogue?.choices.map(c => c.id)).toContain("light");
+    w = closeAll(choose(w, ME, "light"), ME);
+  }
+  expect(me(w).flags[F.CAUL_ASKED]).toBe(1);
+  w = tick(w);
+  expectStep(w, Q.M3, 7);
+  expect(me(talkTo(w, ME, "caul")).dialogue?.node, "later visits").toBe("after");
+  w = closeAll(w, ME);
+  expect(npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!.state, "the glass decided, Ord is back at the gate").not.toBe("glass");
 
   // Quill hands over the print from the Grid with your own serial in the margin; after the choice, the plate she would not cut
   if (o.forge === "sell") {

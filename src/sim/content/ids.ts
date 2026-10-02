@@ -44,6 +44,10 @@ export const F = {
   FAILED: "failed", // saw a failed Passing
   FIGURE: "figure", // Movement III: heard Ord's figure for last season at the glass (it was captured, not short)
   LID: "nara:lid", // Movement IV: heard Nara's confession at the ring before it was a ring (she pressed record on the first one)
+  CAUL_MET: "caul:met", // Movement III: met Anselm Caul in person, in the room behind the forecast glass
+  CAUL_OFFER: "caul:offer", // Movement III: heard his offer of a reader's post; the oval on the wall takes Q from here
+  CAUL_ASKED: "caul:asked", // Movement III: heard the first "What did it look like" (the beat's end; the step waits for it)
+  TOLD_CAUL: "caul:told", // Movement III: told him what the waking hint looked like, in your own words
   FORGE: "forge", // decided copies with Quill
   PREPARE: "prepare", // prepared the Clearing
   BRINK: "brink", // Movement IV: heard Nara at the ring before the ground was kept, with the readiness read
@@ -76,6 +80,7 @@ export const C = {
   PARTY: "party", // "with" | "alone": whether the party stands in the ring with you (readiness) or you stand alone (restraint); the news says which
   CLEARING: "clearing", // "keep" | "extract" | "pass"
   PASSING: "passing", // PassingOutcome
+  GLASS: "glass", // "read" | "dark": the reader's post taken at Caul's desk, or the light put out at the oval; one value, the two exclusive
 } as const;
 
 /** Shared world flags and counters (WorldState.flags). */
@@ -92,6 +97,8 @@ export const W = {
   BULLETIN_NUMBER: "bulletinNumber", // the figure that was pinned, for whoever reads the plaque next
   FREEZES: "freezes",
   PASSINGS: "passings",
+  DARK_LIGHTS: "darkLights", // count of lights put out behind the forecast glass, one per Angel who shuttered it (the city's switch, Phase C reads it)
+  GLASS_LINES: "glassLines", // count of readers whose readiness is a line on the glass
 } as const;
 
 /** Quest ids. */
@@ -126,6 +133,7 @@ export const POI_STATES: Record<string, readonly string[]> = {
   "omen-terrace": ["quiet", "read"],
   "hour-bell": ["still", "struck"],
   "forecast-glass": ["dark", "lit"],
+  "oval-glass": ["lit", "dark"], // the oval on the wall of the room behind the glass: dark once any Angel has put it out
   "shrine-1": ["unkept", "kept"],
   "shrine-2": ["unkept", "kept"],
   "shrine-3": ["unkept", "kept"],

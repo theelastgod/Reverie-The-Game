@@ -66,8 +66,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   serial in the margin and the plate she would not cut), and Movement
   IV (Ione's voice known from the crate and her word said first, Nara's
   three numbers and her confession at the ring, Caul's body on the
-  Grid's gate above it, the hijack with a margin). Phase A is complete;
-  Phase B, the new beats, is next.
+  Grid's gate above it, the hijack with a margin). Phase A is complete.
+  Phase B, the new beats, has begun: the altar's reel in the Nave and the
+  room behind the forecast glass, where Caul sits across the desk in
+  Movement III and offers the reader's post or the light to put out.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1428,6 +1430,58 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   complete: every movement has the company in its mouth. Next: Phase B,
   the new beats (SYNOPSIS §10), starting with the altar as a readable
   POI in the Nave (I.9) and the room behind the glass (III.7).
+- Backlog A, Phase B, first beats (2026-10-02, late): the altar's reel
+  (I.9) and the room behind the forecast glass (III.7), from the
+  script's lines tagged new. The lit altar in the Nave now plays the
+  catalog: a sky through an oval, a bell, ninety seconds, a tag in the
+  corner, a serial in the margin, and over the restart a courteous
+  voice, "You will feel it again. We kept it for you.", inside the
+  watch's own line so nobody is named. The room: new map geometry at
+  the top of the Kerb past the hour clerks (`room-glass`, an operator
+  floor, the `oval-glass` POI on its wall, the stations `caul-glass`
+  and `ord-glass` inside it). Anselm Caul is in it in person in
+  Movement III (and for a guest who walks the Kerb): your serial, your
+  first node and the recorder said back as compliments; last season on
+  the screen as a sample ("You are looking at a failure. I am looking
+  at a sample."; "I was never counted. People take that for the wound.
+  It is the clearance."); the offer of a reader's post; the first "What
+  did it look like", told or not. The reader's post (C.GLASS read)
+  makes Cold your current, counts your line on the glass for everyone
+  (W.GLASS_LINES) and lets you read the glass the way the company sees
+  it: the city's figure (`cityFigure`, the Angels' readiness averaged)
+  and the count in the hole. The light put out (Q at the oval, once
+  the offer is made and while the glass is undecided; never a guest's):
+  readiness, one dark light counted for the city (W.DARK_LIGHTS), the
+  oval dark, Halla Voss sent to the glass for everyone, news, and his
+  voice in the dark. Ord's figure is reachable from Caul's choices (the
+  dialogue engine now hands a window over when a choice's effects open
+  another person's node) and "Back to him." returns across the desk;
+  Ord stays in the room until the glass is decided. The step `failed`
+  now waits for the glass to be decided (C.GLASS read or dark, as the
+  script's header says: the room ends on the reader's post or the
+  light, never on a walk out, and a decliner is pointed at the oval);
+  the hole-sight path's F.FAILED moved to a "Stand at the hole" verb on
+  the seed ground south-east of the ring, Movement III only. Halla's
+  after-light line, offered once, and once any Angel has put the light
+  out she is at the glass for everyone and sells no more hours. The
+  campaign smoke walks the room and takes the reader's post. What the
+  script leaves to Phase C stays there and no landed line claims it:
+  the date on the glass, the journal line for readers, the hour
+  clerks' descent as a spawn, the dark-light threshold hiding the
+  date; Caul's offer and reader lines say what the glass gives today.
+  Reviewed by three adversarial readers (engine, script, world) with a
+  refuter on each finding; the confirmed ones folded: the omen-reader
+  was being moved by tile numbers where the effect takes pixels (she
+  would have stood in the map's corner for everyone), the oval's POI
+  state was unregistered and would have been dropped on reload, the
+  hole verb lacked the movement gate the glass has, Ord's jump was
+  offered after he had left the room, Caul and Halla claimed a descent
+  and a date the game does not have yet, the step's end followed the
+  question instead of the decision, and Halla kept selling hours after
+  walking to the glass.
+  Next for Phase B: the catalog reversal at the forge as a listing or a
+  pull that moves the price (III.8), then the recorders at the lip with
+  Caul's last offer (IV.6).
 
 ## Verified (2026-09-25, integration)
 
@@ -2117,6 +2171,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   readiness 52 as the bot's path earns, the credits; 22.3 s of bot
   time in the fourth hour, 1,086 words shown), and the render check at
   `RENDER_MIN_FPS=5` passed on desktop and phone, run alone.
+- Backlog A, Phase B, first beats (2026-10-02, late): typecheck, 507
+  tests in 41 files (the Movement III walk now goes through the room on
+  both runs: the reader's post on one, the light put out on the other,
+  the window handed to Ord and back, the step waiting for the question,
+  a reader never offered the light, the dark light counted and Halla at
+  the glass), the build, the play build and the stage; on a fresh local
+  world the Movement III campaign smoke passed through the room (the
+  bot took the reader's post and heard the question; Movement III now
+  shows 2,206 words, 1,520 of dialogue), and the render check at
+  `RENDER_MIN_FPS=5` passed on desktop and phone, run alone; all of it
+  re-run on the tree after the review's fixes.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2165,10 +2230,12 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      recorder's voice as Ione Kade's and the first hint moved from the lip
      to the waking in the Care (a guest hears none); Halla's hour played as
      the product; "reverie" in both of its senses.
-   - **Phase B, the new beats** (the next firing's work, one beat at a
-     time, each from `SCRIPT.md`'s lines tagged new or Phase B, with the
-     beat's header there naming the step, flag, gate or station it
-     needs): never inserted between shipped steps (a
+   - **Phase B, the new beats** (one beat at a firing, each from
+     `SCRIPT.md`'s lines tagged new or Phase B, with the beat's header
+     there naming the step, flag, gate or station it needs; landed so
+     far: the altar's reel (I.9) and the room behind the glass (III.7),
+     see Done; next the forge's listing or pull (III.8), then the lip
+     (IV.6), then the Hijack's and Absence's remainders): never inserted between shipped steps (a
      saved body's progress is a step index); they enter as verbs and
      dialogue on existing steps or at a movement's end. The altar as a
      readable POI in the Nave (I.9); the oval's line by serial, branched

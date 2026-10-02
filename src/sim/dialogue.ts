@@ -129,8 +129,9 @@ export function applyChoose(w: WorldState, id: string, choiceId: string): WorldS
   const npcId = p.dialogue.npc;
   let cur = applyEffects(w, id, choice.effects);
   if (choice.next) return openNode(cur, id, npcId, choice.next);
+  // A choice whose effects opened another person's node (a `dialogue` effect) hands the window over; otherwise it closes.
   const after = cur.players.get(id);
-  if (after && after.dialogue) cur = setPlayer(cur, { ...after, dialogue: null });
+  if (after && after.dialogue && after.dialogue === p.dialogue) cur = setPlayer(cur, { ...after, dialogue: null });
   return cur;
 }
 

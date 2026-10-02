@@ -10,10 +10,11 @@ import {
   OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, TITHE_COST, UPKEEP_COST,
   WAR_PERIOD,
 } from "../constants";
-import { weatherBand } from "../protocol";
+import { cityFigure, weatherBand } from "../protocol";
 import { C, F, W, seasonPassingFlag } from "./ids";
 import { WEATHER_LABELS, WEATHER_NAMED } from "./lines";
 import { clearingPrice, listClearing, moveClearing } from "./market";
+import { SIDE_PLACES } from "./side";
 
 // ---------------------------------------------------------------- helpers
 
@@ -291,8 +292,9 @@ const NAVE: PoiConfig[] = [
         label: "Watch",
         choice: "watch",
         guest: "allow",
-        say: "Screens in a ring. One of them shows the yield desk from above. The clerk is at it. The clerk is also on the street behind you, doing the job.",
-        effects: [{ kind: "wink", text: "A copy of a person doing a job. The copy does not clock out." }],
+        // The catalog, playing since the body arrived: last season's sky, cut to ninety seconds, and a courteous voice over the restart. No name; nobody looks up.
+        say: "Screens in a ring. One is lit and people are kneeling at it. On the screen: a sky through an oval, a bell, the light a shade warmer than the room. The kneelers call it a reverie. It runs ninety seconds and starts again. A tag in the corner. A serial in the margin. Over the restart, courteous, a man's voice: \"You will feel it again. We kept it for you.\"",
+        effects: [{ kind: "wink", text: "A copy of a hint somebody heard. The copy does not clock out." }],
       },
     ],
   },
@@ -843,12 +845,56 @@ export const LAST_SEASON_WINK: WinkBySchool = {
 
 /** The glass is the Concern's calendar as much as the city's weather: its line is posted in every meter's face, with no time on it yet. */
 const CALENDAR_LINE = " Under the band, in the same face as every meter in the city, a line the Concern posts: the next hour, with no time on it yet.";
+/** The lines on the glass: a reader's own, the length of their readiness, with the city's figure and the count in the hole; for everyone, how many lines cross it. */
+const glassLines = (ctx: Ctx): string => {
+  const lines = ctx.w.flags[W.GLASS_LINES] ?? 0;
+  const crossing = lines === 0 ? "" : lines === 1 ? " One line across it, the length of a readiness." : ` ${lines} lines across it, each the length of a readiness.`;
+  if (ctx.p.choices[C.GLASS] !== "read") return crossing;
+  return `${crossing} Your line is in it, the length of your readiness. The city's figure: ${cityFigure(ctx.w)}. In the hole: ${ctx.w.clearing.heldBy.length}.`;
+};
 const forecastLine = (ctx: Ctx): string => {
   const band = weatherBand(ctx.w.gestell);
   const base = WEATHER_LABELS[band];
-  if (ctx.p.house !== "sky") return `Forecast glass. ${base}${CALENDAR_LINE}`;
+  if (ctx.p.house !== "sky") return `Forecast glass. ${base}${CALENDAR_LINE}${glassLines(ctx)}`;
   const drift = ctx.w.gestell > GESTELL_BASELINE + 0.5 ? "The drift is down: the weather eases toward baseline." : ctx.w.gestell < GESTELL_BASELINE - 0.5 ? "The drift is up: the weather climbs toward baseline." : "No drift. The weather sits at baseline.";
-  return `Forecast glass. ${base} ${drift} Only Sky sees the front.${CALENDAR_LINE}`;
+  return `Forecast glass. ${base} ${drift} Only Sky sees the front.${CALENDAR_LINE}${glassLines(ctx)}`;
+};
+
+/** The oval on the wall of the room behind the glass: the one thing of Caul's in the city a hand can reach. Q puts it out, once the offer has been made and while the glass is undecided. */
+const OVAL_GLASS: PoiConfig = {
+  id: "oval-glass",
+  label: ctx => (poiState(ctx, "oval-glass") === "dark" && ctx.p.choices[C.GLASS] === "dark" ? "Oval light — dark" : "Oval light"),
+  plate: "failed-passing.jpg",
+  verbs: [
+    {
+      key: "F",
+      label: "Look at the light",
+      choice: "look",
+      guest: "allow",
+      say: ctx => (ctx.p.choices[C.GLASS] === "dark"
+        ? "The wall. The oval is dark. One lamp on the top terrace is dark with it."
+        : "An oval of champagne light on the wall, the same as every oval on the Kerb. It is the one thing of his in the city a hand can reach."),
+    },
+    {
+      key: "Q",
+      label: "Put the light out",
+      choice: "dark",
+      when: ctx => has(ctx, F.CAUL_OFFER) && ctx.p.choices[C.GLASS] !== "read" && ctx.p.choices[C.GLASS] !== "dark",
+      guest: spectate,
+      say: "You put the light out. The room is the room. Behind the glass the band keeps its colour, and one lamp in the top terrace goes dark for the whole Kerb.",
+      effects: ctx => [
+        { kind: "choice", key: C.GLASS, value: "dark" },
+        { kind: "readiness", delta: 10 },
+        { kind: "worldCount", key: W.DARK_LIGHTS, delta: 1 },
+        { kind: "poi", id: "oval-glass", state: "dark" },
+        // The omen-reader goes to the glass and reads the front for nothing from now on (side.ts keeps her there once the hours are done).
+        { kind: "npc", id: "omen", ...SIDE_PLACES["omen-glass"], present: true, state: "glass" },
+        { kind: "news", text: `A light went out behind the forecast glass. ${(ctx.w.flags[W.DARK_LIGHTS] ?? 0) + 1} ${(ctx.w.flags[W.DARK_LIGHTS] ?? 0) + 1 === 1 ? "is" : "are"} dark.` },
+        { kind: "notice", text: "One light dark on the Kerb, for everyone. Readiness.", tone: "sky" },
+        { kind: "dialogue", npc: "caul", node: "dark" },
+      ],
+    },
+  ],
 };
 
 const KERB: PoiConfig[] = [
@@ -926,6 +972,7 @@ const KERB: PoiConfig[] = [
     ],
   },
   hall("sky", "House of Sky. Hours, omens, Passing timing. You see the front others do not.", "A sky you cannot name."),
+  OVAL_GLASS,
 ];
 
 // ---------------------------------------------------------------- the Gold Ring
@@ -1165,11 +1212,12 @@ const ORGANS: PoiConfig[] = [
 
 // ---------------------------------------------------------------- the Clearing
 
-const seed = (id: string): PoiConfig => ({
+const seed = (id: string, extra: PoiVerb[] = []): PoiConfig => ({
   id,
   label: ctx => (poiState(ctx, id) === "seeded" ? "Seed ground — seeded" : "Seed ground"),
   plate: "clearing-ring.jpg",
   verbs: [
+    ...extra,
     {
       key: "F",
       label: "Plant a seed",
@@ -1289,7 +1337,23 @@ const CLEARING: PoiConfig[] = [
   seed("seed-1"),
   seed("seed-2"),
   seed("seed-3"),
-  seed("seed-4"),
+  // The hole itself: Ruin-sight, the Storm and the House of Sky can face last season here instead of in the glass (the spine's step takes either).
+  seed("seed-4", [
+    {
+      key: "F",
+      label: "Stand at the hole",
+      choice: "stand",
+      when: ctx => ctx.p.movement >= 3 && !ctx.p.guest && (ctx.p.messenger === "ruin" || ctx.p.stance === "storm" || ctx.p.house === "sky") && !has(ctx, F.FAILED) && ctx.w.failed.some(f => f.district === "clearing"),
+      guest: spectate,
+      say: "You stand over it. Last season's Passing failed here, south-east of the seed ground. The hour went by. The city kept the weather. The recorders stood where it went. You did not loot it.",
+      effects: [
+        { kind: "flag", key: F.FAILED },
+        { kind: "wink", text: LAST_SEASON_WINK },
+        { kind: "readiness", delta: 2 },
+        { kind: "notice", text: "Last season's Passing failed here. The hour went by. You did not loot it.", tone: "sky" },
+      ],
+    },
+  ]),
 ];
 
 // ---------------------------------------------------------------- export

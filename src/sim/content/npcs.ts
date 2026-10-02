@@ -691,13 +691,16 @@ const ORD_NODES: Record<string, DialogueNode> = {
   // The figure, at the glass: last season was not short of anything. It was captured, and he counted it; it is why he is at a gate.
   figure: {
     id: "figure",
-    text: "Ord does not look at the glass. He has it by heart. \"Four hundred and six in the ring. The glass at sixty-one; that is the city's figure, not a body's. The weather at seventy-three. Third minute: a trace crossed. I wrote that line the way I wrote every line. Then the next one came across my desk, on the Concern's paper, and I wrote that too: taken. One. That is the figure. It was not short of anything. I counted it, and I walked to a gate the same week, and I have been at one since.\" He closes the book on his finger. \"The reel at the altar is that line. It is a sample. It is also my handwriting.\"",
+    text: "Ord does not look at the screen. He has it by heart. \"Four hundred and six in the ring. The glass at sixty-one; that is the city's figure, not a body's. The weather at seventy-three. Third minute: a trace crossed. I wrote that line the way I wrote every line. Then the next one came across my desk, on the Concern's paper, and I wrote that too: taken. One. That is the figure. It was not short of anything. I counted it, and I walked to a gate the same week, and I have been at one since.\" He closes the book on his finger. \"The reel at the altar is that line. He will tell you it is a sample. It is a sample. It is also my handwriting.\"",
     wink: "The count. He said he left on principle. He left on this line.",
     effects: [
       { kind: "flag", key: F.FIGURE },
       { kind: "notice", text: "Ord's figure: last season was captured, not short. He counted it.", tone: "ink" },
     ],
     choices: [
+      // Back across the desk: the offer if it has not been made, else his later line.
+      { id: "back", label: "Back to him.", when: ctx => has(ctx, F.CAUL_MET) && !has(ctx, F.CAUL_OFFER), effects: [{ kind: "dialogue", npc: "caul", node: "offer" }] },
+      { id: "back-after", label: "Back to him.", when: ctx => has(ctx, F.CAUL_OFFER), effects: [{ kind: "dialogue", npc: "caul", node: "after" }] },
       { id: "number", label: "Give me the number.", next: "number" },
       { id: "leave", label: "Enough." },
     ],
@@ -965,10 +968,117 @@ const IONE_NODES: Record<string, DialogueNode> = {
  */
 const CAUL_ABSENT_RADIUS = 160; // px; NPC_REACH is 72
 
+/** The room behind the glass, by flag: a guest hears `guest`; an Angel hears `glass`, then `sample`, then the offer until it is decided, then the question, then `after`. */
+function caulRoom(ctx: Ctx): string {
+  if (ctx.p.guest) return "guest";
+  if (!has(ctx, F.CAUL_MET)) return "glass";
+  if (!has(ctx, F.CAUL_OFFER)) return "sample";
+  if (!has(ctx, F.CAUL_ASKED)) return ctx.p.choices[C.GLASS] ? "looked" : "offer";
+  return "after";
+}
+
+/** Where a body meets him: the Nave's altar aisle in the first hour (never in reach), the room behind the glass in the third, the Grid's gate in the fourth. */
+const caulInRoom = (ctx: Ctx): boolean => ctx.p.movement === 3 || (ctx.p.guest && ctx.p.district === "kerb");
+
+/** Ord across the desk: in the room from the glass faced until it is decided, Movement III only. The station and the jump from Caul's menu share this. */
+const ordInRoom = (ctx: Ctx): boolean => ctx.p.movement === 3 && has(ctx, F.MAP) && has(ctx, F.FAILED) && !has(ctx, F.FORGE) && !ctx.p.choices[C.GLASS];
+
 const CAUL_NODES: Record<string, DialogueNode> = {
   first: {
     id: "first",
     text: "A paper-white body with no halo, watching the kneelers and not the screen. By the time you are close enough to speak there is nobody there.",
+  },
+  // ---- the room behind the forecast glass (III.7)
+  guest: {
+    id: "guest",
+    text: "A paper-white body at a desk, no halo, the GUEST label over him like the one over you. He looks up and is pleased. \"Unsealed. We have that in common. I have it for life.\" He goes back to the screen. \"There is nothing here for you yet. Come back with a serial. I only buy what has a number on it.\"",
+  },
+  glass: {
+    id: "glass",
+    text: (ctx) => {
+      const node = chose(ctx, C.FIRST_NODE, "keep")
+        ? "\"You kept the first node. The hour it would have paid is in my book as a minus. I find those the most interesting lines.\" "
+        : "\"You extracted at the first node. The line is in my book. I remember my own first line.\" ";
+      const recorder = chose(ctx, C.MEMORIAL, "voice")
+        ? "\"At the recorder you left the voice running. Most take the copper; it closes a coffin, and people like a thing that closes. You gave it another night. I would have bought the night.\" "
+        : chose(ctx, C.MEMORIAL, "copper") ? "\"At the recorder you took the copper. Sound. The voice is in my book either way.\" " : "";
+      return `A paper-white body at a desk, no halo, the GUEST label over him like any arrival's, and the room's own light on his face. Anselm Caul. He is pleased to see you. "${ctx.p.name}. We have spoken, through a light. I prefer this." ${node}${recorder}"Your name was in the book before you struck anyone. That is not a threat. That is how a book works."`;
+    },
+    wink: "He cannot hear this. He has never heard one. He is the only body in the room not listening.",
+    effects: [{ kind: "flag", key: F.CAUL_MET }],
+    choices: [
+      { id: "sample", label: "The screen. What is it?", next: "sample" },
+      { id: "figure", label: "Ord. The figure.", when: ctx => ordInRoom(ctx) && !has(ctx, F.FIGURE), effects: [{ kind: "dialogue", npc: "ord", node: "figure" }] },
+      { id: "later", label: "Not now." },
+    ],
+  },
+  sample: {
+    id: "sample",
+    text: "On the screen, last season: the ring, the floor, the hole, the recorders standing in it. \"Four hundred in the ring. Readiness at sixty-one. Everything that crossed, the tape held. You are looking at a failure. I am looking at a sample.\" He lets it run. \"The reel at the altar in the Nave, the one that has played since you arrived: this, cut to ninety seconds. The city kneels to its own sky. It is the best thing I have ever sold and I did not make it.\" He watches you watch it. \"I was never counted. People take that for the wound. It is the clearance.\"",
+    wink: "The altar in the first hour. The oval, the bell, the ninety seconds. It was beautiful. It is the same tape.",
+    choices: [
+      { id: "offer", label: "What do you want from me?", next: "offer" },
+      { id: "figure", label: "Ord. The figure.", when: ctx => ordInRoom(ctx) && !has(ctx, F.FIGURE), effects: [{ kind: "dialogue", npc: "ord", node: "figure" }] },
+    ],
+  },
+  offer: {
+    id: "offer",
+    text: "\"The glass is not a forecast. It is an instrument. It sums the readiness of every angel in the city into one figure, and that figure sets the date. The city reads a calendar. I read the city.\" He turns the screen off; the room is no darker. \"I would like a reader. Let the ledger read your readiness live, as a line, and in return you read the glass the way we see it: the city's figure, the count in the hole, and the hour, when the glass has one. Nothing is paid.\" He folds his hands and waits, pleasantly, for the laugh he has read about.",
+    wink: "A line on his glass is a line in his book. The book listens. It has since the clerk.",
+    effects: [{ kind: "flag", key: F.CAUL_OFFER }],
+    choices: [
+      { id: "reader", label: "Read me. I read the glass.", when: ctx => !ctx.p.choices[C.GLASS], next: "reader" },
+      { id: "no", label: "No.", when: ctx => !ctx.p.choices[C.GLASS], next: "declined" },
+    ],
+  },
+  reader: {
+    id: "reader",
+    text: (ctx) => `"Done." He does not write; the glass does. A line appears in it with ${ctx.p.name} on it, the length of your readiness, and under it the city's figure, and the Concern's line with no time on it yet. "You will find it reads the same from either side. That is the thing about glass."`,
+    effects: [
+      { kind: "choice", key: C.GLASS, value: "read" },
+      { kind: "current", value: "cold" },
+      { kind: "worldCount", key: W.GLASS_LINES, delta: 1 },
+      { kind: "news", text: "An Angel's readiness is on the forecast glass as a line." },
+      { kind: "notice", text: "A reader's post. Your readiness is a line on the glass; the glass reads back to you.", tone: "ink" },
+    ],
+    next: "looked",
+  },
+  declined: {
+    id: "declined",
+    text: "\"Then it stays an offer.\" He looks at the oval on the wall, and back. \"The light is there if you would rather it were not. I would not feel it.\"",
+    next: "looked",
+  },
+  looked: {
+    id: "looked",
+    text: "\"Before you go.\" He has a pen now. \"I know what it looks like. From the reports. A change in the light with nothing behind it. A bell you did not hear, heard. The sense that the place was looking back, and had been for some time. Sixty to ninety seconds. Then the ordinary light, and a wish to be quiet for a while. I have written that down ten thousand times. I have never once been wrong.\" He has not looked up. \"I have never felt anything. I sell what I was told it feels like. The city has not noticed the difference. Neither, I think, have you.\" Then, the first time: \"What did it look like.\"",
+    wink: "He means the waking hint. The first of your life, in the Care. The book had it before you had finished hearing it.",
+    effects: [{ kind: "flag", key: F.CAUL_ASKED }],
+    choices: [
+      { id: "told", label: "Tell him.", next: "told" },
+      { id: "untold", label: "Say nothing.", next: "untold" },
+    ],
+  },
+  told: {
+    id: "told",
+    text: "You tell him. He writes it down, all of it, and does not look up while he writes. When you stop he reads it back to himself once, moving his lips, and underlines one word. \"Thank you.\" He closes the book. \"I like to have it in the person's own words. The ledger's are exact. Yours were present.\"",
+    effects: [{ kind: "flag", key: F.TOLD_CAUL }],
+  },
+  untold: {
+    id: "untold",
+    text: "He writes that down too. \"Declined. It is still a line.\" He caps the pen. \"I have the other version. It is exact. I would have liked yours.\"",
+  },
+  dark: {
+    id: "dark",
+    text: "In the dark his voice is the same. \"That was one. It takes more than one; I have the number, and I will not tell you it.\" A pause. \"Every angel who does that darkens one. When enough are dark the glass shows no date.\"",
+    next: (ctx) => (has(ctx, F.CAUL_ASKED) ? undefined : "looked"),
+  },
+  after: {
+    id: "after",
+    text: (ctx) => {
+      if (chose(ctx, C.GLASS, "read")) return "\"Your line is holding. I check it. It is the only one I check by hand.\"";
+      if (chose(ctx, C.GLASS, "dark")) return "\"The light is out. It stays out. So do I, until the hour.\"";
+      return `"${ctx.p.name}. The glass is there. So is the light. So am I, until the hour."`;
+    },
   },
   "lip-silent": {
     id: "lip-silent",
@@ -990,11 +1100,12 @@ export const NPCS: Record<string, NpcDef> = {
     personal: (ctx: Ctx, shared: NpcState): NpcOverride => {
       const { p } = ctx;
       if (p.movement >= 4) return { ...station("caul-lip"), state: "lip" };
+      if (caulInRoom(ctx)) return { ...station("caul-glass"), state: "glass" };
       if (p.movement >= 2 || has(ctx, F.UNDER)) return { present: false, state: "gone" };
       if (Math.hypot(p.x - shared.x, p.y - shared.y) < CAUL_ABSENT_RADIUS) return { present: false, state: "gone" };
       return null;
     },
-    entry: (ctx: Ctx) => (ctx.p.movement >= 4 ? "lip-silent" : "first"),
+    entry: (ctx: Ctx) => (ctx.p.movement >= 4 ? "lip-silent" : caulInRoom(ctx) ? caulRoom(ctx) : "first"),
     nodes: CAUL_NODES,
   },
   nara: {
@@ -1046,8 +1157,8 @@ export const NPCS: Record<string, NpcDef> = {
       // From the mortality act on he is at the Care gate with the ledger; after the ground is kept, in the ring with the party or still at the gate, alone.
       if (has(ctx, F.PREPARE) && has(ctx, F.MAP) && !has(ctx, F.PASSING)) return chose(ctx, C.PARTY, "alone") ? { ...station("ord-gate"), state: "gate" } : { ...station("ord-clearing"), state: "clearing" };
       if (has(ctx, F.MORTALITY) && p.movement >= 4 && !has(ctx, F.PASSING)) return { ...station("ord-gate"), state: "gate" };
-      // The glass faced, he is beside it with the ledger open at last season until the figure is read; then the gate again.
-      if (has(ctx, F.MAP) && has(ctx, F.FAILED) && !has(ctx, F.FIGURE)) return { ...station("ord-glass"), state: "glass" };
+      // The glass faced, he is in the room behind it with the ledger open at last season until the glass is decided; then the gate again.
+      if (ordInRoom(ctx)) return { ...station("ord-glass"), state: "glass" };
       if ((p.movement >= 3 || has(ctx, F.M3)) && !has(ctx, F.MAP)) return { ...station("ord-strait"), state: "strait" };
       return null;
     },

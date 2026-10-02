@@ -280,12 +280,12 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 ### I.9 The altar
 *New beat, Phase B: verbs on `crt-altar-2`, the lit altar at the south end of the aisle; no step of its own, reachable from I.4 on, so a saved index does not move. No journal plate; the screen plays `video/ambient-hall`. Guest-legal. Phase D re-points `side-nave-third-altar`: its dark twin is no longer this screen.*
 
-**THE ALTAR** — `crt-altar-2` watch (revised)
+**THE ALTAR** — `crt-altar-2` watch (shipped since Phase B, first beats)
 > Screens in a ring. One is lit and people are kneeling at it. On the screen: a sky through an oval, a bell, the light a shade warmer than the room. The kneelers call it a reverie. It runs ninety seconds and starts again. A tag in the corner. A serial in the margin.
 ✦ *A copy of a hint somebody heard. The copy does not clock out.*
 [the shipped watch sets no state; the tag is HUD acid, never world colour; the serial in the margin is not yours yet]
 
-**CAUL** — on the altar reel, over the restart (new)
+**CAUL** — on the altar reel, over the restart (shipped since Phase B, first beats; said inside the watch's own line, so no name and no window: "Over the restart, courteous, a man's voice:")
 > You will feel it again. We kept it for you.
 
 **CAUL** — `first`, a body at the back of the aisle (shipped; his one node in I, never opened: he is gone inside a hundred and sixty pixels, and gone for good once anyone has been under)
@@ -1015,7 +1015,7 @@ The paper panel, the gold mark:
 ✦ *The bell you did not hear is the one that rang. She heard this one. It ruins her whole trade.*
 
 ### III.7 The glass, from behind
-*Step `failed` (shipped) carries the glass and the hole; the room behind the glass is new, Phase B, as verbs and dialogue on the same step. Phase B: the step's `done` becomes `has(F.FAILED) && !!ctx.p.choices[C.GLASS]`; the hole-sight path keeps its F.FAILED, Wink and readiness, moved from the step's onComplete to a `stand` verb at the mark (new), since the step no longer completes there; the target is `forecast-glass` (or the nearest mark for those who see it) until F.FAILED, then `station:caul-glass`. The forecast glass on the Kerb; then, past the hour clerks at the top of the Kerb, the room behind it: `plate-kerb.jpg` for the plate, `tiles/operator` for the floor, clear of the Kerb's node. Ord is in the room, having walked the Organs with you: a new station, `ord-glass`, from F.FAILED until the glass is decided (`ord-strait` then holds until F.FAILED, not F.MAP, so `after-map` plays at the Strait); his entry there is `figure`, and the jump from Caul's menu to him is a `dialogue` effect on the choice, not a `next`. Anselm Caul is in it, in person: the guest sprite and portrait, no halo, no aura, the GUEST label over him; his name is in the prompt and the dialogue only. New flags: F.CAUL_MET at `glass`, F.CAUL_OFFER at `offer`, F.CAUL_ASKED at `looked`; his entry: a guest hears `guest`; an Angel hears `glass`, then `sample`, then `looked`, then `after`, by flag. Read and dark are exclusive: C.GLASS takes one value; the oval's Q is offered only after the offer and while C.GLASS is unset; a reader's line stays on the glass; a darkened room never gets the offer again. The Kerb is a district a guest may walk, which is why he can be here and why a guest can walk in on him. The screen behind the desk is `props/crt-altar`, playing `video/passing-failed`. Set piece. The step is an Angel's.*
+*Step `failed` (shipped) carries the glass and the hole; the room behind the glass is new, Phase B, as verbs and dialogue on the same step. Phase B (shipped): the step's `done` is `has(F.FAILED) && !!ctx.p.choices[C.GLASS]`: the room ends on the reader's post or the light put out, never on a walk out (a decliner is pointed at the oval, "the room has no other way out of it"); the hole-sight path keeps its F.FAILED, Wink and readiness, moved from the step's onComplete to a `Stand at the hole` verb on `seed-4` beside the mark, since the step no longer completes there; the target is `forecast-glass` (or the nearest mark for those who see it) until F.FAILED, then `station:caul-glass`. The forecast glass on the Kerb; then, past the hour clerks at the top of the Kerb, the room behind it: `plate-kerb.jpg` for the plate, `tiles/operator` for the floor, clear of the Kerb's node. Ord is in the room, having walked the Organs with you: a new station, `ord-glass`, from F.FAILED until the glass is decided (`ord-strait` then holds until F.FAILED, not F.MAP, so `after-map` plays at the Strait); his entry there is `figure`, and the jump from Caul's menu to him is a `dialogue` effect on the choice, not a `next`. Anselm Caul is in it, in person: the guest sprite and portrait, no halo, no aura, the GUEST label over him; his name is in the prompt and the dialogue only. New flags: F.CAUL_MET at `glass`, F.CAUL_OFFER at `offer`, F.CAUL_ASKED at `looked`; his entry: a guest hears `guest`; an Angel hears `glass`, then `sample`, then `looked`, then `after`, by flag. Read and dark are exclusive: C.GLASS takes one value; the oval's Q is offered only after the offer and while C.GLASS is unset; a reader's line stays on the glass; a darkened room never gets the offer again. The Kerb is a district a guest may walk, which is why he can be here and why a guest can walk in on him. The screen behind the desk is `props/crt-altar`, playing `video/passing-failed`. Set piece. The step is an Angel's.*
 
 **THE GLASS** — `face last season` F (shipped since Phase A, Movement III, pois.ts: the recorders in the hole, not an empty one)
 > In the glass, behind the forecast: last season's Passing failed. The hour went by. The city kept the weather. There is a hole in the Clearing with the recorders still standing in it. You watched. You did not loot it.
@@ -1030,10 +1030,10 @@ The paper panel, the gold mark:
 **THE GLASS** — for a guest (shipped, lines.ts)
 > Glass. You do not see the front.
 
-**CAUL** — in person, `guest` (new), to an unsealed body in the room
+**CAUL** — in person, `guest` (shipped since Phase B, first beats; a guest on the Kerb finds him here, elsewhere the altar's body), to an unsealed body in the room
 > A paper-white body at a desk, no halo, the GUEST label over him like the one over you. He looks up and is pleased. "Unsealed. We have that in common. I have it for life." He goes back to the screen. "There is nothing here for you yet. Come back with a serial. I only buy what has a number on it."
 
-**CAUL** — in person, `glass` (new)
+**CAUL** — in person, `glass` (shipped since Phase B, first beats)
 > A paper-white body at a desk, no halo, the GUEST label over him like any arrival's, and the room's own light on his face. Anselm Caul. He is pleased to see you. "#SERIAL. We have spoken, through a light. I prefer this."
 > *If you kept the first node:* "You kept the first node. The hour it would have paid is in my book as a minus. I find those the most interesting lines."
 > *If you extracted it:* "You extracted at the first node. The line is in my book. I remember my own first line."
@@ -1046,13 +1046,13 @@ The paper panel, the gold mark:
 - ▸ "Ord. The figure." → ORD `figure` (a `dialogue` effect on the choice)
 - ▸ "Not now."
 
-**CAUL** — `sample` (new)
+**CAUL** — `sample` (shipped since Phase B, first beats)
 > On the screen, last season: the ring, the floor, the hole, the recorders standing in it. "Four hundred in the ring. Readiness at sixty-one. Everything that crossed, the tape held. You are looking at a failure. I am looking at a sample." He lets it run. "The reel at the altar in the Nave, the one that has played since you arrived: this, cut to ninety seconds. The city kneels to its own sky. It is the best thing I have ever sold and I did not make it." He watches you watch it. "I was never counted. People take that for the wound. It is the clearance."
 ✦ *The altar in the first hour. The oval, the bell, the ninety seconds. It was beautiful. It is the same tape.*
 - ▸ "Ord. The figure." → ORD `figure` (a `dialogue` effect on the choice)
 - ▸ "What do you want from me?" → `offer`
 
-**ORD** — `figure` (shipped since Phase A, Movement III, beside the glass at `station:ord-glass` from F.FAILED until F.FIGURE; Phase B moves him into the room and adds the jump from Caul's menu), the ledger open at last season
+**ORD** — `figure` (shipped since Phase A, Movement III; since Phase B in the room, `station:ord-glass` from F.FAILED until the glass is decided (or the forge's lesson, if taken first), reachable from Caul's menu by a `dialogue` effect, with "Back to him." the way back across the desk), the ledger open at last season
 > Ord does not look at the screen. He has it by heart. "Four hundred and six in the ring. The glass at sixty-one; that is the city's figure, not a body's. The weather at seventy-three. Third minute: a trace crossed. I wrote that line the way I wrote every line. Then the next one came across my desk, on the Concern's paper, and I wrote that too: taken. One. That is the figure. It was not short of anything. I counted it, and I walked to a gate the same week, and I have been at one since." He closes the book on his finger. "The reel at the altar is that line. He will tell you it is a sample. It is a sample. It is also my handwriting."
 ✦ *The count. He said he left on principle. He left on this line.*
 [F.FIGURE (new), once; news (new, Phase C), once: "Ord's figure is on the marquee: last season, four hundred and six in the ring, the glass at sixty-one, a trace crossed and was taken."]
@@ -1061,58 +1061,62 @@ The paper panel, the gold mark:
 **ORD** — `figure-after` (shipped since Phase A, Movement III), at the Annex gate once the figure is read, until the act
 > The figure is read. It is on the marquee. The weather did not move for it; I did not expect it to. Quill has something for you on the Grid. Then the Care, and the act.
 
-**CAUL** — `offer` (new)
+**CAUL** — `offer` (shipped since Phase B, first beats; the reader's bargain says what the glass gives today, "the city's figure, the count in the hole, and the hour, when the glass has one", since the journal line and the date are Phase C's)
 > "The glass is not a forecast. It is an instrument. It sums the readiness of every angel in the city into one figure, and that figure sets the date. The city reads a calendar. I read the city." He turns the screen off; the room is no darker. "I would like a reader. Let the ledger read your readiness live, as a line, and in return you read the glass: the launch's hour, the count in the hole, the city's figure, in your journal from now on, the way we see them. Nothing is paid." He folds his hands and waits, pleasantly, for the laugh he has read about.
 ✦ *A line on his glass is a line in his book. The book listens. It has since the clerk.*
 [F.CAUL_OFFER (new): from here the oval on the wall takes Q while the glass is undecided]
 - ▸ "Read me. I read the glass." → `reader`
 - ▸ "No." → `declined`
 
-**CAUL** — `reader` (new)
+**CAUL** — `reader` (shipped since Phase B, first beats; "and a date" reads "and the Concern's line with no time on it yet" until Phase C puts the date on the glass)
 > "Done." He does not write; the glass does. A line appears in it with #SERIAL on it, the length of your readiness, and under it the city's figure and a date. "You will find it reads the same from either side. That is the thing about glass."
 [C.GLASS read (new); Cold is your current; perception: the glass's readings in your journal from now on, the launch's hour, the count in the hole, the city's figure; your serial on the glass as a line, for everyone; news (new): "An Angel's readiness is on the forecast glass as a line."]
 → `looked`
 
-**CAUL** — `declined` (new)
+**CAUL** — `declined` (shipped since Phase B, first beats)
 > "Then it stays an offer." He looks at the oval on the wall, and back. "The light is there if you would rather it were not. I would not feel it."
 → `looked`
 
-**THE OVAL** — the light on the wall, `put the light out` Q (new; `when: has(F.CAUL_OFFER) && !ctx.p.choices[C.GLASS]`)
+**THE OVAL** — the light on the wall, `Look at the light` F (shipped since Phase B, first beats; guest-legal, the room's one prompt before the offer)
+> An oval of champagne light on the wall, the same as every oval on the Kerb. It is the one thing of his in the city a hand can reach.
+> *After the light:* The wall. The oval is dark. One lamp on the top terrace is dark with it.
+
+**THE OVAL** — the light on the wall, `put the light out` Q (shipped since Phase B, first beats; `when: has(F.CAUL_OFFER)` and C.GLASS neither read nor dark; the say ends at the lamp going dark, the clerks' descent being Phase C's; F `Look at the light` beside it)
 > You put the light out. The room is the room. Behind the glass the band keeps its colour, and one lamp in the top terrace goes dark for the whole Kerb. On the stair, the hour clerks start down.
-[C.GLASS dark (new); readiness +10; one light dark on the Kerb for everyone, the count carried as world state (Phase C); the hour clerks come down the stair for the rest of the hour, a world-wide spawn, and fall as clerks fall ("Hour Clerk did their job."); Halla Voss goes to the glass (an `npc` effect to `omen-glass`, state glass) and reads the front for nothing from now on; news (new): "A light went out behind the forecast glass. {count} are dark."; past the threshold the glass shows no date]
+[C.GLASS dark (shipped); readiness +10; one light dark on the Kerb for everyone, the count carried as world state (W.DARK_LIGHTS, shipped; the threshold that hides the date is Phase C); the hour clerks come down the stair for the rest of the hour, a world-wide spawn, and fall as clerks fall ("Hour Clerk did their job.") (Phase C); Halla Voss goes to the glass (an `npc` effect to `omen-glass`, state glass, for everyone; from then on she sells no hours to anyone) and reads the front for nothing from now on; news (new): "A light went out behind the forecast glass. {count} are dark."; past the threshold the glass shows no date]
 → CAUL `dark` (a `dialogue` effect)
 
-**CAUL** — `dark` (new)
+**CAUL** — `dark` (shipped since Phase B, first beats; the two sentences about the clerks on the stair wait for Phase C's descent, so that he says nothing the game does not do)
 > In the dark his voice is the same. "That was one. It takes more than one; I have the number, and I will not tell you it. The clerks are on the stair. A light goes and they come down. It is what the stair is for." A pause. "Every angel who does that darkens one. When enough are dark the glass shows no date."
 → `looked`, if you have not heard it
 
-**CAUL** — `looked` (new)
+**CAUL** — `looked` (shipped since Phase B, first beats)
 > "Before you go." He has a pen now. "I know what it looks like. From the reports. A change in the light with nothing behind it. A bell you did not hear, heard. The sense that the place was looking back, and had been for some time. Sixty to ninety seconds. Then the ordinary light, and a wish to be quiet for a while. I have written that down ten thousand times. I have never once been wrong." He has not looked up. "I have never felt anything. I sell what I was told it feels like. The city has not noticed the difference. Neither, I think, have you." Then, the first time: "What did it look like."
 ✦ *He means the waking hint. The first of your life, in the Care. The book had it before you had finished hearing it.*
 [F.CAUL_ASKED (new)]
 - ▸ "Tell him." → `told`
 - ▸ "Say nothing." → `untold`
 
-**CAUL** — `told` (new)
+**CAUL** — `told` (shipped since Phase B, first beats)
 > You tell him. He writes it down, all of it, and does not look up while he writes. When you stop he reads it back to himself once, moving his lips, and underlines one word. "Thank you." He closes the book. "I like to have it in the person's own words. The ledger's are exact. Yours were present."
 [F.TOLD_CAUL (new); your waking hint in his book, in your words]
 
-**CAUL** — `untold` (new)
+**CAUL** — `untold` (shipped since Phase B, first beats)
 > He writes that down too. "Declined. It is still a line." He caps the pen. "I have the other version. It is exact. I would have liked yours."
 
-**CAUL** — `after` (new), any later visit to the room
+**CAUL** — `after` (shipped since Phase B, first beats; after the light it reads "The light is out. It stays out. So do I, until the hour." until the clerks descend, Phase C), any later visit to the room
 > "#SERIAL. The glass is there. So am I, until the hour."
 > *Undecided, the light still on:* "#SERIAL. The glass is there. So is the light. So am I, until the hour."
 > *For the reader:* "Your line is holding. I check it. It is the only one I check by hand."
 > *After the light:* "The clerks are still on the stair. They will be, for the hour."
 
-**HALLA VOSS** — `after-light` (new), at the glass, once, for the one who put the light out
+**HALLA VOSS** — `after-light` (shipped since Phase B, first beats; offered by her greet and hub, once; "the date went thin" reads "the Concern's line under it went thin" until Phase C puts a date on the glass), at the glass, once, for the one who put the light out
 > "One went out up there. I felt it in the glass; the band held and the date went thin." She does not take the slip out of her pocket. "I read the front now. For nothing. It is what it is worth."
 
 **HALLA VOSS** — `hub` (shipped, side-npcs.ts), at the glass from then on
 > She is at the forecast glass with nothing to sell. "I read the front now. For nothing. It is worse. It is better."
 
-**THE GLASS** — `read the forecast` F, after the room (revised, pois.ts: the calendar carries a date, and a countdown)
+**THE GLASS** — `read the forecast` F, after the room (revised, pois.ts: the calendar carries a date, and a countdown, Phase C; since Phase B the reader's line, the city's figure and the count in the hole are on it, and everyone reads how many lines cross it)
 > Forecast glass. {band}. Under the band, in the same face as every meter in the city, a line the Concern posts: the launch, as a date, with a countdown.
 > *For the reader:* …Your line is in it, the length of your readiness.
 > *Past the threshold of dark lights:* …a line the Concern posts: the launch. The date is not on it. There are not enough lights left to show it.

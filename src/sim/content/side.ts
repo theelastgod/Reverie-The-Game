@@ -121,6 +121,7 @@ export const SF = {
   HOURS_WAITED: "side:hours:waited",
   HOURS_CONFRONTED: "side:hours:confronted",
   GLASS_TAKEN: "side:glass:taken",
+  AFTER_LIGHT: "side:omen:afterLight", // the light put out behind the glass, told to the omen-reader once
   // ring
   MUTE_TONGUE: "side:mute:tongue",
   MUTE_HUNG: "side:mute:hung",

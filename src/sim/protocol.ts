@@ -4,7 +4,7 @@
 import type {
   Claim, ClearingState, DialogueView, DistrictId, Enemy, FailedPassing, Fourfold, Grave, HistoryMark, House, HouseScores,
   HouseWar, Intent, Item, Listing, Messenger, Movement, Notice, NpcState, Objective, PartyState, PassingState, PoiState,
-  Player, Prompt, SideObjective, Stance, WinkSchool, Wreckage, YieldNode,
+  Player, Prompt, SideObjective, Stance, WinkSchool, WorldState, Wreckage, YieldNode,
 } from "./types";
 
 /**
@@ -134,6 +134,18 @@ export function isClientMsg(data: unknown): data is ClientMsg {
   if (!data || typeof data !== "object" || Array.isArray(data)) return false;
   const t = (data as { t?: unknown }).t;
   return typeof t === "string" && (CLIENT_MSG_TYPES as ReadonlyArray<string>).includes(t);
+}
+
+/** The city's figure, as the glass sums it: the readiness of every Angel on the server, averaged. A body's readiness is not it. */
+export function cityFigure(w: WorldState): number {
+  let sum = 0;
+  let n = 0;
+  for (const p of w.players.values()) {
+    if (p.guest) continue;
+    sum += p.readiness;
+    n++;
+  }
+  return n === 0 ? 0 : Math.round(sum / n);
 }
 
 export type WeatherBand = "clear" | "mixed" | "fat" | "meltdown";

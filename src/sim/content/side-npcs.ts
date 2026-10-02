@@ -172,6 +172,9 @@ const officer: NpcDef = {
 
 // ---------------------------------------------------------------- Halla Voss, omen-reader
 
+/** At the glass, for everyone, once her hours are done or any Angel has put the light out behind it: she sells nothing from then on. */
+const omenAtGlass = (ctx: Ctx): boolean => finished(ctx.p, SQ.HOURS) || ctx.w.npcs["omen"]?.state === "glass";
+
 const omenHub = (ctx: Ctx): string => {
   const { p, w } = ctx;
   if (finished(p, SQ.HOURS) || w.npcs["omen"]?.state === "glass") return "She is at the forecast glass with nothing to sell. \"I read the front now. For nothing. It is worse. It is better.\"";
@@ -192,12 +195,15 @@ const omen: NpcDef = {
   nodes: {
     greet: node({
       id: "greet",
-      text: "\"Halla Voss. I read the front.\" She is not looking at the glass. She is looking at a slip with a time on it. \"Hours are three Bestand. Fronts are not for sale. Which are you?\"",
+      text: ctx => (omenAtGlass(ctx)
+        ? "\"Halla Voss. I read the front.\" She is at the forecast glass with nothing to sell. \"For nothing. It is worse. It is better.\""
+        : "\"Halla Voss. I read the front.\" She is not looking at the glass. She is looking at a slip with a time on it. \"Hours are three Bestand. Fronts are not for sale. Which are you?\""),
       effects: [flag(SF.OMEN_MET), tally(SF.OMEN_VISITS)],
       choices: [
         { id: "read", label: "What do you read?", next: "read" },
-        { id: "buy", label: "Sell me an hour.", next: "hours" },
+        { id: "buy", label: "Sell me an hour.", when: ctx => !omenAtGlass(ctx), next: "hours" },
         { id: "bell", label: "Does the bell strike?", next: "hour" },
+        { id: "light", label: "A light went out up there.", when: ({ p }) => p.choices[C.GLASS] === "dark" && !has(p, SF.AFTER_LIGHT), next: "after-light" },
         leave,
       ],
     }),
@@ -212,10 +218,11 @@ const omen: NpcDef = {
       text: omenHub,
       effects: [tally(SF.OMEN_VISITS)],
       choices: [
-        { id: "buy", label: "Sell me an hour.", when: ({ p }) => !offered(p, SQ.HOURS), next: "hours" },
+        { id: "buy", label: "Sell me an hour.", when: ctx => !offered(ctx.p, SQ.HOURS) && !omenAtGlass(ctx), next: "hours" },
         { id: "bell", label: "Does the bell strike?", when: ({ p }) => !offered(p, SQ.HOUR), next: "hour" },
         { id: "struck", label: "It struck.", when: ({ p }) => atStep(p, SQ.HOUR, 1), next: "hour-told" },
         { id: "once", label: "I struck it once, on the way.", when: ({ p }) => has(p, F.BELL) && !has(p, SF.BELL_TOLD), next: "struck" },
+        { id: "light", label: "A light went out up there.", when: ({ p }) => p.choices[C.GLASS] === "dark" && !has(p, SF.AFTER_LIGHT), next: "after-light" },
         { id: "confront", label: "The hour I bought did not come.", when: ({ p }) => atStep(p, SQ.HOURS, 2), next: "hours-confront" },
         { id: "front", label: "There is a front behind the band.", when: ({ p }) => atStep(p, SQ.FRONT, 1), next: "front-report" },
         { id: "season", label: "Last season's hole.", when: ({ p }) => atStep(p, SQ.SEASON, 1), next: "season-report" },
@@ -245,6 +252,12 @@ const omen: NpcDef = {
       id: "struck",
       text: "\"Once. On the way to the glass.\" She looks at the bell and then at the slip in her hand. \"That is not on anything I copied.\"",
       effects: [flag(SF.BELL_TOLD)],
+    }),
+    // The light put out behind the glass: she felt it in the pane, and reads the front for nothing from now on.
+    "after-light": node({
+      id: "after-light",
+      text: "\"One went out up there. I felt it in the glass; the band held and the Concern's line under it went thin.\" She does not take the slip out of her pocket. \"I read the front now. For nothing. It is what it is worth.\"",
+      effects: [flag(SF.AFTER_LIGHT)],
     }),
     "hours-confront": node({
       id: "hours-confront",

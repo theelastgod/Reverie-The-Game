@@ -104,6 +104,7 @@ const T3 = {
   bell: at(52, 4),             // hour-bell, north of the Kerb's row-6 wall through its gap
   garden: at(25, 70),          // wreckage-garden, the Care
   glass: at(60, 10),           // forecast-glass, the Kerb
+  caulGlass: at(65, 3),        // station:caul-glass, the room behind the glass at the top of the Kerb
   quillForge: at(59, 44),      // station:quill-forge, the Wet Grid
 };
 const ROUTE3 = {
@@ -116,7 +117,9 @@ const ROUTE3 = {
   // The Kerb's low wall on row 6 (x 39..48 and 57..60) has its gap at x 49..56: the bell at (52,4) is through it.
   toBell: [at(19, 70), at(17, 70), at(17, 63), at(17, 58), at(17, 50), at(17, 30), at(17, 27), at(17, 15), at(20, 14), at(33, 14), at(35, 13), at(38, 13), at(40, 10), at(52, 10), at(52, 6)],
   bellToGlass: [at(52, 6), at(52, 10), at(58, 10)],
-  toForge: [at(58, 10), at(49, 19), at(49, 23), at(53, 26), at(53, 27), at(53, 30), at(53, 38), at(58, 41)],
+  // The room behind the glass: the gap in the row-6 wall at x 61..68, its door on the south side at x 64.
+  glassToRoom: [at(58, 10), at(64, 10), at(64, 7), at(64, 5), at(64, 4)],
+  roomToForge: [at(64, 5), at(64, 7), at(64, 10), at(58, 10), at(49, 19), at(49, 23), at(53, 26), at(53, 27), at(53, 30), at(53, 38), at(58, 41)],
 };
 const T4 = {
   ione: at(31, 67),            // home:ione, the bench at the edge of the Care's garden
@@ -743,9 +746,19 @@ try {
     phase('III verb: glass');
     await useVerb(me, 'forecast-glass', verbs => verbs.find(v => v.choice === 'season'), () => !!you(me).flags.failed, 'face last season');
 
+    // The room behind the glass: Anselm Caul across the desk. The first choices lead through the sample, the offer, the reader's post and the question.
+    phase('III walk: room');
+    await walk(me, ROUTE3.glassToRoom);
+    await stand(me, T3.caulGlass, 72);
+    read.decisions++;
+    phase('III talk: caul');
+    await converse(me, 'caul', 'caul:asked');
+    assert.equal(you(me).choices.glass, 'read', "the reader's post taken");
+    await wait(me, () => you(me).quests['m3-geopolitics'] === 7, 'the step moves on from the room', 6000);
+
     // Quill at the forge tray: learn to spot the copy (the first choice), which turns the movement.
     phase('III walk: forge');
-    await walk(me, ROUTE3.toForge);
+    await walk(me, ROUTE3.roomToForge);
     await stand(me, T3.quillForge, 72);
     assert.equal(me.snap.district, 'wet', 'down to the Wet Grid');
     read.decisions++;
