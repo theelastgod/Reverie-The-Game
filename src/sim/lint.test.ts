@@ -5,7 +5,7 @@ import { join } from "node:path";
 /** The game is standalone. Nothing in the shipped tree names a studio, a film or a film room. */
 const FORBIDDEN = /\b(studios?|film|films|documentary|director|collective|screening|screenings|production still|observer room|participant room|founder room|sephiroth|aerith|midgar|shinra|materia|lifestream|buster sword)\b/i;
 // DESIGN.md, AGENTS.md and PROMPT.md are developer documents that state the rule; the shipped tree is what is linted.
-const ROOTS = ["src", "server/src", "site", "index.html", "README.md", "HANDOFF.md", "public/assets", "scripts"];
+const ROOTS = ["src", "server/src", "site", "index.html", "README.md", "HANDOFF.md", "SYNOPSIS.md", "public/assets", "scripts"];
 // Build output (site/play, dist) carries third-party library headers and is regenerated from the sources linted here.
 const SKIP = /node_modules|\.test\.ts$|lint\.test\.ts$|^site\/play\/|^dist\//;
 

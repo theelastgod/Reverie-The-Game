@@ -1209,7 +1209,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   change, the altar, the hour on the Kerb, the map, the plate, the catalog
   with the player's serial in the margin, the recorders at the lip of the
   ring; the four Passing outcomes written through Caul's tape. Themes as
-  verbs, never named; no studio or film anywhere; every scene mapped to
+  verbs, never named; nothing from outside the game anywhere; every scene mapped to
   existing art; §10 the rebuild in four phases (Backlog A). Written from
   the brief, the design, the current spine and the cast's lines, with a
   panel of four independent treatments and their adversarial judges
@@ -1913,7 +1913,7 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      the company behind every clerk, desk, van, hour and copy they touch.
    The rules that do not move: persistent ids stay; the server owns every
    number; no new art (Caul is the guest's art and must never get more);
-   nothing of a studio or a film anywhere; no theory named; the fairness
+   nothing from outside the game anywhere (the content lint says what); no theory named; the fairness
    tests, the guest lock and the four Passing outcomes as they are.
 
 1. **Generated assets (Stage B).** 68 results exist in the owner's Higgsfield
