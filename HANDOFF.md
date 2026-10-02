@@ -22,7 +22,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   push runs the typecheck, the tests, the client build and a dry-run
   bundle on GitHub's runner by itself (`.github/workflows/gates.yml`, no
   secrets, nothing deployed); the Actions tab shows the mark on each
-  commit, and the first run passed in half a minute.
+  commit, and the first run passed in half a minute. Since 2026-10-02 the
+  client's first request (the generated-asset manifest) is answered, by
+  an empty manifest committed until the Stage B pull overwrites it, and
+  the render check fails on any file the city's own origin fails to serve.
 - **Two steps only you can take** (Backlog 1 and 2 have the detail): the
   Stage B art waits on the results host being reachable from a machine that
   runs `node scripts/pull-generated.mjs`; the deploy waits on either the
@@ -1042,6 +1045,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   when. The first run's one warning (the v4 checkout and setup-node
   actions target Node 20, which the runners have deprecated) moved both
   workflows to the v5 actions on the follow-up push.
+- The generated manifest's 404 ended (2026-10-02, Backlog 13). The client's
+  first request, `assets/gen/manifest.json`, answered 404 on every load
+  since the slots were built, in production as in the render check, because
+  nothing was staged under `public/assets/gen/`; the client read it as an
+  empty manifest by design, but the browser logged a failed request each
+  time. Now `public/assets/gen/manifest.json` is committed as the empty
+  manifest (`{ "v": 1, "targets": {} }`, the bytes `pull-generated.mjs`
+  writes when nothing is pulled, so a pull that lands nothing leaves no
+  diff), Vite copies it into the build and the Worker serves it as JSON.
+  Tests: the committed file is those bytes and loads as a manifest naming
+  nothing (`gen.test.ts`); the pull rehearsal starts with the committed
+  manifest in its output directory and proves the pull overwrites it, and a
+  second rehearsal with nothing to pull writes the committed file byte for
+  byte (`pullGenerated.test.ts`). The render check now keeps each console
+  error's URL (Playwright puts a failed resource's URL in the message's
+  location, not its text) and fails the desktop pass when the city's own
+  origin failed to serve a file the client asked for; proven against a
+  stage with the manifest deleted, which it fails naming the manifest, and
+  against the new stage, which passes with the proxy's two certificate
+  errors on Google Fonts as the only ones left.
 
 ## Verified (2026-09-25, integration)
 
@@ -1577,6 +1600,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   through the GitHub connector (the run's jobs and its log). The
   follow-up push carries this entry and the v5 actions; the Actions tab
   holds its run. Locally the same day: typecheck, 500 tests, the build.
+- The generated manifest's 404 ended (2026-10-02): typecheck, 502 tests
+  (the committed manifest's bytes and its empty load; the pull rehearsal
+  overwriting it, and a pull of nothing writing it back byte for byte), the
+  build; the staged client under the local Worker answers
+  `/play/assets/gen/manifest.json` with 200 `application/json` and the
+  empty manifest. The render check at `RENDER_MIN_FPS=5` on that stage
+  passed (desktop: the landing page's 8 log lines, a dialogue after SPEAK
+  with focus, keyboard reach, a11y, 8.4 fps under SwiftShader; the phone:
+  the HUD in its screen, the stick, the heavy, the tap, the dodge chip),
+  and its page errors are now the proxy's certificate refusal on Google
+  Fonts, twice, each with its URL, and nothing else, on both passes. The
+  same check against the stage with `manifest.json` deleted failed as the
+  new rule means it to: `FAIL: the city failed to serve 1 file(s) the
+  client asked for: http://127.0.0.1:8788/play/assets/gen/manifest.json`
+  (wrangler dev answered 500 for a file removed from under its asset list;
+  a stage that never had it answers 404; the rule catches both).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1588,9 +1627,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 Prioritized. The autonomous routine takes the top unfinished item, finishes it
 with tests, runs the gates, commits, pushes, and moves it to Done. Add items as
-they are discovered; keep this list honest. As of 2026-10-01 items 1–12 are
+they are discovered; keep this list honest. As of 2026-10-02 items 1–12 are
 the owner's, a real device's or the network's to finish; the routine takes
-the discovered items from 13 on and adds what it finds.
+the discovered items that follow them and adds what it finds (none open at
+the moment: 13, the generated manifest's 404, is done).
 
 1. **Generated assets (Stage B).** 68 results exist in the owner's Higgsfield
    account (manifest: `.rebuild/generated-manifest.tsv`, pull script:
@@ -1768,19 +1808,6 @@ the discovered items from 13 on and adds what it finds.
    has; the heavy's hold length in particular wants a thumb's judgement).
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
-13. **The generated manifest's 404.** The client asks for
-   `/assets/gen/manifest.json` before Phaser boots (`src/assets/gen.ts`;
-   the audio bus asks again) and, with no Stage B assets staged,
-   `public/assets/gen/` does not exist and the Worker answers 404: the
-   client reads that as an empty manifest by design, but the browser
-   logs a failed request on every load, in production as in the render
-   check (listed there as a known page error since 2026-09-26). An empty
-   manifest committed at `public/assets/gen/manifest.json` (`{ "v": 1,
-   "targets": {} }`, what `pull-generated.mjs` writes with nothing
-   pulled) would end it. Check that the lint and `hasGen` treat it as no
-   assets, that the pull script overwrites it and the test still passes,
-   and that the render check's known-error list shrinks to the fonts'
-   proxy certificate.
 
 ## Rules
 

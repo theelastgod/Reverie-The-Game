@@ -58,7 +58,8 @@ for (const item of manifest) {
 console.log(`${ok} pulled, ${failed} failed`);
 
 // The manifest names what exists on disk; the client fetches nothing that is not in it.
-// It is written even when nothing could be pulled, so an unfinished city costs one request.
+// It is written even when nothing could be pulled: then it is the empty manifest the repository
+// already carries at public/assets/gen/manifest.json, byte for byte, so the pull leaves no diff.
 async function writeManifest() {
   const targets = {};
   const walk = dir => {

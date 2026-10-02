@@ -38,7 +38,9 @@ try {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
-  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+  // A failed resource names only its status in the console; its URL is the message's location, kept so the list
+  // tells the proxy's refusals (the fonts) from a file the city itself failed to serve.
+  page.on('console', m => { if (m.type() === 'error') errors.push(m.location()?.url ? `${m.text()} @ ${m.location().url}` : m.text()); });
 
   // The landing page first, and the city's log on it: when the log route has lines, the band must show them.
   const root = origin.replace(/play\/?$/, '');
@@ -266,6 +268,10 @@ try {
   console.log(`canvas: ${canvases}  avg fps: ${fps.toFixed(1)}  gl: ${renderer}  prompt: ${JSON.stringify(promptText.trim())}`);
   if (/swiftshader|software|llvmpipe/i.test(String(renderer))) console.log('note: software WebGL; frame pacing here does not reflect a GPU-backed browser');
   if (errors.length) console.log(`page errors: ${errors.slice(0, 5).join(' | ')}`);
+  // Errors the proxy causes (the fonts' certificate) are the container's; a request the city's own origin failed
+  // (a 404 on a file the client asks for by name, as the generated manifest was until it was committed) is ours.
+  const own = errors.filter(e => /Failed to load resource/.test(e) && e.includes(`@ ${origin.replace(/\/play\/?$/, '')}`));
+  if (own.length) failures.push(`the city failed to serve ${own.length} file(s) the client asked for: ${own.slice(0, 3).map(e => e.replace(/^.*@ /, '')).join(', ')}`);
   if (canvases === 0) failures.push('no canvas rendered');
   if (fps < MIN_FPS) failures.push(`fps ${fps.toFixed(1)} < ${MIN_FPS}`);
 
@@ -277,7 +283,7 @@ try {
   const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, reducedMotion: 'reduce' });
   const phoneErrors = [];
   phone.on('pageerror', e => phoneErrors.push(String(e)));
-  phone.on('console', m => { if (m.type() === 'error') phoneErrors.push(m.text()); });
+  phone.on('console', m => { if (m.type() === 'error') phoneErrors.push(m.location()?.url ? `${m.text()} @ ${m.location().url}` : m.text()); });
   // A strike and a heavy leave no line in the HUD, so the phone pass reads the wire: every message the client
   // sends is noted by its kind, and the touch step asks what a tap and a held second finger sent.
   await phone.addInitScript(() => {

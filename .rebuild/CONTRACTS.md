@@ -192,7 +192,7 @@ export function applyLink(w, id, serial: number, proof: LinkProof | string): Wor
 
 ## assets/gen.ts, assets/slots.ts, ui/loops.ts (client; generated files, always optional)
 ```ts
-export type GenManifest = { v: number; targets: Record<string, { w: number; h: number }> }; // public/assets/gen/manifest.json, written by scripts/pull-generated.mjs
+export type GenManifest = { v: number; targets: Record<string, { w: number; h: number }> }; // public/assets/gen/manifest.json, written by scripts/pull-generated.mjs; committed empty ({ v: 1, targets: {} }) until the pull lands, so the request succeeds
 export function loadGenManifest(fetcher, url = genUrl("manifest.json")): Promise<GenManifest>; // 404 / junk / wrong shape → EMPTY_MANIFEST, never throws
 export const hasGen = (m, target) => boolean;  export const pickGen = (m, target | null, fallback) => string;
 export const gen: { load(fetcher?): Promise<GenManifest>; current; has(target); url(target, fallback); set(m) }; // one registry, loaded in main.ts before Phaser boots

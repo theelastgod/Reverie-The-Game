@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { EMPTY_MANIFEST, hasGen, loadGenManifest, parseManifest, pickGen, genUrl, gen } from "./gen";
 
@@ -39,6 +40,17 @@ describe("the generated-asset manifest", () => {
     expect(pickGen(m, "portraits/omen.jpg", "/assets/x.jpg")).toBe("/assets/gen/portraits/omen.jpg");
     expect(pickGen(m, "portraits/desk.jpg", "/assets/x.jpg")).toBe("/assets/x.jpg");
     expect(pickGen(m, null, "/assets/x.jpg")).toBe("/assets/x.jpg");
+  });
+
+  it("the committed manifest is empty, so the first request succeeds and names no generated file", async () => {
+    // public/assets/gen/manifest.json ships with the client until the Stage B pull overwrites it: the same bytes
+    // scripts/pull-generated.mjs writes when nothing is pulled, so a pull that lands nothing leaves no diff.
+    const text = readFileSync("public/assets/gen/manifest.json", "utf8");
+    expect(text).toBe(JSON.stringify({ v: 1, targets: {} }, null, 2) + "\n");
+    const m = await loadGenManifest(async () => json(200, JSON.parse(text)));
+    expect(m).toEqual({ v: 1, targets: {} });
+    expect(hasGen(m, "sprites/warden.png")).toBe(false);
+    expect(pickGen(m, "portraits/nara.jpg", "/assets/nara.jpg")).toBe("/assets/nara.jpg");
   });
 
   it("the registry loads once, shares the promise, and answers empty until then", async () => {

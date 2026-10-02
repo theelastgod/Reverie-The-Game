@@ -4,7 +4,7 @@
 // reads lists what landed with the images' sizes. It lives here because site/ is deployed and scripts/ is not
 // collected by vitest.
 import { execFile } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -36,8 +36,18 @@ beforeAll(async () => {
 });
 afterAll(() => new Promise<void>(resolve => server.close(() => resolve())));
 
+/** The empty manifest the client ships with until the pull lands (public/assets/gen/manifest.json). */
+const COMMITTED = readFileSync("public/assets/gen/manifest.json", "utf8");
+
+const pull = (manifest: string, out: string) => new Promise<{ code: number | null; stdout: string }>(resolve => {
+  execFile("node", ["scripts/pull-generated.mjs"], {
+    env: { ...process.env, PULL_ORIGIN: origin, PULL_MANIFEST: manifest, PULL_OUT: out },
+    timeout: 60_000,
+  }, (error, stdout) => resolve({ code: error ? (error as { code?: number }).code ?? 1 : 0, stdout: String(stdout) }));
+});
+
 describe("pull-generated against a stub host", () => {
-  it("pulls, sizes and copies what the manifest names, counts what is missing, and writes the client's manifest", async () => {
+  it("pulls, sizes and copies what the manifest names, counts what is missing, and overwrites the committed manifest", async () => {
     const dir = mkdtempSync(join(tmpdir(), "pull-"));
     const manifest = join(dir, "manifest.tsv");
     const out = join(dir, "gen");
@@ -50,12 +60,10 @@ describe("pull-generated against a stub host", () => {
       `4\timage\tprops/missing.png\t${HOST}/missing.png`,
       "",
     ].join("\n"));
-    const run = await new Promise<{ code: number | null; stdout: string }>(resolve => {
-      execFile("node", ["scripts/pull-generated.mjs"], {
-        env: { ...process.env, PULL_ORIGIN: origin, PULL_MANIFEST: manifest, PULL_OUT: out },
-        timeout: 60_000,
-      }, (error, stdout) => resolve({ code: error ? (error as { code?: number }).code ?? 1 : 0, stdout: String(stdout) }));
-    });
+    // The output directory starts as the repository does: the empty manifest already there.
+    mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, "manifest.json"), COMMITTED);
+    const run = await pull(manifest, out);
     expect(run.stdout).toContain("4 pulled, 1 failed");
     expect(run.stdout).toContain("FAIL");
     expect(run.code, "one failure fails the run").toBe(1);
@@ -74,5 +82,18 @@ describe("pull-generated against a stub host", () => {
     expect(Object.keys(written.targets).sort()).toEqual(["audio/bed-nave.ogg", "portraits/nara.jpg", "sprites/warden.png", "video/going-under.mp4"]);
     expect(written.targets["portraits/nara.jpg"].w).toBe(portrait.width);
     expect(written.targets["video/going-under.mp4"]).toEqual({ w: 0, h: 0 });
+  });
+
+  it("a pull that lands nothing writes the committed manifest byte for byte, so the repository shows no diff", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "pull-"));
+    const manifest = join(dir, "manifest.tsv");
+    const out = join(dir, "gen");
+    writeFileSync(manifest, "# index\tkind\ttarget\turl\n");
+    const run = await pull(manifest, out);
+    expect(run.stdout).toContain("0 pulled, 0 failed");
+    expect(run.stdout).toContain("manifest: 0 targets");
+    expect(run.code).toBe(0);
+    expect(readFileSync(join(out, "manifest.json"), "utf8")).toBe(COMMITTED);
+    expect(JSON.parse(COMMITTED)).toEqual({ v: 1, targets: {} });
   });
 });

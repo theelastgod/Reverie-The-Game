@@ -2,8 +2,10 @@
  * The generated-asset manifest. `scripts/pull-generated.mjs` writes
  * `public/assets/gen/manifest.json` naming every file it landed; the client
  * fetches it once, before Phaser boots, and afterwards asks `hasGen` before
- * touching any generated file. Absent or malformed, the manifest is empty and
- * the city renders exactly as it does today, at the cost of one request.
+ * touching any generated file. An empty manifest is committed there until the
+ * pull lands (so the request succeeds and the browser logs nothing); absent or
+ * malformed, the manifest is empty all the same, and the city renders exactly
+ * as it does today, at the cost of one request.
  */
 import { genUrl } from "./url";
 
