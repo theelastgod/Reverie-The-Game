@@ -67,7 +67,7 @@ deploy.
   `seen:v2:<token>`, when its session was last seen live); the object is `city-v2`. Once an hour it
   sweeps a page of saved guest bodies unseen for thirty days that bound no
   wallet; an Angel's body and a bound wallet's are kept for good.
-- `src/` (client) — Phaser 3 + Vite + TypeScript, DOM HUD over the canvas. Sends
+- `src/` (client) — Phaser 4 + Vite + TypeScript, DOM HUD over the canvas. Sends
   intents, renders snapshots.
 - `site/` — the landing page (its `log.js` shows the city's last news lines
   from `/log/recent`); `site/play/` is the built client (git-ignored).

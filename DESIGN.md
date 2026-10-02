@@ -10,7 +10,7 @@ Read this before touching any file under `src/`, `server/`, `site/` or `scripts/
 
 ## 1. Shape
 
-- **Client:** Phaser 3 + Vite + TypeScript. DOM HUD over the canvas. The client
+- **Client:** Phaser 4 + Vite + TypeScript. DOM HUD over the canvas. The client
   sends intents and renders snapshots. It never computes a number that matters.
 - **Shared sim:** `src/sim/**` is DOM-free TypeScript imported by both the client
   (types, map, labels) and the Worker (authoritative reducers).

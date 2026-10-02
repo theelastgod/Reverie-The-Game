@@ -17,9 +17,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   since the 26th: a message and join budget, an hourly sweep of stale guest
   bodies, a world record without bodies and body records written only when
   they change, each reviewed and security-reviewed (see Done). The dev
-  tools are current (vite 8.3, vitest 5, wrangler 4.146 and TypeScript 7
-  since 2026-10-02; `npm audit` reads 0 for production and dev
-  dependencies alike; the one major left, Phaser 4, is Backlog 9). Since 2026-10-01 every
+  tools are current (vite 8.3, vitest 5, wrangler 4.146, TypeScript 7 and
+  Phaser 4.2 since 2026-10-02; `npm audit` reads 0 for production and dev
+  dependencies alike and `npm outdated` lists nothing). Since 2026-10-01 every
   push runs the typecheck, the tests, the client build and a dry-run
   bundle on GitHub's runner by itself (`.github/workflows/gates.yml`, no
   secrets, nothing deployed); the Actions tab shows the mark on each
@@ -1088,6 +1088,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   from 6.9 s to 1.55 s here. Only the dev tool changed: Vite builds the
   client with its own transformer and vitest the tests, so the bundle
   and the tests are the same bytes as before.
+- Phaser 4 (2026-10-02, Backlog 9's other half, on its own commit).
+  `phaser` moved from ^3.90.0 to ^4.2.1, the release built on the new
+  WebGL renderer. The port cost no code: the typecheck against the 4.2.1
+  types lists zero breaks, and the shipped migration guide's checklist
+  names nothing the client uses (the seven files that touch Phaser use
+  plain `setTint`, never `setTintFill`; `BlendModes.ADD`, one of WebGL's
+  four native modes; TileSprite without cropping; Graphics, Text,
+  Rectangle, Arc, Particles, Tweens, the Scale manager; no masks, no FX,
+  no shaders, no lights, no `Geom.Point` or `Mesh`). The client bundle
+  grows from 1,305 kB (355 kB gzipped) to 1,482 kB (394 kB gzipped), the
+  renderer's size; the Worker bundle is unchanged. The render check's
+  screenshots were read by eye on desktop and phone (the Nave's tiles and
+  bodies, the labels, the player ring, the dialogue's portrait, the phone's
+  HUD) and the city looks as it did under 3.90; frame pacing under
+  SwiftShader is 10.0 fps against 8.4 and 9.4 on the two 3.90 runs of the
+  same day, so no regression the check can see. Phaser 4's filters,
+  lighting and tint modes are now available to the client if a later item
+  wants them; nothing uses them yet.
 
 ## Verified (2026-09-25, integration)
 
@@ -1663,6 +1681,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   typescript` shows the root as its only dependent. The push's gates run
   on GitHub is the proof that `npm ci` on a clean Linux runner picks the
   platform package and the typecheck passes there too.
+- Phaser 4 (2026-10-02): the typecheck against the 4.2.1 types, zero
+  errors; 502 tests; the play build and its stage; the render check at
+  `RENDER_MIN_FPS=5` passed on desktop (the landing page's 8 log lines, a
+  dialogue after SPEAK with focus, keyboard reach, the a11y read, 10.0 fps
+  under SwiftShader, the two font refusals the only page errors) and on
+  the phone (the HUD in its screen under reduced motion, the stick, the
+  heavy, the tap, the dodge chip); the screenshots read by eye (above);
+  the bundles measured back to back on the same tree (3.90 then 4.2.1,
+  the lockfile returning to the same bytes); `npx wrangler deploy
+  --dry-run` 558.62 KiB, unchanged. Not run: the campaign smokes (the
+  server and the protocol did not change; the smokes drive the wire, not
+  the renderer).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1675,8 +1705,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 Prioritized. The autonomous routine takes the top unfinished item, finishes it
 with tests, runs the gates, commits, pushes, and moves it to Done. Add items as
 they are discovered; keep this list honest. As of 2026-10-02 items 1–8 and
-10–12 are the owner's, a real device's or the network's to finish; the
-routine takes item 9 and whatever it discovers, and adds what it finds.
+10–12 are the owner's, a real device's or the network's to finish, and 9 is
+done; the routine takes whatever it discovers, and adds what it finds.
 
 1. **Generated assets (Stage B).** 68 results exist in the owner's Higgsfield
    account (manifest: `.rebuild/generated-manifest.tsv`, pull script:
@@ -1832,18 +1862,13 @@ routine takes item 9 and whatever it discovers, and adds what it finds.
    16.7 min / 8 decisions, II 12.5 / 4, III 11.5 / 3, IV 7.3 / 3; the
    whole campaign is about 48 min of a first playthrough on the spine
    alone, with 18 decisions.
-9. **The one major left: Phaser 4.** `npm outdated` lists phaser 3.90 →
-   4.2.1; TypeScript 7 was taken on 2026-10-02 (Done: the typecheck passed
-   unchanged under it, 4.4× faster). No advisory names Phaser, and the
-   client is written against 3.90's API in seven files (`src/scenes`,
-   `src/render`, the loops: Scene, Image, TileSprite, Graphics, Text,
-   Rectangle, Arc, Particles, Tweens, the Scale manager, `BlendModes.ADD`),
-   so it is a port to measure, not a bump: install it on its own commit,
-   read the typecheck's list of breaks, and keep it only if the fixes fit
-   a firing and the render check's frame pacing and screenshots hold on
-   desktop and phone; otherwise revert and record the breaks here. `npm
-   audit` is worth a look each firing; the dev tools were brought current
-   on 2026-09-27 and again on 2026-10-02 (Done).
+9. **The majors: taken** (2026-10-02, two commits; see Done). TypeScript 7
+   typechecks the tree unchanged, 4.4× faster; Phaser 4.2.1 ports with no
+   code change, the render check and its screenshots holding on desktop
+   and phone, the client bundle 11% larger gzipped for the new renderer.
+   `npm outdated` now lists nothing outside its range; `npm audit` is worth
+   a look each firing. The number stays so older entries that cite it
+   still read.
 10. **Assistive technology, the rest.** The markup says what it is, the
    map speaks, the HUD's controls have keyboard reach, the dialogue, the
    guest lock and the credits take focus when they appear and give it
