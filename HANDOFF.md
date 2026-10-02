@@ -17,9 +17,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   since the 26th: a message and join budget, an hourly sweep of stale guest
   bodies, a world record without bodies and body records written only when
   they change, each reviewed and security-reviewed (see Done). The dev
-  tools are current (vite 8.3, vitest 5, wrangler 4.146 since 2026-10-02;
-  `npm audit` reads 0 for production and dev dependencies alike; the two
-  majors left, phaser 4 and TypeScript 7, are Backlog 13). Since 2026-10-01 every
+  tools are current (vite 8.3, vitest 5, wrangler 4.146 and TypeScript 7
+  since 2026-10-02; `npm audit` reads 0 for production and dev
+  dependencies alike; the one major left, Phaser 4, is Backlog 9). Since 2026-10-01 every
   push runs the typecheck, the tests, the client build and a dry-run
   bundle on GitHub's runner by itself (`.github/workflows/gates.yml`, no
   secrets, nothing deployed); the Actions tab shows the mark on each
@@ -1073,9 +1073,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   (`package.json`'s ranges already allowed every step): wrangler 4.146.0
   (miniflare 5.20261001.0-alpha, undici 7.29.1), `@cloudflare/workers-types`
   5.20261002.1, sharp 0.35.5, vite 8.3.2, vitest 5.0.3; `npm audit` reads 0
-  again. Not taken, and recorded in Backlog 13: the two majors `npm
+  again. Not taken then, and recorded in Backlog 9: the two majors `npm
   outdated` shows (phaser 4.2.1 and TypeScript 7.0.2), each a migration
   rather than a bump.
+- TypeScript 7 (2026-10-02, Backlog 9's cheaper half, on its own commit).
+  `typescript` moved from ^5.6.3 (5.9.3 installed) to ^7.0.2, the native
+  compiler: the lockfile carries its twenty platform packages as optional
+  dependencies (`@typescript/typescript-linux-x64` and the rest, 27 MB on
+  disk, so `npm ci` picks the right one on any machine), nothing else in
+  the tree depends on `typescript`, and both tsconfigs (ES2022, `bundler`
+  resolution, strict, `skipLibCheck`, `noEmit`; the server's
+  `allowImportingTsExtensions` and the workers types) pass unchanged with
+  no deprecation printed. The typecheck of the client and the Worker went
+  from 6.9 s to 1.55 s here. Only the dev tool changed: Vite builds the
+  client with its own transformer and vitest the tests, so the bundle
+  and the tests are the same bytes as before.
 
 ## Verified (2026-09-25, integration)
 
@@ -1645,6 +1657,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   full hp after 40 s, nothing hit): the two checks share one city and
   one CPU, so the smokes run one at a time from now on; the rerun alone
   is the measure.
+- TypeScript 7 (2026-10-02): `npx tsc --version` 7.0.2; the typecheck of
+  both configs clean in 1.55 s against 6.9 s under 5.9.3 on the same
+  tree (timed back to back); 502 tests; the build; `npm audit` 0; `npm ls
+  typescript` shows the root as its only dependent. The push's gates run
+  on GitHub is the proof that `npm ci` on a clean Linux runner picks the
+  platform package and the typecheck passes there too.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1656,9 +1674,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 Prioritized. The autonomous routine takes the top unfinished item, finishes it
 with tests, runs the gates, commits, pushes, and moves it to Done. Add items as
-they are discovered; keep this list honest. As of 2026-10-02 items 1–12 are
-the owner's, a real device's or the network's to finish; the routine takes
-the discovered items that follow them and adds what it finds.
+they are discovered; keep this list honest. As of 2026-10-02 items 1–8 and
+10–12 are the owner's, a real device's or the network's to finish; the
+routine takes item 9 and whatever it discovers, and adds what it finds.
 
 1. **Generated assets (Stage B).** 68 results exist in the owner's Higgsfield
    account (manifest: `.rebuild/generated-manifest.tsv`, pull script:
@@ -1814,12 +1832,18 @@ the discovered items that follow them and adds what it finds.
    16.7 min / 8 decisions, II 12.5 / 4, III 11.5 / 3, IV 7.3 / 3; the
    whole campaign is about 48 min of a first playthrough on the spine
    alone, with 18 decisions.
-9. **Majors not taken.** `npm outdated` (2026-09-27) lists phaser 4.2 and
-   typescript 7.0; no audit finding needs either, the client is written
-   against Phaser 3.90's API and the typecheck against tsc 5, so each is
-   a port to plan, not a bump. Take one only with the render check and
-   the whole spine over the wire behind it. `npm audit` is worth a look
-   each month; the dev tools were brought current on 2026-09-27 (Done).
+9. **The one major left: Phaser 4.** `npm outdated` lists phaser 3.90 →
+   4.2.1; TypeScript 7 was taken on 2026-10-02 (Done: the typecheck passed
+   unchanged under it, 4.4× faster). No advisory names Phaser, and the
+   client is written against 3.90's API in seven files (`src/scenes`,
+   `src/render`, the loops: Scene, Image, TileSprite, Graphics, Text,
+   Rectangle, Arc, Particles, Tweens, the Scale manager, `BlendModes.ADD`),
+   so it is a port to measure, not a bump: install it on its own commit,
+   read the typecheck's list of breaks, and keep it only if the fixes fit
+   a firing and the render check's frame pacing and screenshots hold on
+   desktop and phone; otherwise revert and record the breaks here. `npm
+   audit` is worth a look each firing; the dev tools were brought current
+   on 2026-09-27 and again on 2026-10-02 (Done).
 10. **Assistive technology, the rest.** The markup says what it is, the
    map speaks, the HUD's controls have keyboard reach, the dialogue, the
    guest lock and the credits take focus when they appear and give it
@@ -1836,16 +1860,6 @@ the discovered items that follow them and adds what it finds.
    has; the heavy's hold length in particular wants a thumb's judgement).
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
-13. **The two majors.** `npm outdated` (2026-10-02) shows phaser 3.90 →
-   4.2.1 and TypeScript 5.9 → 7.0.2; everything else is at its range's
-   latest and `npm audit` reads 0. Each is a migration, not a bump: Phaser 4
-   changes the renderer and parts of the scene and loader API the client
-   leans on (`src/scenes`, `src/render`), and TypeScript 7 is the Go port
-   with its own set of removed options and stricter checks. Take one at a
-   time, on its own commit, with the gates, the session smoke and the
-   render check before and after; if either costs more than a firing or
-   moves frame pacing, revert and record why here. Not urgent: no advisory
-   names either.
 
 ## Rules
 
