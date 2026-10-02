@@ -69,6 +69,20 @@ miss on the container's own hiccups (a single late alarm fails the worst
 bar), and nothing here is a regression to chase; the knee is still the
 deployed run's to find.
 
+Re-read 2026-10-02 under wrangler 4.146 (miniflare 5.20261001.0-alpha, a
+newer workerd again), on a fresh world: at 20 bots the interval mean is
+49.8 ms (p50 52, p95 61, p99 105), the alarm 5.8 ms late on average with one
+369 ms worst and one stall, the checkpoint 0.81 ms, 3764 B per fast frame;
+at 40 bots the interval mean is 51.2 ms (p50 52, p95 64, p99 73), the alarm
+4.5 ms late on average with a 352 ms worst and two stalls, the checkpoint
+0.91 ms, 6050 B per fast frame. The bytes and the checkpoint are the rows
+above; the timing at 40 is much better than the 4.141 read (a 91 ms mean and
+76 ms of lateness then, the step held now), which is the runtime's doing,
+not the Worker's. The worst-alarm and stall bars still fail on the
+container's hiccups, as before. The same check runs on GitHub's runner on
+every push since this date, as numbers in the live job's summary, not a gate
+(`gates.yml`).
+
 Two things to know when reading these. The checkpoint (the world blob plus
 every connected body's record, once a second of world time) costs 1–2 ms
 even at 80 bodies, so the late alarms are compute: one `tickWorld` over

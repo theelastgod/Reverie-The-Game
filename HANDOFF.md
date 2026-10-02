@@ -1154,6 +1154,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the bot stands in the clerk's reach until it wakes at the spawn
   (about 13 s), then the recovery runs for real. The game did not
   change; the bot plays it better.
+- The load check on GitHub's runner, as numbers (2026-10-02). The `live`
+  job runs `scripts/load-check.mjs` (20 bots, 20 s) after the render
+  check against the same Worker, with `continue-on-error`, and appends
+  its `connected`, `measure:` and verdict lines to the job summary; the
+  log joins the `render-check` artifact. Never a gate: the check's
+  worst-alarm and stall bars are the machine's hiccups as much as the
+  Worker's (they fail in this container on every run), so a miss there
+  must not turn a push red; what the summary gives is the step held, the
+  bytes per viewer and the checkpoint cost on a clean machine with every
+  push, beside the container's rows in `.rebuild/ZONES.md`.
 
 ## Verified (2026-09-25, integration)
 
@@ -1775,6 +1785,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   a first playthrough on the spine, 18 decisions, as before. The two
   failed spine runs of the day before this change (14:04 and 14:20,
   each at the intake) are the reason for it.
+- The load check re-read under wrangler 4.146 (2026-10-02, a fresh world):
+  at 20 bots the interval mean 49.8 ms (p95 61, p99 105), the alarm 5.8 ms
+  late on average, the checkpoint 0.81 ms, 3764 B per fast frame; at 40
+  bots the interval mean 51.2 ms (p95 64, p99 73), the alarm 4.5 ms late
+  on average, the checkpoint 0.91 ms, 6050 B per fast frame. The bytes
+  and the checkpoint are unchanged; the timing at 40 bots is far better
+  than under 4.141 (a 91 ms mean and 76 ms of lateness then), the new
+  runtime's doing. The worst-alarm and stall bars fail on this
+  container's hiccups as they always have (one 369 ms alarm and a stall
+  at 20; a 352 ms alarm and two stalls at 40); nothing is a regression.
+  The numbers are in `.rebuild/ZONES.md`.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

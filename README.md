@@ -119,8 +119,10 @@ taken from the pushed branch itself, no secrets, nothing deployed), and on
 a second runner the built client under a local Worker (`wrangler dev`, the
 log's migration on the runner's own SQLite): the session smoke over the
 wire and the render check in the runner's Chrome, its screenshots kept as
-the run's `render-check` artifact for two weeks. The Actions tab lists the
-runs and each commit carries its mark.
+the run's `render-check` artifact for two weeks, then the load check as
+numbers in the job's summary (never a gate: its timing bars are the
+machine's as much as the Worker's). The Actions tab lists the runs and each
+commit carries its mark.
 
 The three live scripts take an origin argument (default `http://127.0.0.1:8788`;
 the render check defaults to `http://127.0.0.1:8788/play/`) and need

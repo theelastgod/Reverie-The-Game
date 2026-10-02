@@ -91,7 +91,15 @@ jobs:
       - name: The render check
         # Software WebGL on the runner, as in the container: the pacing bound is the sandbox's, not a GPU's.
         run: RENDER_MIN_FPS=5 npm run test:render
-      - name: Keep the screenshots and the Worker's log
+      - name: The load check, as numbers in the summary and not a gate
+        # 20 bots walk and strike for 20 s against the same Worker. Its timing bars (the worst alarm, a stall) are the
+        # machine's as much as the Worker's, so a miss here never fails the push; the numbers are read from the summary.
+        if: always()
+        continue-on-error: true
+        run: |
+          node scripts/load-check.mjs 2>&1 | tee load.log
+          { echo '### The load check (20 bots, 20 s)'; echo '```'; grep -E '^(connected|measure:|PASS|FAIL)' load.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the screenshots and the logs
         if: always()
         uses: actions/upload-artifact@v5
         with:
@@ -99,5 +107,6 @@ jobs:
           path: |
             .rebuild/shots/
             wrangler.log
+            load.log
           if-no-files-found: ignore
           retention-days: 14
