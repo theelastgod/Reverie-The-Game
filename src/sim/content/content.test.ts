@@ -306,6 +306,11 @@ describe("POI configs", () => {
     const struck = { ...m3, p: { ...m3.p, flags: { ...m3.p.flags, [F.BELL]: 1 } } };
     expect(offersOnce(struck)).toBe(true);
     expect(offersOnce({ ...struck, p: { ...struck.p, flags: { ...struck.p.flags, "side:bell:told": 1 } } })).toBe(false);
+    // A sexton who walked was not in the ring: after the rite she is still gone, not "I stood in the ring anyway".
+    const walked = CTXS.find(c => c.name === "angel M4 nara gone")!.ctx;
+    const passed = { ...walked, p: { ...walked.p, flags: { ...walked.p.flags, [F.PASSING]: 1 }, choices: { ...walked.p.choices, [C.PASSING]: "failed" } } };
+    expect(NPCS.nara.entry(passed)).toBe("gone");
+    expect(NPCS.caul.entry(passed), "Caul on the lip has no spoken line yet").toBe("lip-silent");
   });
 
   it("names the weather with three verbs once all three names are heard", () => {

@@ -265,6 +265,7 @@ export const NPC_STATIONS: Record<string, NpcHome> = Object.fromEntries([
   home("vesper-clearing", "clearing", 52, 63),
   home("officer-clearing", "clearing", 52, 71),
   home("ione-clearing", "clearing", 52, 65),
+  home("caul-lip", "wet", 53, 54), // the Grid's edge at its gate to the Clearing: the tile where the city stops a guest, the ring in sight below
 ].map(h => [h.id, h]));
 
 export type EnemySpawn = {

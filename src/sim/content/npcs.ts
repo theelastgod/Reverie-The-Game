@@ -5,7 +5,7 @@
  */
 import type { Ctx, DialogueNode, Effect, NpcDef, NpcState } from "../types";
 import { POSITIONS } from "../map";
-import { AURA_ADDRESS_GLAMOUR, AURA_DIM, CLEARING_LIST_PRICE, COPY_PRICE, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_PASSING_MIN, READINESS_REFUSE, READINESS_WATCH } from "../constants";
+import { AURA_ADDRESS_GLAMOUR, AURA_DIM, CLEARING_HOLD_ANGELS, CLEARING_LIST_PRICE, COPY_PRICE, GESTELL_MELTDOWN, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_PASSING_MIN, READINESS_REFUSE, READINESS_WATCH } from "../constants";
 import { C, F, W } from "./ids";
 import { clearingPrice, moveClearing } from "./market";
 import { PARTY_BLIND } from "./lines";
@@ -51,8 +51,9 @@ const outcome = (ctx: Ctx): string => ctx.p.choices[C.PASSING] ?? "";
 
 function naraRoute(ctx: Ctx): string {
   const { p } = ctx;
-  if (p.movement >= 5 || has(ctx, F.PASSING)) return "after";
+  // A sexton who walked was not in the ring and does not say she was: gone before after.
   if (p.party.nara === "gone") return "gone";
+  if (p.movement >= 5 || has(ctx, F.PASSING)) return "after";
   if (has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)) return "garden-silent";
   if (p.party.nara === "waiting") return "waiting";
   if (has(ctx, F.GARDEN) && !p.choices[C.GARDEN] && p.movement < 4) return "garden-plate";
@@ -234,6 +235,7 @@ const NARA_NODES: Record<string, DialogueNode> = {
       { kind: "notice", text: "A mortality act. Burial. The Clearing will take you now.", tone: "gold" },
     ],
   },
+  // Three numbers at the brink: the Angel's readiness against the floor, the weather, and the bodies in the ring.
   brink: {
     id: "brink",
     text: (ctx) => {
@@ -241,14 +243,31 @@ const NARA_NODES: Record<string, DialogueNode> = {
       const read = r >= READINESS_APPEARANCE_MIN ? `Readiness ${r}. Enough for a trace, if the weather lets it.`
         : r >= READINESS_PASSING_MIN ? `Readiness ${r}. The floor is ${READINESS_PASSING_MIN}; you are over it. A trace wants ${READINESS_APPEARANCE_MIN}.`
           : `Readiness ${r}. The floor is ${READINESS_PASSING_MIN}. You are short, and I will say so now rather than after: the hours you did not take, the nodes you did not keep, the freeze you signed or did not. It is not a sin. It is a number.`;
-      return `Nara Vale is at the ring before it is a ring. The asphalt is asphalt until somebody keeps it. She looks at you the way she looks at a plate. ${read} I will stand in it either way. Press F at the ring and keep the ground; then E to keep the hole or Q to take it. Then the hour, or not.`;
+      const g = Math.round(ctx.w.gestell);
+      const bodies = ctx.w.clearing.heldBy.length;
+      const meltdown = g >= GESTELL_MELTDOWN;
+      const weather = `Then the weather. The weather at ${g}.${meltdown ? " At ninety-one a hole holds only as long as bodies stand in it." : ""} Then the bodies: ${bodies} in the ring.${meltdown && bodies < CLEARING_HOLD_ANGELS ? ` Fewer than ${CLEARING_HOLD_ANGELS} and nothing passes, whatever you are.` : ""}`;
+      return `Nara Vale is at the ring before it is a ring. The asphalt is asphalt until somebody keeps it. She looks at you the way she looks at a plate. Three numbers. First, yours. ${read} ${weather} I will stand in it either way. Press F at the ring and keep the ground; then E to keep the hole or Q to take it. Then the hour, or not.`;
     },
     wink: "A sexton reads the ground before the funeral, not after. She is telling you the depth.",
     effects: [{ kind: "flag", key: F.BRINK }],
+    next: (ctx) => (has(ctx, F.GARDEN) && !has(ctx, F.LID) ? "lid" : undefined),
+  },
+  // Her confession, once, at the ring before it is a ring: she pressed record on the first one. The man who prices gravesides is on the gate above.
+  lid: {
+    id: "lid",
+    text: (ctx) => {
+      const plate = chose(ctx, C.GARDEN, "numbered") ? "You put a number on the garden." : "You left the plate blank.";
+      const recorder = chose(ctx, C.MEMORIAL, "voice") ? " It is still running on my street. You left it on. I hear it every day."
+        : chose(ctx, C.MEMORIAL, "copper") ? " You stopped it. I never could. The copper is in a coffin, which is where copper should be." : "";
+      return `Her hand goes flat on the asphalt. ${plate} I was twenty-two and I heard something and I wanted to keep it. They kept it. That is the catalog. Every grave since is me not doing it twice. A Clearing is a grave with the lid off. I know. I put the lid on the first one.${recorder} She looks up once, at the white mark on the Grid's gate above the ring. He is at the gate. He sent money for my street once. He will send it again next season. Let him stand there.`;
+    },
+    wink: "Ione's voice. Her hand. The catalog has two authors and only one of them is still digging.",
+    effects: [{ kind: "flag", key: F.LID }],
   },
   ring: {
     id: "ring",
-    text: (ctx) => `I am in the ring. I will stand in the hole as long as it is a hole. If the process takes it I will still be here; I will just be standing in stock. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}. Press F at the ring when the party is ready.`,
+    text: (ctx) => `I am in the ring. I will stand in the hole as long as it is a hole. If the process takes it I will still be here; I will just be standing in stock. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}. The weather at ${Math.round(ctx.w.gestell)}. Bodies ${ctx.w.clearing.heldBy.length}. Press F at the ring when the party is ready.`,
     wink: "The Clearing holds when people do.",
   },
   after: {
@@ -258,7 +277,9 @@ const NARA_NODES: Record<string, DialogueNode> = {
         case "appearance": return "A trace. Not a face. The city was world for a minute and I saw you see it. That is all I ever wanted from the street. Now bury the next one.";
         case "absence": return "The hour went by. Absence is honest. I stay. The hole is still a grave. Nothing you did was wrong. Nothing you did was enough. That is what the word means.";
         case "hijack": return "Somebody claimed the hour. Cold or Safety, it does not matter to the body. You are marked. Marks are not sins. They are places. I bury places.";
-        case "failed": return "Gestell kept the weather. No hole. I stood in the ring anyway. Nobody can say I did not. Next season there will be earth again.";
+        case "failed": return ctx.p.readiness < READINESS_PASSING_MIN || !has(ctx, F.MORTALITY)
+          ? "You are short. It is a number. Stand anyway, or come back. I stood in the ring. Nobody can say I did not. Next season there will be earth again."
+          : "The weather kept it. No hole. I stood in the ring anyway. Nobody can say I did not. Next season there will be earth again.";
         default: return "It is in the earth. All of it. I still will not forgive the factory.";
       }
     },
@@ -446,9 +467,9 @@ const QUILL_NODES: Record<string, DialogueNode> = {
     id: "after",
     text: (ctx) => {
       switch (outcome(ctx)) {
-        case "appearance": return "A trace. I did not print it. Do not look at me like that. I did not print it. Somebody will and it will be worse than mine.";
+        case "appearance": return "She has the tape out of the van in both hands and she is laughing. A trace. I did not print it. Do not look at me like that. Nobody did. There is nothing on it. Not a margin, not a grain. I am not printing anything for a day.";
         case "absence": return "Nothing came. I have a print of nothing if you want one. It is my best seller this season.";
-        case "hijack": return "Somebody claimed the hour. Not me. I only claim margins. You are marked. Marks sell, by the way. I am telling you as a friend.";
+        case "hijack": return "Somebody claimed the hour. Not me. I only claim margins. You are marked. Marks sell, by the way. I am telling you as a friend. Your serial is in the margin of the sky now.";
         case "failed": return "Gestell ate the hole. The stall is fine. The stall is always fine. That is the horror of the stall.";
         default: return "Copies travel. You didn't. Good.";
       }
@@ -735,9 +756,10 @@ const ORD_NODES: Record<string, DialogueNode> = {
         : r >= READINESS_PASSING_MIN ? `Readiness ${r}. Over the floor of ${READINESS_PASSING_MIN}; a trace is ${READINESS_APPEARANCE_MIN}.`
           : `Readiness ${r} against a floor of ${READINESS_PASSING_MIN}. It will not open for you. I would write that down before you stand, so nobody says the number lied.`;
       const where = chose(ctx, C.PARTY, "alone") ? "I count from the gate; you are in the ring, alone, as you said." : "I am in the ring. I am counting.";
-      return ctx.w.gestell >= 91
-        ? `Gestell is maxed. I have to tell you: the hour will not open unless enough of you hold the ring. I cannot make that number smaller by wanting it. Nobody can. ${read}`
-        : `${where} ${read} If the hour opens I will write it down honest. If it does not I will write that. Press F when ${chose(ctx, C.PARTY, "alone") ? "you are" : "the party is"} ready.`;
+      const bodies = ctx.w.clearing.heldBy.length;
+      return ctx.w.gestell >= GESTELL_MELTDOWN
+        ? `Gestell is maxed. I have to tell you: the hour will not open unless enough of you hold the ring. Bodies in the ring: ${bodies}; it wants ${CLEARING_HOLD_ANGELS}. I cannot make that number smaller by wanting it. Nobody can. ${read}`
+        : `${where} ${read} Bodies in the ring: ${bodies}. If the hour opens I will write it down honest. If it does not I will write that. Press F when ${chose(ctx, C.PARTY, "alone") ? "you are" : "the party is"} ready.`;
     },
     wink: "A solo cannot force the hour. He knows the arithmetic and hates it.",
   },
@@ -896,9 +918,14 @@ const IONE_NODES: Record<string, DialogueNode> = {
     id: "watching",
     text: "You have been to the Organs. You have the look. Everything feeds everything and none of it feeds anyone. I am not going to explain it. I am going to be here a little while longer and then I am not.",
   },
+  // The voice on the crate is hers; the player knows it before she speaks, by what they did at the recorder in their first hour.
   offer: {
     id: "offer",
-    text: "Ione Kade: I will not be in the next hour. Do not make a story of it. Stand in the hole. If you want a last word I have one. It is not for the city. It is for whoever is standing here when I say it.",
+    text: (ctx) => {
+      const recorder = chose(ctx, C.MEMORIAL, "voice") ? "You left it running. Some nights I hear it from here. "
+        : chose(ctx, C.MEMORIAL, "copper") ? "You took the coil out of it. Good. A coffin needs the copper more than a crate does. I know the word without it. " : "";
+      return `You know the voice before she speaks. It is the one on the crate on the funeral street, one word on a loop. Ione Kade. ${recorder}I will not be in the next hour. Do not make a story of it. Stand in the hole. If you want a last word I have one. It is not for the city. It is for whoever is standing here when I say it.`;
+    },
     wink: "The hour does not arrive as a body. It is a trace, or it is not. You cannot buy it.",
     choices: [
       { id: "say", label: "Say it.", when: ctx => !has(ctx, F.MORTALITY), next: "lastword" },
@@ -907,7 +934,7 @@ const IONE_NODES: Record<string, DialogueNode> = {
   },
   lastword: {
     id: "lastword",
-    text: "She says it. It is short. It is not written down anywhere and it will not be. When you look up the bench is a bench. That was the last word.",
+    text: "She says the word once, the way she said it at the counter, to a customer who wept. Reverie. The word on the crate; the word on the first form. Then the other thing, the one that was never on the form. It is short. It is not written down anywhere and it will not be. When you look up the bench is a bench. That was the last word.",
     effects: [
       { kind: "choice", key: C.MORTALITY, value: "lastword" },
       { kind: "flag", key: F.MORTALITY },
@@ -932,7 +959,9 @@ const IONE_NODES: Record<string, DialogueNode> = {
  * The Concern's chief is a guest in every rule the server has: the guest's sprite and portrait, no aura, the GUEST label
  * (the client's labels module), and never inside the Care, the Clearing or the Organs. In Movement I he is a body at the
  * back of the altar aisle, watching the kneelers; he is gone by the time anyone is close enough to speak, so the one
- * node below is never opened. The room behind the glass (III) and the Grid's gate (IV) come with their beats.
+ * node below is never opened. From Movement IV he stands on the Grid's edge at its gate to the Clearing, the tile where the
+ * city stops a guest, looking down at the ring; he has no spoken line there until the recorders' beat (Phase B). The room
+ * behind the glass (III) comes with its beat.
  */
 const CAUL_ABSENT_RADIUS = 160; // px; NPC_REACH is 72
 
@@ -940,6 +969,10 @@ const CAUL_NODES: Record<string, DialogueNode> = {
   first: {
     id: "first",
     text: "A paper-white body with no halo, watching the kneelers and not the screen. By the time you are close enough to speak there is nobody there.",
+  },
+  "lip-silent": {
+    id: "lip-silent",
+    text: "A paper-white body with no halo on the tile where the city stops a guest, looking down at the ring and not at you. The label over him says GUEST. He does not look up.",
   },
 };
 
@@ -956,11 +989,12 @@ export const NPCS: Record<string, NpcDef> = {
     party: false,
     personal: (ctx: Ctx, shared: NpcState): NpcOverride => {
       const { p } = ctx;
+      if (p.movement >= 4) return { ...station("caul-lip"), state: "lip" };
       if (p.movement >= 2 || has(ctx, F.UNDER)) return { present: false, state: "gone" };
       if (Math.hypot(p.x - shared.x, p.y - shared.y) < CAUL_ABSENT_RADIUS) return { present: false, state: "gone" };
       return null;
     },
-    entry: () => "first",
+    entry: (ctx: Ctx) => (ctx.p.movement >= 4 ? "lip-silent" : "first"),
     nodes: CAUL_NODES,
   },
   nara: {

@@ -31,7 +31,7 @@ import { weatherBand } from "./protocol";
 import { C, F, W, seasonPassingFlag } from "./content/ids";
 import { LINES } from "./content";
 import { moveClearing } from "./content/market";
-import { notice, pushNews, say } from "./world";
+import { notice, pushNews, say, wink } from "./world";
 import { applyListing, earn } from "./economy";
 
 export const RING = "clearing-ring";
@@ -59,12 +59,16 @@ const CLEARING_CLOSED_NEWS = "The Clearing was extracted. The hole closes.";
 const PASSING_NOT_PREPARED = "The ground is not prepared. The party must be willing to stand in it.";
 const PASSING_APPEARANCE = "A trace, not a face. The city is briefly world again. A stipend for the shrine. Cult upkeep.";
 const PASSING_ABSENCE = "The hour went by. Absence is honest. Nara Vale stays. No one can force a god alone.";
-const PASSING_HIJACK_COLD = "A concentrator claimed the hour. The world continues. You are marked.";
+const PASSING_HIJACK_COLD = "Cold claimed the hour. Whatever would have crossed, the recorders had it, with a margin. The world continues. You are marked.";
+/** The hint on an Absence: the hour went by the way the Angel once did. */
+const ABSENCE_WINK = "You went under once and came back. The hour did the same. Neither of you arrived.";
 const PASSING_HIJACK_SAFETY = "Safety claimed the hour. The freeze ate the rite. You are marked.";
 const PASSING_FAILED = "Gestell kept the weather. Without a held Clearing the hour does not open. No stipend is owed.";
 const NEWS_APPEARANCE = (name: string) => `A Passing. ${name} prepared the ground. The city is briefly world.`;
 const NEWS_ABSENCE = (name: string) => `A Passing went by. ${name} kept the hole. Absence is honest.`;
-const NEWS_HIJACK = (name: string, by: "cold" | "safety") => `${by === "cold" ? "Cold" : "Safety"} claimed the hour at ${name}'s Clearing. The world continues.`;
+const NEWS_HIJACK = (name: string, by: "cold" | "safety") => (by === "cold"
+  ? `${name} sold their Passing. Cold claimed the hour at their Clearing; the margin has a serial in it.`
+  : `Safety's freeze ate ${name}'s Passing. The district held. The form says funded by.`);
 const NEWS_FAILED = (name: string) => `${name}'s Passing failed. Gestell kept the weather.`;
 /** The name the city writes the rite under: an Angel who stood alone is written so. */
 const standingName = (p: Player): string => (p.choices[C.PARTY] === "alone" ? `${p.name}, alone,` : p.name);
@@ -335,6 +339,7 @@ export function applyPassing(w: WorldState, id: string): WorldState {
     }
     case "absence": {
       next = pushNews(next, NEWS_ABSENCE(standingName(p)));
+      me = wink(me, ABSENCE_WINK, next.now, next.gestell);
       return speak(next, me, PASSING_ABSENCE);
     }
     case "hijack": {

@@ -43,6 +43,7 @@ export const F = {
   BELL: "bell", // Movement III: struck the hour bell once on the way to the glass
   FAILED: "failed", // saw a failed Passing
   FIGURE: "figure", // Movement III: heard Ord's figure for last season at the glass (it was captured, not short)
+  LID: "nara:lid", // Movement IV: heard Nara's confession at the ring before it was a ring (she pressed record on the first one)
   FORGE: "forge", // decided copies with Quill
   PREPARE: "prepare", // prepared the Clearing
   BRINK: "brink", // Movement IV: heard Nara at the ring before the ground was kept, with the readiness read

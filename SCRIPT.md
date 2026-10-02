@@ -1215,7 +1215,7 @@ The paper panel, the gold mark:
 **NARA** — `blind` (shipped)
 > You're looking at something I'm not. Whatever it is, I cannot bury it for you. Say what you need.
 
-**IONE KADE** — `offer` (revised: the voice recognised, by what you did at the recorder in your first hour)
+**IONE KADE** — `offer` (shipped since Phase A, Movement IV: the voice recognised, by what you did at the recorder in your first hour)
 > You know the voice before she speaks. It is the one on the crate on the funeral street, one word on a loop. Ione Kade.
 > *Voice preserved:* "You left it running. Some nights I hear it from here."
 > *Copper taken:* "You took the coil out of it. Good. A coffin needs the copper more than a crate does. I know the word without it."
@@ -1224,7 +1224,7 @@ The paper panel, the gold mark:
 - ▸ "Say it." → `lastword`
 - ▸ "Not yet."
 
-**IONE KADE** — `lastword` (revised: the recorder's word first, as at the counter; then the other thing)
+**IONE KADE** — `lastword` (shipped since Phase A, Movement IV: the recorder's word first, as at the counter; then the other thing)
 > She says the word once, the way she said it at the counter, to a customer who wept. Reverie. The word on the crate; the word on the first form. Then the other thing, the one that was never on the form. It is short. It is not written down anywhere and it will not be. When you look up the bench is a bench. That was the last word.
 [C.MORTALITY lastword; F.MORTALITY; W.IONE_GONE 1; readiness +6; she does not return, and the game does not show her go]
 
@@ -1289,7 +1289,7 @@ The paper panel, the gold mark:
 **ORD** — `gone` (shipped)
 > Ord is gone. He will not number a city that will not freeze. His desk is a chair and a ledger with the last honest line still wet.
 
-**NARA** — `brink` (revised: three numbers)
+**NARA** — `brink` (shipped since Phase A, Movement IV: three numbers; the bodies are the Angels holding the ring)
 > Nara Vale is at the ring before it is a ring. The asphalt is asphalt until somebody keeps it. She looks at you the way she looks at a plate. Three numbers. First, yours.
 > *At 80 or past:* Readiness {readiness}. Enough for a trace, if the weather lets it.
 > *60 to 79:* Readiness {readiness}. The floor is 60; you are over it. A trace wants 80.
@@ -1299,7 +1299,7 @@ The paper panel, the gold mark:
 ✦ *A sexton reads the ground before the funeral, not after. She is telling you the depth.*
 [F.BRINK; → `lid` once, if the garden is in the ground]
 
-**NARA** — `lid` (new; once; only with F.GARDEN)
+**NARA** — `lid` (shipped since Phase A, Movement IV; once, on the brink's `next`, with F.GARDEN; the flag is F.LID)
 > Her hand goes flat on the asphalt. *Numbered:* You put a number on the garden. *Blank:* You left the plate blank.
 > I was twenty-two and I heard something and I wanted to keep it. They kept it. That is the catalog. Every grave since is me not doing it twice. A Clearing is a grave with the lid off. I know. I put the lid on the first one.
 > *Voice preserved:* It is still running on my street. You left it on. I hear it every day. *Copper taken:* You stopped it. I never could. The copper is in a coffin, which is where copper should be.
@@ -1312,7 +1312,7 @@ The paper panel, the gold mark:
 > A ring in the asphalt. The last hole was contested lately and the asphalt has not set: {seconds} seconds. Wait for the hour, or stand here while it sets.
 > A ring in the asphalt. The Clearing's reserve is spent; there is nothing left to open until it fills back, a point at a time.
 
-**CAUL** — on the Grid's gate, no line (new placement)
+**CAUL** — on the Grid's gate, no line (shipped since Phase A, Movement IV: station `caul-lip` on the Grid's edge at the gate from the fourth hour on; the prompt opens `lip-silent`, a description and not a line, until IV.6 lands)
 *A paper-white body with no halo on the tile where the city stops a guest, north of the ring, looking at the hole. The label over him says GUEST. He has no line until you climb to him (IV.6).*
 
 ### IV.4 Keep the hole
@@ -1349,11 +1349,11 @@ The paper panel, the gold mark:
 > Bare ground inside the ring. A Dweller could seed it. You are not one.
 > *Seeded:* A seed in the ground. Someone dwelt here long enough to leave one.
 
-**NARA** — `ring` (revised: three numbers)
+**NARA** — `ring` (shipped since Phase A, Movement IV: three numbers)
 > I am in the ring. I will stand in the hole as long as it is a hole. If the process takes it I will still be here; I will just be standing in stock. Readiness {readiness} of 60. The weather {weather}. Bodies {bodies}. Press F at the ring when the party is ready.
 ✦ *The Clearing holds when people do.*
 
-**ORD** — `ring` (revised: the bodies counted with the rest)
+**ORD** — `ring` (shipped since Phase A, Movement IV: the bodies counted with the rest)
 > *With:* I am in the ring. I am counting. *Alone:* I count from the gate; you are in the ring, alone, as you said.
 > *At 80 or past:* Readiness {readiness}. Over the line for a trace. *60 to 79:* Readiness {readiness}. Over the floor of 60; a trace is 80. *Under 60:* Readiness {readiness} against a floor of 60. It will not open for you. I would write that down before you stand, so nobody says the number lied.
 > Bodies in the ring: {bodies}. If the hour opens I will write it down honest. If it does not I will write that. Press F when *the party is / you are* ready.
@@ -1476,7 +1476,7 @@ The paper panel, the gold mark:
 **CAUL** (new)
 > Then sell that.
 
-**QUILL** — `after`, appearance (revised: the tape in her hands)
+**QUILL** — `after`, appearance (shipped since Phase A, Movement IV: the tape in her hands)
 > She has the tape out of the van in both hands and she is laughing. A trace. I did not print it. Do not look at me like that. Nobody did. There is nothing on it. Not a margin, not a grain. I am not printing anything for a day.
 [news (new, Phase C): "The tape at {name}'s Clearing is blank. The god passed through the ones who were ready."]
 
@@ -1498,7 +1498,7 @@ The paper panel, the gold mark:
 
 **THE RING** — pass (shipped, clearing.ts)
 > The hour went by. Absence is honest. Nara Vale stays. No one can force a god alone.
-✦ *You went under once and came back. The hour did the same. Neither of you arrived.* (new)
+✦ *You went under once and came back. The hour did the same. Neither of you arrived.* (shipped since Phase A, Movement IV; clearing.ts)
 [C.PASSING absence; news: "A Passing went by. {name} kept the hole. Absence is honest."; the listing +4; Nara's station kept at the ring (Phase B: her `personal` releases her on F.PASSING today)]
 
 **NARA** — `after`, absence (shipped)
@@ -1524,12 +1524,12 @@ The paper panel, the gold mark:
 
 #### Hijack
 
-**THE RING** — pass, Cold (revised: whatever would have crossed, with a margin, so a taker at the floor is not told a trace crossed; "Cold", not the desk, so a lip signer is not told a concentrator claimed it)
+**THE RING** — pass, Cold (shipped since Phase A, Movement IV, clearing.ts: whatever would have crossed, with a margin, so a taker at the floor is not told a trace crossed; "Cold", not the desk, so a lip signer is not told a concentrator claimed it)
 > Cold claimed the hour. Whatever would have crossed, the recorders had it, with a margin. The world continues. You are marked.
 
 **THE RING** — pass, Safety (shipped, clearing.ts)
 > Safety claimed the hour. The freeze ate the rite. You are marked.
-[C.PASSING hijack; hijackedBy cold or safety; the lip's key read beside the operator's; news (revised): "{name} sold their Passing. Cold claimed the hour at their Clearing; the margin has a serial in it." / "Safety's freeze ate {name}'s Passing. The district held. The form says funded by."; the listing +8; the Ruin kit reads the mark forever]
+[C.PASSING hijack; hijackedBy cold or safety; the lip's key read beside the operator's (Phase B); news (shipped since Phase A, Movement IV): "{name} sold their Passing. Cold claimed the hour at their Clearing; the margin has a serial in it." / "Safety's freeze ate {name}'s Passing. The district held. The form says funded by."; the listing +8; the Ruin kit reads the mark forever]
 
 **THE ALTAR** — every altar you pass from now on (new; per viewer)
 > *At the trace's line:* The Reverie of the Passing: the Appearance, with a margin, and in the margin, small, #SERIAL.
@@ -1544,7 +1544,7 @@ The paper panel, the gold mark:
 **NARA** — `after`, hijack (shipped)
 > Somebody claimed the hour. Cold or Safety, it does not matter to the body. You are marked. Marks are not sins. They are places. I bury places.
 
-**QUILL** — `after`, hijack (revised: one sentence added)
+**QUILL** — `after`, hijack (shipped since Phase A, Movement IV: one sentence added)
 > Somebody claimed the hour. Not me. I only claim margins. You are marked. Marks sell, by the way. I am telling you as a friend. Your serial is in the margin of the sky now.
 
 **ORD** — `after`, hijack (revised: the lip's door added)
@@ -1565,7 +1565,7 @@ The paper panel, the gold mark:
 > Gestell kept the weather. Without a held Clearing the hour does not open. No stipend is owed.
 [C.PASSING failed; the hole closes; a mark at `failed-1` for the season; news: "{name}'s Passing failed. Gestell kept the weather."; the listing −6]
 
-**NARA** — `after`, failed (revised: the short case and the weather's; a gone Nara is routed to `gone` before `after`, Phase B)
+**NARA** — `after`, failed (shipped since Phase A, Movement IV: the short case and the weather's, read off the readiness against the floor and the act; a gone Nara is routed to `gone` before `after`)
 > *Short of the floor, or no act:* You are short. It is a number. Stand anyway, or come back. I stood in the ring. Nobody can say I did not. Next season there will be earth again.
 > *The weather at 91, fewer than two bodies:* The weather kept it. No hole. I stood in the ring anyway. Nobody can say I did not. Next season there will be earth again.
 > *Nara gone:* she was not in the ring and does not say she was. `gone` stands (IV.3): she does not turn, and the hole in the Care is still a grave.

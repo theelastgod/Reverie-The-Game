@@ -63,8 +63,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   freeze form, the oval light speaking by serial at Vesper's desk), and
   Movement III (the catalog named at the Cable, Ord's figure at the
   glass, the recorders in last season's hole, Quill's print with your
-  serial in the margin and the plate she would not cut); Movement IV
-  is next.
+  serial in the margin and the plate she would not cut), and Movement
+  IV (Ione's voice known from the crate and her word said first, Nara's
+  three numbers and her confession at the ring, Caul's body on the
+  Grid's gate above it, the hijack with a margin). Phase A is complete;
+  Phase B, the new beats, is next.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1394,6 +1397,37 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   waits for Phase B. Next for Phase A: Movement IV (Nara's three numbers
   and her confession at the ring, Ord's gate line, Ione's word, Caul's
   placement on the Grid's gate tile).
+- Backlog A, Phase A, Movement IV (2026-10-02, night): the Concern in
+  the fourth hour, content only, on the shipped steps, the script's
+  IV.1 to IV.8 as the source. Ione Kade's offer opens with the voice
+  the player already knows from the crate on the funeral street, and
+  says what they did at it (left it running, or took the coil); her
+  last word is the word itself first, Reverie, the way she said it at
+  the counter, then the other thing. Nara at the brink reads three
+  numbers (the readiness against the floor, the weather, the bodies
+  holding the ring, with the meltdown rule when it applies) and then,
+  once, with the garden in the ground, her confession on the brink's
+  `next`: she was twenty-two and pressed record on the first one, a
+  Clearing is a grave with the lid off, and she looks up at the man on
+  the Grid's gate (`lid`, F.LID, the plate and the recorder branched).
+  Nara's and Ord's ring lines count the bodies. Caul's body stands on
+  the Grid's edge at its gate to the Clearing from the fourth hour on
+  (a new station, `caul-lip`); the prompt opens a description, not a
+  line, until the recorders' beat (Phase B). The Cold hijack says the
+  recorders had whatever would have crossed, with a margin, and its
+  news says the margin has a serial in it; Safety's says the form says
+  funded by. Quill after an Appearance has the blank tape in both
+  hands; after a Hijack she adds that your serial is in the margin of
+  the sky. Nara after a failed rite says the short case or the
+  weather's; a sexton who walked is routed to `gone` before `after` so
+  she never claims a ring she left. An Absence carries its hint. Tests:
+  the whole Movement IV walk reads the voice, the word, the three
+  numbers, the lid once, Caul at the lip, the hijack line and news, the
+  absence hint and Quill's margin; the content test reads the gone
+  route and the lip's entry. `SCRIPT.md`'s tags updated. Phase A is
+  complete: every movement has the company in its mouth. Next: Phase B,
+  the new beats (SYNOPSIS §10), starting with the altar as a readable
+  POI in the Nave (I.9) and the room behind the glass (III.7).
 
 ## Verified (2026-09-25, integration)
 
@@ -2076,6 +2110,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the bell, last season in the glass, the copy spotted, into Movement
   IV; 100.6 s of bot time, 1,379 words shown), and the render check at
   `RENDER_MIN_FPS=5` passed on desktop and phone, run alone.
+- Backlog A, Phase A, Movement IV (2026-10-02, night): typecheck, 507
+  tests in 41 files, the build, the play build and the stage; on a
+  fresh local world the whole spine passed over the wire (Movements I
+  to IV: Ione's last word, the ring prepared, the Passing failed at
+  readiness 52 as the bot's path earns, the credits; 22.3 s of bot
+  time in the fourth hour, 1,086 words shown), and the render check at
+  `RENDER_MIN_FPS=5` passed on desktop and phone, run alone.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2107,11 +2148,9 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    gates, the session smoke, the campaign smoke for the movement touched
    and the render check, and each recorded here:
    - **Phase A, the company in the mouth of the city** (content only;
-     Movements I, II and III landed 2026-10-02, see Done; Movement IV
-     is the next firing's work, from `SCRIPT.md` IV.1 to IV.8's lines
-     tagged revised that need no new system: Nara's `brink` with three
-     numbers and `lid`, Ord's `ring` with the bodies, the credits as
-     shipped, Caul's body on the Grid's gate tile with no line yet): the
+     done: all four movements landed 2026-10-02, see Done; what is
+     listed below and not yet in the code is Phase B's or C's, and the
+     script's tags say which): the
      company (the Concern) and its chief (Anselm Caul) named in the lines of
      Ord, Quill, Corvin Slate and Vesper Hale, on the clerks' badges and the
      vans' HUD labels, on the freeze form, the hall's lease plaque, the
@@ -2126,7 +2165,10 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      recorder's voice as Ione Kade's and the first hint moved from the lip
      to the waking in the Care (a guest hears none); Halla's hour played as
      the product; "reverie" in both of its senses.
-   - **Phase B, the new beats**: never inserted between shipped steps (a
+   - **Phase B, the new beats** (the next firing's work, one beat at a
+     time, each from `SCRIPT.md`'s lines tagged new or Phase B, with the
+     beat's header there naming the step, flag, gate or station it
+     needs): never inserted between shipped steps (a
      saved body's progress is a step index); they enter as verbs and
      dialogue on existing steps or at a movement's end. The altar as a
      readable POI in the Nave (I.9); the oval's line by serial, branched

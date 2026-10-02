@@ -719,10 +719,15 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
 function movementFourToTheRing(w0: WorldState, party: "with" | "alone"): WorldState {
   let w = w0;
   expect(snapshotFor(w, ME).npcs.some(n => n.id === "ione")).toBe(true);
+  // Caul is on the Grid's edge at its gate from the fourth hour, with no line yet; the mark Nara looks up at
+  expect(npcView({ w, p: me(w), now: w.now }, w.npcs.caul)).toMatchObject({ state: "lip", x: POSITIONS["station:caul-lip"].x, y: POSITIONS["station:caul-lip"].y });
   w = talkTo(w, ME, "ione");
   expect(me(w).dialogue?.node).toBe("offer");
+  expect(me(w).dialogue?.text, "the voice on the crate is hers").toContain("You know the voice before she speaks.");
+  expect(me(w).dialogue?.text).toContain(me(w).choices[C.MEMORIAL] === "voice" ? "You left it running." : "You took the coil out of it.");
   w = choose(w, ME, "say");
   expect(me(w).dialogue?.node).toBe("lastword");
+  expect(me(w).dialogue?.text).toContain("Reverie. The word on the crate; the word on the first form.");
   w = tick(closeAll(w, ME));
   expectStep(w, Q.M4, 1);
   expect(me(w).flags[F.MORTALITY]).toBe(1);
@@ -763,8 +768,18 @@ function movementFourToTheRing(w0: WorldState, party: "with" | "alone"): WorldSt
   expect(me(w).dialogue?.node).toBe("brink");
   expect(me(w).dialogue?.text).toContain(`Readiness ${Math.round(me(w).readiness)}`);
   expect(me(w).dialogue?.text).toContain(`floor is ${READINESS_PASSING_MIN}`);
+  expect(me(w).dialogue?.text, "three numbers").toContain(`The weather at ${Math.round(w.gestell)}. Then the bodies: ${w.clearing.heldBy.length} in the ring.`);
+  w = act(w, ME, { t: "close" });
+  expect(me(w).dialogue?.node, "her confession follows, once, with the garden in the ground").toBe("lid");
+  expect(me(w).dialogue?.text).toContain("A Clearing is a grave with the lid off.");
+  expect(me(w).dialogue?.text).toContain(me(w).choices[C.GARDEN] === "numbered" ? "You put a number on the garden." : "You left the plate blank.");
   w = closeAll(w, ME);
   expect(me(w).flags[F.BRINK]).toBe(1);
+  expect(me(w).flags[F.LID]).toBe(1);
+  w = talkTo(w, ME, "nara");
+  expect(me(w).dialogue?.node).toBe("brink");
+  w = act(w, ME, { t: "close" });
+  expect(me(w).dialogue, "the lid is said once").toBeNull();
   expect(snapshotFor(w, ME).objective?.detail).toContain(`Readiness ${Math.round(me(w).readiness)} of ${READINESS_PASSING_MIN}`);
 
   w = tick(use(w, "clearing-ring", "prepare"));
@@ -975,6 +990,8 @@ describe("the spine, played through", () => {
     expect(me(a).choices[C.PASSING]).toBe("hijack");
     expect(a.passing).toMatchObject({ count: 1, lastOutcome: "hijack", hijackedBy: "cold", lastBy: ME });
     expect(me(a).history).toMatchObject({ passings: 1, outcomes: ["hijack"] });
+    expect(me(a).heard).toContain("Cold claimed the hour. Whatever would have crossed, the recorders had it, with a margin.");
+    expect(a.news.some(n => n.text === `${me(a).name} sold their Passing. Cold claimed the hour at their Clearing; the margin has a serial in it.`)).toBe(true);
     expect(w.flags[W.PASSINGS] ?? 0).toBe(0);
     expect(a.flags[W.PASSINGS]).toBe(1);
     expect(pass(a).passing.count, "the Passing resolves once per Angel").toBe(1);
@@ -984,6 +1001,9 @@ describe("the spine, played through", () => {
     a = talkTo(a, ME, "nara");
     expect(me(a).dialogue?.node).toBe("after");
     expect(me(a).dialogue?.text).toContain("claimed the hour");
+    a = closeAll(a, ME);
+    a = talkTo(a, ME, "quill");
+    expect(me(a).dialogue?.text).toContain("Your serial is in the margin of the sky now.");
   });
 
   it("run two: keep, the voice, the end of world as world, sign the freeze, refuse the yield, bury the garden, spot the copy, every outcome", () => {
@@ -1021,6 +1041,7 @@ describe("the spine, played through", () => {
       const a = pass(ready(brink, { readiness: 65 }));
       expect(me(a).choices[C.PASSING]).toBe("absence");
       expect(a.passing).toMatchObject({ lastOutcome: "absence", hijackedBy: "" });
+      expect(me(a).wink, "the hint on an absence").toBe("You went under once and came back. The hour did the same. Neither of you arrived.");
       expect(me(a).bestand).toBe(me(brink).bestand);
       expect(a.passing.appearanceUntil).toBe(0);
     }
