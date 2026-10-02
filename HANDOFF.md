@@ -1226,7 +1226,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   dug); Nara's refusal of the company's purse (I.7); Quill's refusal to cut
   the ring's plate; the brake-and-throttle shape of the company (paid when
   the city takes and when it stops); Caul's comedy by accident; Safety's
-  Hijack given its line. `SYNOPSIS.md` is inside the content lint's roots.
+  Hijack given its line. Then read adversarially by three readers and
+  three verifiers against the code (continuity, the hard rules, the
+  shipped systems) and corrected to what the sim actually does: the
+  Passing is each angel's own press at the ring, so the launch is a
+  seasonal world window and not a date for the god; the Hijack's two
+  doors are the player's own and the contest never opens them; Failed's
+  causes listed as the resolver has them; "floor" kept for readiness and
+  "meltdown" for the weather; flags raised only by the player or the
+  weather; no earner without its sink (the glass's post pays perception,
+  the lip's offer pays nothing, the catalog sale is a listing); the
+  statues the brief names have no art, so the altars light instead; Caul
+  wears the GUEST label; the bought hour does not come, as the Kerb's
+  side hour already says; Nara's confession moved to the ring; Quill at
+  the vans, never in the hole; the cast's lies the shipped hours carry;
+  33 side quests, not 24; new beats never inserted between saved steps.
+  `SYNOPSIS.md` is inside the content lint's roots. One thing for the
+  owner, noted by a judge and left as written: the token and the
+  company's product share the name Reverie, which is the story's point
+  and a commercial decision only you can make.
 
 ## Verified (2026-09-25, integration)
 
@@ -1917,20 +1935,28 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      recorder's voice as Ione Kade's and the first hint moved from the lip
      to the waking in the Care (a guest hears none); Halla's hour played as
      the product; "reverie" in both of its senses.
-   - **Phase B, the new beats as steps**: the altar as a readable POI in
-     the Nave (I.9); the oval's line by serial in Vesper's office (II.10);
-     the room behind the glass as a step with a choice and the Kerb's
-     consequences (III.7); the catalog reversal as a step with a choice and
-     the hot-street consequence (III.8); the launch as a step kept against
-     (IV.5); the recorders at the Clearing with Caul's last offer (IV.6);
-     the Hijack outcome's altar reel for the whole server.
-   - **Phase C, the shared-world weave**: the Cable's darkening flickering
-     the altars server-wide; the listing's seller exposed by Quill; Ord's
-     figure on the news; the count of dark lights on the Kerb as world
-     state and the glass's date withheld past a threshold; the launch as a
-     scheduled world event before the season's Passing (the weather driven
-     up for the hour, the hot street flagged, the listing's buyer named);
-     the Appearance's blank tape as a server event.
+   - **Phase B, the new beats**: never inserted between shipped steps (a
+     saved body's progress is a step index); they enter as verbs and
+     dialogue on existing steps or at a movement's end. The altar as a
+     readable POI in the Nave (I.9); the oval's line by serial, branched
+     on the hour sold, in Vesper's office (II.10); the room behind the
+     glass on the Kerb, the reader's post (perception, no Bestand) or the
+     light put out as a POI verb (III.7); the catalog reversal at the
+     forge, a listing through the market or a pull that moves the price
+     (III.8); the recorders at the Grid's gate with Caul's last offer, its
+     own key beside the operator's, no payment (IV.6); Hijack written as
+     whatever would have crossed, with a margin; Nara kept at the ring
+     after an Absence; the Hijack reel per viewer and a news line.
+   - **Phase C, the shared-world weave and two named systems**: the
+     Cable's darkening flickering the altars server-wide; the listing's
+     seller exposed by Quill; Ord's figure on the news; the count of dark
+     lights on the Kerb as world state carried in the snapshot, the
+     glass's date withheld past a threshold; the launch as a world window
+     (a flag and a timer in the tick, once a season at the hour on the
+     glass: the weather raised by a bounded amount and never past meltdown
+     on its own, the hot street set hot, the listing's buyer named, skipped
+     all but the vans when the lights are dark); the Appearance's blank
+     tape as a news line naming the angel.
    - **Phase D, the side quests re-pointed**: ids kept, one change each,
      the company behind every clerk, desk, van, hour and copy they touch.
    The rules that do not move: persistent ids stay; the server owns every
