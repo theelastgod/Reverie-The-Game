@@ -1129,6 +1129,31 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   looked at from the Actions tab. No secrets, nothing on Cloudflare; the
   campaign smokes stay local (Movement I alone is a quarter of an hour).
   The README's release-checks paragraph says so.
+- The campaign bot fights like a player (2026-10-02; discovered: the whole
+  spine failed at the intake twice in three runs that day, the clerk at
+  full or near-full hp and the bot back near the spawn with 100 hp, and
+  the traced reruns showed why). Three things in `scripts/smoke-campaign.mjs`:
+  (1) `hunt` ends at once when the body wakes at its respawn point with
+  the goal far off (`dead` never shows on the wire: `killPlayer` wakes
+  the body at its respawn point the same tick), instead of spending the
+  rest of its budget walking a straight line at the enemy from the spawn
+  row; (2) the intake step walks the lane back after a fall and tries
+  again, as Desk Three has since 2026-09-27 (`extendDeadline(60)`, the
+  respawn, `walk(ROUTE.toIntake)`, a second `hunt`), the clerk by then
+  reset to full hp by its abandoned-shift rule; (3) in reach the bot
+  stands and faces the enemy instead of walking at it: a strike lands
+  only in front (`inFront`, a dot above -0.2) and the facing turns only
+  with a moving intent, so a clerk that had walked into the body and
+  stood a few px behind it was missed by every strike while the walk's 5
+  px dead zone left the facing alone (the clerk at 176 hp after a minute
+  of strikes in the rehearsal), and walking at it with no dead zone
+  overshot a step each way, the facing flipping with it, so half the
+  strikes missed and the bot fell again (clerk at 22); now the body turns
+  one step along the dominant axis only when the enemy is not in front,
+  and otherwise stands. `SMOKE_FALL_AT_INTAKE=1` rehearses the fall:
+  the bot stands in the clerk's reach until it wakes at the spawn
+  (about 13 s), then the recovery runs for real. The game did not
+  change; the bot plays it better.
 
 ## Verified (2026-09-25, integration)
 
@@ -1732,6 +1757,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   with the browser named by path (10.8 fps). One warning to carry: the
   runner forces `actions/upload-artifact@v5` from Node 20 to 24; a later
   major of that action will end it.
+- The campaign bot's fall recovery and facing (2026-10-02). The
+  rehearsal `SMOKE_FALL_AT_INTAKE=1 npm run test:campaign` on a fresh
+  world: the bot fell on purpose and woke at the spawn (264,2040), the
+  step walked the lane back, the second try felled a clerk reset to 176
+  hp and Movement I passed (the intake 21.3 s with the detour, Desk Three
+  1.1 s, the Runner 11.4 s; bot 80 s). Two earlier rehearsals, kept for
+  the record, failed as described in Done: with the body walking at the
+  clerk inside the dead zone it struck nothing (clerk 176 after the
+  budget); walking at it with no dead zone it landed half (clerk at 22
+  when the bot fell again). Then the whole spine over the wire (`npm run
+  test:campaign:4`, a fresh world, the Worker to itself): I bot 62.9 s
+  (walk 47.7, fights 12.2: intake 6.2 s, Desk Three 1.2 s, the Runner
+  4.9 s), 1520 words, 8 decisions, estimate 16.8 min; II 1367 words / 4
+  decisions / 12.5 min; III 1157 / 3 / 11.5; IV 851 / 3 / 7.4 with the
+  Passing `failed` as designed and the credits reached; about 48 min of
+  a first playthrough on the spine, 18 decisions, as before. The two
+  failed spine runs of the day before this change (14:04 and 14:20,
+  each at the intake) are the reason for it.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -1861,6 +1904,13 @@ done; the routine takes whatever it discovers, and adds what it finds.
    telegraph wins. If that is meant as the opening's first real test, it
    stands; if it is meant to be gentler, the first node's `keep` could
    carry a `heal` effect like the shrine's, a one-line content change.
+   A second observation (2026-10-02): the intake itself can take a body
+   that lets the clerk get behind it (a strike lands only in front), and
+   a body that falls there wakes at the spawn on the clerk's own row
+   while the clerk, with no fresh arrival near, resets to full hp (the
+   abandoned-shift rule) — so the second try is the whole fight again, at
+   100 hp, against 176. The bot now walks the lane back and faces what
+   it strikes (Done); for a player that is the design as written.
 6. **Movement II density: at target.** Measured 2026-09-26 over the wire
    after the sexton, Officer and tax-window beats: 12.6 min on the spine
    alone (was 7.0), 1369 words, four decisions (the corridor, the freeze,

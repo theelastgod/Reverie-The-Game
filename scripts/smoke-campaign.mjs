@@ -269,19 +269,40 @@ const walk = async (state, points) => { for (const point of points) await approa
  */
 async function hunt(state, enemyId, target, done, label, ms = 20000) {
   let strikes = null;
+  let fell = false;
   const drive = setInterval(() => {
     const p = you(state);
     if (!p || state.ws.readyState !== WebSocket.OPEN) return;
     const e = (state.snap.enemies ?? []).find(x => x.id === enemyId && x.state !== 'dead');
     const goal = e ?? target;
-    // Keep walking at it even in reach: a courier keeps walking too, and the strike lands only in front.
-    send(state, { t: 'intent', intent: { right: p.x < goal.x - 5, left: p.x > goal.x + 5, down: p.y < goal.y - 5, up: p.y > goal.y + 5 } });
+    // The body wakes at its respawn point the tick it dies (`dead` never shows on the wire): back there with the
+    // goal far off, it fell.
+    if (p.respawn && dist(p, p.respawn) < 40 && dist(goal, p.respawn) > 200) fell = true;
     const close = e && dist(p, e) < 50;
+    // Walk at it until in reach; a courier keeps walking, so the walk resumes whenever it is out of reach again. In
+    // reach, stand and face it: the strike lands only in front (the facing's dot with the way to the target above
+    // -0.2, `inFront` in combat.ts) and the facing turns only with a moving intent, so an enemy that walked into the
+    // body and stands a few px behind it was missed by every strike while the walk's 5 px dead zone left the facing
+    // alone (the intake clerk at full hp after a minute of them, 2026-10-02); and walking at it with no dead zone
+    // overshoots by a step each way, the facing flipping with it, and half the strikes miss. So the body turns only
+    // when the enemy is not in front, one step along the dominant axis, and otherwise stands.
+    const dx = goal.x - p.x, dy = goal.y - p.y;
+    let intent;
+    if (close) {
+      const f = p.facing ?? { dx: 1, dy: 0 };
+      const dot = (f.dx * dx + f.dy * dy) / (Math.hypot(dx, dy) || 1);
+      intent = dot < 0.2 ? (Math.abs(dx) >= Math.abs(dy) ? { right: dx > 0, left: dx < 0 } : { down: dy > 0, up: dy < 0 }) : {};
+    } else {
+      intent = { right: dx > 5, left: dx < -5, down: dy > 5, up: dy < -5 };
+    }
+    send(state, { t: 'intent', intent });
     if (process.env.TRACE_HUNT && Math.round(Date.now() / 100) % 5 === 0) console.log(`trace ${label}: me ${Math.round(p.x)},${Math.round(p.y)} hp ${p.hp} dead ${p.dead} respawn ${JSON.stringify(p.respawn ?? null)} | ${e ? `${e.state} hp ${e.hp} at ${Math.round(e.x)},${Math.round(e.y)}` : 'no enemy'} | close ${!!close}`);
     if (close && !strikes) { send(state, { t: 'strike' }); strikes = setInterval(() => send(state, { t: 'strike' }), 450); }
     if (!close && strikes) { clearInterval(strikes); strikes = null; }
   }, 100);
-  try { return await settle(state, done, label, ms); }
+  // A fall ends the hunt at once (false), so the step can walk back instead of spending the budget on a body that
+  // respawned elsewhere and walks a straight line at the enemy.
+  try { await settle(state, () => done() || fell, label, ms); return done(); }
   finally { clearInterval(drive); if (strikes) clearInterval(strikes); send(state, { t: 'intent', intent: {} }); }
 }
 /**
@@ -389,8 +410,29 @@ try {
   phase('walk: intake');
   await walk(me, ROUTE.toIntake);
   phase('fight: intake');
+  // SMOKE_FALL_AT_INTAKE=1 rehearses the fall below: the bot stands in the clerk's reach and lets it have it, and is
+  // fallen once it wakes at its respawn point (about 13 s: eight hits of 14 on a 1.55 s cycle).
+  if (process.env.SMOKE_FALL_AT_INTAKE) {
+    extendDeadline(60);
+    await approach(me, T.intake, 60);
+    const woke = await settle(me, () => dist(you(me), you(me).respawn) < 40, 'the bot stands and falls', 40000);
+    console.log(`note: fell on purpose at intake: ${woke ? 'woke at the spawn' : 'still standing'} (hp ${you(me).hp} at ${Math.round(you(me).x)},${Math.round(you(me).y)})`);
+    assert.ok(woke, 'the rehearsed fall happened');
+  }
   // Walk at the clerk wherever it stands (a load run may have left it dead, returning or on the far side of its leash) and strike in reach.
-  const fell = await hunt(me, 'intake-clerk', T.intake, () => !!you(me).flags.intake, 'intake clerk falls', 40000);
+  const clerkFell = () => !!you(me).flags.intake;
+  let fell = await hunt(me, 'intake-clerk', T.intake, clerkFell, 'intake clerk falls', 40000);
+  // The clerk has 176 hp and hits for 14; a bot whose strikes miss it as it moves can fall first (two runs of three on
+  // 2026-10-02). A fall respawns the guest at the spawn, on the clerk's own row, from where the hunt's straight walk east
+  // sticks on the corner the lane walks around (both failed runs ended at 349 and 409 on that row, the clerk unharmed
+  // since). A person would walk back; so does the bot, by the lane, and the clerk keeps the damage it took.
+  if (!fell && (you(me).dead || dist(you(me), T.intake) > 150)) {
+    console.log(`note: the bot fell at intake (now at ${Math.round(you(me).x)},${Math.round(you(me).y)}); walking the lane back`);
+    extendDeadline(60); // the respawn wait, the walk back and the second fight
+    await settle(me, () => !you(me).dead, 'respawned', 20000);
+    await walk(me, ROUTE.toIntake);
+    fell = await hunt(me, 'intake-clerk', T.intake, clerkFell, 'intake clerk falls, second try', 40000);
+  }
   if (!fell) {
     const p = you(me);
     const clerk = (me.snap.enemies ?? []).find(e => e.id === 'intake-clerk');
