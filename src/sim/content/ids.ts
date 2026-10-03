@@ -108,6 +108,7 @@ export const W = {
   LAUNCH_SEASON: "launchSeason", // the season whose launch window has opened (src/sim/launch.ts; the tick opens it once a season)
   LAUNCH_DARK: "launchDark", // 1 = that window opened past the threshold of dark lights: no shift, only the vans
   LAUNCH_CLIMBED: "launchClimbed", // points the weather has climbed in that window
+  LAUNCH_CLOSED: "launchClosed", // the season whose window has closed (world.ts closeLaunch: the vans leave and the hot street cools, once)
   LAUNCH_SHIFT: "launchShift", // the cable enforcer's shift (world.ts reconcileShift): 1 on shift at the Organs' node through a lit window, 2 going back after the hour, 0 at its desk
   CLERKS_DESCENT: "clerksDescent", // world time the hour clerks go back up the Kerb's stair (src/sim/descent.ts); a light put out behind the glass sets it an hour on; 0 = never
 } as const;

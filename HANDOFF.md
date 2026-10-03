@@ -88,7 +88,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Organs' node, the vans' doors open on the recorders, and Quill by the
   vans keeping the lights on; and a light put out behind the glass now
   sends the hour clerks down the Kerb's stair for the hour, for
-  everyone.
+  everyone; and when the launch's hour is out the vans leave and the hot
+  street is a street again, until the next van or pull heats it.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1825,6 +1826,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the other reading. Next in Phase C: the hot street's cool-down, the
   Houses' lost hour at Ord's map, the listing's seller exposed by Quill,
   and the journal line for readers.
+- Backlog A, Phase C, the hot street's cool-down (2026-10-03, late
+  morning): until now nothing un-hotted the street once a van, a pull or
+  the launch had made it hot. The script gives the cool-down to Phase
+  C's window and has no line for it, so it is the launch window's close:
+  once a season, when the hour is out (`launchClosing` in launch.ts,
+  `closeLaunch` in the tick, `W.LAUNCH_CLOSED` so it is taken once), the
+  vans leave and the hot street goes quiet for everyone, whoever made it
+  hot, lit window or dark. Nothing is said; the street's label ("Hot
+  street — flagged" back to "Hot street") is the city's notice. After
+  it the street is the city's to heat again: the next one to wave a van
+  through parks it with the van hour's own line, and the next pull at
+  the forge heats it with the whole news line. A street heated after the
+  close stays hot until the next season's. `SW.VAN_PARKED` is left as
+  the record that a van once parked (nothing reads it). Next in Phase
+  C: the Houses' lost hour at Ord's map, the listing's seller exposed by
+  Quill, and the journal line for readers.
 - `npm run typecheck` — client and Worker clean.
 - `npm test` — 34 files, 436 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
@@ -2713,6 +2730,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   render check, each run alone. The campaign smoke takes the reader's
   post at the glass, so the descent itself is verified in the sim, not
   over the wire.
+- Backlog A, Phase C, the hot street's cool-down (2026-10-03, late
+  morning): typecheck, 564 tests in 43 files (`launchClosing` owed once
+  the hour of a window opened this season is out, not inside it, not
+  once taken, not when no window opened; through the real tick a lit
+  window's street hot through the hour and quiet at its close for every
+  viewer, the close taken once and a street heated after it left hot, a
+  dark window's close cooling a street a pull made hot, no close before
+  any window; after the close the van hour's wave reopened and parking
+  with its line), the build, the play build and the stage, and on a
+  fresh local world the session smoke, the Movement IV campaign smoke
+  and the render check, each run alone.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2792,7 +2820,7 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      settle whether the city's figure moves the hour as Caul says (the
      window itself has landed with its remainder: see Done, "the
      launch" and "the launch's remainder"; the clerks' descent has
-     landed too, see Done; next the hot street's cool-down, the Houses' lost hour at Ord's
+     landed too, and the hot street's cool-down, see Done; next the Houses' lost hour at Ord's
      map, the listing's seller exposed by Quill, and the journal line
      for readers): the
      Cable's darkening flickering the altars server-wide; the listing's

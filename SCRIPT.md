@@ -1145,7 +1145,7 @@ The paper panel, the gold mark:
 
 **QUILL** — `forge-spot` (shipped since Phase B, the forge: the pull. Phase A's spot opened "She takes it back and does not put it on the tray." and moved nothing)
 > You pull it. She takes it back and does not put it on the tray. Look at the edge once more, so you keep the eye: dirt in the grain, or a margin. The cult hint does not list. Copies will not open the hole. The board will feel the pull. So will the street; it goes hot when a thing comes off the Grid that the Grid wanted. The tray is warm if you want to try your hand.
-[C.FORGE spot; F.FORGE; aura +1; readiness +2; the Clearing's price drops as a refusal (moveClearing("refused"), −4 today); the hot street flagged, for everyone (the `hot-street` POI set hot); news: "An Angel pulled their own hint off the Grid. The hot street is hot." *A street already hot (a van, or an earlier pull) is not made hot again, and the news says only "An Angel pulled their own hint off the Grid."; nothing cools the street yet, which is Phase C's window.*]
+[C.FORGE spot; F.FORGE; aura +1; readiness +2; the Clearing's price drops as a refusal (moveClearing("refused"), −4 today); the hot street flagged, for everyone (the `hot-street` POI set hot); news: "An Angel pulled their own hint off the Grid. The hot street is hot." *A street already hot (a van, or an earlier pull) is not made hot again, and the news says only "An Angel pulled their own hint off the Grid."; the launch window's close cools it, whoever made it hot, since Phase C, the cool-down, and a pull after that heats it again with the whole line.*]
 → `forge-plate`
 
 **QUILL** — `forge-plate` (shipped since Phase A, Movement III; follows `forge-sell` and `forge-spot` on their `next`)
@@ -1416,7 +1416,7 @@ The paper panel, the gold mark:
 
 **THE HOT STREET** — read, flagged by the window (shipped line, pois.ts; the state set by the launch)
 > A wet street. Painted on the kerb: opt in, seconds, spoils from people, not from the street. Press V to flag. Unbanked and copies drop. Cult and banked stay. Guests are not loot. In meltdown weather the street flags itself.
-[world window (shipped since Phase C, the launch and its remainder; the mast is the van's look): the hot street hot; at 91 the Grid flags itself by its own rule; the listing's buyer named; the cable enforcer at the Cable's node; the vans at the Grid's edge and the oval on a mast; all but the vans skipped past the dark-light threshold; news (new): "The launch. The Concern stopped selling. The weather is climbing on every meter." / dark: "The vans are on the Grid. The glass had no hour to give them."]
+[world window (shipped since Phase C, the launch and its remainder; the mast is the van's look): the hot street hot (until the window's close, which cools it, whoever made it hot, since Phase C, the cool-down; nothing is said, the street's label is the notice); at 91 the Grid flags itself by its own rule; the listing's buyer named; the cable enforcer at the Cable's node; the vans at the Grid's edge and the oval on a mast; all but the vans skipped past the dark-light threshold; news (new): "The launch. The Concern stopped selling. The weather is climbing on every meter." / dark: "The vans are on the Grid. The glass had no hour to give them."]
 
 ### IV.6 The recorders
 *New beat, shipped since Phase B, the lip; no step inserted: Caul's lines land as dialogue during `stance` and `passing` (he is silent on the lip until the hole is kept, F.PREPARE), and the offer writes its own key beside the operator's (C.LIP, read by the Passing's resolver as the operator's key is). The lip: the Grid's gate to the Clearing (`gate-wet-clearing`), the tile where the city stops a guest, the ring in sight below. `sprites/guest`, `guest.jpg`, no halo, no aura, the label GUEST; his name is in the prompt and the dialogue only. The synopsis names `plate-operator.jpg`, the same desk's plate; the journal shows the step's `clearing-ring.jpg`, since a line carries no plate. A guest can stand beside him; an Angel can; nobody can strike him.*
@@ -1798,7 +1798,7 @@ The paper panel, the gold mark:
 **THE STREET** — `hot-street` wave the van through, `side:van:wave` (shipped; side-pois.ts)
 > You step aside. The van takes the corner and parks across the mouth of the street. Doors stay shut. The street is a different temperature now.
 ✦ *It looks like freedom. It is a stall with wheels. The street it parks on stops being a street.* (shipped; side.ts; Angels only)
-[poi `hot-street` hot, for everyone; SW.VAN_PARKED; news "An armored van parked on the wet street. The street went hot."]
+[poi `hot-street` hot, for everyone; SW.VAN_PARKED; news "An armored van parked on the wet street. The street went hot."; the launch window's close cools it (since Phase C, the cool-down), and the next one to wave a van through parks it again with this line]
 *Skipped when the street is already hot (another van, or a pulled print, III.8): the step closes on its own, with no van parked, no news and no Wink; only the hour's closing notice is said.*
 
 ### side-wet-copy-of-a-hole — A copy of a hole

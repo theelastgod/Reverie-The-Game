@@ -541,6 +541,22 @@ describe("the armored van on a street already hot", () => {
     expect(w.pois["hot-street"], "the street's mark stands as it was").toEqual({ state: "hot", by: "someone", at: 1, count: 1 });
     expect(me(w).notices.some(n => n.text === "The street is hot. Flags are raised here now. Guests are not loot.")).toBe(true);
   });
+
+  it("is a street again after the launch's close: the next one to wave a van through parks it, with its line", () => {
+    let w = world({ id: SQ.VAN, at: "stall-4", steps: [], check: () => undefined });
+    // hot through the window; its close cools it
+    w = { ...w, pois: { ...w.pois, "hot-street": { state: "hot", by: "someone", at: 1, count: 1 } }, flags: { ...w.flags, [W.LAUNCH_SEASON]: w.season.id } };
+    w = tick({ ...w, now: launchMoment(w) + LAUNCH_WINDOW });
+    expect(w.pois["hot-street"].state).toBe("quiet");
+    w = tick(goTo(w, ME, "stall-4"));
+    w = perform(w, poi("stall-4", "side:van:ask"));
+    w = tick(w, 2);
+    expect(questProgress(me(w), SQ.VAN).step, "the wave is the street's again to ask for").toBe(1);
+    w = perform(w, poi("hot-street", "side:van:wave"));
+    w = tick(w, 2);
+    expect(w.pois["hot-street"].state).toBe("hot");
+    expect(w.news.map(n => n.text)).toContain("An armored van parked on the wet street. The street went hot.");
+  });
 });
 
 describe("the bought hour that does not come", () => {
@@ -724,6 +740,31 @@ describe("the launch window (IV.5), opened by the tick once a season", () => {
     const reel = interact(goTo(w, ME, "crt-altar-2"), "crt-altar-2", "watch");
     expect(me(reel).heard).toContain("No count. The vans are on the Grid anyway.");
     expect(me(reel).dialogue, "no voice on a dark reel").toBeNull();
+  });
+
+  it("cools the hot street at the window's close, once a season, whoever made it hot, lit or dark", () => {
+    const hot = (x: WorldState): WorldState => ({ ...x, pois: { ...x.pois, "hot-street": { state: "hot", by: "someone", at: 1, count: 2 } } });
+    // lit: the launch keeps the street hot through the hour; the close cools it and is taken once
+    let w = tick(eve());
+    expect(w.pois["hot-street"].state).toBe("hot");
+    w = tick({ ...w, now: launchMoment(w) + LAUNCH_WINDOW - 1 });
+    expect(w.pois["hot-street"].state, "hot through the hour").toBe("hot");
+    w = tick({ ...w, now: launchMoment(w) + LAUNCH_WINDOW });
+    expect(w.pois["hot-street"]).toMatchObject({ state: "quiet", by: "" });
+    expect(w.flags[W.LAUNCH_CLOSED]).toBe(w.season.id);
+    expect(snapshotFor(w, ME).pois.find(p => p.id === "hot-street")?.state, "every viewer sees the street cool").toBe("quiet");
+    // a street heated again after the close (a pull, a van) stays hot until the next season's close
+    const again = tick(hot(w), 3);
+    expect(again.pois["hot-street"].state).toBe("hot");
+    // dark: no launch heat, but a street a pull made hot cools all the same
+    let dark = tick(hot(eve(DARK_LIGHTS_THRESHOLD)));
+    expect(launchDark(dark)).toBe(true);
+    dark = tick({ ...dark, now: launchMoment(dark) + LAUNCH_WINDOW });
+    expect(dark.pois["hot-street"].state).toBe("quiet");
+    // before any window this season, a hot street stays hot
+    const early = tick(hot({ ...eve(), now: launchMoment(eve()) - 3600 }), 3);
+    expect(early.pois["hot-street"].state).toBe("hot");
+    expect(early.flags[W.LAUNCH_CLOSED]).toBeUndefined();
   });
 
   it("never takes the weather into the meltdown band on its own, and spends a blocked point instead of saving it", () => {

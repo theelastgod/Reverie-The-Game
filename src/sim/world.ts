@@ -22,7 +22,7 @@ import { initialClearing, initialPassing, tickClearing } from "./clearing";
 import { resolveHeavy, tickCombatTimers, tickEnemies } from "./combat";
 import { tickQuests } from "./quests";
 import { openNode } from "./dialogue";
-import { glassDark, inLaunchHour, launchClimb, launchDue } from "./launch";
+import { glassDark, inLaunchHour, launchClimb, launchClosing, launchDue } from "./launch";
 import { reconcileDescent } from "./descent";
 import * as LINES from "./content/lines";
 
@@ -384,6 +384,7 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
  */
 function tickLaunch(w: WorldState): WorldState {
   w = reconcileShift(w);
+  if (launchClosing(w)) w = closeLaunch(w);
   const due = launchDue(w);
   if (due === "climb") return { ...w, gestell: launchClimb(w.gestell), flags: { ...w.flags, [W.LAUNCH_CLIMBED]: (w.flags[W.LAUNCH_CLIMBED] ?? 0) + 1 } };
   if (due !== "open") return w;
@@ -409,6 +410,17 @@ function tickLaunch(w: WorldState): WorldState {
 }
 
 const HOT_STREET = "hot-street";
+
+/**
+ * The window's close, once a season (III.8's cool-down, Phase C's window): the hour is out, the vans leave the Grid, and
+ * the hot street is a street again, whoever made it hot (the launch, a van waved through, a print pulled off the Grid).
+ * Nothing is said: the street's label is the city's only notice, and the next van or pull heats it with its own line.
+ */
+function closeLaunch(w: WorldState): WorldState {
+  const street = w.pois[HOT_STREET];
+  const pois = street && street.state === "hot" ? { ...w.pois, [HOT_STREET]: { ...street, state: "quiet", by: "", at: w.now } } : w.pois;
+  return { ...w, pois, flags: { ...w.flags, [W.LAUNCH_CLOSED]: w.season.id } };
+}
 const SHIFT_ENEMY = "cable-enforcer";
 const SHIFT_POST = "organ-node-cable";
 

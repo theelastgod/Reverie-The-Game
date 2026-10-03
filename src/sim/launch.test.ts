@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DARK_LIGHTS_THRESHOLD, GESTELL_MELTDOWN, LAUNCH_CLIMB_EVERY, LAUNCH_CLIMB_MAX, LAUNCH_OFFSET, LAUNCH_WINDOW, SEASON_LENGTH } from "./constants";
 import { W } from "./content/ids";
-import { LAUNCH_CEILING, countdown, darkLights, glassDark, inLaunchHour, launchClimb, launchDark, launchDate, launchDue, launchOpen, nextLaunch } from "./launch";
+import { LAUNCH_CEILING, countdown, darkLights, glassDark, inLaunchHour, launchClimb, launchDark, launchDate, launchClosing, launchDue, launchOpen, nextLaunch } from "./launch";
 import { weatherBand } from "./protocol";
 
 const at = (now: number, season = 1, startedAt = 0) => ({ now, season: { id: season, startedAt } });
@@ -74,6 +74,19 @@ describe("the launch window", () => {
     expect(launchDue(w(at + 10, opened, GESTELL_MELTDOWN - 1))).toBe("climb");
     expect(launchDue(w(at + 10, { ...opened, [W.LAUNCH_DARK]: 1 })), "a dark window has no shift").toBeNull();
     expect(launchDue(w(at + LAUNCH_WINDOW, opened))).toBeNull();
+  });
+});
+
+describe("launchClosing", () => {
+  const w = (now: number, flags: Record<string, number>) => ({ ...at(now), flags });
+  it("is owed once the hour of a window this season opened is out, and not again once taken", () => {
+    const opened = { [W.LAUNCH_SEASON]: 1 };
+    expect(launchClosing(w(LAUNCH_OFFSET + LAUNCH_WINDOW - 1, opened)), "inside the hour").toBe(false);
+    expect(launchClosing(w(LAUNCH_OFFSET + LAUNCH_WINDOW, opened))).toBe(true);
+    expect(launchClosing(w(LAUNCH_OFFSET + LAUNCH_WINDOW + 3600, opened)), "late is still owed").toBe(true);
+    expect(launchClosing(w(LAUNCH_OFFSET + LAUNCH_WINDOW, { ...opened, [W.LAUNCH_CLOSED]: 1 })), "taken").toBe(false);
+    expect(launchClosing(w(LAUNCH_OFFSET + LAUNCH_WINDOW, {})), "never opened this season").toBe(false);
+    expect(launchClosing(w(LAUNCH_OFFSET + LAUNCH_WINDOW, { [W.LAUNCH_SEASON]: 1, [W.LAUNCH_CLOSED]: 0 }))).toBe(true);
   });
 });
 
