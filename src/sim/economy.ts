@@ -39,7 +39,7 @@ import {
 } from "./constants";
 import type { Claim, Item, Listing, Player, WorldState, YieldNode } from "./types";
 import { NODE_LIST, nearPoint } from "./map";
-import { EARNERS, SINKS, W, keptIn } from "./content/ids";
+import { EARNERS, F, SINKS, W, keptIn } from "./content/ids";
 import { LINES } from "./content";
 import { pushNews, say } from "./world";
 import { perception } from "./houses";
@@ -432,7 +432,11 @@ export function applyMarket(
       // A fee kept back at the stall comes out of the sale, and the seller hears the figure; the sale itself is counted on them.
       const kept = Math.min(listing.fee ?? 0, listing.price);
       const soldKey = `sold:${listing.item.id}`;
-      let paidSeller: Player = { ...seller, banked: seller.banked + listing.price - kept, flags: { ...seller.flags, [soldKey]: (seller.flags[soldKey] ?? 0) + 1 } };
+      let paidSeller: Player = {
+        ...seller,
+        banked: seller.banked + listing.price - kept,
+        flags: { ...seller.flags, [soldKey]: (seller.flags[soldKey] ?? 0) + 1, ...(listing.forge ? { [F.FORGE_SOLD]: 1 } : {}) },
+      };
       if (kept > 0) paidSeller = say(paidSeller, MARKET_SOLD_FEE_KEPT(listing.price, kept), w.now);
       next = setPlayer(next, paidSeller);
       if (kept > 0) next = bumpFlag(next, "sunk:listing", kept);
@@ -479,6 +483,7 @@ export function listOwn(w: WorldState, id: string, item: Item, price: number): W
     price: bounded,
     at: w.now,
     ...(kept > 0 ? { fee: kept } : {}),
+    forge: true, // the forge is the only caller: its sale is what Quill reads after the lesson
   };
   return { ...base, market: [...base.market, listing] };
 }

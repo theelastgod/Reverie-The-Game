@@ -261,9 +261,10 @@ const NO_FAILED: FailedPassing[] = [];
 const nodeView = (n: YieldNode, now: number): NodeView => ({ ...n, safe: n.announcedUntil > now });
 
 const publicListing = (l: Listing): Listing => {
-  if (l.fee === undefined) return l;
+  if (l.fee === undefined && l.forge === undefined) return l;
   const pub = { ...l };
   delete pub.fee;
+  delete pub.forge;
   return pub;
 };
 

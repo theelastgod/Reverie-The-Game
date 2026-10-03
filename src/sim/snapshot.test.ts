@@ -213,13 +213,14 @@ describe("snapshotFor", () => {
     w = {
       ...w,
       market: [
-        { id: "listing:a:0:1", sellerId: "a", sellerName: "#0042", item: print, price: 9, at: 0, fee: 2 },
+        { id: "listing:a:0:1", sellerId: "a", sellerName: "#0042", item: print, price: 9, at: 0, fee: 2, forge: true },
         { id: "listing:city:clearing", sellerId: "", sellerName: "the resistance", item: { ...print, id: "city:clearing", name: "A Clearing" }, price: 40, at: 0 },
       ],
     };
     const market = snapshotFor(w, "a").market;
     expect(market.map(l => l.id)).toEqual(["listing:city:clearing", "listing:a:0:1"]);
     expect(market[1]).not.toHaveProperty("fee");
+    expect(market[1], "whose listing the forge posted is the seller's business").not.toHaveProperty("forge");
     expect(market[1]).toMatchObject({ sellerId: "a", price: 9 });
     expect(w.market[0].fee, "the record keeps it").toBe(2);
   });

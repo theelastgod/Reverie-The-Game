@@ -294,18 +294,30 @@ describe("side quests", () => {
   });
 
   it("a step that sends the body to a place names a key that place answers to (III.1: the Strait's second column is a Q)", () => {
+    // The body stands at the step: the verbs that answer there are the live ones (their `when`, a spent `once`), and the hour's own
+    // (`side:`) verbs first, so a spine verb on the same key at the same place cannot stand in for the one the step means.
+    let checked = 0;
+    const misses = new Set<string>();
     for (const q of SIDE) {
-      for (const s of q.steps) {
+      q.steps.forEach((s, i) => {
         for (const ctx of variants()) {
-          const target = typeof s.target === "function" ? s.target(ctx) : s.target;
+          const at = { ...ctx, p: { ...ctx.p, quests: { ...ctx.p.quests, [q.id]: i } } };
+          const target = typeof s.target === "function" ? s.target(at) : s.target;
           const verbs = [...(POI_CONFIGS[target!]?.verbs ?? []), ...(SIDE_POI_VERBS[target!] ?? [])];
           if (!verbs.length) continue; // a person or a place with no verbs of its own: E or the fight answers
-          const detail = typeof s.detail === "function" ? s.detail(ctx) : s.detail;
+          const live = verbs.filter(v => !(v.once && (at.p.flags[v.once] ?? 0) > 0) && (!v.when || v.when(at)));
+          // a place with side verbs is answered by them alone; one without is a spine verb's place the hour points at
+          const candidates = (SIDE_POI_VERBS[target!]?.length ? live.filter(v => v.choice.startsWith("side:")) : live);
+          if (!candidates.length) continue; // nothing answers this body here yet (a gate the variant does not pass)
+          const detail = typeof s.detail === "function" ? s.detail(at) : s.detail;
           const key = detail.match(/press ([FEQ])\b/i)![1].toUpperCase();
-          expect(verbs.map(v => v.key), `${q.id}/${s.id}: "Press ${key}" at ${target}`).toContain(key);
+          if (!candidates.some(v => v.key === key)) misses.add(`${q.id}/${s.id}: "Press ${key}" at ${target} (${candidates.map(v => `${v.key}:${v.choice}`).join(", ")})`);
+          checked++;
         }
-      }
+      });
     }
+    expect([...misses]).toEqual([]);
+    expect(checked, "most steps that point at a place are checked against a live verb").toBeGreaterThan(40);
   });
 
   it("each change category has at least six quests whose effects do it, and every quest does what it says", () => {

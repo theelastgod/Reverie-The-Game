@@ -56,6 +56,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   dark-light switch per city or per season, whether the city's figure
   moves the launch's hour, and whether the clerks' descent lasts an hour
   from the light (as built) or to the end of the clock hour.
+- **Length, since the script landed** (Backlog 5–8, 2026-10-03): the
+  spine alone now runs about 59 minutes over the wire (I 17.5, II 13.2,
+  III 18.3, IV 9.8) with 19 decisions, up from 48. Movement III is past
+  its 10–12 minute proposal at 18 because the script's third hour (the
+  room behind the glass, Caul, the forge's reversal) is long; nothing was
+  cut, since the synopsis wins. Whether its target moves or the third
+  hour is trimmed is yours to say.
 - **The story is now `SYNOPSIS.md`** (your brief of 2026-10-02, the
   afternoon). The enemy has a name and a shape: the Concern, the company
   that owns the numbers, and Anselm Caul, its chief, who is a guest (he
@@ -1957,6 +1964,29 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   place answers to (the Strait's second column is a Q; the listing
   fee's stalls are Q, not E), for the spine and every side hour.
 
+- The movements audit's review (2026-10-03, evening): four lenses over
+  efec59d (the sim, the script's words, the client, the tests' strength)
+  with a skeptic per finding; five confirmed and fixed. Quill's line
+  after the forge said "It sold." when the forge's print had been taken
+  back down by a body that had sold an earlier copy by hand: the sale
+  is now the forge listing's own (`Listing.forge`, set by `listOwn`,
+  kept by the save's migration and off the wire; a buy of it raises
+  `F.FORGE_SOLD`). Under reduced motion the longer credits roll was
+  centred past the screen's edges, the script's last line cut off on a
+  laptop and printed under the return hint on a phone: the roll now
+  stands still inside the dialog, which scrolls (wheel, End, PageDown),
+  with the hint pinned clear of it. The glass, the board and the desk
+  were tagged as saying a guest's line they never say (a spectated verb
+  answers with LINES.SPECTATOR); retagged. And both new key checks were
+  too weak to catch the bug they named: the side hours' check now asks
+  the verb that answers the body standing at that step, and the spine's
+  reads every key letter its detail names. The stronger side check
+  found seven more journal hints naming E where the hour's verb is Q:
+  the armored van's ask (E at the van stall buys insurance), the warm
+  tray's bank and take (E there crafts and spends), the standing hour's
+  funeral, and the cult upkeep's three shrines. SCRIPT.md's legend now
+  defines every placeholder the script uses.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -2904,6 +2934,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Movements I–IV, outcome failed at readiness 52), and the render
   check; the credits roll read in Chromium from the staged page (the
   mark, the title, seven lines of prose).
+- The movements audit's review (2026-10-03, evening): typecheck, 591
+  tests in 43 files (the forge's mark through list, buy, migrate and the
+  wire; Quill's two cases; every side step's key against the live verb
+  at that step, 40-plus checked; the spine's 20-plus keys), the build,
+  the play build and the stage, and on a fresh local world the session
+  smoke, `test:campaign:4` (Movements I–IV, outcome failed at readiness
+  52) and the render check. The reduced-motion credits read in Chromium
+  from the staged page, entered past the title, at 1366×657, 360×640,
+  375×553, 320×568 and 1920×969: the last line on the screen and clear
+  of the hint at each, by End's scroll at 320×568.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -3107,7 +3147,11 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    zones or a smaller area of interest, not for more diet. Zone objects
    with handoff at the gates stay behind `ZONES=0`, designed in
    `.rebuild/ZONES.md`, and only when a real population asks.
-5. **Opening density.** Measured 2026-09-26 after the Annex Runner courier
+5. **Opening density.** Re-measured 2026-10-03 after Backlog A (the
+   movements audit, two fresh-world runs of `test:campaign:4`): estimate
+   17.5–17.7 min, 1665 words (dialogue 818, spoken 278, journal 416,
+   notices 153), eight decisions; inside the 15–20 target. Earlier:
+   measured 2026-09-26 after the Annex Runner courier
    beat (`scripts/smoke-campaign.mjs` prints `measure:` lines; a later fight
    is floored at 25 s of a person's time, the first at 45 s; keep only runs
    without a `spent` note): bot 67 s (walk 48 s, three fights 16 s, talk
@@ -3134,7 +3178,9 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    abandoned-shift rule) — so the second try is the whole fight again, at
    100 hp, against 176. The bot now walks the lane back and faces what
    it strikes (Done); for a player that is the design as written.
-6. **Movement II density: at target.** Measured 2026-09-26 over the wire
+6. **Movement II density: at target.** Re-measured 2026-10-03 after
+   Backlog A: 13.2 min on the spine alone, 1497 words, four decisions,
+   77 s of bot walking; inside 12–15. Earlier: measured 2026-09-26 over the wire
    after the sexton, Officer and tax-window beats: 12.6 min on the spine
    alone (was 7.0), 1369 words, four decisions (the corridor, the freeze,
    the tithe, the yield); 78 s of bot walking. Inside the 12–15 min target
@@ -3144,7 +3190,16 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    has a number you can watch in the ledger and the news. Nothing further
    is planned here; re-measure after any change to Movement II and keep
    the numbers here.
-7. **Movement III density: at target.** Measured 2026-09-26 over the wire
+7. **Movement III density: over its proposal since the script landed.**
+   Re-measured 2026-10-03 after Backlog A: 18.3–18.4 min on the spine
+   alone, 2221–2242 words (dialogue about 1520), four decisions (the
+   glass is now one), 110 s of bot walking. The 10–12 min proposal below
+   was set before `SCRIPT.md`: the room behind the glass, Caul, the
+   catalog's reversal at the forge and the lines that name the Concern
+   added about a thousand words. The synopsis wins, so nothing is cut;
+   whether Movement III's target moves to the script's length or the
+   script's third hour is trimmed is the owner's call (noted in the
+   status block). Earlier: measured 2026-09-26 over the wire
    after the cut, the plate and the bell (`npm run test:campaign:3`): 11.5
    min on the spine alone (was 7.5), 1157 words (was 723), three decisions
    (Ord's cut, Nara's plate, Quill's forge; was one), 103 s of bot walking
@@ -3155,8 +3210,13 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    the spine; Ord's cut now points at them without forcing them. Nothing
    further is planned here; re-measure after any change to Movement III and
    keep the numbers here. Movement IV is measured (Backlog 8).
-8. **Movement IV density: at target; the spine alone still cannot reach
-   the rite, and says so.** Measured 2026-09-26 over the wire after the
+8. **Movement IV density: over its 6–8 min shape since the script, and the
+   spine alone still cannot reach
+   the rite, and says so.** Re-measured 2026-10-03 after Backlog A:
+   9.6–9.8 min on the spine alone, 1176–1197 words, three decisions, the
+   Passing `failed` at readiness 52 as before; the whole campaign is now
+   about 59 minutes of a first playthrough on the spine alone (I 17.5, II
+   13.2, III 18.3, IV 9.8) with 19 decisions. Earlier: measured 2026-09-26 over the wire after the
    readiness read, the stance step, Nara at the brink and Ord at the Care
    gate (`npm run test:campaign:4`, fresh local world): 7.3 min on the
    spine alone (was 3.0), 851 words (was 309), three decisions (the last

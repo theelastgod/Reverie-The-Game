@@ -38,7 +38,7 @@ import {
   RESTRAINT_KEEP_GAIN,
   RESTRAINT_START,
 } from "./constants";
-import { EARNERS, SINKS, W } from "./content/ids";
+import { EARNERS, F, SINKS, W } from "./content/ids";
 import { NODE_LIST } from "./map";
 import {
   EARNER_SINKS,
@@ -444,7 +444,7 @@ describe("market", () => {
     // the purse has the fee: spent at once, nothing kept back
     w = listOwn(w, "s", copy(), 9);
     expect(w.market).toHaveLength(1);
-    expect(w.market[0]).toMatchObject({ sellerId: "s", sellerName: "#0001", price: 9, item: { id: ITEM_COPY_WINK, qty: 1 } });
+    expect(w.market[0]).toMatchObject({ sellerId: "s", sellerName: "#0001", price: 9, item: { id: ITEM_COPY_WINK, qty: 1 }, forge: true });
     expect(w.market[0].fee).toBeUndefined();
     expect(you(w, "s").bestand).toBe(10 - LISTING_FEE);
     expect(you(w, "s").items, "the thing never passed through the hands").toHaveLength(0);
@@ -479,7 +479,14 @@ describe("market", () => {
     const bought = applyMarket(w, "b", "buy", { listingId: w.market[0].id });
     expect(you(bought, "q").heard).toBe(`Your print sold at 9. The stall kept its fee, ${LISTING_FEE}. The rest is banked.`);
     expect(you(bought, "q").flags["sold:copy:wink"]).toBe(1);
+    expect(you(bought, "q").flags[F.FORGE_SOLD], "the forge's own listing sold").toBe(1);
     expect(you(bought, "b").heard).toBe("Bought for 9. A copy travels. The hole does not.");
+    // a copy listed by hand at the stall is counted, and is not the forge's
+    const byHand = applyMarket(makeWorld([makePlayer({ id: "h", bestand: 10, items: [copy()] }), buyer]), "h", "list", { itemId: ITEM_COPY_WINK, price: 9 });
+    expect(byHand.market[0].forge).toBeUndefined();
+    const soldByHand = applyMarket(byHand, "b", "buy", { listingId: byHand.market[0].id });
+    expect(you(soldByHand, "h").flags["sold:copy:wink"]).toBe(1);
+    expect(you(soldByHand, "h").flags[F.FORGE_SOLD]).toBeUndefined();
     // a fee paid at the tray: the seller hears nothing new on the sale, and the cancel's line is the plain one
     const rich = listOwn(makeWorld([makePlayer({ id: "s", bestand: 10 }), buyer]), "s", copy(), 9);
     expect(you(applyMarket(rich, "b", "buy", { listingId: rich.market[0].id }), "s").heard).toBe("");

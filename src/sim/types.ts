@@ -237,7 +237,8 @@ export type HouseWar = {
 };
 
 /** `fee` is a listing fee kept back from the sale (or charged on the cancel) when the seller could not pay it at the stall. */
-export type Listing = { id: string; sellerId: string; sellerName: string; item: Item; price: number; at: number; fee?: number };
+// forge: posted by Quill's forge through the `list` effect; its sale, and only its, is the one her line after the forge reads (F.FORGE_SOLD)
+export type Listing = { id: string; sellerId: string; sellerName: string; item: Item; price: number; at: number; fee?: number; forge?: true };
 
 export type ClearingState = {
   open: boolean;

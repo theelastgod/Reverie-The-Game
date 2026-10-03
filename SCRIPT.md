@@ -13,7 +13,7 @@
 - [square brackets] are the consequences that matter to the drama: a flag, a choice remembered, readiness, aura, Bestand with its sink, a news line, a world state.
 - Things that speak get a speaker label too: **THE PLAQUE**, **THE RECORDER**, **THE ALTAR**, **THE OVAL**, **THE GLASS**, **THE BELL**, **THE FORM**, **THE DESK**, **THE BOARD**, **THE RING**, with their verb in place of a node id.
 - The player is `#SERIAL`, never a name. An unsealed arrival has no name at all; a clerk writes one in a ledger before they have struck anyone.
-- {braces} are the server's numbers and words: `{yield}`, `{tax}`, `{rate}`, `{figure}` (the weather), `{price}`, `{fee}`, `{count}`, `{readiness}`, `{bodies}`, `{band}` and `{drift}` (the glass's), `{number}` (the slip's), `{House}`, `{name}` (the Angel the news names). The script never fixes them; the server owns every number.
+- {braces} are the server's numbers and words: `{yield}`, `{tax}`, `{rate}`, `{figure}` (the weather), `{price}`, `{fee}`, `{count}`, `{readiness}`, `{bodies}`, `{band}` and `{drift}` (the glass's), `{number}` (the slip's), `{House}`, `{name}` (the Angel the news names), `{weather}` (the same figure as `{figure}`, in Nara's and the readiness read's mouth), `{n}` (a plain count the glass reads out: the season's number in its date, the city's figure and the count in the hole for a reader), `{date}` and `{countdown}` (the glass's next hour, "season {n}, day 7, 00:00", and the count to it, "{d}d {hh}:{mm}:{ss}"), `{dark}` (the lights out on the Kerb), `{seconds}` (the asphalt's setting time at the ring) and `{pay}` (the Clearing's extraction). The script never fixes them; the server owns every number.
 - The party is written by first name (**NARA**, **QUILL**, **ORD**) and the chief by his surname (**CAUL**); everyone else by their full name. *(revised: ...)* says in a few words what changed from the shipped line; *(new, Phase B)* or *(Phase C)* says which phase of HANDOFF Backlog A lands it when it is not plain dialogue.
 - The appendix carries every side hour whole: who offers it, each verb's line in step order, its branches, its Wink, the report back, and the one line Phase D changes, tagged. The five who hand them out appear twice: in the movement where the spine meets them and in the appendix with their hours.
 
@@ -571,7 +571,7 @@ The paper panel, the gold mark:
 [F.HISTORY; readiness +2]
 
 ### II.8 The sky is already priced
-*Step `board` (shipped). The listing board on the Wet Grid by Quill's forge tray, where she stands from the going-under on. Plate `clearing-stall.jpg`. Angels only; a guest at the board spectates ("A stall of lights. You cannot afford a sky you cannot see."). Reversal.*
+*Step `board` (shipped). The listing board on the Wet Grid by Quill's forge tray, where she stands from the going-under on. Plate `clearing-stall.jpg`. Angels only; a guest at the board spectates and hears LINES.SPECTATOR (the board's own line, "A stall of lights. You cannot afford a sky you cannot see.", is in lines.ts, SPECTATOR_LINES, but not said). Reversal.*
 
 **QUILL** — `board-hint` (shipped; from the waking until the board is read)
 > You went under. You have the eyes now. The listing board is by my old stall on the Grid. Read it. Then tell me it is not funny.
@@ -675,7 +675,7 @@ The paper panel, the gold mark:
 [forecast-glass lit]
 
 ### II.10 The private hour
-*Steps `operator` and `door` (shipped). Vesper Hale's office at the south-east of the Wet Grid, the oval light on her wall; then the Organs door east of the Grid, or the wreckage garden in the Care. Plates `plate-operator.jpg`, then `plate-m3.jpg`. Angels only; a guest at the desk spectates ("A woman at a desk. She is not speaking to you."). Caul speaks to you by serial for the first time.*
+*Steps `operator` and `door` (shipped). Vesper Hale's office at the south-east of the Wet Grid, the oval light on her wall; then the Organs door east of the Grid, or the wreckage garden in the Care. Plates `plate-operator.jpg`, then `plate-m3.jpg`. Angels only; a guest at the desk spectates and hears LINES.SPECTATOR (the desk's own line, "A woman at a desk. She is not speaking to you.", is in lines.ts, SPECTATOR_LINES, but not said). Caul speaks to you by serial for the first time.*
 
 **VESPER HALE** — `dark` (shipped; she does not price what the city cannot see)
 > Vesper Hale does not price what the city cannot see. She does not look up. Come back with an aura on you and she will tell you what your hour is worth.
@@ -1037,7 +1037,7 @@ The paper panel, the gold mark:
 > You stand over it. Last season's Passing failed here, south-east of the seed ground. The hour went by. The city kept the weather. The recorders stood where it went. You did not loot it.
 [F.FAILED; readiness +2]
 
-**THE GLASS** — for a guest (shipped, lines.ts)
+**THE GLASS** — for a guest (in lines.ts, SPECTATOR_LINES, but not said: a guest is offered `Read the forecast` (and `Face last season` from the third hour), both spectated, and refused with LINES.SPECTATOR, interact.ts)
 > Glass. You do not see the front.
 
 **CAUL** — in person, `guest` (shipped since Phase B, first beats; a guest on the Kerb finds him here, elsewhere the altar's body), to an unsealed body in the room

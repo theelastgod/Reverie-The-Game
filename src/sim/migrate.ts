@@ -66,6 +66,7 @@ function listing(v: unknown): Listing | null {
     price: num(v.price, LISTING_PRICE_MIN, LISTING_PRICE_MIN, LISTING_PRICE_MAX),
     at: num(v.at, 0, 0),
     ...(fee > 0 ? { fee } : {}),
+    ...(v.forge === true ? { forge: true as const } : {}),
   };
 }
 

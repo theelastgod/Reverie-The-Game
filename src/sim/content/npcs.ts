@@ -473,7 +473,7 @@ const QUILL_NODES: Record<string, DialogueNode> = {
     text: (ctx) => {
       if (chose(ctx, C.FORGE, "spot")) return "You keep the eye. Every print on the Grid looks a little worse to you now. That is what learning costs. E at the tray crafts a copy anyway, if you want to know how it feels.";
       if (ctx.w.market.some(l => l.sellerId === ctx.p.id && l.item.id === "copy:wink")) return "Your hint is on the board. It has not sold yet. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.";
-      if ((ctx.p.flags["sold:copy:wink"] ?? 0) > 0) return "It sold. The price went to your bank and the fee stayed with me. Somebody on the Grid has your hint by now, and the hole has none of it. I am not judging. I am counting.";
+      if (has(ctx, F.FORGE_SOLD)) return "It sold. The price went to your bank and the fee stayed with me. Somebody on the Grid has your hint by now, and the hole has none of it. I am not judging. I am counting.";
       if (ctx.p.items.some(i => i.id === "copy:wink")) return "You took it down. You hold the print. It is thinning already. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.";
       return "It is off the board. Taken down to the tray, or decayed to nothing; the board does not say which and I do not ask. The fee was mine either way. E at the tray crafts a copy anyway, if you want to know how it feels.";
     },

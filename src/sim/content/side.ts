@@ -405,7 +405,7 @@ const WET: Quest[] = [
       step({
         id: "ask",
         title: "Ask about the van",
-        detail: "Stall four sells vans. Press E and ask what they carry.",
+        detail: "Stall four sells vans. Press Q and ask what they carry.",
         target: "stall-4",
         plate: "stall-surface.jpg",
         done: ({ p }) => has(p, SF.VAN_ASKED),
@@ -510,7 +510,7 @@ const WET: Quest[] = [
       step({
         id: "bank",
         title: "Bank the coals",
-        detail: "Quill's tray goes cold between prints. Press E to bank the coals so the spotted hint keeps.",
+        detail: "Quill's tray goes cold between prints. Press Q to bank the coals so the spotted hint keeps.",
         target: "forge-tray",
         plate: "plate-forge.jpg",
         // Your own hands on the coals, not the shared tray: a warm tray someone else banked does not do this hour for you.
@@ -520,7 +520,7 @@ const WET: Quest[] = [
       step({
         id: "take",
         title: "Take the hint that does not list",
-        detail: "It is on the tray. Press E. It will not go to market because it cannot.",
+        detail: "It is on the tray. Press Q. It will not go to market because it cannot.",
         target: "forge-tray",
         plate: "plate-forge.jpg",
         done: ({ p }) => has(p, SF.TRAY_TAKEN),
@@ -662,7 +662,7 @@ const CARE: Quest[] = [
       step({
         id: "funeral",
         title: "Pay for an unnamed funeral",
-        detail: "The funeral desk buries whoever is paid for. Press E and pay for one nobody claimed.",
+        detail: "The funeral desk buries whoever is paid for. Press Q and pay for one nobody claimed.",
         target: "funeral-desk",
         plate: "plate-care.jpg",
         done: ({ p }) => has(p, SF.STANDING_FUNERAL),
@@ -1105,7 +1105,7 @@ const RING: Quest[] = [
       step({
         id: "two",
         title: "Sweep the first two shrines",
-        detail: "Upkeep costs Bestand. Press E at the first shrine, then the second. The Gestell thins a little for each.",
+        detail: "Upkeep costs Bestand. Press Q at the first shrine, then the second. The Gestell thins a little for each.",
         target: ({ p }) => (has(p, SF.SWEEP_1) ? "shrine-2" : "shrine-1"),
         plate: "shrine-upkeep.jpg",
         done: ({ p }) => has(p, SF.SWEEP_1) && has(p, SF.SWEEP_2),
@@ -1113,7 +1113,7 @@ const RING: Quest[] = [
       step({
         id: "last",
         title: "Sweep the last",
-        detail: "The shrine of the last bell has no keeper. Press E. Pay it anyway.",
+        detail: "The shrine of the last bell has no keeper. Press Q. Pay it anyway.",
         target: "shrine-3",
         plate: "shrine-upkeep.jpg",
         done: ({ p }) => has(p, SF.SWEEP_3),

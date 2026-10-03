@@ -49,6 +49,7 @@ export const F = {
   CAUL_OFFER: "caul:offer", // Movement III: heard his offer of a reader's post; the oval on the wall takes Q from here
   CAUL_ASKED: "caul:asked", // Movement III: heard the first "What did it look like" (the beat's end; the step waits for it)
   TOLD_CAUL: "caul:told", // Movement III: told him what the waking hint looked like, in your own words
+  FORGE_SOLD: "sold:forge", // Movement III: the print the forge listed (Listing.forge) was bought; an earlier or later copy's sale is not it
   FORGE: "forge", // decided copies with Quill
   PREPARE: "prepare", // prepared the Clearing
   BRINK: "brink", // Movement IV: heard Nara at the ring before the ground was kept, with the readiness read

@@ -768,19 +768,23 @@ describe("lines", () => {
 describe("the spine's steps", () => {
   it("name, where they send the body to a place, a key that place answers to", () => {
     const misses: string[] = [];
+    const checked = new Set<string>();
     for (const q of SPINE) {
       for (const s of q.steps) {
         for (const { ctx } of CTXS) {
           const target = typeof s.target === "function" ? s.target(ctx) : s.target;
           const verbs = [...(POI_CONFIGS[target ?? ""]?.verbs ?? []), ...(SIDE_POI_VERBS[target ?? ""] ?? [])];
           const detail = typeof s.detail === "function" ? s.detail(ctx) : s.detail;
-          const key = detail.match(/press ([FEQ])\b/i)?.[1].toUpperCase();
-          if (!key || !verbs.length) continue; // a person, a fight, or a step that names no key
-          if (!verbs.some(v => v.key === key)) misses.push(`${q.id}/${s.id}: "Press ${key}" at ${target} (${[...new Set(verbs.map(v => v.key))].join("")})`);
+          // every key the detail names, with or without "press" ("Q refuses.", "E pays this hour's tithe"); upper case only, so a word is never a key
+          const keys = [...new Set([...detail.matchAll(/\b([FEQ])\b/g)].map(m => m[1]))];
+          if (!keys.length || !verbs.length) continue; // a person, a fight, or a step that names no key
+          checked.add(`${q.id}/${s.id}`);
+          for (const key of keys) if (!verbs.some(v => v.key === key)) misses.push(`${q.id}/${s.id}: ${key} at ${target} (${[...new Set(verbs.map(v => v.key))].join("")})`);
         }
       }
     }
     expect([...new Set(misses)]).toEqual([]);
+    expect(checked.size, "the steps that name a key at a place with verbs").toBeGreaterThanOrEqual(20);
   });
 });
 
@@ -852,8 +856,12 @@ describe("the movements audit: the script's words where the code said otherwise"
     const m3 = ctxOf("angel divinities M3 refuse");
     expect(textOf("quill", "forge-caul", m3)).toBe("He asked me once what a hint looked like. I told him. He wrote it down. Only time I've been quoted and not paid.");
     expect(textOf("quill", "forge-caul", withFlags(m3, { [F.TOLD_CAUL]: 1 }))).toContain("He asked you too. Don't look like that. Everybody tells him. He has a way of holding the pen.");
-    const both = withFlags(m3, { "sold:copy:wink": 1 }, { items: [{ id: "copy:wink", kind: "exhibition", name: "Printed Wink", qty: 1, value: 1 }], choices: { ...m3.p.choices, [C.FORGE]: "sell" } });
-    expect(textOf("quill", "forge-after", both)).toMatch(/^It sold\./);
+    const print = { id: "copy:wink", kind: "exhibition" as const, name: "Printed Wink", qty: 1, value: 1 };
+    const both = withFlags(m3, { "sold:copy:wink": 2, [F.FORGE_SOLD]: 1 }, { items: [print], choices: { ...m3.p.choices, [C.FORGE]: "sell" } });
+    expect(textOf("quill", "forge-after", both), "the forge's print sold, and a fresh copy is in hand").toMatch(/^It sold\./);
+    // an earlier copy sold at the stall, and the forge's listing was taken back down: the print is in the hand, and nothing of the forge's sold
+    const tookItDown = withFlags(m3, { "sold:copy:wink": 1 }, { items: [print], choices: { ...m3.p.choices, [C.FORGE]: "sell" } });
+    expect(textOf("quill", "forge-after", tookItDown)).toMatch(/^You took it down\./);
   });
 
   it("Ord writes the gate alone on the news (IV.2), and Caul's crew and his oval open the Appearance and the Absence (IV.7)", () => {

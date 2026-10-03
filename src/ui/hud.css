@@ -1019,7 +1019,11 @@ canvas { display: block; }
 @media (prefers-reduced-motion: reduce) {
   .title-loop, .journal-loop, .lock-loop, .gen-overlay { display: none; }
   .marquee-text { animation: none; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .credits-roll { animation: none; top: 50%; transform: translateY(-50%); gap: 24px; }
+  /* the roll stands still: centred when it fits, and the focused dialog scrolls it (wheel, End, PageDown) when it does not; the hint stays on the screen, clear of the last line */
+  .credits { overflow-y: auto; }
+  .credits-roll { animation: none; position: static; transform: none; min-height: 100%; box-sizing: border-box; padding: 16px 16px 48px; gap: 16px; justify-content: safe center; }
+  .credits-mark img { width: 72px; height: 72px; }
+  .credits-hint { position: fixed; }
   .notice { animation: none; }
   .bar-fill, .wink, .heard, .chip-connection { transition: none; }
 }
