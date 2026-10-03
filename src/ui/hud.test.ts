@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   auraTier, bearingTo, dodgeLine, formatSerial, heardStep, identityLine, joinNews, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
   pad2, parseSerial, pct, questLabel, questRows, roman, seconds, stanceLine, statusLine,
+  glassRows,
 } from "./format";
 import { TILE } from "../sim/map";
 
@@ -63,6 +64,22 @@ describe("heardStep", () => {
     // a window opening later over a line already fading changes nothing: the fade was armed when the line went up
     const shown = heardStep(fresh, { heard: "Said.", heardAt: 10, dialogue: null }, 10, 8).state;
     expect(heardStep(shown, { heard: "Said.", heardAt: 10, dialogue: window }, 11, 8)).toEqual({ state: shown, show: null, arm: false });
+  });
+});
+
+describe("glassRows", () => {
+  const base = { launch: "season 2, day 7, 00:00", at: 1000, dark: 3, figure: 61, hole: 4 };
+  it("is nothing for a body that is no reader", () => {
+    expect(glassRows(null, 0)).toBeNull();
+    expect(glassRows(undefined, 0)).toBeNull();
+  });
+  it("runs the count down against the world's clock and gives the figures in the glass's words", () => {
+    expect(glassRows(base, 1000 - 62)).toEqual({ launch: "The launch: season 2, day 7, 00:00 · 0d 00:01:02", figures: "The city's figure: 61 · In the hole: 4" });
+    expect(glassRows(base, 2000)?.launch, "a count past its moment stops at zero").toBe("The launch: season 2, day 7, 00:00 · 0d 00:00:00");
+  });
+  it("says now through the window, and no date past the threshold with the lights out", () => {
+    expect(glassRows({ ...base, launch: "now", at: 0 }, 0)?.launch).toBe("The launch: now");
+    expect(glassRows({ ...base, launch: "no date", at: 0, dark: 7 }, 0)?.launch).toBe("The launch: no date · 7 lights out on the Kerb");
   });
 });
 

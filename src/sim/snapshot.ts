@@ -9,8 +9,9 @@
 import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, CITY_SELLER, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
 import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
-import { W } from "./content/ids";
-import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type EnemyView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView } from "./protocol";
+import { C, W } from "./content/ids";
+import { darkLights, glassDark, launchDark, launchDate, launchOpen, nextLaunch } from "./launch";
+import { PROTOCOL_VERSION, WEATHER_LABEL, cityFigure, weatherBand, type EnemyView, type GlassView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView } from "./protocol";
 import type { Ctx, Enemy, FailedPassing, HistoryMark, Listing, NpcState, Player, PoiConfig, Prompt, PromptVerb, Wreckage, WorldState, YieldNode } from "./types";
 import { nodeYield } from "./economy";
 import { perception } from "./houses";
@@ -225,6 +226,7 @@ export type StepViews = {
   clearing: Snap["clearing"];
   passing: Snap["passing"];
   historyFor: (serial: number) => HistoryMark[];
+  figure: () => number; // the city's figure, summed once a step and only when a reader asks
   frames: FrameCache;
 };
 
@@ -291,6 +293,7 @@ export function stepViews(w: WorldState): StepViews {
     return marks;
   };
 
+  let figure: number | undefined;
   const frames = newFrameCache(lastFrames); // a body whose roster fields stand keeps its roster entry from the last step
   const shared: StepViews = {
     players,
@@ -308,6 +311,7 @@ export function stepViews(w: WorldState): StepViews {
     clearing: keptClearing.get(w.clearing, c => ({ open: c.open, reserve: c.reserve, contest: c.contest, lastOutcome: c.lastOutcome, dwellers: c.heldBy.length })),
     passing: keptPassing.get(w.passing, () => new Keep()).get(w.season.id, season => ({ ...w.passing, season })),
     historyFor,
+    figure: () => (figure ??= cityFigure(w)),
     frames,
   };
   // A section that stood since the last step keeps its encoding too.
@@ -450,10 +454,20 @@ function sectionsOf(fast: ViewerFast, slow: ViewerSlow): Pick<Snap, SlowKey> {
     market: slow.market,
     news: shared.news,
     flicker: w.flags[W.ALTARS_FLICKER] ?? 0,
+    glass: glassFor(w, p, shared),
     objective: slow.objective,
     sideObjectives: slow.sideObjectives,
     notices: p.notices,
   };
+}
+
+/** The glass as a reader's journal carries it (C.GLASS "read"): the glass's own readings, the way the Concern sees them. Null for anyone else. */
+export function glassFor(w: WorldState, p: Player, shared: Pick<StepViews, "figure">): GlassView | null {
+  if (p.choices[C.GLASS] !== "read") return null;
+  const dark = darkLights(w);
+  const next = nextLaunch(w);
+  const [launch, at] = launchDark(w) || (!launchOpen(w) && glassDark(w)) ? ["no date", 0] : launchOpen(w) ? ["now", 0] : [launchDate(next.season), next.at];
+  return { launch, at, dark, figure: shared.figure(), hole: w.clearing.heldBy.length };
 }
 
 /** The viewer's own record as they may see it: Winke never leave for a guest, whatever content did. The record itself when nothing has to be hidden. */

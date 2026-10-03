@@ -103,6 +103,8 @@ assert.equal(firstSnap.players.filter(p => p.id === id).length, 0, 'you are not 
 // The altars' flicker rides the slow sections for everyone: the world time of the last one, 0 before the Foundry is ever darkened.
 assert.equal(typeof firstSnap.flicker, 'number', 'the slow frame carries the altars\' flicker');
 assert.ok(firstSnap.flicker >= 0 && firstSnap.flicker <= firstSnap.now, 'the flicker is a moment in the world\'s past, or 0');
+// The glass rides the slow sections for a reader only (III.7's reader's post); a fresh body is no reader.
+assert.ok('glass' in firstSnap && firstSnap.glass === null, 'the slow frame carries the glass, null for a body that is no reader');
 
 const moved = snapshot(first.ws, snap => snap.you.x > x, 'movement');
 const heartbeat = setInterval(() => send(first.ws, { t: 'intent', intent: { right: true } }), 200);

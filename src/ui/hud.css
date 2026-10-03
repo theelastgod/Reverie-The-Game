@@ -560,6 +560,19 @@ canvas { display: block; }
   letter-spacing: 0.12em;
   font-variant-numeric: tabular-nums;
 }
+.journal-glass {
+  padding: 8px 12px;
+  border-top: var(--border) solid var(--ink);
+  font-size: 11px;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+.journal-glass[hidden] { display: none; }
+.journal-glass-head {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
 .journal-quests {
   margin: 0;
   padding: 0;

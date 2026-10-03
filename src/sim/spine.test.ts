@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
  */
 import { CLEARING_LIST_PRICE, CLEARING_PRICE_MOVE, COPY_PRICE, DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_PASSING_MIN, READINESS_REFUSE, TEST_SERIAL, TITHE_COST } from "./constants";
 import { POSITIONS, blockedFor, districtAt } from "./map";
-import type { ClientMsg } from "./protocol";
+import { cityFigure, type ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
 import { SIDE_PLACES } from "./content/side";
 import { CLEARING_LISTING, clearingPrice } from "./content/market";
@@ -715,6 +715,9 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
     w = choose(w, ME, "told");
     expect(me(w).flags[F.TOLD_CAUL]).toBe(1);
     w = closeAll(w, ME);
+    const glass = snapshotFor(w, ME).glass;
+    expect(glass, "the glass in the reader's journal from now on").toMatchObject({ launch: expect.stringMatching(/^season \d+, day 7, 00:00$/), figure: cityFigure(w), hole: w.clearing.heldBy.length });
+    expect(glass!.at).toBeGreaterThan(w.now);
     expect(me(use(w, "forecast-glass", "read")).heard, "the reader reads the glass the way the company sees it").toMatch(/Your line is in it, the length of your readiness. The city\x27s figure: \d+\. In the hole: \d+\./);
     const verbs = snapshotFor(goTo(w, ME, "oval-glass"), ME).prompt?.verbs.map(v => v.choice) ?? [];
     expect(verbs, "a reader is never offered the light").not.toContain("dark");
@@ -730,6 +733,7 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
     // the light put out: readiness, a dark light for everyone, the omen-reader at the glass, and his voice in the dark
     w = use(w, "oval-glass", "dark");
     expect(me(w).choices[C.GLASS]).toBe("dark");
+    expect(snapshotFor(w, ME).glass, "no glass in the journal of one who put the light out").toBeNull();
     expect(w.flags[W.DARK_LIGHTS]).toBe(1);
     expect(w.npcs.omen).toMatchObject({ state: "glass", x: SIDE_PLACES["omen-glass"].x, y: SIDE_PLACES["omen-glass"].y });
     expect(w.news.some(n => n.text === "A light went out behind the forecast glass. 1 is dark.")).toBe(true);

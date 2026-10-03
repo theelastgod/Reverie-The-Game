@@ -75,6 +75,14 @@ export type PoiView = { id: string; state: string; count: number };
 /** The record's `notices` never ride in `you` on the wire: `Snap.notices` is their section (`YOU_OFF_WIRE` in frames.ts). */
 export type YouView = Omit<Player, "items" | "claims" | "notices"> & { items: Item[]; claims: Claim[]; notices?: Notice[]; kitReadout?: string[] };
 
+/**
+ * The glass in a reader's journal (III.7, Phase C): what Caul's reader's post gives, "the launch's hour, the count in
+ * the hole, the city's figure, in your journal from now on, the way we see them". `launch` is the glass's own date
+ * ("season 2, day 7, 00:00"), "now" through the window, or "no date" past the threshold of dark lights; `at` is the
+ * moment the count runs down to (0 when there is none), counted down by the client against `now`.
+ */
+export type GlassView = { launch: string; at: number; dark: number; figure: number; hole: number };
+
 export type Snap = {
   t: "snap";
   v: typeof PROTOCOL_VERSION;
@@ -101,6 +109,7 @@ export type Snap = {
   market: Listing[];
   news: string[];
   flicker: number; // world time of the last flicker of the Nave's altars, for everyone (W.ALTARS_FLICKER); 0 = never
+  glass: GlassView | null; // the glass in the journal, for a reader only (C.GLASS "read"); null for everyone else
   prompt: Prompt | null;
   objective: Objective | null;
   sideObjectives: SideObjective[];
@@ -113,7 +122,7 @@ export type FastKey = (typeof FAST_KEYS)[number];
 /** Everything else: sent when it changes, at most every SLOW_EVERY_TICKS steps, and at once after the viewer acts. */
 export const SLOW_KEYS = [
   "gestell", "weather", "weatherNamed", "frozen", "district", "npcs", "nodes", "wreckage", "graves", "pois", "history", "failed",
-  "houses", "clearing", "passing", "market", "news", "flicker", "objective", "sideObjectives", "notices",
+  "houses", "clearing", "passing", "market", "news", "flicker", "glass", "objective", "sideObjectives", "notices",
 ] as const;
 export type SlowKey = (typeof SLOW_KEYS)[number];
 

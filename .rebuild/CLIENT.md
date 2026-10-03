@@ -56,7 +56,7 @@ and knob, planted where a finger lands), `hud-prompt` (nearest interaction with 
 `hud-heard` (spoken line; hidden under an open dialogue window, its fade held until the window closes, `format.ts` `heardStep`), `hud-wink` (private line, void/gold),
 `hud-notices`, `hud-marquee` (news ticker), `hud-dialogue` (portrait, speaker,
 text, wink, choices), `hud-journal` (field notes: plate, movement, title,
-detail, bearing, quests list), `hud-minimap` (canvas), `hud-lock` (guest lock
+detail, bearing, the glass for a reader (`.journal-glass`, hidden for anyone else: Snap.glass through `format.ts` `glassRows`, its count run down against `snap.now`), quests list), `hud-minimap` (canvas), `hud-lock` (guest lock
 panel: mark, "A GUEST CANNOT PREPARE THE GROUND", link test Angel button and a
 serial input 1–7777), `hud-connection`, `hud-credits` (shown when `you.flags.credits`
 turns 1; names only the game).

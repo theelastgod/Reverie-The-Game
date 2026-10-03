@@ -47,6 +47,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - **One call for you** (Backlog 5): no heal stands between the intake and
   Desk Three, so a worn body meets the desk at about 44 hp; a player who
   strikes first or dodges wins, and the bot falls about one run in five.
+- **The rest of Phase C waits on you** (Backlog A, 2026-10-03): the Houses'
+  lost hour at Ord's map needs which House is the water's, the heat's
+  and the light's, and what a House's "hour" is (a hold of the House war,
+  or standing); the listing's seller "exposed by Quill for everyone who
+  asks" needs the words of the asking (her answer is written and in the
+  game after the board). Also open, each recorded where it landed: the
+  dark-light switch per city or per season, whether the city's figure
+  moves the launch's hour, and whether the clerks' descent lasts an hour
+  from the light (as built) or to the end of the clock hour.
 - **The story is now `SYNOPSIS.md`** (your brief of 2026-10-02, the
   afternoon). The enemy has a name and a shape: the Concern, the company
   that owns the numbers, and Anselm Caul, its chief, who is a guest (he
@@ -89,7 +98,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   vans keeping the lights on; and a light put out behind the glass now
   sends the hour clerks down the Kerb's stair for the hour, for
   everyone; and when the launch's hour is out the vans leave and the hot
-  street is a street again, until the next van or pull heats it.
+  street is a street again, until the next van or pull heats it; and a
+  reader of the glass carries it in the field notes, as Caul promised.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1842,6 +1852,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the record that a van once parked (nothing reads it). Next in Phase
   C: the Houses' lost hour at Ord's map, the listing's seller exposed by
   Quill, and the journal line for readers.
+- Backlog A, Phase C, the journal line for readers (2026-10-03, midday):
+  what Caul's reader's post promised, "the launch's hour, the count in
+  the hole, the city's figure, in your journal from now on, the way we
+  see them". A new slow section, `Snap.glass`, is built for a reader
+  (C.GLASS "read") and null for everyone else (`glassFor` in
+  snapshot.ts; the city's figure summed once a step and only when a
+  reader asks). The field notes show THE GLASS under the bearing: "The
+  launch: season 2, day 7, 00:00 · 6d 23:41:07" with the count run down
+  by the client against the world's clock, "now" through a lit window,
+  "no date · 7 lights out on the Kerb" through a dark one or past the
+  threshold, then "The city's figure: 61 · In the hole: 3", in the
+  glass's own words. Caul's offer now says the script's line, "in your
+  journal from now on", since the journal gives it. The two items
+  before it in this list were passed over, each needing the owner (see
+  Backlog A): the Houses' lost hour names a House "whose layer the
+  water (the heat, the light) is" and nothing in the synopsis, the
+  script or the code says which House that is, or what a House's hour
+  is (the synopsis points at the House war); and Quill's "Whoever the
+  resistance is, they bought their paper from the same man I did" is
+  already hers after the board, so "exposed for everyone who asks"
+  needs a choice the script does not write.
 - `npm run typecheck` — client and Worker clean.
 - `npm test` — 34 files, 436 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
@@ -2741,6 +2772,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   with its line), the build, the play build and the stage, and on a
   fresh local world the session smoke, the Movement IV campaign smoke
   and the render check, each run alone.
+- Backlog A, Phase C, the journal line for readers (2026-10-03,
+  midday): typecheck, 568 tests in 43 files (`glassRows`: nothing for
+  no reader, the count run down and stopped at zero, "now", "no date"
+  with the lights out; through the real tick a reader's glass "now"
+  through a lit window, "no date" through a dark one, the next season's
+  date after the hour, and null for a non-reader and a guest; in the
+  spine's reader fork the date, a count ahead, the figure and the hole,
+  and null in the dark fork), the build, the play build and the stage,
+  and on a fresh local world the session smoke (`glass` null in a fresh
+  body's first slow frame), the Movement III campaign smoke (over the
+  wire the reader's post brings the glass with a date, a count ahead,
+  the figure and the hole) and the render check, each run alone; the
+  journal's glass block rendered in Chromium from the real markup and
+  `hud.css` (a scratchpad screenshot; the render check's bot is no
+  reader).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2820,9 +2866,13 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      settle whether the city's figure moves the hour as Caul says (the
      window itself has landed with its remainder: see Done, "the
      launch" and "the launch's remainder"; the clerks' descent has
-     landed too, and the hot street's cool-down, see Done; next the Houses' lost hour at Ord's
-     map, the listing's seller exposed by Quill, and the journal line
-     for readers): the
+     landed too, and the hot street's cool-down and the journal line
+     for readers, see Done; what is left of Phase C waits on the owner:
+     the Houses' lost hour at Ord's map (which House is the water's,
+     the heat's and the light's, and what a House's hour is: a hold of
+     the House war, or standing) and the listing's seller exposed by
+     Quill (her line is written; "for everyone who asks" needs the
+     choice that asks): the
      Cable's darkening flickering the altars server-wide; the listing's
      seller exposed by Quill; Ord's figure on the news; the count of dark
      lights on the Kerb as world state carried in the snapshot, the

@@ -1062,7 +1062,7 @@ The paper panel, the gold mark:
 **ORD** — `figure-after` (shipped since Phase A, Movement III; "It is on the marquee." is not said: the figure goes on the marquee once for the city, Phase C, the weave, and the marquee keeps only its last lines, so for most bodies it would no longer be true), at the Annex gate once the figure is read, until the act
 > The figure is read. It is on the marquee. The weather did not move for it; I did not expect it to. Quill has something for you on the Grid. Then the Care, and the act.
 
-**CAUL** — `offer` (shipped since Phase B, first beats; the reader's bargain says what the glass gives today, "the city's figure, the count in the hole, and the hour, when the glass has one", since the journal line is Phase C's; the date has been on the glass since Phase C, the date, at a fixed hour of the season, so "that figure sets the date" is his claim and not yet the glass's rule: the launch window decides whether the figure moves the hour)
+**CAUL** — `offer` (shipped since Phase B, first beats; the reader's bargain as written here since Phase C, the journal line, which gives what it says: the glass in a reader's field notes, the launch's hour with its count, the city's figure and the count in the hole; the date has been on the glass since Phase C, the date, at a fixed hour of the season, so "that figure sets the date" is his claim and not yet the glass's rule: the launch window decides whether the figure moves the hour)
 > "The glass is not a forecast. It is an instrument. It sums the readiness of every angel in the city into one figure, and that figure sets the date. The city reads a calendar. I read the city." He turns the screen off; the room is no darker. "I would like a reader. Let the ledger read your readiness live, as a line, and in return you read the glass: the launch's hour, the count in the hole, the city's figure, in your journal from now on, the way we see them. Nothing is paid." He folds his hands and waits, pleasantly, for the laugh he has read about.
 ✦ *A line on his glass is a line in his book. The book listens. It has since the clerk.*
 [F.CAUL_OFFER (new): from here the oval on the wall takes Q while the glass is undecided]
@@ -1071,7 +1071,7 @@ The paper panel, the gold mark:
 
 **CAUL** — `reader` (shipped since Phase B, first beats; "and a date" since Phase C, the date; past the threshold of dark lights "and, where the date was, nothing")
 > "Done." He does not write; the glass does. A line appears in it with #SERIAL on it, the length of your readiness, and under it the city's figure and a date. "You will find it reads the same from either side. That is the thing about glass."
-[C.GLASS read (new); Cold is your current; perception: the glass's readings in your journal from now on, the launch's hour, the count in the hole, the city's figure; your serial on the glass as a line, for everyone; news (new): "An Angel's readiness is on the forecast glass as a line."]
+[C.GLASS read (new); Cold is your current; perception: the glass's readings in your journal from now on, the launch's hour, the count in the hole, the city's figure (shipped since Phase C, the journal line: Snap.glass for a reader, THE GLASS in the field notes, "The launch: {date} · {count}" or "now" through the window or "no date · {n} lights out on the Kerb", then "The city's figure: {n} · In the hole: {n}"); your serial on the glass as a line, for everyone; news (new): "An Angel's readiness is on the forecast glass as a line."]
 → `looked`
 
 **CAUL** — `declined` (shipped since Phase B, first beats)

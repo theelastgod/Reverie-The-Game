@@ -1099,7 +1099,7 @@ const CAUL_NODES: Record<string, DialogueNode> = {
   },
   offer: {
     id: "offer",
-    text: "\"The glass is not a forecast. It is an instrument. It sums the readiness of every angel in the city into one figure, and that figure sets the date. The city reads a calendar. I read the city.\" He turns the screen off; the room is no darker. \"I would like a reader. Let the ledger read your readiness live, as a line, and in return you read the glass the way we see it: the city's figure, the count in the hole, and the hour, when the glass has one. Nothing is paid.\" He folds his hands and waits, pleasantly, for the laugh he has read about.",
+    text: "\"The glass is not a forecast. It is an instrument. It sums the readiness of every angel in the city into one figure, and that figure sets the date. The city reads a calendar. I read the city.\" He turns the screen off; the room is no darker. \"I would like a reader. Let the ledger read your readiness live, as a line, and in return you read the glass: the launch's hour, the count in the hole, the city's figure, in your journal from now on, the way we see them. Nothing is paid.\" He folds his hands and waits, pleasantly, for the laugh he has read about.",
     wink: "A line on his glass is a line in his book. The book listens. It has since the clerk.",
     effects: [{ kind: "flag", key: F.CAUL_OFFER }],
     choices: [

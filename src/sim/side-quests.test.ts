@@ -742,6 +742,18 @@ describe("the launch window (IV.5), opened by the tick once a season", () => {
     expect(me(reel).dialogue, "no voice on a dark reel").toBeNull();
   });
 
+  it("reads the window into a reader's journal: now through a lit hour, no date through a dark one, and nothing for anyone else", () => {
+    const reader = (x: WorldState): WorldState => add(x, { ...me(x), choices: { ...me(x).choices, [C.GLASS]: "read" } });
+    expect(snapshotFor(tick(eve()), ME).glass, "no reader, no glass").toBeNull();
+    expect(snapshotFor(tick(eve()), "g").glass).toBeNull();
+    const lit = tick(reader(eve()));
+    expect(snapshotFor(lit, ME).glass).toMatchObject({ launch: "now", at: 0 });
+    const dark = tick(reader(eve(DARK_LIGHTS_THRESHOLD)));
+    expect(snapshotFor(dark, ME).glass).toMatchObject({ launch: "no date", at: 0, dark: DARK_LIGHTS_THRESHOLD });
+    const after = tick({ ...lit, now: launchMoment(lit) + LAUNCH_WINDOW });
+    expect(snapshotFor(after, ME).glass, "after the hour, the next season's date").toMatchObject({ launch: `season ${after.season.id + 1}, day 7, 00:00` });
+  });
+
   it("cools the hot street at the window's close, once a season, whoever made it hot, lit or dark", () => {
     const hot = (x: WorldState): WorldState => ({ ...x, pois: { ...x.pois, "hot-street": { state: "hot", by: "someone", at: 1, count: 2 } } });
     // lit: the launch keeps the street hot through the hour; the close cools it and is taken once

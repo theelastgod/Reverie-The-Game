@@ -6,6 +6,8 @@
 import { bearing as mapBearing, DISTRICT_BY_ID } from "../sim/map";
 import { ANGEL_SUPPLY, AURA_DIM, TEST_SERIAL } from "../sim/constants";
 import type { DistrictId, House, Messenger, Objective, Vec } from "../sim/types";
+import type { GlassView } from "../sim/protocol";
+import { countdown } from "../sim/launch";
 
 /** "#0042" for a serial; "GUEST" for none. */
 export function formatSerial(serial: number | null | undefined): string {
@@ -285,4 +287,15 @@ export function setAttr(el: Element | null, name: string, value: string): void {
 /** URL of a file under public/assets, respecting the deploy base (the game ships under /play/). */
 export function assetUrl(file: string, base: string = (import.meta.env && import.meta.env.BASE_URL) || "/"): string {
   return base.replace(/\/?$/, "/") + "assets/" + file.replace(/^\/+/, "");
+}
+
+/**
+ * The glass in a reader's journal (Snap.glass, III.7): the launch's hour with its count run down against the world's
+ * clock, then the city's figure and the count in the hole, in the glass's own words. Null when the viewer is no reader.
+ */
+export function glassRows(glass: GlassView | null | undefined, now: number): { launch: string; figures: string } | null {
+  if (!glass) return null;
+  const count = glass.at > 0 ? ` · ${countdown(glass.at - now)}` : "";
+  const dark = glass.launch === "no date" ? ` · ${glass.dark} lights out on the Kerb` : "";
+  return { launch: `The launch: ${glass.launch}${count}${dark}`, figures: `The city's figure: ${glass.figure} · In the hole: ${glass.hole}` };
 }

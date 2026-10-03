@@ -1,16 +1,17 @@
 /**
  * Field notes: the current objective (plate, movement numeral, title, detail,
- * bearing) and a compact list of active quests with step numbers.
+ * bearing), the glass for a reader (III.7: the launch's hour and its count, the
+ * city's figure, the count in the hole), and a compact list of active quests.
  */
 import type { Objective, SideObjective } from "../sim/types";
-import type { YouView } from "../sim/protocol";
-import { assetUrl, bearingTo, roman, setClass, setText } from "./format";
+import type { GlassView, YouView } from "../sim/protocol";
+import { assetUrl, bearingTo, glassRows, roman, setClass, setText, show } from "./format";
 import { gen, pickGen } from "../assets/gen";
 import { ambientFor, plateFor } from "../assets/slots";
 import { LoopSlot } from "./loops";
 
 export type JournalPanel = {
-  set(objective: Objective | null, you: YouView, side?: readonly SideObjective[], hot?: boolean): void;
+  set(objective: Objective | null, you: YouView, side?: readonly SideObjective[], hot?: boolean, glass?: GlassView | null, now?: number): void;
   toggle(): void;
   destroy(): void;
 };
@@ -26,6 +27,9 @@ export function mountJournal(root: HTMLElement): JournalPanel {
   const detail = panel?.querySelector<HTMLElement>(".journal-detail") ?? null;
   const bearing = panel?.querySelector<HTMLElement>(".journal-bearing") ?? null;
   const quests = panel?.querySelector<HTMLElement>(".journal-quests") ?? null;
+  const glassBox = panel?.querySelector<HTMLElement>(".journal-glass") ?? null;
+  const glassLaunch = panel?.querySelector<HTMLElement>(".journal-glass-launch") ?? null;
+  const glassFigures = panel?.querySelector<HTMLElement>(".journal-glass-figures") ?? null;
 
   let objectiveSig = "";
   let plateFile = "";
@@ -42,8 +46,15 @@ export function mountJournal(root: HTMLElement): JournalPanel {
   tab?.addEventListener("click", toggle);
 
   return {
-    set(objective, you, side = [], hot = false) {
+    set(objective, you, side = [], hot = false, glass = null, now = 0) {
       if (!panel) return;
+      // The glass, the way the Concern reads it: a reader's only, its count run down against the world's clock.
+      const rows = glassRows(glass, now);
+      show(glassBox, !!rows);
+      if (rows) {
+        setText(glassLaunch, rows.launch);
+        setText(glassFigures, rows.figures);
+      }
       // The plate: a generated one for this district when the manifest has it, else the objective's own.
       if (objective && plate) {
         const wanted = pickGen(gen.current, plateFor(you.district, hot), assetUrl(objective.plate || "plate-arena.jpg"));

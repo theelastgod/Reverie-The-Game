@@ -770,6 +770,10 @@ try {
     await converse(me, 'caul', 'caul:asked');
     assert.equal(you(me).choices.glass, 'read', "the reader's post taken");
     await wait(me, () => you(me).quests['m3-geopolitics'] === 7, 'the step moves on from the room', 6000);
+    // The reader's post puts the glass in the journal from now on: the launch's hour, the city's figure, the count in the hole.
+    await wait(me, () => !!me.snap.glass, "the glass in the reader's journal", 6000);
+    assert.match(me.snap.glass.launch, /^season \d+, day 7, 00:00$/, 'the launch as a date');
+    assert.ok(me.snap.glass.at > me.snap.now && Number.isFinite(me.snap.glass.figure) && me.snap.glass.hole >= 0, 'a count to run down, the figure and the hole');
 
     // Quill at the forge tray: pull the print with the bot's serial off the Grid (the second choice; the first lists it), which turns the movement.
     phase('III walk: forge');

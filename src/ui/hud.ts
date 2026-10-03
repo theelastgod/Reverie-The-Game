@@ -280,7 +280,7 @@ export class Hud {
     this.events.set(eventRows(snap));
     this.updateLedger(snap);
     this.dialogue.set(you.dialogue);
-    this.journal.set(snap.objective, you, snap.sideObjectives, snap.pois.some(p => p.id === "hot-street" && p.state === "hot"));
+    this.journal.set(snap.objective, you, snap.sideObjectives, snap.pois.some(p => p.id === "hot-street" && p.state === "hot"), snap.glass, snap.now);
     this.minimap.update(snap);
 
     this.last = snap;
