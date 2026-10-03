@@ -41,6 +41,17 @@ export function flickerDue(lastSeen: number, at: number, now: number): boolean {
   return at > 0 && at !== lastSeen && now - at >= 0 && now - at <= FLICKER_FRESH;
 }
 
+/**
+ * One frame of the client's flicker: the slow frame carrying a new moment can land before the fast frame of the step
+ * it happened in, so the merged snapshot's clock is a step or two behind it. Such a moment is waited for, not
+ * marked seen, and plays on the frame the clock reaches it. `seen` is what the scene keeps as its last moment.
+ */
+export function flickerStep(lastSeen: number, at: number, now: number): { play: boolean; seen: number } {
+  if (at === lastSeen) return { play: false, seen: lastSeen };
+  if (at > 0 && now < at) return { play: false, seen: lastSeen };
+  return { play: flickerDue(lastSeen, at, now), seen: at };
+}
+
 /** The flicker's tween: quick and four times; under reduced motion one slow dip and back, nothing that flashes. */
 export function flickerTween(reduced: boolean): { alpha: number; duration: number; repeat: number } {
   return reduced ? { alpha: 0.45, duration: 420, repeat: 0 } : { alpha: 0.12, duration: 80, repeat: 3 };

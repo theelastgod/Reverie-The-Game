@@ -1209,7 +1209,9 @@ const ORGANS: PoiConfig[] = [
         guest: spectate,
         say: ctx => (poiState(ctx, "organ-cable") === "quiet"
           ? "The Cable. Someone kept a node. The hum is less. The Foundry notices."
-          : "The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone."),
+          : poiState(ctx, "organ-foundry") === "dark"
+            ? "The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Someone darkened the Foundry and they flickered, all of them, for everyone."
+            : "The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone."),
         effects: [{ kind: "flag", key: F.CABLE }, { kind: "notice", text: "The Cable drinks what the Strait paid. Ord will draw it.", tone: "sky" }],
       },
     ],

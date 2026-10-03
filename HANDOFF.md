@@ -1663,16 +1663,31 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `flickerTween`, pure, with cases; the floors keep each altar's resting
   brightness so a flicker ends where it began). The spine's darkening of
   the Foundry flickers them and its news now says "The altars in the
-  Nave flicker."; the Foundry side hour's rake flickers them for the one
-  who raked, and a Foundry already dark now closes that step with no
+  Nave flicker."; the Foundry side hour's rake flickers them, for
+  everyone, when the body at the step raked it out, and a Foundry
+  already dark now closes that step with no
   second flicker and no false "Someone raked the Foundry out" (it used to
   post it), as the van's wave step does. The Cable's study says what
   darkening does. Ord's figure goes on the marquee once for the city,
   by the first body to hear it. The Appearance posts the recorders'
   blank tape after its own line, naming the angel by serial (never
-  ", alone,", which would break the possessive). Next in Phase C: the
-  date on the glass and the dark-light threshold that withholds it,
-  then the launch window that reads them.
+  ", alone,", which would break the possessive). Reviewed by one
+  reader after the first commit; folded in the next: a viewer could
+  miss the flicker when the slow frame carrying it lands before the fast
+  frame of its step (the merged snapshot's clock a step behind the
+  moment), so the scene now waits for its clock to reach the moment
+  (`flickerStep`, pure, with cases); the Cable told every later Angel to
+  darken a Foundry already dark (it now says someone did, and they
+  flickered); a rake followed in the same tick by someone's darkening
+  still posted the raked news and a second flicker (the step's effects
+  now also need the Foundry still lit); the script and this entry said
+  the rake's flicker was the raker's alone (it is everyone's; only its
+  firing depends on the raker); and Ord's `figure-after` in the script
+  carried "It is on the marquee.", which the code never said and which
+  the once-for-the-city news would make false for most bodies (tagged
+  as not said). Next in Phase C: the date on the glass and the
+  dark-light threshold that withholds it, then the launch window that
+  reads them.
 
 ## Verified (2026-09-25, integration)
 
@@ -2459,7 +2474,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   tests in 41 files (the darkening through the real verb stamps the
   world's moment, a guest's snapshot and the actor's carry it, the news
   reads the revised line, and a dark Foundry offers no second darkening;
-  the rake flickers for the one who raked, and a Foundry already dark
+  the rake flickers when the body raked it out, and a Foundry already dark
   closes the step with no flicker and no raked news; the Cable's line,
   the darken verb's effects in order, Ord's figure posted once for the
   city; the Appearance's two lines in order, the tape naming an alone
@@ -2469,8 +2484,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   carries `flicker`) and the render check at `RENDER_MIN_FPS=5` passed,
   each run alone. The flicker's own pulse is covered by the pure cases
   only: the render check does not darken the Foundry. The Movement III
-  campaign smoke and a review of the diff were still running at this
-  commit; their results follow in the next entry.
+  campaign smoke and a review of the diff were still running at that
+  commit; their results are the next entry.
+- Phase C, the weave, after the review (2026-10-03, morning): the
+  Movement III campaign smoke on a fresh local world passed on the first
+  commit (the Strait, the Foundry, the Cable, Ord's map, the garden, the
+  glass, the print pulled, on to Movement IV); after the review's fixes,
+  typecheck, 536 tests in 41 files (`flickerStep` waiting for a moment
+  ahead of the clock and playing it once the clock arrives, a stale
+  moment marked seen unplayed; the Cable's line with the Foundry lit and
+  dark; the rake raced by another body's darkening, with one flicker and
+  no raked news), the build, the play build and the stage, and on a
+  fresh local world the session smoke and the render check again, each
+  run alone. The GitHub gates passed on the first commit.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

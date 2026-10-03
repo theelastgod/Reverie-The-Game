@@ -438,7 +438,11 @@ describe("dialogue", () => {
   it("the weave: the Cable says the altars flicker, the Foundry's darkening flickers them, and Ord's figure goes on the marquee once for the city", () => {
     const m3 = CTXS.find(c => c.name === "angel divinities M3 refuse")!.ctx;
     const say = (id: string, choice: string, ctx: Ctx): string => { const v = POI_CONFIGS[id].verbs.find(x => x.choice === choice)!; return typeof v.say === "function" ? v.say(ctx) : v.say ?? ""; };
-    expect(say("organ-cable", "study", m3)).toBe("The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone.");
+    const lit = { ...m3, w: { ...m3.w, pois: { ...m3.w.pois, "organ-foundry": { state: "lit", by: "", at: 0, count: 0 } } } };
+    expect(say("organ-cable", "study", lit)).toBe("The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone.");
+    // once the Foundry is dark, nobody is told to do what cannot be done again
+    const dark = { ...m3, w: { ...m3.w, pois: { ...m3.w.pois, "organ-foundry": { state: "dark", by: "x", at: 1, count: 1 } } } };
+    expect(say("organ-cable", "study", dark)).toBe("The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Someone darkened the Foundry and they flickered, all of them, for everyone.");
     const darken = POI_CONFIGS["organ-foundry"].verbs.find(v => v.choice === "darken")!;
     const effects = darken.effects as Effect[];
     expect(effects.map(e => e.kind)).toEqual(["poi", "worldFlag", "flicker", "news"]);

@@ -11,7 +11,7 @@ import { bus, type SceneActions } from "../render/bus";
 import { Entities } from "../render/entities";
 import { Floors, TEX } from "../render/floors";
 import { Fx } from "../render/fx";
-import { flickerDue, reducedMotion } from "../render/motion";
+import { flickerStep, reducedMotion } from "../render/motion";
 import { audio } from "../audio/bus";
 import { VOLUME_STEP } from "../audio/settings";
 import { loopFor, passingLoopFor } from "../assets/slots";
@@ -472,10 +472,9 @@ export class CityScene extends Phaser.Scene {
       this.floors.setPois(snap.pois);
     }
     // The Foundry's darkening: every altar in the Nave flickers once, for everyone looking when it happens.
-    if (snap.flicker !== this.lastFlicker) {
-      if (flickerDue(this.lastFlicker, snap.flicker, snap.now)) this.floors.flickerAltars(this.reduced());
-      this.lastFlicker = snap.flicker;
-    }
+    const flicker = flickerStep(this.lastFlicker, snap.flicker ?? 0, snap.now);
+    if (flicker.play) this.floors.flickerAltars(this.reduced());
+    this.lastFlicker = flicker.seen;
     const gates = `${you.guest ? "g" : "a"}|${you.flags.under ?? 0}|${you.flags.m3 ?? 0}`;
     if (gates !== this.lastGates) {
       this.lastGates = gates;

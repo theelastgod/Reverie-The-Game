@@ -893,6 +893,7 @@ The paper panel, the gold mark:
 
 **THE CABLE** — `study` F (shipped: the catalog named as what the light carries since Phase A, Movement III; the flicker sentence since Phase C, the weave, when the darkening began to flicker the altars)
 > The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone.
+> *(once the Foundry is dark, since Phase C, the weave)* The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Someone darkened the Foundry and they flickered, all of them, for everyone.
 [F.CABLE]
 
 **THE CABLE** — `study`, once a node is kept (shipped)
@@ -1058,7 +1059,7 @@ The paper panel, the gold mark:
 [F.FIGURE, once; news (shipped since Phase C, the weave), once for the city, by the first body to hear it: "Ord's figure is on the marquee: last season, four hundred and six in the ring, the glass at sixty-one, a trace crossed and was taken."]
 - ▸ "Back to him." → CAUL `offer` (a `dialogue` effect on the choice)
 
-**ORD** — `figure-after` (shipped since Phase A, Movement III), at the Annex gate once the figure is read, until the act
+**ORD** — `figure-after` (shipped since Phase A, Movement III; "It is on the marquee." is not said: the figure goes on the marquee once for the city, Phase C, the weave, and the marquee keeps only its last lines, so for most bodies it would no longer be true), at the Annex gate once the figure is read, until the act
 > The figure is read. It is on the marquee. The weather did not move for it; I did not expect it to. Quill has something for you on the Grid. Then the Care, and the act.
 
 **CAUL** — `offer` (shipped since Phase B, first beats; the reader's bargain says what the glass gives today, "the city's figure, the count in the hole, and the hour, when the glass has one", since the journal line and the date are Phase C's)
@@ -2211,7 +2212,7 @@ The paper panel, the gold mark:
 **THE FOUNDRY** — `organ-foundry` rake the coals out, `side:foundry:rake` (shipped; side-pois.ts)
 > You rake it out. Heat without a nation, ended. The Cable hums a note lower. Somewhere a number becomes zero.
 [poi `organ-foundry` dark, for everyone; SW.FOUNDRY_DARK; news "Someone raked the Foundry out. Heat without a nation, ended."]
-[every altar in the Nave flickers once, for everyone (shipped since Phase C, the weave; only for the one who raked, since a Foundry already dark closes the step with no news and no second flicker)]
+[every altar in the Nave flickers once, for everyone (shipped since Phase C, the weave; it fires only when the body at the step raked the Foundry out, so a Foundry already dark, by the spine's darken or anyone's, closes the step with no news and no second flicker)]
 *Skipped when the Foundry is already dark (the spine's `Q`, yours or anyone's, III.2): the step closes on its own and the hour's line is Renn's.*
 
 **RENN COIL** — `foundry-told`, from the hub's "The Foundry is dark." (shipped; side-npcs.ts)

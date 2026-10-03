@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FLICKER_FRESH, flickerDue, flickerTween, pulseAt, reducedMotion, stillTween } from "./motion";
+import { FLICKER_FRESH, flickerDue, flickerStep, flickerTween, pulseAt, reducedMotion, stillTween } from "./motion";
 
 describe("reducedMotion", () => {
   it("reads the media query live", () => {
@@ -65,5 +65,20 @@ describe("flickerTween", () => {
     expect(still.duration).toBeGreaterThan(quick.duration * 4);
     expect(still.alpha).toBeGreaterThan(quick.alpha);
     for (const t of [quick, still]) expect(t.alpha).toBeGreaterThan(0);
+  });
+});
+
+describe("flickerStep", () => {
+  it("waits for a moment ahead of the merged snapshot's clock and plays it on the frame the clock arrives", () => {
+    // the slow frame with the new moment lands before the fast frame of its step: the clock is a step behind
+    const early = flickerStep(0, 100.1, 100.05);
+    expect(early).toEqual({ play: false, seen: 0 });
+    const arrived = flickerStep(early.seen, 100.1, 100.1);
+    expect(arrived).toEqual({ play: true, seen: 100.1 });
+    expect(flickerStep(arrived.seen, 100.1, 100.15), "once").toEqual({ play: false, seen: 100.1 });
+  });
+  it("marks a stale moment seen without playing it, and no moment at all as nothing", () => {
+    expect(flickerStep(0, 50, 50 + FLICKER_FRESH + 1)).toEqual({ play: false, seen: 50 });
+    expect(flickerStep(0, 0, 10)).toEqual({ play: false, seen: 0 });
   });
 });

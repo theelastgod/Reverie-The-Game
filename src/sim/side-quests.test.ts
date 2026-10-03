@@ -619,7 +619,7 @@ describe("the Foundry's darkening flickers every altar in the Nave, for everyone
     expect(interact(later, "organ-foundry", "darken").flags[W.ALTARS_FLICKER]).toBe(now);
   });
 
-  it("the side hour's rake flickers them for the one who raked; a Foundry already dark closes the step with no flicker and no news", () => {
+  it("the side hour's rake flickers them, for everyone, when the body raked it out; a Foundry already dark closes the step with no flicker and no news", () => {
     let w = tick(world({ id: SQ.FOUNDRY, flags: { [offerKey(SQ.FOUNDRY)]: 1 }, steps: [], check: () => undefined }), 3);
     expect(questProgress(me(w), SQ.FOUNDRY)).toEqual({ started: true, step: 0, done: false });
     w = goTo(w, ME, "organ-foundry");
@@ -635,6 +635,18 @@ describe("the Foundry's darkening flickers every altar in the Nave, for everyone
     expect(questProgress(me(dark), SQ.FOUNDRY).step, "the step closes on its own").toBe(1);
     expect(dark.flags[W.ALTARS_FLICKER]).toBeUndefined();
     expect(dark.news.some(n => n.text === RAKED_NEWS), "nobody raked it").toBe(false);
+
+    // the race: a body rakes, and before the step closes on the tick someone darkens the Foundry with the spine's Q
+    let race = tick(world({ id: SQ.FOUNDRY, flags: { [offerKey(SQ.FOUNDRY)]: 1 }, steps: [], check: () => undefined }), 3);
+    race = add(race, { ...me(race), id: "other", flags: { ...me(race).flags } });
+    race = interact(goTo(race, ME, "organ-foundry"), "organ-foundry", "side:foundry:rake");
+    race = act(goTo(race, "other", "organ-foundry"), "other", { t: "interact", targetId: "organ-foundry", choice: "darken" });
+    const darkenedAt = race.flags[W.ALTARS_FLICKER];
+    expect(darkenedAt).toBeGreaterThan(0);
+    race = tick(race);
+    expect(questProgress(me(race), SQ.FOUNDRY).step, "the raker's step closes").toBe(1);
+    expect(race.flags[W.ALTARS_FLICKER], "the darkening's flicker is the only one").toBe(darkenedAt);
+    expect(race.news.some(n => n.text === RAKED_NEWS), "the Foundry was darkened, not raked out").toBe(false);
   });
 });
 
