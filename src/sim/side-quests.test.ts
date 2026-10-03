@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
  * hour promises (a POI state, a person's place, a cult object, a House
  * standing) must be visible in the world.
  */
-import { DARK_LIGHTS_THRESHOLD, DT, LAUNCH_CLIMB_EVERY, LAUNCH_WINDOW } from "./constants";
+import { CLEARING_LIST_PRICE, DARK_LIGHTS_THRESHOLD, DT, LAUNCH_CLIMB_EVERY, LAUNCH_WINDOW } from "./constants";
 import { ENEMY_SPAWNS, POSITIONS, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
@@ -24,6 +24,7 @@ import { verbsFor } from "./interact";
 import { launchDark, launchMoment, launchOpen } from "./launch";
 import { weatherBand } from "./protocol";
 import { POI_CONFIGS } from "./content/pois";
+import { clearingPrice } from "./content/market";
 import { questById, questProgress } from "./quests";
 import { npcView, snapshotFor } from "./snapshot";
 
@@ -229,8 +230,9 @@ const SCRIPTS: Script[] = [
   // ---------------------------------------------------------------- Nave
   {
     id: SQ.THIRD_ALTAR,
-    steps: [[poi("crt-altar-1", "side:altar:count")], [poi("crt-altar-2", "side:altar:light")]],
-    check: all(poiIs("crt-altar-2", "lit"), w => expect(w.flags[SW.ALTAR_LIT]).toBe(1)),
+    steps: [[poi("crt-altar-1", "side:altar:count")], [poi("crt-altar-3", "side:altar:light")]],
+    // the third altar is its own screen across the aisle (Phase D); the catalog's lit altar is left as it was
+    check: all(poiIs("crt-altar-3", "lit"), poiIs("crt-altar-2", "dark"), w => expect(w.flags[SW.ALTAR_LIT]).toBe(1)),
   },
   {
     id: SQ.UNSPENT,
@@ -525,6 +527,104 @@ describe("every side hour, walked", () => {
       expect(me(later).items).toEqual(me(w).items);
     });
   }
+});
+
+describe("Phase D: the side hours as the script revised them", () => {
+  /** An hour opened for the Angel as the walk opens it: the world, the place, the offer. */
+  function opened(id: string, patch: (w: WorldState) => WorldState = x => x): WorldState {
+    const script = SCRIPTS.find(s => s.id === id)!;
+    let w = patch(world(script));
+    if (script.at) w = goTo(w, ME, script.at);
+    w = tick(w);
+    if (script.offer) w = talkChoose(w, script.offer.npc, script.offer.choice);
+    expect(questProgress(me(w), id)).toEqual({ started: true, step: 0, done: false });
+    return w;
+  }
+  const said = (w: WorldState): string => me(w).heard;
+
+  it("waits under the bell in order: nothing, a watcher, then the one strike, on the third wait and not before", () => {
+    let w = goTo(opened(SQ.HOUR), ME, "hour-bell");
+    w = interact(w, "hour-bell", "side:hour:wait");
+    expect(said(w)).toBe("You wait. The bell does not strike. The terrace goes on selling hours behind you.");
+    w = interact(w, "hour-bell", "side:hour:wait");
+    expect(said(w)).toBe("You wait. Someone on the terrace stops talking to watch you. The bell does not strike.");
+    expect(w.pois["hour-bell"].state, "no strike said before it strikes").not.toBe("struck");
+    w = interact(w, "hour-bell", "side:hour:wait");
+    expect(said(w)).toBe("You wait. The bell strikes. Once. Nobody signed for it. The terrace has gone quiet.");
+  });
+
+  it("keeps the Cable's hour to the Organs: a keep elsewhere does not count, a keep at an Organs node does", () => {
+    let w = opened(SQ.CABLE);
+    w = tick(perform(w, node("kerb-node-1", "keep")), 2);
+    expect(me(w).kept, "the keep itself counts as a keep").toBeGreaterThan(0);
+    expect(questProgress(me(w), SQ.CABLE).step, "a keep on the Kerb is not the Organs").toBe(0);
+    w = tick(perform(w, node("organ-node-strait", "keep")), 2);
+    expect(questProgress(me(w), SQ.CABLE).step).toBe(1);
+  });
+
+  it("asks whose you are twice and writes it on the third stand, not the second", () => {
+    let w = goTo(opened(SQ.CONTEST), ME, "seed-2");
+    const again = "The ring asks whose you are. You say it. The ring wants to hear it again.";
+    w = interact(w, "seed-2", "side:contest:stand");
+    expect(said(w)).toBe(again);
+    w = interact(w, "seed-2", "side:contest:stand");
+    expect(said(w)).toBe(again);
+    w = interact(w, "seed-2", "side:contest:stand");
+    expect(said(w)).toBe("The ring asks whose you are a third time. You say it. The ring writes it. Tithe and omen. Never a bigger stick.");
+  });
+
+  it("never stalls the Cable's hour on the Organs' three shared nodes: with all three kept by others, a keep elsewhere counts", () => {
+    const allKept = (x: WorldState): WorldState => ({ ...x, nodes: x.nodes.map(n => (n.district === "organs" ? { ...n, kept: true, keptBy: "someone" } : n)) });
+    let w = opened(SQ.CABLE, allKept);
+    expect(w.nodes.filter(n => n.district === "organs").every(n => n.kept)).toBe(true);
+    w = tick(perform(w, node("kerb-node-1", "keep")), 2);
+    expect(questProgress(me(w), SQ.CABLE).step).toBe(1);
+  });
+
+  it("lights the third altar across the aisle and leaves the catalog's altar as it was", () => {
+    let w = opened(SQ.THIRD_ALTAR);
+    w = tick(perform(w, poi("crt-altar-1", "side:altar:count")), 2);
+    w = perform(w, poi("crt-altar-3", "side:altar:light"));
+    w = tick(w, 2);
+    expect(w.pois["crt-altar-3"].state).toBe("lit");
+    expect(w.pois["crt-altar-2"].state).toBe("dark");
+    expect(verbsFor({ w, p: me(w), now: w.now }, "crt-altar-3").map(v => v.choice), "a dark screen with no verb of its own once the hour is done").toEqual([]);
+  });
+
+  it("closes the desk's hour on the close alone: a desk the sale already shut still waits for the ledger, with its line", () => {
+    let w = opened(SQ.DESK, x => ({ ...x, pois: { ...x.pois, "operator-desk": { state: "closed", by: "", at: 1, count: 1 } } }));
+    w = tick(perform(w, poi("operator-desk", "side:desk:read")), 2);
+    expect(questProgress(me(w), SQ.DESK).step, "the read is done, the close is not").toBe(1);
+    w = perform(w, poi("operator-desk", "side:desk:close"));
+    expect(said(w)).toBe("You close it. The desk stops asking. It will not start again for you. The oval light on the wall stays on; it was never the desk that was asking.");
+    expect(questProgress(me(tick(w)), SQ.DESK).done).toBe(true);
+  });
+
+  it("prices the copy at the board's live price, sold by the resistance and printed by Quill", () => {
+    let w = goTo(opened(SQ.COPY), ME, "listing-board");
+    w = interact(w, "listing-board", "side:copy:read");
+    expect(said(w)).toBe(`${clearingPrice(w) ?? CLEARING_LIST_PRICE} Bestand. Exhibition copy of a Clearing. The hole itself is not for sale. The copy is. Seller: the resistance. Printer: Quill. Fee paid, on a slip with a margin.`);
+  });
+
+  it("finds twelve under the name you buried it under, and the notice does not say there is no plate", () => {
+    let w = opened(SQ.HONEST, x => add(x, { ...me(x), flags: { ...me(x).flags, [SF.TWELVE_BURIED]: 1 } }));
+    w = goTo(w, ME, "wreckage-garden");
+    w = interact(w, "wreckage-garden", "side:honest:look");
+    expect(said(w)).toMatch(/^The plot you buried under a name\. The number under the name is twelve\./);
+    w = tick(w, 2);
+    expect(me(w).notices.map(n => n.text)).toContain("Number twelve. The Officer's brother.");
+    expect(me(w).notices.map(n => n.text)).not.toContain("Number twelve. No plate. A number. The Officer's brother.");
+  });
+
+  it("reads last season's ground against the glass once the glass has shown it", () => {
+    const face = (w: WorldState): string => said(interact(goTo(w, ME, "seed-4"), "seed-4", "side:season:face"));
+    const w = opened(SQ.SEASON);
+    const plain = "South-east of the seed ground the asphalt is a different colour. Last season's Passing failed here. The hour went by. The city kept the weather. You do not loot it.";
+    const { [F.FAILED]: _faced, [F.GLASS_FAILED]: _glass, ...unfaced } = me(w).flags;
+    expect(face(add(w, { ...me(w), flags: unfaced })), "before the glass, the ground alone").toBe(plain);
+    expect(face(add(w, { ...me(w), flags: { ...unfaced, [F.FAILED]: 1 } })), "the hole stood at, the glass never read: no 'the glass says'").toBe(plain);
+    expect(face(add(w, { ...me(w), flags: { ...unfaced, [F.FAILED]: 1, [F.GLASS_FAILED]: 1 } }))).toBe("South-east of the seed ground the asphalt is a different colour. Last season's Passing failed here, the glass says. The hour went by. The city kept the weather. You do not loot it. Somebody already did.");
+  });
 });
 
 describe("the armored van on a street already hot", () => {

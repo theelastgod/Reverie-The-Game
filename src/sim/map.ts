@@ -170,6 +170,7 @@ export const POI_LIST: PoiDef[] = [
   poi("guest-arena", "arena", "nave", 28, 33, "Practice ground"),
   poi("crt-altar-1", "door", "nave", 5, 31, "CRT altar"),
   poi("crt-altar-2", "door", "nave", 29, 45, "CRT altar"),
+  poi("crt-altar-3", "door", "nave", 30, 31, "CRT altar"), // the third altar, the first one's dark twin across the aisle: Safety's plaque counts two (side-nave-third-altar, Phase D)
   // Wet Grid — market, desks, Vesper
   poi("stall-1", "stall", "wet", 46, 38, "Stall · surfaces"),
   poi("stall-2", "stall", "wet", 53, 38, "Stall · copies"),

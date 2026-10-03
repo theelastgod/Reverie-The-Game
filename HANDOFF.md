@@ -100,6 +100,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   everyone; and when the launch's hour is out the vans leave and the hot
   street is a street again, until the next van or pull heats it; and a
   reader of the glass carries it in the field notes, as Caul promised.
+  Phase D, the side hours re-pointed to the script, is done: every line
+  the appendix tagged revised is in the game, and the third altar has a
+  screen of its own.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1781,9 +1784,6 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `ring` and `margin` at the vans followed (below); next the clerks'
   descent, the hot street's cool-down, the Houses' lost hour at Ord's
   map, and the journal line for readers.
-
-## Verified (2026-09-25, integration)
-
 - Backlog A, Phase C, the launch's remainder (2026-10-03, morning):
   from IV.5's lines that waited for the window; no step inserted.
   Through a lit window the cable enforcer ("Cold desk · cable") stands
@@ -1873,6 +1873,54 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   resistance is, they bought their paper from the same man I did" is
   already hers after the board, so "exposed for everyone who asks"
   needs a choice the script does not write.
+- Backlog A, Phase D, the side hours re-pointed (2026-10-03, afternoon):
+  the appendix's side hours made to say what the script says, found by
+  a read-only audit workflow (six slices of the appendix against
+  side.ts, side-pois.ts, side-npcs.ts and news.ts, each finding checked
+  again by a skeptic: 28 confirmed of 39 reported) and a review
+  workflow over the diff (three lenses, each verified). Every line the
+  appendix tagged revised now ships word for word: the van's clerk
+  saying what the clerk was told to say and the vans carrying
+  recorders; the copy of a hole at the board's live price, "Seller: the
+  resistance. Printer: Quill."; the copy taken down while the price
+  stays up; the Concern's stamp on the fee tin; "No margin." on the
+  spotted hint; the desk's close with the oval light on the wall;
+  Corvin's form face up, "funded by"; the tax as "Tax", not the
+  theory's word, and the column the window remits to; Corvin's "The
+  paper is theirs; the form is mine."; the weather, not the theory's
+  word, thinning under Dov's upkeep and the swept shrine; and last
+  season's ground read against the glass once the glass itself has
+  shown it (`F.GLASS_FAILED`, new, set by the glass's "Face last
+  season"; standing at the hole sets `F.FAILED` alone). The desk's
+  close step is done on its own flag, as the script asked, so the close
+  is offered even when the sale that walked Vesper already shut the
+  desk. The third altar has a screen of its own at last (`crt-altar-3`,
+  across the aisle from the first, a dark altar with no verb until the
+  hour lights it; the client draws every `crt-altar-*` with the
+  existing prop), so lighting it no longer touches the catalog's lit
+  altar the kneelers watch (I.9). Bugs the audit and the review found
+  and fixed: the hour bell's waits and the contest's stands each spoke
+  one step ahead, because a verb's say is read after its count
+  (`interact.ts`), so the bell said it struck on the second wait and
+  the ring said it wrote on the second stand; the honest answer's look
+  branched on the name told to Pim instead of the burial under a name,
+  and its notice said "No plate. A number." over a grave with a plate
+  (now "Number twelve. The Officer's brother.", the same words less
+  three); and the Cable's hour counted a keep anywhere in the city.
+  It now counts keeps in the Organs (every keep raises the body's
+  `kept:<district>` flag, `keptIn` in ids.ts), and because the Organs
+  have three shared nodes and a kept node offers no Keep until someone
+  extracts it, while all three stand kept a keep anywhere still counts,
+  so the hour never waits on an extract. The script was corrected where
+  it was wrong about the code: every giver's visit tally ("[a visit
+  counted]"), Halla's greet at the glass and the choices her greet and
+  hub really offer, Renn's cut-organ gates, the mute bell's header (the
+  bell stays rung), and Movement III's Renn hub no longer promising
+  Phase D. The two Phase C items that wait on you are still open (see
+  the status block).
+
+## Verified (2026-09-25, integration)
+
 - `npm run typecheck` — client and Worker clean.
 - `npm test` — 34 files, 436 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
@@ -2787,6 +2835,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   journal's glass block rendered in Chromium from the real markup and
   `hud.css` (a scratchpad screenshot; the render check's bot is no
   reader).
+- Backlog A, Phase D, the side hours re-pointed (2026-10-03,
+  afternoon): typecheck, 577 tests in 43 files (every side hour still
+  walked end to end, the third altar's now lighting `crt-altar-3` and
+  leaving `crt-altar-2` dark; the bell's three waits and the contest's
+  three stands in order; the Cable's hour refusing a keep on the Kerb,
+  taking one in the Organs, and taking one anywhere while all three
+  Organs nodes stand kept by others; the desk's close offered and
+  closing the hour after a sale shut the desk; the copy at the live
+  price; twelve found under its name with the shortened notice; the
+  ground before the glass, at the hole and after the glass; the
+  satisfier table with the close on its flag and the Organs keep; every
+  POI still offering a verb, its own or a side hour's), the build, the
+  play build and the stage, and on fresh local worlds the session
+  smoke, the Movement I, II and III campaign smokes and the render
+  check, each run alone. A Movement III run made while the review
+  workflow's agents were working beside it lost its socket when the
+  local Worker reloaded; run again alone it passed.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2882,7 +2947,9 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      on its own, the hot street set hot, the listing's buyer named, skipped
      all but the vans when the lights are dark); the Appearance's blank
      tape as a news line naming the angel.
-   - **Phase D, the side quests re-pointed**: ids kept, one change each,
+   - **Phase D, the side quests re-pointed** (done 2026-10-03, see Done:
+     every appendix line tagged revised ships, the third altar has its
+     own screen, and the audit's bugs are fixed): ids kept, one change each,
      the company behind every clerk, desk, van, hour and copy they touch.
    The rules that do not move: persistent ids stay; the server owns every
    number; no new art (Caul is the guest's art and must never get more);

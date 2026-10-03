@@ -5,11 +5,12 @@
  * verbs that share a key on one POI hide behind the earlier one until it is
  * done. Verbs report; quests change the world.
  */
-import { FUNERAL_COST, LISTING_FEE, FORGE_COST, TITHE_COST, UPKEEP_COST } from "../constants";
+import { CLEARING_LIST_PRICE, FUNERAL_COST, LISTING_FEE, FORGE_COST, TITHE_COST, UPKEEP_COST } from "../constants";
 import { weatherBand, WEATHER_LABEL } from "../protocol";
 import { F } from "./ids";
 import type { Ctx, PoiVerb } from "../types";
 import { COPY_ITEM_ID, SC, SF, SQ, has, hasCopy, stepOf } from "./side";
+import { clearingPrice } from "./market";
 
 const atStep = (questId: string, step: number) => ({ p }: Ctx): boolean => stepOf(p, questId) === step;
 const notAtStep = (questId: string, step: number) => ({ p }: Ctx): boolean => stepOf(p, questId) !== step;
@@ -47,7 +48,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
       say: "The glass is warm where nothing is playing. Two nodes behind you still have their charges. The screen takes that as a signal.",
     },
   ]),
-  "crt-altar-2": [
+  "crt-altar-3": [
     {
       key: "E", label: "Light it", choice: "side:altar:light",
       when: atStep(SQ.THIRD_ALTAR, 1), guest: "allow", once: SF.ALTAR_LIT,
@@ -86,7 +87,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "Q", label: "Pay the fee in your House's name", choice: "side:fee:pay",
       when: atStep(SQ.LISTING_FEE, 0), guest: "deny", once: SF.FEE_2, cost: { bestand: LISTING_FEE, sink: "listing" },
-      say: "Copies. The fee goes in a tin. The tin has four Houses scratched on it. Yours was already there.",
+      say: "Copies. The fee goes in a tin. The tin has four Houses scratched on it and the Concern's stamp on the lid. Yours was already there.",
     },
   ],
   "stall-3": [
@@ -100,7 +101,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "Q", label: "Ask about the van", choice: "side:van:ask",
       when: atStep(SQ.VAN, 0), guest: "allow", once: SF.VAN_ASKED,
-      say: "Armored. For moving Bestand between desks, the clerk says. The clerk is lying. They are for moving Bestand out of a street before it goes hot. This one wants the south end.",
+      say: "Armored. For moving Bestand between desks, the clerk says, because that is what the clerk was told to say. They carry recorders. No markings; everyone on this street knows whose. This one wants the south end.",
     },
     {
       key: "Q", label: "Pay the fee in your House's name", choice: "side:fee:pay",
@@ -119,12 +120,12 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "E", label: "Read the copy's price", choice: "side:copy:read",
       when: atStep(SQ.COPY, 0), guest: "allow", once: SF.COPY_READ,
-      say: "Forty Bestand. Exhibition copy of a Clearing. The hole itself is not for sale. The copy is. Seller: Quill. Fee paid.",
+      say: ({ w }) => `${clearingPrice(w) ?? CLEARING_LIST_PRICE} Bestand. Exhibition copy of a Clearing. The hole itself is not for sale. The copy is. Seller: the resistance. Printer: Quill. Fee paid, on a slip with a margin.`,
     },
     {
       key: "E", label: "Take it down", choice: "side:copy:down",
       when: atStep(SQ.COPY, 1), guest: "allow", once: SF.COPY_DOWN, cost: { bestand: LISTING_FEE, sink: "listing" },
-      say: "You pay the fee the seller paid and the board goes quiet where the hole was priced. Somewhere on the Grid, Quill feels the space.",
+      say: "You pay the fee the seller paid and the copy comes down. The price stays up where the hole was priced; a price is not a copy. Somewhere on the Grid, Quill feels the space.",
     },
   ]),
   "forge-tray": exclusive([
@@ -136,7 +137,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "Q", label: "Take the spotted hint", choice: "side:tray:take",
       when: atStep(SQ.TRAY, 1), guest: "deny", once: SF.TRAY_TAKEN,
-      say: "Paper with a hint on it that no press made. You spotted it. It is yours the way a grave is yours.",
+      say: "Paper with a hint on it that no press made. No margin. You spotted it. It is yours the way a grave is yours.",
     },
   ]),
   "operator-desk": exclusive([
@@ -148,7 +149,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "E", label: "Close the ledger", choice: "side:desk:close",
       when: atStep(SQ.DESK, 1), guest: "spectate", once: SF.DESK_CLOSED,
-      say: "You close it. The desk stops asking. It will not start again for you.",
+      say: "You close it. The desk stops asking. It will not start again for you. The oval light on the wall stays on; it was never the desk that was asking.",
     },
   ]),
 
@@ -181,7 +182,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "E", label: "Look for the frozen name", choice: "side:honest:look",
       when: atStep(SQ.HONEST, 0), guest: "spectate", once: SF.HONEST_FOUND,
-      say: ({ p }) => (has(p, SF.TWELVE_NAMED)
+      say: ({ p }) => (has(p, SF.TWELVE_BURIED)
         ? "The plot you buried under a name. The number under the name is twelve. Went under during a freeze. The Passing that season failed. It was Corvin Slate's brother."
         : "A plot with a number. Twelve. Went under during a freeze. The Passing that season failed. No plate. No name. That is his brother."),
     },
@@ -214,12 +215,12 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "E", label: "Read who pays", choice: "side:tax:read",
       when: atStep(SQ.TAX, 0), guest: "spectate", once: SF.TAX_READ,
-      say: ({ w }) => `Gestell tax: ${taxPercent(w.gestell)} percent on every yield. Payers: nobody, by name. The rate is the weather. The weather is everyone, added up.`,
+      say: ({ w }) => `Tax: ${taxPercent(w.gestell)} percent on every yield. Payers: nobody, by name. The rate is the weather. The weather is everyone, added up.`,
     },
     {
       key: "E", label: "Pay your House's share", choice: "side:tax:pay",
       when: atStep(SQ.TAX, 1), guest: "spectate", once: SF.TAX_PAID, cost: { bestand: TITHE_COST, sink: "tax" },
-      say: "You pay a share under a House's name. The clerk has a column for that. It has never had anything in it.",
+      say: "You pay a share under a House's name. The clerk has a column for that. It has never had anything in it. The column beside it, the one the window remits to, has never once been empty.",
     },
   ]),
 
@@ -237,7 +238,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
       when: atStep(SQ.HOUR, 0), guest: "allow",
       effects: [{ kind: "count", key: SF.HOUR_WAITED, delta: 1 }],
       say: ({ p }) => {
-        const n = (p.flags[SF.HOUR_WAITED] ?? 0) + 1;
+        const n = p.flags[SF.HOUR_WAITED] ?? 0; // the say is read after the verb's effects: the count already holds this wait
         if (n <= 1) return "You wait. The bell does not strike. The terrace goes on selling hours behind you.";
         if (n === 2) return "You wait. Someone on the terrace stops talking to watch you. The bell does not strike.";
         return "You wait. The bell strikes. Once. Nobody signed for it. The terrace has gone quiet.";
@@ -283,7 +284,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "Q", label: "Sweep the shrine", choice: "side:sweep:first",
       when: atStep(SQ.UPKEEP, 0), guest: "spectate", once: SF.SWEEP_1, cost: { bestand: UPKEEP_COST, sink: "upkeep" },
-      say: "Upkeep. Bestand into the ground. The Gestell thins by an amount you will not feel.",
+      say: "Upkeep. Bestand into the ground. The weather thins by an amount you will not feel.",
     },
   ]),
   "shrine-2": exclusive([
@@ -389,7 +390,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
       when: atStep(SQ.CONTEST, 0), guest: "spectate",
       effects: [{ kind: "count", key: SF.CONTEST_HELD, delta: 1 }],
       say: ({ p }) => {
-        const n = (p.flags[SF.CONTEST_HELD] ?? 0) + 1;
+        const n = p.flags[SF.CONTEST_HELD] ?? 0; // the say is read after the verb's effects: the count already holds this stand
         return n >= 3 ? "The ring asks whose you are a third time. You say it. The ring writes it. Tithe and omen. Never a bigger stick." : "The ring asks whose you are. You say it. The ring wants to hear it again.";
       },
     },
@@ -405,7 +406,10 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "E", label: "Face last season", choice: "side:season:face",
       when: atStep(SQ.SEASON, 0), guest: "spectate", once: SF.SEASON_FACED,
-      say: "South-east of the seed ground the asphalt is a different colour. Last season's Passing failed here. The hour went by. The city kept the weather. You do not loot it.",
+      // Once the glass itself has shown last season (III.7), the ground is read against it; standing at the hole does not count.
+      say: ({ p }) => (has(p, F.GLASS_FAILED)
+        ? "South-east of the seed ground the asphalt is a different colour. Last season's Passing failed here, the glass says. The hour went by. The city kept the weather. You do not loot it. Somebody already did."
+        : "South-east of the seed ground the asphalt is a different colour. Last season's Passing failed here. The hour went by. The city kept the weather. You do not loot it."),
     },
   ],
 };

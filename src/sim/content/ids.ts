@@ -42,6 +42,7 @@ export const F = {
   GARDEN: "garden", // buried the wreckage garden
   BELL: "bell", // Movement III: struck the hour bell once on the way to the glass
   FAILED: "failed", // saw a failed Passing
+  GLASS_FAILED: "failed:glass", // saw it in the forecast glass itself (III.7's "Face last season"); standing at the hole sets FAILED alone
   FIGURE: "figure", // Movement III: heard Ord's figure for last season at the glass (it was captured, not short)
   LID: "nara:lid", // Movement IV: heard Nara's confession at the ring before it was a ring (she pressed record on the first one)
   CAUL_MET: "caul:met", // Movement III: met Anselm Caul in person, in the room behind the forecast glass
@@ -163,8 +164,12 @@ export const POI_STATES: Record<string, readonly string[]> = {
   "seed-4": ["bare", "seeded"],
   "crt-altar-1": ["dark", "lit"],
   "crt-altar-2": ["dark", "lit"],
+  "crt-altar-3": ["dark", "lit"], // the third altar, across the aisle from the first: dark until a side hour lights it (Phase D)
   "stall-1": ["open"], "stall-2": ["open"], "stall-3": ["open"], "stall-4": ["open"], "forge-tray": ["cold", "warm"],
 };
+
+/** A body's own count of nodes it has kept in a district (Player.flags), raised by every keep (economy.ts); the side hours count from it. */
+export const keptIn = (district: string): string => `kept:${district}`;
 
 /** Earner and sink ids used in bestand effects; economy.ts pairs them. */
 export const EARNERS = ["node", "spoils", "craft", "bounty", "claim", "stipend", "operator"] as const;

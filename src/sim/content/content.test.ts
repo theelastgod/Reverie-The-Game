@@ -214,7 +214,8 @@ describe("POI configs", () => {
   it("every verb has a key, label, choice and a valid guest policy, and costs use a known sink", () => {
     const sinks = new Set(["tax", "repair", "restore", "listing", "tithe", "freeze", "insurance", "upkeep", "funeral", "forge", "door", "bank"]);
     for (const cfg of Object.values(POI_CONFIGS)) {
-      expect(cfg.verbs.length, cfg.id).toBeGreaterThan(0);
+      // every POI offers something: its own verbs, or (the third altar, Phase D) a side hour's
+      expect(cfg.verbs.length + (SIDE_POI_VERBS[cfg.id]?.length ?? 0), cfg.id).toBeGreaterThan(0);
       for (const v of cfg.verbs) {
         expect(["F", "E", "Q"]).toContain(v.key);
         expect(v.label.length).toBeGreaterThan(0);

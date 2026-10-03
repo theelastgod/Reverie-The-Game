@@ -292,6 +292,12 @@ const NAVE: PoiConfig[] = [
     ],
   },
   {
+    // The third altar: a dark screen with no verb of its own until the side hour that lights it (side-pois.ts, Phase D).
+    id: "crt-altar-3",
+    label: "CRT altar",
+    verbs: [],
+  },
+  {
     id: "crt-altar-2",
     label: "CRT altar",
     verbs: [
@@ -1039,6 +1045,7 @@ const KERB: PoiConfig[] = [
         say: "In the glass, behind the forecast: last season's Passing failed. The hour went by. The city kept the weather. There is a hole in the Clearing with the recorders still standing in it. You watched. You did not loot it.",
         effects: [
           { kind: "flag", key: F.FAILED },
+          { kind: "flag", key: F.GLASS_FAILED }, // the glass itself, not the hole: the seed ground reads it (side-pois.ts, Phase D)
           { kind: "poi", id: "forecast-glass", state: "lit" },
           { kind: "wink", text: LAST_SEASON_WINK },
           { kind: "readiness", delta: 2 },

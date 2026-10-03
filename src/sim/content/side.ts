@@ -9,7 +9,7 @@
  * Keys are stable once shipped. Add, never rename.
  */
 import { POSITIONS, TILE } from "../map";
-import { C, F, W } from "./ids";
+import { C, F, W, keptIn } from "./ids";
 import type { Ctx, DistrictId, Effect, Fourfold, Item, Player, Quest, QuestStep, Vec, WorldState } from "../types";
 
 // ---------------------------------------------------------------- ids
@@ -135,7 +135,8 @@ export const SF = {
   // organs
   TOLL_DECIDED: "side:toll:decided",
   TOLL_TOLD: "side:toll:told",
-  CABLE_BASE: "side:cable:base",
+  CABLE_BASE: "side:cable:base", // the body's whole keep count at the hour's start: read only while every Organs node stands kept by someone
+  CABLE_ORGANS_BASE: "side:cable:organsBase", // the body's Organs keeps at the hour's start: the keep must be in the Organs (Phase D)
   CABLE_TOLD: "side:cable:told",
   FOUNDRY_RAKED: "side:foundry:raked",
   FOUNDRY_TOLD: "side:foundry:told",
@@ -269,11 +270,11 @@ const NAVE: Quest[] = [
         id: "light",
         title: "Light the one they did not count",
         detail: "The altar across the aisle is dark. Safety counted two and this is the third. Press E to light it.",
-        target: "crt-altar-2",
+        target: "crt-altar-3", // its own screen since Phase D, not the catalog's lit altar at the aisle's south end (I.9)
         plate: "wing-star.png",
-        done: ({ p, w }) => has(p, SF.ALTAR_LIT) || poiIs(w, "crt-altar-2", "lit"),
+        done: ({ p, w }) => has(p, SF.ALTAR_LIT) || poiIs(w, "crt-altar-3", "lit"),
         onComplete: [
-          poi("crt-altar-2", "lit"),
+          poi("crt-altar-3", "lit"),
           worldFlag(SW.ALTAR_LIT),
           news("Someone lit the altar Safety did not count."),
           wink("Three screens. Two on the ledger. The one that is not counted is the one that is still a place."),
@@ -555,7 +556,7 @@ const WET: Quest[] = [
         detail: "Private yield still wants a body. Press E to close the book so it stops asking.",
         target: "operator-desk",
         plate: "plate-operator.jpg",
-        done: ({ p, w }) => has(p, SF.DESK_CLOSED) || poiIs(w, "operator-desk", "closed"),
+        done: ({ p }) => has(p, SF.DESK_CLOSED), // the close is the ledger's, not the desk's: a sale that walked her already closed the desk (Phase D)
         onComplete: [
           poi("operator-desk", "closed"),
           worldFlag(SW.DESK_CLOSED),
@@ -774,7 +775,8 @@ const ANNEX: Quest[] = [
         target: "wreckage-garden",
         plate: "failed-passing.jpg",
         done: ({ p }) => has(p, SF.HONEST_FOUND),
-        onComplete: [notice("Number twelve. No plate. A number. The Officer's brother.")],
+        // A twelve already buried under a name has a plate in the ground now.
+        onComplete: ({ p }) => [notice(has(p, SF.TWELVE_BURIED) ? "Number twelve. The Officer's brother." : "Number twelve. No plate. A number. The Officer's brother.")],
       }),
       step({
         id: "tell",
@@ -1238,7 +1240,7 @@ const ORGANS: Quest[] = [
     guestLegal: false,
     changes: "poi",
     available: ({ p }) => angel(p) && has(p, F.M3) && offered(p, SQ.CABLE),
-    onStart: ({ p }) => [flag(SF.CABLE_BASE, p.kept)],
+    onStart: ({ p }) => [flag(SF.CABLE_BASE, p.kept), flag(SF.CABLE_ORGANS_BASE, count(p, keptIn("organs")))],
     steps: [
       step({
         id: "keep",
@@ -1246,7 +1248,11 @@ const ORGANS: Quest[] = [
         detail: "One node, left with its charges. Press Q at a node in the Strait, the Foundry or the Cable. Do not extract.",
         target: ({ w }) => w.nodes.find(n => n.district === "organs" && !n.kept)?.id ?? "organ-node-cable",
         plate: "organ-cable-dark.jpg",
-        done: ({ p }) => p.kept - count(p, SF.CABLE_BASE) >= 1,
+        // At an Organs node, counted from the hour's start. The Organs have three nodes, shared, and a kept node offers no Keep
+        // until someone extracts it: while all three stand kept, a keep anywhere counts, so the hour never waits on an extract.
+        done: ({ p, w }) =>
+          count(p, keptIn("organs")) - count(p, SF.CABLE_ORGANS_BASE) >= 1 ||
+          (w.nodes.every(n => n.district !== "organs" || n.kept) && p.kept - count(p, SF.CABLE_BASE) >= 1),
         onComplete: [notice("You kept the node. The hum is less. The Foundry will not thank you.")],
       }),
       step({

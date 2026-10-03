@@ -106,7 +106,7 @@ export function gestellTax(gestell: number): number;        // floor(clamp(g,0,1
 export function nodeYield(w, p, node): number;              // NODE_YIELD * (fat ? NODE_FAT_MULT : 1) * (restraint stance ? NODE_RESTRAINT_MULT : 1) * (Angel with aura < AURA_DIM ? 1+AURA_DARK_YIELD_BONUS : 1) minus tax%, floored; frozen district -> 0
 export function applyNode(w, id, nodeId, op: "extract"|"keep"|"announce"|"seed"): WorldState;
   // extract: within 56 px, charges>0, district not frozen (say LINES.FROZEN), guests allowed (in-instance bestand); charges--, bestand += yield (earner "node"), gestell += GESTELL_EXTRACT, p.extracted++, extractedSinceFuneral++, world EXTRACTIONS++, kept=false; if extractedSinceFuneral >= NARA_THRESHOLD and party.nara==="with" -> party.nara="gone", say LINES.NARA_LEAVES
-  // keep: within 56, !kept; kept=true keptBy=id, readiness += READINESS_KEEP, restraint += RESTRAINT_KEEP_GAIN, gestell += GESTELL_KEEP, p.kept++
+  // keep: within 56, !kept; kept=true keptBy=id, readiness += READINESS_KEEP, restraint += RESTRAINT_KEEP_GAIN, gestell += GESTELL_KEEP, p.kept++, p.flags[keptIn(node.district)]++ (content/ids.ts keptIn(d) = "kept:<d>"; the side hours count a district's keeps from it: Cable quiet counts the Organs', and while all three Organs nodes stand kept a keep anywhere)
   // announce/seed: see combat kit; seed sets node.seed=true and clearing.seeds push
 export function earn(w, id, amount, earner): WorldState;     // bestand += amount, world flag `earned:<earner>` += amount
 export function spend(w, id, amount, sink): WorldState | null; // null when bestand < amount (caller says LINES.CANT_AFFORD); world flag `sunk:<sink>` += amount

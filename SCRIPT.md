@@ -278,7 +278,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 > Closed earth. A name on a slat. The recorder can be heard from here if the wind is right.
 
 ### I.9 The altar
-*New beat, Phase B: verbs on `crt-altar-2`, the lit altar at the south end of the aisle; no step of its own, reachable from I.4 on, so a saved index does not move. No journal plate; the screen plays `video/ambient-hall`. Guest-legal. Phase D re-points `side-nave-third-altar`: its dark twin is no longer this screen.*
+*New beat, Phase B: verbs on `crt-altar-2`, the lit altar at the south end of the aisle; no step of its own, reachable from I.4 on, so a saved index does not move. No journal plate; the screen plays `video/ambient-hall`. Guest-legal. Since Phase D `side-nave-third-altar` has a dark twin of its own, `crt-altar-3`, across the aisle from the first altar, so its light never touches this screen.*
 
 **THE ALTAR** — `crt-altar-2` watch (shipped since Phase B, first beats)
 > Screens in a ring. One is lit and people are kneeling at it. On the screen: a sky through an oval, a bell, the light a shade warmer than the room. The kneelers call it a reverie. It runs ninety seconds and starts again. A tag in the corner. A serial in the margin.
@@ -853,8 +853,8 @@ The paper panel, the gold mark:
 > "Cold desk. I post the number for each organ. Strait, Foundry, Cable. The number is the whole column." There is a second column on the sheet. It is folded under.
 > *Once Ord has written where you would cut it (III.4), one sentence more:* "Ord's entry says you would cut it at the water. I post the Strait first." *· or* "Ord's entry says you would cut it at the heat. I post the Foundry first." *· or* "Ord's entry says you would cut it at the light. I post the Cable first." *· or* "Ord's entry says nowhere. I post them in the order they are."
 - ▸ "The Foundry." → `foundry-offer` (the Foundry read; posted first, or not behind the cut organ)
-- ▸ "The Strait toll." → `toll-offer` (the Strait's hour, Phase D)
-- ▸ "The Cable hums." → `cable-offer` (the Cable's hour, Phase D)
+- ▸ "The Strait toll." → `toll-offer` (the side hour *Strait toll*, written in the appendix; posted first, or not behind the cut organ)
+- ▸ "The Cable hums." → `cable-offer` (the side hour *Cable quiet*, written in the appendix; posted first, or not behind the cut organ)
 - ▸ "There is a second column." → `column-offer` (once the map is drawn)
 - ▸ "Leave."
 
@@ -1655,14 +1655,17 @@ The paper panel, the gold mark:
 - ▸ "You lost someone under a freeze." → `grief` (Angels, the freeze decided, on a second visit)
 - ▸ the report lines of each hour, below
 - ▸ "Leave."
+[a visit counted]
 
 **HALLA VOSS** — `greet` (shipped; side-npcs.ts)
 > "Halla Voss. I read the front." She is not looking at the glass. She is looking at a slip with a time on it. "Hours are three Bestand. Fronts are not for sale. Which are you?"
+> *After she has stopped selling:* "Halla Voss. I read the front." She is at the forecast glass with nothing to sell. "For nothing. It is worse. It is better."
 - ▸ "What do you read?" → `read`
-- ▸ "Sell me an hour." → `hours`
+- ▸ "Sell me an hour." → `hours` (while she still sells)
 - ▸ "Does the bell strike?" → `hour`
+- ▸ "A light went out up there." → `after-light` (for the one who put the light out, once; III.7, written there)
 - ▸ "Leave."
-[SF.OMEN_MET]
+[SF.OMEN_MET; a visit counted]
 
 **HALLA VOSS** — `read` (shipped; side-npcs.ts)
 > "The front. Behind the band the glass shows there is a front, and I can see its edge." She says this to everyone. She does not say it to the glass.
@@ -1672,10 +1675,13 @@ The paper panel, the gold mark:
 **HALLA VOSS** — `hub` (shipped; side-npcs.ts)
 > "Omen-reader. I read the front and I sell the hour. Ask for one or the other. Not both at once; they do not agree."
 > *Guest:* "Unsealed and on the Kerb. You cannot see the front. You can wait under a bell. Anyone can wait."
-- ▸ "Sell me an hour." → `hours`
+- ▸ "Sell me an hour." → `hours` (while she still sells, until the hour is offered)
 - ▸ "Does the bell strike?" → `hour`
+- ▸ "I struck it once, on the way." → `struck` (F.BELL, until she has heard it; III.6, written there)
+- ▸ "A light went out up there." → `after-light` (for the one who put the light out, once; III.7, written there)
 - ▸ the report lines of each hour, below
 - ▸ "Leave."
+[a visit counted]
 
 **DOV MARROW** — `greet` (shipped; side-npcs.ts)
 > "Dov Marrow. I keep the Ring." He has a broom and a key and does not put either down. "The first bell rings. The last bell rings. The middle one was cast mute. Do not ask me to make it ring; it was made that way."
@@ -1683,7 +1689,7 @@ The paper panel, the gold mark:
 - ▸ "I could sweep." → `step`
 - ▸ "What needs keeping?" → `hub`
 - ▸ "Leave."
-[SF.KEEPER_MET]
+[SF.KEEPER_MET; a visit counted]
 
 **DOV MARROW** — `mute-story` (shipped; side-npcs.ts)
 > "Cast without a tongue. Before my time. A bell that cannot ring cannot be put on an hour, and a bell that is not on an hour cannot be sold as one. Whoever cast it knew that." He says 'whoever' carefully.
@@ -1699,13 +1705,14 @@ The paper panel, the gold mark:
 - ▸ "What does the vault keep?" → `vault-offer` (Angels, after the forge)
 - ▸ the report lines of each hour, below
 - ▸ "Leave."
+[a visit counted]
 
 **PIM ASHE** — `greet` (shipped; side-npcs.ts)
 > "Pim Ashe. I dig for Nara Vale." He is younger than the shovel. "Every grave in the Care has a name. She says so. So it is so." The ledger corner in his coat says something else.
 - ▸ "Every grave has a name?" → `lie`
 - ▸ "Is there digging?" → `hub`
 - ▸ "Leave."
-[SF.SEXTON_MET]
+[SF.SEXTON_MET; a visit counted]
 
 **PIM ASHE** — `lie` (shipped; side-npcs.ts)
 > "Every one." He puts a hand over the coat pocket. "Nara will not bury a number. So the numbers are not graves. So every grave has a name." He has said it before. It gets shorter each time.
@@ -1720,13 +1727,14 @@ The paper panel, the gold mark:
 - ▸ "The garden is dirt now." → `seed-offer` (Angels with the garden buried)
 - ▸ the report lines of each hour, below
 - ▸ "Leave."
+[a visit counted]
 
 **RENN COIL** — `greet` (shipped; side-npcs.ts)
 > "Renn Coil. Cold desk." He does not look up from the sheet. "Strait, Foundry, Cable. A number for each. Honest. The number is the whole column; there is nothing under it." The sheet is folded so you cannot see under it.
 - ▸ "What is the number?" → `number`
 - ▸ "What does the desk need?" → `hub`
 - ▸ "Leave."
-[SF.DESK_MET]
+[SF.DESK_MET; a visit counted]
 
 **RENN COIL** — `number` (shipped; side-npcs.ts)
 > "Yield. Per organ. Per hour. It goes up when you extract and down when you keep. I post it. I do not pretty it and I do not explain it." He taps the fold in the sheet without noticing he has.
@@ -1737,23 +1745,24 @@ The paper panel, the gold mark:
 > "Cold desk. I post the number for each organ. Strait, Foundry, Cable. The number is the whole column." There is a second column on the sheet. It is folded under.
 > *By Ord's map (III.4), one of:* "Ord's entry says you would cut it at the water. I post the Strait first." / "Ord's entry says you would cut it at the heat. I post the Foundry first." / "Ord's entry says you would cut it at the light. I post the Cable first." / "Ord's entry says nowhere. I post them in the order they are."
 - ▸ "The Strait toll." → `toll-offer` (Angels through the door; the cut organ's hour comes first)
-- ▸ "The Cable hums." → `cable-offer` (Angels through the door)
-- ▸ "The Foundry." → `foundry-offer` (Angels who have studied the Foundry)
+- ▸ "The Cable hums." → `cable-offer` (Angels through the door; the cut organ's hour comes first)
+- ▸ "The Foundry." → `foundry-offer` (Angels who have studied the Foundry; the cut organ's hour comes first)
 - ▸ "There is a second column." → `column-offer` (Angels after Ord's map)
 - ▸ the report lines of each hour, below
 - ▸ "Leave."
+[a visit counted]
 
 ### side-nave-third-altar — The third altar
-*Movement I, the Nave of Tubes. Opens once the Safety plaque is read; the lit altar, then its dark twin across the aisle. Plate `wing-star.png`. Guest-legal. Changes a POI: `crt-altar-2` lit, for everyone.*
+*Movement I, the Nave of Tubes. Opens once the Safety plaque is read; the lit altar, then its dark twin across the aisle (`crt-altar-3` since Phase D: before it, the twin was `crt-altar-2`, the catalog's lit screen, I.9). Plate `wing-star.png`. Guest-legal. Changes a POI: `crt-altar-3` lit, for everyone.*
 
 **THE ALTAR** — `crt-altar-1` count, `side:altar:count` (shipped; side-pois.ts)
 > Two altars, says the plaque. This one is lit. Its twin across the aisle is not. Safety counted two. Safety did not count the dark one.
 [SF.ALTAR_COUNTED]
 
-**THE ALTAR** — `crt-altar-2` light it, `side:altar:light` (shipped; side-pois.ts)
+**THE ALTAR** — `crt-altar-3` light it, `side:altar:light` (shipped; side-pois.ts; on its own screen since Phase D, a dark altar with no verb of its own until this hour)
 > The screen comes up white, then the colour of the Nave. No picture. Just on. The third altar is lit. The plaque still says two.
 ✦ *Three screens. Two on the ledger. The one that is not counted is the one that is still a place.* (shipped; side.ts; Angels only)
-[poi `crt-altar-2` lit, for everyone; SW.ALTAR_LIT; news "Someone lit the altar Safety did not count."; readiness +2]
+[poi `crt-altar-3` lit, for everyone; SW.ALTAR_LIT; news "Someone lit the altar Safety did not count."; readiness +2]
 *Skipped when the twin is already lit by another hand: the step closes on its own and the Wink lands.*
 
 ### side-nave-unspent — Leave something unspent
@@ -1791,7 +1800,7 @@ The paper panel, the gold mark:
 ### side-wet-armored-van — The armored van
 *Movement I, the Wet Grid. Opens on entering the Grid; stall four, then the hot street's south end. Plate `stall-surface.jpg`. Guest-legal. Changes a POI: `hot-street` hot, for everyone.*
 
-**THE STALL** — `stall-4` ask about the van, `side:van:ask` (revised; side-pois.ts: the vans carry recorders, and the clerk is doing a job, not lying)
+**THE STALL** — `stall-4` ask about the van, `side:van:ask` (shipped since Phase D, the side hours; side-pois.ts: the vans carry recorders, and the clerk is doing a job, not lying)
 > Armored. For moving Bestand between desks, the clerk says, because that is what the clerk was told to say. They carry recorders. No markings; everyone on this street knows whose. This one wants the south end.
 [SF.VAN_ASKED]
 
@@ -1804,11 +1813,11 @@ The paper panel, the gold mark:
 ### side-wet-copy-of-a-hole — A copy of a hole
 *Movement II, the Wet Grid. Opens on the listing board read; the board, twice. Plate `clearing-stall.jpg`. Guest-legal on paper; the board's read is spectate, so it opens for Angels. Changes a person: Quill walks to the board.*
 
-**THE BOARD** — `listing-board` read the copy's price, `side:copy:read` (revised; side-pois.ts: the seller is the resistance, the price is the board's live one)
+**THE BOARD** — `listing-board` read the copy's price, `side:copy:read` (shipped since Phase D, the side hours; side-pois.ts: the seller is the resistance, the price is the board's live one)
 > {price} Bestand. Exhibition copy of a Clearing. The hole itself is not for sale. The copy is. Seller: the resistance. Printer: Quill. Fee paid, on a slip with a margin.
 [SF.COPY_READ]
 
-**THE BOARD** — `listing-board` take it down, `side:copy:down` (revised; side-pois.ts: the resistance's price stays on the board, II.8; costs the listing fee, sink listing)
+**THE BOARD** — `listing-board` take it down, `side:copy:down` (shipped since Phase D, the side hours; side-pois.ts: the resistance's price stays on the board, II.8; costs the listing fee, sink listing)
 > You pay the fee the seller paid and the copy comes down. The price stays up where the hole was priced; a price is not a copy. Somewhere on the Grid, Quill feels the space.
 ✦ *A copy travels. The hole does not. You paid to make the board say nothing. That is not nothing.* (shipped; side.ts; Angels only)
 [Quill walks to the board; news "Someone took a Clearing off the listing board. Quill went to look."; aura +1]
@@ -1819,7 +1828,7 @@ The paper panel, the gold mark:
 **THE STALL** — `stall-1` pay the fee in your House's name, `side:fee:pay` (shipped; side-pois.ts)
 > Surfaces. The stallholder writes your House on the fee slip and does not look up.
 
-**THE STALL** — `stall-2` pay the fee in your House's name, `side:fee:pay` (revised; side-pois.ts: the Concern's stamp on the tin)
+**THE STALL** — `stall-2` pay the fee in your House's name, `side:fee:pay` (shipped since Phase D, the side hours; side-pois.ts: the Concern's stamp on the tin)
 > Copies. The fee goes in a tin. The tin has four Houses scratched on it and the Concern's stamp on the lid. Yours was already there.
 
 **THE STALL** — `stall-3` pay the fee in your House's name, `side:fee:pay` (shipped; side-pois.ts)
@@ -1837,7 +1846,7 @@ The paper panel, the gold mark:
 > You rake the coals to the back of the tray and cover them. The print that was not a print stays warm. It has nowhere else to go.
 [poi `forge-tray` warm; news "Someone banked the forge tray. The print that was not a print stays warm."]
 
-**THE TRAY** — `forge-tray` take the spotted hint, `side:tray:take` (revised; side-pois.ts)
+**THE TRAY** — `forge-tray` take the spotted hint, `side:tray:take` (shipped since Phase D, the side hours; side-pois.ts)
 > Paper with a hint on it that no press made. No margin. You spotted it. It is yours the way a grave is yours.
 ✦ *You kept the eye. The cult hint does not list. Copies will not open the hole.* (shipped; side.ts)
 [cult: A hint that does not list]
@@ -1849,9 +1858,9 @@ The paper panel, the gold mark:
 > The desk is empty. The ledger is open at a page with your hour on it. Private yield still wants a body.
 [SF.DESK_READ]
 
-**THE DESK** — `operator-desk` close the ledger, `side:desk:close` (revised; side-pois.ts; unreachable as shipped: the sale that walked her already closed the desk, pois.ts and npcs.ts, so the close step completes on the tick after the read and the verb is never offered. Phase D gates the close step's done on SF.DESK_CLOSED alone)
+**THE DESK** — `operator-desk` close the ledger, `side:desk:close` (shipped since Phase D, the side hours; side-pois.ts; the close step's done is SF.DESK_CLOSED alone, so a desk the sale already closed, pois.ts and npcs.ts, waits for the ledger and the verb is offered)
 > You close it. The desk stops asking. It will not start again for you. The oval light on the wall stays on; it was never the desk that was asking.
-✦ *A desk is a mouth. You shut it. The number it quoted was honest. The door it bought was not.* (shipped; side.ts; as shipped it lands off the read)
+✦ *A desk is a mouth. You shut it. The number it quoted was honest. The door it bought was not.* (shipped; side.ts; it lands off the close since Phase D)
 [poi `operator-desk` closed, for everyone; SW.DESK_CLOSED; news "Someone closed the Concentrator's desk. Yield still wants a body. It will have to ask elsewhere."; restraint +2]
 
 ### side-care-unnamed-ledger — The unnamed ledger
@@ -1957,7 +1966,7 @@ The paper panel, the gold mark:
 > *Otherwise:* A plot with a number. Twelve. Went under during a freeze. The Passing that season failed. No plate. No name. That is his brother.
 [SF.HONEST_FOUND]
 
-**CORVIN SLATE** — `grief-return`, from the hub's "Number twelve." (revised; side-npcs.ts: the form's small line)
+**CORVIN SLATE** — `grief-return`, from the hub's "Number twelve." (shipped since Phase D, the side hours; side-npcs.ts: the form's small line)
 > "Twelve." He says it once. He puts the form down, face up, the small line at the foot of it showing: funded by. He has signed over it a hundred times. "The freeze held. The district was stable. He went under stable." He takes his coat. "I am going to stand where the Passing failed. Somebody from Safety should have."
 ✦ *Safety was the other honest answer. He still is. He just stopped saying it where it was safe.* (shipped; side.ts)
 [SF.HONEST_TOLD; the Officer walks to where the Passing failed; SW.OFFICER_WALKED; news "The Officer of Safety left the Annex. He is standing where the Passing failed."; a guest keeps him at the Annex desk]
@@ -1968,11 +1977,11 @@ The paper panel, the gold mark:
 ### side-annex-tax-is-climate — The tax is climate
 *Movement II, the Safety Annex. Angels with a House, once this hour's tithe is decided; the tax window, twice. Plate `safety-annex.jpg`. Changes a standing: your House. Sink: the tax.*
 
-**THE WINDOW** — `tax-window` read who pays, `side:tax:read` (revised; side-pois.ts: the city's word for the weather)
+**THE WINDOW** — `tax-window` read who pays, `side:tax:read` (shipped since Phase D, the side hours; side-pois.ts: the city's word for the weather)
 > Tax: {rate} percent on every yield. Payers: nobody, by name. The rate is the weather. The weather is everyone, added up.
 [SF.TAX_READ]
 
-**THE WINDOW** — `tax-window` pay your House's share, `side:tax:pay` (revised; side-pois.ts; costs the tithe, sink tax)
+**THE WINDOW** — `tax-window` pay your House's share, `side:tax:pay` (shipped since Phase D, the side hours; side-pois.ts; costs the tithe, sink tax)
 > You pay a share under a House's name. The clerk has a column for that. It has never had anything in it. The column beside it, the one the window remits to, has never once been empty.
 ✦ *The tax is climate. The climate is you, added up. You paid for a House to be counted as weather.* (shipped; side.ts)
 [your House +1; news "{House} paid its share at the tax window. The Annex wrote the name down."]
@@ -1980,7 +1989,7 @@ The paper panel, the gold mark:
 ### side-annex-notice-for-the-bell — A notice for the bell
 *Movement I, the Safety Annex. From Corvin Slate once the census is offered; Form 4 to Dov Marrow, his refusal back to the Officer. Plates `shrine-upkeep.jpg`, `safety-annex.jpg`. Guest-legal. Changes a person: the keeper stands under the mute bell.*
 
-**CORVIN SLATE** — `notice`, from the hub's "A notice for the bell." (revised; side-npcs.ts: the Concern's paper, in his own formula from the corridor)
+**CORVIN SLATE** — `notice`, from the hub's "A notice for the bell." (shipped since Phase D, the side hours; side-npcs.ts: the Concern's paper, in his own formula from the corridor)
 > "Form 4. Registration of an hour. The mute bell is to be entered as a scheduled hour whether it rings or not. The paper is theirs; the form is mine. Take it to the keeper. He will sign or he will not. Either way, come back."
 - ▸ "I will take it."
 [offer `side-annex-notice-for-the-bell`]
@@ -2095,7 +2104,7 @@ The paper panel, the gold mark:
 [cult: Omen glass]
 
 ### side-ring-mute-bell — Mute bell
-*Movement II, the Gold Ring. Angels, from Dov Marrow on a second visit; under the second shrine's altar, then the bell. Plate `shrine-upkeep.jpg`. Changes a POI: `mute-bell` rung, for everyone, then mute again.*
+*Movement II, the Gold Ring. Angels, from Dov Marrow on a second visit; under the second shrine's altar, then the bell. Plate `shrine-upkeep.jpg`. Changes a POI: `mute-bell` rung, for everyone.*
 
 **DOV MARROW** — `mute-offer`, from the hub's "The bell was not cast mute." (shipped; side-npcs.ts)
 > A long look. "No. It was not." He sets the broom down for the first time. "Look under the altar of its shrine. Hang what you find. It will ring once, and then I will take it back, and it will be mute again, and you will know why. That is the whole hour."
@@ -2116,12 +2125,12 @@ The paper panel, the gold mark:
 ### side-ring-cult-upkeep — Cult upkeep
 *Movement II, the Gold Ring. Angels, from Dov Marrow; three shrines swept for Bestand, the last one nobody keeps. Plate `shrine-upkeep.jpg`. Changes a standing: Divinities. Sink: upkeep, three times.*
 
-**DOV MARROW** — `upkeep-offer`, from the hub's "Upkeep." (revised; side-npcs.ts: the city's word for the weather)
+**DOV MARROW** — `upkeep-offer`, from the hub's "Upkeep." (shipped since Phase D, the side hours; side-npcs.ts: the city's word for the weather)
 > "Three shrines. Bestand goes into the ground and the weather thins by an amount nobody feels. Nobody keeps the last bell. Pay it anyway. Divinities stands for people who pay for what nobody keeps."
 - ▸ "I will sweep them."
 [offer `side-ring-cult-upkeep`]
 
-**THE SHRINE** — `shrine-1` sweep the shrine, `side:sweep:first` (revised; side-pois.ts: the city's word for the weather; upkeep, sink upkeep)
+**THE SHRINE** — `shrine-1` sweep the shrine, `side:sweep:first` (shipped since Phase D, the side hours; side-pois.ts: the city's word for the weather; upkeep, sink upkeep)
 > Upkeep. Bestand into the ground. The weather thins by an amount you will not feel.
 
 **THE SHRINE** — `shrine-2` sweep the shrine, `side:sweep:second` (shipped; side-pois.ts; upkeep, sink upkeep)
@@ -2194,7 +2203,7 @@ The paper panel, the gold mark:
 **RENN COIL** — `cable-offer`, from the hub's "The Cable hums." (shipped; side-npcs.ts)
 > "The Cable hums because the Strait pays. Keep a node in the Organs. Any organ. Do not extract. Then come back and I will post a smaller number. It will be the first time."
 - ▸ "I will keep one."
-[offer `side-organs-cable-quiet`; the keep is the spine's `Q` at any Organs node, counted from the hour's start]
+[offer `side-organs-cable-quiet`; the keep is the spine's `Q` at any Organs node, counted from the hour's start (since Phase D the keep counts itself by district, so a keep elsewhere does not close it, unless all three Organs nodes already stand kept by someone, when a keep anywhere does: the hour never waits on an extract)]
 
 **RENN COIL** — `cable-told`, from the hub's "I kept a node." (shipped; side-npcs.ts)
 > He posts it. The Cable number goes down by one. "Quiet. Not dark." He looks at the sheet longer than the number needs. "The Foundry will notice. It is fed by that hum."
@@ -2279,10 +2288,10 @@ The paper panel, the gold mark:
 ### side-clearing-last-season — Last season's hole
 *Movement III, the Clearing. Angels; the south-east seed ground faced, not looted, then Halla Voss. Plate `failed-passing.jpg`. Changes a cult object: last season's mark. The hour opens with the movement, before or after the glass; the ground reads differently each side of it.*
 
-**THE GROUND** — `seed-4` face last season, `side:season:face` (shipped; side-pois.ts; before the glass is faced, III.7)
+**THE GROUND** — `seed-4` face last season, `side:season:face` (shipped; side-pois.ts; before the glass itself has shown last season, III.7, or when it was faced at the hole)
 > South-east of the seed ground the asphalt is a different colour. Last season's Passing failed here. The hour went by. The city kept the weather. You do not loot it.
 
-**THE GROUND** — `seed-4` face last season, `side:season:face` (revised; side-pois.ts; a new branch once the glass is faced, F.FAILED)
+**THE GROUND** — `seed-4` face last season, `side:season:face` (shipped since Phase D, the side hours; side-pois.ts; a new branch once the glass itself has shown last season, F.GLASS_FAILED; standing at the hole sets F.FAILED alone)
 > South-east of the seed ground the asphalt is a different colour. Last season's Passing failed here, the glass says. The hour went by. The city kept the weather. You do not loot it. Somebody already did.
 [SF.SEASON_FACED]
 

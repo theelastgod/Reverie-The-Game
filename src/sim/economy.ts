@@ -39,7 +39,7 @@ import {
 } from "./constants";
 import type { Claim, Item, Listing, Player, WorldState, YieldNode } from "./types";
 import { NODE_LIST, nearPoint } from "./map";
-import { EARNERS, SINKS, W } from "./content/ids";
+import { EARNERS, SINKS, W, keptIn } from "./content/ids";
 import { LINES } from "./content";
 import { pushNews, say } from "./world";
 import { perception } from "./houses";
@@ -238,6 +238,7 @@ export function applyNode(w: WorldState, id: string, nodeId: string, op: "extrac
       const me: Player = {
         ...p,
         kept: p.kept + 1,
+        flags: { ...p.flags, [keptIn(node.district)]: (p.flags[keptIn(node.district)] ?? 0) + 1 },
         readiness: clamp(p.readiness + READINESS_KEEP, 0, READINESS_MAX),
         restraint: clamp(p.restraint + RESTRAINT_KEEP_GAIN, 0, RESTRAINT_MAX),
       };

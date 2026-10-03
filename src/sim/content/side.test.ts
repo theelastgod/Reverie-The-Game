@@ -6,7 +6,7 @@ import { SIDE, SIDE_BY_ID, SIDE_ITEMS, SIDE_PLACES, SF, SC, SQ, offerKey } from 
 import { SIDE_NPCS } from "./side-npcs";
 import { SIDE_POI_VERBS } from "./side-pois";
 import { NEWS, newsFor } from "./news";
-import { F, POI_STATES, SINKS } from "./ids";
+import { F, POI_STATES, SINKS, keptIn } from "./ids";
 import {
   GUEST_SPAWN, NODE_LIST, NPC_HOMES, POIS, POSITIONS, blockedFor, circleHitsWalls, districtAt, idx, isWall, reachableTiles, tileOf,
 } from "../map";
@@ -85,7 +85,7 @@ function variants(): Ctx[] {
   for (const house of ["earth", "sky", "mortals", "divinities"] as Fourfold[]) out.push(ctxOf(richPlayer({ house }), rw));
   out.push(ctxOf(richPlayer({ choices: { ...richPlayer().choices, [SC.TOLL]: "paid", [SC.FORM9]: "filed" } }), rw));
   out.push(ctxOf(richPlayer({ choices: { ...richPlayer().choices, [SC.TOLL]: "refused", [SC.FORM9]: "refused" } }), rw));
-  out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.HONEST_FOUND]: 1, [SF.TWELVE_NAMED]: 1, [SF.FEE_1]: 1, [SF.FEE_3]: 1, [SF.SWEEP_1]: 1 } }), rw));
+  out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.HONEST_FOUND]: 1, [SF.TWELVE_BURIED]: 1, [SF.TWELVE_NAMED]: 1, [F.FAILED]: 1, [F.GLASS_FAILED]: 1, [SF.FEE_1]: 1, [SF.FEE_3]: 1, [SF.SWEEP_1]: 1 } }), rw));
   out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.VAN_WAVED]: 1 } }), rw)); // the one who waved the van through parks it
   out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.FOUNDRY_RAKED]: 1 } }), rw)); // the one who raked the Foundry out darkens it
   return out;
@@ -145,13 +145,13 @@ function everythingSet(): { quests: Sets; verbs: Sets; npcs: Sets } {
 
 // ---------------------------------------------------------------- satisfiers: what makes each step done
 
-type Sat = { flags?: Record<string, number>; choices?: Record<string, string>; pois?: Record<string, string>; kept?: number; buried?: number };
+type Sat = { flags?: Record<string, number>; choices?: Record<string, string>; pois?: Record<string, string>; kept?: number; keptOrgans?: number; buried?: number };
 const f = (...keys: string[]): Sat => ({ flags: Object.fromEntries(keys.map(k => [k, 1])) });
 const poi = (id: string, state: string): Sat => ({ pois: { [id]: state } });
 
 /** Per quest, per step: one or more ways the side content's own effects make `done` true. */
 const SATISFIERS: Record<string, Sat[][]> = {
-  [SQ.THIRD_ALTAR]: [[f(SF.ALTAR_COUNTED)], [f(SF.ALTAR_LIT), poi("crt-altar-2", "lit")]],
+  [SQ.THIRD_ALTAR]: [[f(SF.ALTAR_COUNTED)], [f(SF.ALTAR_LIT), poi("crt-altar-3", "lit")]],
   [SQ.UNSPENT]: [[{ kept: 2 }], [f(SF.UNSPENT_TOUCHED), poi("crt-altar-1", "lit")]],
   [SQ.ANOTHER_NIGHT]: [[f(SF.NIGHT_SAT)], [f(SF.NIGHT_HEARD)]],
   [SQ.DOING_A_JOB]: [[{ buried: 1 }], [f(SF.JOB_NAMES)]],
@@ -159,7 +159,7 @@ const SATISFIERS: Record<string, Sat[][]> = {
   [SQ.COPY]: [[f(SF.COPY_READ)], [f(SF.COPY_DOWN)]],
   [SQ.LISTING_FEE]: [[f(SF.FEE_1, SF.FEE_2)], [f(SF.FEE_3, SF.FEE_4)]],
   [SQ.TRAY]: [[f(SF.TRAY_BANKED)], [f(SF.TRAY_TAKEN)]],
-  [SQ.DESK]: [[f(SF.DESK_READ)], [f(SF.DESK_CLOSED), poi("operator-desk", "closed")]],
+  [SQ.DESK]: [[f(SF.DESK_READ)], [f(SF.DESK_CLOSED)]], // the close is the ledger's: a desk the sale already closed does not close the step (Phase D)
   [SQ.LEDGER]: [[{ buried: 2 }], [f(SF.LEDGER_REPORTED)]],
   [SQ.TWELVE]: [[f(SF.TWELVE_PLATE)], [f(SF.TWELVE_BURIED)], [f(SF.TWELVE_NAMED)]],
   [SQ.STANDING]: [[f(SF.STANDING_FUNERAL)], [f(SF.STANDING_ENTERED)]],
@@ -178,7 +178,7 @@ const SATISFIERS: Record<string, Sat[][]> = {
   [SQ.VAULT]: [[f(SF.VAULT_LEFT)], [f(SF.VAULT_TOLD)]],
   [SQ.STEP]: [[f(SF.STEP_SWEPT)], [f(SF.STEP_TOLD)]],
   [SQ.TOLL]: [[{ choices: { [SC.TOLL]: "paid" } }, { choices: { [SC.TOLL]: "refused" } }], [f(SF.TOLL_TOLD)]],
-  [SQ.CABLE]: [[{ kept: 1 }], [f(SF.CABLE_TOLD)]],
+  [SQ.CABLE]: [[{ keptOrgans: 1 }], [f(SF.CABLE_TOLD)]], // a keep in the Organs, counted by the keep itself (economy.ts)
   [SQ.FOUNDRY]: [[f(SF.FOUNDRY_RAKED), poi("organ-foundry", "dark")], [f(SF.FOUNDRY_TOLD)]],
   [SQ.COLUMN]: [[f(SF.COLUMN_STRAIT)], [f(SF.COLUMN_FOUNDRY)], [f(SF.COLUMN_CABLE)]],
   [SQ.SEED]: [[f(SF.SEED_EARTH)], [f(SF.SEED_TURNED), poi("seed-1", "seeded")]],
@@ -187,7 +187,7 @@ const SATISFIERS: Record<string, Sat[][]> = {
 };
 
 function applySat(sat: Sat): Ctx {
-  const p = player({ flags: { ...(sat.flags ?? {}) }, choices: { ...(sat.choices ?? {}) }, kept: sat.kept ?? 0 });
+  const p = player({ flags: { ...(sat.flags ?? {}), ...(sat.keptOrgans ? { [keptIn("organs")]: sat.keptOrgans } : {}) }, choices: { ...(sat.choices ?? {}) }, kept: (sat.kept ?? 0) + (sat.keptOrgans ?? 0) });
   p.history = { ...p.history, buried: sat.buried ?? 0 };
   const w = world();
   for (const [id, state] of Object.entries(sat.pois ?? {})) w.pois[id] = { state, by: "p1", at: 1, count: 1 };

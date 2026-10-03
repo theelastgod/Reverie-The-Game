@@ -141,7 +141,7 @@ const officer: NpcDef = {
     }),
     notice: node({
       id: "notice",
-      text: "\"Form 4. Registration of an hour. The mute bell is to be entered as a scheduled hour whether it rings or not. Take it to the keeper. He will sign or he will not. Either way, come back.\"",
+      text: "\"Form 4. Registration of an hour. The mute bell is to be entered as a scheduled hour whether it rings or not. The paper is theirs; the form is mine. Take it to the keeper. He will sign or he will not. Either way, come back.\"",
       effects: offer(SQ.NOTICE),
       choices: [{ id: "go", label: "I will take it." }],
     }),
@@ -165,7 +165,7 @@ const officer: NpcDef = {
     }),
     "grief-return": node({
       id: "grief-return",
-      text: "\"Twelve.\" He says it once. He puts the form down. \"The freeze held. The district was stable. He went under stable.\" He takes his coat. \"I am going to stand where the Passing failed. Somebody from Safety should have.\"",
+      text: "\"Twelve.\" He says it once. He puts the form down, face up, the small line at the foot of it showing: funded by. He has signed over it a hundred times. \"The freeze held. The district was stable. He went under stable.\" He takes his coat. \"I am going to stand where the Passing failed. Somebody from Safety should have.\"",
       effects: [flag(SF.HONEST_TOLD)],
     }),
   },
@@ -361,7 +361,7 @@ const keeper: NpcDef = {
     }),
     "upkeep-offer": node({
       id: "upkeep-offer",
-      text: "\"Three shrines. Bestand goes into the ground and the Gestell thins by an amount nobody feels. Nobody keeps the last bell. Pay it anyway. Divinities stands for people who pay for what nobody keeps.\"",
+      text: "\"Three shrines. Bestand goes into the ground and the weather thins by an amount nobody feels. Nobody keeps the last bell. Pay it anyway. Divinities stands for people who pay for what nobody keeps.\"",
       effects: offer(SQ.UPKEEP),
       choices: [{ id: "go", label: "I will sweep them." }],
     }),
