@@ -22,6 +22,7 @@ import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
 import { verbsFor } from "./interact";
 import { launchDark, launchMoment, launchOpen } from "./launch";
+import { weatherBand } from "./protocol";
 import { POI_CONFIGS } from "./content/pois";
 import { questById, questProgress } from "./quests";
 import { npcView, snapshotFor } from "./snapshot";
@@ -683,9 +684,9 @@ describe("the launch window (IV.5), opened by the tick once a season", () => {
     expect(me(w).dialogue).toMatchObject({ npc: "caul", node: "oval-launch", speaker: "Anselm Caul" });
     expect(me(w).dialogue!.text).toContain("I will be at the Grid's gate, which is as far as I go.");
     expect(me(w, "g").dialogue, "a body in the Nave is not on the Kerb").toBeNull();
-    // the first point is owed at once, the next an interval later; the opening is once
+    // the first point is owed at once (a whole point, not the drift), the next an interval later; the opening is once
     w = tick(w);
-    expect(w.gestell).toBeGreaterThan(before);
+    expect(w.gestell).toBeCloseTo(before + 1, 3);
     const climbed = w.flags[W.LAUNCH_CLIMBED];
     expect(climbed).toBe(1);
     w = tick({ ...w, now: launchMoment(w) + LAUNCH_CLIMB_EVERY });
@@ -723,6 +724,30 @@ describe("the launch window (IV.5), opened by the tick once a season", () => {
     const reel = interact(goTo(w, ME, "crt-altar-2"), "crt-altar-2", "watch");
     expect(me(reel).heard).toContain("No count. The vans are on the Grid anyway.");
     expect(me(reel).dialogue, "no voice on a dark reel").toBeNull();
+  });
+
+  it("never takes the weather into the meltdown band on its own, and spends a blocked point instead of saving it", () => {
+    let w = { ...eve(), gestell: 89.6 };
+    w = tick(w, 2); // the opening, then the first point
+    for (let i = 1; i <= 4; i++) w = tick({ ...w, now: launchMoment(w) + i * LAUNCH_CLIMB_EVERY });
+    expect(weatherBand(w.gestell), "the HUD never reads meltdown from the launch").toBe("fat");
+    expect(w.flags[W.LAUNCH_CLIMBED], "five points were owed and spent").toBe(5);
+    // the city cools the weather mid-hour: the launch climbs one point at its next interval, not every point it was blocked from
+    w = tick({ ...w, gestell: 80, now: launchMoment(w) + 5 * LAUNCH_CLIMB_EVERY });
+    expect(w.gestell).toBeCloseTo(81, 2);
+    w = tick(w, 20);
+    expect(w.gestell, "no burst on the following ticks").toBeLessThan(81.01);
+  });
+
+  it("a body in a fight on the Kerb is not stopped by his window: it gets the ovals as a notice", () => {
+    let w = eve();
+    const clerk = w.enemies.find(e => e.district === "kerb" && e.state !== "dead");
+    expect(clerk, "a clerk walks the Kerb").toBeDefined();
+    w = { ...w, enemies: w.enemies.map(e => (e.id === clerk!.id ? { ...e, state: "aggro" as const, targetId: ME } : e)) };
+    w = tick(w);
+    expect(launchOpen(w)).toBe(true);
+    expect(me(w).dialogue).toBeNull();
+    expect(me(w).notices.map(n => n.text)).toContain("Every oval on the Kerb goes champagne at once. The same voice is on all of them.");
   });
 
   it("does not interrupt a body already in a conversation, and opens once a season", () => {

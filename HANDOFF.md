@@ -1740,11 +1740,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   which season opened, whether dark, and how far the weather climbed).
   Lit: the hot street is set hot, the marquee says "The launch. The
   Concern stopped selling. The weather is climbing on every meter.", the
-  weather climbs a point at the opening and one every five minutes,
-  twelve at most, and never into meltdown on its own (the launch alone
-  stops at 90; extraction can still take the city past it), and every
-  body on the Kerb with no conversation open hears Caul through the
-  ovals ("The hour. I am told this is the part where people look up.").
+  weather climbs a point just after the opening and one every five
+  minutes, twelve at most, and never into meltdown on its own (the
+  launch alone stops at the top of the fat band, 90, below the HUD's
+  meltdown band; a point the ceiling blocks is spent, not saved;
+  extraction can still take the city past it), and every body on the
+  Kerb with no conversation open hears Caul through the ovals ("The
+  hour. I am told this is the part where people look up."), except one
+  in a fight, which gets the ovals as a notice instead of a window that
+  would stop it; the House of Sky reads the drift as the launch's.
   Through the hour the glass reads "the Concern's line with a time on
   it: now"; both altars play the countdown reel for every body, the
   marked included, with his voice over the count; the board names the
@@ -2604,7 +2608,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   is not interrupted), the build, the play build and the stage, and on
   a fresh local world the session smoke and the render check, each run
   alone. The window itself cannot be reached over the wire in a smoke:
-  it opens six days of world time into a season.
+  it opens six days of world time into a season. Reviewed by one reader
+  after the commit; folded in the next: the climb could carry the
+  weather into the HUD's meltdown band (which starts above 90, a point
+  below the rules' 91) from any fraction short of the old cap, so the
+  ceiling is now the fat band's top, 90 (`LAUNCH_CEILING`,
+  `launchClimb`); a point the cap blocked was saved and paid back in a
+  burst when the city cooled the weather, so a blocked point is now
+  spent with nothing climbed; Caul's window opened on a body fighting a
+  clerk on the Kerb and stopped it mid-fight (a body with a clerk on
+  it, a heavy winding up or a duel now gets the ovals as a notice); the
+  test of the first point passed on the drift alone (it now pins a
+  whole point); the House of Sky read "the drift is down" beside "now"
+  (during a lit window it reads the launch's climb); stale docs. After
+  the fixes: typecheck, 550 tests in 42 files (the ceiling from
+  fractions, the blocked point spent, a cooled city climbing one point
+  and no burst, the fighter's notice), the build, the play build and the
+  stage, and on a fresh local world the session smoke and the render
+  check, each run alone.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

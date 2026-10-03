@@ -913,7 +913,7 @@ const forecastLine = (ctx: Ctx): string => {
   const band = weatherBand(ctx.w.gestell);
   const base = WEATHER_LABELS[band];
   if (ctx.p.house !== "sky") return `Forecast glass. ${base}${calendarLine(ctx)}${glassLines(ctx)}`;
-  const drift = ctx.w.gestell > GESTELL_BASELINE + 0.5 ? "The drift is down: the weather eases toward baseline." : ctx.w.gestell < GESTELL_BASELINE - 0.5 ? "The drift is up: the weather climbs toward baseline." : "No drift. The weather sits at baseline.";
+  const drift = launchOpen(ctx.w) && !launchDark(ctx.w) ? "The drift is up: the launch climbs it a point at a time." : ctx.w.gestell > GESTELL_BASELINE + 0.5 ? "The drift is down: the weather eases toward baseline." : ctx.w.gestell < GESTELL_BASELINE - 0.5 ? "The drift is up: the weather climbs toward baseline." : "No drift. The weather sits at baseline.";
   return `Forecast glass. ${base} ${drift} Only Sky sees the front.${calendarLine(ctx)}${glassLines(ctx)}`;
 };
 

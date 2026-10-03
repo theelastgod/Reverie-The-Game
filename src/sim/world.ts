@@ -22,7 +22,7 @@ import { initialClearing, initialPassing, tickClearing } from "./clearing";
 import { resolveHeavy, tickCombatTimers, tickEnemies } from "./combat";
 import { tickQuests } from "./quests";
 import { openNode } from "./dialogue";
-import { glassDark, launchDue } from "./launch";
+import { glassDark, launchClimb, launchDue } from "./launch";
 import * as LINES from "./content/lines";
 
 export const NO_INTENT: Intent = { up: false, down: false, left: false, right: false };
@@ -382,7 +382,7 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
  */
 function tickLaunch(w: WorldState): WorldState {
   const due = launchDue(w);
-  if (due === "climb") return { ...w, gestell: w.gestell + 1, flags: { ...w.flags, [W.LAUNCH_CLIMBED]: (w.flags[W.LAUNCH_CLIMBED] ?? 0) + 1 } };
+  if (due === "climb") return { ...w, gestell: launchClimb(w.gestell), flags: { ...w.flags, [W.LAUNCH_CLIMBED]: (w.flags[W.LAUNCH_CLIMBED] ?? 0) + 1 } };
   if (due !== "open") return w;
   const dark = glassDark(w);
   let cur: WorldState = { ...w, flags: { ...w.flags, [W.LAUNCH_SEASON]: w.season.id, [W.LAUNCH_DARK]: dark ? 1 : 0, [W.LAUNCH_CLIMBED]: 0 } };
@@ -393,10 +393,13 @@ function tickLaunch(w: WorldState): WorldState {
     if (street && street.state !== "hot") cur = { ...cur, pois: { ...cur.pois, [HOT_STREET]: { state: "hot", by: "", at: cur.now, count: street.count + 1 } } };
     cur = pushNews(cur, LAUNCH_NEWS);
   }
-  // Every oval on the Kerb: a body there with no window open hears him; one in a conversation or down is not interrupted.
+  // Every oval on the Kerb: a body there with no window open hears him. One in a conversation or down is not interrupted;
+  // one in a fight (a clerk on it, a heavy winding up, a duel) is not stopped by a window: it gets the ovals as a notice.
   for (const p of [...cur.players.values()]) {
     if (p.district !== "kerb" || p.dead || p.dialogue) continue;
-    cur = openNode(cur, p.id, "caul", dark ? "oval-launch-dark" : "oval-launch");
+    const fighting = p.heavyWindup > 0 || !!p.duel || cur.enemies.some(e => e.targetId === p.id && e.state !== "idle" && e.state !== "dead" && e.state !== "return");
+    if (fighting) cur = { ...cur, players: new Map(cur.players).set(p.id, notice(p, LAUNCH_OVALS_NOTICE, cur.now, "sky")) };
+    else cur = openNode(cur, p.id, "caul", dark ? "oval-launch-dark" : "oval-launch");
   }
   return cur;
 }
@@ -404,6 +407,7 @@ function tickLaunch(w: WorldState): WorldState {
 const HOT_STREET = "hot-street";
 const LAUNCH_NEWS = "The launch. The Concern stopped selling. The weather is climbing on every meter.";
 const LAUNCH_NEWS_DARK = "The vans are on the Grid. The glass had no hour to give them.";
+const LAUNCH_OVALS_NOTICE = "Every oval on the Kerb goes champagne at once. The same voice is on all of them.";
 
 /** The marquee names the climate band once, when the weather crosses into it. Mixed is the default and says nothing. */
 function announceWeather(w: WorldState): WorldState {

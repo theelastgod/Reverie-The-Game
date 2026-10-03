@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DARK_LIGHTS_THRESHOLD, GESTELL_MELTDOWN, LAUNCH_CLIMB_EVERY, LAUNCH_CLIMB_MAX, LAUNCH_OFFSET, LAUNCH_WINDOW, SEASON_LENGTH } from "./constants";
 import { W } from "./content/ids";
-import { countdown, darkLights, glassDark, inLaunchHour, launchDark, launchDate, launchDue, launchOpen, nextLaunch } from "./launch";
+import { LAUNCH_CEILING, countdown, darkLights, glassDark, inLaunchHour, launchClimb, launchDark, launchDate, launchDue, launchOpen, nextLaunch } from "./launch";
+import { weatherBand } from "./protocol";
 
 const at = (now: number, season = 1, startedAt = 0) => ({ now, season: { id: season, startedAt } });
 
@@ -69,9 +70,21 @@ describe("the launch window", () => {
     expect(launchDue(w(at + LAUNCH_CLIMB_EVERY, { ...opened, [W.LAUNCH_CLIMBED]: 1 }))).toBe("climb");
     expect(launchDue(w(at + LAUNCH_WINDOW - 1, { ...opened, [W.LAUNCH_CLIMBED]: LAUNCH_CLIMB_MAX })), "bounded").toBeNull();
     expect(LAUNCH_CLIMB_MAX).toBeLessThanOrEqual(Math.floor(LAUNCH_WINDOW / LAUNCH_CLIMB_EVERY));
-    expect(launchDue(w(at + 10, opened, GESTELL_MELTDOWN - 1)), "the window does not tip the city into meltdown").toBeNull();
-    expect(launchDue(w(at + 10, opened, GESTELL_MELTDOWN - 2))).toBe("climb");
+    // at the ceiling the point is still owed, and is spent with nothing climbed (launchClimb), so nothing is saved up for later
+    expect(launchDue(w(at + 10, opened, GESTELL_MELTDOWN - 1))).toBe("climb");
     expect(launchDue(w(at + 10, { ...opened, [W.LAUNCH_DARK]: 1 })), "a dark window has no shift").toBeNull();
     expect(launchDue(w(at + LAUNCH_WINDOW, opened))).toBeNull();
+  });
+});
+
+describe("launchClimb", () => {
+  it("climbs a point, never past the top of the fat band, and never pulls the weather down", () => {
+    expect(launchClimb(40)).toBe(41);
+    expect(launchClimb(89.6), "a fraction short of the ceiling climbs only to it").toBe(LAUNCH_CEILING);
+    expect(launchClimb(89.99998)).toBe(LAUNCH_CEILING);
+    expect(launchClimb(LAUNCH_CEILING)).toBe(LAUNCH_CEILING);
+    expect(launchClimb(95), "extraction took it past; the launch does not undo that").toBe(95);
+    for (const g of [85, 89.5, 89.99998, 90]) expect(weatherBand(launchClimb(g)), `from ${g}`).toBe("fat");
+    expect(LAUNCH_CEILING).toBeLessThan(GESTELL_MELTDOWN);
   });
 });

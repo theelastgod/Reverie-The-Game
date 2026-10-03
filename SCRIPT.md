@@ -1396,7 +1396,7 @@ The paper panel, the gold mark:
 **THE ENFORCER** — Cold desk · cable at the Organs' node, on shift (new); Cold desk · one and · two on the hot street the window flags, as shipped
 > Cold desk · cable, at the node, not the desk. "Shift." The meter runs. It does not look up.
 > *Fall line (shipped, lines.ts `DEATH_BY`):* Cold desk · cable did their job.
-[the weather climbs a point at a time on every HUD on the server, by a bounded amount, never past 91 on its own (shipped since Phase C, the launch: a point at the opening and one every five minutes, twelve at most, and never to meltdown, so the launch alone stops at 90); the altars draw on the Cable as before; the enforcer at the node is the next slice]
+[the weather climbs a point at a time on every HUD on the server, by a bounded amount, never past 91 on its own (shipped since Phase C, the launch: a point just after the opening and one every five minutes, twelve at most; the launch alone stops at the top of the fat band, 90, below the HUD's meltdown band and the rules' 91, and a point the ceiling blocks is spent, not saved for later); the altars draw on the Cable as before; the enforcer at the node is the next slice]
 
 **THE BOARD** — `listing-board` read, during the window (shipped since Phase C, the launch; pois.ts; a window that opened dark names nobody)
 > Quill listed a Clearing, on commission, for a buyer she never met. The buyer has a name this hour. BUYER: THE CONCERN. {price} Bestand. Copies travel. The hole does not. The vans backing up to it say otherwise.

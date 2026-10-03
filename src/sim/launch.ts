@@ -3,7 +3,7 @@
  * SEASON_LENGTH of world time from `w.season.startedAt`, and the launch is LAUNCH_OFFSET into it, the first hour of
  * its seventh day. Once this season's moment has gone by, the glass shows the next season's. The city puts lights out
  * behind the glass (W.DARK_LIGHTS, one per Angel who darkened the oval); past DARK_LIGHTS_THRESHOLD the glass shows no
- * date at all. Pure: the content reads it; the launch window that opens at the moment is the tick's (next).
+ * date at all. Pure: the content reads it; the launch window that opens at the moment is the tick's (world.ts tickLaunch).
  *
  * The switch is the city's, not the season's: W.DARK_LIGHTS is never reset (the season roll keeps world flags) and an
  * Angel puts the light out once, so seven refusals withhold the date in every season after (the synopsis's "switch with
@@ -65,8 +65,18 @@ export const launchDark = (w: Pick<WorldState, "now" | "season" | "flags">): boo
   launchOpen(w) && (w.flags[W.LAUNCH_DARK] ?? 0) > 0;
 
 /**
- * What the tick owes the window now: open it (once a season, inside the hour), or climb the weather a point (one per
- * LAUNCH_CLIMB_EVERY since the moment, LAUNCH_CLIMB_MAX in all, and never to meltdown on its own), or nothing.
+ * The highest the launch takes the weather on its own: the top of the fat band. The HUD's meltdown band starts above
+ * it (protocol.ts weatherBand), and the rules' meltdown at GESTELL_MELTDOWN above that; the launch reaches neither.
+ */
+export const LAUNCH_CEILING = GESTELL_MELTDOWN - 1;
+
+/** The weather after one of the launch's points: a point up, never past the ceiling, never down. */
+export const launchClimb = (gestell: number): number => Math.max(gestell, Math.min(gestell + 1, LAUNCH_CEILING));
+
+/**
+ * What the tick owes the window now: open it (once a season, inside the hour), or spend a point of the climb (one per
+ * LAUNCH_CLIMB_EVERY since the moment, LAUNCH_CLIMB_MAX in all; a point the ceiling blocks is spent with nothing
+ * climbed, so the weather is never paid back in a burst), or nothing.
  */
 export function launchDue(w: Pick<WorldState, "now" | "season" | "flags" | "gestell">): "open" | "climb" | null {
   if (!inLaunchHour(w)) return null;
@@ -75,6 +85,5 @@ export function launchDue(w: Pick<WorldState, "now" | "season" | "flags" | "gest
   const climbed = w.flags[W.LAUNCH_CLIMBED] ?? 0;
   const owed = Math.min(LAUNCH_CLIMB_MAX, Math.floor((w.now - launchMoment(w)) / LAUNCH_CLIMB_EVERY) + 1);
   if (climbed >= owed) return null;
-  if (w.gestell + 1 >= GESTELL_MELTDOWN) return null;
   return "climb";
 }
