@@ -394,6 +394,18 @@ describe("resolvePassing", () => {
     const coldAtMeltdown = makeWorld([cold], { gestell: 100 });
     expect(resolvePassing(coldAtMeltdown, cold)).toBe("failed");
   });
+
+  it("the lip's key is read beside the operator's: signed with Cold as the current claims the hour, and Cold's claim comes before Safety's", () => {
+    const signed = prepared({ readiness: 100, current: "cold", choices: { [C.LIP]: "signed" } });
+    expect(resolvePassing(makeWorld([signed]), signed)).toBe("hijack");
+    const warmSigned = { ...signed, current: "" as const };
+    expect(resolvePassing(makeWorld([warmSigned]), warmSigned), "a key without the current is no claim").toBe("appearance");
+    const refused = prepared({ readiness: 100, current: "cold", choices: { [C.LIP]: "refused" } });
+    expect(resolvePassing(makeWorld([refused]), refused)).toBe("appearance");
+    const both = prepared({ readiness: 100, restraint: 30, current: "cold", choices: { [C.LIP]: "signed", [C.FREEZE]: "signed" } });
+    const passed = applyPassing(makeWorld([both]), "p1");
+    expect(passed.passing).toMatchObject({ lastOutcome: "hijack", hijackedBy: "cold" });
+  });
 });
 
 describe("applyPassing", () => {

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import type { Ctx, Effect, NpcState, Player, PoiVerb, WorldState } from "../types";
 import { GUEST_SPAWN, NPC_HOMES, POI_LIST, POSITIONS } from "../map";
 import { AURA_DIM, M3_DOOR_PRICE, OPERATOR_YIELD, RESTRAINT_START, TEST_SERIAL } from "../constants";
-import { C, F, POI_STATES, Q, W } from "./ids";
+import { C, F, POI_STATES, Q, W, seasonPassingFlag } from "./ids";
 import { NPCS } from "./npcs";
 import { LAST_SEASON_WINK as POIS_LAST_SEASON, POI_CONFIGS } from "./pois";
 import { SIDE_NPCS } from "./side-npcs";
@@ -308,9 +308,11 @@ describe("POI configs", () => {
     expect(offersOnce({ ...struck, p: { ...struck.p, flags: { ...struck.p.flags, "side:bell:told": 1 } } })).toBe(false);
     // A sexton who walked was not in the ring: after the rite she is still gone, not "I stood in the ring anyway".
     const walked = CTXS.find(c => c.name === "angel M4 nara gone")!.ctx;
-    const passed = { ...walked, p: { ...walked.p, flags: { ...walked.p.flags, [F.PASSING]: 1 }, choices: { ...walked.p.choices, [C.PASSING]: "failed" } } };
+    const passed = { ...walked, p: { ...walked.p, flags: { ...walked.p.flags, [F.PASSING]: 1, [seasonPassingFlag(walked.w.season.id)]: 1 }, choices: { ...walked.p.choices, [C.PASSING]: "failed" } } };
     expect(NPCS.nara.entry(passed)).toBe("gone");
-    expect(NPCS.caul.entry(passed), "Caul on the lip has no spoken line yet").toBe("lip-silent");
+    expect(NPCS.caul.entry(passed), "Caul on the lip speaks the season's outcome").toBe("lip-failed");
+    expect(NPCS.caul.entry({ ...passed, p: { ...passed.p, flags: { ...passed.p.flags, [`caul:lip:said:${walked.w.season.id}`]: 1 } } }), "once").toBe("lip-silent");
+    expect(NPCS.caul.entry({ ...passed, w: { ...passed.w, season: { ...passed.w.season, id: passed.w.season.id + 1 } } }), "a later season finds him silent; the offer was the campaign's").toBe("lip-silent");
   });
 
   it("names the weather with three verbs once all three names are heard", () => {
@@ -377,6 +379,24 @@ describe("dialogue", () => {
     expect(def.personal!({ ...angelInOne, p: { ...angelInOne.p, x: far.p.x, y: far.p.y } }, shared)).toBeNull();
     const under = CTXS.find(c => c.name === "angel 7777 M2 fresh")!.ctx;
     expect(def.personal!({ ...under, p: { ...under.p, x: far.p.x, y: far.p.y } }, shared)).toMatchObject({ present: false });
+    // from the fourth hour he stands on the lip, silent until the hole is kept; then the form for the one who refused at the desk, once; the line for the one who sold or signed
+    const lip = POSITIONS["station:caul-lip"];
+    const prepared = CTXS.find(c => c.name === "angel M4 lastword prepared")!.ctx;
+    expect(def.personal!(prepared, shared)).toMatchObject({ x: lip.x, y: lip.y, state: "lip" });
+    expect(def.entry(prepared)).toBe("lip");
+    expect(def.entry({ ...prepared, p: { ...prepared.p, flags: { ...prepared.p.flags, [F.PREPARE]: 0 } } })).toBe("lip-silent");
+    expect(def.entry({ ...prepared, p: { ...prepared.p, choices: { ...prepared.p.choices, [C.LIP]: "refused" } } })).toBe("lip-silent");
+    expect(def.entry({ ...prepared, p: { ...prepared.p, choices: { ...prepared.p.choices, [C.LIP]: "signed" } } })).toBe("lip-sold");
+    expect(def.entry(CTXS.find(c => c.name === "angel M4 nara gone")!.ctx), "the hour sold at the desk").toBe("lip-sold");
+    for (const outcome of ["appearance", "absence", "hijack", "failed"]) {
+      const after = CTXS.find(c => c.name === `angel after ${outcome}`)!.ctx;
+      expect(def.entry({ ...after, p: { ...after.p, flags: { ...after.p.flags, [seasonPassingFlag(after.w.season.id)]: 1 } } })).toBe(`lip-${outcome}`);
+    }
+    // a guest who walks the Grid finds him on the lip, with his own line and no serial
+    const guestOnTheGrid = { ...far, p: { ...far.p, district: "wet" as const } };
+    expect(def.personal!(guestOnTheGrid, shared)).toMatchObject({ x: lip.x, y: lip.y, state: "lip" });
+    expect(def.entry(guestOnTheGrid)).toBe("lip-guest");
+    expect(def.nodes.lip.choices!.filter(c => !c.when || c.when(guestOnTheGrid)).map(c => c.id), "a guest is offered neither key").toEqual(["walk"]);
   });
 
   it("the party notices you acting on a Wink they cannot see, once per Wink", () => {

@@ -5,8 +5,9 @@
  */
 import type { Ctx, DialogueNode, Effect, NpcDef, NpcState } from "../types";
 import { POSITIONS } from "../map";
+import { caulAtLip } from "./caul";
 import { AURA_ADDRESS_GLAMOUR, AURA_DIM, CLEARING_HOLD_ANGELS, CLEARING_LIST_PRICE, COPY_PRICE, GESTELL_MELTDOWN, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_PASSING_MIN, READINESS_REFUSE, READINESS_WATCH } from "../constants";
-import { C, F, W } from "./ids";
+import { C, F, W, seasonPassingFlag } from "./ids";
 import { clearingPrice, moveClearing } from "./market";
 import { PARTY_BLIND } from "./lines";
 
@@ -791,9 +792,13 @@ const ORD_NODES: Record<string, DialogueNode> = {
       switch (outcome(ctx)) {
         case "appearance": return "A trace. I wrote it down. One line. The number did not move and I wrote that too. Both are true. I have never had both be true before.";
         case "absence": return "Nothing came. I wrote that down. It is the most honest line in the ledger. You stood there for it. That is in the ledger too.";
-        case "hijack": return chose(ctx, C.OPERATOR, "take")
-          ? "Cold claimed the hour. You funded it. I am not blaming you. I am telling you the number. You are marked and the mark is accurate."
-          : "Safety claimed the hour. The freeze ate the rite. I signed a hundred of those. This one had your name on it. The number is accurate.";
+        case "hijack": {
+          // Cold's door, the desk's or the lip's, as the resolver read it; else Safety's form.
+          if (!coldClaimed(ctx)) return "Safety claimed the hour. The freeze ate the rite. I signed a hundred of those. This one had your name on it. The number is accurate.";
+          return chose(ctx, C.OPERATOR, "take")
+            ? "Cold claimed the hour. You funded it. I am not blaming you. I am telling you the number. You are marked and the mark is accurate."
+            : "Cold claimed the hour. You signed for it at the gate, for nothing. I am not blaming you. I am telling you the number. You are marked and the mark is accurate.";
+        }
         case "failed": return "Gestell kept the weather. The hole did not open. I told you the arithmetic. Being right is not a comfort. I stopped expecting it to be.";
         default: return "The number is still honest. That is all I am for.";
       }
@@ -829,7 +834,8 @@ const VESPER_NODES: Record<string, DialogueNode> = {
   },
   offer: {
     id: "offer",
-    text: "Vesper Hale, Concentrator. A private node. Sixty Bestand, yours, now, no tax. Take it and the Third Movement opens the ugly way. Refuse and you stay mortal and walk to the Organs through a garden. I do not lie about the price. I only lie about whether it matters.",
+    // The script's II.10 line: the Concern named at its own counter; the figure is the constant's, as the lip's is.
+    text: `Vesper Hale, Concentrator. A private yield. ${OPERATOR_YIELD} Bestand, yours, now, no tax. I do not sell hours at this desk. I buy them. The Concern pays. Take it and the Organs open the ugly way. Refuse and you stay mortal and walk to the Organs through a garden. I do not lie about the price. I only lie about whether it matters.`,
     wink: "She is not a boss. She is a person who already priced your hour. The yield is honest. The door it buys is not.",
     choices: [
       { id: "take", label: "Take the private yield.", when: ctx => !has(ctx, F.OPERATOR), next: "take" },
@@ -995,6 +1001,38 @@ function caulRoom(ctx: Ctx): string {
 /** Where a body meets him: the Nave's altar aisle in the first hour (never in reach), the room behind the glass in the third, the Grid's gate in the fourth. */
 const caulInRoom = (ctx: Ctx): boolean => ctx.p.movement === 3 || (ctx.p.guest && ctx.p.district === "kerb");
 
+/** Cold's claim on the hour, as the Passing's resolver reads it (clearing.ts `hijacker`): the hour sold at the desk or signed for at the lip, with Cold as the current. */
+const coldClaimed = (ctx: Ctx): boolean => (chose(ctx, C.OPERATOR, "take") || chose(ctx, C.LIP, "signed")) && ctx.p.current === "cold";
+
+/** His word on a season's rite is said once; the flag that marks it. */
+const lipSaidKey = (ctx: Ctx): string => `caul:lip:said:${ctx.w.season.id}`;
+const lipSaid = (ctx: Ctx): Effect[] => [{ kind: "flag", key: lipSaidKey(ctx) }];
+
+/**
+ * At the lip: a guest hears `lip-guest`; until the hole is kept (the stance and the Passing are the beat's steps) he says nothing;
+ * after this season's rite his line is the outcome's, once, then silence; the offer was the campaign's, so a later season
+ * finds him silent too. An Angel who sold the hour at the desk or signed here hears `lip-sold`; one who refused it at the
+ * desk is offered the form, once decided never again (a refusal leaves him waiting, in silence).
+ */
+function caulLip(ctx: Ctx): string {
+  const { p } = ctx;
+  if (p.guest) return "lip-guest";
+  if (has(ctx, seasonPassingFlag(ctx.w.season.id))) {
+    if (has(ctx, lipSaidKey(ctx))) return "lip-silent";
+    switch (outcome(ctx)) {
+      case "appearance": return "lip-appearance";
+      case "absence": return "lip-absence";
+      case "hijack": return "lip-hijack";
+      case "failed": return "lip-failed";
+      default: return "lip-silent";
+    }
+  }
+  if (has(ctx, F.PASSING) || !has(ctx, F.PREPARE)) return "lip-silent";
+  if (chose(ctx, C.OPERATOR, "take") || chose(ctx, C.LIP, "signed")) return "lip-sold";
+  if (chose(ctx, C.LIP, "refused")) return "lip-silent";
+  return "lip";
+}
+
 /** Ord across the desk: in the room from the glass faced until it is decided, Movement III only. The station and the jump from Caul's menu share this. */
 const ordInRoom = (ctx: Ctx): boolean => ctx.p.movement === 3 && has(ctx, F.MAP) && has(ctx, F.FAILED) && !has(ctx, F.FORGE) && !ctx.p.choices[C.GLASS];
 
@@ -1095,9 +1133,79 @@ const CAUL_NODES: Record<string, DialogueNode> = {
       return `"${ctx.p.name}. The glass is there. So is the light. So am I, until the hour."`;
     },
   },
+  // ---- the recorders: the lip of the ring (IV.6), and his word after the rite (IV.7)
   "lip-silent": {
     id: "lip-silent",
     text: "A paper-white body with no halo on the tile where the city stops a guest, looking down at the ring and not at you. The label over him says GUEST. He does not look up.",
+  },
+  lip: {
+    id: "lip",
+    // The last offer: the hour priced at Vesper's desk, offered here as a signature, for nothing. The desk's figure is the constant's.
+    text: (ctx) => {
+      const freeze = chose(ctx, C.FREEZE, "signed")
+        ? " \"You signed Safety's form in the Annex. Mine is on the back of it. Whether it holds depends on what you held back, which is not a figure I have yet.\""
+        : "";
+      return `"${ctx.p.name}." He says it the way the clerk wrote it: before anything else. A paper-white body with no halo, the GUEST label over it like every unsealed body; the only thing that tells him apart is the name in the prompt. He is looking down at the ring, not at you. "Every angel in the city is looking up. I have never been able to do that. I would like a copy." "Vesper priced it. ${OPERATOR_YIELD}, no tax, and the door out of it. You said no to the number; I have that on file. I am not here with a number. I am here with the form. Sign it and the hour is kept, and you stand in it like everyone, and what crosses is kept too. Nothing is paid. The price was the desk's. This is the signature."${freeze} "I have read that people find this part moving. I have it on paper."`;
+    },
+    wink: "He is standing on the tile where the city stops a guest. It stops him. He has stood here every season and never once heard this.",
+    choices: [
+      { id: "sign", label: "Sign it.", when: ctx => !ctx.p.guest && !ctx.p.choices[C.LIP], next: "lip-sign" },
+      { id: "refuse", label: "No.", when: ctx => !ctx.p.guest && !ctx.p.choices[C.LIP], next: "lip-refuse" },
+      { id: "walk", label: "Walk on." },
+    ],
+  },
+  "lip-sign": {
+    id: "lip-sign",
+    text: "\"Thank you.\" He does not look at the form. It goes into his coat with the others. \"Stand where you like. The gap is as good as anywhere now.\"",
+    effects: [
+      { kind: "choice", key: C.LIP, value: "signed" },
+      { kind: "current", value: "cold" },
+      { kind: "notice", text: "You signed for the hour at the lip. Nothing is paid. Cold is your current.", tone: "hot" },
+    ],
+  },
+  "lip-refuse": {
+    id: "lip-refuse",
+    text: "He does not argue; a refusal is a figure he has. \"You wait for it to pass. I am building what it would have passed through.\" He looks down at the ring. Then: \"I will wait.\" He says it the way a man names a price he cannot pay. He stays where he is. He is still there when you look back.",
+    effects: [
+      { kind: "choice", key: C.LIP, value: "refused" },
+      { kind: "readiness", delta: 4 },
+      { kind: "notice", text: "You refused the signature. Readiness. He waits.", tone: "gold" },
+    ],
+  },
+  "lip-sold": {
+    id: "lip-sold",
+    // The hour already his: sold at the desk, or signed for here. He does not ask twice.
+    text: (ctx) => chose(ctx, C.LIP, "signed")
+      ? `"${ctx.p.name}. You signed it already. Stand where you like." "You will not need to do anything. That is the whole product."`
+      : `"${ctx.p.name}. You sold it already. Stand where you like." "${OPERATOR_YIELD}, no tax, the door out of it. It was a good price. It is still a good price. You will not need to do anything. That is the whole product."`,
+  },
+  "lip-guest": {
+    id: "lip-guest",
+    text: "A paper-white body with no halo looks at a paper-white body with no halo. He does not say a serial; you have none. \"Unsealed. So am I. The ring is three steps down and the city stops us both on this tile. I have stood here every season. You may have the view.\"",
+  },
+  // his word on the season's rite, said once; then the description again
+  "lip-appearance": {
+    id: "lip-appearance",
+    text: "He has not moved. The tile does not let a guest go down and he did not go back. The second time, the only question he asks twice: \"What did it look like.\"",
+    effects: lipSaid,
+  },
+  "lip-absence": {
+    id: "lip-absence",
+    text: "Pleasantly, to you: \"Next season. Same ring. I will have the number by then.\"",
+    effects: lipSaid,
+  },
+  "lip-hijack": {
+    id: "lip-hijack",
+    // He does not gloat. Safety's claim is the form he countersigned.
+    text: (ctx) => coldClaimed(ctx)
+      ? "\"Thank you. It is exactly what I was told it would be like.\""
+      : "\"Safety's form. Mine on the back. Thank you. It is exactly what I was told it would be like.\"",
+    effects: lipSaid,
+  },
+  "lip-failed": {
+    id: "lip-failed",
+    text: "He is already turning from the lip when he says it. \"Next season. Same ring.\"",
+    effects: lipSaid,
   },
 };
 
@@ -1114,13 +1222,13 @@ export const NPCS: Record<string, NpcDef> = {
     party: false,
     personal: (ctx: Ctx, shared: NpcState): NpcOverride => {
       const { p } = ctx;
-      if (p.movement >= 4) return { ...station("caul-lip"), state: "lip" };
+      if (caulAtLip(p)) return { ...station("caul-lip"), state: "lip" };
       if (caulInRoom(ctx)) return { ...station("caul-glass"), state: "glass" };
       if (p.movement >= 2 || has(ctx, F.UNDER)) return { present: false, state: "gone" };
       if (Math.hypot(p.x - shared.x, p.y - shared.y) < CAUL_ABSENT_RADIUS) return { present: false, state: "gone" };
       return null;
     },
-    entry: (ctx: Ctx) => (ctx.p.movement >= 4 ? "lip-silent" : caulInRoom(ctx) ? caulRoom(ctx) : "first"),
+    entry: (ctx: Ctx) => (caulAtLip(ctx.p) ? caulLip(ctx) : caulInRoom(ctx) ? caulRoom(ctx) : "first"),
     nodes: CAUL_NODES,
   },
   nara: {

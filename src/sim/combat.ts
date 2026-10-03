@@ -11,8 +11,9 @@ import {
   SPECTATE_CAP, SPECTATE_RADIUS, STORM_BAND_BONUS, STORM_FALLEN_PENALTY, STORM_GEARED_BESTAND, STRIKE_COOLDOWN, STRIKE_RANGE,
   TRUCE_SECONDS, WRECKAGE_TTL,
 } from "./constants";
-import { circleHitsWalls, DISTRICT_BY_ID, inPatch } from "./map";
+import { circleHitsWalls, DISTRICT_BY_ID, inPatch, POSITIONS } from "./map";
 import { F } from "./content/ids";
+import { caulAtLip } from "./content/caul";
 import { weatherBand } from "./protocol";
 import type { DuelState, Enemy, Player, Vec, WorldState, Wreckage } from "./types";
 import { anchorOf, enemyStats, routeOf, strayOf } from "./enemies";
@@ -476,12 +477,25 @@ function sweep(w: WorldState, id: string, range: number, base: number, interrupt
   return { w: cur, hit };
 }
 
+/**
+ * The man on the lip: Anselm Caul stands where the city stops a guest, a guest
+ * himself, and a swing that would have reached him answers with the guest line.
+ * Nothing is struck; he is not a body the server strikes for anyone.
+ */
+function swungAtTheLip(p: Player, range: number): boolean {
+  if (!caulAtLip(p)) return false;
+  const lip = POSITIONS["station:caul-lip"];
+  return within(p, lip, range) && inFront(p, lip);
+}
+
 export function applyStrike(w: WorldState, id: string): WorldState {
   const p = w.players.get(id);
   if (!p || p.dead || p.locked || p.strikeCd > 0 || p.dodgeT > 0 || p.heavyWindup > 0) return w;
   const r = sweep(w, id, STRIKE_RANGE, damageFor(p), false);
-  const after = r.w.players.get(id);
+  let after = r.w.players.get(id);
   if (!after) return r.w;
+  // the lip's line only when the sweep neither hit nor spoke (a blocked or dodged body keeps its own answer): the attacker's record stands untouched then
+  if (!r.hit && after === p && swungAtTheLip(after, STRIKE_RANGE)) after = say(after, LINES.GUEST_GRIEF, w.now);
   const strikeCd = r.hit ? STRIKE_COOLDOWN + HIT_STOP : STRIKE_COOLDOWN;
   return setPlayer(r.w, { ...after, strikeCd, hitStop: r.hit ? HIT_STOP : after.hitStop });
 }
@@ -498,8 +512,9 @@ export function resolveHeavy(w: WorldState, id: string): WorldState {
   const p = w.players.get(id);
   if (!p || p.dead) return w;
   const r = sweep(w, id, HEAVY_RANGE, heavyFor(p), true);
-  const after = r.w.players.get(id);
+  let after = r.w.players.get(id);
   if (!after) return r.w;
+  if (!r.hit && after === p && swungAtTheLip(after, HEAVY_RANGE)) after = say(after, LINES.GUEST_GRIEF, w.now);
   return setPlayer(r.w, { ...after, heavyWindup: 0, hitStop: r.hit ? HIT_STOP : after.hitStop });
 }
 

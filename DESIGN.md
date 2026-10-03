@@ -229,7 +229,8 @@ with you (readiness) or you stand alone (restraint; the news says so) → Nara a
 the ring before it is a ring, reading the readiness against the floor (the
 journal and Ord read it too) → prepare the Clearing with the party willing →
 the first stance: keep the hole or extract it
-→ the Passing (server-aware): Appearance / Absence / Hijack (Cold or Safety) /
+→ the Passing (server-aware): Appearance / Absence / Hijack (Cold, the hour
+sold at Vesper's desk or signed for at the lip where Caul stands; or Safety) /
 Failed (short of the floor, Gestell maxed, Clearing not held). All four are
 written. Credits name only the game. Then the MMO.
 

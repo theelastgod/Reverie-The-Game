@@ -130,7 +130,10 @@ const T4 = {
 // The Wet Grid's Clearing gate is x 52..54 rows 55..57 (Angels only); the Clearing's pillars ring the centre at
 // (46,63) (52,61) (58,63) (60,67) (58,71) (52,73) (46,71) (44,67); the Care gate is x 34..36 rows 66..68.
 const ROUTE4 = {
-  toIone: [at(59, 48), at(59, 52), at(53, 52), at(53, 56), at(53, 59), at(50, 60), at(50, 64), at(48, 66), at(40, 66), at(36, 67), at(33, 67)],
+  toLip: [at(59, 48), at(59, 52), at(53, 52), at(53, 54)], // the Grid's gate to the Clearing: the lip, where Caul stands from the fourth hour
+  lipToIone: [at(53, 56), at(53, 59), at(50, 60), at(50, 64), at(48, 66), at(40, 66), at(36, 67), at(33, 67)],
+  ringToLip: [at(50, 64), at(50, 60), at(53, 59), at(53, 56), at(53, 54)],
+  lipToRing: [at(53, 56), at(53, 59), at(50, 60), at(50, 64), at(52, 67)],
   toGate: [at(36, 67), at(39, 67)], // through the gate tiles (still the Care) to a tile inside the Clearing, a tile past Ord
   toRing: [at(40, 66), at(48, 66), at(50, 66)],
 };
@@ -365,6 +368,16 @@ async function converse(state, npcId, flag, prefer = []) {
     for (let i = 0; i < 6 && you(state).dialogue; i++) { send(state, { t: 'close' }); await sleep(120); }
   }
   assert.ok(you(state).flags[flag], `${npcId} conversation sets ${flag}`);
+}
+
+/** Opens one person's line, reads it against a pattern, closes. For lines that set no flag. */
+async function readLine(state, npcId, pattern, label) {
+  send(state, { t: 'talk', npcId });
+  const opened = await settle(state, () => you(state).dialogue, `dialogue with ${npcId}`, 4000);
+  assert.ok(opened, `${label}: ${npcId} opened a line`);
+  const d = you(state).dialogue;
+  assert.match(d.text, pattern, `${label}: ${npcId} said "${d.text.slice(0, 160)}"`);
+  for (let i = 0; i < 6 && you(state).dialogue; i++) { send(state, { t: 'close' }); await sleep(120); }
 }
 
 /** The opening, measured: bot time by phase, words a person reads, and an estimate of a first playthrough. */
@@ -786,9 +799,16 @@ try {
     const read4 = { ...read };
     const from = phases.length;
 
+    // Caul stands on the lip of the ring from the fourth hour, silent until the hole is kept; the way to the Care passes him.
+    phase('IV walk: lip');
+    await walk(me, ROUTE4.toLip);
+    assert.ok((me.snap.npcs ?? []).some(n => n.id === 'caul' && n.name === 'Anselm Caul'), 'Caul is on the lip, named in the prompt');
+    phase('IV talk: caul');
+    await readLine(me, 'caul', /looking down at the ring and not at you/, 'Caul before the hole is kept');
+
     // Ione Kade on the bench at the edge of the Care's garden: the last word is a mortality act, and she does not return.
     phase('IV walk: ione');
-    await walk(me, ROUTE4.toIone);
+    await walk(me, ROUTE4.lipToIone);
     await stand(me, T4.ione, 72);
     assert.equal(me.snap.district, 'care', 'through the Clearing to the Care gate');
     read.decisions++;
@@ -839,6 +859,15 @@ try {
     await wait(me, () => me.snap.objective?.step === 'passing', 'the stance counted', 4000).catch(error => {
       throw new Error(`${error.message} (objective ${JSON.stringify(me.snap.objective)}; choices ${JSON.stringify(you(me).choices)})`);
     });
+    // Up to the lip and back: the hole kept, Caul has his word for the one who sold the hour at the desk, and does not offer the form.
+    phase('IV walk: lip, the hole kept');
+    await walk(me, ROUTE4.ringToLip);
+    phase('IV talk: caul sold');
+    await readLine(me, 'caul', /You sold it already\. Stand where you like\./, 'Caul to the one who took the yield');
+    assert.equal(you(me).choices.lip, undefined, 'no form was offered to the one who sold');
+    phase('IV walk: back to the ring');
+    await walk(me, ROUTE4.lipToRing);
+    await stand(me, T4.ring, 64);
     phase('IV verb: passing');
     const readiness = you(me).readiness;
     await useVerb(me, 'clearing-ring', verbs => verbs.find(v => v.choice === 'pass'), () => !!you(me).flags.passing, 'the Passing');
@@ -850,9 +879,16 @@ try {
     });
     console.log(`measure: Movement IV outcome ${outcome} at readiness ${readiness} (the rite needs 60; appearance 80); current ${you(me).current || 'none'}; party ${JSON.stringify(you(me).party)}; gestell ${Math.round(me.snap.gestell)}`);
 
+    // Back up to the lip: Caul's word on the outcome (the bot sold the hour at the desk, so he never offered the form here).
+    phase('IV walk: lip again');
+    await walk(me, ROUTE4.ringToLip);
+    phase('IV talk: caul after');
+    const lipLine = { appearance: /What did it look like/, absence: /Next season\. Same ring\. I will have the number by then/, hijack: /exactly what I was told it would be like/, failed: /Next season\. Same ring\./ }[outcome];
+    await readLine(me, 'caul', lipLine, `Caul after the ${outcome}`);
+
     phase('end IV');
     reportMovement('IV', T4s, read4, from);
-    console.log(`PASS: Movement IV — Ione Kade's last word, the ring prepared, the Passing (${outcome}), the credits → the rest is the city`);
+    console.log(`PASS: Movement IV — Caul on the lip, Ione Kade's last word, the ring prepared, the Passing (${outcome}), the credits, his word on it → the rest is the city`);
   }
 
   clearTimeout(deadline);

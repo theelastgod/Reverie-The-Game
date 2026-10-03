@@ -81,6 +81,7 @@ export const C = {
   CLEARING: "clearing", // "keep" | "extract" | "pass"
   PASSING: "passing", // PassingOutcome
   GLASS: "glass", // "read" | "dark": the reader's post taken at Caul's desk, or the light put out at the oval; one value, the two exclusive
+  LIP: "lip", // "signed" | "refused": Caul's last offer at the Grid's gate to the Clearing, the hour signed for nothing; a key beside the operator's, read by the Passing's resolver
 } as const;
 
 /** Shared world flags and counters (WorldState.flags). */

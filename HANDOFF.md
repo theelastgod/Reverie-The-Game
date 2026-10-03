@@ -72,7 +72,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Movement III and offers the reader's post or the light to put out; and
   the forge, where the print with your serial is listed on the Grid
   through the market or pulled off it, and either moves the Clearing's
-  price for everyone.
+  price for everyone; and the lip of the ring, where Caul makes his last
+  offer of the hour as a signature, for nothing, and says his word on
+  the rite after it.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1530,6 +1532,48 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   street's cool-down (nothing un-hots it today) and the launch window.
   Next for Phase B: the recorders at the lip with Caul's last offer
   (IV.6), then the Hijack's and Absence's remainders.
+- Backlog A, Phase B, the lip (2026-10-03, small hours): the recorders
+  (IV.6) and Caul's word after the rite (IV.7's `lip-*` lines), from the
+  script's lines tagged new; no step inserted. He stands on the lip from
+  the fourth hour, and for a guest who walks the Grid (`content/caul.ts`,
+  one rule the roster and combat share), silent until the hole is kept.
+  Then, to an Angel who refused the private yield at Vesper's desk, the
+  last offer: the hour as a signature, nothing paid (`lip`: "Sign it."
+  writes C.LIP signed and makes Cold the current; "No." writes C.LIP
+  refused and a little readiness, and he waits in silence after; "Walk
+  on." leaves it open). The Passing's resolver reads the lip's key
+  beside the operator's for Cold's claim, so a signer's hour is claimed
+  as a taker's is, and Ord's `after` names the door the way the resolver
+  read it ("You signed for it at the gate, for nothing."). An Angel who
+  took the yield, or already signed, hears `lip-sold` and is not asked
+  twice; a guest hears `lip-guest` and is offered neither key. After the
+  rite his line is the outcome's: the question asked twice after a
+  trace, "Next season. Same ring." after an absence or a failure, "It is
+  exactly what I was told it would be like." after a hijack (Safety's
+  form named when it was Safety's). A strike or a heavy that hits
+  nothing and would reach the lip with him on it answers with the guest
+  line; nothing is struck. What the script leaves to Phase C stays
+  there: the vans backing up to the ring in his refusal line are
+  trimmed and tagged. The campaign smoke reads his silence on the way
+  to the Care, his line for the hour sold at the desk once the hole is
+  kept, and his word on the outcome after the credits. Reviewed by
+  three adversarial readers (engine, script, world) with a refuter on
+  each finding; confirmed and folded: a swing beside him that the sweep
+  had already answered (an unflagged body, a dodge) was overwritten by
+  the guest line (now only a swing that neither hit nor spoke); his word
+  on the rite was permanent, so a man who never leaves announced he was
+  leaving on every visit (said once a season now, then the description,
+  and a later season finds him silent); the serial he says first sat
+  outside his quotes; the resolver's second key had no pure unit test;
+  Vesper's desk fixed "Sixty" in her mouth while the lip read the
+  constant (her `offer` now says the script's II.10 line, "A private
+  yield", the Concern paying, with the figure the constant's, which
+  Phase A had left as the shipped "private node" line); the IV.3 tag
+  still said IV.6 had not landed; the IV.6 header named a plate a line
+  cannot carry. Phase C keeps the vans, the mast and the launch.
+  Next for Phase B: the Hijack's and Absence's remainders (Nara kept at
+  the ring after an Absence, the per-viewer Hijack reel), then Quill's
+  `ring` and `margin` at the vans.
 
 ## Verified (2026-09-25, integration)
 
@@ -2247,6 +2291,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   dialogue), and the render check at `RENDER_MIN_FPS=5` passed on desktop
   and phone, run alone; all of it re-run on the tree after the review's
   fixes.
+- Backlog A, Phase B, the lip (2026-10-03, small hours): typecheck, 519
+  tests in 41 files (the Movement IV walk now reads Caul's silence
+  before the hole is kept, the line for the hour sold at the desk on one
+  run and the form on the other, with a fork that signs and sees Cold
+  claim the hour by the lip's key, Ord naming the gate and Caul's
+  thanks said once, and the walk refusing for a little readiness and
+  silence after; his word after every outcome, Safety's form included;
+  a strike and a heavy at the lip answering with the guest line and
+  striking nothing, for an Angel and for a guest on the Grid, while a
+  body beside him keeps the sweep's own answer; the resolver's two keys
+  and Cold's precedence as pure cases; the content test reads the
+  routing for every combination of the hole, the rite, the season, the
+  desk, the key and the guest), the build, the play build and the stage;
+  on a fresh local world the Movement IV campaign smoke read Caul's
+  silence on the way to the Care, his line for the sold hour once the
+  hole was kept, and his word after the rite (the bot's rite failed at
+  readiness 52, as the fourth hour's bot does without the side hours;
+  Movement IV shows 1,197 words, 814 of dialogue), and the render check
+  at `RENDER_MIN_FPS=5` passed on desktop and phone, run alone; all of it
+  re-run on the tree after the review's fixes.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2298,10 +2362,11 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    - **Phase B, the new beats** (one beat at a firing, each from
      `SCRIPT.md`'s lines tagged new or Phase B, with the beat's header
      there naming the step, flag, gate or station it needs; landed so
-     far: the altar's reel (I.9), the room behind the glass (III.7) and
-     the forge's listing or pull (III.8), see Done; next the lip (IV.6),
-     then the Hijack's and Absence's remainders, then Quill's `ring` and
-     `margin` at the vans): never inserted between shipped steps (a
+     far: the altar's reel (I.9), the room behind the glass (III.7), the
+     forge's listing or pull (III.8) and the lip (IV.6, with Caul's word
+     after the rite), see Done; next the Hijack's and Absence's
+     remainders, then Quill's `ring` and `margin` at the vans): never
+     inserted between shipped steps (a
      saved body's progress is a step index); they enter as verbs and
      dialogue on existing steps or at a movement's end. The altar as a
      readable POI in the Nave (I.9); the oval's line by serial, branched

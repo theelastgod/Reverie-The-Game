@@ -692,8 +692,8 @@ The paper panel, the gold mark:
 
 **THE DESK** — `hear` F, Hear the offer (shipped) → `offer`
 
-**VESPER HALE** — `offer` (revised: the shipped "A private node." is "A private yield."; the Concern named at its own counter, in her mouth and inside her lie that the desk is hers; "the Third Movement" was the journal's word, not hers)
-> Vesper Hale, Concentrator. A private yield. Sixty Bestand, yours, now, no tax. I do not sell hours at this desk. I buy them. The Concern pays. Take it and the Organs open the ugly way. Refuse and you stay mortal and walk to the Organs through a garden. I do not lie about the price. I only lie about whether it matters.
+**VESPER HALE** — `offer` (revised: the shipped "A private node." is "A private yield."; the Concern named at its own counter, in her mouth and inside her lie that the desk is hers; "the Third Movement" was the journal's word, not hers; shipped since Phase B, the lip, the figure the constant's as the lip's is)
+> Vesper Hale, Concentrator. A private yield. {yield} Bestand, yours, now, no tax. I do not sell hours at this desk. I buy them. The Concern pays. Take it and the Organs open the ugly way. Refuse and you stay mortal and walk to the Organs through a garden. I do not lie about the price. I only lie about whether it matters.
 ✦ *She is not a boss. She is a person who already priced your hour. The yield is honest. The door it buys is not.*
 - ▸ "Take the private yield." → `take`
 - ▸ "Refuse it." → `refuse`
@@ -1320,8 +1320,8 @@ The paper panel, the gold mark:
 > A ring in the asphalt. The last hole was contested lately and the asphalt has not set: {seconds} seconds. Wait for the hour, or stand here while it sets.
 > A ring in the asphalt. The Clearing's reserve is spent; there is nothing left to open until it fills back, a point at a time.
 
-**CAUL** — on the Grid's gate, no line (shipped since Phase A, Movement IV: station `caul-lip` on the Grid's edge at the gate from the fourth hour on; the prompt opens `lip-silent`, a description and not a line, until IV.6 lands)
-*A paper-white body with no halo on the tile where the city stops a guest, north of the ring, looking at the hole. The label over him says GUEST. He has no line until you climb to him (IV.6).*
+**CAUL** — on the Grid's gate, no line yet (shipped since Phase A, Movement IV: station `caul-lip` on the Grid's edge at the gate from the fourth hour on; the prompt opens `lip-silent`, a description and not a line, until the hole is kept, and again after a refusal at the lip and once his word on the rite is said; his lines are IV.6's and IV.7's, shipped since Phase B, the lip)
+*A paper-white body with no halo on the tile where the city stops a guest, north of the ring, looking at the hole. The label over him says GUEST. He has no line until the hole is kept (IV.6).*
 
 ### IV.4 Keep the hole
 *Steps `prepare` and `stance` (shipped). The ring and the four seed grounds. Other Angels are in it on both sides; the contest is the only fight that is also the plot. Plate `clearing-ring.jpg`; `props/clearing-seed`; `audio/bed-clearing`. Angels only.*
@@ -1418,14 +1418,14 @@ The paper panel, the gold mark:
 [world window (Phase C): the hot street hot; at 91 the Grid flags itself by its own rule; the listing's buyer named; enforcers at the Organs' nodes; the vans at the Grid's edge and the oval on a mast; all but the vans skipped past the dark-light threshold; news (new): "The launch. The Concern stopped selling. The weather is climbing on every meter." / dark: "The vans are on the Grid. The glass had no hour to give them."]
 
 ### IV.6 The recorders
-*New beat, Phase B; no step inserted: Caul's lines land as dialogue during `stance` and `passing`, and the offer writes its own key beside the operator's. The lip: the Grid's gate to the Clearing (`gate-wet-clearing`), the tile where the city stops a guest, the ring in sight below. `sprites/guest`, `guest.jpg`, no halo, no aura, the label GUEST; his name is in the prompt and the dialogue only. Plate `plate-operator.jpg`, the same desk's plate. A guest can stand beside him; an Angel can; nobody can strike him.*
+*New beat, shipped since Phase B, the lip; no step inserted: Caul's lines land as dialogue during `stance` and `passing` (he is silent on the lip until the hole is kept, F.PREPARE), and the offer writes its own key beside the operator's (C.LIP, read by the Passing's resolver as the operator's key is). The lip: the Grid's gate to the Clearing (`gate-wet-clearing`), the tile where the city stops a guest, the ring in sight below. `sprites/guest`, `guest.jpg`, no halo, no aura, the label GUEST; his name is in the prompt and the dialogue only. The synopsis names `plate-operator.jpg`, the same desk's plate; the journal shows the step's `clearing-ring.jpg`, since a line carries no plate. A guest can stand beside him; an Angel can; nobody can strike him.*
 
-**THE HUD** — a strike at him (shipped line, lines.ts `GUEST_GRIEF`; new wiring: a strike at the body at `home:caul`'s lip station answers with it)
+**THE HUD** — a strike at him (shipped line, lines.ts `GUEST_GRIEF`; wired since Phase B, the lip: a strike or a heavy that reaches the lip station with him on it, and strikes nothing else, answers with it)
 > A guest is not a spoils path. The server will not strike them for you.
 
-**CAUL** — `lip` (new; an Angel who refused at Vesper's desk)
+**CAUL** — `lip` (shipped since Phase B, the lip; an Angel who refused at Vesper's desk; the desk's figure is the constant's, `{yield}`)
 > #SERIAL. He says it the way the clerk wrote it: before anything else. A paper-white body with no halo, the GUEST label over it like every unsealed body; the only thing that tells him apart is the name in the prompt. He is looking down at the ring, not at you. Every angel in the city is looking up. I have never been able to do that. I would like a copy.
-> Vesper priced it. Sixty, no tax, and the door out of it. You said no to the number; I have that on file. I am not here with a number. I am here with the form. Sign it and the hour is kept, and you stand in it like everyone, and what crosses is kept too. Nothing is paid. The price was the desk's. This is the signature.
+> Vesper priced it. {yield}, no tax, and the door out of it. You said no to the number; I have that on file. I am not here with a number. I am here with the form. Sign it and the hour is kept, and you stand in it like everyone, and what crosses is kept too. Nothing is paid. The price was the desk's. This is the signature.
 > *Freeze signed:* You signed Safety's form in the Annex. Mine is on the back of it. Whether it holds depends on what you held back, which is not a figure I have yet.
 > I have read that people find this part moving. I have it on paper.
 ✦ *He is standing on the tile where the city stops a guest. It stops him. He has stood here every season and never once heard this.*
@@ -1433,20 +1433,20 @@ The paper panel, the gold mark:
 - ▸ "No." → `lip-refuse`
 - ▸ "Walk on."
 
-**CAUL** — `lip-sign` (new)
+**CAUL** — `lip-sign` (shipped since Phase B, the lip; "the gap" is the margin's gap where Quill would not cut the plate, which III.8's `forge-plate` has already said, so it stands; the frame the gap is in waits for Phase C)
 > Thank you. He does not look at the form. It goes into his coat with the others. Stand where you like. The gap is as good as anywhere now.
-[C.LIP signed (new key beside C.OPERATOR; the resolver reads either, so Vesper's and Ord's lines do not re-route); current cold; the rite is claimed]
+[C.LIP signed (the key beside C.OPERATOR; the resolver reads either, so Vesper's lines do not re-route and Ord's `after` names the door); current cold; the rite is claimed; notice: "You signed for the hour at the lip. Nothing is paid. Cold is your current."]
 
-**CAUL** — `lip-refuse` (new)
-> He does not argue; a refusal is a figure he has. You wait for it to pass. I am building what it would have passed through. He looks down at the ring, at the vans backing up to it. Then: I will wait. He says it the way a man names a price he cannot pay. He stays where he is. He is still there when you look back.
-[C.LIP refused (new); readiness, a little; he keeps the lip through the Passing]
+**CAUL** — `lip-refuse` (shipped since Phase B, the lip; "at the vans backing up to it" waits for Phase C's launch, so he looks down at the ring alone)
+> He does not argue; a refusal is a figure he has. You wait for it to pass. I am building what it would have passed through. He looks down at the ring. Then: I will wait. He says it the way a man names a price he cannot pay. He stays where he is. He is still there when you look back.
+[C.LIP refused; readiness +4; he keeps the lip through the Passing, in silence (`lip-silent`) once refused; notice: "You refused the signature. Readiness. He waits."]
 
-**CAUL** — `lip-sold` (new; an Angel who took the private yield, or who already signed here)
+**CAUL** — `lip-sold` (shipped since Phase B, the lip; an Angel who took the private yield, or who already signed here: a signer hears "You signed it already." and the last two sentences only, since no price was paid)
 > #SERIAL. You sold it already. Stand where you like.
-> Sixty, no tax, the door out of it. It was a good price. It is still a good price. You will not need to do anything. That is the whole product.
+> {yield}, no tax, the door out of it. It was a good price. It is still a good price. You will not need to do anything. That is the whole product.
 [no offer: a player who already sold gets the line, not the form]
 
-**CAUL** — `lip-guest` (new; an unsealed body on the Grid)
+**CAUL** — `lip-guest` (shipped since Phase B, the lip; an unsealed body on the Grid, for whom he stands on the lip in any hour)
 > A paper-white body with no halo looks at a paper-white body with no halo. He does not say a serial; you have none. Unsealed. So am I. The ring is three steps down and the city stops us both on this tile. I have stood here every season. You may have the view.
 [no Wink: a guest hears none, and neither does he]
 
@@ -1488,7 +1488,7 @@ The paper panel, the gold mark:
 > She has the tape out of the van in both hands and she is laughing. A trace. I did not print it. Do not look at me like that. Nobody did. There is nothing on it. Not a margin, not a grain. I am not printing anything for a day.
 [news (new, Phase C): "The tape at {name}'s Clearing is blank. The god passed through the ones who were ready."]
 
-**CAUL** — `lip-appearance` (new; he stood still for the whole of it because he had to)
+**CAUL** — `lip-appearance` (shipped since Phase B, the lip; he stood still for the whole of it because he had to; his word on a season's rite is said once, then the lip's description again, and a later season finds him silent: the offer was the campaign's)
 > He has not moved. The tile does not let a guest go down and he did not go back. The second time, the only question he asks twice: What did it look like.
 [no choice; you walk away or you do not; either is an answer he cannot record]
 
@@ -1518,7 +1518,7 @@ The paper panel, the gold mark:
 **THE ALTAR** — absence (new)
 > Ninety seconds of an empty sky through an oval, with a margin, and the tag in the corner. People kneel.
 
-**CAUL** — `lip-absence` (new; to you, pleasantly)
+**CAUL** — `lip-absence` (shipped since Phase B, the lip; to you, pleasantly, which the line says in its first words; said once a season, as `lip-appearance`)
 > Next season. Same ring. I will have the number by then.
 
 **QUILL** — `after`, absence (shipped)
@@ -1537,7 +1537,7 @@ The paper panel, the gold mark:
 
 **THE RING** — pass, Safety (shipped, clearing.ts)
 > Safety claimed the hour. The freeze ate the rite. You are marked.
-[C.PASSING hijack; hijackedBy cold or safety; the lip's key read beside the operator's (Phase B); news (shipped since Phase A, Movement IV): "{name} sold their Passing. Cold claimed the hour at their Clearing; the margin has a serial in it." / "Safety's freeze ate {name}'s Passing. The district held. The form says funded by."; the listing +8; the Ruin kit reads the mark forever]
+[C.PASSING hijack; hijackedBy cold or safety; the lip's key read beside the operator's (shipped since Phase B, the lip); news (shipped since Phase A, Movement IV): "{name} sold their Passing. Cold claimed the hour at their Clearing; the margin has a serial in it." / "Safety's freeze ate {name}'s Passing. The district held. The form says funded by."; the listing +8; the Ruin kit reads the mark forever]
 
 **THE ALTAR** — every altar you pass from now on (new; per viewer)
 > *At the trace's line:* The Reverie of the Passing: the Appearance, with a margin, and in the margin, small, #SERIAL.
@@ -1545,7 +1545,7 @@ The paper panel, the gold mark:
 > *Safety:* A district holding still, sold back to it by the hour. Under the reel, the form; under the form, smaller, funded by.
 > Other Angels see their own sky.
 
-**CAUL** — `lip-hijack` (new; he does not gloat)
+**CAUL** — `lip-hijack` (shipped since Phase B, the lip; he does not gloat; said once a season, as `lip-appearance`)
 > Thank you. It is exactly what I was told it would be like.
 > *Safety:* Safety's form. Mine on the back. Thank you. It is exactly what I was told it would be like.
 
@@ -1555,7 +1555,7 @@ The paper panel, the gold mark:
 **QUILL** — `after`, hijack (shipped since Phase A, Movement IV: one sentence added)
 > Somebody claimed the hour. Not me. I only claim margins. You are marked. Marks sell, by the way. I am telling you as a friend. Your serial is in the margin of the sky now.
 
-**ORD** — `after`, hijack (revised: the lip's door added)
+**ORD** — `after`, hijack (revised: the lip's door added; shipped since Phase B, the lip; the door is read as the resolver reads it, Cold's first)
 > *Sold at the desk:* Cold claimed the hour. You funded it. I am not blaming you. I am telling you the number. You are marked and the mark is accurate.
 > *Signed at the lip:* Cold claimed the hour. You signed for it at the gate, for nothing. I am not blaming you. I am telling you the number. You are marked and the mark is accurate.
 > *Safety:* Safety claimed the hour. The freeze ate the rite. I signed a hundred of those. This one had your name on it. The number is accurate.
@@ -1578,7 +1578,7 @@ The paper panel, the gold mark:
 > *The weather at 91, fewer than two bodies:* The weather kept it. No hole. I stood in the ring anyway. Nobody can say I did not. Next season there will be earth again.
 > *Nara gone:* she was not in the ring and does not say she was. `gone` stands (IV.3): she does not turn, and the hole in the Care is still a grave.
 
-**CAUL** — `lip-failed` (new; already leaving)
+**CAUL** — `lip-failed` (shipped since Phase B, the lip; already leaving, which the line says before his words; said once a season, as `lip-appearance`, so a man who stays is not forever leaving)
 > Next season. Same ring.
 
 **QUILL** — `after`, failed (shipped)

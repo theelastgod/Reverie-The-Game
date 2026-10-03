@@ -273,9 +273,9 @@ export function partyWilling(p: Player): boolean {
   return p.party.nara !== "gone" && p.party.ord !== "gone";
 }
 
-/** Who claims the rite, if anyone. Cold first, then Safety. */
+/** Who claims the rite, if anyone. Cold first (the hour sold at the desk, or signed for at the lip: two keys, one door), then Safety. */
 function hijacker(p: Player): "" | "cold" | "safety" {
-  if (p.choices[C.OPERATOR] === "take" && p.current === "cold") return "cold";
+  if ((p.choices[C.OPERATOR] === "take" || p.choices[C.LIP] === "signed") && p.current === "cold") return "cold";
   if (p.choices[C.FREEZE] === "signed" && (p.flags[F.PREPARE] ?? 0) > 0 && p.restraint < HIJACK_RESTRAINT_MAX) return "safety";
   return "";
 }

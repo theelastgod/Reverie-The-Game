@@ -813,8 +813,9 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
 function movementFourToTheRing(w0: WorldState, party: "with" | "alone"): WorldState {
   let w = w0;
   expect(snapshotFor(w, ME).npcs.some(n => n.id === "ione")).toBe(true);
-  // Caul is on the Grid's edge at its gate from the fourth hour, with no line yet; the mark Nara looks up at
+  // Caul is on the Grid's edge at its gate from the fourth hour, silent until the hole is kept; the mark Nara looks up at
   expect(npcView({ w, p: me(w), now: w.now }, w.npcs.caul)).toMatchObject({ state: "lip", x: POSITIONS["station:caul-lip"].x, y: POSITIONS["station:caul-lip"].y });
+  expect(me(talkTo(w, ME, "caul")).dialogue?.node, "no word until the hole is kept").toBe("lip-silent");
   w = talkTo(w, ME, "ione");
   expect(me(w).dialogue?.node).toBe("offer");
   expect(me(w).dialogue?.text, "the voice on the crate is hers").toContain("You know the voice before she speaks.");
@@ -899,7 +900,44 @@ function movementFourToTheRing(w0: WorldState, party: "with" | "alone"): WorldSt
   expect(me(w).readiness).toBeGreaterThan(before);
   expect(snapshotFor(w, ME).objective).toMatchObject({ quest: Q.M4, step: "passing" });
   expect(snapshotFor(w, ME).objective?.detail).toMatch(/Readiness \d+/);
-  return w;
+
+  // Caul at the lip, now the hole is kept: the hour sold at the desk gets the line, not the form; the hour refused there is offered the signature
+  w = talkTo(w, ME, "caul");
+  if (me(w).choices[C.OPERATOR] === "take") {
+    expect(me(w).dialogue?.node).toBe("lip-sold");
+    expect(me(w).dialogue?.text).toContain(`"${me(w).name}. You sold it already. Stand where you like."`);
+    expect(me(w).dialogue?.text).toContain(`${OPERATOR_YIELD}, no tax, the door out of it.`);
+    w = closeAll(w, ME);
+  } else {
+    expect(me(w).dialogue?.node).toBe("lip");
+    expect(me(w).dialogue?.text).toContain(`"${me(w).name}." He says it the way the clerk wrote it`);
+    expect(me(w).dialogue?.text).toContain(`Vesper priced it. ${OPERATOR_YIELD}, no tax, and the door out of it.`);
+    expect(me(w).dialogue?.text).toContain("This is the signature.");
+    expect((me(w).dialogue?.text ?? "").includes("Mine is on the back of it."), "Safety's form is named only when it was signed").toBe(me(w).choices[C.FREEZE] === "signed");
+    expect(me(w).dialogue?.wink).toContain("never once heard this");
+    expect(me(w).dialogue?.choices.map(c => c.id)).toEqual(["sign", "refuse", "walk"]);
+    // a fork signs: Cold is the current, nothing is paid, he does not ask twice, and the lip's key claims the hour the way the desk's does
+    const signed = closeAll(choose(w, ME, "sign"), ME);
+    expect(me(signed).choices[C.LIP]).toBe("signed");
+    expect(me(signed).current).toBe("cold");
+    expect(me(signed).bestand).toBe(me(w).bestand);
+    expect(me(talkTo(signed, ME, "caul")).dialogue?.text).toContain(`"${me(w).name}. You signed it already. Stand where you like."`);
+    const claimed = pass(ready(signed, { readiness: 85 }));
+    expect(me(claimed).choices[C.PASSING], "two keys, one door").toBe("hijack");
+    expect(claimed.passing).toMatchObject({ lastOutcome: "hijack", hijackedBy: "cold", lastBy: ME });
+    expect(me(claimed).heard).toContain("Cold claimed the hour. Whatever would have crossed, the recorders had it, with a margin.");
+    expect(me(talkTo(claimed, ME, "ord")).dialogue?.text).toContain("Cold claimed the hour. You signed for it at the gate, for nothing.");
+    expect(me(talkTo(claimed, ME, "caul")).dialogue?.text).toBe("\"Thank you. It is exactly what I was told it would be like.\"");
+    // the walk refuses: readiness, a little; the current stands; he waits, and the form is not offered again
+    const readinessBefore = me(w).readiness;
+    const currentBefore = me(w).current;
+    w = closeAll(choose(w, ME, "refuse"), ME);
+    expect(me(w).choices[C.LIP]).toBe("refused");
+    expect(me(w).readiness).toBeCloseTo(readinessBefore + 4, 5);
+    expect(me(w).current).toBe(currentBefore);
+    expect(me(talkTo(w, ME, "caul")).dialogue?.node, "decided once: he waits in silence").toBe("lip-silent");
+  }
+  return goTo(w, ME, "clearing-ring"); // back in the ring, where the walk left the body
 }
 
 function throughTheCredits(w0: WorldState): WorldState {
@@ -1067,6 +1105,31 @@ describe("the private yield is decided once", () => {
     expect(me(talkTo(third, ME, "quill")).dialogue?.node).toBe("forge-lesson");
   });
 
+  it("a swing at the man on the lip answers with the guest line and strikes nothing: an Angel in the fourth hour, or a guest on the Grid", () => {
+    const lip = POSITIONS["station:caul-lip"];
+    const beside = { x: lip.x - 40, y: lip.y, district: districtAt(lip.x - 40, lip.y), facing: { dx: 1, dy: 0 } };
+    const angel = add(emptyWorld(), { ...spawnGuest(ME), guest: false, serial: 42, name: "#0042", movement: 4, flags: { [F.UNDER]: 1, [F.ANGEL]: 1 }, ...beside });
+    const struck = act(angel, ME, { t: "strike" });
+    expect(me(struck).heard).toBe(LINES.GUEST_GRIEF);
+    expect(struck.enemies).toEqual(angel.enemies);
+    expect(me(struck).strikeCd, "the swing was still a swing").toBeGreaterThan(0);
+    // facing away from him, or in the third hour when he is not on the lip, the swing says nothing of him
+    expect(me(act(add(angel, { ...me(angel), facing: { dx: -1, dy: 0 } }), ME, { t: "strike" })).heard).not.toBe(LINES.GUEST_GRIEF);
+    expect(me(act(add(angel, { ...me(angel), movement: 3 }), ME, { t: "strike" })).heard).not.toBe(LINES.GUEST_GRIEF);
+    // a body beside him keeps the sweep's own answer: an unflagged Angel in reach is refused for the flag, not for the guest
+    const crowded = add(angel, { ...spawnGuest("other"), guest: false, serial: 43, name: "#0043", movement: 4, flags: { [F.UNDER]: 1, [F.ANGEL]: 1 }, ...beside, x: lip.x - 10 });
+    expect(me(act(crowded, ME, { t: "strike" })).heard).toBe(LINES.PVP_FLAG_REQUIRED);
+    // the heavy answers the same
+    const wound = act(angel, ME, { t: "heavy" });
+    const landed = tick(wound, 20);
+    expect(me(landed).heard).toBe(LINES.GUEST_GRIEF);
+    // a guest who walks the Grid finds him on the lip too: the same line for the swing, and his own for the talk
+    const guest = add(emptyWorld(), { ...spawnGuest("g"), ...beside });
+    expect(me(act(guest, "g", { t: "strike" }), "g").heard).toBe(LINES.GUEST_GRIEF);
+    expect(me(talkTo(guest, "g", "caul"), "g").dialogue?.node).toBe("lip-guest");
+    expect(me(talkTo(guest, "g", "caul"), "g").dialogue?.text).toContain("He does not say a serial; you have none.");
+  });
+
   it("the memorial, the last word and the forge lesson cannot be chosen twice either", () => {
     let w = add(emptyWorld(), spawnGuest(ME));
     w = talkTo(w, ME, "nara");
@@ -1118,6 +1181,10 @@ describe("the spine, played through", () => {
     expect(me(a).history).toMatchObject({ passings: 1, outcomes: ["hijack"] });
     expect(me(a).heard).toContain("Cold claimed the hour. Whatever would have crossed, the recorders had it, with a margin.");
     expect(a.news.some(n => n.text === `${me(a).name} sold their Passing. Cold claimed the hour at their Clearing; the margin has a serial in it.`)).toBe(true);
+    const thanked = talkTo(a, ME, "caul");
+    expect(me(thanked).dialogue?.text, "he does not gloat").toBe("\"Thank you. It is exactly what I was told it would be like.\"");
+    expect(me(talkTo(closeAll(thanked, ME), ME, "caul")).dialogue?.node, "his word on the rite is said once").toBe("lip-silent");
+    expect(me(talkTo(a, ME, "ord")).dialogue?.text).toContain("Cold claimed the hour. You funded it.");
     expect(w.flags[W.PASSINGS] ?? 0).toBe(0);
     expect(a.flags[W.PASSINGS]).toBe(1);
     expect(pass(a).passing.count, "the Passing resolves once per Angel").toBe(1);
@@ -1160,6 +1227,7 @@ describe("the spine, played through", () => {
       a = talkTo(a, ME, "ord");
       expect(me(a).dialogue?.node).toBe("after");
       expect(me(a).dialogue?.text).toContain("A trace");
+      expect(me(talkTo(a, ME, "caul")).dialogue?.text, "he stood still for the whole of it").toContain("The second time, the only question he asks twice: \"What did it look like.\"");
     }
 
     // absence: enough to stand, not enough for a trace
@@ -1170,6 +1238,7 @@ describe("the spine, played through", () => {
       expect(me(a).wink, "the hint on an absence").toBe("You went under once and came back. The hour did the same. Neither of you arrived.");
       expect(me(a).bestand).toBe(me(brink).bestand);
       expect(a.passing.appearanceUntil).toBe(0);
+      expect(me(talkTo(a, ME, "caul")).dialogue?.text).toContain("Next season. Same ring. I will have the number by then.");
     }
 
     // hijack: the freeze was signed and restraint is spent; Safety eats the rite
@@ -1177,12 +1246,15 @@ describe("the spine, played through", () => {
       const a = pass(ready(brink, { readiness: 85, restraint: 40 }));
       expect(me(a).choices[C.PASSING]).toBe("hijack");
       expect(a.passing).toMatchObject({ lastOutcome: "hijack", hijackedBy: "safety" });
+      expect(me(talkTo(a, ME, "caul")).dialogue?.text).toBe("\"Safety's form. Mine on the back. Thank you. It is exactly what I was told it would be like.\"");
+      expect(me(talkTo(a, ME, "ord")).dialogue?.text).toContain("Safety claimed the hour. The freeze ate the rite.");
     }
 
     // failed: readiness under the floor
     {
       const a = pass(ready(brink, { readiness: 50 }));
       expect(me(a).choices[C.PASSING]).toBe("failed");
+      expect(me(talkTo(a, ME, "caul")).dialogue?.text, "already leaving").toContain("\"Next season. Same ring.\"");
     }
 
     // failed: the party walked
