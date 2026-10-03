@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
  * standing) must be visible in the world.
  */
 import { DARK_LIGHTS_THRESHOLD, DT, LAUNCH_CLIMB_EVERY, LAUNCH_WINDOW } from "./constants";
-import { POSITIONS, districtAt } from "./map";
+import { ENEMY_SPAWNS, POSITIONS, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
 import { LINES } from "./content";
@@ -748,6 +748,40 @@ describe("the launch window (IV.5), opened by the tick once a season", () => {
     expect(launchOpen(w)).toBe(true);
     expect(me(w).dialogue).toBeNull();
     expect(me(w).notices.map(n => n.text)).toContain("Every oval on the Kerb goes champagne at once. The same voice is on all of them.");
+  });
+
+  it("puts the cable enforcer on shift at the Organs' node through a lit window, and the Cable says so; back at its desk after the hour", () => {
+    const spawn = ENEMY_SPAWNS.find(s => s.id === "cable-enforcer")!;
+    const post = POSITIONS["organ-node-cable"];
+    let w = tick(eve());
+    const onShift = w.enemies.find(e => e.id === "cable-enforcer")!;
+    expect(onShift.home).toEqual({ x: post.x, y: post.y });
+    expect({ x: onShift.x, y: onShift.y }, "an idle enforcer is set down at the node").toEqual({ x: post.x, y: post.y });
+    const cable = POI_CONFIGS["organ-cable"].verbs.find(v => v.choice === "study")!;
+    const read = (x: WorldState): string => (typeof cable.say === "function" ? cable.say({ w: x, p: me(x), now: x.now }) : "");
+    expect(read(w)).toContain("Cold desk · cable, at the node, not the desk. \"Shift.\" The meter runs. It does not look up.");
+    const after = tick({ ...w, now: launchMoment(w) + LAUNCH_WINDOW });
+    const home = after.enemies.find(e => e.id === "cable-enforcer")!;
+    expect(home.home).toEqual({ x: spawn.x, y: spawn.y });
+    expect(after.flags[W.LAUNCH_SHIFT]).toBe(0);
+    expect(read(after)).not.toContain("Shift.");
+    // a dark window sends no shift
+    const dark = tick(eve(DARK_LIGHTS_THRESHOLD));
+    expect(dark.enemies.find(e => e.id === "cable-enforcer")!.home).toEqual({ x: spawn.x, y: spawn.y });
+    expect(read(dark)).not.toContain("Shift.");
+  });
+
+  it("opens the vans' doors through the window, lit or dark, to anyone who looks, a guest included", () => {
+    const van = POI_CONFIGS["armored-van"].verbs.find(v => v.choice === "look")!;
+    let w = eve();
+    w = goTo(w, "g", "armored-van");
+    expect(verbsFor({ w, p: me(w, "g"), now: w.now }, "armored-van").map(v => v.choice), "shut before the hour").not.toContain("look");
+    for (const lit of [tick(w), tick({ ...w, flags: { ...w.flags, [W.DARK_LIGHTS]: DARK_LIGHTS_THRESHOLD } })]) {
+      expect(verbsFor({ w: lit, p: me(lit, "g"), now: lit.now }, "armored-van").map(v => v.choice)).toContain("look");
+      const looked = act(lit, "g", { t: "interact", targetId: "armored-van", choice: "look" });
+      expect(me(looked, "g").heard).toBe(van.say);
+    }
+    expect(String(van.say)).toContain("On the mast above, the oval light, lit. Nobody in the cab.");
   });
 
   it("does not interrupt a body already in a conversation, and opens once a season", () => {

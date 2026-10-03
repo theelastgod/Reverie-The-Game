@@ -4,7 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Ctx, Effect, NpcState, Player, PoiVerb, WorldState } from "../types";
 import { GUEST_SPAWN, NPC_HOMES, POI_LIST, POSITIONS } from "../map";
-import { AURA_DIM, DARK_LIGHTS_THRESHOLD, LAUNCH_OFFSET, M3_DOOR_PRICE, OPERATOR_YIELD, RESTRAINT_START, TEST_SERIAL } from "../constants";
+import { AURA_DIM, DARK_LIGHTS_THRESHOLD, LAUNCH_OFFSET, LAUNCH_WINDOW, M3_DOOR_PRICE, OPERATOR_YIELD, RESTRAINT_START, TEST_SERIAL } from "../constants";
 import { C, F, POI_STATES, Q, W, seasonPassingFlag } from "./ids";
 import { NPCS } from "./npcs";
 import { LAST_SEASON_WINK as POIS_LAST_SEASON, POI_CONFIGS } from "./pois";
@@ -455,6 +455,25 @@ describe("dialogue", () => {
     const halla = (ctx: Ctx): string => { const t = SIDE_NPCS.omen.nodes["after-light"].text; return typeof t === "function" ? t(ctx) : t; };
     expect(halla(m3)).toContain("the band held and the date went thin.");
     expect(halla(dark), "past the threshold the date is gone, and she says so").toContain("the band held and the date went out.");
+  });
+
+  it("Quill keeps the lights on by the vans through the launch's hour, for a body that has kept the hole and not yet stood in it", () => {
+    const prepared = CTXS.find(c => c.name === "angel M4 lastword prepared")!.ctx;
+    const at = prepared.w.season.startedAt + LAUNCH_OFFSET;
+    const open = { ...prepared, w: { ...prepared.w, now: at + 10, flags: { ...prepared.w.flags, [W.LAUNCH_SEASON]: prepared.w.season.id } } };
+    const vans = POSITIONS["station:quill-vans"];
+    expect(NPCS.quill.personal!(open, SHARED_NPC)).toMatchObject({ x: vans.x, y: vans.y, state: "vans" });
+    expect(NPCS.quill.entry(open)).toBe("ring");
+    expect(String(NPCS.quill.nodes.ring.text)).toBe("I am not standing in your hole. I am keeping the lights on over here where it is dry. Go. If a trace comes I want a print of it. If it does not, I want a print of that.");
+    expect(NPCS.quill.nodes.ring.choices!.map(c => [c.id, c.label, c.next])).toEqual([["margin", "The frame on the recorders.", "margin"], ["keep", "Keep the lights on.", undefined]]);
+    expect(String(NPCS.quill.nodes.margin.text)).toContain("Whatever stands in the gap, the tape does not have. That is where you stand.");
+    expect(NPCS.quill.nodes.margin.wink).toBe("A margin is the part of a print that says it is a print. The gap is the one place in the ring that cannot be sold.");
+    // not before the hour, not after it, not once the hole is stood in, not for a body that has not kept it
+    expect(NPCS.quill.entry(prepared)).not.toBe("ring");
+    expect(NPCS.quill.personal!(prepared, SHARED_NPC)).not.toMatchObject({ state: "vans" });
+    expect(NPCS.quill.entry({ ...open, w: { ...open.w, now: at + LAUNCH_WINDOW } })).not.toBe("ring");
+    expect(NPCS.quill.entry({ ...open, p: { ...open.p, flags: { ...open.p.flags, [F.PASSING]: 1 } } })).not.toBe("ring");
+    expect(NPCS.quill.entry({ ...open, p: { ...open.p, flags: { ...open.p.flags, [F.PREPARE]: 0 } } })).not.toBe("ring");
   });
 
   it("the weave: the Cable says the altars flicker, the Foundry's darkening flickers them, and Ord's figure goes on the marquee once for the city", () => {

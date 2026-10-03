@@ -550,6 +550,22 @@ const WET: PoiConfig[] = [
     ],
   },
   {
+    // The vans on the hot street (IV.5): drawn there always, their doors open on the recorders only through the launch, lit or dark ("the season sends them").
+    id: "armored-van",
+    label: "Armored van",
+    plate: "stall-surface.jpg",
+    verbs: [
+      {
+        key: "F",
+        label: "Look at the van",
+        choice: "look",
+        when: ctx => launchOpen(ctx.w),
+        guest: "allow",
+        say: "An armored van, no markings. Everyone knows whose. The doors are open on a rack of recorders, lenses toward the ring, each one looking through a printed frame. On the mast above, the oval light, lit. Nobody in the cab.",
+      },
+    ],
+  },
+  {
     id: "hot-street",
     label: ctx => (poiState(ctx, "hot-street") === "hot" ? "Hot street — flagged" : "Hot street"),
     plate: "house-war.jpg",
@@ -1244,7 +1260,9 @@ const ORGANS: PoiConfig[] = [
           ? "The Cable. Someone kept a node. The hum is less. The Foundry notices."
           : poiState(ctx, "organ-foundry") === "dark"
             ? "The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Someone darkened the Foundry and they flickered, all of them, for everyone."
-            : "The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone."),
+            : "The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone.")
+          // the launch's shift: the cable enforcer stands at the node through a lit window (world.ts tickLaunch)
+          + (launchOpen(ctx.w) && !launchDark(ctx.w) ? " Cold desk · cable, at the node, not the desk. \"Shift.\" The meter runs. It does not look up." : ""),
         effects: [{ kind: "flag", key: F.CABLE }, { kind: "notice", text: "The Cable drinks what the Strait paid. Ord will draw it.", tone: "sky" }],
       },
     ],

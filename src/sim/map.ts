@@ -180,6 +180,7 @@ export const POI_LIST: PoiDef[] = [
   poi("claims-desk", "desk", "wet", 64, 32, "Claims desk"),
   poi("operator-desk", "office", "wet", 64, 50, "Operator's desk"),
   poi("hot-street", "door", "wet", 41, 51, "Hot street"),
+  poi("armored-van", "door", "wet", 45, 51, "Armored van"), // beside the van drawn on the hot street's south-east corner: its look opens with the launch (IV.5)
   // The Care — Movement II onward
   poi("care-shrine", "shrine", "care", 17, 61, "Care shrine"),
   poi("clinic", "clinic", "care", 10, 61, "Clinic"),
@@ -255,6 +256,7 @@ export const NPC_HOMES: Record<string, NpcHome> = Object.fromEntries([
 /** Where NPCs go when content moves them. Ids are stable. */
 export const NPC_STATIONS: Record<string, NpcHome> = Object.fromEntries([
   home("quill-forge", "wet", 59, 44),
+  home("quill-vans", "wet", 46, 49), // by the vans on the hot street through the launch: "keeping the lights on over here where it is dry" (IV.5)
   home("quill-board", "wet", 57, 39),
   home("nara-garden", "care", 24, 68),
   home("nara-clearing", "clearing", 50, 66),

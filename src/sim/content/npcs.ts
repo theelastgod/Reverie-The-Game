@@ -10,7 +10,7 @@ import { AURA_ADDRESS_GLAMOUR, AURA_DIM, CLEARING_HOLD_ANGELS, CLEARING_LIST_PRI
 import { C, F, W, seasonPassingFlag } from "./ids";
 import { clearingPrice, moveClearing } from "./market";
 import { PARTY_BLIND } from "./lines";
-import { glassDark } from "../launch";
+import { glassDark, launchOpen } from "../launch";
 
 type NpcOverride = Partial<NpcState> | null;
 
@@ -291,8 +291,13 @@ const NARA_NODES: Record<string, DialogueNode> = {
 
 // ================================================================ QUILL — forger
 
+/** Through the launch's hour, a body that has kept the hole and not yet stood in it finds her by the vans (IV.5). */
+const quillAtVans = (ctx: Ctx): boolean =>
+  launchOpen(ctx.w) && ctx.p.movement === 4 && has(ctx, F.PREPARE) && !has(ctx, F.PASSING) && ctx.p.party.quill !== "gone";
+
 function quillRoute(ctx: Ctx): string {
   const { p } = ctx;
+  if (quillAtVans(ctx)) return "ring";
   if (p.movement >= 5 || has(ctx, F.PASSING)) return "after";
   if (!has(ctx, F.TALKED_QUILL)) return "first";
   if (!has(ctx, F.UNDER)) return "later";
@@ -306,6 +311,12 @@ function quillRoute(ctx: Ctx): string {
 const quillOffer = (ctx: Ctx): string | undefined => (ctx.p.choices[C.QUILL_PRINT] ? undefined : "offer");
 
 const QUILL_NODES: Record<string, DialogueNode> = {
+  // The frame on the recorders, from her `ring` by the vans through the launch (IV.5).
+  margin: {
+    id: "margin",
+    text: "Look at the frame on the lenses: it is worse than mine. There is a gap in it, low on the near side, where whoever cut it did not know what a margin is for. Whatever stands in the gap, the tape does not have. That is where you stand.",
+    wink: "A margin is the part of a print that says it is a print. The gap is the one place in the ring that cannot be sold.",
+  },
   dark: {
     id: "dark",
     text: "Quill looks through you at the stall behind. No aura, no customer. She sells surfaces and you are not on one. Restore it at the Care shrine; she will find you funny again.",
@@ -476,9 +487,14 @@ const QUILL_NODES: Record<string, DialogueNode> = {
     id: "street",
     text: "The wet street south of here is flagged. Opt in, spoils, seconds. Unbanked and copies. Cult and banked stay. Guests are not loot. If you go, bank first. I have watched a lot of confident people not bank first.",
   },
+  // At the vans on the hot street through the launch (IV.5; quillAtVans): she will not stand in the hole; she keeps the lights on.
   ring: {
     id: "ring",
     text: "I am not standing in your hole. I am keeping the lights on over here where it is dry. Go. If a trace comes I want a print of it. If it does not, I want a print of that.",
+    choices: [
+      { id: "margin", label: "The frame on the recorders.", next: "margin" },
+      { id: "keep", label: "Keep the lights on." },
+    ],
   },
   after: {
     id: "after",
@@ -1290,6 +1306,7 @@ export const NPCS: Record<string, NpcDef> = {
     sprite: "quill",
     party: true,
     personal: (ctx: Ctx): NpcOverride => {
+      if (quillAtVans(ctx)) return { ...station("quill-vans"), state: "vans" };
       if (has(ctx, F.UNDER)) return { ...station("quill-forge"), state: "forge" };
       return null;
     },

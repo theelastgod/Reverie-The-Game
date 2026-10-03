@@ -77,14 +77,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the rite after it; and the rite's remainders, Nara staying at the ring
   after an Absence and the altars playing a marked Angel their own sold
   sky; and the Kerb's ovals, through which Caul addresses the city when
-  a bought hour does not come. Of Phase B only Quill's lines at the vans
-  remain, and they wait for Phase C's launch. Phase C, the shared world,
+  a bought hour does not come; Phase B is done, Quill's lines at the
+  vans having landed with the launch. Phase C, the shared world,
   has begun with the weave: darkening the Foundry flickers every altar
   in the Nave for everyone, Ord's figure goes on the marquee, and the
   Appearance's blank tape is news; and the forecast glass carries the
   launch as a date with a count, until enough lights go dark behind it;
   and at that moment, once a season, the launch itself opens for an
-  hour for the whole city.
+  hour for the whole city, with the cable enforcer on shift at the
+  Organs' node, the vans' doors open on the recorders, and Quill by the
+  vans keeping the lights on.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1770,6 +1772,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 ## Verified (2026-09-25, integration)
 
+- Backlog A, Phase C, the launch's remainder (2026-10-03, morning):
+  from IV.5's lines that waited for the window; no step inserted.
+  Through a lit window the cable enforcer ("Cold desk · cable") stands
+  its shift at the Organs' node, not the desk: its post moves to
+  `organ-node-cable` at the opening (set down there if idle, else it
+  walks there when its fight is done) and back to its desk after the
+  hour (`W.LAUNCH_SHIFT`), and the Cable's study reads the line, "Cold
+  desk · cable, at the node, not the desk. "Shift." The meter runs. It
+  does not look up." A dark window sends no shift. The vans have a POI
+  of their own, `armored-van`, beside the van drawn on the hot street's
+  south-east corner: through any window, lit or dark ("the season sends
+  them"), anyone who looks, a guest included, reads the doors open on a
+  rack of recorders and the oval on the mast. Quill keeps the lights on
+  by the vans (a new station, `quill-vans`) through the window for a
+  Movement IV body that has kept the hole and not yet stood in it: her
+  shipped `ring`, never routed until now, gains its two choices, "The
+  frame on the recorders." to the new `margin` (the gap low on the near
+  side where whatever stands is not on the tape) and "Keep the lights
+  on.". With that Phase B's last lines are in.
 - `npm run typecheck` — client and Worker clean.
 - `npm test` — 34 files, 436 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
@@ -2626,6 +2647,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   and no burst, the fighter's notice), the build, the play build and the
   stage, and on a fresh local world the session smoke and the render
   check, each run alone.
+- Backlog A, Phase C, the launch's remainder (2026-10-03, morning):
+  typecheck, 553 tests in 42 files (through the real tick: the cable
+  enforcer's post moved to the node at a lit opening and set down there
+  idle, the Cable's study reading the shift, the post back at its desk
+  after the hour and the shift's flag cleared, no shift in a dark
+  window; the van's look shut before the hour and open through a lit
+  and a dark window to a guest; Quill at `quill-vans` with `ring` for a
+  prepared Movement IV body through the hour, her two choices and
+  `margin` with its Wink, and not before the hour, after it, after the
+  rite or without the hole kept; the map's reachability with the new
+  POI and station), the build, the play build and the stage, and on a
+  fresh local world the session smoke and the render check, each run
+  alone.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2682,8 +2716,8 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      after the rite) and the rite's remainders (Nara kept at the ring
      after an Absence, the marked Angel's own sky on the altars), see
      Done, and the hour (II.9, Caul through every oval on the Kerb when
-     a bought hour does not come); only Quill's `ring` and `margin` at
-     the vans remain, and they wait for Phase C's launch):
+     a bought hour does not come); Quill's `ring` and `margin` at the
+     vans landed with Phase C's launch, so Phase B is done):
      never inserted between shipped steps (a
      saved body's progress is a step index); they enter as verbs and
      dialogue on existing steps or at a movement's end. The altar as a
@@ -2703,11 +2737,11 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      withholds it (the switch is the city's for good; the owner may
      want it per season); next the launch window, which should also
      settle whether the city's figure moves the hour as Caul says (the
-     window itself has landed: see Done, "the launch"; next its
-     enforcers, the vans' look and the mast, and Quill at the vans),
-     then the clerks' descent, the
-     hot street's cool-down, the Houses' lost hour at Ord's map and
-     Quill's lines at the vans): the
+     window itself has landed with its remainder: see Done, "the
+     launch" and "the launch's remainder"; next the clerks' descent,
+     then the hot street's cool-down, the Houses' lost hour at Ord's
+     map, the listing's seller exposed by Quill, and the journal line
+     for readers): the
      Cable's darkening flickering the altars server-wide; the listing's
      seller exposed by Quill; Ord's figure on the news; the count of dark
      lights on the Kerb as world state carried in the snapshot, the

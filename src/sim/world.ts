@@ -10,7 +10,7 @@ import {
   NOTICE_TTL, RESTRAINT_MAX, RESTRAINT_START, RESTRAINT_WINK_MIN, SEASON_LENGTH, SPEED, STORM_RESTRAINT_BURN, STRIKE_DAMAGE,
   UNBANKED_DROP, WRECKAGE_TTL, WRECKAGE_TTL_BONUS,
 } from "./constants";
-import { circleHitsWalls, districtAt, FAILED_PASSING_MARKS, GUEST_SPAWN, NPC_HOMES } from "./map";
+import { circleHitsWalls, districtAt, ENEMY_SPAWNS, FAILED_PASSING_MARKS, GUEST_SPAWN, NPC_HOMES, POSITIONS } from "./map";
 import { POI_STATES, W } from "./content/ids";
 import { newsFor } from "./content/news";
 import { weatherBand } from "./protocol";
@@ -22,7 +22,7 @@ import { initialClearing, initialPassing, tickClearing } from "./clearing";
 import { resolveHeavy, tickCombatTimers, tickEnemies } from "./combat";
 import { tickQuests } from "./quests";
 import { openNode } from "./dialogue";
-import { glassDark, launchClimb, launchDue } from "./launch";
+import { glassDark, inLaunchHour, launchClimb, launchDue } from "./launch";
 import * as LINES from "./content/lines";
 
 export const NO_INTENT: Intent = { up: false, down: false, left: false, right: false };
@@ -381,6 +381,8 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
  * of dark lights: no shift, no climb, only the vans, and Caul through the ovals still lit. Decided once, at the opening.
  */
 function tickLaunch(w: WorldState): WorldState {
+  // After the hour the enforcer on shift goes back to its desk.
+  if ((w.flags[W.LAUNCH_SHIFT] ?? 0) > 0 && !inLaunchHour(w)) w = { ...moveShift(w, false), flags: { ...w.flags, [W.LAUNCH_SHIFT]: 0 } };
   const due = launchDue(w);
   if (due === "climb") return { ...w, gestell: launchClimb(w.gestell), flags: { ...w.flags, [W.LAUNCH_CLIMBED]: (w.flags[W.LAUNCH_CLIMBED] ?? 0) + 1 } };
   if (due !== "open") return w;
@@ -392,6 +394,7 @@ function tickLaunch(w: WorldState): WorldState {
     const street = cur.pois[HOT_STREET];
     if (street && street.state !== "hot") cur = { ...cur, pois: { ...cur.pois, [HOT_STREET]: { state: "hot", by: "", at: cur.now, count: street.count + 1 } } };
     cur = pushNews(cur, LAUNCH_NEWS);
+    cur = { ...moveShift(cur, true), flags: { ...cur.flags, [W.LAUNCH_SHIFT]: 1 } };
   }
   // Every oval on the Kerb: a body there with no window open hears him. One in a conversation or down is not interrupted;
   // one in a fight (a clerk on it, a heavy winding up, a duel) is not stopped by a window: it gets the ovals as a notice.
@@ -405,6 +408,24 @@ function tickLaunch(w: WorldState): WorldState {
 }
 
 const HOT_STREET = "hot-street";
+const SHIFT_ENEMY = "cable-enforcer";
+const SHIFT_POST = "organ-node-cable";
+
+/**
+ * The cable enforcer's shift (IV.5): through a lit window it stands at the Organs' node, not the desk; after the hour it
+ * goes back. Its home moves; an idle body is set down at once, a busy one walks there when it is done.
+ */
+function moveShift(w: WorldState, onShift: boolean): WorldState {
+  const spawn = ENEMY_SPAWNS.find(s => s.id === SHIFT_ENEMY);
+  const post = onShift ? POSITIONS[SHIFT_POST] : spawn;
+  if (!post) return w;
+  const enemies = w.enemies.map(e => {
+    if (e.id !== SHIFT_ENEMY) return e;
+    const home = { x: post.x, y: post.y };
+    return e.state === "idle" ? { ...e, home, x: home.x, y: home.y } : { ...e, home };
+  });
+  return { ...w, enemies };
+}
 const LAUNCH_NEWS = "The launch. The Concern stopped selling. The weather is climbing on every meter.";
 const LAUNCH_NEWS_DARK = "The vans are on the Grid. The glass had no hour to give them.";
 const LAUNCH_OVALS_NOTICE = "Every oval on the Kerb goes champagne at once. The same voice is on all of them.";

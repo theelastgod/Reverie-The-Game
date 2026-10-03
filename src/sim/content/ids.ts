@@ -108,6 +108,7 @@ export const W = {
   LAUNCH_SEASON: "launchSeason", // the season whose launch window has opened (src/sim/launch.ts; the tick opens it once a season)
   LAUNCH_DARK: "launchDark", // 1 = that window opened past the threshold of dark lights: no shift, only the vans
   LAUNCH_CLIMBED: "launchClimbed", // points the weather has climbed in that window
+  LAUNCH_SHIFT: "launchShift", // 1 = the cable enforcer is on shift at the Organs' node (a lit window); cleared when it goes back after the hour
 } as const;
 
 /** Quest ids. */
