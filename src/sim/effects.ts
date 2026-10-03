@@ -205,6 +205,9 @@ function applyOne(w: WorldState, id: string, e: Effect): WorldState {
     }
     case "news":
       return pushNews(w, e.text);
+    case "flicker":
+      // The moment every viewer's altars flicker; the world clock is past 0 by the time anyone acts.
+      return { ...w, flags: { ...w.flags, [W.ALTARS_FLICKER]: now } };
     case "listing":
       return applyListing(w, e);
     case "list":

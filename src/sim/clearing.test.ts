@@ -428,8 +428,22 @@ describe("applyPassing", () => {
     expect(next.passing.lastAt).toBe(w.now);
     expect(next.passing.hijackedBy).toBe("");
     expect(next.passing.appearanceUntil).toBe(w.now + SEASON_LENGTH);
-    expect(next.news).toHaveLength(1);
+    // the rite's line, then the recorders' tape, blank, naming the angel by serial (never ", alone,": the possessive is theirs)
+    expect(next.news.map(n => n.text)).toEqual([
+      `A Passing. ${me.name} prepared the ground. The city is briefly world.`,
+      `The tape at ${me.name}'s Clearing is blank. The god passed through the ones who were ready.`,
+    ]);
     expect(next.failed).toHaveLength(0);
+  });
+
+  it("the blank tape is the Appearance's only: an alone angel is named plainly on the tape, and no other outcome posts it", () => {
+    const alone = applyPassing(makeWorld([prepared({ readiness: 80, choices: { ...prepared().choices, [C.PARTY]: "alone" } })]), "p1");
+    const name = you(alone).name;
+    expect(alone.news.map(n => n.text)).toContain(`The tape at ${name}'s Clearing is blank. The god passed through the ones who were ready.`);
+    expect(alone.news.some(n => n.text.includes(`${name}, alone,'s`))).toBe(false);
+    const short = applyPassing(makeWorld([prepared({ readiness: 10 })]), "p1");
+    expect(you(short).choices[C.PASSING]).not.toBe("appearance");
+    expect(short.news.some(n => n.text.startsWith("The tape at"))).toBe(false);
   });
 
   it("re-prices the resistance's Clearing once the board has been read: up on an appearance, down on a failure, not at all before", () => {

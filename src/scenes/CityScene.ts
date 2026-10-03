@@ -11,6 +11,7 @@ import { bus, type SceneActions } from "../render/bus";
 import { Entities } from "../render/entities";
 import { Floors, TEX } from "../render/floors";
 import { Fx } from "../render/fx";
+import { flickerDue, reducedMotion } from "../render/motion";
 import { audio } from "../audio/bus";
 import { VOLUME_STEP } from "../audio/settings";
 import { loopFor, passingLoopFor } from "../assets/slots";
@@ -67,6 +68,8 @@ export class CityScene extends Phaser.Scene {
   private lastRain = "";
   private lastFrozen = "";
   private lastPois = "";
+  private lastFlicker = 0;
+  private readonly reduced = reducedMotion();
   private lastGates = "";
   private following = false;
   private heard: Snap | null = null; // the last snapshot the audio bus was given
@@ -467,6 +470,11 @@ export class CityScene extends Phaser.Scene {
     if (poisKey !== this.lastPois) {
       this.lastPois = poisKey;
       this.floors.setPois(snap.pois);
+    }
+    // The Foundry's darkening: every altar in the Nave flickers once, for everyone looking when it happens.
+    if (snap.flicker !== this.lastFlicker) {
+      if (flickerDue(this.lastFlicker, snap.flicker, snap.now)) this.floors.flickerAltars(this.reduced());
+      this.lastFlicker = snap.flicker;
     }
     const gates = `${you.guest ? "g" : "a"}|${you.flags.under ?? 0}|${you.flags.m3 ?? 0}`;
     if (gates !== this.lastGates) {

@@ -87,6 +87,7 @@ function variants(): Ctx[] {
   out.push(ctxOf(richPlayer({ choices: { ...richPlayer().choices, [SC.TOLL]: "refused", [SC.FORM9]: "refused" } }), rw));
   out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.HONEST_FOUND]: 1, [SF.TWELVE_NAMED]: 1, [SF.FEE_1]: 1, [SF.FEE_3]: 1, [SF.SWEEP_1]: 1 } }), rw));
   out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.VAN_WAVED]: 1 } }), rw)); // the one who waved the van through parks it
+  out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.FOUNDRY_RAKED]: 1 } }), rw)); // the one who raked the Foundry out darkens it
   return out;
 }
 

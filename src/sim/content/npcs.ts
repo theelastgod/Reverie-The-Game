@@ -709,9 +709,14 @@ const ORD_NODES: Record<string, DialogueNode> = {
     id: "figure",
     text: "Ord does not look at the screen. He has it by heart. \"Four hundred and six in the ring. The glass at sixty-one; that is the city's figure, not a body's. The weather at seventy-three. Third minute: a trace crossed. I wrote that line the way I wrote every line. Then the next one came across my desk, on the Concern's paper, and I wrote that too: taken. One. That is the figure. It was not short of anything. I counted it, and I walked to a gate the same week, and I have been at one since.\" He closes the book on his finger. \"The reel at the altar is that line. He will tell you it is a sample. It is a sample. It is also my handwriting.\"",
     wink: "The count. He said he left on principle. He left on this line.",
-    effects: [
+    // The figure goes on the marquee once for the city: the first body to hear it puts it there.
+    effects: (ctx) => [
       { kind: "flag", key: F.FIGURE },
       { kind: "notice", text: "Ord's figure: last season was captured, not short. He counted it.", tone: "ink" },
+      ...((ctx.w.flags[W.FIGURE_NEWS] ?? 0) > 0 ? [] : [
+        { kind: "worldFlag", key: W.FIGURE_NEWS } as Effect,
+        { kind: "news", text: "Ord's figure is on the marquee: last season, four hundred and six in the ring, the glass at sixty-one, a trace crossed and was taken." } as Effect,
+      ]),
     ],
     choices: [
       // Back across the desk: the offer if it has not been made, else his later line.

@@ -597,6 +597,47 @@ describe("the bought hour that does not come", () => {
   });
 });
 
+describe("the Foundry's darkening flickers every altar in the Nave, for everyone", () => {
+  const RAKED_NEWS = "Someone raked the Foundry out. Heat without a nation, ended.";
+
+  it("the spine's darken stamps the moment on the world, every viewer's snapshot carries it, and the news says so; once", () => {
+    let w = tick(world({ id: SQ.HOURS, steps: [], check: () => undefined }), 5);
+    w = add(w, spawnGuest("g"));
+    expect(snapshotFor(w, "g").flicker, "no flicker yet").toBe(0);
+    w = goTo(w, ME, "organ-foundry");
+    const now = w.now;
+    expect(now).toBeGreaterThan(0);
+    w = interact(w, "organ-foundry", "darken");
+    expect(w.pois["organ-foundry"].state).toBe("dark");
+    expect(w.flags[W.ALTARS_FLICKER]).toBe(now);
+    expect(snapshotFor(w, ME).flicker).toBe(now);
+    expect(snapshotFor(w, "g").flicker, "a guest in the Nave sees it too").toBe(now);
+    expect(w.news.at(-1)?.text).toBe("Someone darkened the Foundry. The heat is off. The altars in the Nave flicker.");
+    // the verb is the lit Foundry's: a dark one offers no second darkening, and so no second flicker
+    const later = tick(w, 10);
+    expect(verbsFor({ w: later, p: me(later), now: later.now }, "organ-foundry").map(v => v.choice)).not.toContain("darken");
+    expect(interact(later, "organ-foundry", "darken").flags[W.ALTARS_FLICKER]).toBe(now);
+  });
+
+  it("the side hour's rake flickers them for the one who raked; a Foundry already dark closes the step with no flicker and no news", () => {
+    let w = tick(world({ id: SQ.FOUNDRY, flags: { [offerKey(SQ.FOUNDRY)]: 1 }, steps: [], check: () => undefined }), 3);
+    expect(questProgress(me(w), SQ.FOUNDRY)).toEqual({ started: true, step: 0, done: false });
+    w = goTo(w, ME, "organ-foundry");
+    const now = w.now;
+    w = tick(interact(w, "organ-foundry", "side:foundry:rake"));
+    expect(questProgress(me(w), SQ.FOUNDRY).step).toBe(1);
+    expect(w.pois["organ-foundry"].state).toBe("dark");
+    expect(w.flags[W.ALTARS_FLICKER]).toBeGreaterThanOrEqual(now);
+    expect(w.news.some(n => n.text === RAKED_NEWS)).toBe(true);
+
+    let dark = world({ id: SQ.FOUNDRY, flags: { [offerKey(SQ.FOUNDRY)]: 1 }, pois: { "organ-foundry": "dark" }, steps: [], check: () => undefined });
+    dark = tick(dark, 4);
+    expect(questProgress(me(dark), SQ.FOUNDRY).step, "the step closes on its own").toBe(1);
+    expect(dark.flags[W.ALTARS_FLICKER]).toBeUndefined();
+    expect(dark.news.some(n => n.text === RAKED_NEWS), "nobody raked it").toBe(false);
+  });
+});
+
 describe("side objectives in the snapshot", () => {
   it("lists every active side hour with its title and a resolved target, newest first, capped", async () => {
     const { snapshotFor } = await import("./snapshot");

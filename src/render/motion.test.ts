@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pulseAt, reducedMotion, stillTween } from "./motion";
+import { FLICKER_FRESH, flickerDue, flickerTween, pulseAt, reducedMotion, stillTween } from "./motion";
 
 describe("reducedMotion", () => {
   it("reads the media query live", () => {
@@ -39,5 +39,31 @@ describe("pulseAt", () => {
       expect(pulseAt(true, s)).toBe(0.5);
     }
     expect(seen.size).toBeGreaterThan(5);
+  });
+});
+
+describe("flickerDue", () => {
+  it("plays a new, fresh flicker once", () => {
+    expect(flickerDue(0, 100, 100.2)).toBe(true);
+    expect(flickerDue(100, 100, 100.4), "the same moment does not play twice").toBe(false);
+    expect(flickerDue(100, 180, 181), "a later darkening plays again").toBe(true);
+  });
+  it("never plays for no flicker, a stale one, or one from the future", () => {
+    expect(flickerDue(0, 0, 50)).toBe(false);
+    expect(flickerDue(0, 100, 100 + FLICKER_FRESH + 0.1), "a viewer who arrives later sees the altars as they are").toBe(false);
+    expect(flickerDue(0, 100, 100 + FLICKER_FRESH)).toBe(true);
+    expect(flickerDue(0, 100, 99)).toBe(false);
+  });
+});
+
+describe("flickerTween", () => {
+  it("flickers quickly with motion and dips once without, never to dark", () => {
+    const quick = flickerTween(false);
+    const still = flickerTween(true);
+    expect(quick.repeat).toBeGreaterThan(0);
+    expect(still.repeat).toBe(0);
+    expect(still.duration).toBeGreaterThan(quick.duration * 4);
+    expect(still.alpha).toBeGreaterThan(quick.alpha);
+    for (const t of [quick, still]) expect(t.alpha).toBeGreaterThan(0);
   });
 });

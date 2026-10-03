@@ -103,6 +103,8 @@ export const W = {
   PASSINGS: "passings",
   DARK_LIGHTS: "darkLights", // count of lights put out behind the forecast glass, one per Angel who shuttered it (the city's switch, Phase C reads it)
   GLASS_LINES: "glassLines", // count of readers whose readiness is a line on the glass
+  ALTARS_FLICKER: "altarsFlicker", // world time of the last flicker of the Nave's altars (the `flicker` effect); 0 = never; carried as Snap.flicker
+  FIGURE_NEWS: "figureNews", // 1 = Ord's figure has been on the marquee (once for the city)
 } as const;
 
 /** Quest ids. */

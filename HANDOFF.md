@@ -78,7 +78,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   after an Absence and the altars playing a marked Angel their own sold
   sky; and the Kerb's ovals, through which Caul addresses the city when
   a bought hour does not come. Of Phase B only Quill's lines at the vans
-  remain, and they wait for Phase C's launch; Phase C is next.
+  remain, and they wait for Phase C's launch. Phase C, the shared world,
+  has begun with the weave: darkening the Foundry flickers every altar
+  in the Nave for everyone, Ord's figure goes on the marquee, and the
+  Appearance's blank tape is news.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1648,6 +1651,28 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   `ring` and `margin` at the vans remain, and they wait for Phase C's
   launch; Phase C is next (the launch window, the dark-light threshold,
   the clerks' descent, the journal line and the date for readers).
+- Backlog A, Phase C, the weave (2026-10-03, morning): the first of the
+  shared world, from the script's lines tagged Phase C that need no
+  launch; no step inserted. A new `flicker` effect puts the world's time
+  on `W.ALTARS_FLICKER`, and the snapshot carries it to every viewer as
+  `flicker`, a slow section (an old client ignores it; the protocol
+  stays v3). The client pulses every altar in the Nave once when the
+  moment is new to it and at most four seconds old, so a viewer who
+  arrives later sees the altars as they are; under reduced motion it is
+  one slow dip and nothing flashes (`render/motion.ts` `flickerDue` and
+  `flickerTween`, pure, with cases; the floors keep each altar's resting
+  brightness so a flicker ends where it began). The spine's darkening of
+  the Foundry flickers them and its news now says "The altars in the
+  Nave flicker."; the Foundry side hour's rake flickers them for the one
+  who raked, and a Foundry already dark now closes that step with no
+  second flicker and no false "Someone raked the Foundry out" (it used to
+  post it), as the van's wave step does. The Cable's study says what
+  darkening does. Ord's figure goes on the marquee once for the city,
+  by the first body to hear it. The Appearance posts the recorders'
+  blank tape after its own line, naming the angel by serial (never
+  ", alone,", which would break the possessive). Next in Phase C: the
+  date on the glass and the dark-light threshold that withholds it,
+  then the launch window that reads them.
 
 ## Verified (2026-09-25, integration)
 
@@ -2430,6 +2455,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   merged snapshot, so the hold sees the window on every frame, and
   before the first slow frame it reads as closed. No server or protocol
   change, so the Wrangler smokes were not re-run.
+- Backlog A, Phase C, the weave (2026-10-03, morning): typecheck, 534
+  tests in 41 files (the darkening through the real verb stamps the
+  world's moment, a guest's snapshot and the actor's carry it, the news
+  reads the revised line, and a dark Foundry offers no second darkening;
+  the rake flickers for the one who raked, and a Foundry already dark
+  closes the step with no flicker and no raked news; the Cable's line,
+  the darken verb's effects in order, Ord's figure posted once for the
+  city; the Appearance's two lines in order, the tape naming an alone
+  angel plainly, no tape on another outcome; `flickerDue` and
+  `flickerTween` cases), the build, the play build and the stage; on a
+  fresh local world the session smoke (which now checks the slow frame
+  carries `flicker`) and the render check at `RENDER_MIN_FPS=5` passed,
+  each run alone. The flicker's own pulse is covered by the pure cases
+  only: the render check does not darken the Foundry. The Movement III
+  campaign smoke and a review of the diff were still running at this
+  commit; their results follow in the next entry.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2487,8 +2528,7 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      after an Absence, the marked Angel's own sky on the altars), see
      Done, and the hour (II.9, Caul through every oval on the Kerb when
      a bought hour does not come); only Quill's `ring` and `margin` at
-     the vans remain, and they wait for Phase C's launch, so Phase C is
-     next):
+     the vans remain, and they wait for Phase C's launch):
      never inserted between shipped steps (a
      saved body's progress is a step index); they enter as verbs and
      dialogue on existing steps or at a movement's end. The altar as a
@@ -2501,7 +2541,13 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      own key beside the operator's, no payment (IV.6); Hijack written as
      whatever would have crossed, with a margin; Nara kept at the ring
      after an Absence; the Hijack reel per viewer and a news line.
-   - **Phase C, the shared-world weave and two named systems**: the
+   - **Phase C, the shared-world weave and two named systems** (begun;
+     landed so far: the weave, see Done: the altars' flicker for
+     everyone, Ord's figure and the blank tape on the news; next the
+     date on the glass with its count and the dark-light threshold that
+     withholds it, then the launch window, then the clerks' descent, the
+     hot street's cool-down, the Houses' lost hour at Ord's map and
+     Quill's lines at the vans): the
      Cable's darkening flickering the altars server-wide; the listing's
      seller exposed by Quill; Ord's figure on the news; the count of dark
      lights on the Kerb as world state carried in the snapshot, the

@@ -435,6 +435,25 @@ describe("dialogue", () => {
     expect(def.nodes.lip.choices!.filter(c => !c.when || c.when(guestOnTheGrid)).map(c => c.id), "a guest is offered neither key").toEqual(["walk"]);
   });
 
+  it("the weave: the Cable says the altars flicker, the Foundry's darkening flickers them, and Ord's figure goes on the marquee once for the city", () => {
+    const m3 = CTXS.find(c => c.name === "angel divinities M3 refuse")!.ctx;
+    const say = (id: string, choice: string, ctx: Ctx): string => { const v = POI_CONFIGS[id].verbs.find(x => x.choice === choice)!; return typeof v.say === "function" ? v.say(ctx) : v.say ?? ""; };
+    expect(say("organ-cable", "study", m3)).toBe("The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone.");
+    const darken = POI_CONFIGS["organ-foundry"].verbs.find(v => v.choice === "darken")!;
+    const effects = darken.effects as Effect[];
+    expect(effects.map(e => e.kind)).toEqual(["poi", "worldFlag", "flicker", "news"]);
+    expect(effects.find(e => e.kind === "news")).toEqual({ kind: "news", text: "Someone darkened the Foundry. The heat is off. The altars in the Nave flicker." });
+    // the figure: the first body to hear it puts it on the marquee; every later body hears it, and the marquee does not repeat
+    const figure = NPCS.ord.nodes.figure.effects as (ctx: Ctx) => Effect[];
+    expect(typeof figure).toBe("function");
+    const first = figure(m3);
+    expect(first.filter(e => e.kind === "flag").map(e => (e as { key: string }).key)).toEqual([F.FIGURE]);
+    expect(first).toContainEqual({ kind: "worldFlag", key: W.FIGURE_NEWS });
+    expect(first).toContainEqual({ kind: "news", text: "Ord's figure is on the marquee: last season, four hundred and six in the ring, the glass at sixty-one, a trace crossed and was taken." });
+    const told = figure({ ...m3, w: { ...m3.w, flags: { ...m3.w.flags, [W.FIGURE_NEWS]: 1 } } });
+    expect(told.map(e => e.kind)).toEqual(["flag", "notice"]);
+  });
+
   it("Caul speaks through every oval on the Kerb when a bought hour does not come: to the city, not by serial, and a voice is not a Wink", () => {
     // The bell's wait for the bought hour (II.9) says the schedule is the Concern's, then opens his address; a guest may buy the hour and press it.
     const wait = SIDE_POI_VERBS["hour-bell"].find(v => v.choice === "side:hours:wait")!;

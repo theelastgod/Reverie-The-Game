@@ -833,7 +833,7 @@ The paper panel, the gold mark:
 
 **THE FOUNDRY** — `darken` Q (shipped)
 > You shut the heat. The furnace goes from a mouth to a room. Cold is honest. It is not the last word.
-[organ-foundry dark, for everyone; world foundryDark; news (revised, Phase C): "Someone darkened the Foundry. The heat is off. The altars in the Nave flicker."]
+[organ-foundry dark, for everyone; world foundryDark; every altar in the Nave flickers once, for everyone (shipped since Phase C, the weave: a `flicker` effect, the moment on the world and on every snapshot); news (shipped since Phase C, the weave): "Someone darkened the Foundry. The heat is off. The altars in the Nave flicker."]
 
 **THE FOUNDRY** — the back of the plaque, `read the second column` E (shipped, side-pois.ts; the Column hour's second step)
 > Back of the plaque: 'A hill. Cold. People climbed it to see the Strait. There was nothing to extract and nobody tried.'
@@ -891,7 +891,7 @@ The paper panel, the gold mark:
 ### III.3 Who pays for the light
 *Step `cable` (shipped). East of the Organs: the Cable. Plate `organ-cable-dark.jpg`. Angels only.*
 
-**THE CABLE** — `study` F (revised: the catalog named as what the light carries; the first two sentences shipped since Phase A, Movement III, the flicker sentence waits for Phase C's weave)
+**THE CABLE** — `study` F (shipped: the catalog named as what the light carries since Phase A, Movement III; the flicker sentence since Phase C, the weave, when the darkening began to flicker the altars)
 > The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone.
 [F.CABLE]
 
@@ -1055,7 +1055,7 @@ The paper panel, the gold mark:
 **ORD** — `figure` (shipped since Phase A, Movement III; since Phase B in the room, `station:ord-glass` from F.FAILED until the glass is decided (or the forge's lesson, if taken first), reachable from Caul's menu by a `dialogue` effect, with "Back to him." the way back across the desk), the ledger open at last season
 > Ord does not look at the screen. He has it by heart. "Four hundred and six in the ring. The glass at sixty-one; that is the city's figure, not a body's. The weather at seventy-three. Third minute: a trace crossed. I wrote that line the way I wrote every line. Then the next one came across my desk, on the Concern's paper, and I wrote that too: taken. One. That is the figure. It was not short of anything. I counted it, and I walked to a gate the same week, and I have been at one since." He closes the book on his finger. "The reel at the altar is that line. He will tell you it is a sample. It is a sample. It is also my handwriting."
 ✦ *The count. He said he left on principle. He left on this line.*
-[F.FIGURE (new), once; news (new, Phase C), once: "Ord's figure is on the marquee: last season, four hundred and six in the ring, the glass at sixty-one, a trace crossed and was taken."]
+[F.FIGURE, once; news (shipped since Phase C, the weave), once for the city, by the first body to hear it: "Ord's figure is on the marquee: last season, four hundred and six in the ring, the glass at sixty-one, a trace crossed and was taken."]
 - ▸ "Back to him." → CAUL `offer` (a `dialogue` effect on the choice)
 
 **ORD** — `figure-after` (shipped since Phase A, Movement III), at the Annex gate once the figure is read, until the act
@@ -1486,7 +1486,7 @@ The paper panel, the gold mark:
 
 **QUILL** — `after`, appearance (shipped since Phase A, Movement IV: the tape in her hands)
 > She has the tape out of the van in both hands and she is laughing. A trace. I did not print it. Do not look at me like that. Nobody did. There is nothing on it. Not a margin, not a grain. I am not printing anything for a day.
-[news (new, Phase C): "The tape at {name}'s Clearing is blank. The god passed through the ones who were ready."]
+[news (shipped since Phase C, the weave; posted by the rite on an Appearance, after its own line, naming the angel by serial): "The tape at {name}'s Clearing is blank. The god passed through the ones who were ready."]
 
 **CAUL** — `lip-appearance` (shipped since Phase B, the lip; he stood still for the whole of it because he had to; his word on a season's rite is said once, then the lip's description again, and a later season finds him silent: the offer was the campaign's)
 > He has not moved. The tile does not let a guest go down and he did not go back. The second time, the only question he asks twice: What did it look like.
@@ -2211,7 +2211,7 @@ The paper panel, the gold mark:
 **THE FOUNDRY** — `organ-foundry` rake the coals out, `side:foundry:rake` (shipped; side-pois.ts)
 > You rake it out. Heat without a nation, ended. The Cable hums a note lower. Somewhere a number becomes zero.
 [poi `organ-foundry` dark, for everyone; SW.FOUNDRY_DARK; news "Someone raked the Foundry out. Heat without a nation, ended."]
-[new, Phase C: every altar in the Nave flickers once, for everyone]
+[every altar in the Nave flickers once, for everyone (shipped since Phase C, the weave; only for the one who raked, since a Foundry already dark closes the step with no news and no second flicker)]
 *Skipped when the Foundry is already dark (the spine's `Q`, yours or anyone's, III.2): the step closes on its own and the hour's line is Renn's.*
 
 **RENN COIL** — `foundry-told`, from the hub's "The Foundry is dark." (shipped; side-npcs.ts)

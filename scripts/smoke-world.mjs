@@ -100,6 +100,9 @@ const x = first.hello.you.x;
 const firstSnap = await snapshot(first.ws, s => s.you?.id === id, 'first snapshot');
 assert.equal(firstSnap.v, PROTOCOL_VERSION);
 assert.equal(firstSnap.players.filter(p => p.id === id).length, 0, 'you are not listed among the others');
+// The altars' flicker rides the slow sections for everyone: the world time of the last one, 0 before the Foundry is ever darkened.
+assert.equal(typeof firstSnap.flicker, 'number', 'the slow frame carries the altars\' flicker');
+assert.ok(firstSnap.flicker >= 0 && firstSnap.flicker <= firstSnap.now, 'the flicker is a moment in the world\'s past, or 0');
 
 const moved = snapshot(first.ws, snap => snap.you.x > x, 'movement');
 const heartbeat = setInterval(() => send(first.ws, { t: 'intent', intent: { right: true } }), 200);

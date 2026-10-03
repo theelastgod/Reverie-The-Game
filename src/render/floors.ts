@@ -15,6 +15,7 @@ import type { PoiView, WeatherBand } from "../sim/protocol";
 import type { DistrictId, Player } from "../sim/types";
 import { PROP_SIZE, propTarget, staticPropSlots, type PropKind } from "../assets/slots";
 import { genTex } from "../scenes/BootScene";
+import { flickerTween } from "./motion";
 
 // ---------------------------------------------------------------- shared render tokens
 
@@ -160,6 +161,10 @@ export class Floors {
   private readonly gateFields: GateField[] = [];
   private readonly hallLamps = new Map<string, Phaser.GameObjects.Arc>();
   private readonly altars = new Map<string, Phaser.GameObjects.Image>();
+  /** The altars that stand in the Nave (its two CRT altar POIs and the altars at its yield nodes): the ones the Foundry's darkening flickers. */
+  private readonly naveAltars = new Set<string>();
+  /** Each altar's resting alpha, as its POI state sets it, so a flicker ends where it began. */
+  private readonly altarAlpha = new Map<string, number>();
   private rain: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private hotStreet: Phaser.GameObjects.TileSprite | null = null;
   private band: WeatherBand = "mixed";
@@ -367,6 +372,9 @@ export class Floors {
     };
     for (const p of POI_LIST) if (p.id.startsWith("crt-altar")) altarAt(p.id, p.x, p.y);
     for (const n of NODE_LIST) altarAt(n.id, n.x, n.y);
+    for (const p of POI_LIST) if (p.id.startsWith("crt-altar") && p.district === "nave") this.naveAltars.add(p.id);
+    for (const n of NODE_LIST) if (n.district === "nave") this.naveAltars.add(n.id);
+    for (const [id, img] of this.altars) this.altarAlpha.set(id, img.alpha);
 
     // Glows: oval light pools in the Kerb and the Ring, drawn additively; a pool at every shrine.
     const glow = s.add.graphics().setDepth(DEPTH.prop).setBlendMode(Phaser.BlendModes.ADD);
@@ -479,12 +487,36 @@ export class Floors {
       const lamp = this.hallLamps.get(p.id);
       if (lamp) lamp.setFillStyle(COLOR.champagneLight, p.state === "lit" ? 0.3 : 0.07);
       const altar = this.altars.get(p.id);
-      if (altar) altar.setAlpha(p.state === "lit" ? 1 : 0.7);
+      if (altar) {
+        const alpha = p.state === "lit" ? 1 : 0.7;
+        this.altarAlpha.set(p.id, alpha);
+        if (!this.scene.tweens.isTweening(altar)) altar.setAlpha(alpha);
+      }
       if (p.id === "hot-street") hot = p.state === "hot";
     }
     if (hot !== this.hot) {
       this.hot = hot;
       this.applyHot();
+    }
+  }
+
+  /** Every altar in the Nave flickers once, for everyone who is looking (the world's `flicker`); under reduced motion one slow dip. */
+  flickerAltars(reduced: boolean): void {
+    const shape = flickerTween(reduced);
+    for (const id of this.naveAltars) {
+      const altar = this.altars.get(id);
+      if (!altar) continue;
+      const rest = this.altarAlpha.get(id) ?? altar.alpha;
+      this.scene.tweens.killTweensOf(altar);
+      altar.setAlpha(rest);
+      this.scene.tweens.add({
+        targets: altar,
+        alpha: shape.alpha,
+        duration: shape.duration,
+        yoyo: true,
+        repeat: shape.repeat,
+        onComplete: () => altar.setAlpha(this.altarAlpha.get(id) ?? rest),
+      });
     }
   }
 

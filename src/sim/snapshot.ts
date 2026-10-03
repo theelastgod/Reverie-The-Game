@@ -9,6 +9,7 @@
 import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, CITY_SELLER, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
 import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
+import { W } from "./content/ids";
 import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type EnemyView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView } from "./protocol";
 import type { Ctx, Enemy, FailedPassing, HistoryMark, Listing, NpcState, Player, PoiConfig, Prompt, PromptVerb, Wreckage, WorldState, YieldNode } from "./types";
 import { nodeYield } from "./economy";
@@ -448,6 +449,7 @@ function sectionsOf(fast: ViewerFast, slow: ViewerSlow): Pick<Snap, SlowKey> {
     passing: shared.passing,
     market: slow.market,
     news: shared.news,
+    flicker: w.flags[W.ALTARS_FLICKER] ?? 0,
     objective: slow.objective,
     sideObjectives: slow.sideObjectives,
     notices: p.notices,

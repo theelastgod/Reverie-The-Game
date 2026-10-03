@@ -30,6 +30,22 @@ export function stillTween<T extends object>(reduced: boolean, config: T): T {
   return out as T;
 }
 
+/** How long after the world's flicker a viewer still sees it play (a viewer who arrives later sees the altars as they are). */
+export const FLICKER_FRESH = 4;
+
+/**
+ * Whether the Nave's altars should flicker now: the world's flicker moment (Snap.flicker, world seconds, 0 = never)
+ * is new to this viewer and still fresh. Each moment plays once; a reconnect inside the window may play it again.
+ */
+export function flickerDue(lastSeen: number, at: number, now: number): boolean {
+  return at > 0 && at !== lastSeen && now - at >= 0 && now - at <= FLICKER_FRESH;
+}
+
+/** The flicker's tween: quick and four times; under reduced motion one slow dip and back, nothing that flashes. */
+export function flickerTween(reduced: boolean): { alpha: number; duration: number; repeat: number } {
+  return reduced ? { alpha: 0.45, duration: 420, repeat: 0 } : { alpha: 0.12, duration: 80, repeat: 3 };
+}
+
 /** The pulse that rings and lights breathe with, in [0, 1]; its mean when motion is reduced. */
 export function pulseAt(reduced: boolean, seconds: number): number {
   return reduced ? 0.5 : 0.5 + 0.5 * Math.sin(seconds * Math.PI * 1.6);

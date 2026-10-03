@@ -100,6 +100,7 @@ export type Snap = {
   passing: PassingState & { season: number };
   market: Listing[];
   news: string[];
+  flicker: number; // world time of the last flicker of the Nave's altars, for everyone (W.ALTARS_FLICKER); 0 = never
   prompt: Prompt | null;
   objective: Objective | null;
   sideObjectives: SideObjective[];
@@ -112,7 +113,7 @@ export type FastKey = (typeof FAST_KEYS)[number];
 /** Everything else: sent when it changes, at most every SLOW_EVERY_TICKS steps, and at once after the viewer acts. */
 export const SLOW_KEYS = [
   "gestell", "weather", "weatherNamed", "frozen", "district", "npcs", "nodes", "wreckage", "graves", "pois", "history", "failed",
-  "houses", "clearing", "passing", "market", "news", "objective", "sideObjectives", "notices",
+  "houses", "clearing", "passing", "market", "news", "flicker", "objective", "sideObjectives", "notices",
 ] as const;
 export type SlowKey = (typeof SLOW_KEYS)[number];
 

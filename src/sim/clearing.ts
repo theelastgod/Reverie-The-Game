@@ -65,6 +65,8 @@ const ABSENCE_WINK = "You went under once and came back. The hour did the same. 
 const PASSING_HIJACK_SAFETY = "Safety claimed the hour. The freeze ate the rite. You are marked.";
 const PASSING_FAILED = "Gestell kept the weather. Without a held Clearing the hour does not open. No stipend is owed.";
 const NEWS_APPEARANCE = (name: string) => `A Passing. ${name} prepared the ground. The city is briefly world.`;
+/** The recorders' tape after an Appearance: nothing on it. The angel is named by serial, never "alone". */
+const NEWS_TAPE = (name: string) => `The tape at ${name}'s Clearing is blank. The god passed through the ones who were ready.`;
 const NEWS_ABSENCE = (name: string) => `A Passing went by. ${name} kept the hole. Absence is honest.`;
 const NEWS_HIJACK = (name: string, by: "cold" | "safety") => (by === "cold"
   ? `${name} sold their Passing. Cold claimed the hour at their Clearing; the margin has a serial in it.`
@@ -339,6 +341,7 @@ export function applyPassing(w: WorldState, id: string): WorldState {
       me = next.players.get(id) ?? me;
       me = notice(me, `Stipend. ${PASSING_STIPEND} Bestand. For the shrines, not the hand.`, next.now, "gold");
       next = pushNews(next, NEWS_APPEARANCE(standingName(p)));
+      next = pushNews(next, NEWS_TAPE(p.name));
       return speak(next, me, PASSING_APPEARANCE);
     }
     case "absence": {

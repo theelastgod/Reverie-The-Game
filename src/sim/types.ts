@@ -322,6 +322,7 @@ export type Effect =
   | { kind: "npc"; id: string; x?: number; y?: number; district?: DistrictId; present?: boolean; state?: string }
   | { kind: "poi"; id: string; state: string }
   | { kind: "news"; text: string }
+  | { kind: "flicker" } // every altar in the Nave flickers once, for everyone: the world time goes on W.ALTARS_FLICKER and rides Snap.flicker
   | { kind: "say"; text: string } // heard line
   | { kind: "wink"; text: WinkText } // private Wink (filtered by guest / aura / restraint; per school when authored so)
   | { kind: "notice"; text: string; tone?: Notice["tone"] }

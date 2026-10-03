@@ -1188,7 +1188,9 @@ const ORGANS: PoiConfig[] = [
         effects: [
           { kind: "poi", id: "organ-foundry", state: "dark" },
           { kind: "worldFlag", key: "foundryDark", value: 1 },
-          { kind: "news", text: "Someone darkened the Foundry. The heat is off." },
+          // The Cable draws the catalog; with the heat off, every altar in the Nave flickers once, for everyone.
+          { kind: "flicker" },
+          { kind: "news", text: "Someone darkened the Foundry. The heat is off. The altars in the Nave flicker." },
         ],
       },
     ],
@@ -1207,7 +1209,7 @@ const ORGANS: PoiConfig[] = [
         guest: spectate,
         say: ctx => (poiState(ctx, "organ-cable") === "quiet"
           ? "The Cable. Someone kept a node. The hum is less. The Foundry notices."
-          : "The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here."),
+          : "The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Darken the Foundry and they flicker, all of them, for everyone."),
         effects: [{ kind: "flag", key: F.CABLE }, { kind: "notice", text: "The Cable drinks what the Strait paid. Ord will draw it.", tone: "sky" }],
       },
     ],

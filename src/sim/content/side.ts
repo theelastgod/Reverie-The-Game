@@ -1282,7 +1282,10 @@ const ORGANS: Quest[] = [
         target: "organ-foundry",
         plate: "organ-foundry-dark.jpg",
         done: ({ p, w }) => has(p, SF.FOUNDRY_RAKED) || poiIs(w, "organ-foundry", "dark"),
-        onComplete: [poi("organ-foundry", "dark"), worldFlag(SW.FOUNDRY_DARK), news("Someone raked the Foundry out. Heat without a nation, ended.")],
+        // The one who raked it out darkens it, and every altar in the Nave flickers once; a Foundry already dark (the spine's darken, anyone's) closes the step with no news and no second flicker.
+        onComplete: ({ p }) => (has(p, SF.FOUNDRY_RAKED)
+          ? [poi("organ-foundry", "dark"), worldFlag(SW.FOUNDRY_DARK), { kind: "flicker" }, news("Someone raked the Foundry out. Heat without a nation, ended.")]
+          : []),
       }),
       step({
         id: "tell",
