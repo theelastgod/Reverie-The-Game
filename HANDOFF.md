@@ -72,9 +72,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Movement III and offers the reader's post or the light to put out; and
   the forge, where the print with your serial is listed on the Grid
   through the market or pulled off it, and either moves the Clearing's
-  price for everyone; and the lip of the ring, where Caul makes his last
+  price for everyone; the lip of the ring, where Caul makes his last
   offer of the hour as a signature, for nothing, and says his word on
-  the rite after it.
+  the rite after it; and the rite's remainders, Nara staying at the ring
+  after an Absence and the altars playing a marked Angel their own sold
+  sky. Of Phase B two beats remain: Caul's address through every oval on
+  the Kerb when a bought hour does not come (II.9), next, and Quill's
+  lines at the vans, which wait for Phase C's launch.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1574,6 +1578,36 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Next for Phase B: the Hijack's and Absence's remainders (Nara kept at
   the ring after an Absence, the per-viewer Hijack reel), then Quill's
   `ring` and `margin` at the vans.
+- Backlog A, Phase B, the remainders (2026-10-03, small hours): the
+  Hijack's and the Absence's, from IV.7's lines tagged new; no step
+  inserted. After an Absence Nara Vale stays at the ring for that body,
+  through the credits and after, while the Absence is the last word on
+  its hour (her `personal`, before the movement-5 release; a sexton who
+  walked does not stay), and says "I stay." as the shipped line did.
+  The marked Angel's own sky: the rite now writes on the body who
+  claimed the hour (Cold or Safety, as the resolver read it) and whether
+  a trace was on the way (readiness at the appearance floor when it was
+  taken), and both CRT altars' watch play that back to a body whose last
+  rite was claimed: the Appearance with their name in the margin, or an
+  empty sky through an oval with their name, or Safety's district
+  holding still with the form under it. Every other body sees the
+  catalog as it always played; the say is the viewer's alone. Ord's and
+  Caul's hijack lines now read the rite's record first (`content/caul.ts`
+  `coldClaimed`), falling back to the resolver's rule for bodies saved
+  before it was written. Reviewed by three adversarial readers (engine,
+  script, world) with a refuter on each finding; confirmed and folded:
+  the dark altar's room hint was still given to a body shown its own sky
+  (the altars' Winke are now the catalog's and the room's only); the reel
+  ended with the next rite where the script and the synopsis say "from
+  now on" (it reads the body's record now, so the mark is forever, as the
+  Ruin kit's is); a body marked before the record read no trace (its
+  readiness now decides, as its current does for the claimant); the
+  rite's writes had no pure unit cases. What remains of Phase B: Caul's
+  `oval-hour` through every oval on the Kerb, on the bought hour's wait
+  (II.9), which is the next beat; and Quill's `ring` and `margin` at the
+  vans, which wait for Phase C's launch. Then Phase C (the launch window,
+  the dark-light threshold, the clerks' descent, the journal line and
+  the date for readers).
 
 ## Verified (2026-09-25, integration)
 
@@ -2311,6 +2345,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Movement IV shows 1,197 words, 814 of dialogue), and the render check
   at `RENDER_MIN_FPS=5` passed on desktop and phone, run alone; all of it
   re-run on the tree after the review's fixes.
+- Backlog A, Phase B, the remainders (2026-10-03, small hours): typecheck,
+  521 tests in 41 files (the spine's runs read the marked Angel's own
+  sky at both altars after a Cold claim under the floor, with the room's
+  hint withheld and the shared altar still lit, the Appearance with the
+  serial after the lip's signature at the floor, Safety's district after
+  Safety's claim, and the catalog for a second body at the same altar
+  and for the unclaimed; Nara at the ring through the credits after an
+  Absence, home after a trace; the rite's writes as pure cases, the
+  trace at the floor and one under it, Safety's keys, none on an
+  unclaimed rite, and the mark standing through a later season's
+  absence; the content test reads the reel for every recorded claim,
+  the resolver's and the readiness fallbacks for a body marked before
+  the record, the reel surviving a later absence, the altars' Winke
+  withheld from the marked and given to the rest, and Nara's station
+  for the four outcomes and a sexton who walked), the build, the play
+  build and the stage; on a fresh local world the Movement IV campaign
+  smoke passed as before (the bot's rite fails at readiness 52, so the
+  reel and the stay are in-process coverage only; Movement IV shows 1,197
+  words, 814 of dialogue), and the render check at `RENDER_MIN_FPS=5`
+  passed on desktop and phone, run alone; all of it re-run on the tree
+  after the review's fixes.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2363,10 +2418,13 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      `SCRIPT.md`'s lines tagged new or Phase B, with the beat's header
      there naming the step, flag, gate or station it needs; landed so
      far: the altar's reel (I.9), the room behind the glass (III.7), the
-     forge's listing or pull (III.8) and the lip (IV.6, with Caul's word
-     after the rite), see Done; next the Hijack's and Absence's
-     remainders, then Quill's `ring` and `margin` at the vans): never
-     inserted between shipped steps (a
+     forge's listing or pull (III.8), the lip (IV.6, with Caul's word
+     after the rite) and the rite's remainders (Nara kept at the ring
+     after an Absence, the marked Angel's own sky on the altars), see
+     Done; next Caul's `oval-hour` through every oval on the Kerb when a
+     bought hour does not come (II.9); then only Quill's `ring` and
+     `margin` at the vans remain, and they wait for Phase C's launch):
+     never inserted between shipped steps (a
      saved body's progress is a step index); they enter as verbs and
      dialogue on existing steps or at a movement's end. The altar as a
      readable POI in the Nave (I.9); the oval's line by serial, branched

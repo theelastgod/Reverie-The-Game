@@ -5,7 +5,7 @@
  */
 import type { Ctx, DialogueNode, Effect, NpcDef, NpcState } from "../types";
 import { POSITIONS } from "../map";
-import { caulAtLip } from "./caul";
+import { caulAtLip, coldClaimed as coldClaimedBy } from "./caul";
 import { AURA_ADDRESS_GLAMOUR, AURA_DIM, CLEARING_HOLD_ANGELS, CLEARING_LIST_PRICE, COPY_PRICE, GESTELL_MELTDOWN, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_PASSING_MIN, READINESS_REFUSE, READINESS_WATCH } from "../constants";
 import { C, F, W, seasonPassingFlag } from "./ids";
 import { clearingPrice, moveClearing } from "./market";
@@ -1001,8 +1001,8 @@ function caulRoom(ctx: Ctx): string {
 /** Where a body meets him: the Nave's altar aisle in the first hour (never in reach), the room behind the glass in the third, the Grid's gate in the fourth. */
 const caulInRoom = (ctx: Ctx): boolean => ctx.p.movement === 3 || (ctx.p.guest && ctx.p.district === "kerb");
 
-/** Cold's claim on the hour, as the Passing's resolver reads it (clearing.ts `hijacker`): the hour sold at the desk or signed for at the lip, with Cold as the current. */
-const coldClaimed = (ctx: Ctx): boolean => (chose(ctx, C.OPERATOR, "take") || chose(ctx, C.LIP, "signed")) && ctx.p.current === "cold";
+/** Cold's claim on the hour, as the rite wrote it on the body (content/caul.ts). */
+const coldClaimed = (ctx: Ctx): boolean => coldClaimedBy(ctx.p);
 
 /** His word on a season's rite is said once; the flag that marks it. */
 const lipSaidKey = (ctx: Ctx): string => `caul:lip:said:${ctx.w.season.id}`;
@@ -1241,6 +1241,8 @@ export const NPCS: Record<string, NpcDef> = {
     party: true,
     personal: (ctx: Ctx): NpcOverride => {
       const { p } = ctx;
+      // After an Absence she stays at the ring ("I stay."), for as long as that is the last word on this body's hour.
+      if (chose(ctx, C.PASSING, "absence") && p.party.nara !== "gone") return { ...station("nara-clearing"), state: "clearing" };
       if (p.movement >= 5) return null;
       if (has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)) return { ...station("nara-garden"), state: "garden" };
       // From the mortality act on she is at the ring, before the ground is kept: the first person there reads the number.

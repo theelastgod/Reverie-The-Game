@@ -54,6 +54,9 @@ export const F = {
   GATE: "gate", // Movement IV: decided with Ord at the Care gate whether the party stands in the ring
   MORTALITY: "mortality", // did a mortality act
   PASSING: "passing", // the Passing resolved for this Angel
+  HIJACK_TRACE: "hijack:trace", // the hour was claimed with a trace on the way (readiness at the appearance floor when it was taken): the altars play the Appearance, with a margin
+  HIJACKED_COLD: "hijack:cold", // the hour was claimed by Cold (the desk's key or the lip's), as the resolver read it; written at a claimed rite, 1 or 0, and left standing by later rites: the mark is forever
+  HIJACKED_SAFETY: "hijack:safety", // the hour was claimed by Safety's form; written at a claimed rite, 1 or 0, and left standing by later rites
   CREDITS: "credits",
   ANNOUNCE_HEARD: "kit:announce", // counters for kit uses
 } as const;

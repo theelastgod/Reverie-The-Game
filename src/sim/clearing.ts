@@ -319,9 +319,13 @@ export function applyPassing(w: WorldState, id: string): WorldState {
   };
   let next: WorldState = { ...w, passing, flags: { ...w.flags, [W.PASSINGS]: (w.flags[W.PASSINGS] ?? 0) + 1 } };
 
+  // A claimed hour is written on the body as the resolver read it: who took it, and whether a trace was on the way; the altars play that sky back to them.
+  const claimed: Record<string, number> = outcome === "hijack"
+    ? { [F.HIJACKED_COLD]: by === "cold" ? 1 : 0, [F.HIJACKED_SAFETY]: by === "safety" ? 1 : 0, [F.HIJACK_TRACE]: p.readiness >= READINESS_APPEARANCE_MIN ? 1 : 0 }
+    : {};
   let me: Player = {
     ...p,
-    flags: { ...p.flags, [F.PASSING]: 1, [passedKey(w.season.id)]: 1 },
+    flags: { ...p.flags, [F.PASSING]: 1, [passedKey(w.season.id)]: 1, ...claimed },
     choices: { ...p.choices, [C.PASSING]: outcome },
     history: { ...p.history, passings: p.history.passings + 1, outcomes: [...p.history.outcomes, outcome] },
   };

@@ -25,6 +25,7 @@ import {
   MAX_HP,
   NODE_REGEN,
   PASSING_STIPEND,
+  READINESS_APPEARANCE_MIN,
   READINESS_KEEP,
   RESTRAINT_KEEP_GAIN,
   RESTRAINT_START,
@@ -33,6 +34,7 @@ import {
   WAR_PERIOD,
 } from "./constants";
 import { C, F, W, seasonPassingFlag } from "./content/ids";
+import { coldClaimed } from "./content/caul";
 import { CLEARING_ITEM, CLEARING_LISTING, RESISTANCE } from "./content/market";
 import { POSITIONS } from "./map";
 import { applyListing, initialNodes } from "./economy";
@@ -482,6 +484,30 @@ describe("applyPassing", () => {
     const safety = applyPassing(makeWorld([prepared({ readiness: 90, restraint: 10, choices: { [C.FREEZE]: "signed" } })]), "p1");
     expect(safety.passing.hijackedBy).toBe("safety");
     expect(you(safety).history.outcomes).toEqual(["hijack"]);
+  });
+
+  it("a claimed hour is written on the body: who claimed it, and whether a trace was on the way; an unclaimed rite writes none of it, and a later rite leaves the mark", () => {
+    const take = (readiness: number) => prepared({ readiness, current: "cold", choices: { [C.OPERATOR]: "take" } });
+    expect(you(applyPassing(makeWorld([take(READINESS_APPEARANCE_MIN)]), "p1")).flags).toMatchObject({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 1 });
+    expect(you(applyPassing(makeWorld([take(READINESS_APPEARANCE_MIN - 1)]), "p1")).flags).toMatchObject({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 0 });
+    const safety = you(applyPassing(makeWorld([prepared({ readiness: 90, restraint: 10, choices: { [C.FREEZE]: "signed" } })]), "p1"));
+    expect(safety.flags).toMatchObject({ [F.HIJACKED_COLD]: 0, [F.HIJACKED_SAFETY]: 1, [F.HIJACK_TRACE]: 1 });
+    expect(coldClaimed(safety)).toBe(false);
+    for (const p of [prepared({ readiness: 70 }), prepared({ readiness: 90 }), prepared({ readiness: 50 })]) {
+      const flags = you(applyPassing(makeWorld([p]), "p1")).flags;
+      expect(flags[F.HIJACKED_COLD]).toBeUndefined();
+      expect(flags[F.HIJACKED_SAFETY]).toBeUndefined();
+      expect(flags[F.HIJACK_TRACE]).toBeUndefined();
+    }
+    // the mark is forever: a later season's absence leaves the record of the claim on the body, and Cold's claim still reads
+    const marked = applyPassing(makeWorld([take(70)]), "p1");
+    // the next season, the current no longer Cold's: the hour is not claimed again, and the old mark stands
+    const unclaimed = { ...you(marked), current: "" as const };
+    const later = { ...marked, players: new Map(marked.players).set("p1", unclaimed), season: { ...marked.season, id: marked.season.id + 1 }, clearing: { ...marked.clearing, open: true, heldBy: ["p1"] } };
+    const absent = applyPassing(later, "p1");
+    expect(you(absent).choices[C.PASSING]).toBe("absence");
+    expect(you(absent).flags).toMatchObject({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 0 });
+    expect(coldClaimed(you(absent))).toBe(true);
   });
 
   it("failed leaves a FailedPassing for the season, closes the ring and pays nothing", () => {

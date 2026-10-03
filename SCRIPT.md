@@ -1507,7 +1507,7 @@ The paper panel, the gold mark:
 **THE RING** — pass (shipped, clearing.ts)
 > The hour went by. Absence is honest. Nara Vale stays. No one can force a god alone.
 ✦ *You went under once and came back. The hour did the same. Neither of you arrived.* (shipped since Phase A, Movement IV; clearing.ts)
-[C.PASSING absence; news: "A Passing went by. {name} kept the hole. Absence is honest."; the listing +4; Nara's station kept at the ring (Phase B: her `personal` releases her on F.PASSING today)]
+[C.PASSING absence; news: "A Passing went by. {name} kept the hole. Absence is honest."; the listing +4; Nara's station kept at the ring (shipped since Phase B, the remainders: she stays, for this body, while the Absence is the last word on its hour, through the credits and after; a sexton who walked does not)]
 
 **NARA** — `after`, absence (shipped)
 > The hour went by. Absence is honest. I stay. The hole is still a grave. Nothing you did was wrong. Nothing you did was enough. That is what the word means.
@@ -1539,7 +1539,7 @@ The paper panel, the gold mark:
 > Safety claimed the hour. The freeze ate the rite. You are marked.
 [C.PASSING hijack; hijackedBy cold or safety; the lip's key read beside the operator's (shipped since Phase B, the lip); news (shipped since Phase A, Movement IV): "{name} sold their Passing. Cold claimed the hour at their Clearing; the margin has a serial in it." / "Safety's freeze ate {name}'s Passing. The district held. The form says funded by."; the listing +8; the Ruin kit reads the mark forever]
 
-**THE ALTAR** — every altar you pass from now on (new; per viewer)
+**THE ALTAR** — every altar you pass from now on (shipped since Phase B, the remainders; per viewer: both CRT altars' watch, to a body whose hour was ever claimed, a later season's rite notwithstanding, since the mark is forever; the rite writes on the body who claimed it and whether a trace was on the way, and the altar plays that back, the serial the body's name; the altars' own Winke are not given to the marked body, whose reel the script leaves without a hint)
 > *At the trace's line:* The Reverie of the Passing: the Appearance, with a margin, and in the margin, small, #SERIAL.
 > *Under it:* The Reverie of the Passing: an empty sky through an oval, with a margin, and in the margin, small, #SERIAL.
 > *Safety:* A district holding still, sold back to it by the hour. Under the reel, the form; under the form, smaller, funded by.

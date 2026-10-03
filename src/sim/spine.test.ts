@@ -928,6 +928,9 @@ function movementFourToTheRing(w0: WorldState, party: "with" | "alone"): WorldSt
     expect(me(claimed).heard).toContain("Cold claimed the hour. Whatever would have crossed, the recorders had it, with a margin.");
     expect(me(talkTo(claimed, ME, "ord")).dialogue?.text).toContain("Cold claimed the hour. You signed for it at the gate, for nothing.");
     expect(me(talkTo(claimed, ME, "caul")).dialogue?.text).toBe("\"Thank you. It is exactly what I was told it would be like.\"");
+    // a trace was on the way at 85: the altars now play the marked Angel's own sky, the Appearance with their serial in the margin
+    expect(me(claimed).flags).toMatchObject({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 1 });
+    expect(me(use(claimed, "crt-altar-2", "watch")).heard).toBe(`The Reverie of the Passing: the Appearance, with a margin, and in the margin, small, ${me(w).name}.`);
     // the walk refuses: readiness, a little; the current stands; he waits, and the form is not offered again
     const readinessBefore = me(w).readiness;
     const currentBefore = me(w).current;
@@ -1189,6 +1192,17 @@ describe("the spine, played through", () => {
     expect(a.flags[W.PASSINGS]).toBe(1);
     expect(pass(a).passing.count, "the Passing resolves once per Angel").toBe(1);
     a = throughTheCredits(a);
+    // the hour taken under the appearance floor: every altar this Angel passes plays an empty sky with their serial in the margin; the dark altar too
+    expect(me(a).flags).toMatchObject({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 0 });
+    const reel = `The Reverie of the Passing: an empty sky through an oval, with a margin, and in the margin, small, ${me(a).name}.`;
+    expect(me(use(a, "crt-altar-2", "watch")).heard).toBe(reel);
+    const dark = use(a, "crt-altar-1", "watch");
+    expect(me(dark).heard).toBe(reel);
+    expect(me(dark).wink, "the room's hint is not given over the marked body's own sky").not.toContain("The room on the screen is this one.");
+    expect(dark.pois["crt-altar-1"].state, "the shared altar still lights").toBe("lit");
+    // another body at the same altar sees its own sky: the catalog as it always played
+    const other = add(a, { ...spawnGuest("other"), guest: false, serial: 43, name: "#0043", flags: { [F.UNDER]: 1, [F.ANGEL]: 1 } });
+    expect(me(interact(goTo(other, "other", "crt-altar-2"), "other", "crt-altar-2", "watch"), "other").heard).toContain("The kneelers call it a reverie.");
 
     // the party after the hour
     a = talkTo(a, ME, "nara");
@@ -1228,6 +1242,8 @@ describe("the spine, played through", () => {
       expect(me(a).dialogue?.node).toBe("after");
       expect(me(a).dialogue?.text).toContain("A trace");
       expect(me(talkTo(a, ME, "caul")).dialogue?.text, "he stood still for the whole of it").toContain("The second time, the only question he asks twice: \"What did it look like.\"");
+      // after a trace Nara goes home from the ring; only an Absence keeps her there
+      expect(npcView({ w: a, p: me(a), now: a.now }, a.npcs.nara)?.state).not.toBe("clearing");
     }
 
     // absence: enough to stand, not enough for a trace
@@ -1239,6 +1255,12 @@ describe("the spine, played through", () => {
       expect(me(a).bestand).toBe(me(brink).bestand);
       expect(a.passing.appearanceUntil).toBe(0);
       expect(me(talkTo(a, ME, "caul")).dialogue?.text).toContain("Next season. Same ring. I will have the number by then.");
+      // Nara stays at the ring after an Absence, through the credits and after, and says so
+      const stayed = throughTheCredits(a);
+      expect(npcView({ w: stayed, p: me(stayed), now: stayed.now }, stayed.npcs.nara)).toMatchObject({ state: "clearing", x: POSITIONS["station:nara-clearing"].x, y: POSITIONS["station:nara-clearing"].y });
+      expect(me(talkTo(stayed, ME, "nara")).dialogue?.text).toContain("The hour went by. Absence is honest. I stay.");
+      // the altars play the catalog to a body whose hour was not claimed
+      expect(me(use(stayed, "crt-altar-2", "watch")).heard).toContain("The kneelers call it a reverie.");
     }
 
     // hijack: the freeze was signed and restraint is spent; Safety eats the rite
@@ -1248,6 +1270,9 @@ describe("the spine, played through", () => {
       expect(a.passing).toMatchObject({ lastOutcome: "hijack", hijackedBy: "safety" });
       expect(me(talkTo(a, ME, "caul")).dialogue?.text).toBe("\"Safety's form. Mine on the back. Thank you. It is exactly what I was told it would be like.\"");
       expect(me(talkTo(a, ME, "ord")).dialogue?.text).toContain("Safety claimed the hour. The freeze ate the rite.");
+      // Safety's reel on the altars: the district holding still, the form under it
+      expect(me(a).flags).toMatchObject({ [F.HIJACKED_COLD]: 0, [F.HIJACKED_SAFETY]: 1, [F.HIJACK_TRACE]: 1 });
+      expect(me(use(a, "crt-altar-2", "watch")).heard).toBe("A district holding still, sold back to it by the hour. Under the reel, the form; under the form, smaller, funded by.");
     }
 
     // failed: readiness under the floor

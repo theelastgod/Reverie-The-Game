@@ -315,6 +315,40 @@ describe("POI configs", () => {
     expect(NPCS.caul.entry({ ...passed, w: { ...passed.w, season: { ...passed.w.season, id: passed.w.season.id + 1 } } }), "a later season finds him silent; the offer was the campaign's").toBe("lip-silent");
   });
 
+  it("the altars play a marked Angel their own sky, and Nara stays at the ring after an Absence", () => {
+    const watch = (id: string, ctx: Ctx): string => { const v = POI_CONFIGS[id].verbs.find(x => x.choice === "watch")!; return typeof v.say === "function" ? v.say(ctx) : v.say ?? ""; };
+    const marked = CTXS.find(c => c.name === "angel after hijack")!.ctx;
+    const withFlags = (flags: Record<string, number>): Ctx => ({ ...marked, p: { ...marked.p, flags: { ...marked.p.flags, ...flags } } });
+    expect(watch("crt-altar-2", withFlags({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 1 }))).toBe(`The Reverie of the Passing: the Appearance, with a margin, and in the margin, small, ${marked.p.name}.`);
+    expect(watch("crt-altar-1", withFlags({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 0 }))).toBe(`The Reverie of the Passing: an empty sky through an oval, with a margin, and in the margin, small, ${marked.p.name}.`);
+    expect(watch("crt-altar-2", withFlags({ [F.HIJACKED_COLD]: 0, [F.HIJACKED_SAFETY]: 1, [F.HIJACK_TRACE]: 1 }))).toBe("A district holding still, sold back to it by the hour. Under the reel, the form; under the form, smaller, funded by.");
+    // a body marked before the rite wrote who claimed it: the resolver's own rule decides (this one took the yield but is not Cold's current, and signed the freeze: Safety's); the trace reads its readiness now
+    expect(watch("crt-altar-2", marked)).toContain("A district holding still");
+    expect(watch("crt-altar-2", { ...marked, p: { ...marked.p, current: "cold", readiness: 50 } })).toContain("an empty sky through an oval");
+    expect(watch("crt-altar-2", { ...marked, p: { ...marked.p, current: "cold", readiness: 85 } })).toContain("the Appearance, with a margin");
+    // the mark is forever: a later season's absence leaves the reel playing
+    expect(watch("crt-altar-2", { ...withFlags({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 0 }), p: { ...withFlags({ [F.HIJACKED_COLD]: 1 }).p, choices: { ...marked.p.choices, [C.PASSING]: "absence" } } })).toContain("an empty sky through an oval");
+    // the altars' own Winke are the catalog's and the room's, not the marked body's
+    const effectsOf = (id: string, ctx: Ctx): Effect[] => { const v = POI_CONFIGS[id].verbs.find(x => x.choice === "watch")!; return typeof v.effects === "function" ? v.effects(ctx) : v.effects ?? []; };
+    const claimedCtx = withFlags({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 0 });
+    expect(effectsOf("crt-altar-1", claimedCtx).map(e => e.kind)).toEqual(["poi"]);
+    expect(effectsOf("crt-altar-2", claimedCtx)).toEqual([]);
+    const unmarked = CTXS.find(c => c.name === "angel after appearance")!.ctx;
+    expect(effectsOf("crt-altar-1", unmarked).map(e => e.kind)).toEqual(["wink", "poi"]);
+    expect(effectsOf("crt-altar-2", unmarked).map(e => e.kind)).toEqual(["wink"]);
+    // every other body sees the catalog as it always played
+    for (const name of ["angel after appearance", "angel after absence", "angel after failed", "guest fresh", "angel 7777 M2 fresh"]) {
+      expect(watch("crt-altar-2", CTXS.find(c => c.name === name)!.ctx), name).toContain("The kneelers call it a reverie.");
+    }
+    // Nara: an Absence keeps her at the ring, through the credits; a trace or a claim sends her home
+    const ring = POSITIONS["station:nara-clearing"];
+    expect(NPCS.nara.personal!(CTXS.find(c => c.name === "angel after absence")!.ctx, SHARED_NPC)).toMatchObject({ x: ring.x, y: ring.y, state: "clearing" });
+    expect(NPCS.nara.personal!(CTXS.find(c => c.name === "angel after appearance")!.ctx, SHARED_NPC)).toBeNull();
+    expect(NPCS.nara.personal!(CTXS.find(c => c.name === "angel after hijack")!.ctx, SHARED_NPC)).toBeNull();
+    const walkedOut = CTXS.find(c => c.name === "angel after absence")!.ctx;
+    expect(NPCS.nara.personal!({ ...walkedOut, p: { ...walkedOut.p, party: { ...walkedOut.p.party, nara: "gone" } } }, SHARED_NPC), "a sexton who walked does not stay").toBeNull();
+  });
+
   it("names the weather with three verbs once all three names are heard", () => {
     const named = CTXS.find(c => c.name === "angel M1 named")!.ctx;
     const heard = { ...named, p: { ...named.p, flags: { ...named.p.flags, [F.WEATHER_NAMED]: 0 } } };

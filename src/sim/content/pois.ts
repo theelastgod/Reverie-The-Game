@@ -7,7 +7,7 @@
 import type { Ctx, Effect, Fourfold, PoiConfig, PoiVerb, WinkBySchool } from "../types";
 import {
   AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_PRESENT, CLEARING_LIST_PRICE, FREEZE_FEE, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
-  OPERATOR_YIELD, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, TITHE_COST, UPKEEP_COST,
+  OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, TITHE_COST, UPKEEP_COST,
   WAR_PERIOD,
 } from "../constants";
 import { cityFigure, weatherBand } from "../protocol";
@@ -15,6 +15,7 @@ import { C, F, W, seasonPassingFlag } from "./ids";
 import { WEATHER_LABELS, WEATHER_NAMED } from "./lines";
 import { clearingPrice, listClearing, moveClearing } from "./market";
 import { SIDE_PLACES } from "./side";
+import { coldClaimed } from "./caul";
 
 // ---------------------------------------------------------------- helpers
 
@@ -278,8 +279,12 @@ const NAVE: PoiConfig[] = [
         label: "Watch",
         choice: "watch",
         guest: "allow",
-        say: "A stack of screens with the tubes still warm. Static, then a room, then static. Nobody is in the room.",
-        effects: [{ kind: "wink", text: "The room on the screen is this one. It is empty because you are looking at the screen." }, { kind: "poi", id: "crt-altar-1", state: "lit" }],
+        say: ctx => hijackReel(ctx) ?? "A stack of screens with the tubes still warm. Static, then a room, then static. Nobody is in the room.",
+        // The room's Wink belongs to the room; a marked body sees its own sky here and gets no hint about an empty room it is not shown.
+        effects: ctx => [
+          ...(hijackReel(ctx) ? [] : [{ kind: "wink", text: "The room on the screen is this one. It is empty because you are looking at the screen." } as Effect]),
+          { kind: "poi", id: "crt-altar-1", state: "lit" } as Effect,
+        ],
       },
     ],
   },
@@ -293,12 +298,30 @@ const NAVE: PoiConfig[] = [
         choice: "watch",
         guest: "allow",
         // The catalog, playing since the body arrived: last season's sky, cut to ninety seconds, and a courteous voice over the restart. No name; nobody looks up.
-        say: "Screens in a ring. One is lit and people are kneeling at it. On the screen: a sky through an oval, a bell, the light a shade warmer than the room. The kneelers call it a reverie. It runs ninety seconds and starts again. A tag in the corner. A serial in the margin. Over the restart, courteous, a man's voice: \"You will feel it again. We kept it for you.\"",
-        effects: [{ kind: "wink", text: "A copy of a hint somebody heard. The copy does not clock out." }],
+        say: ctx => hijackReel(ctx) ?? "Screens in a ring. One is lit and people are kneeling at it. On the screen: a sky through an oval, a bell, the light a shade warmer than the room. The kneelers call it a reverie. It runs ninety seconds and starts again. A tag in the corner. A serial in the margin. Over the restart, courteous, a man's voice: \"You will feel it again. We kept it for you.\"",
+        // The catalog's Wink is about somebody else's hint; the marked body's reel is its own, and the script gives it no hint.
+        effects: ctx => (hijackReel(ctx) ? [] : [{ kind: "wink", text: "A copy of a hint somebody heard. The copy does not clock out." } as Effect]),
       },
     ],
   },
 ];
+
+/**
+ * The marked Angel's own sky (IV.7): once their hour was claimed, every altar they pass from now on plays what would have crossed,
+ * with their serial in the margin; Safety's form under Safety's reel. The mark is forever (the Ruin kit reads it so), so a later
+ * season's rite does not take the reel down; a body marked before the rite wrote its record is read by its last outcome. Other
+ * Angels see their own, so this is the viewer's say and nothing else.
+ */
+function hijackReel(ctx: Ctx): string | null {
+  const recorded = has(ctx, F.HIJACKED_COLD) || has(ctx, F.HIJACKED_SAFETY);
+  if (!(recorded || chose(ctx, C.PASSING, "hijack"))) return null;
+  if (!coldClaimed(ctx.p)) return "A district holding still, sold back to it by the hour. Under the reel, the form; under the form, smaller, funded by.";
+  // a body marked before the rite wrote the trace reads its readiness now, as coldClaimed reads its current
+  const trace = recorded ? has(ctx, F.HIJACK_TRACE) : ctx.p.readiness >= READINESS_APPEARANCE_MIN;
+  return trace
+    ? `The Reverie of the Passing: the Appearance, with a margin, and in the margin, small, ${ctx.p.name}.`
+    : `The Reverie of the Passing: an empty sky through an oval, with a margin, and in the margin, small, ${ctx.p.name}.`;
+}
 
 // ---------------------------------------------------------------- the Wet Grid
 
