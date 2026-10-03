@@ -86,7 +86,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   and at that moment, once a season, the launch itself opens for an
   hour for the whole city, with the cable enforcer on shift at the
   Organs' node, the vans' doors open on the recorders, and Quill by the
-  vans keeping the lights on.
+  vans keeping the lights on; and a light put out behind the glass now
+  sends the hour clerks down the Kerb's stair for the hour, for
+  everyone.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1798,6 +1800,31 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   on.". With that Phase B's last lines are in. A review of the commit
   found the shift held only for an idle enforcer, the look inside an
   enforcer's aggro, and two overclaims in the docs; all are folded.
+- Backlog A, Phase C, the clerks' descent (2026-10-03, morning): from
+  III.7's lines that waited for it; no step inserted. Putting the light
+  out behind the forecast glass now sends the hour clerks down the
+  Kerb's stair for the hour after it, for the whole city: the oval's Q
+  writes `W.CLERKS_DESCENT`, an hour of world time on (a second light
+  while they are down keeps them down an hour from the second), and the
+  tick (`src/sim/descent.ts`, `reconcileDescent`) files three Hour
+  Clerks out of the head of the stair below the room's door, five
+  seconds apart, pacing the stair past the glass down to the Grid's gate
+  and back (`STAIR_SPAWNS` in map.ts, routed like the Annex Runner, the
+  Kerb's clerk sprite by id). They fight and fall as clerks do ("Hour
+  Clerk did their job."), and a fallen one comes back at the head of the
+  stair; once the hour is out each goes as soon as it is out of a fight.
+  They are never saved: a restored world gets them filed out again if
+  the hour still runs. The lines that waited are in: the oval's say ends
+  "On the stair, the hour clerks start down.", Caul's `dark` says "The
+  clerks are on the stair. A light goes and they come down. It is what
+  the stair is for.", and his `after` reads "The clerks are still on the
+  stair. They will be, for the hour." while they are on it, and the
+  light's line after. "For the rest of the hour" is read as the hour of
+  world time after the light, not the clock hour it falls in (a light at
+  :59 would otherwise send them down for a minute); the owner may want
+  the other reading. Next in Phase C: the hot street's cool-down, the
+  Houses' lost hour at Ord's map, the listing's seller exposed by Quill,
+  and the journal line for readers.
 - `npm run typecheck` — client and Worker clean.
 - `npm test` — 34 files, 436 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
@@ -2671,6 +2698,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   POI and station), the build, the play build and the stage, and on a
   fresh local world the session smoke and the render check, each run
   alone.
+- Backlog A, Phase C, the clerks' descent (2026-10-03, morning):
+  typecheck, 561 tests in 43 files (the stair walkable end to end inside
+  the Kerb with the clerk sprite; no clerks and the same world back when
+  no light is out; through the real tick the three filed out five
+  seconds apart, walking down the stair inside the leash and seen in a
+  viewer's snapshot, and gone after the hour; one in a fight kept until
+  it ends, a fallen one gone with the rest; a second light keeping them
+  down past the first hour; a restored world filed out again; the
+  oval's say, its flag an hour on, and Caul's two lines; in the spine's
+  dark fork the flag, the first clerk on the next tick, his `dark` and
+  his `after`), the build, the play build and the stage, and on a fresh
+  local world the session smoke, the Movement III campaign smoke and the
+  render check, each run alone. The campaign smoke takes the reader's
+  post at the glass, so the descent itself is verified in the sim, not
+  over the wire.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2749,8 +2791,8 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      want it per season); next the launch window, which should also
      settle whether the city's figure moves the hour as Caul says (the
      window itself has landed with its remainder: see Done, "the
-     launch" and "the launch's remainder"; next the clerks' descent,
-     then the hot street's cool-down, the Houses' lost hour at Ord's
+     launch" and "the launch's remainder"; the clerks' descent has
+     landed too, see Done; next the hot street's cool-down, the Houses' lost hour at Ord's
      map, the listing's seller exposed by Quill, and the journal line
      for readers): the
      Cable's darkening flickering the altars server-wide; the listing's

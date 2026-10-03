@@ -734,6 +734,9 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
     expect(w.npcs.omen).toMatchObject({ state: "glass", x: SIDE_PLACES["omen-glass"].x, y: SIDE_PLACES["omen-glass"].y });
     expect(w.news.some(n => n.text === "A light went out behind the forecast glass. 1 is dark.")).toBe(true);
     expect(me(w).dialogue, "his voice in the dark").toMatchObject({ npc: "caul", node: "dark" });
+    expect(me(w).dialogue?.text, "and the clerks on the stair").toContain("The clerks are on the stair.");
+    expect(w.flags[W.CLERKS_DESCENT], "the hour clerks come down the stair for the hour").toBeGreaterThan(w.now);
+    expect(tick(w).enemies.some(e => e.id === "hour-clerk-stair-1"), "the first starts down").toBe(true);
     w = closeAll(w, ME);
     w = talkTo(w, ME, "omen");
     expect(me(w).dialogue?.choices.map(c => c.id)).toContain("light");
@@ -743,6 +746,7 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
   w = tick(w);
   expectStep(w, Q.M3, 7);
   expect(me(talkTo(w, ME, "caul")).dialogue?.node, "later visits").toBe("after");
+  if (o.forge !== "sell") expect(me(talkTo(w, ME, "caul")).dialogue?.text, "the clerks still on the stair").toContain("They will be, for the hour.");
   w = closeAll(w, ME);
   expect(npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!.state, "the glass decided, Ord is back at the gate").not.toBe("glass");
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  COLS, ROWS, DISTRICTS, GATES, POSITIONS, POI_LIST, NODE_LIST, NPC_HOMES, NPC_STATIONS, ENEMY_SPAWNS, GUEST_SPAWN,
+  COLS, ROWS, DISTRICTS, GATES, POSITIONS, POI_LIST, NODE_LIST, NPC_HOMES, NPC_STATIONS, ENEMY_SPAWNS, STAIR_SPAWNS, GUEST_SPAWN,
   blockedFor, circleHitsWalls, districtAt, isWall, reachableTiles, tileOf, idx, floorAt, PATCHES, FLOOR_FILES,
 } from "./map";
 import { BODY_R } from "./constants";
@@ -72,8 +72,8 @@ describe("the city", () => {
     expect(floorAt(tileOf(POSITIONS["going-under"].x), tileOf(POSITIONS["going-under"].y))).toBe("under");
   });
 
-  it("ids are unique across POIs, nodes, homes, stations and enemies", () => {
-    const ids = [...POI_LIST.map(p => p.id), ...NODE_LIST.map(n => n.id), ...Object.keys(NPC_HOMES), ...Object.keys(NPC_STATIONS), ...ENEMY_SPAWNS.map(e => e.id)];
+  it("ids are unique across POIs, nodes, homes, stations, enemies and the stair clerks", () => {
+    const ids = [...POI_LIST.map(p => p.id), ...NODE_LIST.map(n => n.id), ...Object.keys(NPC_HOMES), ...Object.keys(NPC_STATIONS), ...ENEMY_SPAWNS.map(e => e.id), ...STAIR_SPAWNS.map(e => e.id)];
     expect(new Set(ids).size).toBe(ids.length);
   });
 });

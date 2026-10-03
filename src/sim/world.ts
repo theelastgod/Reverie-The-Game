@@ -23,6 +23,7 @@ import { resolveHeavy, tickCombatTimers, tickEnemies } from "./combat";
 import { tickQuests } from "./quests";
 import { openNode } from "./dialogue";
 import { glassDark, inLaunchHour, launchClimb, launchDue } from "./launch";
+import { reconcileDescent } from "./descent";
 import * as LINES from "./content/lines";
 
 export const NO_INTENT: Intent = { up: false, down: false, left: false, right: false };
@@ -353,6 +354,7 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
   cur = tickClearing(cur, dt);
   cur = tickSeason(cur);
   cur = tickLaunch(cur);
+  cur = reconcileDescent(cur);
 
   // Gestell drifts toward its baseline; the weather forgets slowly.
   let gestell = cur.gestell;

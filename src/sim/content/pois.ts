@@ -17,6 +17,7 @@ import { clearingPrice, listClearing, moveClearing } from "./market";
 import { SIDE_PLACES } from "./side";
 import { coldClaimed } from "./caul";
 import { countdown, darkLights, glassDark, launchDark, launchDate, launchOpen, nextLaunch } from "../launch";
+import { descentFrom } from "../descent";
 
 // ---------------------------------------------------------------- helpers
 
@@ -954,12 +955,14 @@ const OVAL_GLASS: PoiConfig = {
       choice: "dark",
       when: ctx => has(ctx, F.CAUL_OFFER) && ctx.p.choices[C.GLASS] !== "read" && ctx.p.choices[C.GLASS] !== "dark",
       guest: spectate,
-      say: "You put the light out. The room is the room. Behind the glass the band keeps its colour, and one lamp in the top terrace goes dark for the whole Kerb.",
+      say: "You put the light out. The room is the room. Behind the glass the band keeps its colour, and one lamp in the top terrace goes dark for the whole Kerb. On the stair, the hour clerks start down.",
       effects: ctx => [
         { kind: "choice", key: C.GLASS, value: "dark" },
         { kind: "readiness", delta: 10 },
         { kind: "worldCount", key: W.DARK_LIGHTS, delta: 1 },
         { kind: "poi", id: "oval-glass", state: "dark" },
+        // The hour clerks come down the Kerb's stair for the hour, for everyone (src/sim/descent.ts; the tick files them out).
+        { kind: "worldFlag", key: W.CLERKS_DESCENT, value: descentFrom(ctx.w.now) },
         // The omen-reader goes to the glass and reads the front for nothing from now on (side.ts keeps her there once the hours are done).
         { kind: "npc", id: "omen", ...SIDE_PLACES["omen-glass"], present: true, state: "glass" },
         { kind: "news", text: `A light went out behind the forecast glass. ${(ctx.w.flags[W.DARK_LIGHTS] ?? 0) + 1} ${(ctx.w.flags[W.DARK_LIGHTS] ?? 0) + 1 === 1 ? "is" : "are"} dark.` },

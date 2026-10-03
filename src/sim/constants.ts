@@ -150,6 +150,8 @@ export const LAUNCH_OFFSET = 6 * 24 * 60 * 60; // the Concern's launch: the firs
 export const LAUNCH_WINDOW = 60 * 60; // the launch lasts an hour of world time from the moment on the glass
 export const LAUNCH_CLIMB_EVERY = 5 * 60; // during it the weather climbs a point this often...
 export const LAUNCH_CLIMB_MAX = 12; // ...by at most this much, and never into meltdown on its own (it stops short of GESTELL_MELTDOWN)
+export const DESCENT_WINDOW = 60 * 60; // a light put out behind the glass sends the hour clerks down the Kerb's stair for an hour of world time (III.7)
+export const DESCENT_FILE = 5; // seconds between one stair clerk starting down and the next: a shift filing out, spaced along the stair
 export const DARK_LIGHTS_THRESHOLD = 7; // lights put out behind the forecast glass past which it shows no date (Caul has the number and will not say it)
 
 // Snapshot / area of interest

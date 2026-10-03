@@ -301,7 +301,16 @@ export const ENEMY_SPAWNS: EnemySpawn[] = [
   spawn("ring-warden", "warden", "ring", 80, 16, "Warden of the Ring", "sky"),
 ];
 
-export const SPAWN_BY_ID: Record<string, EnemySpawn> = Object.fromEntries(ENEMY_SPAWNS.map(s => [s.id, s]));
+/**
+ * The hour clerks who come down the Kerb's stair when a light goes out behind the forecast glass (III.7, Phase C's
+ * descent, src/sim/descent.ts): not in the world until then, filed out one after another from the head of the stair
+ * below the glass room's door, pacing the stair down to the Grid's gate and back for the hour, gone after it. Their ids
+ * start "hour-clerk" so they wear the Kerb's clerk sprite.
+ */
+const STAIR: [number, number][] = [[60, 12], [58, 16], [58, 23], [53, 24], [58, 23], [58, 16]];
+export const STAIR_SPAWNS: EnemySpawn[] = [1, 2, 3].map(n => routed(spawn(`hour-clerk-stair-${n}`, "clerk", "kerb", 64, 8, "Hour Clerk", "lavender"), ...STAIR));
+
+export const SPAWN_BY_ID: Record<string, EnemySpawn> = Object.fromEntries([...ENEMY_SPAWNS, ...STAIR_SPAWNS].map(s => [s.id, s]));
 
 export const GUEST_SPAWN: Vec & { district: DistrictId } = { ...at(5, 42), district: "nave" };
 

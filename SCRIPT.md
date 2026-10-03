@@ -1082,12 +1082,12 @@ The paper panel, the gold mark:
 > An oval of champagne light on the wall, the same as every oval on the Kerb. It is the one thing of his in the city a hand can reach.
 > *After the light:* The wall. The oval is dark. One lamp on the top terrace is dark with it.
 
-**THE OVAL** — the light on the wall, `put the light out` Q (shipped since Phase B, first beats; `when: has(F.CAUL_OFFER)` and C.GLASS neither read nor dark; the say ends at the lamp going dark, the clerks' descent being Phase C's; F `Look at the light` beside it)
+**THE OVAL** — the light on the wall, `put the light out` Q (shipped since Phase B, first beats; `when: has(F.CAUL_OFFER)` and C.GLASS neither read nor dark; the say's last sentence, the clerks starting down, since Phase C, the descent; F `Look at the light` beside it)
 > You put the light out. The room is the room. Behind the glass the band keeps its colour, and one lamp in the top terrace goes dark for the whole Kerb. On the stair, the hour clerks start down.
-[C.GLASS dark (shipped); readiness +10; one light dark on the Kerb for everyone, the count carried as world state (W.DARK_LIGHTS, shipped; the threshold that hides the date shipped since Phase C, the date: DARK_LIGHTS_THRESHOLD, seven, which nobody in the city says); the hour clerks come down the stair for the rest of the hour, a world-wide spawn, and fall as clerks fall ("Hour Clerk did their job.") (Phase C); Halla Voss goes to the glass (an `npc` effect to `omen-glass`, state glass, for everyone; from then on she sells no hours to anyone) and reads the front for nothing from now on; news (new): "A light went out behind the forecast glass. {count} are dark."; past the threshold the glass shows no date]
+[C.GLASS dark (shipped); readiness +10; one light dark on the Kerb for everyone, the count carried as world state (W.DARK_LIGHTS, shipped; the threshold that hides the date shipped since Phase C, the date: DARK_LIGHTS_THRESHOLD, seven, which nobody in the city says); the hour clerks come down the stair for the rest of the hour, a world-wide spawn, and fall as clerks fall ("Hour Clerk did their job.") (shipped since Phase C, the descent: W.CLERKS_DESCENT set an hour of world time on, a second light keeping them an hour from it; three Hour Clerks filed out of the head of the stair below the room's door five seconds apart, pacing the stair past the glass down to the Grid's gate and back, coming back at the head of the stair when they fall; after the hour each goes once out of a fight; src/sim/descent.ts); Halla Voss goes to the glass (an `npc` effect to `omen-glass`, state glass, for everyone; from then on she sells no hours to anyone) and reads the front for nothing from now on; news (new): "A light went out behind the forecast glass. {count} are dark."; past the threshold the glass shows no date]
 → CAUL `dark` (a `dialogue` effect)
 
-**CAUL** — `dark` (shipped since Phase B, first beats; the two sentences about the clerks on the stair wait for Phase C's descent, so that he says nothing the game does not do)
+**CAUL** — `dark` (shipped since Phase B, first beats; the two sentences about the clerks on the stair since Phase C, the descent, which the light sets going before he speaks)
 > In the dark his voice is the same. "That was one. It takes more than one; I have the number, and I will not tell you it. The clerks are on the stair. A light goes and they come down. It is what the stair is for." A pause. "Every angel who does that darkens one. When enough are dark the glass shows no date."
 → `looked`, if you have not heard it
 
@@ -1105,7 +1105,7 @@ The paper panel, the gold mark:
 **CAUL** — `untold` (shipped since Phase B, first beats)
 > He writes that down too. "Declined. It is still a line." He caps the pen. "I have the other version. It is exact. I would have liked yours."
 
-**CAUL** — `after` (shipped since Phase B, first beats; after the light it reads "The light is out. It stays out. So do I, until the hour." until the clerks descend, Phase C), any later visit to the room
+**CAUL** — `after` (shipped since Phase B, first beats; after the light, the clerks' line since Phase C, the descent, while they are on the stair, and "The light is out. It stays out. So do I, until the hour." once their hour is out), any later visit to the room
 > "#SERIAL. The glass is there. So am I, until the hour."
 > *Undecided, the light still on:* "#SERIAL. The glass is there. So is the light. So am I, until the hour."
 > *For the reader:* "Your line is holding. I check it. It is the only one I check by hand."

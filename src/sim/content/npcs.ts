@@ -11,6 +11,7 @@ import { C, F, W, seasonPassingFlag } from "./ids";
 import { clearingPrice, moveClearing } from "./market";
 import { PARTY_BLIND } from "./lines";
 import { glassDark, launchOpen } from "../launch";
+import { descentLive } from "../descent";
 
 type NpcOverride = Partial<NpcState> | null;
 
@@ -1145,14 +1146,15 @@ const CAUL_NODES: Record<string, DialogueNode> = {
   },
   dark: {
     id: "dark",
-    text: "In the dark his voice is the same. \"That was one. It takes more than one; I have the number, and I will not tell you it.\" A pause. \"Every angel who does that darkens one. When enough are dark the glass shows no date.\"",
+    text: "In the dark his voice is the same. \"That was one. It takes more than one; I have the number, and I will not tell you it. The clerks are on the stair. A light goes and they come down. It is what the stair is for.\" A pause. \"Every angel who does that darkens one. When enough are dark the glass shows no date.\"",
     next: (ctx) => (has(ctx, F.CAUL_ASKED) ? undefined : "looked"),
   },
   after: {
     id: "after",
     text: (ctx) => {
       if (chose(ctx, C.GLASS, "read")) return "\"Your line is holding. I check it. It is the only one I check by hand.\"";
-      if (chose(ctx, C.GLASS, "dark")) return "\"The light is out. It stays out. So do I, until the hour.\"";
+      // The clerks on the stair while the descent runs (src/sim/descent.ts); after their hour, the light alone.
+      if (chose(ctx, C.GLASS, "dark")) return descentLive(ctx.w) ? "\"The clerks are still on the stair. They will be, for the hour.\"" : "\"The light is out. It stays out. So do I, until the hour.\"";
       return `"${ctx.p.name}. The glass is there. So is the light. So am I, until the hour."`;
     },
   },

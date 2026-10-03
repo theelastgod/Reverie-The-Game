@@ -65,6 +65,15 @@ export function enemyStats(kind: EnemyKind): typeof ENEMY[EnemyKind]; // kinds: 
 export function routeOf(e: { id }): Vec[] | null;          // ENEMY_SPAWNS[id].route: px points walked as a cycle from home while idle; content, never saved with the world
 export function anchorOf(e: Enemy): Vec;                   // the route point in hand (route[leg]) or home: where a return walks to
 export function strayOf(e: Enemy): number;                 // distance from the route polyline (home + route, cyclic) or from home; the leash (ENEMY_LEASH) reads this
+// map.ts STAIR_SPAWNS: hour-clerk-stair-1..3 (clerk, "Hour Clerk", the Kerb), home at the head of the stair below the glass room's door, routed down past the glass to the Grid's gate and back; not in initialEnemies; SPAWN_BY_ID carries them so routeOf finds their route
+```
+
+## descent.ts (Phase C: the clerks' descent, III.7)
+```ts
+export const descentUntil = (w) => w.flags[W.CLERKS_DESCENT] ?? 0;  export const descentLive = (w) => w.now < descentUntil(w);
+export const descentFrom = (now) => now + DESCENT_WINDOW;  // what the oval's Q writes (a worldFlag effect); a second light while live keeps them down an hour from it
+export function reconcileDescent(w): WorldState;           // world.ts, every tick after tickLaunch: while live, STAIR_SPAWNS[i] spawned at its home once now >= until - DESCENT_WINDOW + i * DESCENT_FILE; after, each stair clerk not in aggro/telegraph/recover removed; the same world back when nothing changes. Never saved (migrate restores base.enemies); a restored world is filed out again
+// read by npcs.ts: Caul's `after` for the one who put the light out ("The clerks are still on the stair. They will be, for the hour." while live, the light's line after)
 ```
 
 ## combat.ts
