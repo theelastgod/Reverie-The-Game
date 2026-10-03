@@ -79,7 +79,7 @@ export const GATES: GateDef[] = [
   { id: "gate-wet-organs", a: "wet", b: "organs", rect: R(69, 40, 3, 3), requires: "m3" },
   { id: "gate-ring-organs", a: "ring", b: "organs", rect: R(86, 26, 3, 3), requires: "m3" },
   { id: "gate-wet-clearing", a: "wet", b: "clearing", rect: R(52, 55, 3, 3), requires: "angel" },
-  { id: "gate-care-clearing", a: "care", b: "clearing", rect: R(34, 66, 3, 3), requires: "angel" },
+  { id: "gate-care-clearing", a: "care", b: "clearing", rect: R(34, 66, 3, 3), requires: "under" }, // the Care opens by going under, from either side
 ];
 
 /** A walled room with one door tile removed. */
@@ -476,6 +476,20 @@ export function nearPoint(px: number, py: number, x: number, y: number, reach = 
 
 export function dist(a: Vec, b: Vec): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+const walkCache = new Map<string, Set<number>>();
+
+/** True when this body can walk from one point to the other through the walls and the gates it may pass. */
+export function walksBetween(p: Pick<Player, "guest" | "flags">, from: Vec, to: Vec): boolean {
+  const key = `${GATES.map(g => (gateOpenFor(p, g) ? 1 : 0)).join("")}:${idx(tileOf(from.x), tileOf(from.y))}`;
+  let tiles = walkCache.get(key);
+  if (!tiles) {
+    if (walkCache.size >= 64) walkCache.clear();
+    tiles = reachableTiles(tileOf(from.x), tileOf(from.y), (tx, ty) => blockedFor(p, tx, ty));
+    walkCache.set(key, tiles);
+  }
+  return tiles.has(idx(tileOf(to.x), tileOf(to.y)));
 }
 
 /** Tiles reachable on foot from a start tile for a given blocking rule. For tests and pathing hints. */

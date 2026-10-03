@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MAX_HP, NODE_CHARGES } from "./constants";
-import { NODE_LIST, ENEMY_SPAWNS } from "./map";
+import { NODE_LIST, ENEMY_SPAWNS, POSITIONS } from "./map";
 import { POI_STATES } from "./content/ids";
 import { migratePlayer, migrateWorld } from "./migrate";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
@@ -121,6 +121,22 @@ describe("player shape migration", () => {
     expect(p.items).toHaveLength(1);
     expect(p.restraint).toBe(spawnGuest("x").restraint);
     expect(p.kit).toBeNull();
+  });
+
+  it("wakes a body at its respawn when it was saved where it can no longer walk out, and leaves every other body where it stood", () => {
+    // before the reach audit an Angel in the first hour could walk round through the Clearing into the Care; that door
+    // now waits for the going-under too, so a body saved there would stand behind two shut doors
+    const shrine = POSITIONS["care-shrine"];
+    const spawn = spawnGuest("x").respawn;
+    const early = migratePlayer({ id: "a", guest: false, serial: 42, flags: { angel: 1 }, x: shrine.x, y: shrine.y, district: "care" }, "fb");
+    expect(early).toMatchObject({ x: spawn.x, y: spawn.y, district: spawn.district });
+    const under = migratePlayer({ id: "b", guest: false, serial: 43, flags: { angel: 1, under: 1 }, movement: 2, x: shrine.x, y: shrine.y, district: "care", respawn: { x: shrine.x, y: shrine.y, district: "care" } }, "fb");
+    expect(under, "a body that went under keeps its place").toMatchObject({ x: shrine.x, y: shrine.y, district: "care" });
+    const ring = POSITIONS["clearing-ring"];
+    expect(migratePlayer({ id: "c", guest: false, serial: 44, flags: { angel: 1 }, x: ring.x, y: ring.y, district: "clearing" }, "fb"), "the Clearing is still an Angel's").toMatchObject({ x: ring.x, y: ring.y });
+    expect(migratePlayer({ id: "d", x: 1, y: 1 }, "fb"), "inside a wall").toMatchObject({ x: spawn.x, y: spawn.y });
+    // a respawn that is not ground to stand on moves nobody
+    expect(migratePlayer({ id: "e", x: shrine.x, y: shrine.y, respawn: { x: 1, y: 1 } }, "fb")).toMatchObject({ x: shrine.x, y: shrine.y });
   });
 
   it("uses the fallback id and a fresh guest for garbage", () => {

@@ -188,7 +188,8 @@ export function tickQuests(w: WorldState, id: string): WorldState {
 
 // ---------------------------------------------------------------- objectives
 
-function resolveTarget(ctx: Ctx, target: QuestStep["target"]): Objective["target"] {
+/** Where a step points this viewer: a named position, or a person where this viewer sees them. */
+export function resolveTarget(ctx: Ctx, target: QuestStep["target"]): Objective["target"] {
   const id = typeof target === "function" ? target(ctx) : target;
   if (!id) return null;
   const pos = POSITIONS[id];

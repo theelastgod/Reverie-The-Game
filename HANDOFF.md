@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 607 tests (2026-10-03), the session smoke, the campaign smoke and the
+  fresh world; 610 tests (2026-10-03), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -2038,6 +2038,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   body's own step and flags; nodes regenerate; copies can be crafted
   again; the toll and Form 9 can be refused for free).
 
+- The reach audit (2026-10-03, night): every place the journal or a
+  hand-out points a body at, read against the gates that body can open
+  at that moment, over every action and tick of both spine runs and of
+  an Angel linked before the first step (881 states, about fourteen
+  thousand targets). Every target resolved and was walkable, but the
+  check found the city's one hole: the Care's door from the Clearing
+  asked only for an Angel, so an Angel linked in the first hour could
+  walk Grid → Clearing → Care before dying as death, and read and tithe
+  at the House of Mortals hall (Movement II's step), pay the funeral
+  desk, insure at the clinic and rest at the shrine. `PROMPT.md` ("Guests
+  stop. Angels continue into the Care") and the synopsis ("dying as
+  death opens the Care") close it, so that door now asks for `under`
+  as the Nave's does; the Clearing stays an Angel's. A body saved in
+  the Care before its going-under (possible until now) would stand
+  behind two shut doors, so a restore now wakes any body that cannot
+  walk to its respawn at the respawn (`walksBetween` in map.ts). The
+  check stays: `spine.test.ts` asserts it after every action and tick
+  (side hours' later steps included, since a body can run ahead of the
+  spine; every live hand-out's speaker and steps; no Angel's hour handed
+  to a guest), and `resolveTarget` is exported for it.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3012,6 +3033,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   (Movements I–IV) and the render check; a nine-line dialogue read in
   Chromium at 1366×657, 375×553 and 360×640: on the screen, its body
   scrolling on the phones.
+- The reach audit (2026-10-03, night): typecheck, 610 tests in 45
+  files (spine.test.ts holds the reach check after every action and
+  tick of every run, and walks an Angel linked before the first step
+  through Movement I into the Care; map.test.ts the Care's two doors;
+  migrate.test.ts the restored body behind a shut door), the build, the
+  play build and the stage, and on a fresh local world the session
+  smoke, `test:campaign:4` (Movements I–IV: 17.6, 13.3, 18.5 and 9.6
+  min, the outcome `failed` at readiness 52 as before) and the render
+  check. Each new check was seen to fail on the code it guards against:
+  the map test and the restore test on the old door and the old
+  restore, the reach check on a Kerb shut behind `m3` (five side-hour
+  steps named).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

@@ -7,8 +7,9 @@
  * Restoring is therefore always safe, and additive contract changes never
  * strand a shard.
  */
-import { LISTING_PRICE_MAX, LISTING_PRICE_MIN, MAX_HP, NODE_CHARGES } from "./constants";
+import { BODY_R, LISTING_PRICE_MAX, LISTING_PRICE_MIN, MAX_HP, NODE_CHARGES } from "./constants";
 import { HOUSES } from "./identity";
+import { circleHitsWalls, walksBetween } from "./map";
 import { POI_STATES } from "./content/ids";
 import type { Fourfold, Item, Listing, Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest } from "./world";
@@ -107,6 +108,13 @@ export function migratePlayer(saved: unknown, fallbackId: string, now = 0): Play
   p.choices = strRecord(s.choices);
   const r = isDict(s.respawn) ? s.respawn : {};
   p.respawn = { x: num(r.x, base.respawn.x), y: num(r.y, base.respawn.y), district: (str(r.district, base.respawn.district) as Player["respawn"]["district"]) };
+  // A body saved where it can no longer walk to its respawn (a wall moved, or a gate it may not pass now stands between,
+  // as the Care's door from the Clearing since the reach audit) wakes at the respawn, when the respawn is ground it can stand on.
+  if (!circleHitsWalls(p.respawn.x, p.respawn.y, BODY_R, p) && (circleHitsWalls(p.x, p.y, BODY_R, p) || !walksBetween(p, p.respawn, p))) {
+    p.x = p.respawn.x;
+    p.y = p.respawn.y;
+    p.district = p.respawn.district;
+  }
   const h = isDict(s.history) ? s.history : {};
   p.history = {
     passings: num(h.passings, 0, 0),

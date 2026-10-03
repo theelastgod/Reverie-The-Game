@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
  * garden, spots the copy, and reaches every outcome the Passing can have.
  */
 import { CLEARING_LIST_PRICE, CLEARING_PRICE_MOVE, COPY_PRICE, DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_PASSING_MIN, READINESS_REFUSE, TEST_SERIAL, TITHE_COST } from "./constants";
-import { POSITIONS, blockedFor, districtAt } from "./map";
+import { GATES, GUEST_SPAWN, POSITIONS, blockedFor, districtAt, gateOpenFor, idx, reachableTiles, tileOf } from "./map";
 import { cityFigure, type ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
 import { SIDE_PLACES } from "./content/side";
@@ -21,12 +21,12 @@ import { CLEARING_LISTING, clearingPrice } from "./content/market";
 import { verbsFor } from "./interact";
 import { openNode } from "./dialogue";
 import { applyListing } from "./economy";
-import { LINES } from "./content";
+import { LINES, NPCS, QUESTS } from "./content";
 import { WAKING_WINK } from "./content/lines";
-import type { Player, WorldState } from "./types";
+import type { Ctx, Effect, Player, Quest, WorldState } from "./types";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
-import { questById, questProgress } from "./quests";
+import { questById, questProgress, resolveTarget } from "./quests";
 import { npcView, snapshotFor } from "./snapshot";
 
 const ME = "me";
@@ -62,10 +62,15 @@ function goTo(w: WorldState, id: string, positionId: string): WorldState {
 function tick(w: WorldState, n = 1): WorldState {
   let cur = w;
   for (let i = 0; i < n; i++) cur = tickWorld(cur, DT);
+  expectReachable(cur);
   return cur;
 }
 
-const act = (w: WorldState, id: string, msg: ClientMsg): WorldState => applyAction(w, id, msg);
+const act = (w: WorldState, id: string, msg: ClientMsg): WorldState => {
+  const next = applyAction(w, id, msg);
+  expectReachable(next);
+  return next;
+};
 const interact = (w: WorldState, id: string, targetId: string, choice: string): WorldState => act(w, id, { t: "interact", targetId, choice });
 
 /** Stand at a POI and press a spine verb the way the client would: it must be in the prompt first (a side hour can take its key). */
@@ -169,6 +174,76 @@ function fellRunner(w: WorldState, id: string): WorldState {
   expect(cur.enemies.find(e => e.id === "annex-runner")?.state).toBe("dead");
   expect(me(cur, id).dead).toBe(false);
   return cur;
+}
+
+// ---------------------------------------------------------------- the city's gates
+
+/**
+ * The reach audit (2026-10-03), held after every action and tick of every run in this file: wherever the journal or a
+ * hand-out points a body, it can walk there through the gates it can open at that moment (the Care's at the going-under,
+ * the Organs' at the third hour's door, the Clearing's to Angels). A side hour's later steps count as well, since a body
+ * can run ahead of the spine; the spine's own steps only while live, since a later one may need a gate an earlier one opens.
+ * Every person who could hand out an hour now must stand where the body can reach, and never hand a guest an Angel's hour.
+ */
+const walkableByGates = new Map<string, Set<number>>();
+function walkable(p: Player): Set<number> {
+  const key = GATES.map(g => (gateOpenFor(p, g) ? "1" : "0")).join("");
+  let tiles = walkableByGates.get(key);
+  if (!tiles) {
+    tiles = reachableTiles(tileOf(GUEST_SPAWN.x), tileOf(GUEST_SPAWN.y), (tx, ty) => blockedFor(p, tx, ty));
+    walkableByGates.set(key, tiles);
+  }
+  return tiles;
+}
+
+function unreachable(w: WorldState): string[] {
+  const faults: string[] = [];
+  for (const p of w.players.values()) {
+    if (p.locked) continue;
+    const tiles = walkable(p);
+    const walks = (at: { x: number; y: number }) => tiles.has(idx(tileOf(at.x), tileOf(at.y)));
+    const check = (ctx: Ctx, q: Quest, i: number, why: string) => {
+      const step = q.steps[i];
+      if (!step.target) return;
+      const at = resolveTarget(ctx, step.target);
+      if (!at) {
+        if (typeof step.target === "string") faults.push(`${p.id}: ${why}${q.id}'s ${step.id} points at ${step.target}, which is nowhere`);
+      } else if (!walks(at)) faults.push(`${p.id}: ${why}${q.id}'s ${step.id} points into ${at.district}, past a gate this body cannot open`);
+    };
+    const ctx: Ctx = { w, p, now: w.now };
+    for (const q of QUESTS) {
+      const s = p.quests[q.id];
+      if (s === undefined) continue;
+      for (let i = s; i < q.steps.length; i++) {
+        check(ctx, q, i, "");
+        if (q.kind === "spine") break;
+      }
+    }
+    for (const npc of Object.values(NPCS)) {
+      for (const node of Object.values(npc.nodes)) {
+        for (const c of node.choices ?? []) {
+          if (c.when && !c.when(ctx)) continue;
+          const effects: Effect[] = typeof c.effects === "function" ? c.effects(ctx) : c.effects ?? [];
+          for (const e of effects) {
+            if (e.kind !== "quest" || e.op !== "start" || p.quests[e.id] !== undefined) continue;
+            const q = questById(e.id)!;
+            const why = `${npc.id}'s ${c.id} would start `;
+            if (p.guest && !q.guestLegal) faults.push(`${p.id}: ${why}${q.id}, an Angel's hour, for a guest`);
+            const shared = w.npcs[npc.id];
+            const view = shared ? npcView(ctx, shared) : null;
+            if (view && !walks(view)) faults.push(`${p.id}: ${why}${q.id} from ${view.district}, past a gate this body cannot open`);
+            const started: Ctx = { ...ctx, p: { ...p, quests: { ...p.quests, [q.id]: 0 } } };
+            q.steps.forEach((_, i) => check(started, q, i, why));
+          }
+        }
+      }
+    }
+  }
+  return faults;
+}
+
+function expectReachable(w: WorldState): void {
+  expect(unreachable(w), "every place the journal or a hand-out points at is one the body can walk to").toEqual([]);
 }
 
 // ---------------------------------------------------------------- Movement I
@@ -1168,6 +1243,19 @@ describe("the spine, played through", () => {
     expect(questById(Q.M2)!.steps.length).toBe(10);
     expect(questById(Q.M3)!.steps.length).toBe(8);
     expect(questById(Q.M4)!.steps.length).toBe(6);
+  });
+
+  it("an Angel linked before the first step walks the first hour as a guest would and wakes in the Care at the going-under", () => {
+    // the runs below link at the guest's lock; here the link comes first, so the hand-outs and the journal are read for an
+    // Angel with no `under` all through Movement I (the reach check after every action)
+    let w = add(emptyWorld(), spawnGuest(ME));
+    w = act(w, ME, { t: "link", serial: TEST_SERIAL, sig: MOCK_SIG });
+    expect(me(w)).toMatchObject({ guest: false, movement: 1 });
+    w = movementOne(w, { node: "extract", extra: [], memorial: "copper", weather: "process", bulletin: true });
+    expect(me(w)).toMatchObject({ locked: false, movement: 2, district: "care" });
+    expect(me(w).flags[F.UNDER]).toBe(1);
+    w = tick(w);
+    expectStep(w, Q.M2, 0);
   });
 
   it("run one: extract, the copper, the process, refuse the freeze, take the private yield, sell the print, Cold claims the hour", () => {

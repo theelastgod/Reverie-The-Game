@@ -36,6 +36,15 @@ export function serialHistoryMark(serial: number): HistoryMark | null; // 7777 -
 export function historyMarkFor(serial: number, log: HistoryLog, deaths?: number): HistoryMark | null; // the serial's written-back log as a mark at POSITIONS["history:mark"]: null when passings+buried+looted+deaths is 0; line from the last outcome, else what the hands did
 ```
 
+## map.ts (gates and walking)
+```ts
+export function gateOpenFor(p, g: GateDef): boolean;       // "" open; "angel" not a guest; "under" / "m3" the flag. The Care's two doors (nave↔care, care↔clearing) are both "under": the Care opens by going under, from either side
+export function blockedFor(p, tx, ty): boolean;            // a wall, or a gate this body may not pass
+export function walksBetween(p, from: Vec, to: Vec): boolean; // on foot through walls and the gates this body may pass; flood fills cached per gate pattern and start tile (64 at most)
+export function reachableTiles(tx, ty, blocked): Set<number>;
+// migrate.ts migratePlayer: a body saved where it cannot walk to its respawn (inside a wall, or behind a gate it may not pass) wakes at the respawn, when the respawn is ground it can stand on
+```
+
 ## world.ts
 ```ts
 export function emptyWorld(): WorldState;                  // gestell GESTELL_START, nodes initialNodes(), enemies initialEnemies(), npcs from NPC_HOMES (present, state "home"), pois every id in POI_STATES at its first state, houses initialHouses(), clearing initialClearing(), passing initialPassing(), failed: one FailedPassing per FAILED_PASSING_MARKS at season 0 (last season's hole exists on every shard), rng 0x9e3779b9
@@ -157,6 +166,7 @@ export function questById(id: string): Quest | undefined;
 export function questProgress(p, id): { started: boolean; step: number; done: boolean };
 export function tickQuests(w: WorldState, id: string): WorldState; // for one player: start every quest whose available(ctx) is true and not started (spine only in movement order; side quests may start freely), apply onStart; for each active quest evaluate current step done(ctx): apply onComplete, advance; when steps exhausted apply onFinish once; loop at most 8 advances per tick
 export function objectiveFor(ctx: Ctx): Objective | null;   // current step of the active spine quest, else the most recently started active side quest, else null; target resolved through POSITIONS / NPC personal position
+export function resolveTarget(ctx, target: QuestStep["target"]): Objective["target"]; // where a step points this viewer: a named position (a `home:` one follows the person as this viewer sees them), or a person's personal position, else their home; null when nothing. spine.test.ts holds every target a journal or hand-out shows against the gates the body can open (the reach audit)
 export function activeQuests(ctx): { quest: Quest; step: QuestStep }[];
 ```
 

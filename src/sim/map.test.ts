@@ -52,6 +52,20 @@ describe("the city", () => {
     }
   });
 
+  it("the Care opens by going under, from either side: an Angel who has not gone under reaches the Clearing, never the Care", () => {
+    // the reach audit (2026-10-03): the Care's door from the Clearing once asked only for an Angel, so an Angel linked in the
+    // first hour walked round through the Clearing into the Care (its hall's tithe, its desk, its shrine) before dying as death
+    const early = { guest: false, flags: {} };
+    const from = (p: { guest: boolean; flags: Record<string, number> }) => reachableTiles(tileOf(GUEST_SPAWN.x), tileOf(GUEST_SPAWN.y), (tx, ty) => blockedFor(p, tx, ty));
+    const has = (reach: Set<number>, id: string) => reach.has(idx(tileOf(POSITIONS[id].x), tileOf(POSITIONS[id].y)));
+    const before = from(early);
+    expect(has(before, "clearing-ring"), "the Clearing is an Angel's").toBe(true);
+    for (const id of ["care-shrine", "wreckage-garden", "funeral-desk", "hall-mortals", "clinic"]) expect(has(before, id), `${id} before the going-under`).toBe(false);
+    expect(has(before, "organ-strait"), "the Organs wait for the third hour").toBe(false);
+    const under = from({ guest: false, flags: { under: 1 } });
+    for (const id of ["care-shrine", "wreckage-garden", "funeral-desk", "hall-mortals", "clinic", "clearing-ring"]) expect(has(under, id), `${id} after the going-under`).toBe(true);
+  });
+
   it("gates are three tiles wide openings between their two districts", () => {
     for (const g of GATES) {
       expect(g.rect.w * g.rect.h).toBe(9);

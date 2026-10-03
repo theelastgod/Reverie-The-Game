@@ -100,8 +100,9 @@ lacks its flag (`gateBlocks(player, tx, ty)`).
 
 Gates: `nave↔annex`, `nave↔wet`, `annex↔kerb`, `wet↔kerb`, `kerb↔ring`,
 `nave↔care` (requires `under`), `wet↔clearing` (requires `angel`),
-`care↔clearing` (requires `angel`), `wet↔organs` (requires `m3`),
-`ring↔organs` (requires `m3`).
+`care↔clearing` (requires `under`: the Care opens by going under, from
+either side), `wet↔organs` (requires `m3`), `ring↔organs` (requires `m3`).
+A body restored where it can no longer walk to its respawn wakes there.
 
 Floor patches (sub-areas with their own texture) mark places: burial street,
 arena, going-under threshold, stalls, claims room, Vesper's office, garden,
