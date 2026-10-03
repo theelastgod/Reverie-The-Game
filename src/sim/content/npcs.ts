@@ -1133,6 +1133,14 @@ const CAUL_NODES: Record<string, DialogueNode> = {
       return `"${ctx.p.name}. The glass is there. So is the light. So am I, until the hour."`;
     },
   },
+  // ---- through every oval on the Kerb, when a bought hour does not come (II.9)
+  // Opened by the bell's wait for the bought hour (side-pois.ts). He is addressing the city: no serial, and a voice is not a Wink,
+  // so an unsealed body that bought the hour hears the same words. The ovals going champagne for everyone is the launch window's (Phase C),
+  // and so is the date on the glass: until then he says the date will be there, so that he says nothing the glass does not do.
+  "oval-hour": {
+    id: "oval-hour",
+    text: "The time goes by and every oval on the Kerb goes champagne at once, and the same voice is on all of them, on the real sky like a watermark. \"The hour. The ovals are open. The sky through them is yours; the hour is ours. Some of you bought one on the terrace. It did not come. The slip is our time. The bell keeps its own. We are working on the bell. The god is not coming. The god is a demand. I have never failed to meet a demand. The date will be on the glass. Until then, the altars. We kept something for you.\"",
+  },
   // ---- the recorders: the lip of the ring (IV.6), and his word after the rite (IV.7)
   "lip-silent": {
     id: "lip-silent",

@@ -15,7 +15,8 @@ import { POSITIONS, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
 import { LINES } from "./content";
-import { SIDE, SIDE_BY_ID, SIDE_ITEMS, SIDE_PLACES, SQ, SW, offerKey } from "./content/side";
+import { NPCS } from "./content/npcs";
+import { SF, SIDE, SIDE_BY_ID, SIDE_ITEMS, SIDE_PLACES, SQ, SW, offerKey } from "./content/side";
 import type { Fourfold, Item, Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
@@ -536,6 +537,63 @@ describe("the armored van on a street already hot", () => {
     expect(w.flags[SW.VAN_PARKED]).toBeUndefined();
     expect(w.pois["hot-street"], "the street's mark stands as it was").toEqual({ state: "hot", by: "someone", at: 1, count: 1 });
     expect(me(w).notices.some(n => n.text === "The street is hot. Flags are raised here now. Guests are not loot.")).toBe(true);
+  });
+});
+
+describe("the bought hour that does not come", () => {
+  const BELL_LINE = "The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.";
+  const OVALS = { npc: "caul", node: "oval-hour", speaker: "Anselm Caul", portrait: "guest.jpg", wink: "", choices: [] };
+
+  /** A body that bought the hour, under the bell, with the hour at its wait (the offer and the slip are flags; the step index is the tick's). */
+  function underTheBell(w: WorldState, id: string): WorldState {
+    let cur = goTo(w, id, "hour-bell");
+    cur = tick(cur, 2);
+    expect(questProgress(me(cur, id), SQ.HOURS), `${id} waits for the bought hour`).toEqual({ started: true, step: 1, done: false });
+    expect(verbsFor({ w: cur, p: me(cur, id), now: cur.now }, "hour-bell").map(v => v.choice)).toContain("side:hours:wait");
+    return cur;
+  }
+
+  it("an Angel under the bell hears the Concern's schedule, then Caul through every oval on the Kerb, once, with no Wink; the step advances", () => {
+    let w = underTheBell(world({ id: SQ.HOURS, flags: { [offerKey(SQ.HOURS)]: 1, [SF.HOURS_BOUGHT]: 1 }, steps: [], check: () => undefined }), ME);
+    const before = me(w);
+    w = interact(w, "hour-bell", "side:hours:wait");
+    const after = me(w);
+    expect(after.heard, "the bell's line, said after the window opened").toBe(BELL_LINE);
+    expect(after.dialogue).toMatchObject(OVALS);
+    expect(after.dialogue!.text).toBe(NPCS.caul.nodes["oval-hour"].text);
+    expect(after.dialogue!.text, "he is addressing the city, not a serial").not.toContain(after.name);
+    expect(after.flags[SF.HOURS_WAITED]).toBe(1);
+    expect(after.wink, "a voice is not a Wink").toBe(before.wink);
+    expect(after.winke).toBe(before.winke);
+    // the window reaches the client whole, and closes with nothing after it
+    expect(snapshotFor(w, ME).you.dialogue).toMatchObject(OVALS);
+    w = act(w, ME, { t: "close" });
+    expect(me(w).dialogue).toBeNull();
+    w = tick(w);
+    expect(questProgress(me(w), SQ.HOURS).step, "the wait is done").toBe(2);
+    expect(me(w).notices.some(n => n.text.startsWith("The bought hour did not come."))).toBe(true);
+    // once: the wait is behind this body, so the bell offers it no more and the ovals do not speak again
+    expect(verbsFor({ w, p: me(w), now: w.now }, "hour-bell").map(v => v.choice)).not.toContain("side:hours:wait");
+    const again = interact(w, "hour-bell", "side:hours:wait");
+    expect(me(again).dialogue).toBeNull();
+    expect(me(again).heard).toBe(me(w).heard);
+  });
+
+  it("an unsealed body that bought the hour hears the same words through the ovals, and no Wink", () => {
+    const g = { ...spawnGuest("g"), flags: { [offerKey(SQ.HOURS)]: 1, [SF.HOURS_BOUGHT]: 1 } };
+    let w = underTheBell(add(emptyWorld(), g), "g");
+    w = act(w, "g", { t: "interact", targetId: "hour-bell", choice: "side:hours:wait" });
+    const guest = me(w, "g");
+    expect(guest.guest).toBe(true);
+    expect(REFUSALS).not.toContain(guest.heard);
+    expect(guest.heard).toBe(BELL_LINE);
+    expect(guest.dialogue).toMatchObject(OVALS);
+    expect(guest.dialogue!.text).toBe(NPCS.caul.nodes["oval-hour"].text);
+    expect(guest.wink).toBe("");
+    expect(snapshotFor(w, "g").you.dialogue).toMatchObject(OVALS);
+    expect(guest.flags[SF.HOURS_WAITED]).toBe(1);
+    w = tick(w);
+    expect(questProgress(me(w, "g"), SQ.HOURS).step).toBe(2);
   });
 });
 

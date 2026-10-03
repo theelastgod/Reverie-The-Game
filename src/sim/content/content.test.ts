@@ -8,7 +8,9 @@ import { AURA_DIM, M3_DOOR_PRICE, OPERATOR_YIELD, RESTRAINT_START, TEST_SERIAL }
 import { C, F, POI_STATES, Q, W, seasonPassingFlag } from "./ids";
 import { NPCS } from "./npcs";
 import { LAST_SEASON_WINK as POIS_LAST_SEASON, POI_CONFIGS } from "./pois";
+import { SF } from "./side";
 import { SIDE_NPCS } from "./side-npcs";
+import { SIDE_POI_VERBS } from "./side-pois";
 import { SPINE } from "./spine";
 import * as LINES from "./lines";
 
@@ -431,6 +433,36 @@ describe("dialogue", () => {
     expect(def.personal!(guestOnTheGrid, shared)).toMatchObject({ x: lip.x, y: lip.y, state: "lip" });
     expect(def.entry(guestOnTheGrid)).toBe("lip-guest");
     expect(def.nodes.lip.choices!.filter(c => !c.when || c.when(guestOnTheGrid)).map(c => c.id), "a guest is offered neither key").toEqual(["walk"]);
+  });
+
+  it("Caul speaks through every oval on the Kerb when a bought hour does not come: to the city, not by serial, and a voice is not a Wink", () => {
+    // The bell's wait for the bought hour (II.9) says the schedule is the Concern's, then opens his address; a guest may buy the hour and press it.
+    const wait = SIDE_POI_VERBS["hour-bell"].find(v => v.choice === "side:hours:wait")!;
+    expect(wait.guest).toBe("allow");
+    expect(wait.once).toBe(SF.HOURS_WAITED);
+    expect(wait.effects).toEqual([{ kind: "dialogue", npc: "caul", node: "oval-hour" }]);
+    expect(wait.say).toBe("The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.");
+    expect(wait.say).not.toContain("Safety's");
+    // His own table, so the window carries his name and the guest's portrait; one text for every body, no branch and no serial; nothing heard with it.
+    const node = NPCS.caul.nodes["oval-hour"];
+    expect(node).toBeDefined();
+    expect(node.speaker).toBeUndefined();
+    expect(node.wink).toBeUndefined();
+    expect(node.effects).toBeUndefined();
+    expect(node.next).toBeUndefined();
+    expect(node.choices ?? []).toEqual([]);
+    expect(typeof node.text).toBe("string");
+    expect(node.text).toContain("every oval on the Kerb goes champagne at once");
+    expect(node.text).toContain("\"The hour. The ovals are open. The sky through them is yours; the hour is ours.");
+    expect(node.text).toContain("The god is not coming. The god is a demand.");
+    // the shipped glass carries no date until Phase C's launch window, so he says nothing the glass does not do
+    expect(node.text).toContain("The date will be on the glass.");
+    expect(node.text).not.toContain("The date is on the glass.");
+    expect(node.text).toMatch(/We kept something for you\."$/);
+    for (const { name, ctx } of CTXS) if (ctx.p.name && ctx.p.name !== "GUEST") expect(node.text, `no serial for ${name}`).not.toContain(ctx.p.name);
+    // Only the bought hour's wait opens it: the bell's other verbs stay the city's.
+    for (const v of SIDE_POI_VERBS["hour-bell"]) if (v !== wait) expect(JSON.stringify(v.effects ?? [])).not.toContain("oval-hour");
+    expect(JSON.stringify(POI_CONFIGS["hour-bell"].verbs.map(v => v.effects ?? []))).not.toContain("oval-hour");
   });
 
   it("the party notices you acting on a Wink they cannot see, once per Wink", () => {

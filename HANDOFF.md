@@ -76,9 +76,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   offer of the hour as a signature, for nothing, and says his word on
   the rite after it; and the rite's remainders, Nara staying at the ring
   after an Absence and the altars playing a marked Angel their own sold
-  sky. Of Phase B two beats remain: Caul's address through every oval on
-  the Kerb when a bought hour does not come (II.9), next, and Quill's
-  lines at the vans, which wait for Phase C's launch.
+  sky; and the Kerb's ovals, through which Caul addresses the city when
+  a bought hour does not come. Of Phase B only Quill's lines at the vans
+  remain, and they wait for Phase C's launch; Phase C is next.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1608,6 +1608,46 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   vans, which wait for Phase C's launch. Then Phase C (the launch window,
   the dark-light threshold, the clerks' descent, the journal line and
   the date for readers).
+- Backlog A, Phase B, the hour (2026-10-03, small hours): Caul's
+  address through every oval on the Kerb when a bought hour does not
+  come, from II.9's lines tagged new and revised; no step inserted. The
+  bell's wait for the bought hour (the second step of the Kerb's side
+  hour `Hours for sale`) opens `oval-hour` through a `dialogue` effect
+  on the verb: his address, one text for every body, in his own table so
+  the window carries his name and the guest's portrait, no serial (he
+  is addressing the city), no Wink (a voice is not one), nothing after
+  it; and the bell's own line, said in the same press, now says what the
+  script says, that the bell is on a schedule, the schedule is the
+  Concern's and so is the slip, and Safety only carries them (the
+  shipped line had the schedule Safety's). The verb was already a
+  guest's to press and the hour is guest-legal, so an unsealed body that
+  bought the hour hears the same words. Once a body: the verb is `once`
+  on SF.HOURS_WAITED and gated on the step, so the ovals do not speak to
+  that body again. Phase C keeps the ovals going champagne for everyone
+  at the hour, with the launch window, and the date on the glass: until
+  then he says the date will be there. Reviewed by three adversarial
+  readers (engine, script, world) with a refuter on each finding;
+  confirmed and folded: the bell's revised line was lost in the client
+  (the press opens the window and says the line in one step, the HUD
+  hides a heard line under an open window, and its six-second fade ran
+  out underneath; the four shipped pairings of a say and a window carry
+  a notice beside them, this verb did not), so the HUD now holds a heard
+  line's fade while a window is open and starts it the frame the window
+  closes, through a pure `heardStep` in `src/ui/format.ts` with its own
+  cases, which repairs those four pairings too; "The date is on the
+  glass" outran the shipped glass, which carries no date until Phase C,
+  so he says the date will be there, tagged as the reader lines are; the
+  Verified entry recorded a run on GitHub's runner for a commit that did
+  not yet exist; the hour's tags did not name the firing as every other
+  Phase B tag does. Refuted: the test's literal speaker and portrait (he
+  is drawn as a guest by design and has no Stage B slot); a Phase C
+  promise missing from the synopsis (the script's launch beat carries
+  it); the step's notice saying a schedule nobody signed beside the
+  bell's the Concern's (Phase A wrote it so, and Halla's confront
+  reconciles them). Of Phase B only Quill's
+  `ring` and `margin` at the vans remain, and they wait for Phase C's
+  launch; Phase C is next (the launch window, the dark-light threshold,
+  the clerks' descent, the journal line and the date for readers).
 
 ## Verified (2026-09-25, integration)
 
@@ -2366,6 +2406,30 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   words, 814 of dialogue), and the render check at `RENDER_MIN_FPS=5`
   passed on desktop and phone, run alone; all of it re-run on the tree
   after the review's fixes.
+- Backlog A, Phase B, the hour (2026-10-03, small hours): typecheck,
+  524 tests in 41 files (the content test reads the bell's verb, its
+  line, its effect and its guest policy, the node's shape, its text and
+  its silence, and that no other verb on the bell opens it; the walked
+  side hours drive the bought hour's wait for an Angel, the window whole
+  in the snapshot, closed with nothing after it, the step advanced and
+  the verb gone from the prompt, and for a guest the same words and no
+  Wink; the every-side-hour walk still passes through the wait with the
+  window open), the build, the play build and the stage. After the
+  review's fixes: 527 tests in 41 files (the HUD's `heardStep` cases:
+  a line up and armed at once with no window, held under a window
+  however long it stays and armed once the frame it closes, a newer
+  line under the window replacing the held one, an empty or stale line
+  putting nothing up, a window opening over a line already fading
+  changing nothing), the typecheck, both builds and the stage; and,
+  since the client changed, the render check at `RENDER_MIN_FPS=5` on
+  a fresh local world passed on desktop and phone, run alone (it walks
+  a guest in the Nave and does not reach the Kerb, so the hold itself
+  is covered by the pure cases only). A second review pass over the
+  HUD hold was cut off before any reader returned; checked by hand
+  instead: the client's kept slow state carries `dialogue` into every
+  merged snapshot, so the hold sees the window on every frame, and
+  before the first slow frame it reads as closed. No server or protocol
+  change, so the Wrangler smokes were not re-run.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2421,9 +2485,10 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      forge's listing or pull (III.8), the lip (IV.6, with Caul's word
      after the rite) and the rite's remainders (Nara kept at the ring
      after an Absence, the marked Angel's own sky on the altars), see
-     Done; next Caul's `oval-hour` through every oval on the Kerb when a
-     bought hour does not come (II.9); then only Quill's `ring` and
-     `margin` at the vans remain, and they wait for Phase C's launch):
+     Done, and the hour (II.9, Caul through every oval on the Kerb when
+     a bought hour does not come); only Quill's `ring` and `margin` at
+     the vans remain, and they wait for Phase C's launch, so Phase C is
+     next):
      never inserted between shipped steps (a
      saved body's progress is a step index); they enter as verbs and
      dialogue on existing steps or at a movement's end. The altar as a

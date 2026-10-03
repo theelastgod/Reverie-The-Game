@@ -53,7 +53,7 @@ HUD element ids (D2 creates them; D1 never touches DOM except through `Hud`):
 `hud-bars` (hp, aura, restraint, readiness), `hud-stance`, `hud-kit`,
 `hud-dodge` (a button on coarse pointers), `hud-stick` (the touch stick's ring
 and knob, planted where a finger lands), `hud-prompt` (nearest interaction with key caps),
-`hud-heard` (spoken line), `hud-wink` (private line, void/gold),
+`hud-heard` (spoken line; hidden under an open dialogue window, its fade held until the window closes, `format.ts` `heardStep`), `hud-wink` (private line, void/gold),
 `hud-notices`, `hud-marquee` (news ticker), `hud-dialogue` (portrait, speaker,
 text, wink, choices), `hud-journal` (field notes: plate, movement, title,
 detail, bearing, quests list), `hud-minimap` (canvas), `hud-lock` (guest lock

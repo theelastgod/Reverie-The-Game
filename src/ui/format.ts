@@ -236,6 +236,32 @@ export function statusLine(status: "connecting" | "online" | "reconnecting" | "e
   }
 }
 
+// ---------------------------------------------------------------- the heard line
+/**
+ * The heard line (what a verb or a desk says to you) goes up at once and fades
+ * after a while. While a dialogue window is open the HUD hides it, so a line
+ * heard in the same press that opened a window (the bell's, under Caul's
+ * address) would fade unread; its fade waits until the window closes. One step
+ * per frame: `show` is a new line to put up, `arm` says to start the fade now.
+ */
+export type HeardState = { at: number; held: boolean };
+
+export function heardStep(
+  state: HeardState,
+  you: { heard: string; heardAt: number; dialogue: unknown },
+  now: number,
+  ttl: number,
+): { state: HeardState; show: string | null; arm: boolean } {
+  const open = !!you.dialogue;
+  if (you.heardAt !== state.at) {
+    const fresh = !!you.heard && now - you.heardAt <= ttl;
+    if (!fresh) return { state: { at: you.heardAt, held: false }, show: null, arm: false };
+    return { state: { at: you.heardAt, held: open }, show: you.heard, arm: !open };
+  }
+  if (state.held && !open) return { state: { at: state.at, held: false }, show: null, arm: true };
+  return { state, show: null, arm: false };
+}
+
 // ---------------------------------------------------------------- DOM helpers
 // Small write-if-changed helpers shared by the HUD modules. They take DOM
 // nodes but do nothing else, so this file stays importable without a DOM.

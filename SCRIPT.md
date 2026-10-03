@@ -598,7 +598,7 @@ The paper panel, the gold mark:
 *The forge tray's F, Hear Quill on copies, opens `forge-lesson` from here already; that is III.8's scene and is written there. The board's E verbs (the copy's price, taking it down) are the side hour *A copy of a hole*, shipped.*
 
 ### II.9 The hour
-*New beat, Phase B (rides steps `board` and `operator`; the dialogue is the Kerb's shipped side hours `side-kerb-hours-for-sale` and `side-kerb-hour-that-does-not-strike` and Halla's nodes; Caul's address is a dialogue effect on the bought hour's wait, new, Phase B; the ovals champagne at the hour for everyone is a world tick, Phase C, with the launch window). The Kerb of Hours: the omen terrace, the hour bell north of the terraces through the gap in the low wall, the forecast glass east of the bell. Plate `plate-kerb.jpg`. The Kerb is a district a guest may walk and Halla's hours are guest-legal, so a guest too can buy the hour that does not come and hear the voice when it does not; the Winke here are an Angel's. Set piece.*
+*New beat, Phase B (rides steps `board` and `operator`; the dialogue is the Kerb's shipped side hours `side-kerb-hours-for-sale` and `side-kerb-hour-that-does-not-strike` and Halla's nodes; Caul's address is a dialogue effect on the bought hour's wait, shipped since Phase B, the hour; the ovals champagne at the hour for everyone is a world tick, Phase C, with the launch window). The Kerb of Hours: the omen terrace, the hour bell north of the terraces through the gap in the low wall, the forecast glass east of the bell. Plate `plate-kerb.jpg`. The Kerb is a district a guest may walk and Halla's hours are guest-legal, so a guest too can buy the hour that does not come and hear the voice when it does not; the Winke here are an Angel's. Set piece.*
 
 **THE TERRACE** — `read` F, Read the terrace (shipped, pois.ts omen-terrace)
 > Terraces of poured concrete with oval windows that look at nothing. A halo of thin pink light on the top step, at the wrong hour for it.
@@ -636,11 +636,11 @@ The paper panel, the gold mark:
 > Three Bestand. Halla Voss writes a time on a slip and says the bell will strike for you then. She does not look at the glass while she writes it.
 [Bestand −3, sink upkeep; a slip with a time on it]
 
-**THE BELL** — `side:hours:wait` E, Wait for the bought hour (revised, side-pois.ts: the shipped line says "The schedule is Safety's. So, it turns out, is the slip."; the schedule is the Concern's and Safety carries it)
+**THE BELL** — `side:hours:wait` E, Wait for the bought hour (shipped since Phase B, the hour; side-pois.ts; before it the line said "The schedule is Safety's. So, it turns out, is the slip."; the same press opens the window below, and the HUD keeps a line heard under a window until the window closes, so this one is read when his is done)
 > The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.
-[SF.HOURS_WAITED; the bought hour did not come → `oval-hour` (new, Phase B: a `{ kind: "dialogue", npc: "caul", node: "oval-hour" }` effect on the verb, which a guest can press)]
+[SF.HOURS_WAITED, the verb once; the bought hour did not come → `oval-hour` (shipped since Phase B, the hour: a `{ kind: "dialogue", npc: "caul", node: "oval-hour" }` effect on the verb, which a guest can press)]
 
-**CAUL** — through every oval on the Kerb, `oval-hour` (new, Phase B; npcs.ts, speaker caul; the moment the time on the slip has come and gone; no serial, he is addressing the city)
+**CAUL** — through every oval on the Kerb, `oval-hour` (shipped since Phase B, the hour; npcs.ts, in his own nodes; the moment the time on the slip has come and gone; no serial, he is addressing the city; no Wink with it; "The date is on the glass" reads "The date will be on the glass" until Phase C puts the date on the glass, so that he says nothing the glass does not do)
 > The time goes by and every oval on the Kerb goes champagne at once, and the same voice is on all of them, on the real sky like a watermark. "The hour. The ovals are open. The sky through them is yours; the hour is ours. Some of you bought one on the terrace. It did not come. The slip is our time. The bell keeps its own. We are working on the bell. The god is not coming. The god is a demand. I have never failed to meet a demand. The date is on the glass. Until then, the altars. We kept something for you."
 [a voice is not a Wink, and a guest on the Kerb hears it too; world: the ovals champagne at the hour, for everyone, on the world tick (Phase C, with the launch window)]
 
@@ -2069,9 +2069,9 @@ The paper panel, the gold mark:
 > Three Bestand. Halla Voss writes a time on a slip and says the bell will strike for you then. She does not look at the glass while she writes it.
 [SF.HOURS_BOUGHT]
 
-**THE BELL** — `hour-bell` wait for the bought hour, `side:hours:wait` (revised; side-pois.ts: the schedule is nobody's, the slip is the Concern's, II.9)
-> The time on the slip comes and goes. The bell is on a schedule nobody signed. The slip, it turns out, was the Concern's.
-[SF.HOURS_WAITED]
+**THE BELL** — `hour-bell` wait for the bought hour, `side:hours:wait` (shipped since Phase B, the hour; side-pois.ts; the line and the address are II.9's, the window first and this line when it closes)
+> The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.
+[SF.HOURS_WAITED; then Caul through every oval on the Kerb, `oval-hour`, written at II.9; a guest hears it too]
 
 **HALLA VOSS** — `hours-confront`, from the hub's "The hour I bought did not come." (shipped; side-npcs.ts)
 > "It did not come." She takes the slip back. "No. The times are the Concern's bell schedule; Safety carries it and I copy it. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it, and the time was theirs." She tears the slip. "I am going to stand at the glass. I will read the front, which I can see, for nothing, which is what it is worth."

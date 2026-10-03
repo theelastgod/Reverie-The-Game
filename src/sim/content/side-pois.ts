@@ -246,7 +246,9 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
     {
       key: "E", label: "Wait for the bought hour", choice: "side:hours:wait",
       when: atStep(SQ.HOURS, 1), guest: "allow", once: SF.HOURS_WAITED,
-      say: "The time on the slip comes and goes. The bell is on a schedule. The schedule is Safety's. So, it turns out, is the slip.",
+      // The time comes and goes, and every oval on the Kerb speaks (II.9). A voice is not a Wink: a guest, who may buy the hour, hears it too.
+      effects: [{ kind: "dialogue", npc: "caul", node: "oval-hour" }],
+      say: "The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.",
     },
   ]),
   "forecast-glass": exclusive([

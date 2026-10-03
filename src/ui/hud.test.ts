@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  auraTier, bearingTo, dodgeLine, formatSerial, identityLine, joinNews, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
+  auraTier, bearingTo, dodgeLine, formatSerial, heardStep, identityLine, joinNews, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
   pad2, parseSerial, pct, questLabel, questRows, roman, seconds, stanceLine, statusLine,
 } from "./format";
 import { TILE } from "../sim/map";
@@ -31,6 +31,38 @@ describe("parseSerial", () => {
     expect(parseSerial("4.5")).toBeNull();
     expect(parseSerial("")).toBeNull();
     expect(parseSerial(null)).toBeNull();
+  });
+});
+
+describe("heardStep", () => {
+  const fresh = { at: -1, held: false };
+  const window = { npc: "caul", node: "oval-hour" };
+
+  it("puts a new line up and arms its fade at once when no window covers it; the same line does nothing more", () => {
+    const up = heardStep(fresh, { heard: "The time on the slip comes and goes.", heardAt: 10, dialogue: null }, 10.1, 8);
+    expect(up).toEqual({ state: { at: 10, held: false }, show: "The time on the slip comes and goes.", arm: true });
+    expect(heardStep(up.state, { heard: "The time on the slip comes and goes.", heardAt: 10, dialogue: null }, 10.2, 8)).toEqual({ state: up.state, show: null, arm: false });
+  });
+
+  it("holds the fade of a line heard under an open window, and arms it the frame the window closes, once", () => {
+    // the bell's wait: the press opens Caul's window and says the bell's line in the same step
+    const up = heardStep(fresh, { heard: "The bell.", heardAt: 10, dialogue: window }, 10.1, 8);
+    expect(up).toEqual({ state: { at: 10, held: true }, show: "The bell.", arm: false });
+    const reading = heardStep(up.state, { heard: "The bell.", heardAt: 10, dialogue: window }, 40, 8);
+    expect(reading, "however long the window stays up").toEqual({ state: up.state, show: null, arm: false });
+    const closed = heardStep(reading.state, { heard: "The bell.", heardAt: 10, dialogue: null }, 41, 8);
+    expect(closed).toEqual({ state: { at: 10, held: false }, show: null, arm: true });
+    expect(heardStep(closed.state, { heard: "The bell.", heardAt: 10, dialogue: null }, 42, 8)).toEqual({ state: closed.state, show: null, arm: false });
+  });
+
+  it("a newer line under the window replaces the held one; an empty or stale line puts nothing up and holds nothing", () => {
+    const held = heardStep(fresh, { heard: "First.", heardAt: 10, dialogue: window }, 10, 8).state;
+    expect(heardStep(held, { heard: "Second.", heardAt: 12, dialogue: window }, 12, 8)).toEqual({ state: { at: 12, held: true }, show: "Second.", arm: false });
+    expect(heardStep(fresh, { heard: "", heardAt: 5, dialogue: window }, 5, 8)).toEqual({ state: { at: 5, held: false }, show: null, arm: false });
+    expect(heardStep(fresh, { heard: "Old.", heardAt: 0, dialogue: null }, 20, 8)).toEqual({ state: { at: 0, held: false }, show: null, arm: false });
+    // a window opening later over a line already fading changes nothing: the fade was armed when the line went up
+    const shown = heardStep(fresh, { heard: "Said.", heardAt: 10, dialogue: null }, 10, 8).state;
+    expect(heardStep(shown, { heard: "Said.", heardAt: 10, dialogue: window }, 11, 8)).toEqual({ state: shown, show: null, arm: false });
   });
 });
 

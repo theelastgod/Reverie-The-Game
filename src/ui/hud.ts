@@ -9,7 +9,7 @@ import type { Notice, Prompt } from "../sim/types";
 import { AURA_MAX, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_MAX, RESTRAINT_MAX, RESTRAINT_WINK_MIN, STORM_RESTRAINT_BURN } from "../sim/constants";
 import { F } from "../sim/content/ids";
 import {
-  auraTier, districtFourfold, districtName, dodgeLine, identityLine, joinNews, kitLine, ledgerLine, marqueeSeconds, num, pct,
+  auraTier, districtFourfold, districtName, dodgeLine, heardStep, identityLine, joinNews, kitLine, ledgerLine, marqueeSeconds, num, pct,
   setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine,
 } from "./format";
 import { mountDialogue, type DialoguePanel } from "./dialogue";
@@ -119,6 +119,7 @@ export class Hud {
   private promptSig = "";
   private promptTarget = "";
   private heardAt = -1;
+  private heardHeld = false;
   private winkAt = -1;
   private noticeSig = "";
   private marqueeText = "";
@@ -554,20 +555,26 @@ export class Hud {
     show(this.prompt, true);
   }
 
+  /** A new line goes up at once; its fade waits while a dialogue window hides it (the bell's line under Caul's address) and starts when the window closes. */
   private updateHeard(snap: Snap): void {
-    const you = snap.you;
-    if (you.heardAt === this.heardAt) return;
-    this.heardAt = you.heardAt;
-    if (!you.heard || snap.now - you.heardAt > NOTICE_TTL) return;
-    window.clearTimeout(this.heardTimer);
-    window.clearTimeout(this.heardFade);
-    setText(this.heard, you.heard);
-    this.heard?.classList.remove("fading");
-    show(this.heard, true);
-    this.heardTimer = window.setTimeout(() => {
-      this.heard?.classList.add("fading");
-      this.heardFade = window.setTimeout(() => show(this.heard, false), FADE_MS);
-    }, HEARD_MS);
+    const step = heardStep({ at: this.heardAt, held: this.heardHeld }, snap.you, snap.now, NOTICE_TTL);
+    this.heardAt = step.state.at;
+    this.heardHeld = step.state.held;
+    if (step.show !== null) {
+      window.clearTimeout(this.heardTimer);
+      window.clearTimeout(this.heardFade);
+      setText(this.heard, step.show);
+      this.heard?.classList.remove("fading");
+      show(this.heard, true);
+    }
+    if (step.arm) {
+      window.clearTimeout(this.heardTimer);
+      window.clearTimeout(this.heardFade);
+      this.heardTimer = window.setTimeout(() => {
+        this.heard?.classList.add("fading");
+        this.heardFade = window.setTimeout(() => show(this.heard, false), FADE_MS);
+      }, HEARD_MS);
+    }
   }
 
   private updateWink(snap: Snap): void {
