@@ -276,7 +276,7 @@ export function pvpBlockReason(a: Player, b: Player, w: WorldState): string | nu
   const ad = liveDuel(a, w.now);
   const bd = liveDuel(b, w.now);
   if ((ad && ad.with !== b.id) || (bd && bd.with !== a.id)) return DUEL_CLOSED;
-  if (!(a.flagged && b.flagged) && !weatherFlagged(a, b, w)) return LINES.PVP_FLAG_REQUIRED;
+  if (!(a.flagged && b.flagged) && !weatherFlagged(a, b, w)) return a.flagged ? LINES.PVP_OTHER_UNFLAGGED : LINES.PVP_FLAG_REQUIRED;
   return null;
 }
 
@@ -579,7 +579,8 @@ export function duelBlockReason(p: Player, other: Player, w: WorldState): string
   if (p.guest || other.guest || p.locked || other.locked) return LINES.GUEST_GRIEF;
   if (p.dead || other.dead) return DUEL_WHERE;
   if (p.truceUntil > w.now || other.truceUntil > w.now) return LINES.TRUCE_ACTIVE;
-  if (!p.flagged || !other.flagged) return LINES.PVP_FLAG_REQUIRED;
+  if (!p.flagged) return LINES.PVP_FLAG_REQUIRED;
+  if (!other.flagged) return LINES.PVP_OTHER_UNFLAGGED; // V would lower this body's own flag: the instruction is for the other
   if (!duelWreckageFor(w, p, other)) return DUEL_WHERE;
   if (liveDuel(p, w.now) || liveDuel(other, w.now)) return DUEL_BUSY;
   return null;

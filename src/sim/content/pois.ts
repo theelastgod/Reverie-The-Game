@@ -593,7 +593,7 @@ const WET: PoiConfig[] = [
         guest: "allow",
         say: ctx => (ctx.p.guest
           ? "A wet street. Painted on the kerb: opt in, seconds, spoils from people. You are not flagged. You are not spoils."
-          : "A wet street. Painted on the kerb: opt in, seconds, spoils from people, not from the street. Press V to flag. Unbanked and copies drop. Cult and banked stay. Guests are not loot. In meltdown weather the street flags itself."),
+          : `A wet street. Painted on the kerb: opt in, seconds, spoils from people, not from the street. ${ctx.p.flagged ? "You are flagged. Press V to lower it." : "Press V to flag."} Unbanked and copies drop. Cult and banked stay. Guests are not loot. In meltdown weather the street flags itself.`),
       },
     ],
   },

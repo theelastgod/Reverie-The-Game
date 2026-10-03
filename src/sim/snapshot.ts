@@ -177,6 +177,15 @@ export function promptFor(ctx: Ctx, npcs: readonly NpcPlace[] = npcStatesFor(ctx
   }
 
   if (found.length > 1) found.sort((a, b) => a.d - b.d); // stable: at one distance the kind gathered first stands
+  // A ruin duel offered to this body is answered with F, as its notice says, even when the wreckage it is fought over is nearer
+  // (whose own F buries it, and the duel with it): the offerer's prompt comes first while it can still be answered.
+  for (const c of found) {
+    if (c.targetKind !== "player") continue;
+    const duel = w.players.get(c.targetId)?.duel;
+    if (!duel || duel.with !== p.id || duel.accepted || duel.until <= w.now) continue;
+    const verbs = c.verbs();
+    if (verbs.some(v => v.choice === "duel")) return { targetId: c.targetId, targetKind: c.targetKind, name: typeof c.name === "function" ? c.name(ctx) : c.name, verbs };
+  }
   for (const c of found) {
     const verbs = c.verbs();
     if (verbs.length === 0) continue;

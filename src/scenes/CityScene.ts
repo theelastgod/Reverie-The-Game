@@ -16,7 +16,8 @@ import { audio } from "../audio/bus";
 import { VOLUME_STEP } from "../audio/settings";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
-import { browserOwns, escapeDoes, hudControlFocused } from "../ui/keys";
+import { browserOwns, escapeDoes, hudControlFocused, paperToUse } from "../ui/keys";
+import { MAX_HP } from "../sim/constants";
 import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, secondFinger, stickIntent } from "../ui/stick";
 
 const IDLE: Intent = { up: false, down: false, left: false, right: false };
@@ -161,17 +162,16 @@ export class CityScene extends Phaser.Scene {
     };
   }
 
-  /** I: use the first paper item (insurance / repair). */
+  /** I: use the paper that would do something (insurance while uninsured, repair while hurt); see ../ui/keys.ts paperToUse. */
   private useFirstPaper(): void {
     const you = this.net.you;
     if (!you) return;
-    for (const item of you.items) {
-      if (item.kind === "paper" && item.qty > 0) {
-        this.net.use(item.id);
-        return;
-      }
+    const id = paperToUse(you, MAX_HP);
+    if (id) {
+      this.net.use(id);
+      return;
     }
-    bus.hud?.flash("No paper to use.", "ink");
+    bus.hud?.flash(you.items.some(i => i.kind === "paper" && i.qty > 0) ? "Nothing to mend. The paper keeps." : "No paper to use.", "ink");
   }
 
   /** F / E / Q: the prompt verb for that key; F talks when the target is an NPC. */

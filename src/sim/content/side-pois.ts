@@ -21,6 +21,10 @@ const live = (ctx: Ctx, v: PoiVerb): boolean => !(v.once && (ctx.p.flags[v.once]
 
 /** The spine decides this hour's tithe at the tax window on E and Q; the hours' verbs there wait for that. */
 const tithed = ({ p }: Ctx): boolean => has(p, F.TITHE);
+/** The tax hour under way (read, then pay): it holds E at the window until it is done. */
+const taxing = (p: Ctx["p"]): boolean => { const s = stepOf(p, SQ.TAX); return s !== undefined && s < 2; };
+/** The spine's "A prior hour" (the care shrine's Q, pois.ts history): a body with a mark in the Care has not yet faced it. */
+const historyPending = (w: Ctx["w"], p: Ctx["p"]): boolean => p.serial !== null && w.history.some(m => m.serial === p.serial) && !has(p, F.HISTORY);
 
 /** Same-key verbs on one POI show one at a time, in the order written. */
 function exclusive(verbs: PoiVerb[]): PoiVerb[] {
@@ -128,14 +132,16 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
       say: "You pay the fee the seller paid and the copy comes down. The price stays up where the hole was priced; a price is not a copy. Somewhere on the Grid, Quill feels the space.",
     },
   ]),
+  // F, not Q: the tray's Q is the spine's spot, live for every body that talked to Quill; for a body that pulled the print the
+  // tray's only F is its look, so the hour hides nothing it needs (the key audit, 2026-10-03)
   "forge-tray": exclusive([
     {
-      key: "Q", label: "Bank the coals", choice: "side:tray:bank",
+      key: "F", label: "Bank the coals", choice: "side:tray:bank",
       when: atStep(SQ.TRAY, 0), guest: "deny", once: SF.TRAY_BANKED, cost: { bestand: FORGE_COST, sink: "forge" },
       say: "You rake the coals to the back of the tray and cover them. The print that was not a print stays warm. It has nowhere else to go.",
     },
     {
-      key: "Q", label: "Take the spotted hint", choice: "side:tray:take",
+      key: "F", label: "Take the spotted hint", choice: "side:tray:take",
       when: atStep(SQ.TRAY, 1), guest: "deny", once: SF.TRAY_TAKEN,
       say: "Paper with a hint on it that no press made. No margin. You spotted it. It is yours the way a grave is yours.",
     },
@@ -174,7 +180,7 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
   "care-shrine": [
     {
       key: "Q", label: "Enter the burial in the book", choice: "side:standing:enter",
-      when: atStep(SQ.STANDING, 1), guest: "spectate", once: SF.STANDING_ENTERED,
+      when: both(atStep(SQ.STANDING, 1), ({ w, p }) => !historyPending(w, p)), guest: "spectate", once: SF.STANDING_ENTERED,
       say: "The shrine keeps the Mortals book. You write 'paid' and a number. The House will count it.",
     },
   ],
@@ -186,15 +192,16 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
         ? "The plot you buried under a name. The number under the name is twelve. Went under during a freeze. The Passing that season failed. It was Corvin Slate's brother."
         : "A plot with a number. Twelve. Went under during a freeze. The Passing that season failed. No plate. No name. That is his brother."),
     },
-    {
-      key: "E", label: "Bury twelve under a name", choice: "side:twelve:bury",
-      when: atStep(SQ.TWELVE, 1), guest: "spectate", once: SF.TWELVE_BURIED, cost: { bestand: FUNERAL_COST, sink: "funeral" },
-      say: "You put the plate in the ground with the number turned down. The earth closes. A number is not a grave. This is.",
-    },
+    // the free verbs first: the paid burial cannot hide another hour's handful from a purse short of the funeral
     {
       key: "E", label: "Take a handful of the garden", choice: "side:seed:take",
       when: atStep(SQ.SEED, 0), guest: "spectate", once: SF.SEED_EARTH,
       say: "Garden earth. It was a hole in the first hour. It was wreckage in the third. It is dirt now. Dirt is the good outcome.",
+    },
+    {
+      key: "E", label: "Bury twelve under a name", choice: "side:twelve:bury",
+      when: atStep(SQ.TWELVE, 1), guest: "spectate", once: SF.TWELVE_BURIED, cost: { bestand: FUNERAL_COST, sink: "funeral" },
+      say: "You put the plate in the ground with the number turned down. The earth closes. A number is not a grave. This is.",
     },
   ]),
 
@@ -202,7 +209,8 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
   "tax-window": exclusive([
     {
       key: "E", label: "File Form 9", choice: "side:form9:file",
-      when: both(atStep(SQ.FORM9, 1), tithed), guest: "spectate", once: SF.FORM9_FILED, cost: { bestand: 5, sink: "freeze" },
+      // E at the window is the tax hour's while it runs (its read and its pay); filing waits for it, refusing stays on Q
+      when: both(atStep(SQ.FORM9, 1), tithed, ({ p }) => !taxing(p)), guest: "spectate", once: SF.FORM9_FILED, cost: { bestand: 5, sink: "freeze" },
       effects: [{ kind: "choice", key: SC.FORM9, value: "filed" }],
       say: "Five Bestand. Stamped. The freeze you signed is on paper now. Paper holds longer than weather.",
     },

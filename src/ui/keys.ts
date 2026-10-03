@@ -45,3 +45,19 @@ export function focusAfterClose(active: Element | null, opener: Element | null, 
   if (opener && opener !== hud && opener.isConnected && hud.contains(opener) && !panel.contains(opener)) return "opener";
   return "blur";
 }
+
+/** The two papers the I key uses (economy.ts ITEM_INSURANCE, ITEM_REPAIR; keys.test.ts holds them equal). */
+export const PAPER_INSURANCE = "paper:insurance";
+export const PAPER_REPAIR = "paper:repair";
+
+/**
+ * Which paper I uses: the first in the purse that would do something (insurance while uninsured, repair while hurt),
+ * else an insurance paper, which the server refuses and keeps ("It is already done."), else none: a repair paper at
+ * full health would be spent for nothing, so it stays in the purse.
+ */
+export function paperToUse(you: { items: readonly { id: string; kind: string; qty: number }[]; insured: boolean; hp: number }, maxHp: number): string | null {
+  const papers = you.items.filter(i => i.kind === "paper" && i.qty > 0);
+  const useful = papers.find(i => (i.id === PAPER_INSURANCE && !you.insured) || (i.id === PAPER_REPAIR && you.hp < maxHp));
+  if (useful) return useful.id;
+  return papers.find(i => i.id !== PAPER_REPAIR)?.id ?? null;
+}

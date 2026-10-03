@@ -29,6 +29,8 @@ export const GUEST_GRIEF = "A guest is not a spoils path. The server will not st
 export const TRUCE_ACTIVE = "The truce holds. Neither side can strike or raise a flag yet.";
 export const PRACTICE_SAFE = "Practice ground. Strike the dummy; people are safe here.";
 export const PVP_FLAG_REQUIRED = "Both Angels must flag. Press V on a wet street to enter.";
+/** Said to a flagged Angel whose mark has not flagged: V would lower their own flag, so the line names the other body. */
+export const PVP_OTHER_UNFLAGGED = "They have not flagged. A strike needs both.";
 export const FLAG_GUEST = "A wet street. You are not flagged. You are not spoils.";
 export const FLAG_WHERE = "Not here. Flags are raised on the Wet Grid, in the Organs, in the Clearing.";
 export const FLAG_ON = "You flagged. Spoils are unbanked Bestand and exhibition copies. Cult and banked stay. Guests are not loot.";

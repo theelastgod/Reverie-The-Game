@@ -42,6 +42,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 - The going-under, for an Angel: **The ground takes you the way it takes anyone. You wake in the Care.** *(shipped, `effects.ts` ANGEL_UNDER, the line that plays; `lines.ts` exports an older ANGEL_UNDER, "The Care is open. You go under as death, not as a cutscene. Guests stop here.", which nothing reads)*
 - A fall, anyone's: **{name} did their job.** *(shipped, `combat.ts` DEATH_BY; the clerks, the wardens, the cold desks and the Runner are people doing jobs, and the line is the same when the job finishes you)*
 - The waking hint, the first of an Angel's life, in the Care: ✦ *They have your name. You went under where the book could not follow. It will follow now.* *(shipped, WAKING_WINK; Movement II's start)*
+- A strike or a ruin duel between Angels who have not both flagged: to the one who has not, **Both Angels must flag. Press V on a wet street to enter.** *(shipped, `lines.ts` PVP_FLAG_REQUIRED)*; to the one who has, whose V would lower their own flag, **They have not flagged. A strike needs both.** *(shipped since the key audit, `lines.ts` PVP_OTHER_UNFLAGGED)*
 - The Runner's fall: **The Runner drops. A folded slip: the Office of Safety's number for this hour, on the Concern's paper, sealed for the funeral street. It is in your coat now.** *(shipped, FALL_LINES.bulletin)*
 
 
@@ -1207,6 +1208,7 @@ The paper panel, the gold mark:
 
 **THE STREET** — the hot street, `read the street` F (shipped, pois.ts), once the pull has made it hot
 > A wet street. Painted on the kerb: opt in, seconds, spoils from people, not from the street. Press V to flag. Unbanked and copies drop. Cult and banked stay. Guests are not loot. In meltdown weather the street flags itself.
+> *To a body already flagged (shipped since the key audit), in place of "Press V to flag.":* You are flagged. Press V to lower it.
 
 ---
 
@@ -1320,6 +1322,7 @@ The paper panel, the gold mark:
 > *Under 60:* Readiness {readiness}. The floor is 60. You are short, and I will say so now rather than after: the hours you did not take, the nodes you did not keep, the freeze you signed or did not. It is not a sin. It is a number.
 > Then the weather. The weather at {weather}. *At 91 or past:* At ninety-one a hole holds only as long as bodies stand in it. Then the bodies: {bodies} in the ring. *At 91 or past, fewer than two:* Fewer than 2 and nothing passes, whatever you are.
 > I will stand in it either way. Press F at the ring and keep the ground; then E to keep the hole or Q to take it. Then the hour, or not.
+> *Before the party is decided at Ord's gate, between "either way." and "Press F" (shipped since the key audit; the ring takes the ground only after the gate):* Ord has the ledger open at the Care gate. Tell him who stands in it first.
 ✦ *A sexton reads the ground before the funeral, not after. She is telling you the depth.*
 [F.BRINK; → `lid` once, if the garden is in the ground]
 
@@ -1431,6 +1434,7 @@ The paper panel, the gold mark:
 
 **THE HOT STREET** — read, flagged by the window (shipped line, pois.ts; the state set by the launch)
 > A wet street. Painted on the kerb: opt in, seconds, spoils from people, not from the street. Press V to flag. Unbanked and copies drop. Cult and banked stay. Guests are not loot. In meltdown weather the street flags itself.
+> *To a body already flagged (shipped since the key audit), in place of "Press V to flag.":* You are flagged. Press V to lower it.
 [world window (shipped since Phase C, the launch and its remainder; the mast is the van's look): the hot street hot (until the window's close, which cools it, whoever made it hot, since Phase C, the cool-down; nothing is said, the street's label is the notice); at 91 the Grid flags itself by its own rule; the listing's buyer named; the cable enforcer at the Cable's node; the vans at the Grid's edge and the oval on a mast; all but the vans skipped past the dark-light threshold; news (shipped since Phase C, the launch): "The launch. The Concern stopped selling. The weather is climbing on every meter." / dark: "The vans are on the Grid. The glass had no hour to give them."]
 
 ### IV.6 The recorders
@@ -1857,11 +1861,11 @@ The paper panel, the gold mark:
 ### side-wet-tray-warm — The tray stays warm
 *Movement III, the Wet Grid. Angels who spotted the copies at the forge (III.8); Quill's tray, banked, then the sheet on it. Plate `plate-forge.jpg`. Changes a cult object: a hint that does not list. Sink: the forge.*
 
-**THE TRAY** — `forge-tray` bank the coals, `side:tray:bank` (shipped; side-pois.ts; costs the forge, sink forge)
+**THE TRAY** — `forge-tray` bank the coals, `side:tray:bank` (shipped; side-pois.ts; costs the forge, sink forge; on F since the key audit, so the tray's Q stays the spine's spot)
 > You rake the coals to the back of the tray and cover them. The print that was not a print stays warm. It has nowhere else to go.
 [poi `forge-tray` warm; news "Someone banked the forge tray. The print that was not a print stays warm."]
 
-**THE TRAY** — `forge-tray` take the spotted hint, `side:tray:take` (shipped since Phase D, the side hours; side-pois.ts)
+**THE TRAY** — `forge-tray` take the spotted hint, `side:tray:take` (shipped since Phase D, the side hours; side-pois.ts; on F since the key audit)
 > Paper with a hint on it that no press made. No margin. You spotted it. It is yours the way a grave is yours.
 ✦ *You kept the eye. The cult hint does not list. Copies will not open the hole.* (shipped; side.ts)
 [cult: A hint that does not list]
@@ -1926,7 +1930,7 @@ The paper panel, the gold mark:
 > You pay for a funeral nobody claimed. The desk writes 'paid' where the name would go.
 [SF.STANDING_FUNERAL]
 
-**THE SHRINE** — `care-shrine` enter the burial in the book, `side:standing:enter` (shipped; side-pois.ts)
+**THE SHRINE** — `care-shrine` enter the burial in the book, `side:standing:enter` (shipped; side-pois.ts; since the key audit it waits while a marked body has the spine's history to face, which holds the shrine's Q)
 > The shrine keeps the Mortals book. You write 'paid' and a number. The House will count it.
 ✦ *Standing is a name on a dead line. It will never make you hit harder. That is what makes it standing.* (shipped; side.ts)
 [Mortals +2; news "A funeral nobody claimed was entered at the Mortals hall. The House stands taller."]
@@ -1957,7 +1961,7 @@ The paper panel, the gold mark:
 ✦ *You bought time. You spent a god. Form 9 is the receipt.* (shipped)
 [SF.FORM9_ASKED]
 
-**THE WINDOW** — `tax-window` file Form 9, `side:form9:file` (shipped; side-pois.ts; five Bestand, sink freeze)
+**THE WINDOW** — `tax-window` file Form 9, `side:form9:file` (shipped; side-pois.ts; five Bestand, sink freeze; since the key audit it waits while the tax hour is under way, which holds the window's E; the refusal stays on Q)
 > Five Bestand. Stamped. The freeze you signed is on paper now. Paper holds longer than weather.
 ✦ *You bought time. You spent a god. The hour does not forgive the signature. Form 9 does not ask it to.* (shipped; side.ts)
 [SC.FORM9 filed; poi `safety-desk` frozen; SW.FORM9_FILED; news "Form 9 was filed. The freeze is on paper now. Paper holds longer than weather."]
@@ -1992,7 +1996,7 @@ The paper panel, the gold mark:
 ### side-annex-tax-is-climate — The tax is climate
 *Movement II, the Safety Annex. Angels with a House, once this hour's tithe is decided; the tax window, twice. Plate `safety-annex.jpg`. Changes a standing: your House. Sink: the tax.*
 
-**THE WINDOW** — `tax-window` read who pays, `side:tax:read` (shipped since Phase D, the side hours; side-pois.ts: the city's word for the weather)
+**THE WINDOW** — `tax-window` read who pays, `side:tax:read` (shipped since Phase D, the side hours; side-pois.ts: the city's word for the weather; since the key audit the hour does not begin while a Form 9 waits at this window)
 > Tax: {rate} percent on every yield. Payers: nobody, by name. The rate is the weather. The weather is everyone, added up.
 [SF.TAX_READ]
 
@@ -2277,7 +2281,7 @@ The paper panel, the gold mark:
 - ▸ "I will take a handful."
 [offer `side-clearing-seed`]
 
-**THE GARDEN** — `wreckage-garden` take a handful of the garden, `side:seed:take` (shipped; side-pois.ts)
+**THE GARDEN** — `wreckage-garden` take a handful of the garden, `side:seed:take` (shipped; side-pois.ts; ahead of twelve's paid burial on E since the key audit)
 > Garden earth. It was a hole in the first hour. It was wreckage in the third. It is dirt now. Dirt is the good outcome.
 [SF.SEED_EARTH]
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { browserOwns, escapeDoes, focusAfterClose, hudControlFocused } from "./keys";
+import { PAPER_INSURANCE, PAPER_REPAIR, browserOwns, escapeDoes, focusAfterClose, hudControlFocused, paperToUse } from "./keys";
+import { ITEM_INSURANCE, ITEM_REPAIR } from "../sim/economy";
 
 /** A fake element: what it matches, whom it contains, and whether it is still in the document. */
 function el(selectorsMatched: string[], children: object[] = [], isConnected = true) {
@@ -87,5 +88,27 @@ describe("focusAfterClose", () => {
     expect(focusAfterClose(asEl(panel), asEl(hud), asEl(panel), asEl(hud))).toBe("blur");
     expect(focusAfterClose(asEl(choice), asEl(panel), asEl(panel), asEl(hud))).toBe("blur");
     expect(focusAfterClose(asEl(panel), asEl(gone), asEl(panel), asEl(hud))).toBe("blur");
+  });
+});
+
+describe("paperToUse (the I key)", () => {
+  const insurance = { id: PAPER_INSURANCE, kind: "paper", qty: 1 };
+  const repair = { id: PAPER_REPAIR, kind: "paper", qty: 1 };
+  it("names the same papers the economy does", () => {
+    expect(PAPER_INSURANCE).toBe(ITEM_INSURANCE);
+    expect(PAPER_REPAIR).toBe(ITEM_REPAIR);
+  });
+  it("uses the paper that would do something, in the purse's order", () => {
+    // insured already, hurt: the repair paper, though the insurance paper comes first in the purse
+    expect(paperToUse({ items: [insurance, repair], insured: true, hp: 40 }, 100)).toBe(PAPER_REPAIR);
+    // whole and uninsured: the insurance paper, though the repair paper is older
+    expect(paperToUse({ items: [repair, insurance], insured: false, hp: 100 }, 100)).toBe(PAPER_INSURANCE);
+    // both would do something: the purse's order
+    expect(paperToUse({ items: [repair, insurance], insured: false, hp: 40 }, 100)).toBe(PAPER_REPAIR);
+  });
+  it("never spends a repair paper on a whole body; an insurance paper already held is refused and kept by the server", () => {
+    expect(paperToUse({ items: [repair], insured: false, hp: 100 }, 100)).toBeNull();
+    expect(paperToUse({ items: [insurance, repair], insured: true, hp: 100 }, 100)).toBe(PAPER_INSURANCE);
+    expect(paperToUse({ items: [{ id: "copy:wink", kind: "exhibition", qty: 1 }], insured: false, hp: 40 }, 100)).toBeNull();
   });
 });

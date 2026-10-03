@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 591 tests (2026-10-03), the session smoke, the campaign smoke and the
+  fresh world; 601 tests (2026-10-03), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -1987,6 +1987,32 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   funeral, and the cult upkeep's three shrines. SCRIPT.md's legend now
   defines every placeholder the script uses.
 
+- The key audit (2026-10-03, night): every key a character, a place,
+  a notice or the HUD tells a player to press, checked against what the
+  key reaches in the state the line is heard in, and every place where
+  one live verb hides another on the same key (the prompt offers the
+  first live verb per key, a place's side verbs first); a skeptic
+  confirmed all eight findings, all fixed. Spoken: Nara at the brink
+  said "Press F at the ring" before the party was chosen at Ord's gate,
+  where the ring only looks; she now sends you to Ord first (a new
+  clause, in SCRIPT.md). A ruin duel's "F answers it" pressed F on the
+  nearer wreckage and buried the duel's ground; an offer to you now
+  leads the prompt. "Press I to use it" used the first paper, so an
+  insured body could never use its repair paper; I now uses the paper
+  that would do something and never spends repair on a whole body. A
+  flagged body was told "Press V to flag" by the street and the strike,
+  and V lowered its flag; it now hears "You are flagged. Press V to
+  lower it." and "They have not flagged. A strike needs both."
+  Hidden: the tax hour's E behind Form 9's paid filing (a purse under 5
+  was stuck), the garden's free handful behind twelve's paid burial, the
+  tray's spine "spot" behind the warm tray's paid banking for the whole
+  hour, and the spine's "A prior hour" behind the standing hour's entry
+  at the care shrine. Now the tax hour does not begin while a Form 9
+  waits at the window and filing waits while the hour runs (refusing
+  stays on Q); the free handful comes first; the tray's hour is on F;
+  the standing entry waits for the history. `src/sim/keys.test.ts`
+  holds each case with real content.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -2944,6 +2970,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   from the staged page, entered past the title, at 1366×657, 360×640,
   375×553, 320×568 and 1920×969: the last line on the screen and clear
   of the hint at each, by End's scroll at 320×568.
+- The key audit (2026-10-03, night): typecheck, 601 tests in 44 files
+  (the new keys.test.ts: the brink before and after the gate, the duel
+  answered past a nearer wreckage, the flagged street and strike, the
+  tax hour and Form 9 in both orders, the garden, the tray, the shrine;
+  paperToUse in the HUD's keys tests; the fairness tests for both flag
+  lines), the build, the play build and the stage, and on a fresh local
+  world the session smoke, `test:campaign:4` (Movements I–IV) and the
+  render check.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

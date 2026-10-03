@@ -249,7 +249,9 @@ const NARA_NODES: Record<string, DialogueNode> = {
       const bodies = ctx.w.clearing.heldBy.length;
       const meltdown = g >= GESTELL_MELTDOWN;
       const weather = `Then the weather. The weather at ${g}.${meltdown ? " At ninety-one a hole holds only as long as bodies stand in it." : ""} Then the bodies: ${bodies} in the ring.${meltdown && bodies < CLEARING_HOLD_ANGELS ? ` Fewer than ${CLEARING_HOLD_ANGELS} and nothing passes, whatever you are.` : ""}`;
-      return `Nara Vale is at the ring before it is a ring. The asphalt is asphalt until somebody keeps it. She looks at you the way she looks at a plate. Three numbers. First, yours. ${read} ${weather} I will stand in it either way. Press F at the ring and keep the ground; then E to keep the hole or Q to take it. Then the hour, or not.`;
+      // the ring takes the ground only once the party is decided at Ord's gate (pois.ts, prepare): before that she sends you to him first
+      const gate = ctx.p.choices[C.PARTY] ? "" : "Ord has the ledger open at the Care gate. Tell him who stands in it first. ";
+      return `Nara Vale is at the ring before it is a ring. The asphalt is asphalt until somebody keeps it. She looks at you the way she looks at a plate. Three numbers. First, yours. ${read} ${weather} I will stand in it either way. ${gate}Press F at the ring and keep the ground; then E to keep the hole or Q to take it. Then the hour, or not.`;
     },
     wink: "A sexton reads the ground before the funeral, not after. She is telling you the depth.",
     effects: [{ kind: "flag", key: F.BRINK }],

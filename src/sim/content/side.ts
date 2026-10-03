@@ -510,7 +510,7 @@ const WET: Quest[] = [
       step({
         id: "bank",
         title: "Bank the coals",
-        detail: "Quill's tray goes cold between prints. Press Q to bank the coals so the spotted hint keeps.",
+        detail: "Quill's tray goes cold between prints. Press F to bank the coals so the spotted hint keeps.",
         target: "forge-tray",
         plate: "plate-forge.jpg",
         // Your own hands on the coals, not the shared tray: a warm tray someone else banked does not do this hour for you.
@@ -520,7 +520,7 @@ const WET: Quest[] = [
       step({
         id: "take",
         title: "Take the hint that does not list",
-        detail: "It is on the tray. Press Q. It will not go to market because it cannot.",
+        detail: "It is on the tray. Press F. It will not go to market because it cannot.",
         target: "forge-tray",
         plate: "plate-forge.jpg",
         done: ({ p }) => has(p, SF.TRAY_TAKEN),
@@ -803,7 +803,9 @@ const ANNEX: Quest[] = [
     guestLegal: false,
     changes: "standing",
     // The hour opens once the spine's own tithe is decided: its E verbs share the window with "Pay this hour's tithe".
-    available: ({ p }) => angel(p) && p.house !== "" && has(p, F.TITHE),
+    // A body that signed the freeze and holds Form 9 at the same window files or refuses it first: the two hours would share E there,
+    // and Form 9's costs 5 (the key audit, 2026-10-03).
+    available: ({ p }) => angel(p) && p.house !== "" && has(p, F.TITHE) && (stepOf(p, SQ.FORM9) ?? 0) !== 1,
     steps: [
       step({
         id: "read",

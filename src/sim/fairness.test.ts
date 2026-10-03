@@ -12,6 +12,7 @@ vi.mock("./content/lines", () => ({
   TRUCE_ACTIVE: "The truce holds.",
   PRACTICE_SAFE: "Practice ground. People are safe here.",
   PVP_FLAG_REQUIRED: "Both Angels must flag.",
+  PVP_OTHER_UNFLAGGED: "They have not flagged.",
   FLAG_GUEST: "A guest does not flag.",
   FLAG_WHERE: "Not on this street.",
   FLAG_ON: "You flagged.",
@@ -169,8 +170,10 @@ describe("PvP consent", () => {
   it("needs both flags", () => {
     const one = faceOff(angel("a", 1, { flagged: true }), angel("b", 2));
     expect(hp(applyStrike(one, "a"), "b")).toBe(MAX_HP);
-    expect(applyStrike(one, "a").players.get("a")!.heard).toBe("Both Angels must flag.");
+    // the flagged one is told about the other (V would lower their own flag); the unflagged one is told to flag
+    expect(applyStrike(one, "a").players.get("a")!.heard).toBe("They have not flagged.");
     expect(hp(applyStrike(one, "b"), "a")).toBe(MAX_HP);
+    expect(applyStrike(one, "b").players.get("b")!.heard).toBe("Both Angels must flag.");
     const both = faceOff(angel("a", 1, { flagged: true }), angel("b", 2, { flagged: true }));
     expect(hp(applyStrike(both, "a"), "b")).toBe(MAX_HP - STRIKE_DAMAGE);
     expect(hp(applyStrike(both, "b"), "a")).toBe(MAX_HP - STRIKE_DAMAGE);
@@ -364,7 +367,8 @@ describe("ruin duels", () => {
   it("needs both flags, no truce and no guest", () => {
     let w = faceOff(angel("a", 1, { flagged: true }), angel("b", 2));
     w = { ...w, wreckage: [grave(w)] };
-    expect(applyDuel(w, "a", "b").players.get("a")!.heard).toBe("Both Angels must flag.");
+    expect(applyDuel(w, "a", "b").players.get("a")!.heard, "a flagged offerer is told about the other").toBe("They have not flagged.");
+    expect(applyDuel(w, "b", "a").players.get("b")!.heard, "the unflagged one is told to flag").toBe("Both Angels must flag.");
     const g = put(w, { ...spawnGuest("g"), x: RING.x + 15, y: RING.y, district: "clearing" });
     expect(applyDuel(g, "a", "g").players.get("a")!.heard).toBe("Guests are not loot.");
   });

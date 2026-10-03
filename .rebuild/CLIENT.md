@@ -64,6 +64,8 @@ under the mark at mount through `format.ts` `creditRows`, the game's name as a
 title and every other line as `.credits-prose`; under reduced motion the roll
 stands still and the focused dialog scrolls it, the hint pinned clear of the last line).
 
+- The I key uses the paper that would do something (`src/ui/keys.ts` `paperToUse`): insurance while uninsured, repair while hurt, in the purse's order; else an insurance paper (the server refuses and keeps it); a repair paper is never spent on a whole body ("Nothing to mend. The paper keeps.").
+
 ## Rendering rules (D1)
 - District floors: one `TileSprite` per district rect and one per floor patch
   (patches drawn above the district floor), textures from `FLOOR_FILES`. Walls:
