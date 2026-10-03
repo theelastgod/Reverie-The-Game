@@ -477,7 +477,7 @@ const WET: Quest[] = [
       step({
         id: "two",
         title: "Pay two stalls in your House's name",
-        detail: "Stalls one and two. Press E at each to pay the listing fee under your House.",
+        detail: "Stalls one and two. Press Q at each to pay the listing fee under your House.",
         target: ({ p }) => (has(p, SF.FEE_1) ? "stall-2" : "stall-1"),
         plate: "stall-surface.jpg",
         done: ({ p }) => has(p, SF.FEE_1) && has(p, SF.FEE_2),
@@ -485,7 +485,7 @@ const WET: Quest[] = [
       step({
         id: "four",
         title: "Pay the other two",
-        detail: "Stalls three and four. Press E at each. Four stalls carry one name.",
+        detail: "Stalls three and four. Press Q at each. Four stalls carry one name.",
         target: ({ p }) => (has(p, SF.FEE_3) ? "stall-4" : "stall-3"),
         plate: "stall-surface.jpg",
         done: ({ p }) => has(p, SF.FEE_3) && has(p, SF.FEE_4),
@@ -1322,7 +1322,7 @@ const ORGANS: Quest[] = [
       step({
         id: "strait",
         title: "Read what the Strait was",
-        detail: "Press E at the Strait. The second column is on the back of the plaque.",
+        detail: "Press Q at the Strait. The second column is on the back of the plaque.",
         target: "organ-strait",
         plate: "plate-m3.jpg",
         done: ({ p }) => has(p, SF.COLUMN_STRAIT),

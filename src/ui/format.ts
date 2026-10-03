@@ -299,3 +299,11 @@ export function glassRows(glass: GlassView | null | undefined, now: number): { l
   const dark = glass.launch === "no date" ? ` · ${glass.dark} lights out on the Kerb` : "";
   return { launch: `The launch: ${glass.launch}${count}${dark}`, figures: `The city's figure: ${glass.figure} · In the hole: ${glass.hole}` };
 }
+
+/**
+ * The credits' rows (IV.8), from the script's roll (LINES.CREDITS): the game's name set large as a title, every other
+ * line as prose under it, so the roll the player sees is the script's and cannot drift from it.
+ */
+export function creditRows(lines: readonly string[]): { text: string; title: boolean }[] {
+  return lines.map(text => ({ text, title: text === text.toUpperCase() }));
+}

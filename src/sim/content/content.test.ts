@@ -337,13 +337,27 @@ describe("POI configs", () => {
     const claimedCtx = withFlags({ [F.HIJACKED_COLD]: 1, [F.HIJACKED_SAFETY]: 0, [F.HIJACK_TRACE]: 0 });
     expect(effectsOf("crt-altar-1", claimedCtx).map(e => e.kind)).toEqual(["poi"]);
     expect(effectsOf("crt-altar-2", claimedCtx)).toEqual([]);
-    const unmarked = CTXS.find(c => c.name === "angel after appearance")!.ctx;
+    const unmarked = CTXS.find(c => c.name === "angel M4 lastword prepared")!.ctx;
     expect(effectsOf("crt-altar-1", unmarked).map(e => e.kind)).toEqual(["wink", "poi"]);
     expect(effectsOf("crt-altar-2", unmarked).map(e => e.kind)).toEqual(["wink"]);
-    // every other body sees the catalog as it always played
-    for (const name of ["angel after appearance", "angel after absence", "angel after failed", "guest fresh", "angel 7777 M2 fresh"]) {
+    // every body before the credits sees the catalog as it always played
+    for (const name of ["angel M4 lastword prepared", "guest fresh", "angel 7777 M2 fresh"]) {
       expect(watch("crt-altar-2", CTXS.find(c => c.name === name)!.ctx), name).toContain("The kneelers call it a reverie.");
     }
+    // after the credits (IV.8) the altars play someone's sky, with no Wink about the room or the catalog
+    const AFTER = "The altar plays. Ninety seconds of someone's sky, a bell, a serial in the margin. People kneel. The tubes are warm.";
+    for (const name of ["angel after appearance", "angel after absence", "angel after failed"]) {
+      const ctx = CTXS.find(c => c.name === name)!.ctx;
+      expect(watch("crt-altar-1", ctx), name).toBe(AFTER);
+      expect(watch("crt-altar-2", ctx), name).toBe(AFTER);
+      expect(effectsOf("crt-altar-1", ctx).map(e => e.kind), name).toEqual(["poi"]);
+      expect(effectsOf("crt-altar-2", ctx), name).toEqual([]);
+    }
+    // this season's Absence (IV.7): the empty sky the rite made, for the bodies who stood in it; a later season's catalog again
+    const absent = CTXS.find(c => c.name === "angel after absence")!.ctx;
+    const thisSeason = { ...absent, p: { ...absent.p, flags: { ...absent.p.flags, [seasonPassingFlag(absent.w.season.id)]: 1 } } };
+    expect(watch("crt-altar-2", thisSeason)).toBe("Ninety seconds of an empty sky through an oval, with a margin, and the tag in the corner. People kneel.");
+    expect(effectsOf("crt-altar-2", thisSeason)).toEqual([]);
     // Nara: an Absence keeps her at the ring, through the credits; a trace or a claim sends her home
     const ring = POSITIONS["station:nara-clearing"];
     expect(NPCS.nara.personal!(CTXS.find(c => c.name === "angel after absence")!.ctx, SHARED_NPC)).toMatchObject({ x: ring.x, y: ring.y, state: "clearing" });
@@ -428,8 +442,12 @@ describe("dialogue", () => {
     expect(def.entry(CTXS.find(c => c.name === "angel M4 nara gone")!.ctx), "the hour sold at the desk").toBe("lip-sold");
     for (const outcome of ["appearance", "absence", "hijack", "failed"]) {
       const after = CTXS.find(c => c.name === `angel after ${outcome}`)!.ctx;
-      expect(def.entry({ ...after, p: { ...after.p, flags: { ...after.p.flags, [seasonPassingFlag(after.w.season.id)]: 1 } } })).toBe(`lip-${outcome}`);
+      // the Appearance opens on the crew in the van (IV.7), the Absence through the mast's oval; each continues to his word on the lip
+      const entry = outcome === "appearance" ? "lip-crew" : outcome === "absence" ? "oval-absence" : `lip-${outcome}`;
+      expect(def.entry({ ...after, p: { ...after.p, flags: { ...after.p.flags, [seasonPassingFlag(after.w.season.id)]: 1 } } })).toBe(entry);
     }
+    expect(def.nodes["lip-crew"].next).toBe("lip-appearance");
+    expect(def.nodes["oval-absence"].next).toBe("lip-absence");
     // a guest who walks the Grid finds him on the lip, with his own line and no serial
     const guestOnTheGrid = { ...far, p: { ...far.p, district: "wet" as const } };
     expect(def.personal!(guestOnTheGrid, shared)).toMatchObject({ x: lip.x, y: lip.y, state: "lip" });
@@ -747,6 +765,25 @@ describe("lines", () => {
   });
 });
 
+describe("the spine's steps", () => {
+  it("name, where they send the body to a place, a key that place answers to", () => {
+    const misses: string[] = [];
+    for (const q of SPINE) {
+      for (const s of q.steps) {
+        for (const { ctx } of CTXS) {
+          const target = typeof s.target === "function" ? s.target(ctx) : s.target;
+          const verbs = [...(POI_CONFIGS[target ?? ""]?.verbs ?? []), ...(SIDE_POI_VERBS[target ?? ""] ?? [])];
+          const detail = typeof s.detail === "function" ? s.detail(ctx) : s.detail;
+          const key = detail.match(/press ([FEQ])\b/i)?.[1].toUpperCase();
+          if (!key || !verbs.length) continue; // a person, a fight, or a step that names no key
+          if (!verbs.some(v => v.key === key)) misses.push(`${q.id}/${s.id}: "Press ${key}" at ${target} (${[...new Set(verbs.map(v => v.key))].join("")})`);
+        }
+      }
+    }
+    expect([...new Set(misses)]).toEqual([]);
+  });
+});
+
 describe("the register", () => {
   it("contains no forbidden words in any string the content can produce", () => {
     const out: string[] = [];
@@ -772,5 +809,90 @@ describe("the register", () => {
     collectStrings(SPINE, out);
     collectStrings(LINES, out);
     for (const s of out) expect(/heidegger|benjamin|nietzsche|hegel|kant\b|plato|aristotle/i.test(s), s).toBe(false);
+  });
+});
+
+describe("the movements audit: the script's words where the code said otherwise", () => {
+  const ctxOf = (name: string): Ctx => CTXS.find(c => c.name === name)!.ctx;
+  const withFlags = (ctx: Ctx, flags: Record<string, number>, over: Partial<Player> = {}): Ctx => ({ ...ctx, p: { ...ctx.p, ...over, flags: { ...ctx.p.flags, ...flags } } });
+  const textOf = (npc: string, node: string, ctx: Ctx, defs: Record<string, { nodes: Record<string, { text: string | ((c: Ctx) => string) }> }> = NPCS): string => {
+    const t = defs[npc].nodes[node].text;
+    return typeof t === "function" ? t(ctx) : t;
+  };
+  const verbOf = (poi: string, choice: string): PoiVerb => POI_CONFIGS[poi].verbs.find(v => v.choice === choice)!;
+  const effectsOf = (poi: string, choice: string, ctx: Ctx): Effect[] => { const v = verbOf(poi, choice); return typeof v.effects === "function" ? v.effects(ctx) : v.effects ?? []; };
+  const sayOf = (poi: string, choice: string, ctx: Ctx): string => { const v = verbOf(poi, choice); return typeof v.say === "function" ? v.say(ctx) : v.say ?? ""; };
+  const withPoi = (ctx: Ctx, id: string, state: string, count = 1): Ctx => ({ ...ctx, w: { ...ctx.w, pois: { ...ctx.w.pois, [id]: { state, by: "x", at: 1, count } } } });
+
+  it("Vesper's desk is closed after the rite whatever was chosen at it, and the Foundry is read off the Organs, not a world flag (IV.7, III.2)", () => {
+    for (const outcome of ["appearance", "absence", "hijack", "failed"]) expect(NPCS.vesper.entry(ctxOf(`angel after ${outcome}`)), outcome).toBe("after");
+    const took = ctxOf("angel earth M2 take");
+    expect(NPCS.vesper.entry(took), "the Foundry dark on the Organs").toBe("foundry");
+    expect(NPCS.vesper.entry(withPoi(took, "organ-foundry", "lit")), "a stale world flag does not darken it").toBe("taken");
+  });
+
+  it("Ord holds the Strait from the map until the glass is faced, says the map there, and the way back across the desk is only in the room (III.4, III.7)", () => {
+    const m3 = ctxOf("angel divinities M3 refuse");
+    const mapped = withFlags(m3, { [F.FAILED]: 0, [F.FORGE]: 0, [F.CAUL_MET]: 1 });
+    expect(NPCS.ord.personal!(mapped, SHARED_NPC)).toMatchObject({ state: "strait", x: POSITIONS["station:ord-strait"].x });
+    expect(NPCS.ord.entry(mapped)).toBe("after-map");
+    expect(textOf("ord", "after-map", mapped)).toContain("The Foundry is dark.");
+    const lit = withPoi(withPoi(mapped, "organ-foundry", "lit"), "organ-strait", "paid");
+    expect(textOf("ord", "after-map", lit), "a stale world flag does not darken it").not.toContain("The Foundry is dark.");
+    expect(textOf("ord", "after-map", lit)).toContain("Face the glass; I will be behind it.");
+    const faced = withFlags(m3, { [F.FORGE]: 0, [F.CAUL_MET]: 1 });
+    expect(NPCS.ord.personal!(faced, SHARED_NPC)).toMatchObject({ state: "glass" });
+    const backs = (ctx: Ctx) => (NPCS.ord.nodes.figure.choices ?? []).filter(c => c.id.startsWith("back") && (!c.when || c.when(ctx))).map(c => c.id);
+    expect(backs(faced)).toEqual(["back"]);
+    expect(backs(withFlags(faced, { [F.CAUL_OFFER]: 1 }))).toEqual(["back-after"]);
+    expect(backs(mapped), "no desk to cross at the Strait").toEqual([]);
+  });
+
+  it("Quill: he asked you too, if you told him; and a print that sold is said before one in hand (III.8)", () => {
+    const m3 = ctxOf("angel divinities M3 refuse");
+    expect(textOf("quill", "forge-caul", m3)).toBe("He asked me once what a hint looked like. I told him. He wrote it down. Only time I've been quoted and not paid.");
+    expect(textOf("quill", "forge-caul", withFlags(m3, { [F.TOLD_CAUL]: 1 }))).toContain("He asked you too. Don't look like that. Everybody tells him. He has a way of holding the pen.");
+    const both = withFlags(m3, { "sold:copy:wink": 1 }, { items: [{ id: "copy:wink", kind: "exhibition", name: "Printed Wink", qty: 1, value: 1 }], choices: { ...m3.p.choices, [C.FORGE]: "sell" } });
+    expect(textOf("quill", "forge-after", both)).toMatch(/^It sold\./);
+  });
+
+  it("Ord writes the gate alone on the news (IV.2), and Caul's crew and his oval open the Appearance and the Absence (IV.7)", () => {
+    expect(NPCS.ord.nodes["gate-alone"].effects).toContainEqual({ kind: "news", text: "An Angel chose to stand alone in the Clearing. Ord counts from the gate." });
+    expect(NPCS.caul.nodes["lip-crew"].text).toBe("At the van beside the lip, to the crew: \"Play it again.\" The crew, in the van, rewinding: \"There is nothing on it.\" \"Then sell that.\"");
+    expect(NPCS.caul.nodes["oval-absence"].text).toBe("Through the mast's oval, after a while: \"Absence has a margin too.\"");
+  });
+
+  it("Corvin Slate after the rite: the form Safety claimed the hour on, or the plaque's words at the Annex (IV.7)", () => {
+    const after = withFlags(ctxOf("angel after failed"), { [F.HIJACKED_SAFETY]: 0 });
+    const hub = (ctx: Ctx) => textOf("officer", "hub", ctx, SIDE_NPCS);
+    expect(hub(after)).toBe("\"Officer of Safety. The district is stable.\" He says it the way a plaque says it. The form on his desk is blank where a signature would be. He does not ask how the hour went; Safety does not keep that column.");
+    expect(hub(withFlags(after, { [F.HIJACKED_SAFETY]: 1 }))).toBe("\"The freeze held.\" He has your form. He turns it over. \"Funded by. I have read it. It is mine when I sign it. I signed it.\"");
+    expect(hub(ctxOf("angel sky M2 signed")), "before the rite, as shipped").toContain("If you have come about the freeze, it holds.");
+  });
+
+  it("the funeral desk's line is chosen from the state before the pay: the sold hour, her street, or a name the desk made up (II.10)", () => {
+    const sayOfPay = (ctx: Ctx) => effectsOf("funeral-desk", "pay", ctx).find(e => e.kind === "say");
+    const waiting = withFlags(ctxOf("angel earth M2 take"), { [F.GARDEN]: 0 });
+    expect(sayOfPay(waiting)).toEqual({ kind: "say", text: "You paid Nara Vale's street. Five Bestand. She will stand with you. She will not speak until the garden is in the ground." });
+    expect(effectsOf("funeral-desk", "pay", waiting)).toContainEqual({ kind: "party", npc: "nara", state: "with" });
+    const refused = { ...waiting, p: { ...waiting.p, choices: { ...waiting.p.choices, [C.OPERATOR]: "refuse" } } };
+    expect(sayOfPay(refused)).toEqual({ kind: "say", text: "You paid Nara Vale's street. Five Bestand. The body is in the ground. She will speak again." });
+    expect(sayOfPay(ctxOf("angel divinities M3 refuse"))).toEqual({ kind: "say", text: "You paid Nara Vale's street. Five Bestand. A body nobody claimed is in the ground. The desk writes a name it made up." });
+    expect(verbOf("funeral-desk", "pay").say, "the say rides the effects, read before the party moves").toBeUndefined();
+  });
+
+  it("the garden: the first to bury it hears the first hour; a body after hears it buried (II.10, III.5)", () => {
+    const m3 = ctxOf("angel earth M2 take");
+    expect(sayOf("wreckage-garden", "bury", withPoi(m3, "wreckage-garden", "buried", 1))).toBe("The node from the first hour is wreckage now. You put it in the ground. Nara Vale will speak.");
+    expect(sayOf("wreckage-garden", "bury", withPoi(m3, "wreckage-garden", "buried", 2))).toContain("The garden has been buried.");
+  });
+
+  it("the wreckage's line keeps the Concern's file, and its Wink the facing (II.7)", () => {
+    const history = POI_CONFIGS["care-shrine"].verbs.find(v => v.choice === "history")!;
+    const ctx = ctxOf("angel 7777 M2 fresh");
+    const say = typeof history.say === "function" ? history.say(ctx) : history.say ?? "";
+    expect(say).toContain("Only you can face this wreckage. The serial remembers. The city does not. The Concern keeps the file.");
+    const effects = typeof history.effects === "function" ? history.effects(ctx) : history.effects ?? [];
+    expect(effects).toContainEqual({ kind: "wink", text: "The serial remembers. The city does not. The file is theirs; the facing is yours." });
   });
 });

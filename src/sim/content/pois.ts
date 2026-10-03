@@ -281,11 +281,11 @@ const NAVE: PoiConfig[] = [
         label: "Watch",
         choice: "watch",
         guest: "allow",
-        say: ctx => launchReel(ctx) ?? hijackReel(ctx) ?? "A stack of screens with the tubes still warm. Static, then a room, then static. Nobody is in the room.",
+        say: ctx => launchReel(ctx) ?? hijackReel(ctx) ?? absenceReel(ctx) ?? afterCreditsReel(ctx) ?? "A stack of screens with the tubes still warm. Static, then a room, then static. Nobody is in the room.",
         // The room's Wink belongs to the room; a marked body sees its own sky here and gets no hint about an empty room it is not shown; in the launch's hour the screens are the count's.
         effects: ctx => [
           ...launchReelEffects(ctx),
-          ...(launchReel(ctx) || hijackReel(ctx) ? [] : [{ kind: "wink", text: "The room on the screen is this one. It is empty because you are looking at the screen." } as Effect]),
+          ...(launchReel(ctx) || ownReel(ctx) ? [] : [{ kind: "wink", text: "The room on the screen is this one. It is empty because you are looking at the screen." } as Effect]),
           { kind: "poi", id: "crt-altar-1", state: "lit" } as Effect,
         ],
       },
@@ -307,9 +307,9 @@ const NAVE: PoiConfig[] = [
         choice: "watch",
         guest: "allow",
         // The catalog, playing since the body arrived: last season's sky, cut to ninety seconds, and a courteous voice over the restart. No name; nobody looks up.
-        say: ctx => launchReel(ctx) ?? hijackReel(ctx) ?? "Screens in a ring. One is lit and people are kneeling at it. On the screen: a sky through an oval, a bell, the light a shade warmer than the room. The kneelers call it a reverie. It runs ninety seconds and starts again. A tag in the corner. A serial in the margin. Over the restart, courteous, a man's voice: \"You will feel it again. We kept it for you.\"",
+        say: ctx => launchReel(ctx) ?? hijackReel(ctx) ?? absenceReel(ctx) ?? afterCreditsReel(ctx) ?? "Screens in a ring. One is lit and people are kneeling at it. On the screen: a sky through an oval, a bell, the light a shade warmer than the room. The kneelers call it a reverie. It runs ninety seconds and starts again. A tag in the corner. A serial in the margin. Over the restart, courteous, a man's voice: \"You will feel it again. We kept it for you.\"",
         // The catalog's Wink is about somebody else's hint; the marked body's reel is its own, and the script gives it no hint.
-        effects: ctx => (launchReel(ctx) ? launchReelEffects(ctx) : hijackReel(ctx) ? [] : [{ kind: "wink", text: "A copy of a hint somebody heard. The copy does not clock out." } as Effect]),
+        effects: ctx => (launchReel(ctx) ? launchReelEffects(ctx) : ownReel(ctx) ? [] : [{ kind: "wink", text: "A copy of a hint somebody heard. The copy does not clock out." } as Effect]),
       },
     ],
   },
@@ -343,6 +343,15 @@ function hijackReel(ctx: Ctx): string | null {
     ? `The Reverie of the Passing: the Appearance, with a margin, and in the margin, small, ${ctx.p.name}.`
     : `The Reverie of the Passing: an empty sky through an oval, with a margin, and in the margin, small, ${ctx.p.name}.`;
 }
+
+/** After this season's Absence (IV.7): the empty sky the rite made, on every altar, for the bodies who stood in it. */
+const absenceReel = (ctx: Ctx): string | null =>
+  chose(ctx, C.PASSING, "absence") && passedThisSeason(ctx) ? "Ninety seconds of an empty sky through an oval, with a margin, and the tag in the corner. People kneel." : null;
+/** After the credits (IV.8): the altars play on; someone's sky, cut to ninety seconds, a serial in the margin. */
+const afterCreditsReel = (ctx: Ctx): string | null =>
+  has(ctx, F.CREDITS) ? "The altar plays. Ninety seconds of someone's sky, a bell, a serial in the margin. People kneel. The tubes are warm." : null;
+/** A reel that is the viewer's own (the mark's, the Absence's, the one after the credits) gives no Wink about the room or the catalog. */
+const ownReel = (ctx: Ctx): boolean => Boolean(hijackReel(ctx) ?? absenceReel(ctx) ?? afterCreditsReel(ctx));
 
 // ---------------------------------------------------------------- the Wet Grid
 
@@ -629,11 +638,11 @@ const CARE: PoiConfig[] = [
         once: F.HISTORY,
         say: ctx => {
           const mark = ctx.w.history.find(m => m.serial === ctx.p.serial);
-          return `${mark?.line ?? "A prior hour. You stood here and left the body in the weather."} Only you can face this wreckage. The serial remembers. The city does not.`;
+          return `${mark?.line ?? "A prior hour. You stood here and left the body in the weather."} Only you can face this wreckage. The serial remembers. The city does not. The Concern keeps the file.`;
         },
         effects: [
           { kind: "flag", key: F.HISTORY },
-          { kind: "wink", text: "The serial remembers. The city does not. That is the only privacy left." },
+          { kind: "wink", text: "The serial remembers. The city does not. The file is theirs; the facing is yours." },
           { kind: "readiness", delta: 2 },
         ],
       },
@@ -675,15 +684,23 @@ const CARE: PoiConfig[] = [
         choice: "pay",
         guest: spectate,
         cost: { bestand: FUNERAL_COST, sink: "funeral" },
-        say: ctx => (ctx.p.party.nara === "waiting"
-          ? "You paid Nara Vale's street. Five Bestand. The body is in the ground. She will speak again."
-          : "You paid Nara Vale's street. Five Bestand. A body nobody claimed is in the ground. The desk writes a name it made up."),
+        // The line is chosen from the state before the pay (the party effect changes it): she waits for her street, or, the hour sold, for the garden.
         effects: ctx => {
+          const waiting = ctx.p.party.nara === "waiting";
+          const sold = waiting && chose(ctx, C.OPERATOR, "take") && !has(ctx, F.GARDEN);
           const out: Effect[] = [
             { kind: "readiness", delta: 2 },
             { kind: "worldCount", key: W.BURIALS, delta: 1 },
           ];
-          if (ctx.p.party.nara === "waiting") out.push({ kind: "party", npc: "nara", state: "with" });
+          if (waiting) out.push({ kind: "party", npc: "nara", state: "with" });
+          out.push({
+            kind: "say",
+            text: sold
+              ? "You paid Nara Vale's street. Five Bestand. She will stand with you. She will not speak until the garden is in the ground."
+              : waiting
+                ? "You paid Nara Vale's street. Five Bestand. The body is in the ground. She will speak again."
+                : "You paid Nara Vale's street. Five Bestand. A body nobody claimed is in the ground. The desk writes a name it made up.",
+          });
           return out;
         },
       },
@@ -702,7 +719,8 @@ const CARE: PoiConfig[] = [
         // The refuse route reaches the garden before the door: the offer must be decided, not the door opened.
         when: ctx => has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN),
         guest: spectate,
-        say: ctx => (poiState(ctx, "wreckage-garden") === "buried"
+        // read after this verb's poi effect raised the count: above one, somebody buried it before
+        say: ctx => ((ctx.w.pois["wreckage-garden"]?.count ?? 0) > 1
           ? "The garden has been buried. You stay beside it until the city stops counting your time. Nara Vale will speak."
           : "The node from the first hour is wreckage now. You put it in the ground. Nara Vale will speak."),
         effects: [
@@ -917,6 +935,10 @@ const calendarLine = (ctx: Ctx): string => {
   // During the launch window: the line has a time on it, now; or, if the window opened dark, no hour at all.
   if (launchDark(ctx.w)) return ` Under the band, where the date was, nothing. ${darkLights(ctx.w)} lights out on the Kerb. The line has no hour to come at.`;
   if (launchOpen(ctx.w)) return " Under the band, in the same face as every meter in the city, the Concern's line with a time on it: now. The number under it and the number on every meter are the same number.";
+  // After the credits (IV.8): the next season's hour, or, the lights out, no count at all; the journal keeps the date itself.
+  if (has(ctx, F.CREDITS)) return glassDark(ctx.w)
+    ? ` Under the band, where the date was, nothing. ${darkLights(ctx.w)} lights out on the Kerb. The season will come anyway. It will come without a count.`
+    : " Under the band, in the same face as every meter in the city, the Concern's line: the next season's hour, with a date on it.";
   const what = ctx.p.movement >= 3 ? "the launch" : "the next hour";
   if (glassDark(ctx.w)) {
     const dark = darkLights(ctx.w);

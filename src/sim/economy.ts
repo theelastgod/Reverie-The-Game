@@ -82,7 +82,7 @@ const MARKET_LISTED = (price: number, fee: number) =>
   fee > 0 ? `Listed at ${price}. Listing fee ${fee}. Exhibition decays.` : `Listed at ${price}. Glamour waived the fee. Exhibition still decays.`;
 const MARKET_NO_LISTING = "That listing is gone.";
 const MARKET_SELLER_AWAY = "The seller is not on the Grid. The listing waits.";
-const MARKET_CITY_LISTING = "A price, not a sale. The hole does not travel.";
+const MARKET_CITY_LISTING = "That is a price, not a sale. The hole does not travel.";
 const MARKET_CITY_LISTED = (seller: string, item: string, price: number) => `${seller} lists ${item} at ${price}.`;
 const MARKET_CITY_MOVED = (seller: string, item: string, price: number, from: number) => `${seller} prices ${item} at ${price}, ${price > from ? "up" : "down"} from ${from}.`;
 const MARKET_OWN_LISTING = "It is your listing. Cancel it if you want it back.";
@@ -584,7 +584,8 @@ export function applyForge(w: WorldState, id: string, op: "craft" | "spot" | "se
       const listed = applyMarket(w, id, "list", { itemId: ITEM_COPY_WINK, price: COPY_PRICE });
       const me = listed.players.get(id);
       if (!me || listed.market.length === w.market.length) return listed; // could not list; its line already spoke
-      return speak(listed, me, FORGE_SOLD); // the listing itself thinned the aura
+      // the listing's own line, then the forge's: the same price and fee the list op used; the listing itself thinned the aura
+      return speak(listed, me, `${MARKET_LISTED(COPY_PRICE, kitActive(p, "iridescent", w.now) ? 0 : LISTING_FEE)} ${FORGE_SOLD}`);
     }
     default:
       return w;

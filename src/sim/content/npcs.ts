@@ -97,7 +97,7 @@ const NARA_NODES: Record<string, DialogueNode> = {
   },
   who: {
     id: "who",
-    text: "A clerk. Fourteen years at a yield desk. They counted what the street gave up and signed it as civic duty. The man who sat at the next desk for those fourteen years sent money for the funeral. I sent it back. Nobody pays for this one. The Gestell took the street and then it took the counting. Nobody strikes a clerk in the end. The weather does.",
+    text: "A clerk. Fourteen years at a yield desk. They counted what the street gave up and signed it as civic duty. The man at the next desk sat there the same fourteen years. He sent money for his neighbour. I sent it back. Nobody pays for this one. The weather took the street and then it took the counting. Nobody strikes a clerk in the end. The weather does.",
     next: "memorial",
   },
   memorial: {
@@ -138,8 +138,8 @@ const NARA_NODES: Record<string, DialogueNode> = {
   plot: {
     id: "plot",
     text: (ctx) => chose(ctx, C.MEMORIAL, "voice")
-      ? "The cloth is ready and the voice is still playing. The plot is west of me. Press F there and close the earth. Do not thank me."
-      : "The copper holds. The plot is west of me. Press F there and close the earth. Do not thank me.",
+      ? "The cloth is ready and the voice is still playing. The plot is west of me. Press F there and close the earth. Then go into reverie with it a while. Do not thank me."
+      : "The copper holds. The plot is west of me. Press F there and close the earth. Then go into reverie with it a while. Do not thank me.",
     wink: "Burial does not list. She respects that more than she says.",
   },
   weather: {
@@ -162,7 +162,6 @@ const NARA_NODES: Record<string, DialogueNode> = {
     text: (ctx) => ctx.p.guest
       ? "The threshold is east of the plot. The Care is under it. Angels go under as death. A guest stops at the lip. I do not make the rule. I bury what it makes."
       : "The threshold is east of the plot. The Care is under it. You go under as death, not as a cutscene. I will be there when you wake. I am usually there.",
-    wink: "Dying-as-death is a verb here. Nothing else opens the Care.",
   },
   care: {
     id: "care",
@@ -401,7 +400,7 @@ const QUILL_NODES: Record<string, DialogueNode> = {
     text: ctx => {
       const price = clearingPrice(ctx.w);
       const today = price === null || price === CLEARING_LIST_PRICE ? "Forty Bestand." : `Forty Bestand when I wrote it; ${price} on the board today.`;
-      return `Quill listed a Clearing. ${today} On commission: the buyer sent paper and a price and I never met them. Whoever the resistance is, they bought their paper from the same man I did. Nicer lighting than the company. Same electrician. Copies travel. The hole does not. The people who say they are against the process are pricing it. I am not against anything. I just print faster. That is the difference and it is not in my favour.`;
+      return `Quill listed a Clearing. ${today} On commission: the buyer sent paper and a price and I never met them. She looks at the listing the way she looks at a print. There's a margin. Whoever the resistance is, they bought their paper from the same man I did. Nicer lighting than the company. Same electrician. Copies travel. The hole does not. The people who say they are against the process are pricing it. I am not against anything. I just print faster. That is the difference and it is not in my favour.`;
     },
     wink: "The resistance is a stall with better lighting.",
   },
@@ -466,7 +465,7 @@ const QUILL_NODES: Record<string, DialogueNode> = {
   },
   "forge-caul": {
     id: "forge-caul",
-    text: "He asked me once what a hint looked like. I told him. He wrote it down. Only time I've been quoted and not paid.",
+    text: (ctx) => `He asked me once what a hint looked like. I told him. He wrote it down. Only time I've been quoted and not paid.${has(ctx, F.TOLD_CAUL) ? " He asked you too. Don't look like that. Everybody tells him. He has a way of holding the pen." : ""}`,
   },
   "forge-after": {
     id: "forge-after",
@@ -474,8 +473,8 @@ const QUILL_NODES: Record<string, DialogueNode> = {
     text: (ctx) => {
       if (chose(ctx, C.FORGE, "spot")) return "You keep the eye. Every print on the Grid looks a little worse to you now. That is what learning costs. E at the tray crafts a copy anyway, if you want to know how it feels.";
       if (ctx.w.market.some(l => l.sellerId === ctx.p.id && l.item.id === "copy:wink")) return "Your hint is on the board. It has not sold yet. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.";
-      if (ctx.p.items.some(i => i.id === "copy:wink")) return "You took it down. You hold the print. It is thinning already. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.";
       if ((ctx.p.flags["sold:copy:wink"] ?? 0) > 0) return "It sold. The price went to your bank and the fee stayed with me. Somebody on the Grid has your hint by now, and the hole has none of it. I am not judging. I am counting.";
+      if (ctx.p.items.some(i => i.id === "copy:wink")) return "You took it down. You hold the print. It is thinning already. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.";
       return "It is off the board. Taken down to the tray, or decayed to nothing; the board does not say which and I do not ask. The fee was mine either way. E at the tray crafts a copy anyway, if you want to know how it feels.";
     },
     wink: "A stall can be a shrine. She will not say it out loud on the Grid.",
@@ -566,7 +565,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   first: {
     id: "first",
-    text: "Ord. I was Safety. I signed freezes. The Concern owns the numbers. Safety counts them. I counted them. That is why I am at a gate and not a desk, and why the number stays honest. Safety calls it stability. I call it the process. The number goes up because you extract. I will not pretty it.",
+    text: "Ord. I was Safety. I signed freezes. The Concern owns the numbers. Safety counts them. I counted them. That is why I'm at a gate and not a desk. The number stays honest for it. Safety calls it stability. I call it the process. The number goes up because you extract. I will not pretty it.",
     wink: "He left Safety. He did not leave the ledger. Nobody leaves the ledger.",
     effects: [{ kind: "flag", key: F.TALKED_ORD }, { kind: "party", npc: "ord", state: "with" }],
     choices: [
@@ -713,9 +712,9 @@ const ORD_NODES: Record<string, DialogueNode> = {
     text: (ctx) => {
       const cut = ctx.p.choices[C.MAP];
       const said = cut === "strait" ? "You said the water. " : cut === "foundry" ? "You said the heat. " : cut === "cable" ? "You said the light. " : cut === "whole" ? "You said nowhere. " : "";
-      if (worldHas(ctx, "foundryDark")) return `${said}The Foundry is dark. The Cable still drinks on what the Strait already paid. Nobody unlights a debt. The number is quieter. I will not pretty it.`;
+      if (ctx.w.pois["organ-foundry"]?.state === "dark") return `${said}The Foundry is dark. The Cable still drinks on what the Strait already paid. Nobody unlights a debt. The number is quieter. I will not pretty it.`;
       if (ctx.w.pois["organ-strait"]?.state === "refused") return `${said}You refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.`;
-      return `${said}The map is drawn. The Kerb first. Face the glass; I will be at it. I have a line to read you there. Then Quill, on the Grid, about hints and what they cost to copy.`;
+      return `${said}The map is drawn. The Kerb first. Face the glass; I will be behind it. I have a line to read you there. Then Quill, on the Grid, about hints and what they cost to copy.`;
     },
     choices: [
       { id: "number", label: "Give me the number.", next: "number" },
@@ -738,8 +737,8 @@ const ORD_NODES: Record<string, DialogueNode> = {
     ],
     choices: [
       // Back across the desk: the offer if it has not been made, else his later line.
-      { id: "back", label: "Back to him.", when: ctx => has(ctx, F.CAUL_MET) && !has(ctx, F.CAUL_OFFER), effects: [{ kind: "dialogue", npc: "caul", node: "offer" }] },
-      { id: "back-after", label: "Back to him.", when: ctx => has(ctx, F.CAUL_OFFER), effects: [{ kind: "dialogue", npc: "caul", node: "after" }] },
+      { id: "back", label: "Back to him.", when: ctx => ordInRoom(ctx) && has(ctx, F.CAUL_MET) && !has(ctx, F.CAUL_OFFER), effects: [{ kind: "dialogue", npc: "caul", node: "offer" }] },
+      { id: "back-after", label: "Back to him.", when: ctx => ordInRoom(ctx) && has(ctx, F.CAUL_OFFER), effects: [{ kind: "dialogue", npc: "caul", node: "after" }] },
       { id: "number", label: "Give me the number.", next: "number" },
       { id: "leave", label: "Enough." },
     ],
@@ -781,6 +780,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
       { kind: "choice", key: C.PARTY, value: "alone" },
       { kind: "flag", key: F.GATE },
       { kind: "restraint", delta: 8 },
+      { kind: "news", text: "An Angel chose to stand alone in the Clearing. Ord counts from the gate." },
       { kind: "notice", text: "You stand alone. Restraint.", tone: "ink" },
     ],
   },
@@ -834,7 +834,8 @@ const ORD_NODES: Record<string, DialogueNode> = {
 function vesperRoute(ctx: Ctx): string {
   if (!has(ctx, F.HALL)) return "cold";
   if (has(ctx, F.OPERATOR)) {
-    if (chose(ctx, C.OPERATOR, "take")) return worldHas(ctx, "foundryDark") ? "foundry" : "taken";
+    if (ctx.p.movement >= 5 || has(ctx, F.PASSING)) return "after";
+    if (chose(ctx, C.OPERATOR, "take")) return ctx.w.pois["organ-foundry"]?.state === "dark" ? "foundry" : "taken";
     return ctx.p.movement >= 4 ? "nogod" : "refused";
   }
   return "offer";
@@ -853,7 +854,7 @@ const VESPER_NODES: Record<string, DialogueNode> = {
   },
   cold: {
     id: "cold",
-    text: "Vesper Hale will not quote a private node to someone who has not read who owns the public ones. Your hall is in the Care. Read the plaque. Then come back and I will tell you what your hour is worth.",
+    text: "Vesper Hale will not quote a private node to someone who has not read who owns the public ones. Your hall is where your House stands. Read the plaque. Then come back and I will tell you what your hour is worth.",
   },
   offer: {
     id: "offer",
@@ -1043,8 +1044,8 @@ function caulLip(ctx: Ctx): string {
   if (has(ctx, seasonPassingFlag(ctx.w.season.id))) {
     if (has(ctx, lipSaidKey(ctx))) return "lip-silent";
     switch (outcome(ctx)) {
-      case "appearance": return "lip-appearance";
-      case "absence": return "lip-absence";
+      case "appearance": return "lip-crew";
+      case "absence": return "oval-absence";
       case "hijack": return "lip-hijack";
       case "failed": return "lip-failed";
       default: return "lip-silent";
@@ -1230,10 +1231,20 @@ const CAUL_NODES: Record<string, DialogueNode> = {
     text: "A paper-white body with no halo looks at a paper-white body with no halo. He does not say a serial; you have none. \"Unsealed. So am I. The ring is three steps down and the city stops us both on this tile. I have stood here every season. You may have the view.\"",
   },
   // his word on the season's rite, said once; then the description again
+  "lip-crew": {
+    id: "lip-crew",
+    text: "At the van beside the lip, to the crew: \"Play it again.\" The crew, in the van, rewinding: \"There is nothing on it.\" \"Then sell that.\"",
+    next: "lip-appearance",
+  },
   "lip-appearance": {
     id: "lip-appearance",
     text: "He has not moved. The tile does not let a guest go down and he did not go back. The second time, the only question he asks twice: \"What did it look like.\"",
     effects: lipSaid,
+  },
+  "oval-absence": {
+    id: "oval-absence",
+    text: "Through the mast's oval, after a while: \"Absence has a margin too.\"",
+    next: "lip-absence",
   },
   "lip-absence": {
     id: "lip-absence",
@@ -1331,7 +1342,7 @@ export const NPCS: Record<string, NpcDef> = {
       if (has(ctx, F.MORTALITY) && p.movement >= 4 && !has(ctx, F.PASSING)) return { ...station("ord-gate"), state: "gate" };
       // The glass faced, he is in the room behind it with the ledger open at last season until the glass is decided; then the gate again.
       if (ordInRoom(ctx)) return { ...station("ord-glass"), state: "glass" };
-      if ((p.movement >= 3 || has(ctx, F.M3)) && !has(ctx, F.MAP)) return { ...station("ord-strait"), state: "strait" };
+      if ((p.movement >= 3 || has(ctx, F.M3)) && !(has(ctx, F.MAP) && has(ctx, F.FAILED))) return { ...station("ord-strait"), state: "strait" };
       return null;
     },
     entry: (ctx: Ctx) => (dark(ctx) ? "dark" : unseenWink(ctx, "ord") ? "blind" : ordRoute(ctx)),

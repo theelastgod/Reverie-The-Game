@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   auraTier, bearingTo, dodgeLine, formatSerial, heardStep, identityLine, joinNews, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
   pad2, parseSerial, pct, questLabel, questRows, roman, seconds, stanceLine, statusLine,
-  glassRows,
+  glassRows, creditRows,
 } from "./format";
 import { TILE } from "../sim/map";
+import { CREDITS as LINES_CREDITS } from "../sim/content/lines";
 
 describe("formatSerial", () => {
   it("pads to four digits", () => {
@@ -237,5 +238,13 @@ describe("assetUrl", () => {
     expect(assetUrl("nara.jpg", "/")).toBe("/assets/nara.jpg");
     expect(assetUrl("nara.jpg", "/play/")).toBe("/play/assets/nara.jpg");
     expect(assetUrl("/nara.jpg", "/play")).toBe("/play/assets/nara.jpg");
+  });
+});
+
+describe("creditRows", () => {
+  it("sets the game's name as a title and every other line of the script's roll as prose under it", () => {
+    expect(creditRows(LINES_CREDITS)).toEqual(LINES_CREDITS.map(text => ({ text, title: text === "REVERIE: THE GAME" })));
+    expect(creditRows(LINES_CREDITS).filter(r => r.title)).toHaveLength(1);
+    expect(creditRows([])).toEqual([]);
   });
 });

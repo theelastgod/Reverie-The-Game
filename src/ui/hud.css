@@ -930,6 +930,15 @@ canvas { display: block; }
   text-transform: uppercase;
   line-height: 1;
 }
+.credits-prose {
+  max-width: min(32em, calc(100vw - 32px));
+  font-family: inherit;
+  font-size: clamp(1rem, 2.4vw, 1.5rem);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  line-height: 1.4;
+  text-align: center;
+}
 .credits-mark img { display: block; mix-blend-mode: screen; }
 .credits-hint {
   position: absolute;

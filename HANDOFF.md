@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 500 tests, the session smoke, the campaign smoke and the
+  fresh world; 591 tests (2026-10-03), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -1919,6 +1919,44 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Phase D. The two Phase C items that wait on you are still open (see
   the status block).
 
+- Backlog A, the movements audit (2026-10-03, evening): `SCRIPT.md`'s
+  four movements (lines 1–1630) read against the code line by line, a
+  skeptic confirming each finding (93 of them). Where the script was
+  wrong about the code, the script was corrected (54: tags, citations
+  and transcriptions); where the code had not yet said the script's
+  words, the code now does (42 items, about thirty changes). The lines:
+  the Intake Clerk's and Desk Three's falls are heard (`FALL_LINES`),
+  the intake step's notice is "Entered."; Ord's first, Nara's who and
+  plot, Quill's board read, Vesper's cold read and the mark's failed
+  line in the script's words (the weather, never Gestell's name); no
+  Wink at the lip; the wreckage's line keeps the Concern's file; the
+  Clearing's buy is "That is a price, not a sale."; the tray's sale
+  says the listing's line before the forge's. The gates: Ord holds the
+  Strait from the map until the glass is faced, so his after-map line
+  plays there, says "I will be behind it", and reads the Foundry off
+  the Organs rather than a world flag (Vesper too); the way back
+  across the desk is offered only in the room; a print that sold is
+  said before one in hand; Vesper's desk is closed to everyone after
+  the rite; the funeral desk's line is chosen before the pay (her
+  street, the sold hour waiting on the garden, or a made-up name);
+  the garden's first-burial line now reaches the first to bury it.
+  The new beats: an Appearance lights every altar for everyone and
+  tells the bodies in the Nave; Caul opens the Appearance with the
+  crew in the van ("Play it again.") and the Absence through the
+  mast's oval ("Absence has a margin too."), each continuing to his
+  word on the lip; the altars play this season's Absence and, after
+  the credits, someone's sky, with no Wink about the room or the
+  catalog; the glass after the credits names the next season's hour
+  (or, the lights out, no count); Corvin Slate's two lines after the
+  rite; Ord writes the gate alone on the news; Quill's "He asked you
+  too." The client: the credits roll is the script's (`LINES.CREDITS`,
+  filled by the HUD, the name as a title and the rest as prose; the
+  old four rows are gone) and the lock panel's going-under line is
+  cut. Two keys were wrong in the journal and are now tested
+  everywhere: a step that sends the body to a place names a key that
+  place answers to (the Strait's second column is a Q; the listing
+  fee's stalls are Q, not E), for the spine and every side hour.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -2852,6 +2890,20 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   check, each run alone. A Movement III run made while the review
   workflow's agents were working beside it lost its socket when the
   local Worker reloaded; run again alone it passed.
+- Backlog A, the movements audit (2026-10-03, evening): typecheck, 591
+  tests in 43 files (the new: every altar after an Appearance and the
+  notice to the Nave; the altars after an Absence and after the
+  credits; Caul's crew and oval before his lip line in both spine
+  runs; the glass after the credits, lit and dark; Vesper after the
+  rite; Ord at the Strait, in the room and the way back; the funeral
+  desk's three lines; the garden's two; the Officer after the rite;
+  the forge's sale line; the falls heard; the credits' rows; the lock
+  and credits markup; every step's key against its place), the build,
+  the play build and the stage, and on a fresh local world the
+  session smoke, the whole spine over the wire (`test:campaign:4`,
+  Movements I–IV, outcome failed at readiness 52), and the render
+  check; the credits roll read in Chromium from the staged page (the
+  mark, the title, seven lines of prose).
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2947,6 +2999,11 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      on its own, the hot street set hot, the listing's buyer named, skipped
      all but the vans when the lights are dark); the Appearance's blank
      tape as a news line naming the angel.
+   - **The movements audit** (done 2026-10-03, see Done): the script's
+     four movements read against the code; the script corrected where it
+     was wrong, the code where it had not yet said the script's words.
+     The appendix (the side hours, from line 1630) was audited with
+     Phase D.
    - **Phase D, the side quests re-pointed** (done 2026-10-03, see Done:
      every appendix line tagged revised ships, the third altar has its
      own screen, and the audit's bugs are fixed): ids kept, one change each,

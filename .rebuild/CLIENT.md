@@ -59,7 +59,9 @@ text, wink, choices), `hud-journal` (field notes: plate, movement, title,
 detail, bearing, the glass for a reader (`.journal-glass`, hidden for anyone else: Snap.glass through `format.ts` `glassRows`, its count run down against `snap.now`), quests list), `hud-minimap` (canvas), `hud-lock` (guest lock
 panel: mark, "A GUEST CANNOT PREPARE THE GROUND", link test Angel button and a
 serial input 1–7777), `hud-connection`, `hud-credits` (shown when `you.flags.credits`
-turns 1; names only the game).
+turns 1; names only the game: the roll is `LINES.CREDITS`, which the HUD appends
+under the mark at mount through `format.ts` `creditRows`, the game's name as a
+title and every other line as `.credits-prose`).
 
 ## Rendering rules (D1)
 - District floors: one `TileSprite` per district rect and one per floor patch

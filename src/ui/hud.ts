@@ -8,9 +8,10 @@ import { weatherBand } from "../sim/protocol";
 import type { Notice, Prompt } from "../sim/types";
 import { AURA_MAX, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_MAX, RESTRAINT_MAX, RESTRAINT_WINK_MIN, STORM_RESTRAINT_BURN } from "../sim/constants";
 import { F } from "../sim/content/ids";
+import { CREDITS } from "../sim/content/lines";
 import {
   auraTier, districtFourfold, districtName, dodgeLine, heardStep, identityLine, joinNews, kitLine, ledgerLine, marqueeSeconds, num, pct,
-  setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine,
+  setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine, creditRows,
 } from "./format";
 import { mountDialogue, type DialoguePanel } from "./dialogue";
 import { mountJournal, type JournalPanel } from "./journal";
@@ -206,6 +207,15 @@ export class Hud {
     this.marqueeTrack = this.marquee ? q(this.marquee, ".marquee-track") : null;
     this.connection = q(root, "#hud-connection");
     this.credits = q(root, "#hud-credits");
+    const roll = this.credits ? q(this.credits, ".credits-roll") : null;
+    if (roll) {
+      for (const row of creditRows(CREDITS)) {
+        const line = document.createElement("div");
+        line.className = row.title ? "credits-line" : "credits-line credits-prose";
+        line.textContent = row.text;
+        roll.append(line);
+      }
+    }
     this.creditsFocus = focusKeeper(this.credits, root);
     this.audioChip = q(root, "#hud-audio");
     this.loading = q(root, "#hud-loading");

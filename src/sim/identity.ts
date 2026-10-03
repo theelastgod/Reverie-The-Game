@@ -132,7 +132,7 @@ const OUTCOME_LINES: Record<string, string> = {
   appearance: "A prior hour. A trace came while you stood here. The city was briefly world.",
   absence: "A prior hour. Nothing came. You stood in the hole anyway.",
   hijack: "A prior hour. Somebody claimed the rite. You are still marked.",
-  failed: "A prior hour. Gestell kept the weather. The hole did not open.",
+  failed: "A prior hour. The weather kept it. The hole did not open.",
 };
 
 /**

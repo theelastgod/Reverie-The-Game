@@ -46,7 +46,7 @@ const M1_STEPS: QuestStep[] = [
     target: "enemy:intake-clerk",
     plate: "plate-arena.jpg",
     done: ctx => has(ctx, F.INTAKE),
-    onComplete: [notice("The Intake Clerk falls. They were doing a job.")],
+    onComplete: [notice("Entered.")],
   },
   {
     id: "first-node",

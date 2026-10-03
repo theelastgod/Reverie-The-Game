@@ -132,6 +132,7 @@ function fightIntake(w: WorldState, id: string): WorldState {
     cur = tick(cur, 10);
   }
   expect(me(cur, id).flags[F.INTAKE], "the Intake Clerk fell with this body in it").toBe(1);
+  expect(me(cur, id).heard, "the clerk's fall (I.2)").toBe(LINES.FALL_LINES.intake);
   expect(cur.enemies.find(e => e.id === "intake-clerk")?.state).toBe("dead");
   expect(cur.wreckage.some(r => r.fromId === "intake-clerk")).toBe(true);
   expect(me(cur, id).dead).toBe(false);
@@ -147,6 +148,7 @@ function fightDeskThree(w: WorldState, id: string): WorldState {
     cur = tick(cur, 10);
   }
   expect(me(cur, id).flags[F.DESK_THREE], "Desk Three fell with this body in it").toBe(1);
+  expect(me(cur, id).heard, "Desk Three's fall (I.4)").toBe(LINES.FALL_LINES["desk-three"]);
   expect(cur.enemies.find(e => e.id === "desk-three")?.state).toBe("dead");
   expect(me(cur, id).dead).toBe(false);
   return cur;
@@ -662,7 +664,7 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
   expect(me(w).quests["side-kerb-omen-glass"], "the sky hour woke on the strike").toBe(0);
 
   // before the glass, Ord sends you to it; he is not there yet
-  expect(me(talkTo(w, ME, "ord")).dialogue?.text).toContain("Face the glass; I will be at it.");
+  expect(me(talkTo(w, ME, "ord")).dialogue?.text).toContain("Face the glass; I will be behind it.");
   w = closeAll(w, ME);
   expect(npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!.state).not.toBe("glass");
 
@@ -1246,10 +1248,15 @@ describe("the spine, played through", () => {
       expect(a.flags["earned:stipend"]).toBe(PASSING_STIPEND);
       expect(me(a).history.outcomes).toEqual(["appearance"]);
       a = throughTheCredits(a);
+      // after the credits the altars play on (IV.8)
+      expect(me(use(a, "crt-altar-1", "watch")).heard).toBe("The altar plays. Ninety seconds of someone's sky, a bell, a serial in the margin. People kneel. The tubes are warm.");
       a = talkTo(a, ME, "ord");
       expect(me(a).dialogue?.node).toBe("after");
       expect(me(a).dialogue?.text).toContain("A trace");
-      expect(me(talkTo(a, ME, "caul")).dialogue?.text, "he stood still for the whole of it").toContain("The second time, the only question he asks twice: \"What did it look like.\"");
+      // first the crew in the van beside the lip (IV.7), then his question
+      const crew = talkTo(a, ME, "caul");
+      expect(me(crew).dialogue?.text).toBe("At the van beside the lip, to the crew: \"Play it again.\" The crew, in the van, rewinding: \"There is nothing on it.\" \"Then sell that.\"");
+      expect(me(act(crew, ME, { t: "close" })).dialogue?.text, "he stood still for the whole of it").toContain("The second time, the only question he asks twice: \"What did it look like.\"");
       // after a trace Nara goes home from the ring; only an Absence keeps her there
       expect(npcView({ w: a, p: me(a), now: a.now }, a.npcs.nara)?.state).not.toBe("clearing");
     }
@@ -1262,13 +1269,18 @@ describe("the spine, played through", () => {
       expect(me(a).wink, "the hint on an absence").toBe("You went under once and came back. The hour did the same. Neither of you arrived.");
       expect(me(a).bestand).toBe(me(brink).bestand);
       expect(a.passing.appearanceUntil).toBe(0);
-      expect(me(talkTo(a, ME, "caul")).dialogue?.text).toContain("Next season. Same ring. I will have the number by then.");
+      // through the mast's oval first (IV.7), then pleasantly, to you
+      const oval = talkTo(a, ME, "caul");
+      expect(me(oval).dialogue?.text).toBe("Through the mast's oval, after a while: \"Absence has a margin too.\"");
+      expect(me(act(oval, ME, { t: "close" })).dialogue?.text).toContain("Next season. Same ring. I will have the number by then.");
+      // this season's altars play the empty sky the rite made
+      expect(me(use(a, "crt-altar-2", "watch")).heard).toBe("Ninety seconds of an empty sky through an oval, with a margin, and the tag in the corner. People kneel.");
       // Nara stays at the ring after an Absence, through the credits and after, and says so
       const stayed = throughTheCredits(a);
       expect(npcView({ w: stayed, p: me(stayed), now: stayed.now }, stayed.npcs.nara)).toMatchObject({ state: "clearing", x: POSITIONS["station:nara-clearing"].x, y: POSITIONS["station:nara-clearing"].y });
       expect(me(talkTo(stayed, ME, "nara")).dialogue?.text).toContain("The hour went by. Absence is honest. I stay.");
-      // the altars play the catalog to a body whose hour was not claimed
-      expect(me(use(stayed, "crt-altar-2", "watch")).heard).toContain("The kneelers call it a reverie.");
+      // after the credits the altars play on, someone's sky (IV.8); the Absence's own reel is this season's and comes first
+      expect(me(use(stayed, "crt-altar-2", "watch")).heard).toBe("Ninety seconds of an empty sky through an oval, with a margin, and the tag in the corner. People kneel.");
     }
 
     // hijack: the freeze was signed and restraint is spent; Safety eats the rite

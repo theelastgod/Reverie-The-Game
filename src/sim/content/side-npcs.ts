@@ -51,8 +51,12 @@ const officerHub = (ctx: Ctx): string => {
   const { p } = ctx;
   const state = officerState(ctx);
   if (state === "clearing") return "You are standing where the Passing failed. He does not turn around. \"The freeze held. I have the paperwork. Say what you came to say.\"";
+  // IV.7: Safety's door; he has the form the Angel's hour was claimed on, at the Annex or under the mute bell
+  if (has(p, F.HIJACKED_SAFETY) && (state === "home" || state === "ring")) return "\"The freeze held.\" He has your form. He turns it over. \"Funded by. I have read it. It is mine when I sign it. I signed it.\"";
   if (state === "ring") return "He is under the shrine of the mute bell with a form on a board. \"Two with tongues. One without. Your count was right. I wanted to see the one without.\"";
   if (p.guest) return "\"Unsealed. You can still carry paper. Safety has paper that needs carrying.\"";
+  // IV.7, every other door: the rite done, the Annex desk reads like its plaque
+  if (has(p, F.PASSING) && state === "home") return "\"Officer of Safety. The district is stable.\" He says it the way a plaque says it. The form on his desk is blank where a signature would be. He does not ask how the hour went; Safety does not keep that column.";
   return "\"Officer of Safety. The district is stable. If you have come about the freeze, it holds. If you have come about something else, say it.\"";
 };
 

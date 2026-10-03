@@ -60,3 +60,15 @@ describe("the HUD's markup for assistive technology", () => {
     expect(html).toMatch(/<ul[^>]*class="journal-quests"[^>]*aria-label=/); // the open quests are a named list
   });
 });
+
+describe("the HUD's markup speaks only the script's lines", () => {
+  it("leaves the credits' roll to the script (LINES.CREDITS, filled by the HUD): the mark and no rows of its own", () => {
+    const roll = html.match(/<div class="credits-roll">([\s\S]*?)<\/div>\s*<div class="credits-hint">/);
+    expect(roll, "the roll").not.toBeNull();
+    expect(roll![1].match(/class="credits-line[^"]*"/g)).toEqual(['class="credits-line credits-mark"']);
+  });
+  it("cuts the lock panel's going-under line (I.11): the title and the small copy as the script has them", () => {
+    expect(html).not.toContain("The going-under is not failure.");
+    expect(html).toContain("You may remain in the Nave and watch. A wallet signs one line to link an Angel; the signature costs nothing and moves nothing. No mint, no chain, no settlement.");
+  });
+});

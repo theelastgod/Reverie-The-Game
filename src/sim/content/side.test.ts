@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { SIDE, SIDE_BY_ID, SIDE_ITEMS, SIDE_PLACES, SF, SC, SQ, offerKey } from "./side";
 import { SIDE_NPCS } from "./side-npcs";
 import { SIDE_POI_VERBS } from "./side-pois";
+import { POI_CONFIGS } from "./pois";
 import { NEWS, newsFor } from "./news";
 import { F, POI_STATES, SINKS, keptIn } from "./ids";
 import {
@@ -288,6 +289,21 @@ describe("side quests", () => {
         expect(s.plate, `${q.id}/${s.id} has a plate`).toBeTruthy();
         expect(existsSync(join(ASSETS, s.plate!)), `${q.id}/${s.id} plate ${s.plate} exists`).toBe(true);
         expect(s.plate).not.toMatch(/screening/);
+      }
+    }
+  });
+
+  it("a step that sends the body to a place names a key that place answers to (III.1: the Strait's second column is a Q)", () => {
+    for (const q of SIDE) {
+      for (const s of q.steps) {
+        for (const ctx of variants()) {
+          const target = typeof s.target === "function" ? s.target(ctx) : s.target;
+          const verbs = [...(POI_CONFIGS[target!]?.verbs ?? []), ...(SIDE_POI_VERBS[target!] ?? [])];
+          if (!verbs.length) continue; // a person or a place with no verbs of its own: E or the fight answers
+          const detail = typeof s.detail === "function" ? s.detail(ctx) : s.detail;
+          const key = detail.match(/press ([FEQ])\b/i)![1].toUpperCase();
+          expect(verbs.map(v => v.key), `${q.id}/${s.id}: "Press ${key}" at ${target}`).toContain(key);
+        }
       }
     }
   });

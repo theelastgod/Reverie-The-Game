@@ -53,7 +53,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 ### I.1 The first threshold
 *Step `arrive` (shipped). The west end of the Nave of Tubes, the guest spawn; the first altar north of it. Plate `plate-arena.jpg`. Guest-legal.*
 
-*Nothing is said on the walk. The altars light as the body passes and go dark behind it; nobody explains it.* [F.ARRIVED]
+*The altars light as the body passes and go dark behind it; nobody explains it.* (not in the code: an altar's light follows its POI state only, floors.ts setPois; crt-altar-1 lights on its watch and stays lit; nothing lights for a body passing) [F.ARRIVED; the step's notice stays as shipped: "The Nave of Tubes. Extraction is civic duty, the plaque says."]
 
 **THE ALTAR** — `crt-altar-1` watch (shipped, pois.ts)
 > A stack of screens with the tubes still warm. Static, then a room, then static. Nobody is in the room.
@@ -63,15 +63,15 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 ### I.2 Your name in the ledger
 *Step `intake` (shipped). The southern aisle; the Intake Clerk bars it. Plate `plate-arena.jpg`. Guest-legal.*
 
-**THE FIGHT** — lines.ts (shipped)
+**THE FIGHT** — lines.ts (shipped; DODGE_COPY and INTERRUPT play, combat.ts; lines.ts exports HIT_COPY, the third line, which nothing reads)
 > You stepped through the strike.
 > The swing stops in the air. Readable. Same number.
 > The hit held. Same number. The city felt it.
 
-**THE CLERK** — the Intake Clerk falls, `FALL_LINES.intake` (new; combat.ts already reads `FALL_LINES[F.INTAKE]` on the fall and finds no line)
+**THE CLERK** — the Intake Clerk falls, `FALL_LINES.intake` (shipped since the movements audit; combat.ts reads `FALL_LINES[F.INTAKE]` on the fall)
 > The Intake Clerk drops. The pen finishes the line before the hand does. You did not give a name.
 
-**THE JOURNAL** — the step's line on the fall (revised: replaces the step's notice, spine.ts:59)
+**THE JOURNAL** — the step's line on the fall (shipped since the movements audit; replaces the step's notice, spine.ts:49)
 > Entered.
 
 **THE CLERK** — the Intake Clerk fells you, `DEATH_BY` (shipped, combat.ts:187 and lines.ts; your own death line, the one place the sentence plays)
@@ -97,7 +97,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 **THE PRACTICE GROUND** — `guest-arena` read (shipped, pois.ts)
 > Practice ground. Strike the dummy; people are safe here. Click or Space to strike. Shift and a direction to step through a swing. R for the heavy: slower, same number, it stops a swing mid-air. No spoils. Guests are not loot.
 
-**THE CLERK** — Desk Three falls, `FALL_LINES["desk-three"]` (new; closes on the shipped notice, spine.ts:81; the spawn already carries the flag)
+**THE CLERK** — Desk Three falls, `FALL_LINES["desk-three"]` (shipped since the movements audit; closes on the shipped notice, spine.ts:71; the spawn carries the flag)
 > Desk Three drops. The count of the aisle stops at the gate.
 [F.DESK_THREE; wreckage on the aisle; the step's notice stays as shipped]
 
@@ -156,7 +156,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 ### I.6 Ask who owns the numbers
 *Step `ord` (shipped). The Annex gate, north of the Nave, the ledger on his knee. Plate `safety-annex.jpg`. Guest-legal. The first time the company is named.*
 
-**ORD** — `first` (revised: the entrance as the synopsis gives it)
+**ORD** — `first` (shipped since the movements audit: the entrance as the synopsis gives it)
 > Ord. I was Safety. I signed freezes. The Concern owns the numbers. Safety counts them. I counted them. That is why I'm at a gate and not a desk. The number stays honest for it. Safety calls it stability. I call it the process. The number goes up because you extract. I will not pretty it.
 ✦ *He left Safety. He did not leave the ledger. Nobody leaves the ledger.*
 - ▸ "What do you call the weather?" → `weather`
@@ -223,7 +223,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 - ▸ "Not now."
 [F.TALKED_NARA; party nara with]
 
-**NARA** — `who` (revised: the purse sent back, in the synopsis's words; the weather by its name)
+**NARA** — `who` (shipped since the movements audit: the purse sent back, in the synopsis's words; the weather by its name)
 > A clerk. Fourteen years at a yield desk. They counted what the street gave up and signed it as civic duty. The man at the next desk sat there the same fourteen years. He sent money for his neighbour. I sent it back. Nobody pays for this one. The weather took the street and then it took the counting. Nobody strikes a clerk in the end. The weather does.
 → `memorial`
 
@@ -263,7 +263,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 **NARA** — `memorial-voice`, `memorial-copper` (shipped; the two lines above, spoken at her when chosen in dialogue, with the same consequences)
 → `plot`
 
-**NARA** — `plot` (revised: the old word on the sexton's lips, Phase A; she uses it and does not explain it)
+**NARA** — `plot` (shipped since the movements audit: the old word on the sexton's lips; she uses it and does not explain it)
 > *(voice:)* The cloth is ready and the voice is still playing. The plot is west of me. Press F there and close the earth. Then go into reverie with it a while. Do not thank me.
 > *(copper:)* The copper holds. The plot is west of me. Press F there and close the earth. Then go into reverie with it a while. Do not thank me.
 ✦ *Burial does not list. She respects that more than she says.*
@@ -348,7 +348,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 ### I.11 The going-under
 *Step `going-under` (shipped). The threshold east of the burial plot: a lip of concrete over the Care; the verb opens once the weather is named and the plot is closed. Plate `plate-under.jpg`; `video/going-under` for an Angel, `video/guest-lock` on the panel for a guest. Guest-legal to the lip. No Wink here, for anyone.*
 
-**NARA** — `threshold` (revised: the Wink cut; on her street, after the naming)
+**NARA** — `threshold` (shipped since the movements audit: the Wink cut; on her street, after the naming)
 > *(a guest:)* The threshold is east of the plot. The Care is under it. Angels go under as death. A guest stops at the lip. I do not make the rule. I bury what it makes.
 > *(an Angel:)* The threshold is east of the plot. The Care is under it. You go under as death, not as a cutscene. I will be there when you wake. I am usually there.
 [npcs.ts:161's ✦ removed: nothing is heard at the lip]
@@ -361,7 +361,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 > *(the weather unnamed:)* A lip of concrete. The weather has no name yet. Give it one at the plaque before you go under it.
 > *(an Angel, after:)* The threshold. You have been under it. The Care is south, through the gate.
 
-**THE THRESHOLD** — go under, a guest (lines.ts GUEST_LOCK shipped; then the lock panel, index.html, revised: the middle line cut)
+**THE THRESHOLD** — go under, a guest (lines.ts GUEST_LOCK shipped; then the lock panel, index.html, shipped since the movements audit: the middle line cut)
 > A guest cannot prepare the ground.
 The paper panel, the gold mark:
 > A GUEST CANNOT PREPARE THE GROUND
@@ -556,7 +556,7 @@ The paper panel, the gold mark:
 ### II.7 A prior hour
 *Step `history` (shipped). The Care: wreckage only your serial can see, faced from the shrine with Q. Plate `serial-wreckage.jpg`. Angels only. A serial with no hour written back has no wreckage and walks on; the beat is theirs the next time they link.*
 
-**THE WRECKAGE** — `history` Q, Face the history (revised: the shipped say ends "The serial remembers. The city does not."; the synopsis makes the mark the Concern's file on you)
+**THE WRECKAGE** — `history` Q, Face the history (shipped since the movements audit: the synopsis makes the mark the Concern's file on you)
 > *(the mark's line, below)* Only you can face this wreckage. The serial remembers. The city does not. The Concern keeps the file.
 
 **THE WRECKAGE** — the mark's line, by what the log holds (shipped, identity.ts; the last Passing's outcome first, else what the hands did)
@@ -566,8 +566,8 @@ The paper panel, the gold mark:
 > *(an Appearance)* A prior hour. A trace came while you stood here. The city was briefly world.
 > *(an Absence)* A prior hour. Nothing came. You stood in the hole anyway.
 > *(a Hijack)* A prior hour. Somebody claimed the rite. You are still marked.
-> *(Failed; revised from "Gestell kept the weather.")* A prior hour. The weather kept it. The hole did not open.
-✦ *The serial remembers. The city does not. The file is theirs; the facing is yours.* (revised from "That is the only privacy left.")
+> *(Failed; shipped since the movements audit, in place of "Gestell kept the weather.")* A prior hour. The weather kept it. The hole did not open.
+✦ *The serial remembers. The city does not. The file is theirs; the facing is yours.* (shipped since the movements audit, in place of "That is the only privacy left.")
 [F.HISTORY; readiness +2]
 
 ### II.8 The sky is already priced
@@ -587,15 +587,15 @@ The paper panel, the gold mark:
 ✦ *It looks like freedom. It is a stall. The sky is already priced.*
 [F.BOARD; W.CLEARING_LISTED; the city's listing "A Clearing, the hole scheduled" posted at 40 by the resistance, for everyone; it moves when the city does: +8 when a private hour is sold, −4 when one is refused]
 
-**THE BOARD** — when anyone tries to buy the Clearing (revised, economy.ts MARKET_CITY_LISTING: shipped as "A price, not a sale. The hole does not travel."; the synopsis's "That is" added; economy.test.ts moves with it)
+**THE BOARD** — when anyone tries to buy the Clearing (shipped since the movements audit, economy.ts MARKET_CITY_LISTING: the synopsis's "That is" added)
 > That is a price, not a sale. The hole does not travel.
 
-**QUILL** — `board-read` (revised: the synopsis's margin line and her look at the listing added to the shipped line; after the board, until the Organs open)
+**QUILL** — `board-read` (shipped since the movements audit: the synopsis's margin line and her look at the listing added; after the board, until the Organs open)
 > Quill listed a Clearing. Forty Bestand. On commission: the buyer sent paper and a price and I never met them. She looks at the listing the way she looks at a print. There's a margin. Whoever the resistance is, they bought their paper from the same man I did. Nicer lighting than the company. Same electrician. Copies travel. The hole does not. The people who say they are against the process are pricing it. I am not against anything. I just print faster. That is the difference and it is not in my favour.
 > *(when the city has moved the price)* Quill listed a Clearing. Forty Bestand when I wrote it; {price} on the board today. On commission: ... and the rest the same.
 ✦ *The resistance is a stall with better lighting.*
 
-*The forge tray's F, Hear Quill on copies, opens `forge-lesson` from here already; that is III.8's scene and is written there. The board's E verbs (the copy's price, taking it down) are the side hour *A copy of a hole*, shipped.*
+*The forge tray's F, Hear Quill on copies, opens `forge-lesson` once the board is read and the Organs are open (Movement III, or the Organs door); that is III.8's scene and is written there. The board's E verbs (the copy's price, taking it down) are the side hour *A copy of a hole*, shipped.*
 
 ### II.9 The hour
 *New beat, Phase B (rides steps `board` and `operator`; the dialogue is the Kerb's shipped side hours `side-kerb-hours-for-sale` and `side-kerb-hour-that-does-not-strike` and Halla's nodes; Caul's address is a dialogue effect on the bought hour's wait, shipped since Phase B, the hour; the ovals champagne at the hour for everyone is a world tick, Phase C, with the launch window). The Kerb of Hours: the omen terrace, the hour bell north of the terraces through the gap in the low wall, the forecast glass east of the bell. Plate `plate-kerb.jpg`. The Kerb is a district a guest may walk and Halla's hours are guest-legal, so a guest too can buy the hour that does not come and hear the voice when it does not; the Winke here are an Angel's. Set piece.*
@@ -606,8 +606,9 @@ The paper panel, the gold mark:
 
 **HALLA VOSS** — `greet` (shipped, side-npcs.ts)
 > "Halla Voss. I read the front." She is not looking at the glass. She is looking at a slip with a time on it. "Hours are three Bestand. Fronts are not for sale. Which are you?"
+> *(after she has stopped selling)* "Halla Voss. I read the front." She is at the forecast glass with nothing to sell. "For nothing. It is worse. It is better."
 - ▸ "What do you read?" → `read`
-- ▸ "Sell me an hour." → `hours`
+- ▸ "Sell me an hour." → `hours` (while she still sells)
 - ▸ "Does the bell strike?" → `hour`
 - ▸ "Leave."
 
@@ -666,10 +667,10 @@ The paper panel, the gold mark:
 ✦ *The bell you did not hear is the one that rang. She heard this one. It ruins her whole trade.*
 [SF.HOUR_TOLD; readiness +2]
 
-*The bell's verbs this hour are the two waits only. Its F, Strike the bell, is III.6's, the one strike on the way to the glass, and is written there; today the verb has no gate, so a strike here would complete III.6 and open the House of Sky's hour before III exists, and it is gated `when: ctx.p.movement >= 3` (shipped since Phase A, Movement III).*
+*The bell's verbs this hour are the two waits only. Its F, Strike the bell, is III.6's, the one strike on the way to the glass, and is written there; it is gated `when: ctx.p.movement >= 3` (shipped since Phase A, Movement III).*
 
 **THE GLASS** — `read` F, Read the forecast (shipped since Phase C, the date: the next hour as a date in the season's own calendar, "season {n}, day 7, 00:00", and a count running down to it, "{d}d {hh}:{mm}:{ss}"; the launch's, once this season's has gone by the next season's; pois.ts, src/sim/launch.ts)
-> Forecast glass. *(the band:)* Clear weather. Clearings last. Winke are dense. Yield is poor. / Mixed weather. The default. Nothing has decided yet. / Fat weather. Yield is heavy. The sacred doors dim. The storm is high. / Meltdown weather. Passings fail unless a Clearing is held. The street flags itself. *(then:)* Under the band, in the same face as every meter in the city, a line the Concern posts: the next hour, as a date, and a count running down to it.
+> Forecast glass. *(the band:)* Clear weather. Clearings last. Winke are dense. Yield is poor. / Mixed weather. The default. Nothing has decided yet. / Fat weather. Yield is heavy. The sacred doors dim. The storm is high. / Meltdown weather. Passings fail unless a Clearing is held. The street flags itself. *(then:)* Under the band, in the same face as every meter in the city, a line the Concern posts: the next hour, season {n}, day 7, 00:00, and a count running down to it: {d}d {hh}:{mm}:{ss}.
 > *(House of Sky, between the band and the Concern's line)* The drift is down: the weather eases toward baseline. / The drift is up: the weather climbs toward baseline. / No drift. The weather sits at baseline. Only Sky sees the front.
 [forecast-glass lit]
 
@@ -682,7 +683,7 @@ The paper panel, the gold mark:
 **VESPER HALE** — `blind` (shipped)
 > You're looking at something I'm not. I do not price what I cannot see. Sit down when you are back.
 
-**VESPER HALE** — `cold` (revised: the shipped line says "Your hall is in the Care", which is the House of Mortals' hall only)
+**VESPER HALE** — `cold` (shipped since the movements audit, in place of "Your hall is in the Care", which is the House of Mortals' hall only)
 > Vesper Hale will not quote a private node to someone who has not read who owns the public ones. Your hall is where your House stands. Read the plaque. Then come back and I will tell you what your hour is worth.
 
 **THE DESK** — `look` F, Look at the desk (shipped, pois.ts operator-desk)
@@ -739,11 +740,12 @@ The paper panel, the gold mark:
 
 *The door. Step `door` (shipped): the Organs gate east of the Wet Grid is a gate, not a thing that speaks; it opens on F.M3, paid by Cold at the desk or by the grave below. For a taker the step is done at the desk and the garden waits for III.5. For a refuser it is this hour's last scene.*
 
-**NARA** — `garden-silent` (revised: "the node you turned on in the first hour" is also the one the city turned on while you kept yours; the synopsis III.5)
-> Nara Vale looks at the garden that used to be a hole. The node you turned on in the first hour, or the one the city turned on while you kept yours. She will not speak until it is in the ground. Press F at the garden.
+**NARA** — `garden-silent` (shipped since Phase A, Movement III: the keeper's node named)
+> Nara Vale looks at the garden that used to be a hole. The node you turned on in the first hour. She will not speak until it is in the ground. Press F at the garden.
+> *For the one who kept the first node:* Nara Vale looks at the garden that used to be a hole. The node the city turned on while you kept yours. She will not speak until it is in the ground. Press F at the garden.
 ✦ *You took a hole and called it weather. It came back as earth. Only burial makes it world again.*
 
-**THE GARDEN** — `bury` F, Bury the garden (revised: the shipped line opens "The Clearing from the first hour is wreckage now."; it was a node)
+**THE GARDEN** — `bury` F, Bury the garden (shipped since Phase A, Movement III: a node, not a Clearing, from the first hour; heard by the first to bury it since the movements audit)
 > The node from the first hour is wreckage now. You put it in the ground. Nara Vale will speak.
 > *(someone closed it before you)* The garden has been buried. You stay beside it until the city stops counting your time. Nara Vale will speak.
 ✦ *You took a hole and called it weather. It came back as earth. Only burial makes it world again.*
@@ -784,9 +786,9 @@ The paper panel, the gold mark:
 > She does not turn. She will not stand with a city that will not bury. The hole in the Care is still a grave. Put it in the ground and she will speak.
 [the engine's line when she goes: "Nara Vale is gone. You kept the process and lost the sexton." (`lines.ts` NARA_LEAVES)]
 
-**THE DESK** — the funeral desk, `pay` F, Pay for a burial (5) (shipped, pois.ts funeral-desk; the sold hour's say new)
+**THE DESK** — the funeral desk, `pay` F, Pay for a burial (5) (shipped, pois.ts funeral-desk; the line chosen before the pay and the sold hour's say shipped since the movements audit)
 > *(she is waiting, the second silence)* You paid Nara Vale's street. Five Bestand. The body is in the ground. She will speak again.
-> *(she is waiting, the hour sold and the garden not yet in the ground; new)* You paid Nara Vale's street. Five Bestand. She will stand with you. She will not speak until the garden is in the ground.
+> *(she is waiting, the hour sold and the garden not yet in the ground)* You paid Nara Vale's street. Five Bestand. She will stand with you. She will not speak until the garden is in the ground.
 > *(otherwise)* You paid Nara Vale's street. Five Bestand. A body nobody claimed is in the ground. The desk writes a name it made up.
 [Bestand −5, sink funeral; readiness +2; W.BURIALS +1; Nara with, if she was waiting; her voice only when the garden is in the ground, if the hour was sold]
 
@@ -813,7 +815,7 @@ The paper panel, the gold mark:
 > You refused the water. The Strait stops paying a furnace. The number is quieter. Nara Vale does not have to forgive it.
 [organ-strait refused, for everyone; the weather down one; news "Someone refused the Strait. The water is not paying."]
 
-**THE STRAIT** — the back of the plaque, `read the second column` Q (shipped, side-pois.ts; the Column hour's first step, after III.4 and Renn's `column-offer`)
+**THE STRAIT** — the back of the plaque, `read the second column` Q (shipped, side-pois.ts; the Column hour's first step, after III.4 and Renn's `column-offer`; the step's detail names Q since the movements audit)
 > Back of the plaque, in a hand that is not Safety's: 'A river. Boats with names on them. A ferry that ran on hours, not yield.'
 
 **THE PLAQUE** — the House of Earth hall, `read` (shipped, pois.ts; an Earth Angel reads their hall here, the one hall behind the Organs door, with the oldest copy of the lease)
@@ -852,9 +854,11 @@ The paper panel, the gold mark:
 **RENN COIL** — `hub` (shipped)
 > "Cold desk. I post the number for each organ. Strait, Foundry, Cable. The number is the whole column." There is a second column on the sheet. It is folded under.
 > *Once Ord has written where you would cut it (III.4), one sentence more:* "Ord's entry says you would cut it at the water. I post the Strait first." *· or* "Ord's entry says you would cut it at the heat. I post the Foundry first." *· or* "Ord's entry says you would cut it at the light. I post the Cable first." *· or* "Ord's entry says nowhere. I post them in the order they are."
-- ▸ "The Foundry." → `foundry-offer` (the Foundry read; posted first, or not behind the cut organ)
 - ▸ "The Strait toll." → `toll-offer` (the side hour *Strait toll*, written in the appendix; posted first, or not behind the cut organ)
 - ▸ "The Cable hums." → `cable-offer` (the side hour *Cable quiet*, written in the appendix; posted first, or not behind the cut organ)
+- ▸ "I kept a node." → `cable-told` (at the Cable quiet hour's tell step, written in the appendix)
+- ▸ "The Foundry." → `foundry-offer` (the Foundry read; posted first, or not behind the cut organ)
+- ▸ "The Foundry is dark." → `foundry-told` (at the Foundry hour's tell step)
 - ▸ "There is a second column." → `column-offer` (once the map is drawn)
 - ▸ "Leave."
 
@@ -864,10 +868,11 @@ The paper panel, the gold mark:
 
 **THE FOUNDRY** — `rake the coals out` E (shipped, side-pois.ts; the Foundry's hour)
 > You rake it out. Heat without a nation, ended. The Cable hums a note lower. Somewhere a number becomes zero.
-[organ-foundry dark, for everyone; news "Someone raked the Foundry out. Heat without a nation, ended."]
+[organ-foundry dark, for everyone; SW.FOUNDRY_DARK; every altar in the Nave flickers once, for everyone (only when this body raked it out; a Foundry already dark closes the step with no news and no second flicker); news "Someone raked the Foundry out. Heat without a nation, ended."]
 
 **RENN COIL** — `foundry-told` (shipped)
 > He writes a zero. He looks at it. "I have posted that number for three years and never seen the front of it." He picks up the card. "I am going to stand at the Foundry. Somebody who posts the number should see what zero looks like from the front."
+✦ *Every furnace is a mouth. Every mouth was a place. He went to see what the place was.*
 [Renn Coil leaves the desk for the dark Foundry; news "The cold desk clerk left the desk. He is standing at the dark Foundry with the number."]
 
 **RENN COIL** — `hub`, at the dark Foundry (shipped)
@@ -896,7 +901,7 @@ The paper panel, the gold mark:
 > *(once the Foundry is dark, since Phase C, the weave)* The Cable. Signal as flesh. The Strait is already paying for this light, and the light is the catalog: every altar in the Nave draws its reel from here. Someone darkened the Foundry and they flickered, all of them, for everyone.
 [F.CABLE]
 
-**THE CABLE** — `study`, once a node is kept (shipped)
+**THE CABLE** — `study`, once the Cable is quiet (shipped; `organ-cable` quiet, for everyone, when the side hour *Cable quiet* finishes)
 > The Cable. Someone kept a node. The hum is less. The Foundry notices.
 
 **THE CABLE** — the back of the plaque, `read the second column` E (shipped, side-pois.ts; the last line of Renn's column)
@@ -920,24 +925,24 @@ The paper panel, the gold mark:
 **ORD** — `map-strait` (shipped)
 > The water. He writes it. Stop the Strait and the Foundry goes hungry and the Cable goes dark on its own, a day later, honest. The Strait has a verb for that. I did not tell you to use it. Renn at the cold desk will post the Strait first now. That is what writing it down does.
 ✦ *Cutting at the source is the cleanest cut and the only one the city notices.*
-[C.MAP strait; F.MAP; readiness +2; the cold desk posts the Strait first; the House whose layer the water is loses an hour (new, Phase C); news (shipped since Phase A, Movement III): "An Angel told Ord's ledger they would cut it at the water."]
+[C.MAP strait; F.MAP; readiness +2; the cold desk posts the Strait first; the House whose layer the water is loses an hour (new, Phase C; not built: waits on the owner to name the water's House and say what a House's hour is, HANDOFF Backlog A); news (shipped since Phase A, Movement III): "An Angel told Ord's ledger they would cut it at the water."]
 
 **ORD** — `map-foundry` (shipped)
 > The heat. He writes it. Darken the Foundry and the Strait keeps paying into a room. The Cable drinks what was already lit. Cold is honest; it is not the last word. Renn will post the Foundry first. He has never posted a zero. You may be the reason he does.
 ✦ *Cutting in the middle leaves both ends running. It feels like a decision. It is a delay.*
-[C.MAP foundry; F.MAP; readiness +2; the cold desk posts the Foundry first; the House whose layer the heat is loses an hour (new, Phase C); news (shipped since Phase A, Movement III): "An Angel told Ord's ledger they would cut it at the heat."]
+[C.MAP foundry; F.MAP; readiness +2; the cold desk posts the Foundry first; the House whose layer the heat is loses an hour (new, Phase C; not built: waits on the owner to name the heat's House and say what a House's hour is, HANDOFF Backlog A); news (shipped since Phase A, Movement III): "An Angel told Ord's ledger they would cut it at the heat."]
 
 **ORD** — `map-cable` (shipped)
 > The light. He writes it. Quiet the Cable and nothing upstream notices; the Strait pays, the Foundry burns, and the signal that told you so goes soft. Renn will post the Cable first. The Cable has no switch. It has a desk and a node you can choose not to extract.
 ✦ *Cutting at the end is what most people mean by resistance. The process does not mind.*
-[C.MAP cable; F.MAP; readiness +2; the cold desk posts the Cable first; the House whose layer the light is loses an hour (new, Phase C); news (shipped since Phase A, Movement III): "An Angel told Ord's ledger they would cut it at the light."]
+[C.MAP cable; F.MAP; readiness +2; the cold desk posts the Cable first; the House whose layer the light is loses an hour (new, Phase C; not built: waits on the owner to name the light's House and say what a House's hour is, HANDOFF Backlog A); news (shipped since Phase A, Movement III): "An Angel told Ord's ledger they would cut it at the light."]
 
 **ORD** — `map-whole` (shipped)
 > Nowhere. He writes that too, and underlines it. The number is the whole column. Cut it anywhere and you have two columns and a lie between them. I drew it once. I will not draw it twice. Renn posts them in the order they are.
 ✦ *Refusing to cut is also a cut. It is the one that leaves your hands clean and the map honest.*
 [C.MAP whole; F.MAP; readiness +2; the cold desk posts them in order; news (shipped since Phase A, Movement III): "An Angel told Ord's ledger they would cut it nowhere."]
 
-**ORD** — `after-map` (revised: the Kerb, not the Clearing, is next; he stays at the Strait until the glass is faced, so this plays here. Phase A, Movement III, ships it with "I will be at it" in place of "behind it": Ord waits beside the glass until the room exists, Phase B)
+**ORD** — `after-map` (shipped since the movements audit: the Kerb, not the Clearing, is next; he stays at the Strait until the glass is faced, so this plays here)
 > You said the water. *· or* You said the heat. *· or* You said the light. *· or* You said nowhere. The map is drawn. The Kerb first. Face the glass; I will be behind it. I have a line to read you there. Then Quill, on the Grid, about hints and what they cost to copy.
 > *If the Foundry is dark:* …The Foundry is dark. The Cable still drinks on what the Strait already paid. Nobody unlights a debt. The number is quieter. I will not pretty it.
 > *If the water is refused:* …You refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.
@@ -945,7 +950,7 @@ The paper panel, the gold mark:
 - ▸ "Enough."
 
 **ORD** — `number` (shipped since Phase A, Movement III)
-> The process is at {figure}. Tax {rate} percent on every node. The number goes up because people extract. I will not pretty it.
+> The process, at {figure}. Tax {rate} percent on every node. The number goes up because people extract. I will not pretty it.
 
 ### III.5 What the work destroyed
 *Step `garden` (shipped). The wreckage garden in the Care, Nara at its edge (station `nara-garden`); Ione Kade on the bench at its east edge. Plate `wreckage-garden.jpg`. Angels only. The taker of the private hour comes to it now. The refuser buried it in the second hour to open the Organs door and knelt at the plate then, so the step is already done for them; `garden-buried` and the bench are theirs here. Either way the plate is hers and the confession is not yet: she keeps that for the ring.*
@@ -958,7 +963,7 @@ The paper panel, the gold mark:
 **THE GARDEN** — `look` F (shipped), before the earth
 > A hole with a fence around it. Wreckage in the shape of a node. Someone will have to answer for it before it can be earth.
 
-**THE GARDEN** — `bury` F (shipped since Phase A, Movement III: a node, not a Clearing, from the first hour)
+**THE GARDEN** — `bury` F (shipped since Phase A, Movement III: a node, not a Clearing, from the first hour; heard by the first to bury it since the movements audit)
 > The node from the first hour is wreckage now. You put it in the ground. Nara Vale will speak.
 > *If someone closed it before you:* The garden has been buried. You stay beside it until the city stops counting your time. Nara Vale will speak.
 ✦ *You took a hole and called it weather. It came back as earth. Only burial makes it world again.*
@@ -996,7 +1001,7 @@ The paper panel, the gold mark:
 > You have been to the Organs. You have the look. Everything feeds everything and none of it feeds anyone. I am not going to explain it. I am going to be here a little while longer and then I am not.
 
 ### III.6 One strike, on the way
-*Step `bell` (shipped). The hour bell north of the Kerb's terraces, through the gap in the low wall. Plate `clearing-ring.jpg`. Angels; a guest on the Kerb is refused at the bell. The bell is the one sound the Concern cannot schedule.*
+*Step `bell` (shipped). The hour bell north of the Kerb's terraces, through the gap in the low wall. Plate `clearing-ring.jpg`. Angels; a guest on the Kerb is never offered the strike (it is Movement III's). The bell is the one sound the Concern cannot schedule.*
 
 **THE BELL** — `strike` F (shipped, pois.ts)
 > You strike the hour bell once, on the way to the glass. The note goes over the Kerb and does not come back. On the terrace below, the omen-reader looks up from her slip with a time on it; the time is wrong by exactly one strike.
@@ -1005,7 +1010,7 @@ The paper panel, the gold mark:
 **THE BELL** — `strike`, any time after the glass (shipped)
 > You strike the hour bell. The note goes over the Kerb and does not come back. Somebody below looks up and then goes on extracting.
 
-**THE BELL** — for a guest (shipped, lines.ts)
+**THE BELL** — for a guest (in lines.ts, SPECTATOR_LINES, but not said: a guest is never offered the strike, and a spectated verb is refused with LINES.SPECTATOR)
 > A bell on a schedule nobody signed. Not yours to strike.
 
 **HALLA VOSS** — `struck` (shipped since Phase A, Movement III; the hub offers "I struck it once, on the way." with F.BELL until she has heard it), on the terrace, once
@@ -1016,7 +1021,7 @@ The paper panel, the gold mark:
 ✦ *The bell you did not hear is the one that rang. She heard this one. It ruins her whole trade.*
 
 ### III.7 The glass, from behind
-*Step `failed` (shipped) carries the glass and the hole; the room behind the glass is new, Phase B, as verbs and dialogue on the same step. Phase B (shipped): the step's `done` is `has(F.FAILED) && !!ctx.p.choices[C.GLASS]`: the room ends on the reader's post or the light put out, never on a walk out (a decliner is pointed at the oval, "the room has no other way out of it"); the hole-sight path keeps its F.FAILED, Wink and readiness, moved from the step's onComplete to a `Stand at the hole` verb on `seed-4` beside the mark, since the step no longer completes there; the target is `forecast-glass` (or the nearest mark for those who see it) until F.FAILED, then `station:caul-glass`. The forecast glass on the Kerb; then, past the hour clerks at the top of the Kerb, the room behind it: `plate-kerb.jpg` for the plate, `tiles/operator` for the floor, clear of the Kerb's node. Ord is in the room, having walked the Organs with you: a new station, `ord-glass`, from F.FAILED until the glass is decided (`ord-strait` then holds until F.FAILED, not F.MAP, so `after-map` plays at the Strait); his entry there is `figure`, and the jump from Caul's menu to him is a `dialogue` effect on the choice, not a `next`. Anselm Caul is in it, in person: the guest sprite and portrait, no halo, no aura, the GUEST label over him; his name is in the prompt and the dialogue only. New flags: F.CAUL_MET at `glass`, F.CAUL_OFFER at `offer`, F.CAUL_ASKED at `looked`; his entry: a guest hears `guest`; an Angel hears `glass`, then `sample`, then `looked`, then `after`, by flag. Read and dark are exclusive: C.GLASS takes one value; the oval's Q is offered only after the offer and while C.GLASS is unset; a reader's line stays on the glass; a darkened room never gets the offer again. The Kerb is a district a guest may walk, which is why he can be here and why a guest can walk in on him. The screen behind the desk is `props/crt-altar`, playing `video/passing-failed`. Set piece. The step is an Angel's.*
+*Step `failed` (shipped) carries the glass and the hole; the room behind the glass is new, Phase B, as verbs and dialogue on the same step. Phase B (shipped): the step's `done` is `has(F.FAILED) && !!ctx.p.choices[C.GLASS]`: the room ends on the reader's post or the light put out, never on a walk out (a decliner is pointed at the oval, "the room has no other way out of it"); the hole-sight path keeps its F.FAILED, Wink and readiness, moved from the step's onComplete to a `Stand at the hole` verb on `seed-4` beside the mark, since the step no longer completes there; the target is `forecast-glass` (or the nearest mark for those who see it) until F.FAILED, then `station:caul-glass`. The forecast glass on the Kerb; then, past the hour clerks at the top of the Kerb, the room behind it: `plate-kerb.jpg` for the plate, `tiles/operator` for the floor, clear of the Kerb's node. Ord is in the room, having walked the Organs with you: a new station, `ord-glass`, from F.FAILED until the glass is decided (`ord-strait` then holds until F.FAILED, not F.MAP, so `after-map` plays at the Strait; shipped since the movements audit); his entry there is `figure`, and the jump from Caul's menu to him is a `dialogue` effect on the choice, not a `next`. Anselm Caul is in it, in person: the guest sprite and portrait, no halo, no aura, the GUEST label over him; his name is in the prompt and the dialogue only. New flags: F.CAUL_MET at `glass`, F.CAUL_OFFER at `offer`, F.CAUL_ASKED at `looked`; his entry: a guest hears `guest`; an Angel hears `glass`, then `sample`, then `offer` until the glass is decided, then `looked`, then `after`, by flag. Read and dark are exclusive: C.GLASS takes one value; the oval's Q is offered only after the offer and while C.GLASS is unset; a reader's line stays on the glass; a darkened room never gets the offer again. The Kerb is a district a guest may walk, which is why he can be here and why a guest can walk in on him. The screen behind the desk is in his lines only (not built: no `props/crt-altar` stands in the room and nothing plays `video/passing-failed` there). Set piece. The step is an Angel's.*
 
 **THE GLASS** — `face last season` F (shipped since Phase A, Movement III, pois.ts: the recorders in the hole, not an empty one)
 > In the glass, behind the forecast: last season's Passing failed. The hour went by. The city kept the weather. There is a hole in the Clearing with the recorders still standing in it. You watched. You did not loot it.
@@ -1026,7 +1031,11 @@ The paper panel, the gold mark:
 ✦ *dwelling:* The hole had people in it, and it held. A room can be held and still be recorded from the door. (shipped since Phase A, Movement III)
 ✦ *process:* The ledger has the season as a line: opened, held, crossed, taken. The line is honest. Honest is not the same as enough. (shipped since Phase A, Movement III)
 ✦ *surface:* Last season's hole lists for ninety seconds at a time. It is the one thing on the Kerb that has already been copied. (shipped since Phase A, Movement III)
-[F.FAILED; forecast-glass lit; readiness +2. Ruin-sight, the Storm and the House of Sky can stand at the hole itself, in the asphalt south of the Grid or on the Ring, and hear the same Wink there (shipped, spine.ts; Phase B moves it to a `stand` verb at the mark): F.FAILED; readiness +2]
+[F.FAILED; forecast-glass lit; readiness +2. Ruin-sight, the Storm and the House of Sky can stand at the hole itself, in the asphalt south of the Grid, and hear the same Wink there (shipped since Phase B, pois.ts: a `Stand at the hole` F verb on `seed-4` beside the Clearing's mark; the Ring's mark has no verb): F.FAILED; readiness +2]
+
+**THE GROUND** — `seed-4` `Stand at the hole` F (shipped since Phase B, pois.ts; Ruin-sight, the Storm and the House of Sky, while last season's mark is in the Clearing; the same Wink as the glass)
+> You stand over it. Last season's Passing failed here, south-east of the seed ground. The hour went by. The city kept the weather. The recorders stood where it went. You did not loot it.
+[F.FAILED; readiness +2]
 
 **THE GLASS** — for a guest (shipped, lines.ts)
 > Glass. You do not see the front.
@@ -1042,7 +1051,7 @@ The paper panel, the gold mark:
 > *If you took the copper:* "At the recorder you took the copper. Sound. The voice is in my book either way."
 > "Your name was in the book before you struck anyone. That is not a threat. That is how a book works."
 ✦ *He cannot hear this. He has never heard one. He is the only body in the room not listening.*
-[F.CAUL_MET (new)]
+[F.CAUL_MET]
 - ▸ "The screen. What is it?" → `sample`
 - ▸ "Ord. The figure." → ORD `figure` (a `dialogue` effect on the choice)
 - ▸ "Not now."
@@ -1050,28 +1059,32 @@ The paper panel, the gold mark:
 **CAUL** — `sample` (shipped since Phase B, first beats)
 > On the screen, last season: the ring, the floor, the hole, the recorders standing in it. "Four hundred in the ring. Readiness at sixty-one. Everything that crossed, the tape held. You are looking at a failure. I am looking at a sample." He lets it run. "The reel at the altar in the Nave, the one that has played since you arrived: this, cut to ninety seconds. The city kneels to its own sky. It is the best thing I have ever sold and I did not make it." He watches you watch it. "I was never counted. People take that for the wound. It is the clearance."
 ✦ *The altar in the first hour. The oval, the bell, the ninety seconds. It was beautiful. It is the same tape.*
-- ▸ "Ord. The figure." → ORD `figure` (a `dialogue` effect on the choice)
 - ▸ "What do you want from me?" → `offer`
+- ▸ "Ord. The figure." → ORD `figure` (a `dialogue` effect on the choice)
 
-**ORD** — `figure` (shipped since Phase A, Movement III; since Phase B in the room, `station:ord-glass` from F.FAILED until the glass is decided (or the forge's lesson, if taken first), reachable from Caul's menu by a `dialogue` effect, with "Back to him." the way back across the desk), the ledger open at last season
+**ORD** — `figure` (shipped since Phase A, Movement III; since Phase B in the room, `station:ord-glass` from F.FAILED until the glass is decided (or the forge's lesson, if taken first), reachable from Caul's menu by a `dialogue` effect, with "Back to him." the way back across the desk, offered only in the room since the movements audit), the ledger open at last season
 > Ord does not look at the screen. He has it by heart. "Four hundred and six in the ring. The glass at sixty-one; that is the city's figure, not a body's. The weather at seventy-three. Third minute: a trace crossed. I wrote that line the way I wrote every line. Then the next one came across my desk, on the Concern's paper, and I wrote that too: taken. One. That is the figure. It was not short of anything. I counted it, and I walked to a gate the same week, and I have been at one since." He closes the book on his finger. "The reel at the altar is that line. He will tell you it is a sample. It is a sample. It is also my handwriting."
 ✦ *The count. He said he left on principle. He left on this line.*
 [F.FIGURE, once; news (shipped since Phase C, the weave), once for the city, by the first body to hear it: "Ord's figure is on the marquee: last season, four hundred and six in the ring, the glass at sixty-one, a trace crossed and was taken."]
-- ▸ "Back to him." → CAUL `offer` (a `dialogue` effect on the choice)
+- ▸ "Back to him." → CAUL `offer` (a `dialogue` effect on the choice; once the offer is made, → CAUL `after`)
+- ▸ "Give me the number." → `number`
+- ▸ "Enough."
 
-**ORD** — `figure-after` (shipped since Phase A, Movement III; "It is on the marquee." is not said: the figure goes on the marquee once for the city, Phase C, the weave, and the marquee keeps only its last lines, so for most bodies it would no longer be true), at the Annex gate once the figure is read, until the act
+**ORD** — `figure-after` (shipped since Phase A, Movement III; "It is on the marquee." is not said: the figure goes on the marquee once for the city, Phase C, the weave, and the marquee keeps only its last lines, so for most bodies it would no longer be true), in the room once the figure is read, until the glass is decided (or the forge's lesson, if taken first); then at the Annex gate, until the act
 > The figure is read. It is on the marquee. The weather did not move for it; I did not expect it to. Quill has something for you on the Grid. Then the Care, and the act.
+- ▸ "Give me the number." → `number`
+- ▸ "Enough."
 
 **CAUL** — `offer` (shipped since Phase B, first beats; the reader's bargain as written here since Phase C, the journal line, which gives what it says: the glass in a reader's field notes, the launch's hour with its count, the city's figure and the count in the hole; the date has been on the glass since Phase C, the date, at a fixed hour of the season, so "that figure sets the date" is his claim and not yet the glass's rule: the launch window decides whether the figure moves the hour)
 > "The glass is not a forecast. It is an instrument. It sums the readiness of every angel in the city into one figure, and that figure sets the date. The city reads a calendar. I read the city." He turns the screen off; the room is no darker. "I would like a reader. Let the ledger read your readiness live, as a line, and in return you read the glass: the launch's hour, the count in the hole, the city's figure, in your journal from now on, the way we see them. Nothing is paid." He folds his hands and waits, pleasantly, for the laugh he has read about.
 ✦ *A line on his glass is a line in his book. The book listens. It has since the clerk.*
-[F.CAUL_OFFER (new): from here the oval on the wall takes Q while the glass is undecided]
+[F.CAUL_OFFER: from here the oval on the wall takes Q while the glass is undecided]
 - ▸ "Read me. I read the glass." → `reader`
 - ▸ "No." → `declined`
 
 **CAUL** — `reader` (shipped since Phase B, first beats; "and a date" since Phase C, the date; past the threshold of dark lights "and, where the date was, nothing")
 > "Done." He does not write; the glass does. A line appears in it with #SERIAL on it, the length of your readiness, and under it the city's figure and a date. "You will find it reads the same from either side. That is the thing about glass."
-[C.GLASS read (new); Cold is your current; perception: the glass's readings in your journal from now on, the launch's hour, the count in the hole, the city's figure (shipped since Phase C, the journal line: Snap.glass for a reader, THE GLASS in the field notes, "The launch: {date} · {count}" or "now" through the window or "no date · {n} lights out on the Kerb", then "The city's figure: {n} · In the hole: {n}"); your serial on the glass as a line, for everyone; news (new): "An Angel's readiness is on the forecast glass as a line."]
+[C.GLASS read; Cold is your current; perception: the glass's readings in your journal from now on, the launch's hour, the count in the hole, the city's figure (shipped since Phase C, the journal line: Snap.glass for a reader, THE GLASS in the field notes, "The launch: {date} · {count}" or "now" through the window or "no date · {n} lights out on the Kerb", then "The city's figure: {n} · In the hole: {n}"); your line on the glass, counted for everyone (W.GLASS_LINES: the glass shows others how many lines cross it, not whose); news: "An Angel's readiness is on the forecast glass as a line."]
 → `looked`
 
 **CAUL** — `declined` (shipped since Phase B, first beats)
@@ -1084,7 +1097,7 @@ The paper panel, the gold mark:
 
 **THE OVAL** — the light on the wall, `put the light out` Q (shipped since Phase B, first beats; `when: has(F.CAUL_OFFER)` and C.GLASS neither read nor dark; the say's last sentence, the clerks starting down, since Phase C, the descent; F `Look at the light` beside it)
 > You put the light out. The room is the room. Behind the glass the band keeps its colour, and one lamp in the top terrace goes dark for the whole Kerb. On the stair, the hour clerks start down.
-[C.GLASS dark (shipped); readiness +10; one light dark on the Kerb for everyone, the count carried as world state (W.DARK_LIGHTS, shipped; the threshold that hides the date shipped since Phase C, the date: DARK_LIGHTS_THRESHOLD, seven, which nobody in the city says); the hour clerks come down the stair for the rest of the hour, a world-wide spawn, and fall as clerks fall ("Hour Clerk did their job.") (shipped since Phase C, the descent: W.CLERKS_DESCENT set an hour of world time on, a second light keeping them an hour from it; three Hour Clerks filed out of the head of the stair below the room's door five seconds apart, pacing the stair past the glass down to the Grid's gate and back, coming back at the head of the stair when they fall; after the hour each goes once out of a fight; src/sim/descent.ts); Halla Voss goes to the glass (an `npc` effect to `omen-glass`, state glass, for everyone; from then on she sells no hours to anyone) and reads the front for nothing from now on; news (new): "A light went out behind the forecast glass. {count} are dark."; past the threshold the glass shows no date]
+[C.GLASS dark (shipped); readiness +10; one light dark on the Kerb for everyone, the count carried as world state (W.DARK_LIGHTS, shipped; the threshold that hides the date shipped since Phase C, the date: DARK_LIGHTS_THRESHOLD, seven, which nobody in the city says); the hour clerks come down the stair for the rest of the hour, a world-wide spawn, and fall as clerks fall ("Hour Clerk did their job.") (shipped since Phase C, the descent: W.CLERKS_DESCENT set an hour of world time on, a second light keeping them an hour from it; three Hour Clerks filed out of the head of the stair below the room's door five seconds apart, pacing the stair past the glass down to the Grid's gate and back, coming back at the head of the stair when they fall; after the hour each goes once out of a fight; src/sim/descent.ts); Halla Voss goes to the glass (an `npc` effect to `omen-glass`, state glass, for everyone; from then on she sells no hours to anyone) and reads the front for nothing from now on; news: "A light went out behind the forecast glass. {count} are dark." (the first: "1 is dark."); past the threshold the glass shows no date]
 → CAUL `dark` (a `dialogue` effect)
 
 **CAUL** — `dark` (shipped since Phase B, first beats; the two sentences about the clerks on the stair since Phase C, the descent, which the light sets going before he speaks)
@@ -1094,32 +1107,33 @@ The paper panel, the gold mark:
 **CAUL** — `looked` (shipped since Phase B, first beats)
 > "Before you go." He has a pen now. "I know what it looks like. From the reports. A change in the light with nothing behind it. A bell you did not hear, heard. The sense that the place was looking back, and had been for some time. Sixty to ninety seconds. Then the ordinary light, and a wish to be quiet for a while. I have written that down ten thousand times. I have never once been wrong." He has not looked up. "I have never felt anything. I sell what I was told it feels like. The city has not noticed the difference. Neither, I think, have you." Then, the first time: "What did it look like."
 ✦ *He means the waking hint. The first of your life, in the Care. The book had it before you had finished hearing it.*
-[F.CAUL_ASKED (new)]
+[F.CAUL_ASKED]
 - ▸ "Tell him." → `told`
 - ▸ "Say nothing." → `untold`
 
 **CAUL** — `told` (shipped since Phase B, first beats)
 > You tell him. He writes it down, all of it, and does not look up while he writes. When you stop he reads it back to himself once, moving his lips, and underlines one word. "Thank you." He closes the book. "I like to have it in the person's own words. The ledger's are exact. Yours were present."
-[F.TOLD_CAUL (new); your waking hint in his book, in your words]
+[F.TOLD_CAUL; your waking hint in his book, in your words]
 
 **CAUL** — `untold` (shipped since Phase B, first beats)
 > He writes that down too. "Declined. It is still a line." He caps the pen. "I have the other version. It is exact. I would have liked yours."
 
-**CAUL** — `after` (shipped since Phase B, first beats; after the light, the clerks' line since Phase C, the descent, while they are on the stair, and "The light is out. It stays out. So do I, until the hour." once their hour is out), any later visit to the room
-> "#SERIAL. The glass is there. So am I, until the hour."
+**CAUL** — `after` (shipped since Phase B, first beats; after the light, the clerks' line since Phase C, the descent, while they are on the stair, and "The light is out. It stays out. So do I, until the hour." once their hour is out), any later visit to the room; every visit hears one of the lines below
 > *Undecided, the light still on:* "#SERIAL. The glass is there. So is the light. So am I, until the hour."
 > *For the reader:* "Your line is holding. I check it. It is the only one I check by hand."
 > *After the light:* "The clerks are still on the stair. They will be, for the hour."
 
-**HALLA VOSS** — `after-light` (shipped since Phase B, first beats; offered by her greet and hub, once; "the date went thin" since Phase C, the date), at the glass, once, for the one who put the light out
+**HALLA VOSS** — `after-light` (shipped since Phase B, first beats; offered by her greet and hub, once; "the date went thin", past the threshold "went out", since Phase C, the date), at the glass, once, for the one who put the light out
 > "One went out up there. I felt it in the glass; the band held and the date went thin." She does not take the slip out of her pocket. "I read the front now. For nothing. It is what it is worth."
+> *Past the threshold of dark lights:* …the band held and the date went out.
 
 **HALLA VOSS** — `hub` (shipped, side-npcs.ts), at the glass from then on
 > She is at the forecast glass with nothing to sell. "I read the front now. For nothing. It is worse. It is better."
 
 **THE GLASS** — `read the forecast` F, after the room (shipped: the reader's line, the city's figure and the count in the hole since Phase B, with how many lines cross it for everyone; the launch as a date with a countdown since Phase C, the date, "the launch" from Movement III on and "the next hour" before it; past the threshold the dark line below, with the count of lights out)
-> Forecast glass. {band}. Under the band, in the same face as every meter in the city, a line the Concern posts: the launch, as a date, with a countdown.
-> *For the reader:* …Your line is in it, the length of your readiness.
+> Forecast glass. {band}. Under the band, in the same face as every meter in the city, a line the Concern posts: the launch, {date}, and a count running down to it: {countdown}.
+> *Once a reader's line is on it, for everyone:* …One line across it, the length of a readiness. *· or* …{count} lines across it, each the length of a readiness.
+> *For the reader:* …Your line is in it, the length of your readiness. The city's figure: {n}. In the hole: {n}.
 > *Past the threshold of dark lights:* …a line the Concern posts: the launch. The date is not on it. There are not enough lights left to show it. {dark} lights are out on the Kerb.
 
 ### III.8 The hint can be forged
@@ -1157,16 +1171,16 @@ The paper panel, the gold mark:
 **QUILL** — `forge-margin` (shipped since Phase A, Movement III): the lie, put down
 > Mine. I sold them the margin. They sold the margin to the city. Years ago; a technique, on a sheet, for a price I was pleased with at the time. I don't do their margins. I don't have to. That is what selling a thing means. She wipes the plate.
 
-**QUILL** — `forge-caul` (shipped since Phase A, Movement III; the told-him branch waits for Phase B)
+**QUILL** — `forge-caul` (shipped since Phase A, Movement III; the told-him branch shipped since the movements audit)
 > He asked me once what a hint looked like. I told him. He wrote it down. Only time I've been quoted and not paid.
 > *If you told him at the glass:* …He asked you too. Don't look like that. Everybody tells him. He has a way of holding the pen.
 
 **QUILL** — `forge-after` (shipped since Phase B, the forge: the listing in place of the print in hand; the listing's line follows the print, so the three lines after the first are new with Phase B, tagged here)
 > *For the pull:* You keep the eye. Every print on the Grid looks a little worse to you now. That is what learning costs. E at the tray crafts a copy anyway, if you want to know how it feels.
 > *For the listing, while it is on the board:* Your hint is on the board. It has not sold yet. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.
-> *Once a body bought it (new, Phase B):* It sold. The price went to your bank and the fee stayed with me. Somebody on the Grid has your hint by now, and the hole has none of it. I am not judging. I am counting.
-> *Once they took it down from the ledger and hold it (new, Phase B; also a body saved under Phase A's sale, the print in hand):* You took it down. You hold the print. It is thinning already. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.
-> *Once it is gone, to the tray by Q or decayed to nothing on the board (new, Phase B):* It is off the board. Taken down to the tray, or decayed to nothing; the board does not say which and I do not ask. The fee was mine either way. E at the tray crafts a copy anyway, if you want to know how it feels.
+> *Once a body bought it (shipped since Phase B, the forge):* It sold. The price went to your bank and the fee stayed with me. Somebody on the Grid has your hint by now, and the hole has none of it. I am not judging. I am counting.
+> *Once they took it down from the ledger and hold it (shipped since Phase B, the forge; also a body saved under Phase A's sale, the print in hand; a body that sold hears the line above, since the movements audit):* You took it down. You hold the print. It is thinning already. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.
+> *Once it is gone, to the tray by Q or decayed to nothing on the board (shipped since Phase B, the forge):* It is off the board. Taken down to the tray, or decayed to nothing; the board does not say which and I do not ask. The fee was mine either way. E at the tray crafts a copy anyway, if you want to know how it feels.
 ✦ *A stall can be a shrine. She will not say it out loud on the Grid.*
 
 **THE TRAY** — `look` F (shipped; for the pull only), after the lesson
@@ -1182,12 +1196,12 @@ The paper panel, the gold mark:
 > *With nothing to spot:* Nothing in your hand is a copy.
 [every copy in hand to the tray; aura +1; or the own listing off the board, the kept-back fee charged as far as the purse goes, aura +1]
 
-**THE TRAY** — `sell a copy` F (shipped, economy.ts; for the one who listed; the figures are the stall's, interpolated)
+**THE TRAY** — `sell a copy` F (shipped, economy.ts; for the one who listed; the figures are the stall's, interpolated; the listing's line said with the sale since the movements audit)
 > Listed at {price}. Listing fee {fee}. Exhibition decays. *· with Glamour:* Listed at {price}. Glamour waived the fee. Exhibition still decays.
 > You sold a copy. Aura thins. Cult does not list.
 > *With nothing to sell:* Nothing in your hand is a print. Craft one first.
 
-**THE BOARD** — the listing board, a buy of the Clearing (revised, as II.8)
+**THE BOARD** — the listing board, a buy of the Clearing (shipped since the movements audit, as II.8)
 > That is a price, not a sale. The hole does not travel.
 [the Clearing's price is where the hour moved it: up for the listing, down for the pull]
 
@@ -1200,7 +1214,7 @@ The paper panel, the gold mark:
 *What the Concern is doing: ringing the Clearing with recorders.*
 
 ### IV.1 The act
-*Step `mortality` (shipped). The Care: the buried garden, and the bench at its east edge (the Care floor, no new patch, no bench prop; no bed, silence as a feature). Nara's offer stands on her body wherever it is (the funeral street as shipped; the rebuild walks her to the garden's edge). Plate `plate-ione.jpg`. Angels only; the Care is shut to a guest. Caul has no line here: the Care has no oval.*
+*Step `mortality` (shipped). The Care: the buried garden, and the bench at its east edge (the Care floor, no new patch, no bench prop; no bed, silence as a feature). Nara's offer stands on her body wherever it is (the funeral street as shipped). Plate `plate-ione.jpg`. Angels only; the Care is shut to a guest. Caul has no line here: the Care has no oval.*
 
 **THE RING** — `clearing-ring` look, before the act (shipped, pois.ts)
 > A ring in the asphalt. Keep the hole. The hour is not a character. A mortality act is required first: watch, a burial, or a last word.
@@ -1264,7 +1278,7 @@ The paper panel, the gold mark:
 **ORD** — `gate-alone` (shipped)
 > He writes it without looking up. Alone. Your own counsel, then; the hour cannot be claimed off a person who is not selling anything. We count from the gate. Nara will not leave the ring for it. I would not ask her to.
 ✦ *Alone is not brave and it is not sad. It is the second column, and somebody finally filled it.*
-[C.PARTY alone; F.GATE; restraint +8 (Safety's door into the rite shuts past 50); he keeps the gate; news (new): "An Angel chose to stand alone in the Clearing. Ord counts from the gate."]
+[C.PARTY alone; F.GATE; restraint +8 (Safety's door into the rite shuts past 50); he keeps the gate; news (shipped since the movements audit): "An Angel chose to stand alone in the Clearing. Ord counts from the gate."]
 
 **ORD** — `gate-after` (shipped)
 > *Alone:* The gate. I count from here. Nara is at the ring; she reads the number. Prepare the ground when you are ready and I will write what it does.
@@ -1281,6 +1295,7 @@ The paper panel, the gold mark:
 
 **NARA** — `garden-silent` (shipped), if the garden is not in the ground
 > Nara Vale looks at the garden that used to be a hole. The node you turned on in the first hour. She will not speak until it is in the ground. Press F at the garden.
+> *For the one who kept the first node:* Nara Vale looks at the garden that used to be a hole. The node the city turned on while you kept yours. She will not speak until it is in the ground. Press F at the garden.
 ✦ *You took a hole and called it weather. It came back as earth. Only burial makes it world again.*
 [she stays at the garden; the ring is read without her; the confession below is not made]
 
@@ -1303,7 +1318,7 @@ The paper panel, the gold mark:
 > *At 80 or past:* Readiness {readiness}. Enough for a trace, if the weather lets it.
 > *60 to 79:* Readiness {readiness}. The floor is 60; you are over it. A trace wants 80.
 > *Under 60:* Readiness {readiness}. The floor is 60. You are short, and I will say so now rather than after: the hours you did not take, the nodes you did not keep, the freeze you signed or did not. It is not a sin. It is a number.
-> Then the weather. {weather}. *At 91 or past:* At ninety-one a hole holds only as long as bodies stand in it. Then the bodies: {bodies} in the ring. *At 91 or past, fewer than two:* Fewer than two and nothing passes, whatever you are.
+> Then the weather. The weather at {weather}. *At 91 or past:* At ninety-one a hole holds only as long as bodies stand in it. Then the bodies: {bodies} in the ring. *At 91 or past, fewer than two:* Fewer than 2 and nothing passes, whatever you are.
 > I will stand in it either way. Press F at the ring and keep the ground; then E to keep the hole or Q to take it. Then the hour, or not.
 ✦ *A sexton reads the ground before the funeral, not after. She is telling you the depth.*
 [F.BRINK; → `lid` once, if the garden is in the ground]
@@ -1322,7 +1337,7 @@ The paper panel, the gold mark:
 > A ring in the asphalt. The Clearing's reserve is spent; there is nothing left to open until it fills back, a point at a time.
 
 **CAUL** — on the Grid's gate, no line yet (shipped since Phase A, Movement IV: station `caul-lip` on the Grid's edge at the gate from the fourth hour on; the prompt opens `lip-silent`, a description and not a line, until the hole is kept, and again after a refusal at the lip and once his word on the rite is said; his lines are IV.6's and IV.7's, shipped since Phase B, the lip)
-*A paper-white body with no halo on the tile where the city stops a guest, north of the ring, looking at the hole. The label over him says GUEST. He has no line until the hole is kept (IV.6).*
+*A paper-white body with no halo on the tile where the city stops a guest, looking down at the ring and not at you. The label over him says GUEST. He does not look up. He has no line until the hole is kept (IV.6).*
 
 ### IV.4 Keep the hole
 *Steps `prepare` and `stance` (shipped). The ring and the four seed grounds. Other Angels are in it on both sides; the contest is the only fight that is also the plot. Plate `clearing-ring.jpg`; `props/clearing-seed`; `audio/bed-clearing`. Angels only.*
@@ -1359,14 +1374,14 @@ The paper panel, the gold mark:
 > *Seeded:* A seed in the ground. Someone dwelt here long enough to leave one.
 
 **NARA** — `ring` (shipped since Phase A, Movement IV: three numbers)
-> I am in the ring. I will stand in the hole as long as it is a hole. If the process takes it I will still be here; I will just be standing in stock. Readiness {readiness} of 60. The weather {weather}. Bodies {bodies}. Press F at the ring when the party is ready.
+> I am in the ring. I will stand in the hole as long as it is a hole. If the process takes it I will still be here; I will just be standing in stock. Readiness {readiness} of 60. The weather at {weather}. Bodies {bodies}. Press F at the ring when the party is ready.
 ✦ *The Clearing holds when people do.*
 
 **ORD** — `ring` (shipped since Phase A, Movement IV: the bodies counted with the rest)
 > *With:* I am in the ring. I am counting. *Alone:* I count from the gate; you are in the ring, alone, as you said.
 > *At 80 or past:* Readiness {readiness}. Over the line for a trace. *60 to 79:* Readiness {readiness}. Over the floor of 60; a trace is 80. *Under 60:* Readiness {readiness} against a floor of 60. It will not open for you. I would write that down before you stand, so nobody says the number lied.
 > Bodies in the ring: {bodies}. If the hour opens I will write it down honest. If it does not I will write that. Press F when *the party is / you are* ready.
-> *The weather at 91 or past, in place of the above:* Gestell is maxed. I have to tell you: the hour will not open unless enough of you hold the ring. Bodies in the ring: {bodies}; it wants two. I cannot make that number smaller by wanting it. Nobody can. *Then the readiness read, the same three ways:* Readiness {readiness}. Over the line for a trace. / Readiness {readiness}. Over the floor of 60; a trace is 80. / Readiness {readiness} against a floor of 60. It will not open for you. I would write that down before you stand, so nobody says the number lied.
+> *The weather at 91 or past, in place of the above:* Gestell is maxed. I have to tell you: the hour will not open unless enough of you hold the ring. Bodies in the ring: {bodies}; it wants 2. I cannot make that number smaller by wanting it. Nobody can. *Then the readiness read, the same three ways:* Readiness {readiness}. Over the line for a trace. / Readiness {readiness}. Over the floor of 60; a trace is 80. / Readiness {readiness} against a floor of 60. It will not open for you. I would write that down before you stand, so nobody says the number lied.
 ✦ *A solo cannot force the hour. He knows the arithmetic and hates it.*
 
 ### IV.5 The launch
@@ -1407,7 +1422,7 @@ The paper panel, the gold mark:
 
 **QUILL** — `ring` (shipped since Phase C, the launch's remainder: the two choices added; routed through the launch's hour for a Movement IV body that has kept the hole and not yet stood in it, from her station `quill-vans` by the vans on the hot street, her own street)
 > I am not standing in your hole. I am keeping the lights on over here where it is dry. Go. If a trace comes I want a print of it. If it does not, I want a print of that.
-- ▸ "The frame on the recorders." → `margin` (new)
+- ▸ "The frame on the recorders." → `margin`
 - ▸ "Keep the lights on."
 
 **QUILL** — `margin` (shipped since Phase C, the launch's remainder)
@@ -1416,7 +1431,7 @@ The paper panel, the gold mark:
 
 **THE HOT STREET** — read, flagged by the window (shipped line, pois.ts; the state set by the launch)
 > A wet street. Painted on the kerb: opt in, seconds, spoils from people, not from the street. Press V to flag. Unbanked and copies drop. Cult and banked stay. Guests are not loot. In meltdown weather the street flags itself.
-[world window (shipped since Phase C, the launch and its remainder; the mast is the van's look): the hot street hot (until the window's close, which cools it, whoever made it hot, since Phase C, the cool-down; nothing is said, the street's label is the notice); at 91 the Grid flags itself by its own rule; the listing's buyer named; the cable enforcer at the Cable's node; the vans at the Grid's edge and the oval on a mast; all but the vans skipped past the dark-light threshold; news (new): "The launch. The Concern stopped selling. The weather is climbing on every meter." / dark: "The vans are on the Grid. The glass had no hour to give them."]
+[world window (shipped since Phase C, the launch and its remainder; the mast is the van's look): the hot street hot (until the window's close, which cools it, whoever made it hot, since Phase C, the cool-down; nothing is said, the street's label is the notice); at 91 the Grid flags itself by its own rule; the listing's buyer named; the cable enforcer at the Cable's node; the vans at the Grid's edge and the oval on a mast; all but the vans skipped past the dark-light threshold; news (shipped since Phase C, the launch): "The launch. The Concern stopped selling. The weather is climbing on every meter." / dark: "The vans are on the Grid. The glass had no hour to give them."]
 
 ### IV.6 The recorders
 *New beat, shipped since Phase B, the lip; no step inserted: Caul's lines land as dialogue during `stance` and `passing` (he is silent on the lip until the hole is kept, F.PREPARE), and the offer writes its own key beside the operator's (C.LIP, read by the Passing's resolver as the operator's key is). The lip: the Grid's gate to the Clearing (`gate-wet-clearing`), the tile where the city stops a guest, the ring in sight below. `sprites/guest`, `guest.jpg`, no halo, no aura, the label GUEST; his name is in the prompt and the dialogue only. The synopsis names `plate-operator.jpg`, the same desk's plate; the journal shows the step's `clearing-ring.jpg`, since a line carries no plate. A guest can stand beside him; an Angel can; nobody can strike him.*
@@ -1434,11 +1449,11 @@ The paper panel, the gold mark:
 - ▸ "No." → `lip-refuse`
 - ▸ "Walk on."
 
-**CAUL** — `lip-sign` (shipped since Phase B, the lip; "the gap" is the margin's gap where Quill would not cut the plate, which III.8's `forge-plate` has already said, so it stands; the frame the gap is in waits for Phase C)
+**CAUL** — `lip-sign` (shipped since Phase B, the lip; "the gap" is the margin's gap where Quill would not cut the plate, which III.8's `forge-plate` has already said, so it stands; the frame the gap is in shipped since Phase C, the launch's remainder: the van's look and Quill's `margin`)
 > Thank you. He does not look at the form. It goes into his coat with the others. Stand where you like. The gap is as good as anywhere now.
 [C.LIP signed (the key beside C.OPERATOR; the resolver reads either, so Vesper's lines do not re-route and Ord's `after` names the door); current cold; the rite is claimed; notice: "You signed for the hour at the lip. Nothing is paid. Cold is your current."]
 
-**CAUL** — `lip-refuse` (shipped since Phase B, the lip; "at the vans backing up to it" waits for Phase C's launch, so he looks down at the ring alone)
+**CAUL** — `lip-refuse` (shipped since Phase B, the lip; "at the vans backing up to it" is not said: the vans are on the Grid only through the launch's hour, so he looks down at the ring alone)
 > He does not argue; a refusal is a figure he has. You wait for it to pass. I am building what it would have passed through. He looks down at the ring. Then: I will wait. He says it the way a man names a price he cannot pay. He stays where he is. He is still there when you look back.
 [C.LIP refused; readiness +4; he keeps the lip through the Passing, in silence (`lip-silent`) once refused; notice: "You refused the signature. Readiness. He waits."]
 
@@ -1471,18 +1486,18 @@ The paper panel, the gold mark:
 
 **THE RING** — pass (shipped, clearing.ts)
 > A trace, not a face. The city is briefly world again. A stipend for the shrine. Cult upkeep.
-[C.PASSING appearance; stipend 20 Bestand, "For the shrines, not the hand."; aura stops withering for the season, for the whole city; news: "A Passing. {name} prepared the ground. The city is briefly world."; the listing +12]
+[C.PASSING appearance; stipend 20 Bestand, "For the shrines, not the hand."; aura withers at half the rate for the season, for the whole city; news: "A Passing. {name} prepared the ground. The city is briefly world."; the listing +12]
 
-**THE ALTAR** — every altar in the Nave, at once (new)
+**THE ALTAR** — every altar in the Nave, at once (shipped since the movements audit)
 > Light through every oval on the Kerb. The bells. Every altar in the aisle lit at once, and then dark. For the Angel whose rite it was, the altars stay dark the length of a breath, and then the ordinary light.
 
-**CAUL** — at the van beside the lip, to the crew (new)
+**CAUL** — at the van beside the lip, to the crew (shipped since the movements audit)
 > Play it again.
 
-**THE CREW** — in the van, rewinding (new; people doing a job)
+**THE CREW** — in the van, rewinding (shipped since the movements audit; people doing a job)
 > There is nothing on it.
 
-**CAUL** (new)
+**CAUL** (shipped since the movements audit)
 > Then sell that.
 
 **QUILL** — `after`, appearance (shipped since Phase A, Movement IV: the tape in her hands)
@@ -1513,10 +1528,10 @@ The paper panel, the gold mark:
 **NARA** — `after`, absence (shipped)
 > The hour went by. Absence is honest. I stay. The hole is still a grave. Nothing you did was wrong. Nothing you did was enough. That is what the word means.
 
-**CAUL** — through the mast's oval, after a while (new)
+**CAUL** — through the mast's oval, after a while (shipped since the movements audit)
 > Absence has a margin too.
 
-**THE ALTAR** — absence (new)
+**THE ALTAR** — absence (shipped since the movements audit)
 > Ninety seconds of an empty sky through an oval, with a margin, and the tag in the corner. People kneel.
 
 **CAUL** — `lip-absence` (shipped since Phase B, the lip; to you, pleasantly, which the line says in its first words; said once a season, as `lip-appearance`)
@@ -1561,7 +1576,7 @@ The paper panel, the gold mark:
 > *Signed at the lip:* Cold claimed the hour. You signed for it at the gate, for nothing. I am not blaming you. I am telling you the number. You are marked and the mark is accurate.
 > *Safety:* Safety claimed the hour. The freeze ate the rite. I signed a hundred of those. This one had your name on it. The number is accurate.
 
-**CORVIN SLATE** — where he stands, Safety's door (new; side-npcs.ts)
+**CORVIN SLATE** — where he stands, Safety's door (shipped since the movements audit; side-npcs.ts)
 > *At the Annex, or under the mute bell:* "The freeze held." He has your form. He turns it over. "Funded by. I have read it. It is mine when I sign it. I signed it."
 > *Where the Passing failed last season, if he walked (shipped hub line, `clearing` state):* You are standing where the Passing failed. He does not turn around. "The freeze held. I have the paperwork. Say what you came to say."
 
@@ -1593,19 +1608,19 @@ The paper panel, the gold mark:
 
 #### Every outcome
 
-**VESPER HALE** — `after` (shipped)
+**VESPER HALE** — `after` (shipped; heard after the Passing since the movements audit)
 > The hour passed or it did not. The desk is closed either way. I priced a lot of hours. I never priced that one.
 
 **IONE KADE** — `other`, if she is still on the bench (shipped)
 > You chose another act. Good. I stay a while longer then. Not for you. The bench is comfortable and the garden is quiet now that it is a grave.
 
-**CORVIN SLATE** — where he stands, every other door (new)
+**CORVIN SLATE** — where he stands, every other door (shipped since the movements audit)
 > *At the Annex:* "Officer of Safety. The district is stable." He says it the way a plaque says it. The form on his desk is blank where a signature would be. He does not ask how the hour went; Safety does not keep that column.
 
 ### IV.8 The rest is the city
 *Step `credits` (shipped). The ring; then every district. Plate `plate-credits` (the step ships `wing-star.png`; the synopsis names `plate-credits`); `music/title-theme`. The credits name only the game.*
 
-**THE CREDITS** — `CREDITS` (lines.ts; shipped)
+**THE CREDITS** — `CREDITS` (lines.ts; shipped; the roll the player sees, index.html, since the movements audit)
 > REVERIE: THE GAME
 > The city: the Nave of Tubes, the Wet Grid, the Care, the Safety Annex, the Kerb of Hours, the Gold Ring, the Organs, the Clearing.
 > The weather had three names. You gave it one.
@@ -1616,11 +1631,11 @@ The paper panel, the gold mark:
 > REVERIE: THE GAME. The rest is the city.
 [F.CREDITS; movement 5; news: "An Angel reached the credits. The city continues."]
 
-**THE GLASS** — `forecast-glass` read, after the credits (new, pois.ts)
+**THE GLASS** — `forecast-glass` read, after the credits (shipped since the movements audit, pois.ts)
 > Forecast glass. {band}. Under the band, in the same face as every meter in the city, the Concern's line: the next season's hour, with a date on it.
 > *Dark:* Forecast glass. {band}. Under the band, where the date was, nothing. {dark} lights out on the Kerb. The season will come anyway. It will come without a count.
 
-**THE ALTAR** — after the credits (new)
+**THE ALTAR** — after the credits (shipped since the movements audit)
 > The altar plays. Ninety seconds of someone's sky, a bell, a serial in the margin. People kneel. The tubes are warm.
 
 **CAUL** — after the credits (no new line)

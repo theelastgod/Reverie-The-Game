@@ -883,11 +883,11 @@ try {
     });
     console.log(`measure: Movement IV outcome ${outcome} at readiness ${readiness} (the rite needs 60; appearance 80); current ${you(me).current || 'none'}; party ${JSON.stringify(you(me).party)}; gestell ${Math.round(me.snap.gestell)}`);
 
-    // Back up to the lip: Caul's word on the outcome (the bot sold the hour at the desk, so he never offered the form here).
+    // Back up to the lip: Caul's word on the outcome, opened by the crew after an Appearance or the oval after an Absence (the bot sold the hour at the desk, so he never offered the form here).
     phase('IV walk: lip again');
     await walk(me, ROUTE4.ringToLip);
     phase('IV talk: caul after');
-    const lipLine = { appearance: /What did it look like/, absence: /Next season\. Same ring\. I will have the number by then/, hijack: /exactly what I was told it would be like/, failed: /Next season\. Same ring\./ }[outcome];
+    const lipLine = { appearance: /Play it again\./, absence: /Absence has a margin too\./, hijack: /exactly what I was told it would be like/, failed: /Next season\. Same ring\./ }[outcome];
     await readLine(me, 'caul', lipLine, `Caul after the ${outcome}`);
 
     phase('end IV');

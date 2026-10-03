@@ -21,7 +21,7 @@ import type { Fourfold, Item, Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
 import { verbsFor } from "./interact";
-import { launchDark, launchMoment, launchOpen } from "./launch";
+import { darkLights, glassDark, launchDark, launchMoment, launchOpen } from "./launch";
 import { weatherBand } from "./protocol";
 import { POI_CONFIGS } from "./content/pois";
 import { clearingPrice } from "./content/market";
@@ -823,7 +823,14 @@ describe("the launch window (IV.5), opened by the tick once a season", () => {
     const after = tick({ ...w, now: launchMoment(w) + LAUNCH_WINDOW });
     expect(launchOpen(after)).toBe(false);
     const read = POI_CONFIGS["forecast-glass"].verbs.find(v => v.choice === "read")!;
-    expect(typeof read.say === "function" ? read.say({ w: after, p: me(after), now: after.now }) : "").toContain(`season ${after.season.id + 1}, day 7, 00:00`);
+    const reader = { ...me(after), flags: { ...me(after).flags, [F.CREDITS]: 0 } }; // a body still in the campaign reads the date itself
+    expect(typeof read.say === "function" ? read.say({ w: after, p: reader, now: after.now }) : "").toContain(`season ${after.season.id + 1}, day 7, 00:00`);
+    // after the credits (IV.8) the glass names the next season's hour; past the dark lights, no count
+    const credited = typeof read.say === "function" ? read.say({ w: after, p: me(after), now: after.now }) : "";
+    expect(credited).toContain("Under the band, in the same face as every meter in the city, the Concern's line: the next season's hour, with a date on it.");
+    const darkAfter = { ...after, flags: { ...after.flags, [W.DARK_LIGHTS]: DARK_LIGHTS_THRESHOLD } };
+    expect(glassDark(darkAfter), "the lights out past the threshold").toBe(true);
+    expect(typeof read.say === "function" ? read.say({ w: darkAfter, p: me(after), now: after.now }) : "").toContain(`Under the band, where the date was, nothing. ${darkLights(darkAfter)} lights out on the Kerb. The season will come anyway. It will come without a count.`);
   });
 
   it("past the threshold of dark lights it opens with no shift: no hot street, no climb, the vans' news, and Caul through the ovals still lit", () => {

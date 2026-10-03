@@ -64,6 +64,8 @@ const PASSING_HIJACK_COLD = "Cold claimed the hour. Whatever would have crossed,
 const ABSENCE_WINK = "You went under once and came back. The hour did the same. Neither of you arrived.";
 const PASSING_HIJACK_SAFETY = "Safety claimed the hour. The freeze ate the rite. You are marked.";
 const PASSING_FAILED = "Gestell kept the weather. Without a held Clearing the hour does not open. No stipend is owed.";
+/** IV.7, the Appearance in the Nave: every altar lit at once and then dark, for every body standing in the aisle. */
+const APPEARANCE_ALTARS = "Light through every oval on the Kerb. The bells. Every altar in the aisle lit at once, and then dark. For the Angel whose rite it was, the altars stay dark the length of a breath, and then the ordinary light.";
 const NEWS_APPEARANCE = (name: string) => `A Passing. ${name} prepared the ground. The city is briefly world.`;
 /** The recorders' tape after an Appearance: nothing on it. The angel is named by serial, never "alone". */
 const NEWS_TAPE = (name: string) => `The tape at ${name}'s Clearing is blank. The god passed through the ones who were ready.`;
@@ -342,6 +344,8 @@ export function applyPassing(w: WorldState, id: string): WorldState {
       me = notice(me, `Stipend. ${PASSING_STIPEND} Bestand. For the shrines, not the hand.`, next.now, "gold");
       next = pushNews(next, NEWS_APPEARANCE(standingName(p)));
       next = pushNews(next, NEWS_TAPE(p.name));
+      next = { ...next, flags: { ...next.flags, [W.ALTARS_FLICKER]: next.now } };
+      for (const q of [...next.players.values()]) if (q.district === "nave" && q.id !== id && !q.dead) next = setPlayer(next, notice(q, APPEARANCE_ALTARS, next.now, "sky"));
       return speak(next, me, PASSING_APPEARANCE);
     }
     case "absence": {

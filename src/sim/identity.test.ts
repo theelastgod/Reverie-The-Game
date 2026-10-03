@@ -108,6 +108,7 @@ describe("historyMarkFor", () => {
     expect(historyMarkFor(42, empty, 2)!.line).toContain("left the body in the weather");
     expect(historyMarkFor(42, { ...empty, passings: 1, outcomes: ["absence"] })!.line).toContain("Nothing came");
     expect(historyMarkFor(42, { ...empty, passings: 2, outcomes: ["absence", "appearance"] })!.line).toContain("A trace came");
+    expect(historyMarkFor(42, { ...empty, passings: 1, outcomes: ["failed"] })!.line, "II.7, the weather and not its name").toBe("A prior hour. The weather kept it. The hole did not open.");
   });
 });
 

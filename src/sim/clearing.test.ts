@@ -436,6 +436,23 @@ describe("applyPassing", () => {
     expect(next.failed).toHaveLength(0);
   });
 
+  it("an Appearance lights every altar in the aisle at once for everyone, and tells the bodies standing in the Nave (IV.7)", () => {
+    const ALTARS = "Light through every oval on the Kerb. The bells. Every altar in the aisle lit at once, and then dark. For the Angel whose rite it was, the altars stay dark the length of a breath, and then the ordinary light.";
+    const nave = makePlayer({ id: "p2", district: "nave" });
+    const fallen = makePlayer({ id: "p3", district: "nave", dead: true });
+    const grid = makePlayer({ id: "p4", district: "wet" });
+    const next = applyPassing(makeWorld([prepared({ readiness: 80 }), nave, fallen, grid]), "p1");
+    expect(next.passing.lastOutcome).toBe("appearance");
+    expect(next.flags[W.ALTARS_FLICKER], "every viewer's altars flicker").toBe(next.now);
+    expect(you(next, "p2").notices).toEqual([{ text: ALTARS, at: next.now, tone: "sky" }]);
+    for (const id of ["p1", "p3", "p4"]) expect(you(next, id).notices.some(n => n.text === ALTARS), id).toBe(false);
+    // no other outcome lights them
+    const absent = applyPassing(makeWorld([prepared({ readiness: 65 }), nave]), "p1");
+    expect(absent.passing.lastOutcome).toBe("absence");
+    expect(absent.flags[W.ALTARS_FLICKER]).toBeUndefined();
+    expect(you(absent, "p2").notices).toEqual([]);
+  });
+
   it("the blank tape is the Appearance's only: an alone angel is named plainly on the tape, and no other outcome posts it", () => {
     const alone = applyPassing(makeWorld([prepared({ readiness: 80, choices: { ...prepared().choices, [C.PARTY]: "alone" } })]), "p1");
     const name = you(alone).name;

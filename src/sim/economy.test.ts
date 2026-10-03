@@ -568,7 +568,7 @@ describe("market", () => {
       expect(tried.market).toHaveLength(1);
       expect(you(tried, "b").bestand).toBe(500);
       expect(you(tried, "b").items).toHaveLength(0);
-      expect(you(tried, "b").heard).toBe("A price, not a sale. The hole does not travel.");
+      expect(you(tried, "b").heard).toBe("That is a price, not a sale. The hole does not travel.");
       expect(applyMarket(w, "b", "cancel", { listingId: post.id }).market).toHaveLength(1);
       w = tickMarket(w, 0.05);
       const later = tickMarket({ ...w, now: w.now + EXHIBIT_DECAY }, 0.05);
@@ -665,6 +665,8 @@ describe("forge tray", () => {
     expect(sold.market[0].price).toBe(COPY_PRICE);
     expect(you(sold).aura).toBe(19);
     expect(you(sold).bestand).toBe(0);
+    // the listing's own line, then the forge's (III.8)
+    expect(you(sold).heard).toBe(`Listed at ${COPY_PRICE}. Listing fee ${LISTING_FEE}. Exhibition decays. You sold a copy. Aura thins. Cult does not list.`);
     expect(you(applyForge(sold, "p1", "sell")).items).toHaveLength(0);
     const poor = makeWorld([makePlayer({ bestand: 0 })]);
     expect(you(applyForge(poor, "p1", "craft")).heard).toBe("CANT_AFFORD");
