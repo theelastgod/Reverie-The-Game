@@ -1,6 +1,6 @@
 /**
  * The dialogue panel: portrait, speaker in Anton, text, a Wink in void and
- * champagne when the viewer is allowed one, numbered choices 1–4, Continue.
+ * champagne when the viewer is allowed one, numbered choices 1–9 (the panel scrolls past what fits), Continue.
  * Esc is handled by the scene; this panel only reports clicks.
  *
  * Focus: an opened dialogue takes it (the panel itself, a dialog named by its
@@ -15,6 +15,9 @@ import { assetUrl, setText, show } from "./format";
 import { focusKeeper } from "./focus";
 import { gen, pickGen } from "../assets/gen";
 import { portraitFor } from "../assets/slots";
+
+/** The choices a dialogue shows, one per number key 1 to 9 (CityScene binds the same nine). */
+export const MAX_CHOICES = 9;
 
 export type DialoguePanel = {
   set(view: DialogueView | null): void;
@@ -61,7 +64,8 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
       choices.append(btn);
       return;
     }
-    view.choices.slice(0, 4).forEach((c, i) => {
+    // up to nine, one per number key; the panel scrolls when they do not fit (hud.css .dlg-body)
+    view.choices.slice(0, MAX_CHOICES).forEach((c, i) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "choice";

@@ -223,8 +223,8 @@ export class CityScene extends Phaser.Scene {
         else if (does === "close") this.net.close();
         return;
       }
-      case "Digit1": case "Digit2": case "Digit3": case "Digit4":
-      case "Numpad1": case "Numpad2": case "Numpad3": case "Numpad4": {
+      case "Digit1": case "Digit2": case "Digit3": case "Digit4": case "Digit5": case "Digit6": case "Digit7": case "Digit8": case "Digit9":
+      case "Numpad1": case "Numpad2": case "Numpad3": case "Numpad4": case "Numpad5": case "Numpad6": case "Numpad7": case "Numpad8": case "Numpad9": {
         if (!dialogue || !you) return;
         const i = Number(e.code.slice(-1)) - 1;
         const choice = you.dialogue!.choices[i];

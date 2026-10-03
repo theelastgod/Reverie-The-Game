@@ -97,7 +97,7 @@ stands still and the focused dialog scrolls it, the hint pinned clear of the las
   Tab → stance (prevent default; Shift+Tab is the browser's and moves focus
   into the HUD's controls, where Tab, Space and Enter are the browser's too
   and Escape blurs back to the game: `src/ui/keys.ts`); K → kit; F → prompt verb F (talk when the
-  prompt target is an NPC); E / Q → prompt verbs E / Q; 1–4 → choose;
+  prompt target is an NPC); E / Q → prompt verbs E / Q; 1–9 → choose (up to nine choices, the dialogue body scrolling past what fits);
   Esc → close; V → flag; T → truce; I → use; J → journal; M → minimap.
   Touch (`src/ui/stick.ts`, pure and unit-tested; the scene applies it): a
   finger down on the canvas plants a stick where it lands (`Hud.showStick`),

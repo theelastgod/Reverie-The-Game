@@ -49,6 +49,8 @@ const sacredRefusal = (ctx: Ctx): string => (addressAura(ctx) < AURA_DIM ? SACRE
 const hasHistoryMark = (ctx: Ctx): boolean => ctx.p.serial !== null && ctx.w.history.some(m => m.serial === ctx.p.serial);
 /** Once per season the ring takes the rite; the first one is the campaign's Turn. */
 const passedThisSeason = (ctx: Ctx): boolean => (ctx.p.flags[seasonPassingFlag(ctx.w.season.id)] ?? 0) > 0;
+/** Prepared, but the spine's first stance (keep or extract, or a vote in the live contest) not yet taken (spine.ts stance). */
+const stancePending = (ctx: Ctx): boolean => has(ctx, F.PREPARE) && !ctx.p.choices[C.CLEARING] && !ctx.w.clearing.contest?.votes?.[ctx.p.id];
 /**
  * The ring's ground, as the engine's `open` op will judge it (clearing.ts: never over a live contest or an open
  * hole, never with the reserve spent, never within WAR_PERIOD of the last opening): "open" is joined, "ok" is
@@ -1364,7 +1366,9 @@ const CLEARING: PoiConfig[] = [
         label: "Prepare the ground",
         choice: "prepare",
         // Who stands in it is decided with Ord at the Care gate first: the spine's step order holds at the ring too.
-        when: ctx => has(ctx, F.MORTALITY) && !!ctx.p.choices[C.PARTY] && partyWilling(ctx) && !has(ctx, F.PREPARE) && ringGround(ctx) === "ok",
+        // A prepared body whose first stance never came (the hole closed under it: a season's roll, another body's extract
+        // winning the contest) prepares it again, or the stance step would wait on a hole nobody opens.
+        when: ctx => has(ctx, F.MORTALITY) && !!ctx.p.choices[C.PARTY] && partyWilling(ctx) && (!has(ctx, F.PREPARE) || stancePending(ctx)) && ringGround(ctx) === "ok",
         guest: spectate,
         say: "You keep the hole. The party still willing stands in it. The Passing is not yet the weather.",
         effects: [
@@ -1390,7 +1394,7 @@ const CLEARING: PoiConfig[] = [
         key: "F",
         label: "Stand at the ring",
         choice: "look",
-        when: ctx => !has(ctx, F.PREPARE) && !passedThisSeason(ctx) && (!has(ctx, F.MORTALITY) || !ctx.p.choices[C.PARTY] || !partyWilling(ctx) || ringGround(ctx) === "soon" || ringGround(ctx) === "spent"),
+        when: ctx => (!has(ctx, F.PREPARE) || stancePending(ctx)) && !passedThisSeason(ctx) && (!has(ctx, F.MORTALITY) || !ctx.p.choices[C.PARTY] || !partyWilling(ctx) || ringGround(ctx) === "soon" || ringGround(ctx) === "spent"),
         guest: spectate,
         say: ctx => {
           if (!has(ctx, F.MORTALITY)) return "A ring in the asphalt. Keep the hole. The hour is not a character. A mortality act is required first: watch, a burial, or a last word.";
@@ -1422,7 +1426,8 @@ const CLEARING: PoiConfig[] = [
         key: "F",
         label: "The Passing",
         choice: "pass",
-        when: ctx => has(ctx, F.PREPARE) && !passedThisSeason(ctx),
+        // The stance comes first, as the journal's steps do: a rite before it could close the hole the stance needs.
+        when: ctx => has(ctx, F.PREPARE) && !stancePending(ctx) && !passedThisSeason(ctx),
         guest: spectate,
         // The engine routes "pass" on clearing-ring to clearing.applyPassing; the effect below is the content-side signal.
         effects: [{ kind: "passing" }],

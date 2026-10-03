@@ -224,7 +224,8 @@ export function applyNode(w: WorldState, id: string, nodeId: string, op: "extrac
       next = setPlayer(next, me);
       if (pay > 0) next = earn(next, id, pay, "node");
       me = next.players.get(id) ?? me;
-      if (extractedSinceFuneral >= NARA_THRESHOLD && me.party.nara === "with") {
+      // A guest is never walked out on: the funeral desk that brings her back is in the Care, past gates a guest cannot pass.
+      if (extractedSinceFuneral >= NARA_THRESHOLD && me.party.nara === "with" && !me.guest) {
         me = { ...me, party: { ...me.party, nara: "gone" } };
         return speak(next, me, LINES.NARA_LEAVES);
       }

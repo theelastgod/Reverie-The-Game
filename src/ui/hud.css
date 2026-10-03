@@ -813,6 +813,9 @@ canvas { display: block; }
   display: flex;
   flex-direction: column;
   padding: 12px 16px 14px;
+  /* a hub with many lines scrolls inside the panel rather than running off the top of the screen */
+  max-height: calc(100vh - var(--marquee-h) - 16px - 56px - 16px);
+  overflow-y: auto;
 }
 .dlg-speaker {
   font-family: var(--display);

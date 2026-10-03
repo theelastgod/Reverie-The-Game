@@ -290,6 +290,18 @@ describe("nodes", () => {
     expect(w.graves).toEqual([]); // no funeral happened
   });
 
+  it("Nara never walks out on a guest: the funeral desk that brings her back is in the Care, past gates a guest cannot pass", () => {
+    let w = makeWorld([atNode({ guest: true, serial: null, house: "", messenger: "", aura: 0 })]);
+    const id = w.nodes[0].id;
+    for (let i = 0; i < NARA_THRESHOLD + 2; i++) {
+      w = { ...w, nodes: w.nodes.map(n => ({ ...n, charges: NODE_CHARGES })) };
+      w = applyNode(w, "p1", id, "extract");
+    }
+    expect(you(w).extractedSinceFuneral).toBe(NARA_THRESHOLD + 2);
+    expect(you(w).party.nara).toBe("with");
+    expect(you(w).heard).not.toBe("NARA_LEAVES");
+  });
+
   it("guests may extract in-instance Bestand", () => {
     const w = makeWorld([atNode({ guest: true, serial: null, house: "", messenger: "", aura: 0 })]);
     const next = applyNode(w, "p1", w.nodes[0].id, "extract");

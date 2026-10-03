@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 601 tests (2026-10-03), the session smoke, the campaign smoke and the
+  fresh world; 607 tests (2026-10-03), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -2013,6 +2013,31 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the standing entry waits for the history. `src/sim/keys.test.ts`
   holds each case with real content.
 
+- The dead-end audit (2026-10-03, night): two agents walked every
+  spine step and every side hour looking for a journal step that an
+  event the body does not control could leave unfinishable, each
+  candidate built through the real reducers; I checked every finding
+  against the code. Fixed: (1) Movement IV's stance could be stranded
+  for good, and with it the credits: the Passing was offered on F right
+  after the ground was prepared, so a failed rite (or a season's roll,
+  or another Angel's extract winning the contest) closed the hole the
+  stance needs, and a prepared body was never offered the ground again.
+  Now the Passing waits for the stance, and a prepared body whose stance
+  is pending is offered "Prepare the ground" again once the hole has
+  closed. (2) A guest whose sexton walked out after four extractions
+  could never finish Movement I: only the funeral desk brings her back
+  and it is in the Care, past gates a guest cannot pass; she no longer
+  walks out on a guest. (3) The dialogue window showed four choices and
+  bound keys 1 to 4, so Dov Marrow's and Halla Voss's hubs could push a
+  report-back the journal points at off the end; the hubs now list
+  report-backs first, and the window shows up to nine on keys 1 to 9,
+  its body scrolling when they do not fit. Not changed: a guest who
+  goes under early locks with Movement I unfinished, but the lock is
+  the guest's designed end and linking unlocks the body to finish it.
+  The side hours had no dead end (every verb's gate reads only the
+  body's own step and flags; nodes regenerate; copies can be crafted
+  again; the toll and Form 9 can be refused for free).
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -2978,6 +3003,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   lines), the build, the play build and the stage, and on a fresh local
   world the session smoke, `test:campaign:4` (Movements I–IV) and the
   render check.
+- The dead-end audit (2026-10-03, night): typecheck, 607 tests in 45
+  files (deadends.test.ts: the rite after the stance, the ground
+  prepared again once the hole closed, the setting ground's look, the
+  two hubs' report-backs among the first four and no hub past nine; the
+  guest's sexton in economy.test.ts), the build, the play build and the
+  stage, and on a fresh local world the session smoke, `test:campaign:4`
+  (Movements I–IV) and the render check; a nine-line dialogue read in
+  Chromium at 1366×657, 375×553 and 360×640: on the screen, its body
+  scrolling on the phones.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

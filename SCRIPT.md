@@ -783,7 +783,7 @@ The paper panel, the gold mark:
 ✦ *Waiting is not forgiveness. It is a held door.*
 [the engine's line when a burial brings her from gone to waiting: "Nara Vale is waiting on the funeral street. Pay for a burial and she will speak." (`lines.ts` NARA_WAITS)]
 
-**NARA** — `gone` (shipped; the second silence: four extractions without a funeral; a burial brings her back to waiting)
+**NARA** — `gone` (shipped; the second silence: four extractions without a funeral; a burial brings her back to waiting; never for a guest since the dead-end audit, because the desk that brings her back is in the Care)
 > She does not turn. She will not stand with a city that will not bury. The hole in the Care is still a grave. Put it in the ground and she will speak.
 [the engine's line when she goes: "Nara Vale is gone. You kept the process and lost the sexton." (`lines.ts` NARA_LEAVES)]
 
