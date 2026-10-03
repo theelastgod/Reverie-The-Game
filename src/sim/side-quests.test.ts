@@ -771,6 +771,43 @@ describe("the launch window (IV.5), opened by the tick once a season", () => {
     expect(read(dark)).not.toContain("Shift.");
   });
 
+  it("keeps the shift whatever the enforcer is doing: a fight at the opening or the close settles after it, and a restored world is put right", () => {
+    const spawn = ENEMY_SPAWNS.find(s => s.id === "cable-enforcer")!;
+    const post = POSITIONS["organ-node-cable"];
+    const enforcer = (x: WorldState) => x.enemies.find(e => e.id === "cable-enforcer")!;
+    // a fight: the enforcer on a live body (the Angel, far off on the Kerb, so it is chasing, never striking)
+    const busy = (x: WorldState): WorldState => ({ ...x, enemies: x.enemies.map(e => (e.id === "cable-enforcer" ? { ...e, state: "aggro" as const, targetId: ME } : e)) });
+    const done = (x: WorldState): WorldState => ({ ...x, enemies: x.enemies.map(e => (e.id === "cable-enforcer" ? { ...e, state: "return" as const, targetId: "" } : e)) });
+    // in a fight at the opening: the post moves, the body stays until the fight is over, then stands at the node
+    let w = tick(busy(eve()));
+    expect(enforcer(w).home).toEqual({ x: post.x, y: post.y });
+    expect(enforcer(w).state, "the fight goes on").not.toBe("idle");
+    expect(Math.hypot(enforcer(w).x - post.x, enforcer(w).y - post.y)).toBeGreaterThan(0);
+    w = tick(done(w)); // the fight is over: walking home, and set down at its post
+    expect({ x: enforcer(w).x, y: enforcer(w).y, state: enforcer(w).state }).toEqual({ x: post.x, y: post.y, state: "idle" });
+    // in a fight at the close: still at the node until it is done, then back at its desk, and the shift is over
+    let closing = tick(busy({ ...w, now: launchMoment(w) + LAUNCH_WINDOW }));
+    expect(closing.flags[W.LAUNCH_SHIFT], "going back").toBe(2);
+    expect(enforcer(closing).home).toEqual({ x: spawn.x, y: spawn.y });
+    expect(enforcer(closing).state).not.toBe("idle");
+    closing = tick(done(closing));
+    expect({ x: enforcer(closing).x, y: enforcer(closing).y }).toEqual({ x: spawn.x, y: spawn.y });
+    expect(closing.flags[W.LAUNCH_SHIFT]).toBe(0);
+    // a world restored mid-hour brings its enemies back from the defaults with the flag still set: the next tick puts it on the node
+    const fresh = emptyWorld();
+    const restored = tick({ ...w, enemies: fresh.enemies, now: w.now + 1 });
+    expect({ x: enforcer(restored).x, y: enforcer(restored).y }).toEqual({ x: post.x, y: post.y });
+  });
+
+  it("puts the van's look and Quill's station out of every Grid enforcer's reach, so a guest who looks is not engaged", () => {
+    const aggro = 130;
+    for (const id of ["armored-van", "station:quill-vans"]) {
+      const at = POSITIONS[id];
+      const reach = id === "armored-van" ? 56 : 72;
+      for (const s of ENEMY_SPAWNS.filter(x => x.district === "wet")) expect(Math.hypot(at.x - s.x, at.y - s.y) - reach, `${id} and ${s.id}`).toBeGreaterThan(aggro);
+    }
+  });
+
   it("opens the vans' doors through the window, lit or dark, to anyone who looks, a guest included", () => {
     const van = POI_CONFIGS["armored-van"].verbs.find(v => v.choice === "look")!;
     let w = eve();

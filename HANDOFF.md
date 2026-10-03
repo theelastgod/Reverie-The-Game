@@ -1764,11 +1764,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   city is live, so the hour is never skipped: an empty city meets it
   when it next wakes. Three stubbed-world tests (combat, fairness,
   world) now stub the dialogue opener the tick reaches, as they stub the
-  quests. Next in Phase C: the enforcers at the Organs' nodes on shift,
-  the vans' look with the oval on a mast, and Quill's `ring` and
-  `margin` at the vans, then the clerks' descent, the hot street's
-  cool-down, the Houses' lost hour at Ord's map, and the journal line
-  for readers.
+  quests. The cable enforcer on shift, the vans' look and Quill's
+  `ring` and `margin` at the vans followed (below); next the clerks'
+  descent, the hot street's cool-down, the Houses' lost hour at Ord's
+  map, and the journal line for readers.
 
 ## Verified (2026-09-25, integration)
 
@@ -1776,21 +1775,29 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   from IV.5's lines that waited for the window; no step inserted.
   Through a lit window the cable enforcer ("Cold desk · cable") stands
   its shift at the Organs' node, not the desk: its post moves to
-  `organ-node-cable` at the opening (set down there if idle, else it
-  walks there when its fight is done) and back to its desk after the
-  hour (`W.LAUNCH_SHIFT`), and the Cable's study reads the line, "Cold
+  `organ-node-cable` at the opening and back to its desk after the hour
+  (`W.LAUNCH_SHIFT`: 1 on shift, 2 going back, 0 at its desk). Every
+  tick puts the body where the flag says: an idle or homeward enforcer
+  away from its post is set down there whole; one in a fight, or dead,
+  keeps its fight or its wait and is set down when that ends (a dead one
+  respawns at the post); a world restored mid-window, or after it, is
+  put right the same way. The Cable's study reads the line, "Cold
   desk · cable, at the node, not the desk. "Shift." The meter runs. It
   does not look up." A dark window sends no shift. The vans have a POI
   of their own, `armored-van`, beside the van drawn on the hot street's
   south-east corner: through any window, lit or dark ("the season sends
   them"), anyone who looks, a guest included, reads the doors open on a
-  rack of recorders and the oval on the mast. Quill keeps the lights on
+  rack of recorders and the oval on the mast. The look and Quill's
+  station stand east of the van, out of both hot-street enforcers' reach,
+  so a guest who looks is not engaged. Quill keeps the lights on
   by the vans (a new station, `quill-vans`) through the window for a
   Movement IV body that has kept the hole and not yet stood in it: her
   shipped `ring`, never routed until now, gains its two choices, "The
   frame on the recorders." to the new `margin` (the gap low on the near
   side where whatever stands is not on the tape) and "Keep the lights
-  on.". With that Phase B's last lines are in.
+  on.". With that Phase B's last lines are in. A review of the commit
+  found the shift held only for an idle enforcer, the look inside an
+  enforcer's aggro, and two overclaims in the docs; all are folded.
 - `npm run typecheck` — client and Worker clean.
 - `npm test` — 34 files, 436 tests (2026-09-26): map integrity and reachability, identity,
   world/combat/fairness, economy, houses, clearing, engine glue, snapshot
@@ -2648,11 +2655,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   stage, and on a fresh local world the session smoke and the render
   check, each run alone.
 - Backlog A, Phase C, the launch's remainder (2026-10-03, morning):
-  typecheck, 553 tests in 42 files (through the real tick: the cable
+  typecheck, 555 tests in 42 files (through the real tick: the cable
   enforcer's post moved to the node at a lit opening and set down there
   idle, the Cable's study reading the shift, the post back at its desk
   after the hour and the shift's flag cleared, no shift in a dark
-  window; the van's look shut before the hour and open through a lit
+  window; an enforcer in a fight at the opening and at the close kept in
+  it and set down at its post after, and a world restored mid-window
+  and after it put right; the van's look and Quill's station outside
+  every Grid enforcer's aggro and reach; the van's look shut before the
+  hour and open through a lit
   and a dark window to a guest; Quill at `quill-vans` with `ring` for a
   prepared Movement IV body through the hour, her two choices and
   `margin` with its Wink, and not before the hour, after it, after the

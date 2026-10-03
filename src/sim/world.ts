@@ -381,8 +381,7 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
  * of dark lights: no shift, no climb, only the vans, and Caul through the ovals still lit. Decided once, at the opening.
  */
 function tickLaunch(w: WorldState): WorldState {
-  // After the hour the enforcer on shift goes back to its desk.
-  if ((w.flags[W.LAUNCH_SHIFT] ?? 0) > 0 && !inLaunchHour(w)) w = { ...moveShift(w, false), flags: { ...w.flags, [W.LAUNCH_SHIFT]: 0 } };
+  w = reconcileShift(w);
   const due = launchDue(w);
   if (due === "climb") return { ...w, gestell: launchClimb(w.gestell), flags: { ...w.flags, [W.LAUNCH_CLIMBED]: (w.flags[W.LAUNCH_CLIMBED] ?? 0) + 1 } };
   if (due !== "open") return w;
@@ -394,7 +393,7 @@ function tickLaunch(w: WorldState): WorldState {
     const street = cur.pois[HOT_STREET];
     if (street && street.state !== "hot") cur = { ...cur, pois: { ...cur.pois, [HOT_STREET]: { state: "hot", by: "", at: cur.now, count: street.count + 1 } } };
     cur = pushNews(cur, LAUNCH_NEWS);
-    cur = { ...moveShift(cur, true), flags: { ...cur.flags, [W.LAUNCH_SHIFT]: 1 } };
+    cur = reconcileShift({ ...cur, flags: { ...cur.flags, [W.LAUNCH_SHIFT]: SHIFT_ON } });
   }
   // Every oval on the Kerb: a body there with no window open hears him. One in a conversation or down is not interrupted;
   // one in a fight (a clerk on it, a heavy winding up, a duel) is not stopped by a window: it gets the ovals as a notice.
@@ -411,20 +410,38 @@ const HOT_STREET = "hot-street";
 const SHIFT_ENEMY = "cable-enforcer";
 const SHIFT_POST = "organ-node-cable";
 
+const SHIFT_ON = 1; // on shift at the node, through the lit hour
+const SHIFT_BACK = 2; // the hour is over: going back to the desk, until it stands there
+
 /**
- * The cable enforcer's shift (IV.5): through a lit window it stands at the Organs' node, not the desk; after the hour it
- * goes back. Its home moves; an idle body is set down at once, a busy one walks there when it is done.
+ * The cable enforcer's shift (IV.5), reconciled every tick: through a lit window its post is the Organs' node, not the
+ * desk; after the hour it goes back. Its home is always the post; whenever it is idle or walking home away from the
+ * post it is set down there (the desk and the node are on either side of a wall column, and enemies do not path), as an
+ * enemy arriving home is. A fight is never interrupted: it settles on the first tick after. A world restored with the
+ * flag set (its enemies come back from the defaults) is reconciled the same way.
  */
-function moveShift(w: WorldState, onShift: boolean): WorldState {
+function reconcileShift(w: WorldState): WorldState {
+  let flag = w.flags[W.LAUNCH_SHIFT] ?? 0;
+  if (flag === 0) return w;
+  if (flag === SHIFT_ON && !inLaunchHour(w)) flag = SHIFT_BACK;
   const spawn = ENEMY_SPAWNS.find(s => s.id === SHIFT_ENEMY);
-  const post = onShift ? POSITIONS[SHIFT_POST] : spawn;
-  if (!post) return w;
-  const enemies = w.enemies.map(e => {
-    if (e.id !== SHIFT_ENEMY) return e;
-    const home = { x: post.x, y: post.y };
-    return e.state === "idle" ? { ...e, home, x: home.x, y: home.y } : { ...e, home };
-  });
-  return { ...w, enemies };
+  const post = flag === SHIFT_ON ? POSITIONS[SHIFT_POST] : spawn;
+  const e = w.enemies.find(x => x.id === SHIFT_ENEMY);
+  if (!post || !spawn || !e) return { ...w, flags: { ...w.flags, [W.LAUNCH_SHIFT]: 0 } };
+  let next = e;
+  if (next.home.x !== post.x || next.home.y !== post.y) next = { ...next, home: { x: post.x, y: post.y } };
+  const away = next.x !== post.x || next.y !== post.y;
+  if (away && (next.state === "idle" || next.state === "return")) {
+    next = { ...next, x: post.x, y: post.y, hp: next.maxHp, state: "idle", t: 0, targetId: "", participants: [] };
+  }
+  const settled = !(next.x !== post.x || next.y !== post.y) && next.state !== "dead";
+  const nextFlag = flag === SHIFT_BACK && settled ? 0 : flag;
+  if (next === e && nextFlag === (w.flags[W.LAUNCH_SHIFT] ?? 0)) return w;
+  return {
+    ...w,
+    enemies: next === e ? w.enemies : w.enemies.map(x => (x.id === SHIFT_ENEMY ? next : x)),
+    flags: nextFlag === (w.flags[W.LAUNCH_SHIFT] ?? 0) ? w.flags : { ...w.flags, [W.LAUNCH_SHIFT]: nextFlag },
+  };
 }
 const LAUNCH_NEWS = "The launch. The Concern stopped selling. The weather is climbing on every meter.";
 const LAUNCH_NEWS_DARK = "The vans are on the Grid. The glass had no hour to give them.";
