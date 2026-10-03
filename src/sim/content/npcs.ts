@@ -1148,6 +1148,19 @@ const CAUL_NODES: Record<string, DialogueNode> = {
     id: "oval-hour",
     text: (ctx) => `The time goes by and every oval on the Kerb goes champagne at once, and the same voice is on all of them, on the real sky like a watermark. "The hour. The ovals are open. The sky through them is yours; the hour is ours. Some of you bought one on the terrace. It did not come. The slip is our time. The bell keeps its own. We are working on the bell. The god is not coming. The god is a demand. I have never failed to meet a demand. ${glassDark(ctx.w) ? "The date is not on the glass. I noticed. It comes anyway." : "The date is on the glass."} Until then, the altars. We kept something for you."`,
   },
+  // ---- the launch (IV.5): the tick opens these for every body on the Kerb when the window opens; the altars open his reel
+  "oval-launch": {
+    id: "oval-launch",
+    text: "Every oval on the Kerb goes champagne at once, and the same voice is on all of them. \"The hour. I am told this is the part where people look up. Please do. I will be at the Grid's gate, which is as far as I go.\"",
+  },
+  "oval-launch-dark": {
+    id: "oval-launch-dark",
+    text: "The ovals still lit go champagne, and the same voice is on them. \"The glass is dark. I noticed. Dark lights are a figure; I have it. Smaller than you hope. The vans are on their way; the season sends them, not the glass.\"",
+  },
+  "reel-launch": {
+    id: "reel-launch",
+    text: "Over the count, on every screen in the aisle, the voice. \"This hour is the Concern's. For a season we sold you the feeling of being near it. For an hour we take it. Nothing is for sale. Stand where you like.\"",
+  },
   // ---- the recorders: the lip of the ring (IV.6), and his word after the rite (IV.7)
   "lip-silent": {
     id: "lip-silent",

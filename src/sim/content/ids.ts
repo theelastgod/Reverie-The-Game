@@ -105,6 +105,9 @@ export const W = {
   GLASS_LINES: "glassLines", // count of readers whose readiness is a line on the glass
   ALTARS_FLICKER: "altarsFlicker", // world time of the last flicker of the Nave's altars (the `flicker` effect); 0 = never; carried as Snap.flicker
   FIGURE_NEWS: "figureNews", // 1 = Ord's figure has been on the marquee (once for the city)
+  LAUNCH_SEASON: "launchSeason", // the season whose launch window has opened (src/sim/launch.ts; the tick opens it once a season)
+  LAUNCH_DARK: "launchDark", // 1 = that window opened past the threshold of dark lights: no shift, only the vans
+  LAUNCH_CLIMBED: "launchClimbed", // points the weather has climbed in that window
 } as const;
 
 /** Quest ids. */

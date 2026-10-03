@@ -58,6 +58,8 @@ vi.mock("./clearing", () => ({
   tickClearing: (w: WorldState) => w,
 }));
 vi.mock("./quests", () => ({ tickQuests: (w: WorldState) => w }));
+// The launch window opens Caul's voice through the dialogue module, which loads the content these tests stub out.
+vi.mock("./dialogue", () => ({ openNode: (w: WorldState) => w }));
 
 import {
   BLITZ_DURATION, DODGE_COOLDOWN, DODGE_DURATION, ENEMY, ENEMY_LEASH, FACE_DURATION, HEAVY_COOLDOWN, HEAVY_DAMAGE, HEAVY_WINDUP,

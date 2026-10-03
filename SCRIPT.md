@@ -1370,37 +1370,37 @@ The paper panel, the gold mark:
 ✦ *A solo cannot force the hour. He knows the arithmetic and hates it.*
 
 ### IV.5 The launch
-*New beat, Phase B as what the player stands through; the window itself is Phase C (a flag and a timer in the world tick, once a season at the hour on the glass). No step is inserted: the lines land on the altars, the ovals, the glass, the board, the vans and the Organs' nodes during `prepare`, `stance` and `passing`. The whole server at once. Plates: the altar reel as the countdown; `trailer-hot-street` for the flagged Grid; `props/armored-van`; `props/oval-light`; `sprites/enforcer` at the nodes. The Nave and the Grid are guest districts, so a guest watches the altars count and the vans park; the Clearing stays shut to them. The tag on the reel is HUD, never world.*
+*New beat, Phase B as what the player stands through; the window itself shipped since Phase C, the launch (src/sim/launch.ts and the world tick: once a season at the moment on the glass, for an hour, decided light or dark once at the opening; the enforcers at the nodes, the vans' look and the mast, and Quill's `ring` and `margin` are the next slice). No step is inserted: the lines land on the altars, the ovals, the glass, the board, the vans and the Organs' nodes during `prepare`, `stance` and `passing`. The whole server at once. Plates: the altar reel as the countdown; `trailer-hot-street` for the flagged Grid; `props/armored-van`; `props/oval-light`; `sprites/enforcer` at the nodes. The Nave and the Grid are guest districts, so a guest watches the altars count and the vans park; the Clearing stays shut to them. The tag on the reel is HUD, never world.*
 
-**THE ALTAR** — the countdown (new; every CRT altar in the Nave, for the hour)
+**THE ALTAR** — the countdown (shipped since Phase C, the launch; both CRT altars' watch, for every body, the marked included, for the hour)
 > Every screen in the aisle on one reel: the ring from above, empty, and a number counting down in the face of every meter in the city. A serial in the margin. The tag in the corner where it always is. People kneel to the count.
 
-**CAUL** — on the altar reel (new)
+**CAUL** — on the altar reel (shipped since Phase C, the launch; `reel-launch`, opened by the altars' watch while the window is lit)
 > This hour is the Concern's. For a season we sold you the feeling of being near it. For an hour we take it. Nothing is for sale. Stand where you like.
 
-**CAUL** — through the ovals, at the hour (new; the Kerb's apertures go champagne for everyone, as at II.9)
+**CAUL** — through the ovals, at the hour (shipped since Phase C, the launch; `oval-launch`, opened by the tick at the opening for every body on the Kerb with no window already open; the apertures going champagne is narration, the ovals drawn as they are)
 > The hour. I am told this is the part where people look up. Please do. I will be at the Grid's gate, which is as far as I go.
 
-**THE GLASS** — `forecast-glass` read, during the window (new, pois.ts)
+**THE GLASS** — `forecast-glass` read, during the window (shipped since Phase C, the launch; pois.ts)
 > Forecast glass. {band}. Under the band, in the same face as every meter in the city, the Concern's line with a time on it: now. The number under it and the number on every meter are the same number.
 
-**THE GLASS** — read, dark past the threshold (new)
+**THE GLASS** — read, dark past the threshold (shipped since Phase C, the launch; during a window that opened dark)
 > Forecast glass. {band}. Under the band, where the date was, nothing. {dark} lights out on the Kerb. The line has no hour to come at.
 
-**THE ALTAR** — dark glass (new)
+**THE ALTAR** — dark glass (shipped since Phase C, the launch; during a window that opened dark, no voice)
 > The altar plays what it played yesterday: ninety seconds of someone's sky, with a margin. No count. The vans are on the Grid anyway. The season sends them; only the shift needed a glass.
 
-**CAUL** — through the ovals still lit, dark glass (new)
+**CAUL** — through the ovals still lit, dark glass (shipped since Phase C, the launch; `oval-launch-dark`, opened by the tick as `oval-launch` is)
 > The glass is dark. I noticed. Dark lights are a figure; I have it. Smaller than you hope. The vans are on their way; the season sends them, not the glass.
 
 **THE ENFORCER** — Cold desk · cable at the Organs' node, on shift (new); Cold desk · one and · two on the hot street the window flags, as shipped
 > Cold desk · cable, at the node, not the desk. "Shift." The meter runs. It does not look up.
 > *Fall line (shipped, lines.ts `DEATH_BY`):* Cold desk · cable did their job.
-[the weather climbs a point at a time on every HUD on the server, by a bounded amount, never past 91 on its own; the altars draw on the Cable as before]
+[the weather climbs a point at a time on every HUD on the server, by a bounded amount, never past 91 on its own (shipped since Phase C, the launch: a point at the opening and one every five minutes, twelve at most, and never to meltdown, so the launch alone stops at 90); the altars draw on the Cable as before; the enforcer at the node is the next slice]
 
-**THE BOARD** — `listing-board` read, during the window (new, pois.ts)
+**THE BOARD** — `listing-board` read, during the window (shipped since Phase C, the launch; pois.ts; a window that opened dark names nobody)
 > Quill listed a Clearing, on commission, for a buyer she never met. The buyer has a name this hour. BUYER: THE CONCERN. {price} Bestand. Copies travel. The hole does not. The vans backing up to it say otherwise.
-[label (new): "Listing board — a Clearing at {price} · BUYER: THE CONCERN"; the price moves with the hour]
+[label (shipped since Phase C, the launch): "Listing board — a Clearing at {price} · BUYER: THE CONCERN"; the price moving with the hour waits for the city's figure to move the hour, the owner's question]
 
 **THE VAN** — `armored-van` look (new; the Grid's edge; a guest may look)
 > An armored van, no markings. Everyone knows whose. The doors are open on a rack of recorders, lenses toward the ring, each one looking through a printed frame. On the mast above, the oval light, lit. Nobody in the cab.
@@ -1416,7 +1416,7 @@ The paper panel, the gold mark:
 
 **THE HOT STREET** — read, flagged by the window (shipped line, pois.ts; the state set by the launch)
 > A wet street. Painted on the kerb: opt in, seconds, spoils from people, not from the street. Press V to flag. Unbanked and copies drop. Cult and banked stay. Guests are not loot. In meltdown weather the street flags itself.
-[world window (Phase C): the hot street hot; at 91 the Grid flags itself by its own rule; the listing's buyer named; enforcers at the Organs' nodes; the vans at the Grid's edge and the oval on a mast; all but the vans skipped past the dark-light threshold; news (new): "The launch. The Concern stopped selling. The weather is climbing on every meter." / dark: "The vans are on the Grid. The glass had no hour to give them."]
+[world window (shipped since Phase C, the launch, except the enforcers, the vans' look and the mast, the next slice): the hot street hot; at 91 the Grid flags itself by its own rule; the listing's buyer named; enforcers at the Organs' nodes; the vans at the Grid's edge and the oval on a mast; all but the vans skipped past the dark-light threshold; news (new): "The launch. The Concern stopped selling. The weather is climbing on every meter." / dark: "The vans are on the Grid. The glass had no hour to give them."]
 
 ### IV.6 The recorders
 *New beat, shipped since Phase B, the lip; no step inserted: Caul's lines land as dialogue during `stance` and `passing` (he is silent on the lip until the hole is kept, F.PREPARE), and the offer writes its own key beside the operator's (C.LIP, read by the Passing's resolver as the operator's key is). The lip: the Grid's gate to the Clearing (`gate-wet-clearing`), the tile where the city stops a guest, the ring in sight below. `sprites/guest`, `guest.jpg`, no halo, no aura, the label GUEST; his name is in the prompt and the dialogue only. The synopsis names `plate-operator.jpg`, the same desk's plate; the journal shows the step's `clearing-ring.jpg`, since a line carries no plate. A guest can stand beside him; an Angel can; nobody can strike him.*

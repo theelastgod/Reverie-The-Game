@@ -11,7 +11,7 @@ import {
   UNBANKED_DROP, WRECKAGE_TTL, WRECKAGE_TTL_BONUS,
 } from "./constants";
 import { circleHitsWalls, districtAt, FAILED_PASSING_MARKS, GUEST_SPAWN, NPC_HOMES } from "./map";
-import { POI_STATES } from "./content/ids";
+import { POI_STATES, W } from "./content/ids";
 import { newsFor } from "./content/news";
 import { weatherBand } from "./protocol";
 import type { DistrictId, FailedPassing, Intent, Item, Notice, NpcState, Player, PoiState, Vec, WorldState, Wreckage } from "./types";
@@ -21,6 +21,8 @@ import { initialHouses, tickHouseWar } from "./houses";
 import { initialClearing, initialPassing, tickClearing } from "./clearing";
 import { resolveHeavy, tickCombatTimers, tickEnemies } from "./combat";
 import { tickQuests } from "./quests";
+import { openNode } from "./dialogue";
+import { glassDark, launchDue } from "./launch";
 import * as LINES from "./content/lines";
 
 export const NO_INTENT: Intent = { up: false, down: false, left: false, right: false };
@@ -350,6 +352,7 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
   cur = tickHouseWar(cur, dt);
   cur = tickClearing(cur, dt);
   cur = tickSeason(cur);
+  cur = tickLaunch(cur);
 
   // Gestell drifts toward its baseline; the weather forgets slowly.
   let gestell = cur.gestell;
@@ -370,6 +373,37 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
   for (const id of cur.players.keys()) cur = tickQuests(cur, id);
   return cur;
 }
+
+/**
+ * The Concern's launch (IV.5): once a season, at the moment on the forecast glass, the window opens for an hour,
+ * for everyone at once. With the glass lit: the hot street is set hot, the marquee says so, the weather climbs a point
+ * at a time (src/sim/launch.ts launchDue), and every body on the Kerb hears Caul through the ovals. Past the threshold
+ * of dark lights: no shift, no climb, only the vans, and Caul through the ovals still lit. Decided once, at the opening.
+ */
+function tickLaunch(w: WorldState): WorldState {
+  const due = launchDue(w);
+  if (due === "climb") return { ...w, gestell: w.gestell + 1, flags: { ...w.flags, [W.LAUNCH_CLIMBED]: (w.flags[W.LAUNCH_CLIMBED] ?? 0) + 1 } };
+  if (due !== "open") return w;
+  const dark = glassDark(w);
+  let cur: WorldState = { ...w, flags: { ...w.flags, [W.LAUNCH_SEASON]: w.season.id, [W.LAUNCH_DARK]: dark ? 1 : 0, [W.LAUNCH_CLIMBED]: 0 } };
+  if (dark) {
+    cur = pushNews(cur, LAUNCH_NEWS_DARK);
+  } else {
+    const street = cur.pois[HOT_STREET];
+    if (street && street.state !== "hot") cur = { ...cur, pois: { ...cur.pois, [HOT_STREET]: { state: "hot", by: "", at: cur.now, count: street.count + 1 } } };
+    cur = pushNews(cur, LAUNCH_NEWS);
+  }
+  // Every oval on the Kerb: a body there with no window open hears him; one in a conversation or down is not interrupted.
+  for (const p of [...cur.players.values()]) {
+    if (p.district !== "kerb" || p.dead || p.dialogue) continue;
+    cur = openNode(cur, p.id, "caul", dark ? "oval-launch-dark" : "oval-launch");
+  }
+  return cur;
+}
+
+const HOT_STREET = "hot-street";
+const LAUNCH_NEWS = "The launch. The Concern stopped selling. The weather is climbing on every meter.";
+const LAUNCH_NEWS_DARK = "The vans are on the Grid. The glass had no hour to give them.";
 
 /** The marquee names the climate band once, when the weather crosses into it. Mixed is the default and says nothing. */
 function announceWeather(w: WorldState): WorldState {

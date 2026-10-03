@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
  * hour promises (a POI state, a person's place, a cult object, a House
  * standing) must be visible in the world.
  */
-import { DT } from "./constants";
+import { DARK_LIGHTS_THRESHOLD, DT, LAUNCH_CLIMB_EVERY, LAUNCH_WINDOW } from "./constants";
 import { POSITIONS, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
@@ -21,6 +21,8 @@ import type { Fourfold, Item, Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
 import { verbsFor } from "./interact";
+import { launchDark, launchMoment, launchOpen } from "./launch";
+import { POI_CONFIGS } from "./content/pois";
 import { questById, questProgress } from "./quests";
 import { npcView, snapshotFor } from "./snapshot";
 
@@ -653,6 +655,83 @@ describe("the Foundry's darkening flickers every altar in the Nave, for everyone
     expect(questProgress(me(race), SQ.FOUNDRY).step, "the raker's step closes").toBe(1);
     expect(race.flags[W.ALTARS_FLICKER], "the darkening's flicker is the only one").toBe(darkenedAt);
     expect(race.news.some(n => n.text === RAKED_NEWS), "the Foundry was darkened, not raked out").toBe(false);
+  });
+});
+
+describe("the launch window (IV.5), opened by the tick once a season", () => {
+  const LAUNCH = "The launch. The Concern stopped selling. The weather is climbing on every meter.";
+  const VANS = "The vans are on the Grid. The glass had no hour to give them.";
+
+  /** An Angel on the Kerb, a guest in the Nave, the clock a breath before this season's moment. */
+  function eve(darkLights = 0): WorldState {
+    let w = world({ id: SQ.HOURS, steps: [], check: () => undefined });
+    w = add(w, spawnGuest("g"));
+    w = goTo(w, ME, "forecast-glass");
+    w = { ...w, now: launchMoment(w) - DT / 2, flags: { ...w.flags, [W.DARK_LIGHTS]: darkLights } };
+    return w;
+  }
+
+  it("opens at the moment for everyone: the hot street, the marquee, Caul through the ovals to the Kerb, then the weather a point at a time", () => {
+    let w = eve();
+    expect(w.pois["hot-street"].state).toBe("quiet");
+    const before = w.gestell;
+    w = tick(w);
+    expect(launchOpen(w)).toBe(true);
+    expect(w.flags[W.LAUNCH_SEASON]).toBe(w.season.id);
+    expect(w.pois["hot-street"].state, "the window flags the hot street").toBe("hot");
+    expect(w.news.map(n => n.text)).toContain(LAUNCH);
+    expect(me(w).dialogue).toMatchObject({ npc: "caul", node: "oval-launch", speaker: "Anselm Caul" });
+    expect(me(w).dialogue!.text).toContain("I will be at the Grid's gate, which is as far as I go.");
+    expect(me(w, "g").dialogue, "a body in the Nave is not on the Kerb").toBeNull();
+    // the first point is owed at once, the next an interval later; the opening is once
+    w = tick(w);
+    expect(w.gestell).toBeGreaterThan(before);
+    const climbed = w.flags[W.LAUNCH_CLIMBED];
+    expect(climbed).toBe(1);
+    w = tick({ ...w, now: launchMoment(w) + LAUNCH_CLIMB_EVERY });
+    expect(w.flags[W.LAUNCH_CLIMBED]).toBe(2);
+    expect(w.news.filter(n => n.text === LAUNCH)).toHaveLength(1);
+    // the lines that read it: the glass says now, the altars count with his voice, the board names the buyer
+    const ctx = { w, p: me(w), now: w.now };
+    const say = (id: string, choice: string): string => { const v = POI_CONFIGS[id].verbs.find(x => x.choice === choice)!; return typeof v.say === "function" ? v.say(ctx) : v.say ?? ""; };
+    expect(say("forecast-glass", "read")).toContain("the Concern's line with a time on it: now.");
+    const reel = interact(goTo(w, ME, "crt-altar-2"), "crt-altar-2", "watch");
+    expect(me(reel).heard).toContain("Every screen in the aisle on one reel");
+    expect(me(reel).dialogue).toMatchObject({ npc: "caul", node: "reel-launch" });
+    const board = interact(goTo(w, ME, "listing-board"), "listing-board", "read");
+    expect(me(board).heard).toContain("The buyer has a name this hour. BUYER: THE CONCERN.");
+    const label = POI_CONFIGS["listing-board"].label;
+    expect(typeof label === "function" ? label({ w: board, p: me(board), now: board.now }) : label).toMatch(/^Listing board — a Clearing at \d+ · BUYER: THE CONCERN$/);
+    // after the hour the glass has a date again: the next season's
+    const after = tick({ ...w, now: launchMoment(w) + LAUNCH_WINDOW });
+    expect(launchOpen(after)).toBe(false);
+    const read = POI_CONFIGS["forecast-glass"].verbs.find(v => v.choice === "read")!;
+    expect(typeof read.say === "function" ? read.say({ w: after, p: me(after), now: after.now }) : "").toContain(`season ${after.season.id + 1}, day 7, 00:00`);
+  });
+
+  it("past the threshold of dark lights it opens with no shift: no hot street, no climb, the vans' news, and Caul through the ovals still lit", () => {
+    let w = tick(eve(DARK_LIGHTS_THRESHOLD));
+    expect(launchDark(w)).toBe(true);
+    expect(w.pois["hot-street"].state).toBe("quiet");
+    expect(w.news.map(n => n.text)).toContain(VANS);
+    expect(w.news.map(n => n.text)).not.toContain(LAUNCH);
+    expect(me(w).dialogue).toMatchObject({ npc: "caul", node: "oval-launch-dark" });
+    const g0 = w.gestell;
+    w = tick({ ...w, now: launchMoment(w) + 3 * LAUNCH_CLIMB_EVERY });
+    expect(w.gestell, "only the slow drift to baseline moves it").toBeLessThan(g0 + 0.01);
+    expect(w.flags[W.LAUNCH_CLIMBED]).toBe(0);
+    const reel = interact(goTo(w, ME, "crt-altar-2"), "crt-altar-2", "watch");
+    expect(me(reel).heard).toContain("No count. The vans are on the Grid anyway.");
+    expect(me(reel).dialogue, "no voice on a dark reel").toBeNull();
+  });
+
+  it("does not interrupt a body already in a conversation, and opens once a season", () => {
+    let w = eve();
+    w = add(w, { ...me(w), dialogue: { npc: "omen", node: "hub", speaker: "Halla Voss", portrait: "", text: "", wink: "", choices: [] } });
+    w = tick(w);
+    expect(me(w).dialogue?.npc, "her window stays").toBe("omen");
+    const again = tick({ ...w, flags: { ...w.flags }, now: w.now + 1 });
+    expect(again.news.filter(n => n.text === LAUNCH)).toHaveLength(1);
   });
 });
 

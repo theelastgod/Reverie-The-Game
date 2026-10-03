@@ -167,6 +167,10 @@ export function nextLaunch(w: { now; season }): { season: number; at: number }; 
 export function launchDate(season: number, offset = LAUNCH_OFFSET): string;      // "season 2, day 7, 00:00", the season's own calendar (world time only runs while the city is live, so no wall clock)
 export function countdown(seconds: number): string;                             // "6d 23:59:12", floored at "0d 00:00:00"
 export const darkLights = (w) => w.flags[W.DARK_LIGHTS] ?? 0;  export const glassDark = (w) => darkLights(w) >= DARK_LIGHTS_THRESHOLD; // 7
+export const launchMoment = (w) => w.season.startedAt + LAUNCH_OFFSET;  export function inLaunchHour(w): boolean; // [moment, moment + LAUNCH_WINDOW)
+export const launchOpen = (w) => inLaunchHour(w) && w.flags[W.LAUNCH_SEASON] === w.season.id;  export const launchDark = (w) => launchOpen(w) && w.flags[W.LAUNCH_DARK] > 0;
+export function launchDue(w): "open" | "climb" | null; // the tick's debt: open once a season inside the hour; else (lit) a point of weather at the opening and one per LAUNCH_CLIMB_EVERY, LAUNCH_CLIMB_MAX in all, never to GESTELL_MELTDOWN
+// world.ts tickLaunch (after tickSeason): on "open" records W.LAUNCH_SEASON, W.LAUNCH_DARK (glassDark at the opening) and W.LAUNCH_CLIMBED; lit: hot-street hot (by ""), news "The launch. ..."; dark: news "The vans are on the Grid. ..."; then openNode(caul, oval-launch | oval-launch-dark) for every body on the Kerb not dead and with no dialogue open; on "climb" gestell +1
 // read by pois.ts (the forecast glass's calendar line: the next hour, the launch from Movement III, with date and count; past the threshold no date and the count of lights out) and npcs.ts (Caul's reader and oval-hour)
 ```
 

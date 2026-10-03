@@ -16,7 +16,7 @@ import { WEATHER_LABELS, WEATHER_NAMED } from "./lines";
 import { clearingPrice, listClearing, moveClearing } from "./market";
 import { SIDE_PLACES } from "./side";
 import { coldClaimed } from "./caul";
-import { countdown, darkLights, glassDark, launchDate, nextLaunch } from "../launch";
+import { countdown, darkLights, glassDark, launchDark, launchDate, launchOpen, nextLaunch } from "../launch";
 
 // ---------------------------------------------------------------- helpers
 
@@ -280,10 +280,11 @@ const NAVE: PoiConfig[] = [
         label: "Watch",
         choice: "watch",
         guest: "allow",
-        say: ctx => hijackReel(ctx) ?? "A stack of screens with the tubes still warm. Static, then a room, then static. Nobody is in the room.",
-        // The room's Wink belongs to the room; a marked body sees its own sky here and gets no hint about an empty room it is not shown.
+        say: ctx => launchReel(ctx) ?? hijackReel(ctx) ?? "A stack of screens with the tubes still warm. Static, then a room, then static. Nobody is in the room.",
+        // The room's Wink belongs to the room; a marked body sees its own sky here and gets no hint about an empty room it is not shown; in the launch's hour the screens are the count's.
         effects: ctx => [
-          ...(hijackReel(ctx) ? [] : [{ kind: "wink", text: "The room on the screen is this one. It is empty because you are looking at the screen." } as Effect]),
+          ...launchReelEffects(ctx),
+          ...(launchReel(ctx) || hijackReel(ctx) ? [] : [{ kind: "wink", text: "The room on the screen is this one. It is empty because you are looking at the screen." } as Effect]),
           { kind: "poi", id: "crt-altar-1", state: "lit" } as Effect,
         ],
       },
@@ -299,13 +300,25 @@ const NAVE: PoiConfig[] = [
         choice: "watch",
         guest: "allow",
         // The catalog, playing since the body arrived: last season's sky, cut to ninety seconds, and a courteous voice over the restart. No name; nobody looks up.
-        say: ctx => hijackReel(ctx) ?? "Screens in a ring. One is lit and people are kneeling at it. On the screen: a sky through an oval, a bell, the light a shade warmer than the room. The kneelers call it a reverie. It runs ninety seconds and starts again. A tag in the corner. A serial in the margin. Over the restart, courteous, a man's voice: \"You will feel it again. We kept it for you.\"",
+        say: ctx => launchReel(ctx) ?? hijackReel(ctx) ?? "Screens in a ring. One is lit and people are kneeling at it. On the screen: a sky through an oval, a bell, the light a shade warmer than the room. The kneelers call it a reverie. It runs ninety seconds and starts again. A tag in the corner. A serial in the margin. Over the restart, courteous, a man's voice: \"You will feel it again. We kept it for you.\"",
         // The catalog's Wink is about somebody else's hint; the marked body's reel is its own, and the script gives it no hint.
-        effects: ctx => (hijackReel(ctx) ? [] : [{ kind: "wink", text: "A copy of a hint somebody heard. The copy does not clock out." } as Effect]),
+        effects: ctx => (launchReel(ctx) ? launchReelEffects(ctx) : hijackReel(ctx) ? [] : [{ kind: "wink", text: "A copy of a hint somebody heard. The copy does not clock out." } as Effect]),
       },
     ],
   },
 ];
+
+/**
+ * The launch's hour on the altars (IV.5), for every body, the marked included: every screen in the aisle on one reel,
+ * the ring from above and a number counting down, with his voice over the count; past the threshold of dark lights,
+ * yesterday's sky and no count. Null outside the window.
+ */
+function launchReel(ctx: Ctx): string | null {
+  if (launchDark(ctx.w)) return "The altar plays what it played yesterday: ninety seconds of someone's sky, with a margin. No count. The vans are on the Grid anyway. The season sends them; only the shift needed a glass.";
+  if (launchOpen(ctx.w)) return "Every screen in the aisle on one reel: the ring from above, empty, and a number counting down in the face of every meter in the city. A serial in the margin. The tag in the corner where it always is. People kneel to the count.";
+  return null;
+}
+const launchReelEffects = (ctx: Ctx): Effect[] => (launchOpen(ctx.w) && !launchDark(ctx.w) ? [{ kind: "dialogue", npc: "caul", node: "reel-launch" }] : []);
 
 /**
  * The marked Angel's own sky (IV.7): once their hour was claimed, every altar they pass from now on plays what would have crossed,
@@ -433,7 +446,9 @@ const WET: PoiConfig[] = [
     id: "listing-board",
     label: ctx => {
       const price = clearingPrice(ctx.w);
-      return price === null ? "Listing board" : `Listing board — a Clearing at ${price}`;
+      if (price === null) return "Listing board";
+      // The launch's hour names the buyer (IV.5); a window that opened dark names nobody.
+      return launchOpen(ctx.w) && !launchDark(ctx.w) ? `Listing board — a Clearing at ${price} · BUYER: THE CONCERN` : `Listing board — a Clearing at ${price}`;
     },
     plate: "clearing-stall.jpg",
     verbs: [
@@ -443,7 +458,9 @@ const WET: PoiConfig[] = [
         choice: "read",
         guest: spectate,
         // The say is read after the effects: the first read posts the Clearing and reads its opening price; a later read reads where the city moved it.
-        say: ctx => `Quill listed a Clearing, on commission, for a buyer she never met. ${clearingPrice(ctx.w) ?? CLEARING_LIST_PRICE} Bestand, the resistance's price today. Copies travel. The hole does not. Below it, smaller hands: keep-groups, hold-rates, a schedule of who will stand in which hole for what. The number is on the Grid now, in your ledger, and it moves when the city does.`,
+        say: ctx => launchOpen(ctx.w) && !launchDark(ctx.w)
+          ? `Quill listed a Clearing, on commission, for a buyer she never met. The buyer has a name this hour. BUYER: THE CONCERN. ${clearingPrice(ctx.w) ?? CLEARING_LIST_PRICE} Bestand. Copies travel. The hole does not. The vans backing up to it say otherwise.`
+          : `Quill listed a Clearing, on commission, for a buyer she never met. ${clearingPrice(ctx.w) ?? CLEARING_LIST_PRICE} Bestand, the resistance's price today. Copies travel. The hole does not. Below it, smaller hands: keep-groups, hold-rates, a schedule of who will stand in which hole for what. The number is on the Grid now, in your ledger, and it moves when the city does.`,
         effects: [
           { kind: "flag", key: F.BOARD },
           { kind: "worldFlag", key: W.CLEARING_LISTED, value: 1 },
@@ -874,6 +891,9 @@ export const LAST_SEASON_WINK: WinkBySchool = {
  * down to it; past the threshold of dark lights, no date, and the count of lights out (src/sim/launch.ts).
  */
 const calendarLine = (ctx: Ctx): string => {
+  // During the launch window: the line has a time on it, now; or, if the window opened dark, no hour at all.
+  if (launchDark(ctx.w)) return ` Under the band, where the date was, nothing. ${darkLights(ctx.w)} lights out on the Kerb. The line has no hour to come at.`;
+  if (launchOpen(ctx.w)) return " Under the band, in the same face as every meter in the city, the Concern's line with a time on it: now. The number under it and the number on every meter are the same number.";
   const what = ctx.p.movement >= 3 ? "the launch" : "the next hour";
   if (glassDark(ctx.w)) {
     const dark = darkLights(ctx.w);

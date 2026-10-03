@@ -82,7 +82,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   has begun with the weave: darkening the Foundry flickers every altar
   in the Nave for everyone, Ord's figure goes on the marquee, and the
   Appearance's blank tape is news; and the forecast glass carries the
-  launch as a date with a count, until enough lights go dark behind it.
+  launch as a date with a count, until enough lights go dark behind it;
+  and at that moment, once a season, the launch itself opens for an
+  hour for the whole city.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1729,6 +1731,38 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Caul says the city's figure sets the date while the date is a fixed
   hour of the season (the launch window is where the figure could move
   the hour).
+- Backlog A, Phase C, the launch (2026-10-03, morning): the window itself,
+  from IV.5; no step inserted. Once a season, at the moment on the glass,
+  the world tick opens it for an hour of world time, for everyone at
+  once, and decides once, at the opening, whether it is lit or dark
+  (`src/sim/launch.ts` `launchDue`, `launchOpen`, `launchDark`; the
+  tick's `tickLaunch` after the season roll; three world flags record
+  which season opened, whether dark, and how far the weather climbed).
+  Lit: the hot street is set hot, the marquee says "The launch. The
+  Concern stopped selling. The weather is climbing on every meter.", the
+  weather climbs a point at the opening and one every five minutes,
+  twelve at most, and never into meltdown on its own (the launch alone
+  stops at 90; extraction can still take the city past it), and every
+  body on the Kerb with no conversation open hears Caul through the
+  ovals ("The hour. I am told this is the part where people look up.").
+  Through the hour the glass reads "the Concern's line with a time on
+  it: now"; both altars play the countdown reel for every body, the
+  marked included, with his voice over the count; the board names the
+  buyer, "BUYER: THE CONCERN", in its line and its label. Dark (past
+  the threshold): no shift, no climb, the marquee says "The vans are on
+  the Grid. The glass had no hour to give them." (the two vans drawn on
+  the Grid are the vans), Caul through the ovals still lit says he
+  noticed, the glass has no hour to come at, and the altars play
+  yesterday's sky with no count and no voice. After the hour the glass
+  shows the next season's date. The world's clock runs only while the
+  city is live, so the hour is never skipped: an empty city meets it
+  when it next wakes. Three stubbed-world tests (combat, fairness,
+  world) now stub the dialogue opener the tick reaches, as they stub the
+  quests. Next in Phase C: the enforcers at the Organs' nodes on shift,
+  the vans' look with the oval on a mast, and Quill's `ring` and
+  `margin` at the vans, then the clerks' descent, the hot street's
+  cool-down, the Houses' lost hour at Ord's map, and the journal line
+  for readers.
 
 ## Verified (2026-09-25, integration)
 
@@ -2555,6 +2589,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   typecheck, 542 tests in 42 files (Halla's line light and dark; his
   address compared across every body in each world) and the build. The
   GitHub gates passed on the first commit.
+- Backlog A, Phase C, the launch (2026-10-03, morning): typecheck, 547
+  tests in 42 files (the window's pure cases: the hour's edges, open
+  only once this season's opening is recorded, dark only while open,
+  the opening owed once, the first point at once and the next an
+  interval later, the bound, the stop short of meltdown, nothing owed
+  dark or after the hour; the walked window through the real tick: the
+  opening sets the hot street, posts the news once and opens Caul's
+  oval line for the Angel on the Kerb and not the guest in the Nave, the
+  weather climbs, the glass reads now, the altar's reel and his voice,
+  the board's line and label name the buyer, the next season's date
+  after the hour; dark: no hot street, the vans' news, his dark line, no
+  climb, the dark altar with no voice; a body already in a conversation
+  is not interrupted), the build, the play build and the stage, and on
+  a fresh local world the session smoke and the render check, each run
+  alone. The window itself cannot be reached over the wire in a smoke:
+  it opens six days of world time into a season.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2631,7 +2681,10 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      the glass with its count and the dark-light threshold that
      withholds it (the switch is the city's for good; the owner may
      want it per season); next the launch window, which should also
-     settle whether the city's figure moves the hour as Caul says, then the clerks' descent, the
+     settle whether the city's figure moves the hour as Caul says (the
+     window itself has landed: see Done, "the launch"; next its
+     enforcers, the vans' look and the mast, and Quill at the vans),
+     then the clerks' descent, the
      hot street's cool-down, the Houses' lost hour at Ord's map and
      Quill's lines at the vans): the
      Cable's darkening flickering the altars server-wide; the listing's

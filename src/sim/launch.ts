@@ -10,7 +10,7 @@
  * no handle", thrown one refusal at a time). The date is a fixed hour of the season; Caul says the city's figure sets
  * it, which the glass does not yet bear out (the launch window decides whether the figure moves the hour).
  */
-import { DARK_LIGHTS_THRESHOLD, LAUNCH_OFFSET, SEASON_LENGTH } from "./constants";
+import { DARK_LIGHTS_THRESHOLD, GESTELL_MELTDOWN, LAUNCH_CLIMB_EVERY, LAUNCH_CLIMB_MAX, LAUNCH_OFFSET, LAUNCH_WINDOW, SEASON_LENGTH } from "./constants";
 import { W } from "./content/ids";
 import type { WorldState } from "./types";
 
@@ -44,3 +44,37 @@ export const darkLights = (w: Pick<WorldState, "flags">): number => w.flags[W.DA
 
 /** Past the threshold the glass shows no date: there are not enough lights left to show it. */
 export const glassDark = (w: Pick<WorldState, "flags">): boolean => darkLights(w) >= DARK_LIGHTS_THRESHOLD;
+
+// ---------------------------------------------------------------- the window (IV.5)
+
+/** This season's moment on the glass. */
+export const launchMoment = (w: Pick<WorldState, "season">): number => w.season.startedAt + LAUNCH_OFFSET;
+
+/** Inside this season's hour, opened or not. */
+export function inLaunchHour(w: Pick<WorldState, "now" | "season">): boolean {
+  const at = launchMoment(w);
+  return w.now >= at && w.now < at + LAUNCH_WINDOW;
+}
+
+/** The window is open: this season's hour, and the tick has opened it. */
+export const launchOpen = (w: Pick<WorldState, "now" | "season" | "flags">): boolean =>
+  inLaunchHour(w) && (w.flags[W.LAUNCH_SEASON] ?? 0) === w.season.id;
+
+/** The open window came with no shift: the glass was past the threshold when it opened (decided once, at the opening). */
+export const launchDark = (w: Pick<WorldState, "now" | "season" | "flags">): boolean =>
+  launchOpen(w) && (w.flags[W.LAUNCH_DARK] ?? 0) > 0;
+
+/**
+ * What the tick owes the window now: open it (once a season, inside the hour), or climb the weather a point (one per
+ * LAUNCH_CLIMB_EVERY since the moment, LAUNCH_CLIMB_MAX in all, and never to meltdown on its own), or nothing.
+ */
+export function launchDue(w: Pick<WorldState, "now" | "season" | "flags" | "gestell">): "open" | "climb" | null {
+  if (!inLaunchHour(w)) return null;
+  if ((w.flags[W.LAUNCH_SEASON] ?? 0) !== w.season.id) return "open";
+  if ((w.flags[W.LAUNCH_DARK] ?? 0) > 0) return null;
+  const climbed = w.flags[W.LAUNCH_CLIMBED] ?? 0;
+  const owed = Math.min(LAUNCH_CLIMB_MAX, Math.floor((w.now - launchMoment(w)) / LAUNCH_CLIMB_EVERY) + 1);
+  if (climbed >= owed) return null;
+  if (w.gestell + 1 >= GESTELL_MELTDOWN) return null;
+  return "climb";
+}

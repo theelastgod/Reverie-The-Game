@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { DARK_LIGHTS_THRESHOLD, LAUNCH_OFFSET, SEASON_LENGTH } from "./constants";
+import { DARK_LIGHTS_THRESHOLD, GESTELL_MELTDOWN, LAUNCH_CLIMB_EVERY, LAUNCH_CLIMB_MAX, LAUNCH_OFFSET, LAUNCH_WINDOW, SEASON_LENGTH } from "./constants";
 import { W } from "./content/ids";
-import { countdown, darkLights, glassDark, launchDate, nextLaunch } from "./launch";
+import { countdown, darkLights, glassDark, inLaunchHour, launchDark, launchDate, launchDue, launchOpen, nextLaunch } from "./launch";
 
 const at = (now: number, season = 1, startedAt = 0) => ({ now, season: { id: season, startedAt } });
 
@@ -40,5 +40,38 @@ describe("the dark-light threshold", () => {
     expect(glassDark({ flags: { [W.DARK_LIGHTS]: DARK_LIGHTS_THRESHOLD - 1 } })).toBe(false);
     expect(glassDark({ flags: { [W.DARK_LIGHTS]: DARK_LIGHTS_THRESHOLD } })).toBe(true);
     expect(DARK_LIGHTS_THRESHOLD).toBeGreaterThan(1); // "That was one. It takes more than one."
+  });
+});
+
+describe("the launch window", () => {
+  const w = (now: number, flags: Record<string, number> = {}, gestell = 40) => ({ now, season: { id: 2, startedAt: 100 }, flags, gestell });
+  const at = 100 + LAUNCH_OFFSET;
+  const opened = { [W.LAUNCH_SEASON]: 2, [W.LAUNCH_DARK]: 0, [W.LAUNCH_CLIMBED]: 0 };
+
+  it("is the hour from this season's moment, and open only once the tick has opened it for this season", () => {
+    expect(inLaunchHour(w(at - 0.01))).toBe(false);
+    expect(inLaunchHour(w(at))).toBe(true);
+    expect(inLaunchHour(w(at + LAUNCH_WINDOW - 0.01))).toBe(true);
+    expect(inLaunchHour(w(at + LAUNCH_WINDOW))).toBe(false);
+    expect(launchOpen(w(at))).toBe(false);
+    expect(launchOpen(w(at, opened))).toBe(true);
+    expect(launchOpen(w(at, { ...opened, [W.LAUNCH_SEASON]: 1 })), "last season's opening does not open this one").toBe(false);
+    expect(launchDark(w(at, opened))).toBe(false);
+    expect(launchDark(w(at, { ...opened, [W.LAUNCH_DARK]: 1 }))).toBe(true);
+    expect(launchDark(w(at + LAUNCH_WINDOW, { ...opened, [W.LAUNCH_DARK]: 1 })), "after the hour nothing is open, dark or not").toBe(false);
+  });
+
+  it("is owed an opening once a season, then a point of weather every interval up to the bound, never into meltdown, and nothing dark", () => {
+    expect(launchDue(w(at - 1))).toBeNull();
+    expect(launchDue(w(at))).toBe("open");
+    expect(launchDue(w(at + 10, opened)), "the first point is owed at once").toBe("climb");
+    expect(launchDue(w(at + 10, { ...opened, [W.LAUNCH_CLIMBED]: 1 }))).toBeNull();
+    expect(launchDue(w(at + LAUNCH_CLIMB_EVERY, { ...opened, [W.LAUNCH_CLIMBED]: 1 }))).toBe("climb");
+    expect(launchDue(w(at + LAUNCH_WINDOW - 1, { ...opened, [W.LAUNCH_CLIMBED]: LAUNCH_CLIMB_MAX })), "bounded").toBeNull();
+    expect(LAUNCH_CLIMB_MAX).toBeLessThanOrEqual(Math.floor(LAUNCH_WINDOW / LAUNCH_CLIMB_EVERY));
+    expect(launchDue(w(at + 10, opened, GESTELL_MELTDOWN - 1)), "the window does not tip the city into meltdown").toBeNull();
+    expect(launchDue(w(at + 10, opened, GESTELL_MELTDOWN - 2))).toBe("climb");
+    expect(launchDue(w(at + 10, { ...opened, [W.LAUNCH_DARK]: 1 })), "a dark window has no shift").toBeNull();
+    expect(launchDue(w(at + LAUNCH_WINDOW, opened))).toBeNull();
   });
 });

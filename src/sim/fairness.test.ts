@@ -57,6 +57,8 @@ vi.mock("./clearing", () => ({
   tickClearing: (w: WorldState) => w,
 }));
 vi.mock("./quests", () => ({ tickQuests: (w: WorldState) => w }));
+// The launch window opens Caul's voice through the dialogue module, which loads the content these tests stub out.
+vi.mock("./dialogue", () => ({ openNode: (w: WorldState) => w }));
 
 import {
   AURA_CAMP_PENALTY, AURA_SPECTATE_GAIN, AURA_WOUND, CAMP_WINDOW, DUEL_CHALLENGE_SECONDS, DUEL_SECONDS, GESTELL_CAMP, GESTELL_MELTDOWN,
