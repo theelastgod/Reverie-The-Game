@@ -7,6 +7,7 @@
 import type { Ctx, DialogueChoice, DialogueNode, Effect, NpcDef, NpcState, Player } from "../types";
 import { NPC_HOMES } from "../map";
 import { C, F } from "./ids";
+import { glassDark } from "../launch";
 import { SF, SIDE_BY_ID, SIDE_PLACES, SQ, has, offerKey, offered, stepOf } from "./side";
 
 // ---------------------------------------------------------------- helpers
@@ -253,10 +254,10 @@ const omen: NpcDef = {
       text: "\"Once. On the way to the glass.\" She looks at the bell and then at the slip in her hand. \"That is not on anything I copied.\"",
       effects: [flag(SF.BELL_TOLD)],
     }),
-    // The light put out behind the glass: she felt it in the pane, and reads the front for nothing from now on.
+    // The light put out behind the glass: she felt it in the pane, and reads the front for nothing from now on. Past the threshold of dark lights the date is gone from the glass, and she says so.
     "after-light": node({
       id: "after-light",
-      text: "\"One went out up there. I felt it in the glass; the band held and the date went thin.\" She does not take the slip out of her pocket. \"I read the front now. For nothing. It is what it is worth.\"",
+      text: ({ w }) => `"One went out up there. I felt it in the glass; the band held and the date ${glassDark(w) ? "went out" : "went thin"}." She does not take the slip out of her pocket. "I read the front now. For nothing. It is what it is worth."`,
       effects: [flag(SF.AFTER_LIGHT)],
     }),
     "hours-confront": node({

@@ -1142,7 +1142,7 @@ const CAUL_NODES: Record<string, DialogueNode> = {
   },
   // ---- through every oval on the Kerb, when a bought hour does not come (II.9)
   // Opened by the bell's wait for the bought hour (side-pois.ts). He is addressing the city: no serial, and a voice is not a Wink,
-  // so an unsealed body that bought the hour hears the same words. The ovals going champagne for everyone is the launch window's (Phase C),
+  // so an unsealed body that bought the hour hears the same words. The ovals going champagne for everyone is the launch window's (Phase C).
   // The date is on the glass (src/sim/launch.ts); past the threshold of dark lights it is not, and he says that he noticed.
   "oval-hour": {
     id: "oval-hour",

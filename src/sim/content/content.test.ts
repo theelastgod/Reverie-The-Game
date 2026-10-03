@@ -452,7 +452,9 @@ describe("dialogue", () => {
     const reader = (ctx: Ctx): string => { const t = NPCS.caul.nodes.reader.text; return typeof t === "function" ? t(ctx) : t; };
     expect(reader(m3)).toContain("and under it the city's figure and a date.");
     expect(reader(dark)).toContain("and under it the city's figure and, where the date was, nothing.");
-    expect(String(SIDE_NPCS.omen.nodes["after-light"].text)).toContain("the band held and the date went thin.");
+    const halla = (ctx: Ctx): string => { const t = SIDE_NPCS.omen.nodes["after-light"].text; return typeof t === "function" ? t(ctx) : t; };
+    expect(halla(m3)).toContain("the band held and the date went thin.");
+    expect(halla(dark), "past the threshold the date is gone, and she says so").toContain("the band held and the date went out.");
   });
 
   it("the weave: the Cable says the altars flicker, the Foundry's darkening flickers them, and Ord's figure goes on the marquee once for the city", () => {
@@ -494,15 +496,21 @@ describe("dialogue", () => {
     expect(node.effects).toBeUndefined();
     expect(node.next).toBeUndefined();
     expect(node.choices ?? []).toEqual([]);
-    // one text for every body; only the glass changes it, for everyone at once
+    // one text for every body; only the glass changes it, for everyone at once: within each world every body hears the same words
     const textOf = (ctx: Ctx): string => (typeof node.text === "function" ? node.text(ctx) : node.text);
+    const byWorld = new Map<WorldState, string>();
+    for (const { name, ctx } of CTXS) {
+      const heard = byWorld.get(ctx.w);
+      if (heard === undefined) byWorld.set(ctx.w, textOf(ctx));
+      else expect(textOf(ctx), `the same words for ${name} as for every body in its world`).toBe(heard);
+    }
+    expect(byWorld.size, "guests and Angels in more than one world were compared").toBeGreaterThan(1);
     const base = CTXS[0].ctx;
     const said = textOf(base);
-    for (const { ctx } of CTXS) if (ctx.w === base.w) expect(textOf(ctx), "the same words for every body in one world").toBe(said);
     expect(said).toContain("every oval on the Kerb goes champagne at once");
     expect(said).toContain("\"The hour. The ovals are open. The sky through them is yours; the hour is ours.");
     expect(said).toContain("The god is not coming. The god is a demand.");
-    // the shipped glass carries no date until Phase C's launch window, so he says nothing the glass does not do
+    // the glass carries the date (Phase C, the date), so he says it is there
     expect(said).toContain("I have never failed to meet a demand. The date is on the glass. Until then, the altars.");
     // past the threshold of dark lights the glass has no date, and he says he noticed
     const dark = textOf({ ...base, w: { ...base.w, flags: { ...base.w.flags, [W.DARK_LIGHTS]: DARK_LIGHTS_THRESHOLD } } });

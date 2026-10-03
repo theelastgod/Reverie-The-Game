@@ -4,6 +4,11 @@
  * its seventh day. Once this season's moment has gone by, the glass shows the next season's. The city puts lights out
  * behind the glass (W.DARK_LIGHTS, one per Angel who darkened the oval); past DARK_LIGHTS_THRESHOLD the glass shows no
  * date at all. Pure: the content reads it; the launch window that opens at the moment is the tick's (next).
+ *
+ * The switch is the city's, not the season's: W.DARK_LIGHTS is never reset (the season roll keeps world flags) and an
+ * Angel puts the light out once, so seven refusals withhold the date in every season after (the synopsis's "switch with
+ * no handle", thrown one refusal at a time). The date is a fixed hour of the season; Caul says the city's figure sets
+ * it, which the glass does not yet bear out (the launch window decides whether the figure moves the hour).
  */
 import { DARK_LIGHTS_THRESHOLD, LAUNCH_OFFSET, SEASON_LENGTH } from "./constants";
 import { W } from "./content/ids";
