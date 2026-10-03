@@ -4,13 +4,14 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Ctx, Effect, NpcState, Player, PoiVerb, WorldState } from "../types";
 import { GUEST_SPAWN, NPC_HOMES, POI_LIST, POSITIONS } from "../map";
-import { AURA_DIM, M3_DOOR_PRICE, OPERATOR_YIELD, RESTRAINT_START, TEST_SERIAL } from "../constants";
+import { AURA_DIM, DARK_LIGHTS_THRESHOLD, LAUNCH_OFFSET, M3_DOOR_PRICE, OPERATOR_YIELD, RESTRAINT_START, TEST_SERIAL } from "../constants";
 import { C, F, POI_STATES, Q, W, seasonPassingFlag } from "./ids";
 import { NPCS } from "./npcs";
 import { LAST_SEASON_WINK as POIS_LAST_SEASON, POI_CONFIGS } from "./pois";
 import { SF } from "./side";
 import { SIDE_NPCS } from "./side-npcs";
 import { SIDE_POI_VERBS } from "./side-pois";
+import { countdown } from "../launch";
 import { SPINE } from "./spine";
 import * as LINES from "./lines";
 
@@ -435,6 +436,25 @@ describe("dialogue", () => {
     expect(def.nodes.lip.choices!.filter(c => !c.when || c.when(guestOnTheGrid)).map(c => c.id), "a guest is offered neither key").toEqual(["walk"]);
   });
 
+  it("the forecast glass carries the next hour as a date with a count, the launch from the Organs on, and past the threshold of dark lights no date", () => {
+    const read = (ctx: Ctx): string => { const v = POI_CONFIGS["forecast-glass"].verbs.find(x => x.choice === "read")!; return typeof v.say === "function" ? v.say(ctx) : v.say ?? ""; };
+    const m2 = CTXS.find(c => c.name === "angel sky M2 signed")!.ctx;
+    const early = { ...m2, w: { ...m2.w, now: 100, season: { id: 2, startedAt: 40 } } };
+    expect(read(early)).toContain(`a line the Concern posts: the next hour, season 2, day 7, 00:00, and a count running down to it: ${countdown(40 + LAUNCH_OFFSET - 100)}.`);
+    expect(read(early)).not.toContain("no time on it");
+    const m3 = CTXS.find(c => c.name === "angel divinities M3 refuse")!.ctx;
+    const late = { ...m3, w: { ...m3.w, now: 40 + LAUNCH_OFFSET + 5, season: { id: 2, startedAt: 40 } } };
+    expect(read(late), "past this season's moment, the next season's").toContain("a line the Concern posts: the launch, season 3, day 7, 00:00, and a count running down to it:");
+    const dark = { ...m3, w: { ...m3.w, flags: { ...m3.w.flags, [W.DARK_LIGHTS]: DARK_LIGHTS_THRESHOLD + 2 } } };
+    expect(read(dark)).toContain(`a line the Concern posts: the launch. The date is not on it. There are not enough lights left to show it. ${DARK_LIGHTS_THRESHOLD + 2} lights are out on the Kerb.`);
+    expect(read(dark)).not.toMatch(/season \d+, day/);
+    // the reader's line under it, and Halla's word for the light that went out
+    const reader = (ctx: Ctx): string => { const t = NPCS.caul.nodes.reader.text; return typeof t === "function" ? t(ctx) : t; };
+    expect(reader(m3)).toContain("and under it the city's figure and a date.");
+    expect(reader(dark)).toContain("and under it the city's figure and, where the date was, nothing.");
+    expect(String(SIDE_NPCS.omen.nodes["after-light"].text)).toContain("the band held and the date went thin.");
+  });
+
   it("the weave: the Cable says the altars flicker, the Foundry's darkening flickers them, and Ord's figure goes on the marquee once for the city", () => {
     const m3 = CTXS.find(c => c.name === "angel divinities M3 refuse")!.ctx;
     const say = (id: string, choice: string, ctx: Ctx): string => { const v = POI_CONFIGS[id].verbs.find(x => x.choice === choice)!; return typeof v.say === "function" ? v.say(ctx) : v.say ?? ""; };
@@ -466,7 +486,7 @@ describe("dialogue", () => {
     expect(wait.effects).toEqual([{ kind: "dialogue", npc: "caul", node: "oval-hour" }]);
     expect(wait.say).toBe("The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.");
     expect(wait.say).not.toContain("Safety's");
-    // His own table, so the window carries his name and the guest's portrait; one text for every body, no branch and no serial; nothing heard with it.
+    // His own table, so the window carries his name and the guest's portrait; one text for every body in a world (only the glass changes it), no serial; nothing heard with it.
     const node = NPCS.caul.nodes["oval-hour"];
     expect(node).toBeDefined();
     expect(node.speaker).toBeUndefined();
@@ -474,15 +494,22 @@ describe("dialogue", () => {
     expect(node.effects).toBeUndefined();
     expect(node.next).toBeUndefined();
     expect(node.choices ?? []).toEqual([]);
-    expect(typeof node.text).toBe("string");
-    expect(node.text).toContain("every oval on the Kerb goes champagne at once");
-    expect(node.text).toContain("\"The hour. The ovals are open. The sky through them is yours; the hour is ours.");
-    expect(node.text).toContain("The god is not coming. The god is a demand.");
+    // one text for every body; only the glass changes it, for everyone at once
+    const textOf = (ctx: Ctx): string => (typeof node.text === "function" ? node.text(ctx) : node.text);
+    const base = CTXS[0].ctx;
+    const said = textOf(base);
+    for (const { ctx } of CTXS) if (ctx.w === base.w) expect(textOf(ctx), "the same words for every body in one world").toBe(said);
+    expect(said).toContain("every oval on the Kerb goes champagne at once");
+    expect(said).toContain("\"The hour. The ovals are open. The sky through them is yours; the hour is ours.");
+    expect(said).toContain("The god is not coming. The god is a demand.");
     // the shipped glass carries no date until Phase C's launch window, so he says nothing the glass does not do
-    expect(node.text).toContain("The date will be on the glass.");
-    expect(node.text).not.toContain("The date is on the glass.");
-    expect(node.text).toMatch(/We kept something for you\."$/);
-    for (const { name, ctx } of CTXS) if (ctx.p.name && ctx.p.name !== "GUEST") expect(node.text, `no serial for ${name}`).not.toContain(ctx.p.name);
+    expect(said).toContain("I have never failed to meet a demand. The date is on the glass. Until then, the altars.");
+    // past the threshold of dark lights the glass has no date, and he says he noticed
+    const dark = textOf({ ...base, w: { ...base.w, flags: { ...base.w.flags, [W.DARK_LIGHTS]: DARK_LIGHTS_THRESHOLD } } });
+    expect(dark).toContain("I have never failed to meet a demand. The date is not on the glass. I noticed. It comes anyway. Until then, the altars.");
+    expect(textOf({ ...base, w: { ...base.w, flags: { ...base.w.flags, [W.DARK_LIGHTS]: DARK_LIGHTS_THRESHOLD - 1 } } })).toBe(said);
+    for (const t of [said, dark]) expect(t).toMatch(/We kept something for you\."$/);
+    for (const { name, ctx } of CTXS) if (ctx.p.name && ctx.p.name !== "GUEST") expect(textOf(ctx), `no serial for ${name}`).not.toContain(ctx.p.name);
     // Only the bought hour's wait opens it: the bell's other verbs stay the city's.
     for (const v of SIDE_POI_VERBS["hour-bell"]) if (v !== wait) expect(JSON.stringify(v.effects ?? [])).not.toContain("oval-hour");
     expect(JSON.stringify(POI_CONFIGS["hour-bell"].verbs.map(v => v.effects ?? []))).not.toContain("oval-hour");

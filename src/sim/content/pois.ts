@@ -16,6 +16,7 @@ import { WEATHER_LABELS, WEATHER_NAMED } from "./lines";
 import { clearingPrice, listClearing, moveClearing } from "./market";
 import { SIDE_PLACES } from "./side";
 import { coldClaimed } from "./caul";
+import { countdown, darkLights, glassDark, launchDate, nextLaunch } from "../launch";
 
 // ---------------------------------------------------------------- helpers
 
@@ -867,8 +868,20 @@ export const LAST_SEASON_WINK: WinkBySchool = {
   surface: "Last season's hole lists for ninety seconds at a time. It is the one thing on the Kerb that has already been copied.",
 };
 
-/** The glass is the Concern's calendar as much as the city's weather: its line is posted in every meter's face, with no time on it yet. */
-const CALENDAR_LINE = " Under the band, in the same face as every meter in the city, a line the Concern posts: the next hour, with no time on it yet.";
+/**
+ * The glass is the Concern's calendar as much as the city's weather: under the band, in every meter's face, the next
+ * hour (the launch, to a body that has been to the Organs) as a date in the season's calendar with a count running
+ * down to it; past the threshold of dark lights, no date, and the count of lights out (src/sim/launch.ts).
+ */
+const calendarLine = (ctx: Ctx): string => {
+  const what = ctx.p.movement >= 3 ? "the launch" : "the next hour";
+  if (glassDark(ctx.w)) {
+    const dark = darkLights(ctx.w);
+    return ` Under the band, in the same face as every meter in the city, a line the Concern posts: ${what}. The date is not on it. There are not enough lights left to show it. ${dark} lights are out on the Kerb.`;
+  }
+  const next = nextLaunch(ctx.w);
+  return ` Under the band, in the same face as every meter in the city, a line the Concern posts: ${what}, ${launchDate(next.season)}, and a count running down to it: ${countdown(next.at - ctx.w.now)}.`;
+};
 /** The lines on the glass: a reader's own, the length of their readiness, with the city's figure and the count in the hole; for everyone, how many lines cross it. */
 const glassLines = (ctx: Ctx): string => {
   const lines = ctx.w.flags[W.GLASS_LINES] ?? 0;
@@ -879,9 +892,9 @@ const glassLines = (ctx: Ctx): string => {
 const forecastLine = (ctx: Ctx): string => {
   const band = weatherBand(ctx.w.gestell);
   const base = WEATHER_LABELS[band];
-  if (ctx.p.house !== "sky") return `Forecast glass. ${base}${CALENDAR_LINE}${glassLines(ctx)}`;
+  if (ctx.p.house !== "sky") return `Forecast glass. ${base}${calendarLine(ctx)}${glassLines(ctx)}`;
   const drift = ctx.w.gestell > GESTELL_BASELINE + 0.5 ? "The drift is down: the weather eases toward baseline." : ctx.w.gestell < GESTELL_BASELINE - 0.5 ? "The drift is up: the weather climbs toward baseline." : "No drift. The weather sits at baseline.";
-  return `Forecast glass. ${base} ${drift} Only Sky sees the front.${CALENDAR_LINE}${glassLines(ctx)}`;
+  return `Forecast glass. ${base} ${drift} Only Sky sees the front.${calendarLine(ctx)}${glassLines(ctx)}`;
 };
 
 /** The oval on the wall of the room behind the glass: the one thing of Caul's in the city a hand can reach. Q puts it out, once the offer has been made and while the glass is undecided. */

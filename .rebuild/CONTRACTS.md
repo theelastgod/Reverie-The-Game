@@ -161,6 +161,15 @@ export function applyChoose(w, id, choiceId): WorldState;   // dialogue open, ch
 export function applyClose(w, id): WorldState;              // if node.next (when no choices) -> openNode(next) else dialogue = null
 ```
 
+## launch.ts (Phase C: the Concern's launch as the forecast glass shows it; pure)
+```ts
+export function nextLaunch(w: { now; season }): { season: number; at: number }; // w.season.startedAt + LAUNCH_OFFSET (the first hour of the seventh day) while ahead, else the next season's
+export function launchDate(season: number, offset = LAUNCH_OFFSET): string;      // "season 2, day 7, 00:00", the season's own calendar (world time only runs while the city is live, so no wall clock)
+export function countdown(seconds: number): string;                             // "6d 23:59:12", floored at "0d 00:00:00"
+export const darkLights = (w) => w.flags[W.DARK_LIGHTS] ?? 0;  export const glassDark = (w) => darkLights(w) >= DARK_LIGHTS_THRESHOLD; // 7
+// read by pois.ts (the forecast glass's calendar line: the next hour, the launch from Movement III, with date and count; past the threshold no date and the count of lights out) and npcs.ts (Caul's reader and oval-hour)
+```
+
 ## effects.ts
 ```ts
 export function applyEffects(w: WorldState, id: string, effects: Effect[] | ((ctx: Ctx) => Effect[]) | undefined): WorldState;

@@ -640,7 +640,7 @@ The paper panel, the gold mark:
 > The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.
 [SF.HOURS_WAITED, the verb once; the bought hour did not come → `oval-hour` (shipped since Phase B, the hour: a `{ kind: "dialogue", npc: "caul", node: "oval-hour" }` effect on the verb, which a guest can press)]
 
-**CAUL** — through every oval on the Kerb, `oval-hour` (shipped since Phase B, the hour; npcs.ts, in his own nodes; the moment the time on the slip has come and gone; no serial, he is addressing the city; no Wink with it; "The date is on the glass" reads "The date will be on the glass" until Phase C puts the date on the glass, so that he says nothing the glass does not do)
+**CAUL** — through every oval on the Kerb, `oval-hour` (shipped since Phase B, the hour; npcs.ts, in his own nodes; the moment the time on the slip has come and gone; no serial, he is addressing the city; no Wink with it; since Phase C, the date: "The date is on the glass" is said while the glass has one, and past the threshold of dark lights it reads "The date is not on the glass. I noticed. It comes anyway.")
 > The time goes by and every oval on the Kerb goes champagne at once, and the same voice is on all of them, on the real sky like a watermark. "The hour. The ovals are open. The sky through them is yours; the hour is ours. Some of you bought one on the terrace. It did not come. The slip is our time. The bell keeps its own. We are working on the bell. The god is not coming. The god is a demand. I have never failed to meet a demand. The date is on the glass. Until then, the altars. We kept something for you."
 [a voice is not a Wink, and a guest on the Kerb hears it too; world: the ovals champagne at the hour, for everyone, on the world tick (Phase C, with the launch window)]
 
@@ -668,7 +668,7 @@ The paper panel, the gold mark:
 
 *The bell's verbs this hour are the two waits only. Its F, Strike the bell, is III.6's, the one strike on the way to the glass, and is written there; today the verb has no gate, so a strike here would complete III.6 and open the House of Sky's hour before III exists, and it is gated `when: ctx.p.movement >= 3` (shipped since Phase A, Movement III).*
 
-**THE GLASS** — `read` F, Read the forecast (revised: the shipped calendar line ends "the next hour, with no time on it yet"; the synopsis puts the launch on it as a date with a count, in every meter's face)
+**THE GLASS** — `read` F, Read the forecast (shipped since Phase C, the date: the next hour as a date in the season's own calendar, "season {n}, day 7, 00:00", and a count running down to it, "{d}d {hh}:{mm}:{ss}"; the launch's, once this season's has gone by the next season's; pois.ts, src/sim/launch.ts)
 > Forecast glass. *(the band:)* Clear weather. Clearings last. Winke are dense. Yield is poor. / Mixed weather. The default. Nothing has decided yet. / Fat weather. Yield is heavy. The sacred doors dim. The storm is high. / Meltdown weather. Passings fail unless a Clearing is held. The street flags itself. *(then:)* Under the band, in the same face as every meter in the city, a line the Concern posts: the next hour, as a date, and a count running down to it.
 > *(House of Sky, between the band and the Concern's line)* The drift is down: the weather eases toward baseline. / The drift is up: the weather climbs toward baseline. / No drift. The weather sits at baseline. Only Sky sees the front.
 [forecast-glass lit]
@@ -1069,7 +1069,7 @@ The paper panel, the gold mark:
 - ▸ "Read me. I read the glass." → `reader`
 - ▸ "No." → `declined`
 
-**CAUL** — `reader` (shipped since Phase B, first beats; "and a date" reads "and the Concern's line with no time on it yet" until Phase C puts the date on the glass)
+**CAUL** — `reader` (shipped since Phase B, first beats; "and a date" since Phase C, the date; past the threshold of dark lights "and, where the date was, nothing")
 > "Done." He does not write; the glass does. A line appears in it with #SERIAL on it, the length of your readiness, and under it the city's figure and a date. "You will find it reads the same from either side. That is the thing about glass."
 [C.GLASS read (new); Cold is your current; perception: the glass's readings in your journal from now on, the launch's hour, the count in the hole, the city's figure; your serial on the glass as a line, for everyone; news (new): "An Angel's readiness is on the forecast glass as a line."]
 → `looked`
@@ -1084,7 +1084,7 @@ The paper panel, the gold mark:
 
 **THE OVAL** — the light on the wall, `put the light out` Q (shipped since Phase B, first beats; `when: has(F.CAUL_OFFER)` and C.GLASS neither read nor dark; the say ends at the lamp going dark, the clerks' descent being Phase C's; F `Look at the light` beside it)
 > You put the light out. The room is the room. Behind the glass the band keeps its colour, and one lamp in the top terrace goes dark for the whole Kerb. On the stair, the hour clerks start down.
-[C.GLASS dark (shipped); readiness +10; one light dark on the Kerb for everyone, the count carried as world state (W.DARK_LIGHTS, shipped; the threshold that hides the date is Phase C); the hour clerks come down the stair for the rest of the hour, a world-wide spawn, and fall as clerks fall ("Hour Clerk did their job.") (Phase C); Halla Voss goes to the glass (an `npc` effect to `omen-glass`, state glass, for everyone; from then on she sells no hours to anyone) and reads the front for nothing from now on; news (new): "A light went out behind the forecast glass. {count} are dark."; past the threshold the glass shows no date]
+[C.GLASS dark (shipped); readiness +10; one light dark on the Kerb for everyone, the count carried as world state (W.DARK_LIGHTS, shipped; the threshold that hides the date shipped since Phase C, the date: DARK_LIGHTS_THRESHOLD, seven, which nobody in the city says); the hour clerks come down the stair for the rest of the hour, a world-wide spawn, and fall as clerks fall ("Hour Clerk did their job.") (Phase C); Halla Voss goes to the glass (an `npc` effect to `omen-glass`, state glass, for everyone; from then on she sells no hours to anyone) and reads the front for nothing from now on; news (new): "A light went out behind the forecast glass. {count} are dark."; past the threshold the glass shows no date]
 → CAUL `dark` (a `dialogue` effect)
 
 **CAUL** — `dark` (shipped since Phase B, first beats; the two sentences about the clerks on the stair wait for Phase C's descent, so that he says nothing the game does not do)
@@ -1111,16 +1111,16 @@ The paper panel, the gold mark:
 > *For the reader:* "Your line is holding. I check it. It is the only one I check by hand."
 > *After the light:* "The clerks are still on the stair. They will be, for the hour."
 
-**HALLA VOSS** — `after-light` (shipped since Phase B, first beats; offered by her greet and hub, once; "the date went thin" reads "the Concern's line under it went thin" until Phase C puts a date on the glass), at the glass, once, for the one who put the light out
+**HALLA VOSS** — `after-light` (shipped since Phase B, first beats; offered by her greet and hub, once; "the date went thin" since Phase C, the date), at the glass, once, for the one who put the light out
 > "One went out up there. I felt it in the glass; the band held and the date went thin." She does not take the slip out of her pocket. "I read the front now. For nothing. It is what it is worth."
 
 **HALLA VOSS** — `hub` (shipped, side-npcs.ts), at the glass from then on
 > She is at the forecast glass with nothing to sell. "I read the front now. For nothing. It is worse. It is better."
 
-**THE GLASS** — `read the forecast` F, after the room (revised, pois.ts: the calendar carries a date, and a countdown, Phase C; since Phase B the reader's line, the city's figure and the count in the hole are on it, and everyone reads how many lines cross it)
+**THE GLASS** — `read the forecast` F, after the room (shipped: the reader's line, the city's figure and the count in the hole since Phase B, with how many lines cross it for everyone; the launch as a date with a countdown since Phase C, the date, "the launch" from Movement III on and "the next hour" before it; past the threshold the dark line below, with the count of lights out)
 > Forecast glass. {band}. Under the band, in the same face as every meter in the city, a line the Concern posts: the launch, as a date, with a countdown.
 > *For the reader:* …Your line is in it, the length of your readiness.
-> *Past the threshold of dark lights:* …a line the Concern posts: the launch. The date is not on it. There are not enough lights left to show it.
+> *Past the threshold of dark lights:* …a line the Concern posts: the launch. The date is not on it. There are not enough lights left to show it. {dark} lights are out on the Kerb.
 
 ### III.8 The hint can be forged
 *Step `forge` (shipped). Quill at the forge tray on the Wet Grid (station `quill-forge`), the listing board beside it. Plate `plate-forge.jpg`. Reversal, in action. Angels only; a guest never reaches the tray with eyes.*

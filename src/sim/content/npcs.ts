@@ -10,6 +10,7 @@ import { AURA_ADDRESS_GLAMOUR, AURA_DIM, CLEARING_HOLD_ANGELS, CLEARING_LIST_PRI
 import { C, F, W, seasonPassingFlag } from "./ids";
 import { clearingPrice, moveClearing } from "./market";
 import { PARTY_BLIND } from "./lines";
+import { glassDark } from "../launch";
 
 type NpcOverride = Partial<NpcState> | null;
 
@@ -1091,7 +1092,8 @@ const CAUL_NODES: Record<string, DialogueNode> = {
   },
   reader: {
     id: "reader",
-    text: (ctx) => `"Done." He does not write; the glass does. A line appears in it with ${ctx.p.name} on it, the length of your readiness, and under it the city's figure, and the Concern's line with no time on it yet. "You will find it reads the same from either side. That is the thing about glass."`,
+    // Under the reader's line, the date the glass carries; past the threshold of dark lights, where it was (src/sim/launch.ts).
+    text: (ctx) => `"Done." He does not write; the glass does. A line appears in it with ${ctx.p.name} on it, the length of your readiness, and under it the city's figure ${glassDark(ctx.w) ? "and, where the date was, nothing" : "and a date"}. "You will find it reads the same from either side. That is the thing about glass."`,
     effects: [
       { kind: "choice", key: C.GLASS, value: "read" },
       { kind: "current", value: "cold" },
@@ -1141,10 +1143,10 @@ const CAUL_NODES: Record<string, DialogueNode> = {
   // ---- through every oval on the Kerb, when a bought hour does not come (II.9)
   // Opened by the bell's wait for the bought hour (side-pois.ts). He is addressing the city: no serial, and a voice is not a Wink,
   // so an unsealed body that bought the hour hears the same words. The ovals going champagne for everyone is the launch window's (Phase C),
-  // and so is the date on the glass: until then he says the date will be there, so that he says nothing the glass does not do.
+  // The date is on the glass (src/sim/launch.ts); past the threshold of dark lights it is not, and he says that he noticed.
   "oval-hour": {
     id: "oval-hour",
-    text: "The time goes by and every oval on the Kerb goes champagne at once, and the same voice is on all of them, on the real sky like a watermark. \"The hour. The ovals are open. The sky through them is yours; the hour is ours. Some of you bought one on the terrace. It did not come. The slip is our time. The bell keeps its own. We are working on the bell. The god is not coming. The god is a demand. I have never failed to meet a demand. The date will be on the glass. Until then, the altars. We kept something for you.\"",
+    text: (ctx) => `The time goes by and every oval on the Kerb goes champagne at once, and the same voice is on all of them, on the real sky like a watermark. "The hour. The ovals are open. The sky through them is yours; the hour is ours. Some of you bought one on the terrace. It did not come. The slip is our time. The bell keeps its own. We are working on the bell. The god is not coming. The god is a demand. I have never failed to meet a demand. ${glassDark(ctx.w) ? "The date is not on the glass. I noticed. It comes anyway." : "The date is on the glass."} Until then, the altars. We kept something for you."`,
   },
   // ---- the recorders: the lip of the ring (IV.6), and his word after the rite (IV.7)
   "lip-silent": {

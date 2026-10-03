@@ -256,7 +256,7 @@ const omen: NpcDef = {
     // The light put out behind the glass: she felt it in the pane, and reads the front for nothing from now on.
     "after-light": node({
       id: "after-light",
-      text: "\"One went out up there. I felt it in the glass; the band held and the Concern's line under it went thin.\" She does not take the slip out of her pocket. \"I read the front now. For nothing. It is what it is worth.\"",
+      text: "\"One went out up there. I felt it in the glass; the band held and the date went thin.\" She does not take the slip out of her pocket. \"I read the front now. For nothing. It is what it is worth.\"",
       effects: [flag(SF.AFTER_LIGHT)],
     }),
     "hours-confront": node({

@@ -81,7 +81,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   remain, and they wait for Phase C's launch. Phase C, the shared world,
   has begun with the weave: darkening the Foundry flickers every altar
   in the Nave for everyone, Ord's figure goes on the marquee, and the
-  Appearance's blank tape is news.
+  Appearance's blank tape is news; and the forecast glass carries the
+  launch as a date with a count, until enough lights go dark behind it.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1688,6 +1689,32 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   as not said). Next in Phase C: the date on the glass and the
   dark-light threshold that withholds it, then the launch window that
   reads them.
+- Backlog A, Phase C, the date (2026-10-03, morning): the forecast
+  glass carries the Concern's launch, from the script's lines that
+  waited for it; no step inserted. The world's clock runs only while the
+  city is live, so the date is in the season's own calendar, not the
+  wall's: the launch is the first hour of a season's seventh day
+  (`LAUNCH_OFFSET`), and once this season's has gone by the glass shows
+  the next season's. A new pure module, `src/sim/launch.ts`, gives the
+  moment, its date ("season 2, day 7, 00:00") and the count running down
+  to it ("6d 23:59:12"), and the dark-light threshold
+  (`DARK_LIGHTS_THRESHOLD`, seven; Caul has the number and says only
+  that it takes more than one). The glass reads "the next hour" before
+  the Organs and "the launch" from Movement III, each as a date with its
+  count; from the threshold on, the line is there without a date, "There
+  are not enough lights left to show it", with how many lights are out.
+  The lines that had waited for the date now say it: Caul's reader's
+  bargain shows "a date" under the line (past the threshold, where it
+  was, nothing); Halla's word for the light put out is "the date went
+  thin"; Caul's address through the ovals says "The date is on the
+  glass." (past the threshold, that it is not and he noticed). Content
+  and a pure module only: no server or protocol change, and the date is
+  computed when a body reads it, so nothing new rides the snapshot. Next
+  in Phase C: the launch window that opens at that moment (a flag and a
+  timer in the tick, once a season: the weather raised a bounded
+  amount, the hot street set hot, the listing's buyer named, all but
+  the vans skipped past the threshold), with the glass reading "now"
+  through it.
 
 ## Verified (2026-09-25, integration)
 
@@ -2497,6 +2524,20 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   no raked news), the build, the play build and the stage, and on a
   fresh local world the session smoke and the render check again, each
   run alone. The GitHub gates passed on the first commit.
+- Backlog A, Phase C, the date (2026-10-03, morning): typecheck, 542
+  tests in 42 files (the new `launch.test.ts`: this season's moment
+  while ahead and the next season's from it on, a late-started season's
+  own calendar, the date's format, the count's format, its part second
+  and its floor at zero, the threshold withholding from seven and not at
+  six; the content test reads the glass before the Organs and after,
+  with the date and the exact count, the next season's after this
+  season's moment, the dark line with its count and no date, the
+  reader's "a date" and its dark variant, Halla's "the date went thin",
+  and Caul's address the same for every body in a world, with its dark
+  variant; the walked bought hour reads his address through the world),
+  the build, the play build and the stage. No server or protocol change,
+  so the Wrangler smokes and the render check were not re-run. A review
+  of the diff was still running at this commit.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2569,9 +2610,9 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      after an Absence; the Hijack reel per viewer and a news line.
    - **Phase C, the shared-world weave and two named systems** (begun;
      landed so far: the weave, see Done: the altars' flicker for
-     everyone, Ord's figure and the blank tape on the news; next the
-     date on the glass with its count and the dark-light threshold that
-     withholds it, then the launch window, then the clerks' descent, the
+     everyone, Ord's figure and the blank tape on the news; the date on
+     the glass with its count and the dark-light threshold that
+     withholds it; next the launch window, then the clerks' descent, the
      hot street's cool-down, the Houses' lost hour at Ord's map and
      Quill's lines at the vans): the
      Cable's darkening flickering the altars server-wide; the listing's

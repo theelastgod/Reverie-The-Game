@@ -146,6 +146,8 @@ export const CLEARING_HOLD_ANGELS = 2; // dwellers needed to hold a Passing at m
 export const CLEARING_HOLD_SCALE = { clear: 1.5, mixed: 1, fat: 1, meltdown: 0.5 } as const; // WAR_HOLD scaled by climate band
 export const PASSING_STIPEND = 20;
 export const SEASON_LENGTH = 7 * 24 * 60 * 60; // a season rolls the Clearing, the omens and the Passing rite
+export const LAUNCH_OFFSET = 6 * 24 * 60 * 60; // the Concern's launch: the first hour of a season's seventh day, in the season's own calendar (world time)
+export const DARK_LIGHTS_THRESHOLD = 7; // lights put out behind the forecast glass past which it shows no date (Caul has the number and will not say it)
 
 // Snapshot / area of interest
 export const AOI_RADIUS = 1040;

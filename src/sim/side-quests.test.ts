@@ -544,6 +544,12 @@ describe("the bought hour that does not come", () => {
   const BELL_LINE = "The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.";
   const OVALS = { npc: "caul", node: "oval-hour", speaker: "Anselm Caul", portrait: "guest.jpg", wink: "", choices: [] };
 
+  /** His address as the node says it to this body in this world (one text for everyone; only the glass changes it). */
+  const ovalHour = (w: WorldState, id: string): string => {
+    const text = NPCS.caul.nodes["oval-hour"].text;
+    return typeof text === "function" ? text({ w, p: me(w, id), now: w.now }) : text;
+  };
+
   /** A body that bought the hour, under the bell, with the hour at its wait (the offer and the slip are flags; the step index is the tick's). */
   function underTheBell(w: WorldState, id: string): WorldState {
     let cur = goTo(w, id, "hour-bell");
@@ -560,7 +566,7 @@ describe("the bought hour that does not come", () => {
     const after = me(w);
     expect(after.heard, "the bell's line, said after the window opened").toBe(BELL_LINE);
     expect(after.dialogue).toMatchObject(OVALS);
-    expect(after.dialogue!.text).toBe(NPCS.caul.nodes["oval-hour"].text);
+    expect(after.dialogue!.text).toBe(ovalHour(w, ME));
     expect(after.dialogue!.text, "he is addressing the city, not a serial").not.toContain(after.name);
     expect(after.flags[SF.HOURS_WAITED]).toBe(1);
     expect(after.wink, "a voice is not a Wink").toBe(before.wink);
@@ -588,7 +594,7 @@ describe("the bought hour that does not come", () => {
     expect(REFUSALS).not.toContain(guest.heard);
     expect(guest.heard).toBe(BELL_LINE);
     expect(guest.dialogue).toMatchObject(OVALS);
-    expect(guest.dialogue!.text).toBe(NPCS.caul.nodes["oval-hour"].text);
+    expect(guest.dialogue!.text).toBe(ovalHour(w, "g"));
     expect(guest.wink).toBe("");
     expect(snapshotFor(w, "g").you.dialogue).toMatchObject(OVALS);
     expect(guest.flags[SF.HOURS_WAITED]).toBe(1);
