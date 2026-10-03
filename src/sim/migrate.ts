@@ -7,10 +7,10 @@
  * Restoring is therefore always safe, and additive contract changes never
  * strand a shard.
  */
-import { MAX_HP, NODE_CHARGES } from "./constants";
+import { LISTING_PRICE_MAX, LISTING_PRICE_MIN, MAX_HP, NODE_CHARGES } from "./constants";
 import { HOUSES } from "./identity";
 import { POI_STATES } from "./content/ids";
-import type { Fourfold, Player, WorldState } from "./types";
+import type { Fourfold, Item, Listing, Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest } from "./world";
 
 /** Bumped when a persisted collection changes meaning; stored with every checkpoint. */
@@ -38,6 +38,35 @@ function strRecord(v: unknown): Record<string, string> {
   if (!isDict(v)) return out;
   for (const [k, x] of Object.entries(v)) if (typeof x === "string") out[k] = x;
   return out;
+}
+
+const ITEM_KINDS = new Set<Item["kind"]>(["cult", "exhibition", "paper"]);
+
+/** A saved listing, rebuilt scalar by scalar: a row without its ids, its item or a price inside the stall's bounds is dropped; a fee is kept only as a finite number. */
+function listing(v: unknown): Listing | null {
+  if (!isDict(v) || !isDict(v.item)) return null;
+  const id = str(v.id, "");
+  const itemId = str(v.item.id, "");
+  if (!id || typeof v.sellerId !== "string" || !itemId || typeof v.price !== "number" || !Number.isFinite(v.price)) return null;
+  const kind = v.item.kind;
+  const item: Item = {
+    id: itemId,
+    kind: typeof kind === "string" && ITEM_KINDS.has(kind as Item["kind"]) ? (kind as Item["kind"]) : "exhibition",
+    name: str(v.item.name, itemId),
+    qty: num(v.item.qty, 1, 1),
+    value: num(v.item.value, 0, 0),
+    ...(v.item.bound === true ? { bound: true } : {}),
+  };
+  const fee = num(v.fee, -1, 0);
+  return {
+    id,
+    sellerId: v.sellerId,
+    sellerName: str(v.sellerName, ""),
+    item,
+    price: num(v.price, LISTING_PRICE_MIN, LISTING_PRICE_MIN, LISTING_PRICE_MAX),
+    at: num(v.at, 0, 0),
+    ...(fee > 0 ? { fee } : {}),
+  };
 }
 
 /** Merge saved fields over a default object, key by key, keeping a saved value only when its type matches the default's. */
@@ -193,7 +222,7 @@ export function migrateWorld(saved: unknown, now = 0): WorldState {
     houses,
     clearing,
     passing: mergeShallow(base.passing, s.passing),
-    market: arr(s.market, isDict) as WorldState["market"],
+    market: arr(s.market, isDict).map(listing).filter((l): l is Listing => l !== null),
     news: arr(s.news, isDict) as WorldState["news"],
     failed: Array.isArray(s.failed) && s.failed.length ? (arr(s.failed, isDict) as WorldState["failed"]) : base.failed,
     history: arr(s.history, isDict) as WorldState["history"],

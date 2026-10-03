@@ -1130,21 +1130,21 @@ The paper panel, the gold mark:
 **QUILL** — `blind` (shipped), if you act on a Wink in front of her
 > You're looking at something I'm not. I can sell you a print of it if you describe it well. Joke. Half a joke.
 
-**QUILL** — `forge-lesson` (revised: she hands you the one from the Grid, and the margin has your serial. Phase A, Movement III, ships it with the shipped mechanics, "Now. Take it, or learn to spot it." and the choices "Take the print." and "Teach me to spot the copy."; the listing and the pull are Phase B)
+**QUILL** — `forge-lesson` (shipped since Phase B, the forge: she hands you the one from the Grid, and the margin has your serial; the choices are the listing and the pull. Phase A, Movement III, shipped it first with "Now. Take it, or learn to spot it." and the choices "Take the print." and "Teach me to spot the copy."; the choice ids `sell` and `spot` are kept, so a body saved under the old labels reads the same)
 > Quill fans two hints. One was buried. One was printed. Look at the edge. A buried hint has dirt in the grain. A print has a margin. The printed one lists. The buried one opens. She hands you the printed one, still cool from the Grid. It came in this morning with the rest. Read the margin. #SERIAL. The hint on it is the one you woke to in the Care. Everything you heard, they have. I'm sorry. I'd have charged more. Now. List it, or pull it. I will not think less of you either way. I will think exactly the same amount.
 ✦ *The hint can be forged. Exhibition Winke travel. Cult Winke stay in the hand that buried.*
 - ▸ "List it." → `forge-sell`
 - ▸ "Pull it." → `forge-spot`
 - ▸ "Let me think."
 
-**QUILL** — `forge-sell` (revised: a listing, not a sale; the fee kept back; no number in her mouth. Phase B; until then the shipped sale, its first word now "Taken.")
+**QUILL** — `forge-sell` (shipped since Phase B, the forge: a listing, not a sale; the fee the stall's either way, paid at the tray when the purse has it and kept back from the sale when it has not; no number in her mouth. Phase A shipped the sale, its first word "Taken.")
 > Listed. Your own hint, at my price, on the board behind you. Yours when a body buys it, not before; the stall keeps the fee either way, which is the only part of this I invented. It lists. It decays. It will not open anything and it will look wonderful doing it. Aura thins when you hold a print of the sacred, and thinner when you sell one. Everybody does it once.
-[C.FORGE sell; F.FORGE; the print (`copy:wink`) listed on the Grid at COPY_PRICE through the market as it is, LISTING_FEE kept back (sink listing), the price yours only when a body buys it; aura −1; Cold is your current (new); the Clearing's price climbs (new: moveClearing("taken"), +8 today); news (new): "An Angel listed their own hint on the Grid. The Clearing is dearer."]
+[C.FORGE sell; F.FORGE; the print (`copy:wink`) listed on the Grid at COPY_PRICE through the market as it is (the `list` effect, economy.ts `listOwn`: it never passes through your hand), LISTING_FEE spent now when the purse has it, else kept back on the listing and taken from the sale or charged on the cancel (sink listing), the price yours only when a body buys it; aura −1, once, by this node; Cold is your current; the Clearing's price climbs (moveClearing("taken"), +8 today); news: "An Angel listed their own hint on the Grid. The Clearing is dearer."]
 → `forge-plate`
 
-**QUILL** — `forge-spot` (revised: the pull. Phase B; until then the shipped spot, which since Phase A, Movement III, opens "She takes it back and does not put it on the tray.")
+**QUILL** — `forge-spot` (shipped since Phase B, the forge: the pull. Phase A's spot opened "She takes it back and does not put it on the tray." and moved nothing)
 > You pull it. She takes it back and does not put it on the tray. Look at the edge once more, so you keep the eye: dirt in the grain, or a margin. The cult hint does not list. Copies will not open the hole. The board will feel the pull. So will the street; it goes hot when a thing comes off the Grid that the Grid wanted. The tray is warm if you want to try your hand.
-[C.FORGE spot; F.FORGE; aura +1; readiness +2; the Clearing's price drops as a refusal (new: moveClearing("refused"), −4 today); the hot street flagged, for everyone (new); news (new): "An Angel pulled their own hint off the Grid. The hot street is hot."]
+[C.FORGE spot; F.FORGE; aura +1; readiness +2; the Clearing's price drops as a refusal (moveClearing("refused"), −4 today); the hot street flagged, for everyone (the `hot-street` POI set hot); news: "An Angel pulled their own hint off the Grid. The hot street is hot." *A street already hot (a van, or an earlier pull) is not made hot again, and the news says only "An Angel pulled their own hint off the Grid."; nothing cools the street yet, which is Phase C's window.*]
 → `forge-plate`
 
 **QUILL** — `forge-plate` (shipped since Phase A, Movement III; follows `forge-sell` and `forge-spot` on their `next`)
@@ -1160,9 +1160,12 @@ The paper panel, the gold mark:
 > He asked me once what a hint looked like. I told him. He wrote it down. Only time I've been quoted and not paid.
 > *If you told him at the glass:* …He asked you too. Don't look like that. Everybody tells him. He has a way of holding the pen.
 
-**QUILL** — `forge-after` (revised: the listing in place of the print in hand)
+**QUILL** — `forge-after` (shipped since Phase B, the forge: the listing in place of the print in hand; the listing's line follows the print, so the three lines after the first are new with Phase B, tagged here)
 > *For the pull:* You keep the eye. Every print on the Grid looks a little worse to you now. That is what learning costs. E at the tray crafts a copy anyway, if you want to know how it feels.
-> *For the listing:* Your hint is on the board. It has not sold yet. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.
+> *For the listing, while it is on the board:* Your hint is on the board. It has not sold yet. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.
+> *Once a body bought it (new, Phase B):* It sold. The price went to your bank and the fee stayed with me. Somebody on the Grid has your hint by now, and the hole has none of it. I am not judging. I am counting.
+> *Once they took it down from the ledger and hold it (new, Phase B; also a body saved under Phase A's sale, the print in hand):* You took it down. You hold the print. It is thinning already. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.
+> *Once it is gone, to the tray by Q or decayed to nothing on the board (new, Phase B):* It is off the board. Taken down to the tray, or decayed to nothing; the board does not say which and I do not ask. The fee was mine either way. E at the tray crafts a copy anyway, if you want to know how it feels.
 ✦ *A stall can be a shrine. She will not say it out loud on the Grid.*
 
 **THE TRAY** — `look` F (shipped; for the pull only), after the lesson
@@ -1172,10 +1175,11 @@ The paper panel, the gold mark:
 > A print. It looks like a Wink. It lists. It will not open the hole.
 [FORGE_COST Bestand, sink forge; a `copy:wink` in hand; aura −1 for every print past the first in a run]
 
-**THE TRAY** — `spot the copies` Q (shipped, economy.ts)
+**THE TRAY** — `spot the copies` Q (shipped, economy.ts; the board's line new with Phase B)
 > You keep the eye. The printed ones go to the tray. The buried one opens.
+> *With nothing in hand and your own print on the board (the one Quill listed; "learn what you listed"):* You keep the eye. Your own print comes off the board and goes to the tray. The buried one opens. *· with a fee the stall kept back:* …The stall's fee, {fee}, comes out of the purse.
 > *With nothing to spot:* Nothing in your hand is a copy.
-[every copy in hand to the tray; aura +1]
+[every copy in hand to the tray; aura +1; or the own listing off the board, the kept-back fee charged as far as the purse goes, aura +1]
 
 **THE TRAY** — `sell a copy` F (shipped, economy.ts; for the one who listed; the figures are the stall's, interpolated)
 > Listed at {price}. Listing fee {fee}. Exhibition decays. *· with Glamour:* Listed at {price}. Glamour waived the fee. Exhibition still decays.
@@ -1794,7 +1798,7 @@ The paper panel, the gold mark:
 > You step aside. The van takes the corner and parks across the mouth of the street. Doors stay shut. The street is a different temperature now.
 ✦ *It looks like freedom. It is a stall with wheels. The street it parks on stops being a street.* (shipped; side.ts; Angels only)
 [poi `hot-street` hot, for everyone; SW.VAN_PARKED; news "An armored van parked on the wet street. The street went hot."]
-*Skipped when the street is already hot (another van, or a pulled print, III.8): the step closes on its own.*
+*Skipped when the street is already hot (another van, or a pulled print, III.8): the step closes on its own, with no van parked, no news and no Wink; only the hour's closing notice is said.*
 
 ### side-wet-copy-of-a-hole — A copy of a hole
 *Movement II, the Wet Grid. Opens on the listing board read; the board, twice. Plate `clearing-stall.jpg`. Guest-legal on paper; the board's read is spectate, so it opens for Angels. Changes a person: Quill walks to the board.*

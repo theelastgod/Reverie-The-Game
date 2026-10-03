@@ -348,7 +348,8 @@ async function answer(state, node, choiceId, done, label) {
 }
 
 /** Talk to an NPC and walk the dialogue until the flag is set; retries with a different first choice. */
-async function converse(state, npcId, flag) {
+/** Talks until `flag` is set, taking the first choice at each node (the attempt's index at the first), or a choice named in `prefer` when the node offers one. */
+async function converse(state, npcId, flag, prefer = []) {
   for (let attempt = 0; attempt < 3 && !you(state).flags[flag]; attempt++) {
     send(state, { t: 'talk', npcId });
     const opened = await settle(state, () => you(state).dialogue, `dialogue with ${npcId}`, 4000);
@@ -356,7 +357,8 @@ async function converse(state, npcId, flag) {
     for (let i = 0; i < 24 && you(state).dialogue; i++) {
       const d = you(state).dialogue;
       const before = `${d.node}:${d.text}`;
-      if (d.choices.length) send(state, { t: 'choose', choiceId: d.choices[Math.min(i === 0 ? attempt : 0, d.choices.length - 1)].id });
+      const preferred = d.choices.find(c => prefer.includes(c.id));
+      if (d.choices.length) send(state, { t: 'choose', choiceId: (preferred ?? d.choices[Math.min(i === 0 ? attempt : 0, d.choices.length - 1)]).id });
       else send(state, { t: 'close' });
       await settle(state, () => { const n = you(state).dialogue; return !n || `${n.node}:${n.text}` !== before; }, 'dialogue step', 1500);
     }
@@ -756,15 +758,19 @@ try {
     assert.equal(you(me).choices.glass, 'read', "the reader's post taken");
     await wait(me, () => you(me).quests['m3-geopolitics'] === 7, 'the step moves on from the room', 6000);
 
-    // Quill at the forge tray: learn to spot the copy (the first choice), which turns the movement.
+    // Quill at the forge tray: pull the print with the bot's serial off the Grid (the second choice; the first lists it), which turns the movement.
     phase('III walk: forge');
     await walk(me, ROUTE3.roomToForge);
     await stand(me, T3.quillForge, 72);
     assert.equal(me.snap.district, 'wet', 'down to the Wet Grid');
     read.decisions++;
     phase('III talk: quill');
-    await converse(me, 'quill', 'forge');
-    assert.equal(you(me).choices.forge, 'spot', 'learned to spot the copy');
+    const clearingPriceIII = () => (me.snap.market ?? []).find(l => l.id === 'listing:city:clearing')?.price ?? null;
+    const beforePull = clearingPriceIII();
+    await converse(me, 'quill', 'forge', ['spot']);
+    assert.equal(you(me).choices.forge, 'spot', 'pulled the print off the Grid');
+    // the pull moves the city: the street hot on the wire, the Clearing's price eased
+    await wait(me, () => me.snap.pois.some(p => p.id === 'hot-street' && p.state === 'hot') && clearingPriceIII() !== null && clearingPriceIII() < beforePull, 'the pull: the hot street hot for everyone, the Clearing eased', 4000);
     await wait(me, () => you(me).movement === 4, 'Movement IV opens', 6000).catch(error => {
       const p = you(me);
       throw new Error(`${error.message} (movement ${p.movement}, quests ${JSON.stringify(p.quests)}, flags strait ${p.flags.strait} foundry ${p.flags.foundry} cable ${p.flags.cable} map ${p.flags.map} garden ${p.flags.garden} failed ${p.flags.failed} forge ${p.flags.forge})`);
@@ -772,7 +778,7 @@ try {
 
     phase('end III');
     reportMovement('III', T2s, read2, from);
-    console.log('PASS: Movement III — the Strait, the Foundry, the Cable, Ord\'s map, the garden buried, last season in the glass, the copy spotted → Movement IV');
+    console.log('PASS: Movement III — the Strait, the Foundry, the Cable, Ord\'s map, the garden buried, last season in the glass, the print pulled off the Grid → Movement IV');
   }
 
   if (MOVEMENT >= 4) {

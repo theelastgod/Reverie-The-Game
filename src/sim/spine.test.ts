@@ -12,13 +12,15 @@ import { describe, expect, it } from "vitest";
  * end of world as world, signs the freeze, refuses the yield, buries the
  * garden, spots the copy, and reaches every outcome the Passing can have.
  */
-import { CLEARING_LIST_PRICE, CLEARING_PRICE_MOVE, DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_PASSING_MIN, READINESS_REFUSE, TEST_SERIAL, TITHE_COST } from "./constants";
+import { CLEARING_LIST_PRICE, CLEARING_PRICE_MOVE, COPY_PRICE, DT, FREEZE_FEE, M3_DOOR_PRICE, MOCK_SIG, OPERATOR_YIELD, PASSING_STIPEND, READINESS_PASSING_MIN, READINESS_REFUSE, TEST_SERIAL, TITHE_COST } from "./constants";
 import { POSITIONS, blockedFor, districtAt } from "./map";
 import type { ClientMsg } from "./protocol";
 import { C, F, Q, W } from "./content/ids";
 import { SIDE_PLACES } from "./content/side";
-import { CLEARING_LISTING } from "./content/market";
+import { CLEARING_LISTING, clearingPrice } from "./content/market";
 import { verbsFor } from "./interact";
+import { openNode } from "./dialogue";
+import { applyListing } from "./economy";
 import { LINES } from "./content";
 import { WAKING_WINK } from "./content/lines";
 import type { Player, WorldState } from "./types";
@@ -745,6 +747,8 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
   expect(npcView({ w, p: me(w), now: w.now }, w.npcs.ord)!.state, "the glass decided, Ord is back at the gate").not.toBe("glass");
 
   // Quill hands over the print from the Grid with your own serial in the margin; after the choice, the plate she would not cut
+  const priceBefore = clearingPrice(w);
+  expect(priceBefore).not.toBeNull();
   if (o.forge === "sell") {
     w = interact(goTo(w, ME, "forge-tray"), ME, "forge-tray", "hear");
     expect(me(w).dialogue?.node).toBe("forge-lesson");
@@ -755,8 +759,30 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
     w = choose(w, ME, "margin");
     expect(me(w).dialogue?.text).toContain("I sold them the margin.");
     w = closeAll(w, ME);
-    expect(me(w).items.find(i => i.id === "copy:wink")).toMatchObject({ kind: "exhibition", qty: 1 });
-    expect(me(w).fakeWinke).toBe(1);
+    // the print never reaches your hands: it is on the board at her price, yours when a body buys it; the Clearing is dearer; Cold is your current
+    expect(me(w).items.some(i => i.id === "copy:wink")).toBe(false);
+    const listing = w.market.find(l => l.sellerId === ME)!;
+    expect(listing).toMatchObject({ price: COPY_PRICE, item: { id: "copy:wink", qty: 1 } });
+    expect(me(w).fakeWinke, "nothing is held, so nothing is counted in the hand").toBe(0);
+    expect(me(w).current).toBe("cold");
+    expect(clearingPrice(w), "a hint sold to the Grid makes the Clearing dearer").toBe(priceBefore! + CLEARING_PRICE_MOVE.taken);
+    expect(w.news.some(n => n.text === "An Angel listed their own hint on the Grid. The Clearing is dearer.")).toBe(true);
+    // her later line follows the print: on the board, sold, back in the hand, or gone to the tray (forks; the walk keeps the board)
+    expect(me(talkTo(w, ME, "quill")).dialogue?.text).toContain("Your hint is on the board. It has not sold yet.");
+    const buyer = add(w, { ...spawnGuest("buyer"), guest: false, serial: 43, name: "#0043", bestand: 50 });
+    const sold = act(buyer, "buyer", { t: "market", op: "buy", listingId: listing.id });
+    expect(sold.market.find(l => l.sellerId === ME)).toBeUndefined();
+    expect(me(sold).banked, "the price is the seller's when a body buys it").toBe(me(w).banked + COPY_PRICE);
+    expect(me(talkTo(sold, ME, "quill")).dialogue?.text).toContain("It sold. The price went to your bank and the fee stayed with me.");
+    const down = act(w, ME, { t: "market", op: "cancel", listingId: listing.id });
+    expect(me(down).items.some(i => i.id === "copy:wink")).toBe(true);
+    expect(me(talkTo(down, ME, "quill")).dialogue?.text).toContain("You took it down. You hold the print.");
+    const spotted = interact(goTo(w, ME, "forge-tray"), ME, "forge-tray", "spot");
+    expect(spotted.market.find(l => l.sellerId === ME), "Q at the tray takes the print off the board").toBeUndefined();
+    expect(me(spotted).items.some(i => i.id === "copy:wink")).toBe(false);
+    expect(me(spotted).aura).toBe(me(w).aura + 1);
+    expect(me(spotted).heard).toBe("You keep the eye. Your own print comes off the board and goes to the tray. The buried one opens.");
+    expect(me(talkTo(spotted, ME, "quill")).dialogue?.text).toContain("It is off the board. Taken down to the tray, or decayed to nothing");
   } else {
     w = talkTo(w, ME, "quill");
     expect(me(w).dialogue?.node).toBe("forge-lesson");
@@ -767,6 +793,10 @@ function movementThree(w0: WorldState, o: { forge: "spot" | "sell"; cut: Cut; pl
     w = closeAll(w, ME);
     expect(me(w).items.some(i => i.id === "copy:wink")).toBe(false);
     expect(me(w).fakeWinke).toBe(0);
+    // the pull: the board feels it and the street goes hot, for everyone
+    expect(clearingPrice(w), "a hint pulled off the Grid gives a little").toBe(priceBefore! + CLEARING_PRICE_MOVE.refused);
+    expect(w.pois["hot-street"].state).toBe("hot");
+    expect(w.news.some(n => n.text === "An Angel pulled their own hint off the Grid. The hot street is hot.")).toBe(true);
   }
   expect(me(w).choices[C.FORGE]).toBe(o.forge);
   expect(me(w).flags[F.FORGE]).toBe(1);
@@ -1003,6 +1033,38 @@ describe("the private yield is decided once", () => {
     // and Vesper, spoken to afterwards, does not quote twice
     w = talkTo(w, ME, "vesper");
     expect(me(w).dialogue?.node).toBe("refused");
+  });
+
+  it("the forge's listing and pull are Angels' and Movement III's: a guest at the tray moves nothing, and the lesson waits for the third hour", () => {
+    // a guest who met Quill walks the open gate to the tray: the verb is not theirs (the board's read is Angels'), and even with the flags forced the policy speaks the spectator's line, no node opens, the city stands
+    let w = add(emptyWorld(), { ...spawnGuest("g"), flags: { [F.TALKED_QUILL]: 1 } });
+    w = applyListing(w, { id: CLEARING_LISTING, seller: "the resistance", item: { id: "city:clearing", kind: "exhibition", name: "A Clearing", qty: 1, value: 0 }, price: CLEARING_LIST_PRICE });
+    expect(verbsFor({ w: goTo(w, "g", "forge-tray"), p: me(goTo(w, "g", "forge-tray"), "g"), now: w.now }, "forge-tray").map(v => v.choice)).not.toContain("hear");
+    const guest = { ...me(w, "g"), movement: 3, flags: { [F.TALKED_QUILL]: 1, [F.BOARD]: 1 } };
+    w = add(w, guest);
+    const at = goTo(w, "g", "forge-tray");
+    const tried = interact(at, "g", "forge-tray", "hear");
+    expect(me(tried, "g").dialogue).toBeNull();
+    expect(me(tried, "g").heard).toBe(LINES.SPECTATOR);
+    expect(tried.pois["forge-tray"]?.state).not.toBe("warm");
+    expect(clearingPrice(tried)).toBe(CLEARING_LIST_PRICE);
+    // belt and braces: the node itself offers a guest neither the listing nor the pull
+    const opened = openNode(at, "g", "quill", "forge-lesson");
+    expect(me(opened, "g").dialogue?.choices.map(c => c.id)).toEqual(["think"]);
+    const forced = act(add(opened, { ...me(opened, "g"), dialogue: { ...me(opened, "g").dialogue!, choices: [{ id: "spot", label: "Pull it." }] } }), "g", { t: "choose", choiceId: "spot" });
+    expect(clearingPrice(forced)).toBe(CLEARING_LIST_PRICE);
+    expect(forced.pois["hot-street"]?.state).not.toBe("hot");
+    expect(forced.news.some(n => n.text.includes("pulled their own hint"))).toBe(false);
+    // an Angel who met Quill in the first hour is not offered the lesson at the tray until Movement III, and never before the board is read
+    const trayVerbs = (world: WorldState) => verbsFor({ w: goTo(world, ME, "forge-tray"), p: me(goTo(world, ME, "forge-tray")), now: world.now }, "forge-tray").map(v => v.choice);
+    const early = add(w, { ...spawnGuest(ME), guest: false, serial: 42, name: "#0042", aura: 20, auraSeed: 20, flags: { [F.TALKED_QUILL]: 1, [F.BOARD]: 1, [F.UNDER]: 1 }, movement: 2 });
+    expect(trayVerbs(early)).not.toContain("hear");
+    const doorOnly = add(early, { ...me(early), flags: { [F.TALKED_QUILL]: 1, [F.M3]: 1, [F.UNDER]: 1 } });
+    expect(trayVerbs(doorOnly), "the Organs door alone does not open the lesson: the price it moves is not on the board yet").not.toContain("hear");
+    expect(me(talkTo(doorOnly, ME, "quill")).dialogue?.node).toBe("board-hint");
+    const third = add(early, { ...me(early), movement: 3 });
+    expect(trayVerbs(third)).toContain("hear");
+    expect(me(talkTo(third, ME, "quill")).dialogue?.node).toBe("forge-lesson");
   });
 
   it("the memorial, the last word and the forge lesson cannot be chosen twice either", () => {

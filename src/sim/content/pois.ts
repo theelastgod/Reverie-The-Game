@@ -358,11 +358,12 @@ const WET: PoiConfig[] = [
     reach: 64,
     verbs: [
       {
+        // The lesson is Movement III's (the Clearing is priced by then, and the listing or the pull moves that price): Angels only, a guest never reaches the tray with eyes.
         key: "F",
         label: "Hear Quill on copies",
         choice: "hear",
-        when: ctx => has(ctx, F.TALKED_QUILL) && !has(ctx, F.FORGE),
-        guest: "allow",
+        when: ctx => has(ctx, F.TALKED_QUILL) && !has(ctx, F.FORGE) && has(ctx, F.BOARD) && (ctx.p.movement >= 3 || has(ctx, F.M3)),
+        guest: "spectate",
         effects: [{ kind: "poi", id: "forge-tray", state: "warm" }, { kind: "dialogue", npc: "quill", node: "forge-lesson" }],
       },
       {

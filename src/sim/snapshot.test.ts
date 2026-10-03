@@ -207,6 +207,43 @@ describe("snapshotFor", () => {
     expect(changed.clearing).toBe(a.clearing);
   });
 
+  it("keeps a listing's kept-back fee off the wire, and the city's rows first", () => {
+    let w = add(emptyWorld(), at(angel("a"), NARA.x, NARA.y));
+    const print = { id: "copy:wink", kind: "exhibition" as const, name: "Printed hint", qty: 1, value: 9 };
+    w = {
+      ...w,
+      market: [
+        { id: "listing:a:0:1", sellerId: "a", sellerName: "#0042", item: print, price: 9, at: 0, fee: 2 },
+        { id: "listing:city:clearing", sellerId: "", sellerName: "the resistance", item: { ...print, id: "city:clearing", name: "A Clearing" }, price: 40, at: 0 },
+      ],
+    };
+    const market = snapshotFor(w, "a").market;
+    expect(market.map(l => l.id)).toEqual(["listing:city:clearing", "listing:a:0:1"]);
+    expect(market[1]).not.toHaveProperty("fee");
+    expect(market[1]).toMatchObject({ sellerId: "a", price: 9 });
+    expect(w.market[0].fee, "the record keeps it").toBe(2);
+  });
+
+  it("shows a seller their own rows the board's cut left out, so what they owe on can always be cancelled", () => {
+    let w = add(emptyWorld(), at(angel("a"), NARA.x, NARA.y));
+    w = add(w, at(angel("b", "sky", 43), NARA.x + 20, NARA.y));
+    const print = { id: "copy:wink", kind: "exhibition" as const, name: "Printed hint", qty: 1, value: 9 };
+    const rows = Array.from({ length: 14 }, (_, i) => ({ id: `listing:b:0:${i + 2}`, sellerId: "b", sellerName: "#0043", item: print, price: 9, at: i, ...(i === 0 ? { fee: 2 } : {}) }));
+    w = { ...w, market: [{ id: "listing:a:0:1", sellerId: "a", sellerName: "#0042", item: print, price: 9, at: 0, fee: 2 }, ...rows] };
+    const step = stepViews(w);
+    expect(step.market.map(l => l.sellerId)).not.toContain("a");
+    const a = snapshotFor(w, "a", step).market;
+    expect(a.length).toBe(step.market.length + 1);
+    expect(a[a.length - 1]).toEqual({ id: "listing:a:0:1", sellerId: "a", sellerName: "#0042", item: print, price: 9, at: 0 });
+    const b = snapshotFor(w, "b", step).market;
+    expect(b.length, "the cut rows ride along for their seller only").toBe(step.market.length + 2);
+    expect(b.slice(step.market.length).map(l => l.id)).toEqual(["listing:b:0:2", "listing:b:0:3"]);
+    expect(b.every(l => !("fee" in l))).toBe(true);
+    // a viewer with nothing cut shares the step's object
+    const c = add(w, at(angel("c", "earth", 44), NARA.x + 40, NARA.y));
+    expect(snapshotFor(c, "c", stepViews(c)).market).toBe(stepViews(c).market);
+  });
+
   it("uses the NPC's personal override and reports the objective and prompt", () => {
     let w = add(emptyWorld(), { ...at(angel("a"), PLAQUE.x, PLAQUE.y), flags: { angel: 1, "quill:forge": 1 }, quests: { "m1-diagnosis": 0 } });
     let snap = snapshotFor(w, "a");

@@ -416,12 +416,15 @@ const WET: Quest[] = [
         target: "hot-street",
         plate: "stall-surface.jpg",
         done: ({ p, w }) => has(p, SF.VAN_WAVED) || poiIs(w, "hot-street", "hot"),
-        onComplete: [
-          poi("hot-street", "hot"),
-          worldFlag(SW.VAN_PARKED),
-          news("An armored van parked on the wet street. The street went hot."),
-          wink("It looks like freedom. It is a stall with wheels. The street it parks on stops being a street."),
-        ],
+        // The one who waved it through parks it; a street already hot (another van, or a print pulled off the Grid) closes the step with no van and no news.
+        onComplete: ({ p }) => (has(p, SF.VAN_WAVED)
+          ? [
+            poi("hot-street", "hot"),
+            worldFlag(SW.VAN_PARKED),
+            news("An armored van parked on the wet street. The street went hot."),
+            wink("It looks like freedom. It is a stall with wheels. The street it parks on stops being a street."),
+          ]
+          : []),
       }),
     ],
     onFinish: [notice("The street is hot. Flags are raised here now. Guests are not loot.")],

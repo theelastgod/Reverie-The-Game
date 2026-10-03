@@ -236,7 +236,8 @@ export type HouseWar = {
   site: string; // poi id of the contested site
 };
 
-export type Listing = { id: string; sellerId: string; sellerName: string; item: Item; price: number; at: number };
+/** `fee` is a listing fee kept back from the sale (or charged on the cancel) when the seller could not pay it at the stall. */
+export type Listing = { id: string; sellerId: string; sellerName: string; item: Item; price: number; at: number; fee?: number };
 
 export type ClearingState = {
   open: boolean;
@@ -342,7 +343,8 @@ export type Effect =
   | { kind: "passing" }
   | { kind: "dialogue"; npc: string; node: string }
   | { kind: "history"; passings?: number; buried?: number; looted?: number; outcome?: string }
-  | { kind: "listing"; id: string; seller?: string; item?: Item; price?: number; delta?: number }; // a listing the city posts (seller, item, price; once per id) or re-prices (delta); nobody buys it
+  | { kind: "listing"; id: string; seller?: string; item?: Item; price?: number; delta?: number } // a listing the city posts (seller, item, price; once per id) or re-prices (delta); nobody buys it
+  | { kind: "list"; item: Item; price: number }; // the player's own item posted on the Grid without passing through their hands: the fee spent now, or kept back from the sale
 
 export type GuestPolicy = "allow" | "spectate" | "deny";
 

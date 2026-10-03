@@ -523,6 +523,22 @@ describe("every side hour, walked", () => {
   }
 });
 
+describe("the armored van on a street already hot", () => {
+  it("closes the wave step on its own with no van parked and no news, for the one who only asked", () => {
+    // the street went hot by a print pulled off the Grid (or another body's van): the hour's second step is skipped by the world
+    let w = world({ id: SQ.VAN, at: "stall-4", pois: { "hot-street": "hot" }, steps: [], check: () => undefined });
+    w = { ...w, pois: { ...w.pois, "hot-street": { state: "hot", by: "someone", at: 1, count: 1 } } };
+    w = tick(goTo(w, ME, "stall-4"));
+    w = perform(w, poi("stall-4", "side:van:ask"));
+    w = tick(w, 2);
+    expect(questProgress(me(w), SQ.VAN).done).toBe(true);
+    expect(w.news.some(n => n.text.includes("armored van parked")), "no van news for a van nobody waved").toBe(false);
+    expect(w.flags[SW.VAN_PARKED]).toBeUndefined();
+    expect(w.pois["hot-street"], "the street's mark stands as it was").toEqual({ state: "hot", by: "someone", at: 1, count: 1 });
+    expect(me(w).notices.some(n => n.text === "The street is hot. Flags are raised here now. Guests are not loot.")).toBe(true);
+  });
+});
+
 describe("side objectives in the snapshot", () => {
   it("lists every active side hour with its title and a resolved target, newest first, capped", async () => {
     const { snapshotFor } = await import("./snapshot");

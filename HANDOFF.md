@@ -67,9 +67,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   IV (Ione's voice known from the crate and her word said first, Nara's
   three numbers and her confession at the ring, Caul's body on the
   Grid's gate above it, the hijack with a margin). Phase A is complete.
-  Phase B, the new beats, has begun: the altar's reel in the Nave and the
+  Phase B, the new beats, has begun: the altar's reel in the Nave; the
   room behind the forecast glass, where Caul sits across the desk in
-  Movement III and offers the reader's post or the light to put out.
+  Movement III and offers the reader's post or the light to put out; and
+  the forge, where the print with your serial is listed on the Grid
+  through the market or pulled off it, and either moves the Clearing's
+  price for everyone.
 - **The script is `SCRIPT.md`** (your request of 2026-10-02, the evening:
   "Write the script of dialogue"). Every spoken line of the four
   movements, scene by scene in the synopsis's order, with the speaker,
@@ -1482,6 +1485,51 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Next for Phase B: the catalog reversal at the forge as a listing or a
   pull that moves the price (III.8), then the recorders at the lip with
   Caul's last offer (IV.6).
+- Backlog A, Phase B, the forge (2026-10-03, night): the catalog reversal
+  at the forge (III.8), from the script's lines tagged new. Quill's
+  lesson now ends "List it, or pull it." (the choice ids `sell` and
+  `spot` kept, so a saved body reads the same). The listing: a new
+  `list` effect (`economy.listOwn`) posts the player's own print
+  (`copy:wink` at COPY_PRICE) on the Grid through the market as it is,
+  never passing through their hands; the stall's fee is spent at the
+  tray when the purse has it, else kept back on the listing (a `fee`
+  field, off the wire) and taken from the sale or charged on the cancel
+  as far as the purse goes, the figure spoken each time it is taken; the
+  price is the seller's only when a body buys it (the sale counted on
+  them, `sold:copy:wink`); aura −1 once, by the node; Cold is the
+  current; the Clearing's city listing climbs (moveClearing "taken");
+  news. The pull: aura +1, readiness +2, the Clearing's price eases
+  (moveClearing "refused"), the hot street set hot for everyone (not
+  twice: a street already hot gets the shorter news line), news. Quill's
+  later line follows the print (on the board, sold, back in the hand
+  after a cancel, or gone to the tray or to decay), and the tray's Q
+  with nothing in hand takes the player's own print off the board
+  (the kept-back fee charged as a cancel's is, aura +1). Around the
+  beat: listing ids come from a world counter (`market:seq`) instead of
+  the board's length, so a post and a removal in one tick never share an
+  id; a player's listing whose print has decayed to nothing leaves the
+  board (the city's rows stand); a seller sees their own rows the board's
+  top-12 cut left out, so what they owe on can always be cancelled;
+  saved listings are rebuilt scalar by scalar on restore (a bad fee or a
+  missing price never reaches the seller's bank); the armored-van hour's
+  wave step, when the street is already hot by another van or a pull,
+  closes with no van parked and no news. The journal's step text and
+  its notice say the new scene. The campaign smoke pulls the print and
+  waits for the hot street on the wire and the Clearing's price eased.
+  Reviewed by three adversarial readers (economy, script, world) with a
+  refuter on each finding; confirmed and folded: a guest (or an Angel
+  before Movement III) could open the lesson from the tray and move the
+  Clearing's price, the hot street and the news for everyone (the
+  tray's F is now Angels' and Movement III's, and the node offers a
+  guest neither choice); the listing counted a copy in a hand that held
+  nothing, so the tray's Q gave the aura back for free; the later line
+  said "on the board" after a sale or a cancel; a kept-back fee left the
+  purse with no line; the ids; the fee on the wire; the cut rows; the
+  van hour's false news; the saved rows; the step text; the choices'
+  order (the script's: the listing first). Phase C still owns the
+  street's cool-down (nothing un-hots it today) and the launch window.
+  Next for Phase B: the recorders at the lip with Caul's last offer
+  (IV.6), then the Hijack's and Absence's remainders.
 
 ## Verified (2026-09-25, integration)
 
@@ -2182,6 +2230,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   shows 2,206 words, 1,520 of dialogue), and the render check at
   `RENDER_MIN_FPS=5` passed on desktop and phone, run alone; all of it
   re-run on the tree after the review's fixes.
+- Backlog A, Phase B, the forge (2026-10-03, night): typecheck, 517 tests
+  in 41 files (ten new: the print posted on the Grid without passing
+  through the hand, the fee spent at the tray or kept back and taken from
+  the sale or charged on the cancel with its figure spoken, a guest
+  listing nothing, the ids from the world counter, the decayed listing
+  leaving the board, the seller's rows the cut left out and the fee off
+  the wire, the saved rows rebuilt, the tray's Q on the board, the van
+  hour on a street already hot, a guest and an early Angel at the tray;
+  the spine's two runs through the forge, the listing climbing and the
+  pull easing the Clearing's price and setting the hot street, Quill's
+  later line after a sale, a cancel and the tray), the build, the play
+  build and the stage; on a fresh local world the Movement III campaign
+  smoke pulled the print and saw the hot street on the wire and the
+  Clearing's price eased (Movement III now shows 2,238 words, 1,540 of
+  dialogue), and the render check at `RENDER_MIN_FPS=5` passed on desktop
+  and phone, run alone; all of it re-run on the tree after the review's
+  fixes.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2233,9 +2298,10 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    - **Phase B, the new beats** (one beat at a firing, each from
      `SCRIPT.md`'s lines tagged new or Phase B, with the beat's header
      there naming the step, flag, gate or station it needs; landed so
-     far: the altar's reel (I.9) and the room behind the glass (III.7),
-     see Done; next the forge's listing or pull (III.8), then the lip
-     (IV.6), then the Hijack's and Absence's remainders): never inserted between shipped steps (a
+     far: the altar's reel (I.9), the room behind the glass (III.7) and
+     the forge's listing or pull (III.8), see Done; next the lip (IV.6),
+     then the Hijack's and Absence's remainders, then Quill's `ring` and
+     `margin` at the vans): never inserted between shipped steps (a
      saved body's progress is a step index); they enter as verbs and
      dialogue on existing steps or at a movement's end. The altar as a
      readable POI in the Nave (I.9); the oval's line by serial, branched

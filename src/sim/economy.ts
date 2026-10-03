@@ -87,9 +87,14 @@ const MARKET_CITY_LISTED = (seller: string, item: string, price: number) => `${s
 const MARKET_CITY_MOVED = (seller: string, item: string, price: number, from: number) => `${seller} prices ${item} at ${price}, ${price > from ? "up" : "down"} from ${from}.`;
 const MARKET_OWN_LISTING = "It is your listing. Cancel it if you want it back.";
 const MARKET_BOUGHT = (price: number) => `Bought for ${price}. A copy travels. The hole does not.`;
+const MARKET_SOLD_FEE_KEPT = (price: number, kept: number) => `Your print sold at ${price}. The stall kept its fee, ${kept}. The rest is banked.`;
 const MARKET_CANCELLED = "The listing comes down. The print is back in your hand.";
+const MARKET_CANCELLED_FEE = (owed: number) => `The listing comes down. The print is back in your hand. The stall's fee, ${owed}, comes out of the purse.`;
+const MARKET_SEQ = "market:seq"; // world: every listing a player posts takes the next number, so no two share an id
 const FORGE_CRAFTED = "A print. It looks like a Wink. It lists. It will not open the hole.";
 const FORGE_SPOTTED = "You keep the eye. The printed ones go to the tray. The buried one opens.";
+const FORGE_SPOTTED_BOARD = "You keep the eye. Your own print comes off the board and goes to the tray. The buried one opens.";
+const FORGE_SPOTTED_BOARD_FEE = (owed: number) => `${FORGE_SPOTTED_BOARD} The stall's fee, ${owed}, comes out of the purse.`;
 const FORGE_NOTHING_TO_SPOT = "Nothing in your hand is a copy.";
 const FORGE_NOTHING_TO_SELL = "Nothing in your hand is a print. Craft one first.";
 const FORGE_SOLD = "You sold a copy. Aura thins. Cult does not list.";
@@ -114,6 +119,15 @@ function bumpFlag(w: WorldState, key: string, delta: number): WorldState {
 function speak(w: WorldState, p: Player, text: string): WorldState {
   return setPlayer(w, say(p, text, w.now));
 }
+
+/** The next listing id a player's posting takes: a world counter, so a post and a removal in one tick never mint the same id twice. */
+function nextListingId(w: WorldState, sellerId: string): { w: WorldState; id: string } {
+  const n = (w.flags[MARKET_SEQ] ?? 0) + 1;
+  return { w: bumpFlag(w, MARKET_SEQ, 1), id: `listing:${sellerId}:${w.tick}:${n}` };
+}
+
+/** The player's own copy:wink on the board, if any (the one Quill listed, or one they listed themselves). */
+const ownPrintListing = (w: WorldState, id: string): number => w.market.findIndex(l => l.sellerId === id && l.item.id === ITEM_COPY_WINK);
 
 function kitActive(p: Player, verb: Player["messenger"], now: number): boolean {
   return !!p.kit && p.kit.verb === verb && p.kit.until > now;
@@ -382,11 +396,12 @@ export function applyMarket(
       const price = args.price ?? 0;
       if (!Number.isInteger(price) || price < LISTING_PRICE_MIN || price > LISTING_PRICE_MAX) return speak(w, p, MARKET_BAD_PRICE);
       const fee = kitActive(p, "iridescent", w.now) ? 0 : LISTING_FEE;
-      const paid = spend(w, id, fee, "listing");
-      if (!paid) return speak(w, p, LINES.CANT_AFFORD);
-      const payer = paid.players.get(id) ?? p;
+      const spent = spend(w, id, fee, "listing");
+      if (!spent) return speak(w, p, LINES.CANT_AFFORD);
+      const payer = spent.players.get(id) ?? p;
+      const { w: paid, id: listingId } = nextListingId(spent, id);
       const listing: Listing = {
-        id: `listing:${id}:${w.tick}:${paid.market.length}`,
+        id: listingId,
         sellerId: id,
         sellerName: p.name,
         item: { ...held, qty: 1 },
@@ -413,8 +428,14 @@ export function applyMarket(
       let next: WorldState = { ...w, market };
       const buyer = addItem({ ...p, bestand: p.bestand - listing.price }, listing.item);
       next = setPlayer(next, buyer);
-      next = setPlayer(next, { ...seller, banked: seller.banked + listing.price });
-      next = bumpFlag(next, "earned:craft", listing.price);
+      // A fee kept back at the stall comes out of the sale, and the seller hears the figure; the sale itself is counted on them.
+      const kept = Math.min(listing.fee ?? 0, listing.price);
+      const soldKey = `sold:${listing.item.id}`;
+      let paidSeller: Player = { ...seller, banked: seller.banked + listing.price - kept, flags: { ...seller.flags, [soldKey]: (seller.flags[soldKey] ?? 0) + 1 } };
+      if (kept > 0) paidSeller = say(paidSeller, MARKET_SOLD_FEE_KEPT(listing.price, kept), w.now);
+      next = setPlayer(next, paidSeller);
+      if (kept > 0) next = bumpFlag(next, "sunk:listing", kept);
+      next = bumpFlag(next, "earned:craft", listing.price - kept);
       return speak(next, buyer, MARKET_BOUGHT(listing.price));
     }
     case "cancel": {
@@ -423,11 +444,42 @@ export function applyMarket(
       const listing = w.market[index];
       const market = w.market.slice();
       market.splice(index, 1);
-      return speak({ ...w, market }, addItem(p, listing.item), MARKET_CANCELLED);
+      // The stall keeps the fee either way: a fee kept back is charged on the cancel, as far as the purse goes, and the line says the figure.
+      const owed = Math.min(listing.fee ?? 0, p.bestand);
+      const charged = owed > 0 ? spend({ ...w, market }, id, owed, "listing") : null;
+      const base = charged ?? { ...w, market };
+      const seller = base.players.get(id) ?? p;
+      return speak(base, addItem(seller, listing.item), owed > 0 ? MARKET_CANCELLED_FEE(owed) : MARKET_CANCELLED);
     }
     default:
       return w;
   }
+}
+
+/**
+ * The player's own thing posted on the Grid without passing through their hands
+ * (Quill lists the print she made of their hint): the fee is spent now when the
+ * purse has it, else kept back from the sale; the price is theirs only when a
+ * body buys it. No aura is touched here; the line that does this says what it costs.
+ */
+export function listOwn(w: WorldState, id: string, item: Item, price: number): WorldState {
+  const p = w.players.get(id);
+  if (!p || p.guest) return w;
+  const bounded = clamp(Math.round(price), LISTING_PRICE_MIN, LISTING_PRICE_MAX);
+  const fee = kitActive(p, "iridescent", w.now) ? 0 : LISTING_FEE;
+  const paid = fee > 0 ? spend(w, id, fee, "listing") : w;
+  const kept = paid ? 0 : fee;
+  const { w: base, id: listingId } = nextListingId(paid ?? w, id);
+  const listing: Listing = {
+    id: listingId,
+    sellerId: id,
+    sellerName: p.name,
+    item: { ...item, qty: 1 },
+    price: bounded,
+    at: w.now,
+    ...(kept > 0 ? { fee: kept } : {}),
+  };
+  return { ...base, market: [...base.market, listing] };
 }
 
 /**
@@ -456,13 +508,20 @@ export function applyListing(w: WorldState, e: { id: string; seller?: string; it
 
 const DECAY_KEY = "exhibit:decayAt";
 
-/** Exhibition decays: every EXHIBIT_DECAY seconds every exhibition item loses a unit of value (min 0). */
+/**
+ * Exhibition decays: every EXHIBIT_DECAY seconds every exhibition item loses a
+ * unit of value (min 0). A player's listing whose print has decayed to nothing
+ * leaves the board (the fee was the stall's already; a fee kept back is
+ * forgiven); the city's rows are prices, not prints, and stand.
+ */
 export function tickMarket(w: WorldState, _dt: number): WorldState {
   const due = w.flags[DECAY_KEY];
   if (due === undefined) return { ...w, flags: { ...w.flags, [DECAY_KEY]: w.now + EXHIBIT_DECAY } };
   if (w.now < due) return w;
   const decay = (item: Item): Item => (item.kind === "exhibition" && item.value > 0 ? { ...item, value: item.value - 1 } : item);
-  const market = w.market.map(l => (l.item.kind === "exhibition" && l.item.value > 0 ? { ...l, item: decay(l.item) } : l));
+  const market = w.market
+    .map(l => (l.item.kind === "exhibition" && l.item.value > 0 ? { ...l, item: decay(l.item) } : l))
+    .filter(l => l.sellerId === CITY_SELLER || l.item.kind !== "exhibition" || l.item.value > 0);
   const players = new Map(w.players);
   for (const [pid, p] of w.players) {
     if (!p.items.some(i => i.kind === "exhibition" && i.value > 0)) continue;
@@ -498,7 +557,19 @@ export function applyForge(w: WorldState, id: string, op: "craft" | "spot" | "se
     }
     case "spot": {
       const held = p.items.find(i => i.id === ITEM_COPY_WINK);
-      if (!held && p.fakeWinke <= 0) return speak(w, p, FORGE_NOTHING_TO_SPOT);
+      if (!held && p.fakeWinke <= 0) {
+        // Nothing in hand, but their own print on the board (the one Quill listed): it comes down to the tray, the stall's kept-back fee charged as a cancel's is, and the eye is theirs.
+        const index = ownPrintListing(w, id);
+        if (index < 0) return speak(w, p, FORGE_NOTHING_TO_SPOT);
+        const listing = w.market[index];
+        const market = w.market.slice();
+        market.splice(index, 1);
+        const owed = Math.min(listing.fee ?? 0, p.bestand);
+        const charged = owed > 0 ? spend({ ...w, market }, id, owed, "listing") : null;
+        const base = charged ?? { ...w, market };
+        const payer = base.players.get(id) ?? p;
+        return speak(base, { ...payer, aura: Math.min(AURA_MAX, payer.aura + 1) }, owed > 0 ? FORGE_SPOTTED_BOARD_FEE(owed) : FORGE_SPOTTED_BOARD);
+      }
       const me: Player = {
         ...p,
         items: p.items.filter(i => i.id !== ITEM_COPY_WINK),

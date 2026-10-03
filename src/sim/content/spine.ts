@@ -370,11 +370,11 @@ const M3_STEPS: QuestStep[] = [
   {
     id: "forge",
     title: "The hint can be forged",
-    detail: "Quill is at the forge tray on the Wet Grid. F speaks. She will teach you to spot copies, or sell you one.",
+    detail: "Quill is at the forge tray on the Wet Grid. F speaks. She has a print from the Grid with your serial in the margin. List it, or pull it.",
     target: "station:quill-forge",
     plate: "plate-forge.jpg",
     done: ctx => has(ctx, F.FORGE),
-    onComplete: ctx => [notice(chose(ctx, C.FORGE, "spot") ? "You keep the eye. Copies will not open the hole." : "A print of a hint. It lists. It decays.", chose(ctx, C.FORGE, "spot") ? "gold" : "hot")],
+    onComplete: ctx => [notice(chose(ctx, C.FORGE, "spot") ? "You keep the eye. Copies will not open the hole." : "Your hint is on the board. It lists. It decays.", chose(ctx, C.FORGE, "spot") ? "gold" : "hot")],
   },
 ];
 

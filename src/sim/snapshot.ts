@@ -10,7 +10,7 @@ import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, CITY_SELLER, MAX_HP, WRECKAGE_TTL_B
 import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
 import { PROTOCOL_VERSION, WEATHER_LABEL, weatherBand, type EnemyView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView } from "./protocol";
-import type { Ctx, Enemy, FailedPassing, HistoryMark, NpcState, Player, PoiConfig, Prompt, PromptVerb, Wreckage, WorldState, YieldNode } from "./types";
+import type { Ctx, Enemy, FailedPassing, HistoryMark, Listing, NpcState, Player, PoiConfig, Prompt, PromptVerb, Wreckage, WorldState, YieldNode } from "./types";
 import { nodeYield } from "./economy";
 import { perception } from "./houses";
 import { npcOffers, objectiveFor, sideObjectivesFor } from "./quests";
@@ -257,6 +257,13 @@ const NO_FAILED: FailedPassing[] = [];
 
 const nodeView = (n: YieldNode, now: number): NodeView => ({ ...n, safe: n.announcedUntil > now });
 
+const publicListing = (l: Listing): Listing => {
+  if (l.fee === undefined) return l;
+  const pub = { ...l };
+  delete pub.fee;
+  return pub;
+};
+
 export function stepViews(w: WorldState): StepViews {
   const now = w.now;
 
@@ -291,9 +298,10 @@ export function stepViews(w: WorldState): StepViews {
     pois: keptPois.get(w.pois, pois => Object.entries(pois).map(([id, s]) => ({ id, state: s.state, count: s.count }))),
     frozen: keptFrozen,
     // The city's own listings stand first, whatever else is up: a price to watch, never pushed off the board by prints.
+    // A fee the stall kept back is the seller's business with the stall, not the board's: it stays off the wire.
     market: keptMarket.get(w.market, market => [
       ...market.filter(l => l.sellerId === CITY_SELLER),
-      ...market.filter(l => l.sellerId !== CITY_SELLER).slice(-MARKET_TOP).reverse(),
+      ...market.filter(l => l.sellerId !== CITY_SELLER).slice(-MARKET_TOP).reverse().map(publicListing),
     ]),
     news: keptNews.get(w.news, news => news.map(n => n.text)),
     clearing: keptClearing.get(w.clearing, c => ({ open: c.open, reserve: c.reserve, contest: c.contest, lastOutcome: c.lastOutcome, dwellers: c.heldBy.length })),
@@ -339,6 +347,7 @@ type ViewerSlow = {
   graves: WorldState["graves"];
   history: HistoryMark[];
   failed: FailedPassing[];
+  market: Snap["market"];
   objective: Snap["objective"];
   sideObjectives: Snap["sideObjectives"];
   kitReadout?: string[];
@@ -394,6 +403,14 @@ function viewerSlow(fast: ViewerFast): ViewerSlow {
   const seesFailed = !p.guest && (p.messenger === "ruin" || p.stance === "storm" || p.house === "sky");
   const graves = w.graves.filter(g => near(g.x, g.y));
 
+  // The board shows everyone the newest rows; a seller's own rows the cut left out ride along for them, so what they owe on can always be cancelled.
+  let market = step.market;
+  if (!p.guest && w.market.length > step.market.length) {
+    const shown = new Set(step.market.map(l => l.id));
+    const cut = w.market.filter(l => l.sellerId === p.id && !shown.has(l.id));
+    if (cut.length) market = [...step.market, ...cut.map(publicListing)];
+  }
+
   const out: ViewerSlow = {
     npcs: fast.npcs.map(state => npcViewOf(ctx, state)),
     nodes,
@@ -401,6 +418,7 @@ function viewerSlow(fast: ViewerFast): ViewerSlow {
     graves: graves.length === w.graves.length ? w.graves : graves,
     history,
     failed: seesFailed ? w.failed : NO_FAILED,
+    market,
     objective: objectiveFor(ctx),
     sideObjectives: sideObjectivesFor(ctx),
   };
@@ -428,7 +446,7 @@ function sectionsOf(fast: ViewerFast, slow: ViewerSlow): Pick<Snap, SlowKey> {
     houses: w.houses,
     clearing: shared.clearing,
     passing: shared.passing,
-    market: shared.market,
+    market: slow.market,
     news: shared.news,
     objective: slow.objective,
     sideObjectives: slow.sideObjectives,

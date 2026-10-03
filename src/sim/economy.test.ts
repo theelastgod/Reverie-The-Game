@@ -50,6 +50,7 @@ import {
   applyForge,
   applyListing,
   applyMarket,
+  listOwn,
   applyNode,
   applyUse,
   earn,
@@ -435,6 +436,104 @@ describe("market", () => {
     expect(you(applyMarket(w, "b", "cancel", { listingId: w.market[0].id }), "b").items).toHaveLength(0);
   });
 
+  it("listOwn posts a player's own thing on the Grid: the fee spent now, or kept back from the sale and charged on the cancel", () => {
+    const rich = makePlayer({ id: "s", name: "#0001", bestand: 10 });
+    const poor = makePlayer({ id: "q", name: "#0003", bestand: 0 });
+    const buyer = makePlayer({ id: "b", name: "#0002", bestand: 50 });
+    let w = makeWorld([rich, poor, buyer]);
+    // the purse has the fee: spent at once, nothing kept back
+    w = listOwn(w, "s", copy(), 9);
+    expect(w.market).toHaveLength(1);
+    expect(w.market[0]).toMatchObject({ sellerId: "s", sellerName: "#0001", price: 9, item: { id: ITEM_COPY_WINK, qty: 1 } });
+    expect(w.market[0].fee).toBeUndefined();
+    expect(you(w, "s").bestand).toBe(10 - LISTING_FEE);
+    expect(you(w, "s").items, "the thing never passed through the hands").toHaveLength(0);
+    // an empty purse: listed all the same, the fee kept back
+    w = listOwn(w, "q", copy(), 9);
+    expect(w.market).toHaveLength(2);
+    expect(w.market[1]).toMatchObject({ sellerId: "q", price: 9, fee: LISTING_FEE });
+    expect(you(w, "q").bestand).toBe(0);
+    // a buy pays the seller the price less the fee kept back, and the stall keeps it
+    const bought = applyMarket(w, "b", "buy", { listingId: w.market[1].id });
+    expect(you(bought, "q").banked).toBe(9 - LISTING_FEE);
+    expect(bought.flags["sunk:listing"]).toBe(LISTING_FEE * 2);
+    expect(bought.flags["earned:craft"]).toBe(9 - LISTING_FEE);
+    // a cancel charges the kept-back fee as far as the purse goes, and returns the thing
+    const cancelled = applyMarket(w, "q", "cancel", { listingId: w.market[1].id });
+    expect(cancelled.market).toHaveLength(1);
+    expect(hasItem(you(cancelled, "q"), ITEM_COPY_WINK)).toBe(true);
+    expect(you(cancelled, "q").bestand).toBe(0);
+    const paidLater = applyMarket({ ...w, players: new Map(w.players).set("q", { ...you(w, "q"), bestand: 1 }) }, "q", "cancel", { listingId: w.market[1].id });
+    expect(you(paidLater, "q").bestand).toBe(0);
+    expect(paidLater.flags["sunk:listing"]).toBe(LISTING_FEE + 1);
+    // the price is bounded like any listing's; a guest lists nothing
+    expect(listOwn(w, "s", copy(), 5000).market[2].price).toBe(999);
+    const guest = makeWorld([makePlayer({ id: "g", guest: true })]);
+    expect(listOwn(guest, "g", copy(), 9).market).toHaveLength(0);
+  });
+
+  it("a kept-back fee is spoken when it is taken: the seller hears the sale's figure, the cancel names the charge, and the sale is counted on the seller", () => {
+    const poor = makePlayer({ id: "q", name: "#0003", bestand: 0 });
+    const buyer = makePlayer({ id: "b", name: "#0002", bestand: 50 });
+    let w = listOwn(makeWorld([poor, buyer]), "q", copy(), 9);
+    const bought = applyMarket(w, "b", "buy", { listingId: w.market[0].id });
+    expect(you(bought, "q").heard).toBe(`Your print sold at 9. The stall kept its fee, ${LISTING_FEE}. The rest is banked.`);
+    expect(you(bought, "q").flags["sold:copy:wink"]).toBe(1);
+    expect(you(bought, "b").heard).toBe("Bought for 9. A copy travels. The hole does not.");
+    // a fee paid at the tray: the seller hears nothing new on the sale, and the cancel's line is the plain one
+    const rich = listOwn(makeWorld([makePlayer({ id: "s", bestand: 10 }), buyer]), "s", copy(), 9);
+    expect(you(applyMarket(rich, "b", "buy", { listingId: rich.market[0].id }), "s").heard).toBe("");
+    expect(you(applyMarket(rich, "s", "cancel", { listingId: rich.market[0].id }), "s").heard).toBe("The listing comes down. The print is back in your hand.");
+    w = { ...w, players: new Map(w.players).set("q", { ...you(w, "q"), bestand: 5 }) };
+    const cancelled = applyMarket(w, "q", "cancel", { listingId: w.market[0].id });
+    expect(you(cancelled, "q").heard).toBe(`The listing comes down. The print is back in your hand. The stall's fee, ${LISTING_FEE}, comes out of the purse.`);
+    expect(you(cancelled, "q").bestand).toBe(5 - LISTING_FEE);
+  });
+
+  it("the tray's Q finds the seller's own print on the board when nothing is in hand: it comes down to the tray, the kept-back fee charged as a cancel's is, aura +1", () => {
+    let w = listOwn(makeWorld([makePlayer({ id: "q", bestand: 1, aura: 10 })]), "q", copy(), 9);
+    expect(w.market[0].fee).toBe(LISTING_FEE);
+    const spotted = applyForge(w, "q", "spot");
+    expect(spotted.market).toHaveLength(0);
+    expect(you(spotted, "q").items).toHaveLength(0);
+    expect(you(spotted, "q").aura).toBe(11);
+    expect(you(spotted, "q").bestand, "the fee as far as the purse goes").toBe(0);
+    expect(spotted.flags["sunk:listing"]).toBe(1);
+    expect(you(spotted, "q").heard).toBe("You keep the eye. Your own print comes off the board and goes to the tray. The buried one opens. The stall's fee, 1, comes out of the purse.");
+    const paid = applyForge(listOwn(makeWorld([makePlayer({ id: "q", bestand: 10, aura: 10 })]), "q", copy(), 9), "q", "spot");
+    expect(you(paid, "q").heard).toBe("You keep the eye. Your own print comes off the board and goes to the tray. The buried one opens.");
+    expect(you(applyForge(spotted, "q", "spot"), "q").heard).toBe("Nothing in your hand is a copy.");
+    // a copy in hand is spotted first; the board's print waits for the next Q
+    w = { ...w, players: new Map(w.players).set("q", { ...you(w, "q"), items: [copy()], fakeWinke: 1 }) };
+    const hand = applyForge(w, "q", "spot");
+    expect(hand.market).toHaveLength(1);
+    expect(you(hand, "q").heard).toBe("You keep the eye. The printed ones go to the tray. The buried one opens.");
+    expect(applyForge(hand, "q", "spot").market).toHaveLength(0);
+  });
+
+  it("a listing whose print decays to nothing leaves the board; the city's rows stand at any value", () => {
+    let w = listOwn(makeWorld([makePlayer({ id: "q", bestand: 0 })], { now: 0 }), "q", { ...copy(), value: 1 }, 9);
+    w = applyListing(w, { id: "listing:city:clearing", seller: "the resistance", item: { id: "city:clearing", kind: "exhibition", name: "A Clearing", qty: 1, value: 0 }, price: 40 });
+    w = tickMarket(w, 0); // arms the decay clock
+    const due = w.flags["exhibit:decayAt"];
+    const decayed = tickMarket({ ...w, now: due }, 0);
+    expect(decayed.market.map(l => l.id)).toEqual(["listing:city:clearing"]);
+    expect(decayed.flags["sunk:listing"], "a fee kept back is forgiven; nothing is minted").toBeUndefined();
+    expect(you(decayed, "q").items).toHaveLength(0);
+  });
+
+  it("no two listings share an id, whatever is posted and removed inside one tick", () => {
+    let w = makeWorld([makePlayer({ id: "a", bestand: 20 }), makePlayer({ id: "b", bestand: 20, items: [copy(), copy()] })]);
+    w = applyMarket(w, "b", "list", { itemId: ITEM_COPY_WINK, price: 5 });
+    w = listOwn(w, "a", copy(), 9);
+    w = applyMarket(w, "b", "cancel", { listingId: w.market[0].id });
+    w = applyMarket(w, "b", "list", { itemId: ITEM_COPY_WINK, price: 5 });
+    w = listOwn(w, "a", copy(), 9);
+    const ids = w.market.map(l => l.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(w.flags["market:seq"]).toBe(4);
+  });
+
   describe("the city's listing: a price, not a sale", () => {
     const post = { id: "listing:city:clearing", seller: "the resistance", item: { id: "city:clearing", kind: "exhibition" as const, name: "A Clearing", qty: 1, value: 0 }, price: 40 };
     const last = (w: WorldState) => w.news[w.news.length - 1]?.text;
@@ -539,8 +638,11 @@ describe("market", () => {
     expect(later.market[0].item.value).toBe(COPY_PRICE - 1);
     expect(you(later).items.find(i => i.id === ITEM_COPY_WINK)!.value).toBe(COPY_PRICE - 1);
     expect(you(later).items.find(i => i.id === "cult:mark")!.value).toBe(3);
-    for (let i = 0; i < COPY_PRICE + 2; i++) later = tickMarket({ ...later, now: later.now + EXHIBIT_DECAY }, 0.05);
-    expect(later.market[0].item.value).toBe(0);
+    for (let i = 0; i < COPY_PRICE - 2; i++) later = tickMarket({ ...later, now: later.now + EXHIBIT_DECAY }, 0.05);
+    expect(later.market[0].item.value).toBe(1);
+    // the last unit: the print in hand stays at nothing; the one on the board leaves it
+    for (let i = 0; i < 3; i++) later = tickMarket({ ...later, now: later.now + EXHIBIT_DECAY }, 0.05);
+    expect(later.market).toHaveLength(0);
     expect(you(later).items.find(i => i.id === ITEM_COPY_WINK)!.value).toBe(0);
   });
 });

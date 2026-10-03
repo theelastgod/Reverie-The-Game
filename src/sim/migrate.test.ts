@@ -65,6 +65,24 @@ describe("world shape migration", () => {
     expect(snap.nodes.length).toBeGreaterThan(0);
   });
 
+  it("rebuilds saved listings scalar by scalar: a kept-back fee stays only as a number, a row without a price or an item is dropped", () => {
+    const print = { id: "copy:wink", kind: "exhibition", name: "Printed hint", qty: 1, value: 9 };
+    const w = migrateWorld({
+      market: [
+        { id: "listing:a:0:1", sellerId: "a", sellerName: "#0001", item: print, price: 9, at: 3, fee: 2 },
+        { id: "listing:b:0:2", sellerId: "b", sellerName: "#0002", item: print, price: 5000, at: -1, fee: "2" },
+        { id: "listing:c:0:3", sellerId: "c", sellerName: "#0003", item: print, at: 3 },
+        { id: "listing:d:0:4", sellerId: "d", sellerName: "#0004", item: { kind: "exhibition" }, price: 9, at: 3 },
+        { id: "listing:city:clearing", sellerId: "", sellerName: "the resistance", item: { id: "city:clearing", kind: "weird", name: "A Clearing", qty: 0, value: 0 }, price: 40, at: 0 },
+        "not a row",
+      ],
+    });
+    expect(w.market.map(l => l.id)).toEqual(["listing:a:0:1", "listing:b:0:2", "listing:city:clearing"]);
+    expect(w.market[0]).toEqual({ id: "listing:a:0:1", sellerId: "a", sellerName: "#0001", item: print, price: 9, at: 3, fee: 2 });
+    expect(w.market[1]).toEqual({ id: "listing:b:0:2", sellerId: "b", sellerName: "#0002", item: print, price: 999, at: 0 });
+    expect(w.market[2].item).toEqual({ id: "city:clearing", kind: "exhibition", name: "A Clearing", qty: 1, value: 0 });
+  });
+
   it("accepts players saved as pairs or as an object and normalizes each", () => {
     const p = { ...spawnGuest("a"), bestand: 40, hp: Number.NaN, party: { nara: "with" }, flags: { under: 1, junk: "no" }, dialogue: { node: "stale" }, duel: { with: "b" } };
     const asPairs = migrateWorld({ players: [["a", p]] });

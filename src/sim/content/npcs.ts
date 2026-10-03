@@ -295,8 +295,8 @@ function quillRoute(ctx: Ctx): string {
   if (!has(ctx, F.TALKED_QUILL)) return "first";
   if (!has(ctx, F.UNDER)) return "later";
   if (has(ctx, F.FORGE)) return "forge-after";
+  if (!has(ctx, F.BOARD)) return "board-hint"; // the lesson's listing moves the Clearing's price, so the board is read first (Movement III implies it; the Organs door alone does not)
   if (p.movement >= 3 || has(ctx, F.M3)) return "forge-lesson";
-  if (!has(ctx, F.BOARD)) return "board-hint";
   return "board-read";
 }
 
@@ -394,36 +394,46 @@ const QUILL_NODES: Record<string, DialogueNode> = {
   "forge-lesson": {
     id: "forge-lesson",
     // The reversal lands in her hand: the print from the Grid has the player's own serial in the margin, and the hint on it is the one they woke to.
-    text: (ctx) => `Quill fans two hints. One was buried. One was printed. Look at the edge. A buried hint has dirt in the grain. A print has a margin. The printed one lists. The buried one opens. She hands you the printed one, still cool from the Grid. It came in this morning with the rest. Read the margin. ${ctx.p.name}. The hint on it is the one you woke to in the Care. Everything you heard, they have. I'm sorry. I'd have charged more. Now. Take it, or learn to spot it. I will not think less of you either way. I will think exactly the same amount.`,
+    text: (ctx) => `Quill fans two hints. One was buried. One was printed. Look at the edge. A buried hint has dirt in the grain. A print has a margin. The printed one lists. The buried one opens. She hands you the printed one, still cool from the Grid. It came in this morning with the rest. Read the margin. ${ctx.p.name}. The hint on it is the one you woke to in the Care. Everything you heard, they have. I'm sorry. I'd have charged more. Now. List it, or pull it. I will not think less of you either way. I will think exactly the same amount.`,
     wink: "The hint can be forged. Exhibition Winke travel. Cult Winke stay in the hand that buried.",
+    // The listing and the pull move the city (the Clearing's price, the hot street, the news): Angels only, whatever door opened the node.
     choices: [
-      { id: "spot", label: "Teach me to spot the copy.", when: ctx => !has(ctx, F.FORGE), next: "forge-spot" },
-      { id: "sell", label: "Take the print.", when: ctx => !has(ctx, F.FORGE), next: "forge-sell" },
+      { id: "sell", label: "List it.", when: ctx => !ctx.p.guest && !has(ctx, F.FORGE), next: "forge-sell" },
+      { id: "spot", label: "Pull it.", when: ctx => !ctx.p.guest && !has(ctx, F.FORGE), next: "forge-spot" },
       { id: "think", label: "Let me think." },
     ],
   },
   "forge-spot": {
     id: "forge-spot",
-    text: "She takes it back and does not put it on the tray. Look at the edge once more, so you keep the eye: dirt in the grain, or a margin. The cult hint does not list. Copies will not open the hole. The tray is warm if you want to try your hand.",
-    effects: [
+    // The pull: the print comes off the Grid that wanted it; the board feels it and the street goes hot, for everyone.
+    text: "You pull it. She takes it back and does not put it on the tray. Look at the edge once more, so you keep the eye: dirt in the grain, or a margin. The cult hint does not list. Copies will not open the hole. The board will feel the pull. So will the street; it goes hot when a thing comes off the Grid that the Grid wanted. The tray is warm if you want to try your hand.",
+    // A street already hot (a van, or an earlier pull) is not made hot again: the news says only the pull.
+    effects: (ctx) => [
       { kind: "choice", key: C.FORGE, value: "spot" },
       { kind: "flag", key: F.FORGE },
       { kind: "aura", delta: 1 },
       { kind: "readiness", delta: 2 },
-      { kind: "notice", text: "You can spot a copy. The tray will show you.", tone: "ink" },
+      moveClearing("refused"), // a hint not for sale: the resistance's price gives a little
+      ...(ctx.w.pois["hot-street"]?.state === "hot"
+        ? [{ kind: "news", text: "An Angel pulled their own hint off the Grid." } as Effect]
+        : [{ kind: "poi", id: "hot-street", state: "hot" } as Effect, { kind: "news", text: "An Angel pulled their own hint off the Grid. The hot street is hot." } as Effect]),
+      { kind: "notice", text: "You can spot a copy. The tray will show you. The hot street is hot.", tone: "ink" },
     ],
     next: "forge-plate",
   },
   "forge-sell": {
     id: "forge-sell",
-    text: "Taken. Your own hint, printed. It lists. It decays. It will not open anything and it will look wonderful doing it. Aura thins when you hold a print of the sacred. Everybody does it once.",
+    // The listing: the print goes on the board at her price, through the market as it is; the fee is the stall's either way, the price yours when a body buys it.
+    text: "Listed. Your own hint, at my price, on the board behind you. Yours when a body buys it, not before; the stall keeps the fee either way, which is the only part of this I invented. It lists. It decays. It will not open anything and it will look wonderful doing it. Aura thins when you hold a print of the sacred, and thinner when you sell one. Everybody does it once.",
     effects: [
       { kind: "choice", key: C.FORGE, value: "sell" },
       { kind: "flag", key: F.FORGE },
-      { kind: "item", add: { id: "copy:wink", kind: "exhibition", name: "Printed hint", qty: 1, value: COPY_PRICE } },
-      { kind: "fakeWinke", delta: 1 },
-      { kind: "aura", delta: -1 },
-      { kind: "notice", text: "A printed hint. Exhibition. It decays.", tone: "hot" },
+      { kind: "list", item: { id: "copy:wink", kind: "exhibition", name: "Printed hint", qty: 1, value: COPY_PRICE }, price: COPY_PRICE },
+      { kind: "aura", delta: -1 }, // nothing is held, so no copy is counted in the hand; the tray's Q finds the print on the board instead
+      { kind: "current", value: "cold" },
+      moveClearing("taken"), // a hint sold to the Grid: the resistance's Clearing is worth more
+      { kind: "news", text: "An Angel listed their own hint on the Grid. The Clearing is dearer." },
+      { kind: "notice", text: "Your hint is listed on the Grid. Exhibition. It decays.", tone: "hot" },
     ],
     next: "forge-plate",
   },
@@ -446,9 +456,14 @@ const QUILL_NODES: Record<string, DialogueNode> = {
   },
   "forge-after": {
     id: "forge-after",
-    text: (ctx) => chose(ctx, C.FORGE, "spot")
-      ? "You keep the eye. Every print on the Grid looks a little worse to you now. That is what learning costs. E at the tray crafts a copy anyway, if you want to know how it feels."
-      : "You hold the print. It is thinning already. Q at the tray if you want to learn what you bought. E if you want another. I am not judging. I am counting.",
+    // The listing's line follows the print: on the board, sold, back in the hand (a cancel), or gone to the tray (the tray's Q).
+    text: (ctx) => {
+      if (chose(ctx, C.FORGE, "spot")) return "You keep the eye. Every print on the Grid looks a little worse to you now. That is what learning costs. E at the tray crafts a copy anyway, if you want to know how it feels.";
+      if (ctx.w.market.some(l => l.sellerId === ctx.p.id && l.item.id === "copy:wink")) return "Your hint is on the board. It has not sold yet. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.";
+      if (ctx.p.items.some(i => i.id === "copy:wink")) return "You took it down. You hold the print. It is thinning already. Q at the tray if you want to learn what you listed. E if you want another. I am not judging. I am counting.";
+      if ((ctx.p.flags["sold:copy:wink"] ?? 0) > 0) return "It sold. The price went to your bank and the fee stayed with me. Somebody on the Grid has your hint by now, and the hole has none of it. I am not judging. I am counting.";
+      return "It is off the board. Taken down to the tray, or decayed to nothing; the board does not say which and I do not ask. The fee was mine either way. E at the tray crafts a copy anyway, if you want to know how it feels.";
+    },
     wink: "A stall can be a shrine. She will not say it out loud on the Grid.",
   },
   repair: {

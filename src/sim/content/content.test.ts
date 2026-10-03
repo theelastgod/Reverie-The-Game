@@ -448,7 +448,14 @@ describe("dialogue", () => {
   it("Ione's last word and Quill's forge set the key decisions", () => {
     expect(JSON.stringify(NPCS.ione.nodes.lastword.effects)).toContain(`"value":"lastword"`);
     expect(JSON.stringify(NPCS.ione.nodes.lastword.effects)).toContain(`"key":"${W.IONE_GONE}"`);
-    expect(JSON.stringify(NPCS.quill.nodes["forge-spot"].effects)).toContain(`"value":"spot"`);
+    // the pull's effects read the street: hot already, no second "hot" and a shorter news line
+    const quiet = CTXS.find(c => c.name === "angel 7777 M2 fresh")!.ctx;
+    const spotEffects = NPCS.quill.nodes["forge-spot"].effects as (ctx: typeof quiet) => unknown[];
+    expect(JSON.stringify(spotEffects(quiet))).toContain(`"value":"spot"`);
+    expect(JSON.stringify(spotEffects(quiet))).toContain(`"id":"hot-street","state":"hot"`);
+    const hot = { ...quiet, w: { ...quiet.w, pois: { ...quiet.w.pois, "hot-street": { state: "hot", by: "", at: 0, count: 1 } } } };
+    expect(JSON.stringify(spotEffects(hot))).not.toContain(`"state":"hot"`);
+    expect(JSON.stringify(spotEffects(hot))).toContain(`"text":"An Angel pulled their own hint off the Grid."`);
     expect(JSON.stringify(NPCS.quill.nodes["forge-sell"].effects)).toContain(`"value":"sell"`);
     // Ord's map is drawn on the answer, not on the question: each cut sets the flag and records where
     expect(NPCS.ord.nodes.map.effects).toBeUndefined();
