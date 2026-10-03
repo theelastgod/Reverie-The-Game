@@ -1714,7 +1714,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   timer in the tick, once a season: the weather raised a bounded
   amount, the hot street set hot, the listing's buyer named, all but
   the vans skipped past the threshold), with the glass reading "now"
-  through it.
+  through it. Reviewed by one reader after the commit; folded in the
+  next: Halla's word for the light put out said "the date went thin" to
+  the seventh refusal and every one after, when there was no date left
+  (past the threshold it is "the date went out"); the content test meant
+  to show his address is the same for every body in a world compared
+  only two guests (it now compares every body within each world, and
+  reads Halla's line through a world instead of stringifying it); three
+  stale comments and the `offer` tag. Two questions it raised are the
+  owner's, recorded rather than decided: the switch is the city's, not
+  the season's (seven refusals in a city's life withhold the date in
+  every season after, which is how the synopsis's "switch with no
+  handle" reads; a season-keyed count is a small change if wanted); and
+  Caul says the city's figure sets the date while the date is a fixed
+  hour of the season (the launch window is where the figure could move
+  the hour).
 
 ## Verified (2026-09-25, integration)
 
@@ -2537,7 +2551,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   variant; the walked bought hour reads his address through the world),
   the build, the play build and the stage. No server or protocol change,
   so the Wrangler smokes and the render check were not re-run. A review
-  of the diff was still running at this commit.
+  of the diff was still running at that commit; after its fixes,
+  typecheck, 542 tests in 42 files (Halla's line light and dark; his
+  address compared across every body in each world) and the build. The
+  GitHub gates passed on the first commit.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
@@ -2612,7 +2629,9 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
      landed so far: the weave, see Done: the altars' flicker for
      everyone, Ord's figure and the blank tape on the news; the date on
      the glass with its count and the dark-light threshold that
-     withholds it; next the launch window, then the clerks' descent, the
+     withholds it (the switch is the city's for good; the owner may
+     want it per season); next the launch window, which should also
+     settle whether the city's figure moves the hour as Caul says, then the clerks' descent, the
      hot street's cool-down, the Houses' lost hour at Ord's map and
      Quill's lines at the vans): the
      Cable's darkening flickering the altars server-wide; the listing's
