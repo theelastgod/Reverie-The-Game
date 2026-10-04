@@ -35,8 +35,17 @@ function speak(w: WorldState, p: Player, text: string): WorldState {
   return setPlayer(w, say(p, text, w.now));
 }
 
-/** What a locked guest's press may still do: read, and mark its own reading. */
-const LOCKED_MAY = new Set(["flag", "say", "notice"]);
+/**
+ * What a locked guest's press may still do: read, and mark its own reading. A Wink is nothing to a guest (world.wink gives
+ * a guest none), and a window that only speaks (a node with no effects and no choices, as Caul's reel over the altars'
+ * count) changes nothing in the city, so a guest may see it (SCRIPT.md I.9, IV.5: the altars are guest-legal).
+ */
+const LOCKED_MAY = new Set(["flag", "say", "notice", "wink"]);
+const onlySpeaks = (e: { kind: string; npc?: string; node?: string }): boolean => {
+  if (e.kind !== "dialogue" || !e.npc || !e.node) return false;
+  const node = NPCS[e.npc]?.nodes[e.node];
+  return !!node && !node.effects?.length && !node.choices?.length && !node.next;
+};
 /** A side hour's own verbs (side-pois.ts, "side:<hour>:<verb>"): a locked guest's side hours stand where the lock found them. */
 const isSideVerb = (choice: string): boolean => choice.startsWith("side:");
 
@@ -77,7 +86,7 @@ function interactPoi(w: WorldState, p: Player, cfg: PoiConfig, choice: string): 
   if (p.locked) {
     const effects = typeof verb.effects === "function" ? verb.effects(ctx) : verb.effects ?? [];
     // A side hour's verb is refused too: its step would never close (the hour stands, quests.ts), yet its line says it was done.
-    if (verb.cost || isSideVerb(verb.choice) || effects.some(e => !LOCKED_MAY.has(e.kind))) return speak(w, p, LINES.GUEST_LOCK);
+    if (verb.cost || isSideVerb(verb.choice) || effects.some(e => !LOCKED_MAY.has(e.kind) && !onlySpeaks(e as { kind: string }))) return speak(w, p, LINES.GUEST_LOCK);
   }
   if (verb.once && (p.flags[verb.once] ?? 0) > 0) return speak(w, p, LINES.ALREADY);
 

@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 654 tests (2026-10-04), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 676 tests (2026-10-04), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -33,7 +33,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   On 2026-10-04 a sweep for defects a player would meet (six lenses, each
   finding reproduced and then challenged by a skeptic) confirmed and
   fixed twenty-one, a second round with six new lenses eighteen more,
-  and a third, run by hand, two (see Done).
+  a third, run by hand, two, and a fourth twenty-two, among them the
+  wallet as the login (see Done).
 - **Two steps only you can take** (Backlog 1 and 2 have the detail): the
   Stage B art waits on the results host being reachable from a machine that
   runs `node scripts/pull-generated.mjs`; the deploy waits on either the
@@ -107,6 +108,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   The smallest mechanic that keeps the line: each seed in the ring adds
   a few seconds to an opened hole's contest (`endsAt`); the season roll
   keeps the seeds today. Say the word, or have the line cut.
+- **From the sweep's fourth round** (2026-10-04, the evening; yours to
+  decide): a wallet link now restores the Angel that wallet sealed under
+  a session no longer at hand (another device, cleared cookies, a month
+  away), but the client offers LINK A WALLET only on the guest lock, so
+  a returning holder still walks Movement I as a guest to reach it, and
+  the guest's purse gives way to the Angel's. Offering the link on the
+  title too (it needs a live session, so after the first join) is the
+  other half. Four judged by design and left as they are: a veteran
+  stands for each later season's rite without preparing that season's
+  ground (CONTRACTS and the dead-end audit say so; whether a veteran
+  must reopen the hole first is a design change); the glass after the
+  credits says "the next season's hour, with a date on it" and prints
+  no date (SCRIPT.md IV.8's own words; amend the script if you want the
+  date); a duel offer pressed again notices its Angel again (six-second
+  toasts; skipping the repeat is one line in `applyDuel`); a swept
+  guest's spent wallet challenge stays in storage (about 110 bytes; the
+  sweep's entry judged it bounded).
 - **The story is now `SYNOPSIS.md`** (your brief of 2026-10-02, the
   afternoon). The enemy has a name and a shape: the Concern, the company
   that owns the numbers, and Anselm Caul, its chief, who is a guest (he
@@ -2248,6 +2266,85 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   commit before. One owner call (seeds do nothing yet; status block).
   The rest came back clean, by design where it differs (see Verified).
 
+- The player-defect sweep, round four (2026-10-04, evening; six lenses,
+  each finding reproduced and then challenged by a skeptic): after the
+  credits, the Winke and their schools, the news and the notices, the
+  server's routes and storage, the phone and keyboard HUD, the Phase B
+  and C set pieces. Twenty-two confirmed and fixed:
+  - **Wallet is login** (the one high finding): a holder whose cookie was
+    gone (another device, cleared cookies, a month away) linked their
+    wallet and had the seal put on a fresh guest, while their Angel's
+    record sat for good under the old cookie, out of reach. `/wallet/link`
+    now restores it: when the serial's index names another session that
+    has no socket here, and that record is sealed with this serial and
+    this very wallet, the body comes back into this session (its id, its
+    progress, its purse), the index moves with the checkpoint, and the
+    old record, its stamp and its challenge are deleted after the new one
+    lands. A sold Angel (a record sealed to another wallet) is never
+    inherited, and a body that was once an Angel is resealed as before,
+    never replaced. The client half is yours (status block).
+  - The server: the wallet routes have a budget per session (six deep, one
+    every two seconds; past it 429 and no storage work), and a link's
+    checkpoint and forced broadcast coalesce like an action's; an IPv6
+    address draws its join bucket by its /64, so one host rotating
+    through its own block starves only itself; while pages are deleting
+    stale guests the sweep reads the next page two seconds on, not an
+    hour (it now outpaces the city's join budget); `/log/recent` reads
+    by its index's order (kind, then the clock, newest first) instead of
+    every row of the kind.
+  - After the credits: nothing in the city opened a Clearing for an
+    Angel past the spine, so a city of veterans never saw a contest
+    again. A veteran who has stood for this season's rite now opens the
+    set ring with F (before the rite, F stays the rite's), and the
+    notice no longer promises a rite the season has had.
+  - The news: one opened hole is one "A Clearing was prepared." (it is
+    the ring's prepare verb's now; a body that joins posts none); an
+    Angel who stood alone keeps the possessive on the name when the rite
+    fails or Safety claims it (never "#0042, alone,'s"); a tied House
+    hold is posted as tied and the strip says tied, never that the first
+    House in order holds it; the marquee leads with the newest line, so
+    the still head under reduced motion shows what just happened.
+  - The Winke: a dense body's school line never repeats a sentence of the
+    Wink it follows, and a serial with no hour written back is never
+    told "A prior hour."; the garden's burial Wink is kept before Nara's
+    plate rather than overwritten by it; the waking hint waits in
+    Movement II until the body can see a Wink (spent restraint lost it
+    for good), then is heard once.
+  - The HUD: a phone has USE PAPER (I) and RAISE/LOWER FLAG (V) chips
+    while they have something to do; Tab stays inside the credits, so a
+    keyboard player can always close them; the events strip's countdown
+    is a timer outside its live region, so a screen reader is not read
+    the clock every second; the Wink is a live region on the HUD and
+    part of the dialogue's description; and a standing notice is announced
+    once, when it arrives, not again each time another comes or goes
+    (`noticeDiff`).
+  - The set pieces: a locked guest watching the lit altar sees the
+    catalog, and in the launch's hour Caul's reel over the count, instead
+    of the lock line (a Wink and a window that only speaks change nothing
+    in the city); inside a lit launch hour his `oval-hour` says "The glass
+    says now. The altars are counting it." instead of "The date is on the
+    glass. Until then, the altars." (SCRIPT.md II.9 carries the words);
+    and a body whose third hour turned under his open window (the forge
+    taken first) and then reloaded is asked his first "What did it look
+    like." at the lip, before any lip line, instead of never.
+  `src/sim/sweep4.test.ts`, and tests in session, hud, events and a11y,
+  hold every case; each fails on the commit before. Eight judged
+  otherwise, their drafts reverted, each recorded where it belongs: a
+  veteran stands for a later season's rite on ground prepared earlier
+  (CONTRACTS and the dead-end audit intend it); the
+  glass after the credits says "the next season's hour, with a date on
+  it" word for word as SCRIPT.md IV.8 has it; repeated duel offers
+  notice their Angel each press (a toast that clears in six seconds;
+  yours to polish, status block); a wallet challenge left behind by a
+  swept guest stays (already judged in the sweep's entry); a close whose
+  storage write throws does not retry (on the platform a failed write
+  resets the object); a heard line shown as a window closes was not
+  proven silent to a screen reader (Backlog 10's hardware pass); Caul
+  sits in the room behind the glass for the whole third hour (SYNOPSIS
+  places him by movement, not by step); and Shift pressed while a move
+  key is held dodges even on the way to Shift+Tab (the documented
+  chord; Tab still moves focus).
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3310,6 +3407,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   reader included), the Deploy workflow's own deploy steps on GitHub's
   runner (its check steps are the gates workflow's, which ran, above),
   and so the revision check at the end of a real deploy.
+- The player-defect sweep, round four (2026-10-04, evening): typecheck,
+  676 tests in 50 files, the build. Every new case was run against
+  the commit before (b3cf8f9) and fails there: the eleven in
+  `src/sim/sweep4.test.ts`, the five server cases (the wallet restore,
+  the /64, the wallet budget, the busy sweep, the log's order), and the
+  HUD's (the notice diff, the USE and FLAG chips, the events strip's
+  count, the marquee's order, the two chips' markup). Each fix judged
+  otherwise was reverted before the gates ran, its draft test with it.
+  On a fresh local world
+  from a worktree: the session smoke, `test:campaign:4` (Movements I to
+  IV, the credits) and the render check (desktop and phone).
 
 ## Backlog
 

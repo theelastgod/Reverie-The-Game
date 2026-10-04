@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   auraTier, bearingTo, dodgeLine, formatSerial, heardStep, identityLine, joinNews, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
-  pad2, parseSerial, pct, questLabel, questRows, roman, seconds, stanceLine, statusLine,
-  glassRows, creditRows,
+  noticeDiff, pad2, parseSerial, pct, questLabel, questRows, roman, seconds, stanceLine, statusLine,
+  glassRows, creditRows, chipVerbs,
 } from "./format";
 import { TILE } from "../sim/map";
 import { AURA_PRESENT } from "../sim/constants";
@@ -222,7 +222,8 @@ describe("journal quests", () => {
 
 describe("marquee and status", () => {
   it("joins news with a dot and drops blanks", () => {
-    expect(joinNews(["A fell.", "", "  The bell struck. "])).toBe("A fell. · The bell struck.");
+    // the world keeps news oldest first; the marquee leads with the newest (the player-defect sweep, round four)
+    expect(joinNews(["A fell.", "", "  The bell struck. "])).toBe("The bell struck. · A fell.");
     expect(joinNews([])).toBe("");
   });
   it("scales the marquee duration", () => {
@@ -250,5 +251,35 @@ describe("creditRows", () => {
     expect(creditRows(LINES_CREDITS)).toEqual(LINES_CREDITS.map(text => ({ text, title: text === "REVERIE: THE GAME" })));
     expect(creditRows(LINES_CREDITS).filter(r => r.title)).toHaveLength(1);
     expect(creditRows([])).toEqual([]);
+  });
+});
+
+describe("noticeDiff", () => {
+  it("adds only what arrived and removes only what left; the rows that stay are left in place (the player-defect sweep, round four)", () => {
+    expect(noticeDiff([], ["a"])).toEqual({ remove: [], add: ["a"] });
+    expect(noticeDiff(["a"], ["a", "b"])).toEqual({ remove: [], add: ["b"] });
+    expect(noticeDiff(["a", "b", "c", "d"], ["b", "c", "d", "e"])).toEqual({ remove: ["a"], add: ["e"] });
+    expect(noticeDiff(["a", "b"], ["b"])).toEqual({ remove: ["a"], add: [] });
+    expect(noticeDiff(["a", "b"], ["a", "b"])).toEqual({ remove: [], add: [] });
+    // a row whose place changed is taken out and added again in the new order
+    expect(noticeDiff(["a", "b"], ["b", "x", "a"])).toEqual({ remove: ["a"], add: ["x", "a"] });
+  });
+});
+
+describe("chipVerbs", () => {
+  const angel = { guest: false, locked: false, dead: false, flagged: false, truceUntil: 0, district: "wet" as const };
+  it("shows USE while a paper is worth using, and only to a body that may use it", () => {
+    expect(chipVerbs(angel, "item-repair", 10).use).toBe(true);
+    expect(chipVerbs(angel, null, 10).use).toBe(false);
+    expect(chipVerbs({ ...angel, guest: true }, "item-repair", 10).use).toBe(false);
+    expect(chipVerbs({ ...angel, dead: true }, "item-repair", 10).use).toBe(false);
+  });
+  it("shows the flag where the street allows it, worded for what V would do, and hides it in a truce or a quiet district", () => {
+    expect(chipVerbs(angel, null, 10).flag).toBe("RAISE FLAG");
+    expect(chipVerbs({ ...angel, flagged: true }, null, 10).flag).toBe("LOWER FLAG");
+    expect(chipVerbs({ ...angel, district: "organs" }, null, 10).flag).toBe("RAISE FLAG");
+    expect(chipVerbs({ ...angel, district: "kerb" }, null, 10).flag).toBeNull();
+    expect(chipVerbs({ ...angel, truceUntil: 20 }, null, 10).flag).toBeNull();
+    expect(chipVerbs({ ...angel, locked: true }, null, 10).flag).toBeNull();
   });
 });

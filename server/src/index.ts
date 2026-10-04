@@ -7,7 +7,7 @@
  * ticks from an alarm, checkpoints before it broadcasts, and sends every
  * viewer their own `snapshotFor` view. The client never computes a number.
  */
-import { emptyWorld, spawnGuest, tickWorld } from "../../src/sim/world.ts";
+import { emptyWorld, say, spawnGuest, tickWorld } from "../../src/sim/world.ts";
 import { migratePlayer, migrateWorld, SHAPE } from "../../src/sim/migrate.ts";
 import { DT } from "../../src/sim/constants.ts";
 import { applyAction, applyLink, applyWallet, unsealBody } from "../../src/sim/actions.ts";
@@ -52,6 +52,12 @@ const SEEN_PREFIX = "seen:v2:";
 const SAVED_TTL_MS = 30 * 24 * 3_600_000;
 /** The sweep reads one page of saved bodies at most this often, after the next step is armed, so it never weighs on a step. */
 const SWEEP_EVERY_MS = 3_600_000;
+/**
+ * While pages are deleting stale guests the sweep reads the next page this soon, not an hour on: at 64 bodies a page it
+ * clears faster than the city's join budget can mint sessions (CITY_JOINS_PER_SECOND), so a loop of sessions cannot
+ * outgrow it. A page that deletes nothing puts the sweep back on the hour.
+ */
+const SWEEP_BUSY_MS = 2_000;
 const SWEEP_PAGE = 64; // bodies per page: with their stamps, 128 keys per delete at most
 /** The sweep's clock and cursor outlive the instance: `sweep:v2` → { at, after? }. A new city waits an hour before its first. */
 const SWEEP_KEY = "sweep:v2";
@@ -65,6 +71,24 @@ const SWEEP_KEY = "sweep:v2";
  * 429 and counted. Address buckets that are full again are forgotten once
  * the map is past JOIN_ADDRESSES_MAX.
  */
+/**
+ * The key an address's join bucket is drawn under: an IPv4 address as it is; an IPv6 address by its /64, the block one
+ * host is handed, so a host rotating through its own block draws one bucket and starves only itself.
+ */
+export function joinKey(address: string): string {
+  if (!address.includes(":")) return address;
+  const [head, tail] = address.toLowerCase().split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail === undefined ? [] : tail ? tail.split(":") : [];
+  const groups = tail === undefined ? left : [...left, ...Array<string>(Math.max(0, 8 - left.length - right.length)).fill("0"), ...right];
+  return `${groups.slice(0, 4).map(g => g.replace(/^0+(?=.)/, "") || "0").join(":")}::/64`;
+}
+/**
+ * The wallet routes are budgeted like a socket's messages: a bucket per session token, drawn before any storage work,
+ * small because a holder links once (a challenge, a signature, a link); past it the request is refused with 429.
+ */
+const WALLET_BURST = 6;
+const WALLET_PER_SECOND = 0.5;
 const JOINS_PER_SECOND = 10;
 const JOIN_BURST = 30;
 const CITY_JOINS_PER_SECOND = 30;
@@ -169,8 +193,10 @@ export class ReverieWorld {
   private actionAt = -Infinity; // wall clock of the last broadcast an action forced (a join's or a close's does not count)
   private readonly stamped = new Set<string>(); // tokens whose seen stamp this instance wrote; the close writes it again
   private readonly saved = new Map<string, Player>(); // by body id, the object last written to its record: the same one needs no write
+  private readonly wallets = new Map<string, Budget>(); // the wallet routes' bucket per session token
   private readonly serialOwners = new Map<number, string>(); // serial → the token the index names, as this instance last wrote or read it
   private sweptAt = 0; // wall clock of the last sweep of saved bodies (from storage; a new city waits an hour)
+  private sweepEvery = SWEEP_EVERY_MS; // the hour, or SWEEP_BUSY_MS while pages are deleting
   private sweepAfter: string | undefined; // the sweep's cursor: the last saved-body key it read; undefined starts over
 
   constructor(private readonly ctx: DurableObjectState, private readonly env: Env) {
@@ -279,6 +305,16 @@ export class ReverieWorld {
     const token = sessionToken(req);
     const live = token ? [...this.sessions.values()].find(s => s.token === token) : undefined;
     if (!token || !live || !this.w.players.has(live.id)) return refuse(409, "no-session");
+    // A request past the session's wallet budget does no storage work at all (the player-defect sweep, round four).
+    let budget = this.wallets.get(token);
+    if (!budget) {
+      budget = { tokens: WALLET_BURST, at: Date.now() };
+      this.wallets.set(token, budget);
+    }
+    if (!draw(budget, WALLET_BURST, WALLET_PER_SECOND, Date.now())) {
+      this.load.dropped();
+      return Response.json({ ok: false, reason: "too-many" }, { status: 429, headers: { ...headers, "Retry-After": "2" } });
+    }
     const key = `${CHALLENGE_PREFIX}${token}`;
     let body: { address?: unknown; signature?: unknown } = {};
     try {
@@ -305,17 +341,54 @@ export class ReverieWorld {
     if (!signer || signer !== address) return refuse(403, "bad-signature");
     const serial = await serialFor(address, this.env ?? {}, (input, init) => fetch(input, init), Date.now(), this.holders);
     if (serial === undefined) return refuse(503, "chain");
+    // Wallet is login (PROMPT.md §0): the Angel this wallet sealed, saved under a session no longer at hand (another
+    // device, cleared cookies, a cookie past its month), comes back into this session rather than a new body taking the seal.
+    // Only a body never sealed gives way: one that was an Angel keeps its own progress and is resealed as before.
+    const fresh = this.w.players.get(live.id);
+    const kept = serial === null || !fresh?.guest || fresh.history.houses.length > 0 ? null : await this.sealedElsewhere(serial, address, token);
     if (!this.w.players.has(live.id)) return refuse(409, "no-session"); // the body left while the chain answered
     this.advanceWorld(Date.now());
+    if (kept && this.w.players.get(live.id) === fresh) { // unless the body changed while storage answered
+      const back = { ...migratePlayer(kept.record, live.id, this.w.now), id: live.id }; // the session's body id, not the record's
+      this.withBody(live.id, say({ ...back, dialogue: null }, LINES.LINK_COPY(back.serial ?? serial!, back.house, back.messenger), this.w.now));
+      this.slow.forget(live.id); // the whole record changed under the session: its next frame is a full one
+    }
     this.w = serial === null
       ? applyWallet(this.w, live.id, address, LINES.LINK_NO_ANGEL)
       : applyLink(applyWallet(this.w, live.id, address), live.id, serial, { kind: "wallet", address });
-    await this.checkpoint();
-    this.broadcast(true);
+    // As for a socket's action: checkpointed before its frame is sent, and inside ACTION_BROADCAST_MIN_MS of the last
+    // action the checkpoint and the forced broadcast ride the next alarm. A restored Angel is written at once, and its
+    // old record is deleted only after the new one landed (the serial's index moves with the checkpoint).
+    this.pending = true;
+    const now = Date.now();
+    if (kept || now - this.actionAt >= ACTION_BROADCAST_MIN_MS) {
+      this.actionAt = now;
+      await this.checkpoint();
+      this.broadcast(true);
+    }
+    if (kept) await this.ctx.storage.delete([playerKey(kept.token), seenKey(kept.token), `${CHALLENGE_PREFIX}${kept.token}`]);
     const me = this.w.players.get(live.id);
     // a holder whose Angel already walks in another body is told that, not that the wallet holds none
     const walking = serial !== null && !!me && me.guest;
     return Response.json({ ok: true, address, serial: me && !me.guest ? me.serial : null, ...(walking ? { walking: true } : {}) }, { headers });
+  }
+
+  /**
+   * The saved record of the Angel `serial`, sealed to `address`, when the serial's index names a session other than
+   * `token` that has no socket here: the body a wallet link restores. Null when the serial's body is this session's,
+   * walks now, was relinked to another wallet (a sold Angel: the buyer never inherits the seller's body), or is not saved.
+   */
+  private async sealedElsewhere(serial: number, address: string, token: string): Promise<{ token: string; record: unknown } | null> {
+    const owner = this.serialOwners.get(serial) ?? (await this.ctx.storage.get<string>(serialKey(serial)));
+    if (owner === undefined || owner === token) return null;
+    this.serialOwners.set(serial, owner);
+    if ([...this.sessions.values()].some(s => s.token === owner)) return null;
+    if ([...this.w.players.values()].some(o => !o.guest && o.serial === serial)) return null;
+    const record = await this.ctx.storage.get<unknown>(playerKey(owner));
+    if (record === undefined) return null;
+    const body = migratePlayer(record, "probe", this.w.now);
+    if (body.guest || body.serial !== serial || body.wallet !== address) return null;
+    return { token: owner, record };
   }
 
   async fetch(req: Request): Promise<Response> {
@@ -391,7 +464,8 @@ export class ReverieWorld {
   }
 
   /** True when the address's bucket and then the city's have a token for this join; past either it is refused and counted. */
-  private admitJoin(address: string, now: number): boolean {
+  private admitJoin(ip: string, now: number): boolean {
+    const address = joinKey(ip);
     let budget = this.joins.get(address);
     if (!budget) {
       if (this.joins.size >= JOIN_ADDRESSES_MAX) { // forget the addresses whose buckets are full again
@@ -454,6 +528,7 @@ export class ReverieWorld {
     if (player && this.saved.get(session.id) !== player) leaving[playerKey(session.token)] = player;
     this.sessions.delete(ws);
     this.stamped.delete(session.token);
+    if (![...this.sessions.values()].some(s => s.token === session.token)) this.wallets.delete(session.token);
     this.saved.delete(session.id);
     this.slow.forget(session.id);
     this.withBody(session.id, null);
@@ -476,7 +551,7 @@ export class ReverieWorld {
    * the clock the first time the sweep reads it. The cursor walks the whole
    * set a page at a time and starts over at the end.
    */
-  private async sweep(now: number): Promise<void> {
+  private async sweep(now: number): Promise<number> {
     const list = (startAfter?: string) => this.ctx.storage.list<Player>({ prefix: PLAYER_PREFIX, limit: SWEEP_PAGE, startAfter });
     let page = await list(this.sweepAfter);
     if (page.size === 0 && this.sweepAfter !== undefined) {
@@ -485,13 +560,14 @@ export class ReverieWorld {
     }
     if (page.size === 0) {
       await this.rememberSweep(now);
-      return;
+      return 0;
     }
     const live = new Set([...this.sessions.values()].map(s => s.token));
     const tokens = [...page.keys()].map(key => key.slice(PLAYER_PREFIX.length));
     const seen = await this.ctx.storage.get<number>(tokens.map(seenKey));
     const stamps: Record<string, number> = {};
     const gone: string[] = [];
+    let bodies = 0;
     for (const token of tokens) {
       if (live.has(token)) continue;
       const at = seen.get(seenKey(token));
@@ -502,14 +578,16 @@ export class ReverieWorld {
       const player = page.get(playerKey(token));
       if (!player?.guest || player.wallet || now - at < SAVED_TTL_MS) continue;
       gone.push(playerKey(token), seenKey(token));
+      bodies++;
     }
     if (Object.keys(stamps).length) await this.ctx.storage.put(stamps);
     if (gone.length) {
       await this.ctx.storage.delete(gone);
-      this.load.swept(gone.length / 2);
+      this.load.swept(bodies);
     }
     this.sweepAfter = [...page.keys()].at(-1);
     await this.rememberSweep(now);
+    return bodies;
   }
 
   /** The sweep's clock and cursor, kept across instances: an evicted object picks up the page after the last one read. */
@@ -579,11 +657,12 @@ export class ReverieWorld {
     if (this.w.players.size > 0) await this.setAlarm(Math.max(now + STEP_MS, Date.now() + 1));
     else { this.ticking = false; this.clock.stop(); }
     // Housekeeping after the next step is armed: the tick never waits on it and never dies with it.
-    if (now - this.sweptAt >= SWEEP_EVERY_MS) {
+    if (now - this.sweptAt >= this.sweepEvery) {
       this.sweptAt = now;
       try {
-        await this.sweep(now);
+        this.sweepEvery = (await this.sweep(now)) > 0 ? SWEEP_BUSY_MS : SWEEP_EVERY_MS;
       } catch (e) {
+        this.sweepEvery = SWEEP_EVERY_MS;
         console.warn("sweep failed", e);
       }
     }
@@ -653,7 +732,9 @@ async function logRecent(url: URL, env: Env): Promise<Response> {
   }
   try {
     const rows = await env.LOG
-      .prepare("SELECT at, world_now, kind, player, serial, detail FROM events WHERE kind = ?1 ORDER BY id DESC LIMIT ?2")
+      // Ordered by the index's own columns (events_kind_at: kind, at, then the rowid), so the last few rows are read
+      // from the index's end, not sorted out of every row of the kind; the wall clock is written in id order.
+      .prepare("SELECT at, world_now, kind, player, serial, detail FROM events WHERE kind = ?1 ORDER BY at DESC, id DESC LIMIT ?2")
       .bind(kind, limit)
       .all<LogRow>();
     const events = (rows.results ?? []).map(r => ({ at: r.at, worldNow: r.world_now, kind: r.kind, player: r.player, serial: r.serial, detail: parseDetail(r.detail) }));

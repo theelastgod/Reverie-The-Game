@@ -49,12 +49,26 @@ export function resolveWink(ctx: Ctx, authored: WinkText | ((ctx: Ctx) => WinkTe
   const dense = perception(p, w.gestell).winkDensity >= 2 || (p.serial !== null && isWinkSeed(p.serial));
   if (dense && school) {
     const lines = LINES.WINKE[school] ?? [];
-    if (lines.length) {
-      const extra = lines[(hash(line) + Math.abs(p.serial ?? 0)) % lines.length];
-      if (extra && !line.includes(extra)) line = `${line} ${extra}`;
+    // The school's own line, picked by serial and place, is a second line, never the first said again: the pick walks on past
+    // a pool line that shares a sentence with the authored one, and past "A prior hour" for a serial with no hour written back
+    // (only a serial with a history mark has one). The player-defect sweep, round four.
+    const said = sentences(line);
+    const priorHour = !w.history.some(m => m.serial === p.serial);
+    const start = (hash(line) + Math.abs(p.serial ?? 0)) % Math.max(1, lines.length);
+    for (let i = 0; i < lines.length; i++) {
+      const extra = lines[(start + i) % lines.length];
+      if (!extra || (priorHour && extra.startsWith("A prior hour."))) continue;
+      if (sentences(extra).some(x => said.includes(x))) continue;
+      line = `${line} ${extra}`;
+      break;
     }
   }
   return line;
+}
+
+/** A line's sentences, trimmed, for comparing a pool line with the Wink it would follow. */
+function sentences(text: string): string[] {
+  return text.split(/(?<=[.!?])\s+/).map(x => x.trim()).filter(Boolean);
 }
 
 function visibleChoices(ctx: Ctx, node: DialogueNode): DialogueChoiceView[] {
@@ -113,7 +127,10 @@ export function openNode(w: WorldState, id: string, npcId: string, nodeId: strin
   const after = cur.players.get(id);
   if (!after) return cur;
   let me: Player = { ...after, dialogue: view };
-  if (winkText) me = wink(me, winkText, cur.now, cur.gestell);
+  // A Wink the same act already gave (a verb that opens this node after its own private line, as the garden's burial
+  // opens Nara's plate) is kept, the node's following it: one step, both lines, in the order the script has them.
+  const earlier = after.winkAt === cur.now && after.wink && !after.wink.includes(winkText) ? after.wink : "";
+  if (winkText) me = wink(me, earlier ? `${earlier} ${winkText}` : winkText, cur.now, cur.gestell);
   return setPlayer(cur, me);
 }
 

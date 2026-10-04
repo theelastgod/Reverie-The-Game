@@ -37,6 +37,13 @@ describe("eventRows", () => {
     expect(rows[0]).toMatchObject({ id: "war", tone: "hot" });
     expect(rows[0].detail).toContain("House of Sky holds");
     expect(rows[0].detail).toContain("1:30");
+    // two Houses on the same seconds: a tie gives no winner, and the strip says tied, never that the first in order holds
+    // (the player-defect sweep, round four)
+    s.houses.war = { ...s.houses.war, held: { ...held, earth: 60.05, sky: 60.05 } };
+    expect(eventRows(s as never)[0].detail).toContain("tied");
+    expect(eventRows(s as never)[0].detail).not.toContain("holds");
+    s.houses.war = { ...s.houses.war, held: { ...held, earth: 60.05, sky: 60.05, mortals: 61 } };
+    expect(eventRows(s as never)[0].detail).toContain("House of Mortals holds");
   });
 
   it("shows the contest with a keep/extract bar and the dwellers", () => {
@@ -45,6 +52,22 @@ describe("eventRows", () => {
     const rows = eventRows(s as never);
     expect(rows[0]).toMatchObject({ id: "contest", tone: "gold", bar: { keep: 2, extract: 1 } });
     expect(rows[0].detail).toBe("KEEP 2 · EXTRACT 1 · 3 in the ring · 0:45");
+    // the countdown rides apart, for the timer span a screen reader does not read out every second (the sweep, round four)
+    expect(rows[0].count).toBe("0:45");
+    expect(rows[0].detail.endsWith(` · ${rows[0].count}`)).toBe(true);
+  });
+
+  it("gives every row that counts down its count apart, and a row that does not none", () => {
+    const s = base() as ReturnType<typeof base> & { you: { kitReadout?: string[] } };
+    s.houses.war.startsAt = 1200;
+    s.you.duel = { with: "b", until: 1020, accepted: true };
+    s.you.kitReadout = ["#0042 fell here once."];
+    const rows = eventRows(s as never);
+    for (const r of rows) {
+      if (r.id === "face") expect(r.count, r.id).toBeUndefined();
+      else expect(r.detail.endsWith(` · ${r.count}`), r.id).toBe(true);
+    }
+    expect(rows.map(r => r.id)).toEqual(expect.arrayContaining(["war-next", "duel", "face"]));
   });
 
   it("reads the Ruin-angel's Face back as a row while it lasts, and nothing without it (the player-defect sweep)", () => {

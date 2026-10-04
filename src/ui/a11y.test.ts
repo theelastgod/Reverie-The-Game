@@ -20,7 +20,7 @@ describe("the HUD's markup for assistive technology", () => {
     has(tag("title"), 'role="dialog"');
     has(tag("hud-dialogue"), 'role="dialog"');
     has(tag("hud-dialogue"), 'aria-labelledby="dlg-speaker"');
-    has(tag("hud-dialogue"), 'aria-describedby="dlg-text"');
+    has(tag("hud-dialogue"), 'aria-describedby="dlg-text dlg-wink-text"'); // the Wink is part of what the window says (the sweep, round four)
     has(tag("hud-dialogue"), 'tabindex="-1"'); // it takes focus when it opens (src/ui/dialogue.ts)
     tag("dlg-speaker");
     tag("dlg-text");
@@ -38,6 +38,18 @@ describe("the HUD's markup for assistive technology", () => {
     has(tag("hud-notices"), 'aria-live="polite"');
     has(tag("hud-heard"), 'aria-live="polite"');
     has(tag("dlg-text"), 'aria-live="polite"');
+    // the Winke too: the Restraint's perception reaches a screen reader as it appears (the player-defect sweep, round four)
+    has(tag("hud-wink"), 'aria-live="polite"');
+    tag("dlg-wink-text");
+    expect(html).toMatch(/<div class="dlg-wink" aria-live="polite"/);
+  });
+  it("gives a finger the I and V verbs as buttons, hidden until they have something to do (the player-defect sweep, round four)", () => {
+    for (const id of ["hud-use", "hud-flag"]) {
+      has(tag(id), 'type="button"');
+      has(tag(id), "hidden");
+    }
+    expect(html).toMatch(/id="hud-use"[^>]*>.*USE PAPER/);
+    expect(html).toMatch(/id="hud-flag"[^>]*>.*RAISE FLAG/);
   });
   it("makes the four bars meters with a name and a range", () => {
     for (const bar of ["hp", "aura", "restraint", "readiness"]) {

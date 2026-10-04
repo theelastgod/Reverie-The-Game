@@ -26,6 +26,7 @@ export const F = {
   TALKED_OFFICER: "talked:officer", // Movement II: Corvin Slate in the Annex corridor, before the freeze desk
   TITHE: "tithe", // Movement II: decided the hour's tithe at the Annex tax window
   UNDER: "under", // went under (gate flag: nave↔care and care↔clearing)
+  WAKING: "waking", // the waking hint was heard: it waits in Movement II until the body can see a Wink, then is delivered once
   ANGEL: "angel", // linked an Angel (guest is false)
   CARE: "care", // entered the Care
   SHRINE: "shrine", // touched the Care shrine (respawn set)

@@ -116,7 +116,10 @@ stands still and the focused dialog scrolls it, the hint pinned clear of the las
   a button on coarse pointers (`pointer: coarse`, text "DODGE") and dodges
   the way the stick or the keys point, else the way the body faces. The
   prompt's verbs, the stance, the kit and the dialogue's choices are
-  buttons already.
+  buttons already, and so are I and V: `#hud-use` (USE PAPER) shows while
+  the purse holds a paper worth using and `#hud-flag` (RAISE FLAG or LOWER
+  FLAG) where the street allows a flag and no truce runs (`chipVerbs` in
+  `format.ts`; since 2026-10-04).
 - 60 fps target: no per-tile GameObjects; reuse sprites by id; cull labels.
 
 ## Network (D1)
@@ -131,7 +134,12 @@ and the credits are `role="dialog"`, the dialogue named by its speaker
 (`aria-labelledby`) and described by its line (`aria-describedby`), the lock by
 its heading. What changes on its own is a live region: the connection chip
 (`role="status"`), the events strip, the notices, the heard line, the
-dialogue's text, the lock's note. The four bars are `role="meter"` with a
+dialogue's text, the lock's note, and the Wink (`#hud-wink` is
+`role="status"`; the dialogue's Wink is a polite region and part of the
+dialogue's description). The events strip's countdown is a `role="timer"`
+span outside the spoken text, so the clock is not read every second; the
+notices keep their rows by key (`noticeDiff`), so a standing notice is
+announced once, when it arrives (since 2026-10-04). The four bars are `role="meter"` with a
 name and a range, and `Hud.setBar` keeps `aria-valuenow` and
 `aria-valuemax` on the row equal to the number shown. The map canvas's label
 is the map in a sentence (`mapLabel` in `format.ts`, set by the minimap on

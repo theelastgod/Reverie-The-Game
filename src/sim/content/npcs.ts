@@ -10,7 +10,7 @@ import { AURA_ADDRESS_GLAMOUR, AURA_DIM, CLEARING_HOLD_ANGELS, CLEARING_LIST_PRI
 import { C, F, W, seasonPassingFlag } from "./ids";
 import { clearingPrice, moveClearing } from "./market";
 import { PARTY_BLIND } from "./lines";
-import { glassDark, launchOpen } from "../launch";
+import { glassDark, launchDark, launchOpen } from "../launch";
 import { descentLive } from "../descent";
 
 type NpcOverride = Partial<NpcState> | null;
@@ -1027,6 +1027,12 @@ function caulRoom(ctx: Ctx): string {
 /** Where a body meets him: the Nave's altar aisle in the first hour (never in reach), the room behind the glass in the third, the Grid's gate in the fourth. */
 const caulInRoom = (ctx: Ctx): boolean => ctx.p.movement === 3 || (ctx.p.guest && ctx.p.district === "kerb");
 
+/**
+ * His first question waits for its answer wherever he stands: a body that decided the glass after his offer and was
+ * never asked (the window closed under a reconnect as the movement turned) is asked at the lip, "before you go".
+ */
+const questionPending = (ctx: Ctx): boolean => !ctx.p.guest && !!ctx.p.choices[C.GLASS] && has(ctx, F.CAUL_OFFER) && !has(ctx, F.CAUL_ASKED);
+
 /** Cold's claim on the hour, as the rite wrote it on the body (content/caul.ts). */
 const coldClaimed = (ctx: Ctx): boolean => coldClaimedBy(ctx.p);
 
@@ -1167,7 +1173,7 @@ const CAUL_NODES: Record<string, DialogueNode> = {
   // The date is on the glass (src/sim/launch.ts); past the threshold of dark lights it is not, and he says that he noticed.
   "oval-hour": {
     id: "oval-hour",
-    text: (ctx) => `The time goes by and every oval on the Kerb goes champagne at once, and the same voice is on all of them, on the real sky like a watermark. "The hour. The ovals are open. The sky through them is yours; the hour is ours. Some of you bought one on the terrace. It did not come. The slip is our time. The bell keeps its own. We are working on the bell. The god is not coming. The god is a demand. I have never failed to meet a demand. ${glassDark(ctx.w) ? "The date is not on the glass. I noticed. It comes anyway." : "The date is on the glass."} Until then, the altars. We kept something for you."`,
+    text: (ctx) => `The time goes by and every oval on the Kerb goes champagne at once, and the same voice is on all of them, on the real sky like a watermark. "The hour. The ovals are open. The sky through them is yours; the hour is ours. Some of you bought one on the terrace. It did not come. The slip is our time. The bell keeps its own. We are working on the bell. The god is not coming. The god is a demand. I have never failed to meet a demand. ${launchOpen(ctx.w) && !launchDark(ctx.w) ? "The glass says now. The altars are counting it." : `${glassDark(ctx.w) ? "The date is not on the glass. I noticed. It comes anyway." : "The date is on the glass."} Until then, the altars.`} We kept something for you."`,
   },
   // ---- the launch (IV.5): the tick opens these for every body on the Kerb when the window opens; the altars open his reel
   "oval-launch": {
@@ -1287,7 +1293,7 @@ export const NPCS: Record<string, NpcDef> = {
       if (Math.hypot(p.x - shared.x, p.y - shared.y) < CAUL_ABSENT_RADIUS) return { present: false, state: "gone" };
       return null;
     },
-    entry: (ctx: Ctx) => (caulAtLip(ctx.p) ? caulLip(ctx) : caulInRoom(ctx) ? caulRoom(ctx) : "first"),
+    entry: (ctx: Ctx) => (caulAtLip(ctx.p) ? (questionPending(ctx) ? "looked" : caulLip(ctx)) : caulInRoom(ctx) ? caulRoom(ctx) : "first"),
     nodes: CAUL_NODES,
   },
   nara: {

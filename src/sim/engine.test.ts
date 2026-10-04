@@ -35,6 +35,7 @@ const FIX = vi.hoisted(() => {
     STORM_PRESS: "Storm presses.",
     STORM_FALLEN: "Already fallen.",
     KIT_GUEST: "No kit.",
+    WAKING_WINK: "Waking.",
     KIT_COOLDOWN: "The kit cools.",
     KIT_NEED: per("Need."),
     KIT_COPY: per("Kit."),

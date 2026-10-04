@@ -162,9 +162,13 @@ passive simulation checkpoints about once per simulation second. Each socket
 may send 60 messages a second with a burst of 120; past that, or over 4096
 characters, a message is dropped unread and counted as `dropped` on `/world`.
 Joins are budgeted per address first (10 a second with a burst of 30, by
-`CF-Connecting-IP`), then for the whole city (30 a second, a burst of 60);
-past either the upgrade answers 429 (counted as `refused`) and the client
-retries on its backoff.
+`CF-Connecting-IP`, an IPv6 address by its /64), then for the whole city
+(30 a second, a burst of 60); past either the upgrade answers 429 (counted
+as `refused`) and the client retries on its backoff. The wallet routes
+allow a session six requests at once and one every two seconds after.
+A wallet link restores the Angel that wallet sealed under a session no
+longer at hand (another device, cleared cookies), so the wallet is the
+login.
 
 ## Non-negotiables
 

@@ -1389,14 +1389,18 @@ const CLEARING: PoiConfig[] = [
         choice: "prepare",
         // Who stands in it is decided with Ord at the Care gate first: the spine's step order holds at the ring too.
         // A prepared body whose first stance never came (the hole closed under it: a season's roll, another body's extract
-        // winning the contest) prepares it again, or the stance step would wait on a hole nobody opens.
-        when: ctx => has(ctx, F.MORTALITY) && !!ctx.p.choices[C.PARTY] && partyWilling(ctx) && (!has(ctx, F.PREPARE) || stancePending(ctx)) && ringGround(ctx) === "ok",
+        // winning the contest) prepares it again, or the stance step would wait on a hole nobody opens. A body that has
+        // stood for this season's rite opens the set ring again (SYNOPSIS §6: the rest of life keeps a hole open; nothing
+        // else in the city opens one): before the rite F stays the rite's (the player-defect sweep, round four).
+        when: ctx => has(ctx, F.MORTALITY) && !!ctx.p.choices[C.PARTY] && partyWilling(ctx) && (!has(ctx, F.PREPARE) || stancePending(ctx) || passedThisSeason(ctx)) && ringGround(ctx) === "ok",
         guest: spectate,
         say: "You keep the hole. The party still willing stands in it. The Passing is not yet the weather.",
-        effects: [
+        // The news is this verb's, not the journal step's: one opened hole is one line, and a body that joins it posts none.
+        effects: ctx => [
           { kind: "flag", key: F.PREPARE },
           { kind: "clearing", op: "open" },
-          { kind: "notice", text: "The Clearing is prepared. E keeps it. Q extracts it. F passes.", tone: "gold" },
+          { kind: "news", text: "A Clearing was prepared." },
+          { kind: "notice", text: passedThisSeason(ctx) ? "The Clearing is prepared. E keeps it. Q extracts it." : "The Clearing is prepared. E keeps it. Q extracts it. F passes.", tone: "gold" },
         ],
       },
       {

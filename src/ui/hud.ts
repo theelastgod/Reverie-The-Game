@@ -10,7 +10,7 @@ import { AURA_MAX, GESTELL_MELTDOWN, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_
 import { F } from "../sim/content/ids";
 import { CREDITS } from "../sim/content/lines";
 import {
-  auraTier, districtFourfold, districtName, dodgeLine, heardStep, identityLine, joinNews, kitLine, ledgerLine, marqueeSeconds, num, pct,
+  auraTier, chipVerbs, districtFourfold, districtName, dodgeLine, heardStep, identityLine, joinNews, kitLine, ledgerLine, marqueeSeconds, noticeDiff, num, pct,
   setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine, creditRows,
 } from "./format";
 import { mountDialogue, type DialoguePanel } from "./dialogue";
@@ -24,7 +24,7 @@ import { eventRows, mountEvents, type EventsPanel } from "./events";
 import { ledgerModel, mountLedger, type LedgerPanel } from "./ledger";
 import { gen } from "../assets/gen";
 import { badgeFor, sealFor } from "../assets/slots";
-import { pointerReleasesFocus } from "./keys";
+import { paperToUse, pointerReleasesFocus } from "./keys";
 
 export type HudCallbacks = {
   choose: (choiceId: string) => void; // dialogue choice clicked
@@ -94,6 +94,8 @@ export class Hud {
   private readonly identitySeal: HTMLImageElement;
   private readonly kitBadge: HTMLImageElement;
   private readonly dodge: HTMLElement | null;
+  private readonly useChip: HTMLButtonElement | null;
+  private readonly flagChip: HTMLButtonElement | null;
   private readonly dodgeText: HTMLElement | null;
   private readonly stick: HTMLElement | null;
   private readonly stickKnob: HTMLElement | null;
@@ -200,6 +202,8 @@ export class Hud {
     this.kitBadge.alt = "";
     this.kitBadge.hidden = true;
     this.kitText?.before(this.kitBadge);
+    this.useChip = q<HTMLButtonElement>(root, "#hud-use");
+    this.flagChip = q<HTMLButtonElement>(root, "#hud-flag");
     this.dodge = q(root, "#hud-dodge");
     this.dodgeText = this.dodge ? q(this.dodge, ".chip-text") : null;
     this.stick = q(root, "#hud-stick");
@@ -241,6 +245,8 @@ export class Hud {
     this.stance?.addEventListener("click", this.onStance);
     this.kit?.addEventListener("click", this.onKit);
     this.dodge?.addEventListener("click", this.onDodge);
+    this.useChip?.addEventListener("click", this.onUse);
+    this.flagChip?.addEventListener("click", this.onFlag);
     this.promptVerbs?.addEventListener("click", this.onVerb);
     this.credits?.addEventListener("click", this.onCredits);
     this.credits?.addEventListener("keydown", this.onCreditsKey);
@@ -289,6 +295,7 @@ export class Hud {
     this.updateStance(snap);
     this.updateKit(snap);
     this.updateDodge(snap);
+    this.updateChipVerbs(snap);
     this.updatePrompt(snap.prompt);
     this.updateHeard(snap);
     this.updateWink(snap);
@@ -349,6 +356,8 @@ export class Hud {
     this.stance?.removeEventListener("click", this.onStance);
     this.kit?.removeEventListener("click", this.onKit);
     this.dodge?.removeEventListener("click", this.onDodge);
+    this.useChip?.removeEventListener("click", this.onUse);
+    this.flagChip?.removeEventListener("click", this.onFlag);
     this.promptVerbs?.removeEventListener("click", this.onVerb);
     this.credits?.removeEventListener("click", this.onCredits);
     this.credits?.removeEventListener("keydown", this.onCreditsKey);
@@ -367,6 +376,8 @@ export class Hud {
   private readonly onStance = (ev: Event) => { ev.preventDefault(); this.cb.stance(); };
   private readonly onKit = (ev: Event) => { ev.preventDefault(); this.cb.kit(); };
   private readonly onDodge = (ev: Event) => { ev.preventDefault(); this.cb.dodge(); };
+  private readonly onUse = (ev: Event) => { ev.preventDefault(); this.cb.use(); };
+  private readonly onFlag = (ev: Event) => { ev.preventDefault(); this.cb.flag(); };
 
   // ------------------------------------------------------------ the touch stick (drawn here, decided in the scene)
 
@@ -394,6 +405,13 @@ export class Hud {
     audio.setScene("city");
   };
   private readonly onCreditsKey = (ev: KeyboardEvent) => {
+    // The roll is modal: Tab stays in it (it has nothing to move to), so Enter, Space or Escape always reach it and close
+    // it, whatever the keyboard did before (the player-defect sweep, round four).
+    if (ev.code === "Tab") {
+      ev.preventDefault();
+      ev.stopPropagation();
+      return;
+    }
     if (ev.code !== "Enter" && ev.code !== "Space" && ev.code !== "Escape") return;
     ev.preventDefault();
     ev.stopPropagation();
@@ -547,6 +565,15 @@ export class Hud {
     if (this.kit) this.kit.disabled = you.guest || !you.messenger;
   }
 
+  /** The I and V chips: shown while they have something to do (format.ts chipVerbs), so a finger reaches every verb a key does. */
+  private updateChipVerbs(snap: Snap): void {
+    const you = snap.you;
+    const verbs = chipVerbs(you, paperToUse(you, MAX_HP), snap.now);
+    show(this.useChip, verbs.use);
+    show(this.flagChip, verbs.flag !== null);
+    if (verbs.flag && this.flagChip) setText(q(this.flagChip, ".chip-text"), verbs.flag);
+  }
+
   private updateDodge(snap: Snap): void {
     const cd = Math.ceil(snap.you.dodgeCd * 10) / 10;
     const text = dodgeLine(cd, this.touch);
@@ -649,10 +676,15 @@ export class Hud {
     const key = shown.map(r => r.key).join("\n");
     if (this.notices.dataset.key === key) return;
     this.notices.dataset.key = key;
-    this.notices.replaceChildren();
+    // Rows that stay are left in place: the live region announces a notice when it arrives, and only then.
+    const present = [...this.notices.children] as HTMLElement[];
+    const diff = noticeDiff(present.map(el => el.dataset.key ?? ""), shown.map(r => r.key));
+    for (const el of present) if (diff.remove.includes(el.dataset.key ?? "")) el.remove();
     for (const r of shown) {
+      if (!diff.add.includes(r.key)) continue;
       const div = document.createElement("div");
       div.className = `notice ${r.tone}`;
+      div.dataset.key = r.key;
       div.textContent = r.text;
       this.notices.append(div);
     }

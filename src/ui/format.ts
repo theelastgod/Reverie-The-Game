@@ -188,9 +188,13 @@ export function questRows(quests: Record<string, number>): { id: string; label: 
     .sort((a, b) => (a.spine === b.spine ? a.id.localeCompare(b.id) : a.spine ? -1 : 1));
 }
 
-/** Marquee text: news joined with a middle dot. */
+/**
+ * Marquee text: news joined with a middle dot, the newest line first. The world keeps its news oldest first; the
+ * marquee leads with what just happened, so a scroll that restarts on a new line, and the still head under reduced
+ * motion, both begin with it.
+ */
 export function joinNews(news: readonly string[]): string {
-  return news.map(s => s.trim()).filter(Boolean).join(" · ");
+  return news.map(s => s.trim()).filter(Boolean).reverse().join(" · ");
 }
 
 /** Marquee duration in seconds, scaled to the text length; never below 20 s. */
@@ -306,4 +310,37 @@ export function glassRows(glass: GlassView | null | undefined, now: number): { l
  */
 export function creditRows(lines: readonly string[]): { text: string; title: boolean }[] {
   return lines.map(text => ({ text, title: text === text.toUpperCase() }));
+}
+
+/**
+ * The notice rows to take out and to add, by key, from what is shown to what should be: rows that stay are left in
+ * place, so the notices' live region announces a notice once, when it arrives, and never again because another came
+ * or went (the player-defect sweep, round four). `add` keeps the new order; a row whose place changed is re-added.
+ */
+export function noticeDiff(shown: readonly string[], next: readonly string[]): { remove: string[]; add: string[] } {
+  const keep = new Set<string>();
+  // what stays is the longest run of `next`'s head that `shown` already ends with, in order
+  for (let start = 0; start < shown.length; start++) {
+    const tail = shown.slice(start);
+    if (tail.length <= next.length && tail.every((k, i) => next[i] === k)) {
+      for (const k of tail) keep.add(k);
+      break;
+    }
+  }
+  return { remove: shown.filter(k => !keep.has(k)), add: next.filter(k => !keep.has(k)) };
+}
+
+/**
+ * The verbs the HUD's buttons must repeat for a finger (CLIENT.md: every verb has a key, and the HUD's buttons repeat
+ * them): I uses a paper while the purse holds one worth using, V raises or lowers the flag where the street allows it.
+ * Without these a phone could buy a paper and never use it, and flag only while another Angel was the prompt's target
+ * (the player-defect sweep, round four). Null for a chip that has nothing to do.
+ */
+export function chipVerbs(you: { guest: boolean; locked: boolean; dead: boolean; flagged: boolean; truceUntil: number; district: DistrictId }, paper: string | null, now: number): { use: boolean; flag: "RAISE FLAG" | "LOWER FLAG" | null } {
+  const angel = !you.guest && !you.locked && !you.dead;
+  const flagLegal = !!DISTRICT_BY_ID[you.district]?.flagLegal;
+  return {
+    use: angel && paper !== null,
+    flag: angel && flagLegal && !(you.truceUntil > now) ? (you.flagged ? "LOWER FLAG" : "RAISE FLAG") : null,
+  };
 }

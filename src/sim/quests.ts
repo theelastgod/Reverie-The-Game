@@ -7,6 +7,9 @@ import { POSITIONS } from "./map";
 import { QUESTS as CONTENT_QUESTS } from "./content";
 import type { SideObjective, Ctx, DialogueNode, NpcDef, Objective, Player, Quest, QuestStep, WorldState } from "./types";
 import { applyEffects } from "./effects";
+import { canSeeWink } from "./world";
+import { F, Q } from "./content/ids";
+import { WAKING_WINK } from "./content/lines";
 import { npcView } from "./snapshot";
 
 const MAX_ADVANCES = 8;
@@ -187,7 +190,20 @@ export function tickQuests(w: WorldState, id: string): WorldState {
     if (!changed) break;
     advances++;
   }
-  return cur;
+  return heldWakingHint(cur, id);
+}
+
+/**
+ * The waking hint (SYNOPSIS II.1: "You wake in the Care, and the first hint of your life is waiting"): delivered once in
+ * Movement II, the first tick the body can see a Wink, and marked heard (F.WAKING). A guest hears none.
+ */
+function heldWakingHint(w: WorldState, id: string): WorldState {
+  const p = w.players.get(id);
+  if (!p || p.guest || p.dead || p.movement !== 2 || (p.flags[F.WAKING] ?? 0) > 0 || p.quests[Q.M2] === undefined) return w;
+  if (!canSeeWink(p, w.now, w.gestell)) return w;
+  const players = new Map(w.players);
+  players.set(id, { ...p, flags: { ...p.flags, [F.WAKING]: 1 } });
+  return applyEffects({ ...w, players }, id, [{ kind: "wink", text: WAKING_WINK }]);
 }
 
 // ---------------------------------------------------------------- objectives

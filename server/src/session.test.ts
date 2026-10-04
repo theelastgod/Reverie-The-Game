@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import worker, { ReverieWorld, restoreWorld, sameOrigin, serializeWorld, sessionToken } from "./index";
+import worker, { ReverieWorld, joinKey, restoreWorld, sameOrigin, serializeWorld, sessionToken } from "./index";
 import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { addressOfPublicKey, personalMessageHash, recoverAddress } from "./wallet";
 import { LINES } from "../../src/sim/content";
@@ -530,6 +530,50 @@ describe("wallet login", () => {
     expect(await second.json()).toEqual({ ok: true, address: addressOf(HOLDER), serial: null, walking: true });
   });
 
+  it("restores the Angel this wallet sealed under a session no longer at hand, rather than sealing a new body (wallet is login)", async () => {
+    // the holder's Angel, saved under a cookie that is gone: Movement III, banked Bestand, the serial's index naming it
+    const kept = angel("old", { wallet: addressOf(HOLDER), movement: 3, banked: 480, quests: { "m3-organs": 2 } });
+    const { world, data } = await worldHarness(null, [], [[playerKey(otherToken), kept], [seenKey(otherToken), 5], ["serial:v2:42", otherToken], [`challenge:v1:${otherToken}`, { nonce: "n", at: 0, address: addressOf(HOLDER) }]]);
+    const ws = socket();
+    const hello = await world.join(token, ws as never);
+    expect(last(ws).you).toMatchObject({ guest: true, movement: 1 });
+    const message = await challenge(world, HOLDER);
+    const res = await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    expect(await res.json()).toEqual({ ok: true, address: addressOf(HOLDER), serial: 42 });
+    const you = last(ws).you;
+    expect(you).toMatchObject({ guest: false, serial: 42, movement: 3, banked: 480, wallet: addressOf(HOLDER) });
+    expect(you.quests["m3-organs"]).toBe(2);
+    expect(you.id, "the session's own body id").toBe(hello!.id);
+    // written under this session, the index moved with it, the old record and its keys gone: one body per Angel
+    expect(data.get(playerKey(token))).toMatchObject({ serial: 42, movement: 3, banked: 480 });
+    expect(data.get("serial:v2:42")).toBe(token);
+    expect(data.has(playerKey(otherToken))).toBe(false);
+    expect(data.has(seenKey(otherToken))).toBe(false);
+    expect(data.has(`challenge:v1:${otherToken}`)).toBe(false);
+  });
+
+  it("restores no body sealed to another wallet, none that walks, and never replaces a body that was an Angel", async () => {
+    // a sold Angel: the record under the old cookie is sealed to the seller's wallet; the buyer's link seals the buyer's body
+    const sold = angel("old", { wallet: addressOf(STRANGER), movement: 3, banked: 480 });
+    let h = await worldHarness(null, [], [[playerKey(otherToken), sold], ["serial:v2:42", otherToken]]);
+    let ws = socket();
+    await h.world.join(token, ws as never);
+    let message = await challenge(h.world, HOLDER);
+    await h.world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    expect(last(ws).you).toMatchObject({ guest: false, serial: 42, movement: 1, banked: 0 });
+    expect(h.data.get(playerKey(otherToken)), "the seller's record is left as it was").toMatchObject({ banked: 480 });
+    // a body that was once an Angel (unsealed since) keeps its own progress: the link reseals it as before
+    const mine = angel("old", { wallet: addressOf(HOLDER), movement: 3, banked: 480 });
+    const unsealed = { ...spawnGuest("u"), movement: 2, banked: 7, locked: true, history: { passings: 0, buried: 0, looted: 0, houses: ["sky" as const], outcomes: [] } };
+    h = await worldHarness(null, [], [[playerKey(otherToken), mine], ["serial:v2:42", otherToken], [playerKey(token), unsealed]]);
+    ws = socket();
+    await h.world.join(token, ws as never);
+    message = await challenge(h.world, HOLDER);
+    await h.world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    expect(last(ws).you).toMatchObject({ guest: false, serial: 42, movement: 2, banked: 7 });
+    expect(h.data.has(playerKey(otherToken))).toBe(true);
+  });
+
   it("binds a wallet that holds no Angel without sealing it, and says so", async () => {
     const { world } = await worldHarness(null);
     const ws = socket();
@@ -1022,5 +1066,62 @@ describe("one body per Angel (the player-defect sweep, 2026-10-04)", () => {
     await world.join(token, socket("a", token) as never);
     expect(data.get(playerKey(token))).toMatchObject({ guest: false, serial: TEST_SERIAL, district: "organs" });
     expect(data.get(`serial:v2:${TEST_SERIAL}`)).toBe(token);
+  });
+});
+
+describe("the server's routes and storage (the player-defect sweep, round four)", () => {
+  it("draws an IPv6 address's join bucket by its /64, so one host's rotation starves only itself", () => {
+    expect(joinKey("203.0.113.9")).toBe("203.0.113.9");
+    expect(joinKey("2001:db8:aa:bb:1::7")).toBe("2001:db8:aa:bb::/64");
+    expect(joinKey("2001:0db8:00aa:00bb:ffff:1:2:3")).toBe("2001:db8:aa:bb::/64");
+    expect(joinKey("2001:db8::1")).toBe("2001:db8:0:0::/64");
+    expect(joinKey("2001:DB8:0:0:9::1")).toBe(joinKey("2001:db8::9:0:0:2"));
+    expect(joinKey("2001:db8:aa:bc::1")).not.toBe(joinKey("2001:db8:aa:bb::1"));
+  });
+
+  it("budgets the wallet routes per session before any storage work: past the burst a challenge is refused with 429", async () => {
+    const { world, storage } = await worldHarness(null);
+    await world.join(token, socket() as never);
+    const challenge = () => world.fetch(post("/wallet/challenge", token, { address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf" }));
+    for (let i = 0; i < 6; i++) expect((await challenge()).status, `challenge ${i}`).toBe(200);
+    const puts = storage.put.mock.calls.length;
+    const refused = await challenge();
+    expect(refused.status).toBe(429);
+    expect(await refused.json()).toEqual({ ok: false, reason: "too-many" });
+    expect(storage.put.mock.calls.length, "no storage work past the budget").toBe(puts);
+    vi.setSystemTime(2000); // a token back after two seconds
+    expect((await challenge()).status).toBe(200);
+  });
+
+  it("while pages delete stale guests the sweep reads the next page two seconds on, and back to the hour once one deletes nothing", async () => {
+    const DAY = 86_400_000;
+    const stale: [string, unknown][] = [];
+    for (let i = 0; i < 70; i++) {
+      const t = `g${String(i).padStart(3, "0")}`;
+      stale.push([playerKey(t), spawnGuest(t)], [seenKey(t), 0]);
+    }
+    const { world, storage, data } = await worldHarness(saved(spawnGuest("a")), [socket()], stale);
+    vi.setSystemTime(31 * DAY);
+    await world.alarm();
+    expect(storage.list).toHaveBeenCalledTimes(1);
+    expect(data.has(playerKey("g000"))).toBe(false);
+    vi.setSystemTime(31 * DAY + 2_000);
+    await world.alarm();
+    expect(storage.list, "the next page two seconds on").toHaveBeenCalledTimes(2);
+    expect([...data.keys()].filter(k => k.startsWith(PLAYER_PREFIX) && k.includes(":g"))).toHaveLength(0);
+    vi.setSystemTime(31 * DAY + 4_000);
+    await world.alarm(); // this page deletes nothing: the sweep goes back on the hour
+    const calls = storage.list.mock.calls.length;
+    vi.setSystemTime(31 * DAY + 6_000);
+    await world.alarm();
+    expect(storage.list.mock.calls.length).toBe(calls);
+  });
+
+  it("reads the public log by its index's order: kind, then the wall clock, newest first", async () => {
+    const seen: string[] = [];
+    const LOG = { prepare: (sql: string) => { seen.push(sql); return { bind: () => ({ all: async () => ({ results: [] }) }) }; } };
+    const env = { LOG, ASSETS: { fetch: async () => new Response("asset") }, WORLD: { idFromName: () => "x", get: () => ({ fetch: async () => new Response("world") }) } };
+    expect((await worker.fetch(new Request("https://game.example/log/recent?kind=news&limit=8"), env as never)).status).toBe(200);
+    expect(seen[0]).toContain("WHERE kind = ?1 ORDER BY at DESC, id DESC LIMIT ?2");
   });
 });

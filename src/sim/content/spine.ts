@@ -8,7 +8,6 @@ import type { Ctx, Effect, Quest, QuestStep } from "../types";
 import { READINESS_APPEARANCE_MIN, READINESS_PASSING_MIN } from "../constants";
 import { GUEST_SPAWN } from "../map";
 import { C, F, Q, W } from "./ids";
-import { WAKING_WINK } from "./lines";
 
 const has = (ctx: Ctx, key: string): boolean => (ctx.p.flags[key] ?? 0) > 0;
 const chose = (ctx: Ctx, key: string, value: string): boolean => ctx.p.choices[key] === value;
@@ -406,7 +405,8 @@ const M4_STEPS: QuestStep[] = [
     target: "clearing-ring",
     plate: "clearing-ring.jpg",
     done: ctx => has(ctx, F.PREPARE),
-    onComplete: [notice("The hole is kept. The Passing is not yet the weather.", "gold"), { kind: "news", text: "A Clearing was prepared." }],
+    // The news is the ring's prepare verb's (pois.ts): one opened hole is one line, and a body that joins it posts none (SCRIPT.md IV.4).
+    onComplete: [notice("The hole is kept. The Passing is not yet the weather.", "gold")],
   },
   {
     // The first stance is the spine's: the rest of life takes one per contest.
@@ -482,8 +482,9 @@ export const SPINE: Quest[] = [
     guestLegal: false,
     available: ctx => !ctx.p.guest && ctx.p.movement >= 2,
     steps: M2_STEPS,
-    // The first hint of an Angel's life waits in the Care on waking, never at the lip: a guest hears none.
-    onStart: [{ kind: "wink", text: WAKING_WINK }],
+    // The first hint of an Angel's life waits in the Care on waking, never at the lip: a guest hears none. It is held, not
+    // fired once: quests.ts delivers it the first tick of Movement II the body can see a Wink (spent restraint or the
+    // meltdown's dark would otherwise lose it for good; the player-defect sweep, round four).
     onFinish: [{ kind: "movement", value: 3 }, notice("Movement III. Geopolitics.", "ink")],
     changes: "spine",
   },

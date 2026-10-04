@@ -354,7 +354,8 @@ export function applyPassing(w: WorldState, id: string): WorldState {
       return speak(next, me, PASSING_ABSENCE);
     }
     case "hijack": {
-      next = pushNews(next, NEWS_HIJACK(standingName(p), by === "safety" ? "safety" : "cold"));
+      // Cold's line names the seller as they stood; Safety's takes the possessive, and the possessive is the name's (never ", alone,'s").
+      next = pushNews(next, NEWS_HIJACK(by === "safety" ? p.name : standingName(p), by === "safety" ? "safety" : "cold"));
       return speak(next, me, by === "safety" ? PASSING_HIJACK_SAFETY : PASSING_HIJACK_COLD);
     }
     case "failed":
@@ -368,7 +369,7 @@ export function applyPassing(w: WorldState, id: string): WorldState {
       }
       next = { ...next, clearing: { ...next.clearing, open: false, contest: next.clearing.contest ? { ...next.clearing.contest, active: false } : null } };
       next = setRing(next, "failed", id);
-      next = pushNews(next, NEWS_FAILED(standingName(p)));
+      next = pushNews(next, NEWS_FAILED(p.name)); // the possessive is the name's, as the tape's is
       return speak(next, me, PASSING_FAILED);
     }
   }

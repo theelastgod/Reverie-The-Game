@@ -35,6 +35,8 @@ const BOUNTY_PAID = `Bounty. ${BOUNTY_AMOUNT} Bestand from the tithe pool. It wa
 const WAR_OPENS = (site: string) => `A House hold opens at ${site}. Stand there. Standing is all it pays.`;
 const WAR_WON = (house: Fourfold, site: string) => `${HOUSE_NAMES[house]} held ${site}. Standing and an omen. Not a bigger stick.`;
 const WAR_NONE = (site: string) => `The hold at ${site} passed. No House stood in it long enough.`;
+// Two Houses stood in it the same seconds: a tie gives no winner (CONTRACTS: ties none), and the line says so rather than that nobody stood.
+const WAR_TIED = (site: string) => `The hold at ${site} was tied. No House takes the omen.`;
 // The site the window was held at (the windows alternate between the ring and the hot street), as the news names it.
 const WAR_OMEN = (site: string) => `Your House held ${site}. Tithe eases while the omen lasts.`;
 
@@ -136,7 +138,7 @@ export function tickHouseWar(w: WorldState, dt: number): WorldState {
   };
   let next: WorldState = { ...w, houses: { ...w.houses, war: closed } };
 
-  if (!isFourfold(winner)) return pushNews(next, WAR_NONE(siteName));
+  if (!isFourfold(winner)) return pushNews(next, tie ? WAR_TIED(siteName) : WAR_NONE(siteName));
 
   const standing = { ...next.houses.standing, [winner]: next.houses.standing[winner] + WAR_STANDING };
   const flags = { ...next.flags };

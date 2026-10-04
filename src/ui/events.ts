@@ -13,8 +13,16 @@ export type EventRow = {
   tone: EventTone;
   label: string;
   detail: string;
+  /** The countdown at the end of `detail`, drawn in its own timer span: a ticking clock is not announced, the rest is. */
+  count?: string;
   bar?: { keep: number; extract: number };
 };
+
+/** `detail` with its countdown last, and the countdown kept apart for the timer span. */
+function counted(base: string, seconds: number): { detail: string; count: string } {
+  const count = countdown(seconds);
+  return { detail: `${base} · ${count}`, count };
+}
 
 const NEXT_WAR_WINDOW = 300; // seconds before a war window that the strip starts counting down
 const SITE_NAMES: Record<string, string> = { "clearing-ring": "the Clearing", "hot-street": "the hot street" };
@@ -27,11 +35,13 @@ export function countdown(seconds: number): string {
   return `${m}:${r < 10 ? "0" : ""}${r}`;
 }
 
-function leader(held: Record<Fourfold, number>): Fourfold | "" {
-  let best: Fourfold | "" = "";
+/** The House ahead in the hold, "" when nobody stands in it, "tied" when two lead on the same seconds (a tie gives no winner). */
+function leader(held: Record<Fourfold, number>): Fourfold | "" | "tied" {
+  let best: Fourfold | "" | "tied" = "";
   let top = 0;
   for (const h of ["earth", "sky", "mortals", "divinities"] as const) {
     if (held[h] > top) { top = held[h]; best = h; }
+    else if (held[h] > 0 && held[h] === top) best = "tied";
   }
   return best;
 }
@@ -46,10 +56,10 @@ export function eventRows(snap: Pick<Snap, "now" | "houses" | "clearing" | "you"
   const war = snap.houses.war;
   if (war.active) {
     const lead = leader(war.held);
-    const who = lead ? `${houseLabel(lead)} holds` : "nobody holds";
-    rows.push({ id: "war", tone: "hot", label: "HOUSE WAR", detail: `${siteName(war.site)} · ${who} · ${countdown(war.endsAt - now)}` });
+    const who = lead === "tied" ? "tied" : lead ? `${houseLabel(lead)} holds` : "nobody holds";
+    rows.push({ id: "war", tone: "hot", label: "HOUSE WAR", ...counted(`${siteName(war.site)} · ${who}`, war.endsAt - now) });
   } else if (war.startsAt > now && war.startsAt - now <= NEXT_WAR_WINDOW) {
-    rows.push({ id: "war-next", tone: "ink", label: "NEXT WAR", detail: `${siteName(war.site)} · ${countdown(war.startsAt - now)}` });
+    rows.push({ id: "war-next", tone: "ink", label: "NEXT WAR", ...counted(siteName(war.site), war.startsAt - now) });
   }
   const contest = snap.clearing.contest;
   if (contest && contest.active) {
@@ -59,7 +69,7 @@ export function eventRows(snap: Pick<Snap, "now" | "houses" | "clearing" | "you"
       id: "contest",
       tone: "gold",
       label: "CLEARING CONTEST",
-      detail: `KEEP ${keep} · EXTRACT ${extract} · ${snap.clearing.dwellers} in the ring · ${countdown(contest.endsAt - now)}`,
+      ...counted(`KEEP ${keep} · EXTRACT ${extract} · ${snap.clearing.dwellers} in the ring`, contest.endsAt - now),
       bar: { keep, extract },
     });
   }
@@ -68,17 +78,17 @@ export function eventRows(snap: Pick<Snap, "now" | "houses" | "clearing" | "you"
     const other = snap.players.find((p) => p.id === duel.with);
     const name = other ? other.name : "an Angel";
     rows.push(duel.accepted
-      ? { id: "duel", tone: "hot", label: "RUIN DUEL", detail: `${name} · the grave is the ring · ${countdown(duel.until - now)}` }
+      ? { id: "duel", tone: "hot", label: "RUIN DUEL", ...counted(`${name} · the grave is the ring`, duel.until - now) }
       // an unanswered duel on your own body is the offer you made (the server keeps it on the offerer): F at the wreckage would
       // bury the ground it is fought over, so the strip only waits; the one offered hears it, and their prompt leads with it
-      : { id: "duel", tone: "sky", label: "RUIN DUEL OFFERED", detail: `${name} · waiting for the answer · ${countdown(duel.until - now)}` });
+      : { id: "duel", tone: "sky", label: "RUIN DUEL OFFERED", ...counted(`${name} · waiting for the answer`, duel.until - now) });
   }
   // a duel another body offers you lives on their record; the snapshot derives it for you (snapshot.ts duelOffers)
   const offer = snap.you.duelOffer;
   if (offer && offer.until > now && !(duel?.accepted && duel.until > now)) {
     const other = snap.players.find((p) => p.id === offer.from);
     const name = other ? other.name : "an Angel";
-    rows.push({ id: "duel-offer", tone: "gold", label: "RUIN DUEL ASKED", detail: `${name} · F on them answers · ${countdown(offer.until - now)}` });
+    rows.push({ id: "duel-offer", tone: "gold", label: "RUIN DUEL ASKED", ...counted(`${name} · F on them answers`, offer.until - now) });
   }
   // the Ruin-angel's Face reads the body's own history back while it lasts (snapshot.ts kitReadout); it was sent and never shown
   // the readout rides the slow frame; the kit's own window (fast) ends the row the moment the Face is down
@@ -94,7 +104,7 @@ export type EventsPanel = { set: (rows: EventRow[]) => void };
 export function mountEvents(root: HTMLElement | null): EventsPanel {
   if (!root) return { set: () => {} };
   let shape = "";
-  const rowEls = new Map<string, { el: HTMLElement; detail: HTMLElement; keep: HTMLElement | null; extract: HTMLElement | null }>();
+  const rowEls = new Map<string, { el: HTMLElement; detail: HTMLElement; timer: HTMLElement; keep: HTMLElement | null; extract: HTMLElement | null }>();
   return {
     set(rows) {
       const nextShape = rows.map((r) => r.id + ":" + r.tone + ":" + (r.bar ? "b" : "")).join("|");
@@ -108,8 +118,15 @@ export function mountEvents(root: HTMLElement | null): EventsPanel {
           const label = document.createElement("div");
           label.className = "event-label";
           label.textContent = r.label;
+          // The detail is spoken by the strip's live region; its countdown is a timer, which a screen reader does not
+          // read on every tick (role "timer" is not live): the strip speaks when what is happening changes.
           const detail = document.createElement("div");
           detail.className = "event-detail";
+          const said = document.createElement("span");
+          const timer = document.createElement("span");
+          timer.setAttribute("role", "timer");
+          timer.setAttribute("aria-live", "off");
+          detail.append(said, timer);
           el.append(label, detail);
           let keep: HTMLElement | null = null;
           let extract: HTMLElement | null = null;
@@ -124,13 +141,15 @@ export function mountEvents(root: HTMLElement | null): EventsPanel {
             el.append(bar);
           }
           root.append(el);
-          rowEls.set(r.id, { el, detail, keep, extract });
+          rowEls.set(r.id, { el, detail: said, timer, keep, extract });
         }
       }
       for (const r of rows) {
         const e = rowEls.get(r.id);
         if (!e) continue;
-        setText(e.detail, r.detail);
+        const head = r.count && r.detail.endsWith(` · ${r.count}`) ? r.detail.slice(0, -(r.count.length + 3)) : r.detail;
+        setText(e.detail, r.count ? `${head} · ` : head);
+        setText(e.timer, r.count ?? "");
         setClass(e.el, "live", true);
         if (r.bar && e.keep && e.extract) {
           const total = r.bar.keep + r.bar.extract || 1;

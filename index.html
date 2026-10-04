@@ -64,7 +64,7 @@
       <div id="hud-events" class="events" aria-live="polite" hidden></div>
 
       <div id="hud-left" class="hud-left">
-        <div id="hud-wink" class="panel wink" hidden>
+        <div id="hud-wink" class="panel wink" role="status" aria-live="polite" hidden>
           <div class="wink-tag">WINK</div>
           <div class="wink-text"></div>
         </div>
@@ -116,6 +116,8 @@
         <button id="hud-stance" class="chip chip-btn interactive" type="button"><kbd class="cap">TAB</kbd><span class="chip-text">RESTRAINT</span></button>
         <button id="hud-kit" class="chip chip-btn interactive" type="button"><kbd class="cap">K</kbd><span class="chip-text">NO KIT</span></button>
         <button id="hud-dodge" class="chip chip-btn chip-dodge interactive" type="button"><span class="chip-text">SHIFT + MOVE · DODGE</span></button>
+        <button id="hud-use" class="chip chip-btn interactive" type="button" hidden><kbd class="cap">I</kbd><span class="chip-text">USE PAPER</span></button>
+        <button id="hud-flag" class="chip chip-btn interactive" type="button" hidden><kbd class="cap">V</kbd><span class="chip-text">RAISE FLAG</span></button>
       </div>
 
       <div id="hud-heard" class="chip heard" aria-live="polite" hidden></div>
@@ -135,12 +137,12 @@
 
       <aside id="hud-ledger-panel" class="panel interactive ledger-panel" hidden aria-label="Ledger"></aside>
 
-      <div id="hud-dialogue" class="panel interactive dialogue" role="dialog" aria-labelledby="dlg-speaker" aria-describedby="dlg-text" tabindex="-1" hidden>
+      <div id="hud-dialogue" class="panel interactive dialogue" role="dialog" aria-labelledby="dlg-speaker" aria-describedby="dlg-text dlg-wink-text" tabindex="-1" hidden>
         <img class="dlg-portrait" src="/assets/guest.jpg" alt="" />
         <div class="dlg-body">
           <div id="dlg-speaker" class="dlg-speaker">—</div>
           <p id="dlg-text" class="dlg-text" aria-live="polite"></p>
-          <div class="dlg-wink" hidden><span class="wink-tag">WINK</span><span class="dlg-wink-text"></span></div>
+          <div class="dlg-wink" aria-live="polite" hidden><span class="wink-tag">WINK</span><span id="dlg-wink-text" class="dlg-wink-text"></span></div>
           <div class="dlg-choices"></div>
         </div>
       </div>

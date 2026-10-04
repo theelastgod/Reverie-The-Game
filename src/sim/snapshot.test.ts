@@ -8,7 +8,7 @@ const FIX = vi.hoisted(() => {
     FROZEN: "Frozen.", DODGE_COPY: "Dodged.", DODGE_WHIFF: "Whiff.", INTERRUPT: "Interrupted.", HIT_COPY: "Hit.", ARENA_HIT: "Dummy.",
     GUEST_GRIEF: "Grief.", TRUCE_ACTIVE: "Truce holds.", PRACTICE_SAFE: "Practice.", PVP_FLAG_REQUIRED: "Flag.", FLAG_GUEST: "No flag.",
     FLAG_WHERE: "Not here.", FLAG_ON: "On.", FLAG_OFF: "Off.", TRUCE_COPY: "Truce.", SPOILS_COPY: "Spoils.", CAMP_COPY: "Camp.",
-    DUEL_COPY: "Duel.", SPECTATE_COPY: "Watched.", STORM_PRESS: "Press.", STORM_FALLEN: "Fallen.", KIT_GUEST: "No kit.", KIT_COOLDOWN: "Cools.",
+    DUEL_COPY: "Duel.", SPECTATE_COPY: "Watched.", STORM_PRESS: "Press.", STORM_FALLEN: "Fallen.", KIT_GUEST: "No kit.", KIT_COOLDOWN: "Cools.", WAKING_WINK: "Waking.",
     KIT_NEED: per("Need."), KIT_COPY: per("Kit."), CLAIMS_GUEST: "Guests cannot claim.", CLAIMS_FILED: "Filed.", CLAIMS_HELD: "Held.",
     CLAIMS_TAKEN: "Taken.", CLAIMS_CAP: "Capped.", BANKED: "Banked.", LINK_ELSEWHERE: "Elsewhere.",
     LINK_COPY: (serial: number, house: string, messenger: string) => `Sealed ${serial} ${house} ${messenger}.`,
