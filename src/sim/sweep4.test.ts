@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 import type { Ctx, Player, WorldState } from "./types";
 import { DT, LAUNCH_OFFSET, RESTRAINT_WINK_MIN } from "./constants";
-import { POSITIONS, districtAt } from "./map";
+import { NPC_STATIONS, POSITIONS, districtAt } from "./map";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
 import { applyAction } from "./actions";
 import { verbsFor } from "./interact";
@@ -185,6 +185,23 @@ describe("the Phase B and C set pieces", () => {
     const p = { ...spawnGuest("a"), guest: false, serial: 44, movement: 4 as const, flags: { [F.CAUL_OFFER]: 1, [F.FAILED]: 1 }, choices: { [C.GLASS]: "read" } };
     expect(NPCS.caul.entry(ctxOf(w, p))).toBe("looked");
     expect(NPCS.caul.entry(ctxOf(w, { ...p, flags: { ...p.flags, [F.CAUL_ASKED]: 1 } }))).not.toBe("looked");
+  });
+});
+
+describe("found by the round's skeptics", () => {
+  it("Caul's offer stands for a body that said no: the reader's post is his entry until the glass is decided, and he does not ask twice", () => {
+    const desk = NPC_STATIONS["caul-glass"];
+    const asked = { [F.UNDER]: 1, [F.FAILED]: 1, [F.CAUL_MET]: 1, [F.CAUL_OFFER]: 1, [F.CAUL_ASKED]: 1 };
+    let w = body(emptyWorld(), "a", desk.x, desk.y + 24, { movement: 3, flags: asked, quests: { [Q.M1]: 99, [Q.M2]: 99 } });
+    w = applyAction(w, "a", { t: "talk", npcId: "caul" });
+    expect(me(w, "a").dialogue?.node, "SCRIPT.md III.7: `offer` until the glass is decided").toBe("offer");
+    w = applyAction(w, "a", { t: "choose", choiceId: "reader" });
+    w = ticks(w, 1);
+    expect(me(w, "a").choices[C.GLASS]).toBe("read");
+    // the question was his already: the reader's post closes the window rather than asking it a second time at the glass
+    expect(me(w, "a").dialogue?.node).not.toBe("looked");
+    w = applyAction(w, "a", { t: "talk", npcId: "caul" });
+    expect(me(w, "a").dialogue?.node, "decided: the after line").toBe("after");
   });
 });
 

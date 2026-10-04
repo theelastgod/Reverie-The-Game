@@ -1021,7 +1021,8 @@ function caulRoom(ctx: Ctx): string {
   if (!has(ctx, F.CAUL_MET)) return "glass";
   if (!has(ctx, F.CAUL_OFFER)) return "sample";
   if (!has(ctx, F.CAUL_ASKED)) return ctx.p.choices[C.GLASS] ? "looked" : "offer";
-  return "after";
+  // "Then it stays an offer": a body that said no is offered the post again until the glass is decided (SCRIPT.md III.7).
+  return ctx.p.choices[C.GLASS] ? "after" : "offer";
 }
 
 /** Where a body meets him: the Nave's altar aisle in the first hour (never in reach), the room behind the glass in the third, the Grid's gate in the fourth. */
@@ -1127,7 +1128,8 @@ const CAUL_NODES: Record<string, DialogueNode> = {
       { kind: "news", text: "An Angel's readiness is on the forecast glass as a line." },
       { kind: "notice", text: "A reader's post. Your readiness is a line on the glass; the glass reads back to you.", tone: "ink" },
     ],
-    next: "looked",
+    // As after the light: the question is asked once at the glass, so a body that said no first and was asked is not asked again.
+    next: (ctx) => (has(ctx, F.CAUL_ASKED) ? undefined : "looked"),
   },
   declined: {
     id: "declined",

@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 676 tests (2026-10-04), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 677 tests (2026-10-04), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -2344,6 +2344,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   places him by movement, not by step); and Shift pressed while a move
   key is held dodges even on the way to Shift+Tab (the documented
   chord; Tab still moves focus).
+
+- Caul's offer stands (2026-10-04, evening; found by round four's
+  Caul-room skeptic): a body that said "No." to the reader's post heard
+  his question and then only his `after` line, so the post could never
+  be taken again, while the journal told it "His offer stands. Read the
+  glass for him, or put the light out" and SCRIPT.md III.7 has his
+  entry `offer` until the glass is decided. His room now offers it
+  again until the glass is decided, and the reader's post, like the
+  light, does not ask the question a second time at the glass.
+  `src/sim/sweep4.test.ts` holds it and fails on 0f17f31; SCRIPT.md
+  notes the routing.
 
 ## Verified (2026-09-25, integration)
 

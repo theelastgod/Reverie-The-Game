@@ -1086,11 +1086,11 @@ The paper panel, the gold mark:
 **CAUL** — `reader` (shipped since Phase B, first beats; "and a date" since Phase C, the date; past the threshold of dark lights "and, where the date was, nothing")
 > "Done." He does not write; the glass does. A line appears in it with #SERIAL on it, the length of your readiness, and under it the city's figure and a date. "You will find it reads the same from either side. That is the thing about glass."
 [C.GLASS read; Cold is your current; perception: the glass's readings in your journal from now on, the launch's hour, the count in the hole, the city's figure (shipped since Phase C, the journal line: Snap.glass for a reader, THE GLASS in the field notes, "The launch: {date} · {count}" or "now" through the window or "no date · {n} lights out on the Kerb", then "The city's figure: {n} · In the hole: {n}"); your line on the glass, counted for everyone (W.GLASS_LINES: the glass shows others how many lines cross it, not whose); news: "An Angel's readiness is on the forecast glass as a line."]
-→ `looked`
+→ `looked` (none for a body he has already asked, as after the light: one who said no first; since 2026-10-04)
 
 **CAUL** — `declined` (shipped since Phase B, first beats)
 > "Then it stays an offer." He looks at the oval on the wall, and back. "The light is there if you would rather it were not. I would not feel it."
-→ `looked`
+→ `looked` (and it stays an offer: his entry for that body is `offer` again until the glass is decided; since 2026-10-04)
 
 **THE OVAL** — the light on the wall, `Look at the light` F (shipped since Phase B, first beats; guest-legal, the room's one prompt before the offer)
 > An oval of champagne light on the wall, the same as every oval on the Kerb. It is the one thing of his in the city a hand can reach.
