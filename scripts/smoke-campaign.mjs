@@ -190,8 +190,15 @@ async function settled() {
   }
   assert.equal(quiet, 3, `the Worker at ${origin} answers`);
 }
-/** Like wait, but resolves false instead of rejecting when the time runs out. */
-const settle = (state, predicate, label, ms) => wait(state, predicate, label, ms).catch(() => false);
+/**
+ * Like wait, but resolves false instead of rejecting when the time runs out. A stall or a closed socket still rejects
+ * with its own reason: swallowed, a local reload mid-fight (a `stage-play` while the run was going, 2026-10-04) read
+ * as "intake clerk falls did not complete" a second into the fight.
+ */
+const settle = (state, predicate, label, ms) => wait(state, predicate, label, ms).catch(err => {
+  if (err instanceof Error && err.message === `${label} did not complete`) return false;
+  throw err;
+});
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 async function connect(cookie) {
@@ -276,6 +283,10 @@ const walk = async (state, points) => { for (const point of points) await approa
 async function hunt(state, enemyId, target, done, label, ms = 20000) {
   let strikes = null;
   let fell = false;
+  // The last few seconds of the hunt, kept always and printed when it runs out without a fall, so a stuck fight names
+  // what the bot saw.
+  const recent = [];
+  let lastNote = 0;
   const drive = setInterval(() => {
     const p = you(state);
     if (!p || state.ws.readyState !== WebSocket.OPEN) return;
@@ -302,14 +313,19 @@ async function hunt(state, enemyId, target, done, label, ms = 20000) {
       intent = { right: dx > 5, left: dx < -5, down: dy > 5, up: dy < -5 };
     }
     send(state, { t: 'intent', intent });
-    if (process.env.TRACE_HUNT && Math.round(Date.now() / 100) % 5 === 0) console.log(`trace ${label}: me ${Math.round(p.x)},${Math.round(p.y)} hp ${p.hp} dead ${p.dead} respawn ${JSON.stringify(p.respawn ?? null)} | ${e ? `${e.state} hp ${e.hp} at ${Math.round(e.x)},${Math.round(e.y)}` : 'no enemy'} | close ${!!close}`);
+    const line = () => `trace ${label}: me ${Math.round(p.x)},${Math.round(p.y)} facing ${JSON.stringify(p.facing ?? null)} hp ${p.hp} dead ${p.dead} strikeCd ${p.strikeCd?.toFixed?.(2)} | ${e ? `${e.state} hp ${e.hp} at ${Math.round(e.x)},${Math.round(e.y)}` : 'no enemy'} | close ${!!close} intent ${JSON.stringify(intent)} | tick ${state.snap.tick}`;
+    if (process.env.TRACE_HUNT && Math.round(Date.now() / 100) % 5 === 0) console.log(line());
+    if (Date.now() - lastNote >= 500) { lastNote = Date.now(); recent.push(line()); if (recent.length > 16) recent.shift(); }
     if (close && !strikes) { send(state, { t: 'strike' }); strikes = setInterval(() => send(state, { t: 'strike' }), 450); }
     if (!close && strikes) { clearInterval(strikes); strikes = null; }
   }, 100);
   // A fall ends the hunt at once (false), so the step can walk back instead of spending the budget on a body that
   // respawned elsewhere and walks a straight line at the enemy.
-  try { await settle(state, () => done() || fell, label, ms); return done(); }
-  finally { clearInterval(drive); if (strikes) clearInterval(strikes); send(state, { t: 'intent', intent: {} }); }
+  try {
+    await settle(state, () => done() || fell, label, ms);
+    if (!done() && !fell) console.log(`note: ${label} ran out; the last ${recent.length / 2} s of it:\n  ${recent.join('\n  ')}`);
+    return done();
+  } finally { clearInterval(drive); if (strikes) clearInterval(strikes); send(state, { t: 'intent', intent: {} }); }
 }
 /**
  * Stand inside an interaction's reach (56 px for nodes and plots, 72 for people). The lanes end a
