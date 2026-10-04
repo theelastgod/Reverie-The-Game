@@ -4,11 +4,11 @@ State of the rebuild. Read `DESIGN.md` first, then `.rebuild/CONTRACTS.md`
 (shared-sim signatures) and `.rebuild/CLIENT.md` (client contract). The master
 brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
-## Where things stand (2026-10-01)
+## Where things stand (2026-10-04)
 
 - **Built and verified on this branch:** the whole campaign (four movements,
-  eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 638 tests (2026-10-04), the session smoke, the campaign smoke and the
+  nineteen decisions, about 59 minutes on the spine; see Length below) plays
+  over the wire on a fresh world; 638 tests (2026-10-04), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -30,6 +30,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   client's first request (the generated-asset manifest) is answered, by
   an empty manifest committed until the Stage B pull overwrites it, and
   the render check fails on any file the city's own origin fails to serve.
+  On 2026-10-04 a sweep for defects a player would meet (six lenses, each
+  finding reproduced and then challenged by a skeptic) confirmed and
+  fixed twenty-one (see Done); a second round with six new lenses is the
+  routine's next work.
 - **Two steps only you can take** (Backlog 1 and 2 have the detail): the
   Stage B art waits on the results host being reachable from a machine that
   runs `node scripts/pull-generated.mjs`; the deploy waits on either the
