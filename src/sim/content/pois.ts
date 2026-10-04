@@ -6,7 +6,7 @@
  */
 import type { Ctx, Effect, Fourfold, PoiConfig, PoiVerb, WinkBySchool } from "../types";
 import {
-  AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_PRESENT, CLEARING_LIST_PRICE, FREEZE_FEE, FREEZE_SECONDS, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
+  AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_MAX, AURA_PRESENT, CLEARING_LIST_PRICE, FREEZE_FEE, FREEZE_SECONDS, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
   OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, TITHE_COST, UPKEEP_COST,
   WAR_PERIOD,
 } from "../constants";
@@ -61,8 +61,14 @@ type Ground = "open" | "ok" | "soon" | "spent";
 const ringGround = (ctx: Ctx): Ground => {
   const c = ctx.w.clearing;
   if ((c.contest && c.contest.active) || poiState(ctx, "clearing-ring") === "open") return "open";
-  if (c.reserve <= 0) return "spent";
-  if (c.openedAt > 0 && ctx.w.now - c.openedAt < WAR_PERIOD) return "soon";
+  const spent = c.reserve <= 0;
+  const setting = c.openedAt > 0 && ctx.w.now - c.openedAt < WAR_PERIOD;
+  // A hole its last contest kept open is still a hole: while it cannot be contested again (the reserve spent, which fills
+  // back only while closed, or the asphalt setting) it is stood in, not looked at. Spent and held, it would otherwise
+  // wait out the season (the player-defect sweep, round two).
+  if (c.open && (spent || setting)) return "open";
+  if (spent) return "spent";
+  if (setting) return "soon";
   return "ok";
 };
 const settingSeconds = (ctx: Ctx): number => Math.max(0, Math.ceil(WAR_PERIOD - (ctx.w.now - ctx.w.clearing.openedAt)));
@@ -629,6 +635,8 @@ const CARE: PoiConfig[] = [
         key: "E",
         label: `Restore aura (${RESTORE_COST})`,
         choice: "restore",
+        // Sold only to an aura with room for it (the player-defect sweep, round two: a full one paid for nothing); a guest still hears it is not theirs.
+        when: ctx => ctx.p.guest || ctx.p.aura < AURA_MAX,
         guest: spectate,
         cost: { bestand: RESTORE_COST, sink: "restore" },
         say: "You spent Bestand. Aura returns. The Wink can be held again.",
@@ -662,6 +670,8 @@ const CARE: PoiConfig[] = [
         key: "F",
         label: `Repair (${REPAIR_COST})`,
         choice: "repair",
+        // A whole body is not repaired for six (the paper's rule too: never spent on a whole body).
+        when: ctx => ctx.p.guest || ctx.p.hp < MAX_HP,
         guest: spectate,
         cost: { bestand: REPAIR_COST, sink: "repair" },
         say: "Six Bestand. The body holds again. The clinic does not heal the Gestell. It says so on the door.",
@@ -671,6 +681,8 @@ const CARE: PoiConfig[] = [
         key: "E",
         label: `Insurance (${INSURE_COST})`,
         choice: "insure",
+        // One death, one walk back: a second paper is not sold over the first (the paper by hand says it is already done).
+        when: ctx => ctx.p.guest || !ctx.p.insured,
         guest: spectate,
         cost: { bestand: INSURE_COST, sink: "insurance" },
         say: "Ten Bestand. Death walks you back to where you fell, once. It is a walk, not a bigger strike.",

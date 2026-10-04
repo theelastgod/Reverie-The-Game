@@ -11,7 +11,7 @@ import { say } from "./world";
 import { applyNode, applyClaims, applyForge, spend } from "./economy";
 import { applyBounty, applyTithe } from "./houses";
 import { applyPassing } from "./clearing";
-import { applyDuel, duelBlockReason, truceAllowed } from "./combat";
+import { applyDuel, duelBlockReason, truceTarget } from "./combat";
 import { applyEffects } from "./effects";
 import { keepersOf } from "./content/ids";
 import { applyTalk } from "./dialogue";
@@ -37,6 +37,8 @@ function speak(w: WorldState, p: Player, text: string): WorldState {
 
 /** What a locked guest's press may still do: read, and mark its own reading. */
 const LOCKED_MAY = new Set(["flag", "say", "notice"]);
+/** A side hour's own verbs (side-pois.ts, "side:<hour>:<verb>"): a locked guest's side hours stand where the lock found them. */
+const isSideVerb = (choice: string): boolean => choice.startsWith("side:");
 
 function isFrozen(w: WorldState, district: string): boolean {
   return (w.frozen[district] ?? 0) > w.now;
@@ -74,7 +76,8 @@ function interactPoi(w: WorldState, p: Player, cfg: PoiConfig, choice: string): 
   // effects reach past the body's own flags and lines answers with the lock.
   if (p.locked) {
     const effects = typeof verb.effects === "function" ? verb.effects(ctx) : verb.effects ?? [];
-    if (verb.cost || effects.some(e => !LOCKED_MAY.has(e.kind))) return speak(w, p, LINES.GUEST_LOCK);
+    // A side hour's verb is refused too: its step would never close (the hour stands, quests.ts), yet its line says it was done.
+    if (verb.cost || isSideVerb(verb.choice) || effects.some(e => !LOCKED_MAY.has(e.kind))) return speak(w, p, LINES.GUEST_LOCK);
   }
   if (verb.once && (p.flags[verb.once] ?? 0) > 0) return speak(w, p, LINES.ALREADY);
 
@@ -128,6 +131,10 @@ export function applyInteract(w: WorldState, id: string, targetId: string, choic
   if (wreck) {
     if (choice !== "bury" && choice !== "loot") return w;
     if (p.locked || (choice === "loot" && p.guest)) return speak(w, p, LINES.GUEST_LOCK);
+    // The server takes only what the prompt offers this body (wreckageVerbs: its sight, the Mortals' and the Storm's longer
+    // one, the Witness's Blitz), so an id remembered from the wire buys nothing past the wreckage's hour, and an empty or
+    // looted wreckage is not looted again (the player-defect sweep, round two).
+    if (!wreckageVerbs({ w, p, now: w.now }, wreck).some(v => v.choice === choice)) return w;
     return applyEffects(w, id, [{ kind: "wreckage", op: choice, id: targetId }]);
   }
 
@@ -178,7 +185,9 @@ export function playerVerbs(ctx: Ctx, other: Player): PromptVerb[] {
     out.push({ key: "F", label: offered ? "Answer the duel" : "Ruin duel", choice: "duel" });
   }
   if (DISTRICT_BY_ID[p.district].flagLegal && p.truceUntil <= w.now) out.push({ key: "V", label: p.flagged ? "Unflag" : "Flag", choice: "flag" });
-  if (p.flagged && other.flagged && truceAllowed(p, other, w.now)) out.push({ key: "T", label: "Truce", choice: "truce" });
+  // T carries no target (the server calls it with the nearest flagged Angel): it is offered on that body only, so the prompt
+  // never names one body and truces another (the player-defect sweep, round two)
+  if (p.flagged && other.flagged && truceTarget(w, p)?.id === other.id) out.push({ key: "T", label: "Truce", choice: "truce" });
   return out;
 }
 
@@ -190,6 +199,7 @@ export function poiVerbs(ctx: Ctx, cfg: PoiConfig): PromptVerb[] {
     if (taken.has(v.key)) continue;
     if (!verbAvailable(ctx, v)) continue;
     if (ctx.p.guest && (v.guest ?? "allow") === "deny") continue;
+    if (ctx.p.locked && isSideVerb(v.choice)) continue;
     taken.add(v.key);
     out.push({ key: v.key, label: v.label, choice: v.choice });
   }

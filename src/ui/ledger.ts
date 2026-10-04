@@ -94,10 +94,26 @@ function el(tag: string, cls: string, text = ""): HTMLElement {
 }
 
 /** Renders the ledger; rebuilds sections only when their row keys change. */
+/**
+ * What the panel's rows are built from: a rebuild when it changes, only the claim clocks otherwise. The price is in it: a
+ * city listing's moves with the city ("it moves when the city does", the board's read), and the row must say so.
+ */
+export function ledgerKey(m: LedgerModel): string {
+  return [
+    m.guest ? "g" : "a",
+    m.cult.map((r) => r.id + r.qty).join(","),
+    m.exhibition.map((r) => r.id + r.qty + r.note).join(","),
+    m.paper.map((r) => r.id + r.qty).join(","),
+    m.claims.map((r) => r.id + r.status).join(","),
+    m.listings.map((r) => r.id + r.canBuy + ":" + r.price).join(","),
+  ].join("|");
+}
+
 export function mountLedger(root: HTMLElement | null, cb: LedgerCallbacks): LedgerPanel {
   if (!root) return { set: () => {}, toggle: () => {}, open: () => {}, isOpen: () => false };
   let opened = false;
   let lastKey = "";
+  const typed = new Map<string, string>(); // item id -> the price field's text, carried across a rebuild
   const head = el("div", "ledger-head");
   const title = el("div", "ledger-title", "LEDGER");
   const totals = el("div", "ledger-totals");
@@ -121,7 +137,8 @@ export function mountLedger(root: HTMLElement | null, cb: LedgerCallbacks): Ledg
       row.append(el("span", "ledger-name", `${r.name}${r.qty > 1 ? ` ×${r.qty}` : ""}`), el("span", "ledger-note", r.note));
       if (listable && r.listable) {
         const price = document.createElement("input");
-        price.type = "number"; price.min = "1"; price.max = "999"; price.value = "9"; price.className = "ledger-price"; price.setAttribute("aria-label", "price");
+        price.type = "number"; price.min = "1"; price.max = "999"; price.value = typed.get(r.id) ?? "9"; price.className = "ledger-price"; price.setAttribute("aria-label", "price");
+        price.dataset.item = r.id;
         const btn = el("button", "ledger-btn", "LIST") as HTMLButtonElement;
         btn.type = "button";
         btn.addEventListener("click", () => cb.market("list", { itemId: r.id, price: Math.max(1, Math.min(999, Number(price.value) || 1)) }));
@@ -135,15 +152,7 @@ export function mountLedger(root: HTMLElement | null, cb: LedgerCallbacks): Ledg
   return {
     set(m) {
       setText(totals, `PURSE ${num(m.purse)} · VAULT ${num(m.banked)}`);
-      const key = [
-        m.guest ? "g" : "a",
-        m.cult.map((r) => r.id + r.qty).join(","),
-        m.exhibition.map((r) => r.id + r.qty + r.note).join(","),
-        m.paper.map((r) => r.id + r.qty).join(","),
-        m.claims.map((r) => r.id + r.status).join(","),
-        m.listings.map((r) => r.id + r.canBuy).join(","),
-        m.purse >= 0 ? "" : "",
-      ].join("|");
+      const key = ledgerKey(m);
       if (key === lastKey) {
         // Only the clocks move between rebuilds.
         const clocks = body.querySelectorAll<HTMLElement>("[data-claim]");
@@ -154,6 +163,14 @@ export function mountLedger(root: HTMLElement | null, cb: LedgerCallbacks): Ledg
         return;
       }
       lastKey = key;
+      // A rebuild (another body's listing, a buy, a decay) keeps what the player was typing: a price field reset to 9 under
+      // their hand would list the print at 9 (the player-defect sweep, round two). The focused field keeps its focus.
+      typed.clear();
+      let focused = "";
+      body.querySelectorAll<HTMLInputElement>("input.ledger-price").forEach((i) => {
+        if (i.dataset.item) typed.set(i.dataset.item, i.value);
+        if (document.activeElement === i && i.dataset.item) focused = i.dataset.item;
+      });
       body.innerHTML = "";
       if (m.guest) body.append(el("div", "ledger-spectator", m.spectator));
 
@@ -194,6 +211,7 @@ export function mountLedger(root: HTMLElement | null, cb: LedgerCallbacks): Ledg
       }
       market.append(rows);
       body.append(market);
+      if (focused) body.querySelector<HTMLInputElement>(`input.ledger-price[data-item="${CSS.escape(focused)}"]`)?.focus();
     },
     toggle() { opened = !opened; show(root, opened); },
     open(on) { opened = on; show(root, opened); },

@@ -243,6 +243,13 @@ try {
   else if (!second || second === first) failures.push(`a second Shift+Tab did not move focus within the HUD (${first} → ${second || 'nothing'})`);
   if (after) failures.push(`Escape left focus on ${after}`);
   console.log(`keyboard: Shift+Tab → ${first || 'nothing'}, again → ${second || 'nothing'}, Escape → ${after || 'the game'}`);
+  // A HUD button pressed with the mouse hands the keys back: focus left on it would make Space press it again and Tab
+  // walk the HUD (the player-defect sweep, round two). Clicked twice so the stance is where it was.
+  await page.click('#hud-stance');
+  const afterClick = await focusedControl();
+  await page.click('#hud-stance');
+  if (afterClick) failures.push(`a mouse click left focus on ${afterClick}: Space would press it again`);
+  console.log(`pointer: a click on the stance chip → focus ${afterClick || 'with the game'}`);
 
   // What assistive technology is told: the dialogue is a dialog named by its speaker (read while it was open,
   // above), the notices and the connection chip are live, and every bar is a meter whose value is the number it shows.

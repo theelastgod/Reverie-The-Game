@@ -90,6 +90,7 @@ function variants(): Ctx[] {
   out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.VAN_WAVED]: 1 } }), rw)); // the one who waved the van through parks it
   out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.FOUNDRY_RAKED]: 1 } }), rw)); // the one who raked the Foundry out darkens it
   out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.ALTAR_LIT]: 1, [SF.UNSPENT_TOUCHED]: 1 } }), rw)); // the one who lit an altar lights it, and the news is theirs
+  out.push(ctxOf(richPlayer({ flags: { ...richPlayer().flags, [SF.LAMP_LIT]: 1, [SF.MUTE_HUNG]: 1, [SF.SEED_TURNED]: 1 } }), rw)); // likewise the lamp's lighter, the bell's hanger, the ground's turner
   return out;
 }
 

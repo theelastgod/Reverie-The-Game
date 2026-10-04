@@ -96,9 +96,15 @@ stands still and the focused dialog scrolls it, the hint pinned clear of the las
   Shift+direction → dodge; click / Space → strike; R / Shift+click → heavy;
   Tab → stance (prevent default; Shift+Tab is the browser's and moves focus
   into the HUD's controls, where Tab, Space and Enter are the browser's too
-  and Escape blurs back to the game: `src/ui/keys.ts`); K → kit; F → prompt verb F (talk when the
+  and Escape blurs back to the game: `src/ui/keys.ts`; a HUD button pressed with the mouse or a
+  finger gives the keys straight back, `pointerReleasesFocus`, so Space after a click strikes rather
+  than pressing the chip again); K → kit; F → prompt verb F (talk when the
   prompt target is an NPC); E / Q → prompt verbs E / Q; 1–9 → choose (up to nine choices, the dialogue body scrolling past what fits);
-  Esc → close; V → flag; T → truce; I → use; J → journal; M → minimap.
+  Esc → close; V → flag; T → truce; I → use; J → journal; M → minimap; L → ledger (it opens itself
+  at the claims desk and the listing board; closed with L there, it stays closed until the body
+  walks to something else). The ledger rebuilds its rows when `ledgerKey` changes (a listing's
+  price included, so the resistance's Clearing reads the city's number) and keeps a price being
+  typed, and its focus, across the rebuild.
   Touch (`src/ui/stick.ts`, pure and unit-tested; the scene applies it): a
   finger down on the canvas plants a stick where it lands (`Hud.showStick`),
   a drag from there is the eight-way intent the keys send (45-degree

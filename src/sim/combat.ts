@@ -17,7 +17,7 @@ import { caulAtLip } from "./content/caul";
 import { weatherBand } from "./protocol";
 import type { DuelState, Enemy, Player, Vec, WorldState, Wreckage } from "./types";
 import { anchorOf, enemyStats, routeOf, strayOf } from "./enemies";
-import { damageFor, heavyFor, killPlayer, notice, pushNews, say } from "./world";
+import { damageFor, heavyFor, killPlayer, letGo, notice, pushNews, say } from "./world";
 import { applyNode, earn } from "./economy";
 import * as LINES from "./content/lines";
 
@@ -26,6 +26,8 @@ const INTAKE_ARRIVAL_RADIUS = 240; // px; the intake clerk only takes a shift fo
 const ENEMY_STANDOFF = 28; // px; an enemy stops short of standing inside a body
 const SUBSTEP = BODY_R / 2;
 const HOME_EPSILON = 4;
+/** Enemies do not path: a walk home that stops against a wall, or runs this long, ends with the enemy set down at its post. */
+const RETURN_SET_DOWN = 30;
 const EPS = 1e-6; // timers this close to zero are zero; float drift never steals a tick
 
 // Copy owned by this module: the ruin duel. Short, cold, the grave is the ring.
@@ -138,8 +140,11 @@ function tickEnemy(w: WorldState, e0: Enemy, dt: number): { e: Enemy; w: WorldSt
 
   if (e.state === "return") {
     const pos = walkToward(e, anchor, stats.speed * dt, 0);
-    e = { ...e, x: pos.x, y: pos.y };
-    if (within(e, anchor, HOME_EPSILON)) e = { ...e, x: anchor.x, y: anchor.y, hp: e.maxHp, state: "idle", t: 0, targetId: "", participants: [] };
+    // A wall between the enemy and its post (a pillar on its row, the furnace block) would hold it in `return` for good,
+    // blind to every body and free to fell: set down whole at the post instead, as the shift's reconcile does.
+    const stuck = dt > 0 && pos.x === e.x && pos.y === e.y;
+    e = { ...e, x: pos.x, y: pos.y, t: e.t + dt };
+    if (stuck || e.t >= RETURN_SET_DOWN || within(e, anchor, HOME_EPSILON)) e = { ...e, x: anchor.x, y: anchor.y, hp: e.maxHp, state: "idle", t: 0, targetId: "", participants: [] };
     return { e, w };
   }
 
@@ -160,12 +165,19 @@ function tickEnemy(w: WorldState, e0: Enemy, dt: number): { e: Enemy; w: WorldSt
       const pos = walkToward(e, anchor, stats.speed * dt, 0);
       e = { ...e, x: pos.x, y: pos.y };
       if (within(e, anchor, HOME_EPSILON)) e = { ...e, x: anchor.x, y: anchor.y, leg: ((e.leg ?? 0) + 1) % route.length };
+    } else if (!within(e, anchor, HOME_EPSILON)) {
+      // A fight that ended away from the post (its body fell, or left) ends with the walk back to it.
+      return { e: { ...e, state: "return", t: 0, targetId: "" }, w };
     }
     return { e, w };
   }
 
   const target = w.players.get(e.targetId);
-  if (!alive(target)) return { e: { ...e, state: "idle", targetId: "", t: 0 }, w };
+  if (!alive(target)) {
+    // A recovery runs out whether or not its body is still there: the window is everyone's to answer.
+    if (e.state === "recover" && e.t - dt > EPS) return { e: { ...e, t: e.t - dt }, w };
+    return { e: { ...e, state: "idle", targetId: "", t: 0 }, w };
+  }
 
   if (e.state === "aggro") {
     if (within(e, target, stats.reach)) return { e: { ...e, state: "telegraph", t: stats.telegraph }, w };
@@ -185,7 +197,11 @@ function tickEnemy(w: WorldState, e0: Enemy, dt: number): { e: Enemy; w: WorldSt
       } else {
         const hp = target.hp - stats.damage;
         cur = setPlayer(cur, { ...target, hp });
-        if (hp <= 0) cur = killPlayer(cur, target.id, e.id, `${e.name} did their job.`);
+        if (hp <= 0) {
+          // The body wakes elsewhere in the same call: the recovery runs out on no one, and the enemy goes back to its post.
+          cur = killPlayer(cur, target.id, e.id, `${e.name} did their job.`);
+          return { e: { ...e, state: "recover", t: stats.recovery, targetId: "" }, w: cur };
+        }
       }
     }
     return { e: { ...e, state: "recover", t: stats.recovery }, w: cur };
@@ -201,9 +217,16 @@ export function tickEnemies(w: WorldState, dt: number): WorldState {
   let cur = w;
   const enemies = w.enemies.slice();
   for (let i = 0; i < enemies.length; i++) {
+    const targetId = enemies[i].targetId;
+    const before = targetId ? cur.players.get(targetId)?.deaths : undefined;
     const r = tickEnemy(cur, enemies[i], dt);
     enemies[i] = r.e;
     cur = r.w;
+    // A body this enemy felled is let go by every other enemy on it too (killPlayer's own letting-go reads the enemies
+    // as they stood before this tick, and this list is what the tick keeps).
+    if (before !== undefined && (cur.players.get(targetId)?.deaths ?? before) > before) {
+      for (let j = 0; j < enemies.length; j++) if (j !== i && enemies[j].targetId === targetId) enemies[j] = letGo(enemies[j]);
+    }
   }
   return { ...cur, enemies };
 }
@@ -389,7 +412,11 @@ function pvpKill(w: WorldState, killerId: string, victimId: string): WorldState 
   const v0 = w.players.get(victimId);
   if (!k0 || !v0) return w;
 
-  const duelWreck = liveWreckage(w).find(r => within(r, k0, RUIN_DUEL_RADIUS) && within(r, v0, RUIN_DUEL_RADIUS)) ?? null;
+  // An answered duel runs its sixty seconds at its grave even when the wreckage's own hour ends inside them (answered only
+  // while it is under WRECKAGE_TTL old; the city keeps it WRECKAGE_GRACE longer): the fall is the duel's, watchers and all.
+  const dueling = k0.duel?.with === victimId && !!k0.duel.accepted && v0.duel?.with === killerId && !!v0.duel.accepted;
+  const graves = dueling ? w.wreckage.filter(r => !r.buried) : liveWreckage(w);
+  const duelWreck = graves.find(r => within(r, k0, RUIN_DUEL_RADIUS) && within(r, v0, RUIN_DUEL_RADIUS)) ?? null;
   const hasKilled = k0.lastKillId !== "";
   const chained = hasKilled && now - k0.lastKillAt < CHAIN_KILL_WINDOW;
   const camping = hasKilled && k0.lastKillId === victimId && now - k0.lastKillAt < CAMP_WINDOW;
@@ -644,6 +671,11 @@ export function truceAllowed(p: Player, other: Player, now: number): boolean {
   return (!mine || mine.with === other.id) && (!theirs || theirs.with === p.id);
 }
 
+/** The body a truce would be called with: the nearest flagged Angel within reach that the truce may reach (the prompt's T names only it). */
+export function truceTarget(w: WorldState, p: Player): Player | null {
+  return nearestPlayer(w, p, 96, q => q.id !== p.id && q.flagged && !q.guest && !q.locked && !q.dead && truceAllowed(p, q, w.now));
+}
+
 /** Both unflag. Seconds, not a stick. Only a flagged Angel can call one: the prompt's rule, kept by the server. */
 export function applyTruce(w: WorldState, id: string): WorldState {
   const p = w.players.get(id);
@@ -651,7 +683,7 @@ export function applyTruce(w: WorldState, id: string): WorldState {
   const now = w.now;
   if (!p.flagged) return setPlayer(w, say(p, LINES.PVP_FLAG_REQUIRED, now));
   if (p.truceUntil > now) return setPlayer(w, say(p, LINES.TRUCE_ACTIVE, now));
-  const other = nearestPlayer(w, p, 96, q => q.id !== id && q.flagged && !q.guest && !q.locked && !q.dead && truceAllowed(p, q, now));
+  const other = truceTarget(w, p);
   if (!other) return w;
   const until = now + TRUCE_SECONDS;
   let cur = setPlayer(w, say({ ...p, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));

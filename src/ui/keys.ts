@@ -17,6 +17,15 @@ export function hudControlFocused(active: Element | null, hud: Element | null): 
   return active.matches(CONTROL);
 }
 
+/**
+ * A HUD button pressed with the mouse or a finger (a click that counts presses, `detail` > 0) hands the keys back to the
+ * game: focus left on it would make Space press it again and Tab walk the HUD, until Escape (the player-defect sweep,
+ * round two). A keyboard activation (a click with no count) keeps its focus where the keyboard put it.
+ */
+export function pointerReleasesFocus(clickDetail: number): boolean {
+  return clickDetail > 0;
+}
+
 /** Whether the browser, not the scene, should handle this key press. */
 export function browserOwns(code: string, shiftKey: boolean, focused: boolean): boolean {
   if (code === "Tab") return focused || shiftKey;

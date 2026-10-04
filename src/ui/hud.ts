@@ -24,6 +24,7 @@ import { eventRows, mountEvents, type EventsPanel } from "./events";
 import { ledgerModel, mountLedger, type LedgerPanel } from "./ledger";
 import { gen } from "../assets/gen";
 import { badgeFor, sealFor } from "../assets/slots";
+import { pointerReleasesFocus } from "./keys";
 
 export type HudCallbacks = {
   choose: (choiceId: string) => void; // dialogue choice clicked
@@ -63,6 +64,13 @@ export class Hud {
   private readonly events: EventsPanel;
   private readonly ledger: LedgerPanel;
   private ledgerAuto = false;
+  private ledgerDismissed = ""; // the desk or board the ledger was closed at by hand
+  /** A pointer press on a HUD button gives the keys back to the game (keys.ts pointerReleasesFocus). */
+  private readonly onPointerClick = (ev: MouseEvent): void => {
+    if (!pointerReleasesFocus(ev.detail)) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active !== this.root && this.root.contains(active) && active.matches("button")) active.blur();
+  };
 
   // elements
   private readonly identity: HTMLElement | null;
@@ -139,6 +147,7 @@ export class Hud {
   constructor(root: HTMLElement, callbacks: HudCallbacks) {
     this.root = root;
     this.cb = callbacks;
+    root.addEventListener("click", this.onPointerClick);
     // A phone seats the minimap and the journal's tab under the top chips (hud.css, --below-top), and the chips wrap:
     // measure where they end, so a fourth row (a long name, a weather chip) moves everything under them down.
     const top = q(root, "#hud-top");
@@ -308,15 +317,22 @@ export class Hud {
   }
 
   toggleJournal(): void { this.journal.toggle(); audio.play("page"); }
-  toggleLedger(): void { this.ledgerAuto = false; this.ledger.toggle(); }
+  toggleLedger(): void {
+    this.ledgerAuto = false;
+    this.ledger.toggle();
+    // Closed by hand at the desk or the board, it stays closed there until the body walks to something else (the
+    // player-defect sweep, round two: it reopened on the next frame, so L seemed to do nothing).
+    this.ledgerDismissed = this.ledger.isOpen() ? "" : (this.last?.prompt?.targetId ?? "");
+  }
   /** From hello: whether this city accepts the test link; the lock panel offers it only then. */
   setMockLink(on: boolean): void { this.lock.setMockLink(on); }
 
   /** The ledger opens itself at the claims desk and the listing board, and closes again when you walk away. */
   private updateLedgerPanel(snap: Snap): void {
-    const target = snap.prompt?.targetId;
+    const target = snap.prompt?.targetId ?? "";
+    if (target !== this.ledgerDismissed) this.ledgerDismissed = "";
     const atDesk = target === "claims-desk" || target === "listing-board";
-    if (atDesk && !this.ledger.isOpen()) { this.ledger.open(true); this.ledgerAuto = true; }
+    if (atDesk && !this.ledger.isOpen() && !this.ledgerDismissed) { this.ledger.open(true); this.ledgerAuto = true; }
     else if (!atDesk && this.ledgerAuto && this.ledger.isOpen()) { this.ledger.open(false); this.ledgerAuto = false; }
     if (this.ledger.isOpen()) this.ledger.set(ledgerModel(snap));
   }
@@ -329,6 +345,7 @@ export class Hud {
     window.clearTimeout(this.winkFade);
     window.clearTimeout(this.noticeTimer);
     window.clearTimeout(this.statusTimer);
+    this.root.removeEventListener("click", this.onPointerClick);
     this.stance?.removeEventListener("click", this.onStance);
     this.kit?.removeEventListener("click", this.onKit);
     this.dodge?.removeEventListener("click", this.onDodge);

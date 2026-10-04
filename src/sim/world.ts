@@ -14,7 +14,7 @@ import { circleHitsWalls, districtAt, ENEMY_SPAWNS, FAILED_PASSING_MARKS, GUEST_
 import { POI_STATES, W } from "./content/ids";
 import { newsFor } from "./content/news";
 import { weatherBand } from "./protocol";
-import type { DistrictId, FailedPassing, Intent, Item, Notice, NpcState, Player, PoiState, Vec, WorldState, Wreckage } from "./types";
+import type { DistrictId, Enemy, FailedPassing, Intent, Item, Notice, NpcState, Player, PoiState, Vec, WorldState, Wreckage } from "./types";
 import { initialEnemies } from "./enemies";
 import { initialNodes, tickMarket, tickNodes } from "./economy";
 import { initialHouses, tickHouseWar } from "./houses";
@@ -592,6 +592,26 @@ export function killPlayer(w: WorldState, victimId: string, killerId: string, ca
   };
   if (insured) woke = notice(woke, LINES.INSURANCE_USED, now, "gold");
 
+  // A fall ends the body's fights, whoever felled it: the ruin duel for both bodies (DESIGN §2 rule 7, "a fall or the
+  // timer clears both"), and every enemy on it lets it go, since the body wakes in this same call and never reads as fallen.
+  const partnerId = woke.duel?.with;
+  if (woke.duel) {
+    const { duel: _gone, ...rest } = woke;
+    woke = rest;
+  }
   cur = setPlayer(cur, woke);
+  const partner = partnerId ? cur.players.get(partnerId) : undefined;
+  if (partner?.duel && partner.duel.with === victimId) {
+    const { duel: _gone, ...rest } = partner;
+    cur = setPlayer(cur, rest);
+  }
+  if (cur.enemies.some(e => e.targetId === victimId)) cur = { ...cur, enemies: cur.enemies.map(e => (e.targetId === victimId ? letGo(e) : e)) };
   return { ...cur, wreckage: [...cur.wreckage, wreck] };
+}
+
+/** An enemy whose body fell lets it go: a swing in hand or a walk at it ends; a recovery runs out on no one. */
+export function letGo(e: Enemy): Enemy {
+  if (e.state === "recover") return { ...e, targetId: "" };
+  if (e.state === "aggro" || e.state === "telegraph") return { ...e, state: "idle", targetId: "", t: 0 };
+  return e.targetId ? { ...e, targetId: "" } : e;
 }

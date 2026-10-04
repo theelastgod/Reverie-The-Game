@@ -1320,9 +1320,15 @@ export const NPCS: Record<string, NpcDef> = {
     portrait: "quill.jpg",
     sprite: "quill",
     party: true,
-    personal: (ctx: Ctx): NpcOverride => {
+    personal: (ctx: Ctx, shared: NpcState): NpcOverride => {
       if (quillAtVans(ctx)) return { ...station("quill-vans"), state: "vans" };
       if (has(ctx, F.UNDER)) return { ...station("quill-forge"), state: "forge" };
+      // Movement I's Quill keeps her stall by the east gate (I.5) wherever another body's copy hour has walked her (the
+      // listing board, the Grid): the first hour's lines and its journal name the stall (the player-defect sweep, round two).
+      if (shared.state !== "home") {
+        const home = POSITIONS["home:quill"];
+        return { x: home.x, y: home.y, district: home.district, present: true, state: "home" };
+      }
       return null;
     },
     entry: (ctx: Ctx) => (dark(ctx) ? "dark" : unseenWink(ctx, "quill") ? "blind" : quillRoute(ctx)),

@@ -699,11 +699,11 @@ const CARE: Quest[] = [
         target: "funeral-desk",
         plate: "house-hall.jpg",
         done: ({ p, w }) => has(p, SF.LAMP_LIT) || poiIs(w, "hall-mortals", "lit"),
-        onComplete: [
-          poi("hall-mortals", "lit"),
-          worldFlag(SW.LAMP_LIT),
-          news("Someone lit the Mortals lamp for the buried. Not their House. Their dead."),
-        ],
+        // Skipped when the hall is lit already (a Mortals Angel's plaque read): the step closes on its own, and the light and
+        // its news are the lighter's alone, as the third altar's are (the player-defect sweep, round two).
+        onComplete: ({ p }) => (has(p, SF.LAMP_LIT)
+          ? [poi("hall-mortals", "lit"), worldFlag(SW.LAMP_LIT), news("Someone lit the Mortals lamp for the buried. Not their House. Their dead.")]
+          : []),
       }),
       step({
         id: "tell",
@@ -1084,10 +1084,9 @@ const RING: Quest[] = [
         target: "mute-bell",
         plate: "shrine-upkeep.jpg",
         done: ({ p, w }) => has(p, SF.MUTE_HUNG) || poiIs(w, "mute-bell", "rung"),
-        onComplete: [
-          poi("mute-bell", "rung"),
-          worldFlag(SW.BELL_RANG),
-          news("The mute bell rang once. Then it was mute again."),
+        // Skipped when the bell is rung already: the ring and its news are the hanger's alone; the Wink lands either way.
+        onComplete: ({ p }) => [
+          ...(has(p, SF.MUTE_HUNG) ? [poi("mute-bell", "rung"), worldFlag(SW.BELL_RANG), news("The mute bell rang once. Then it was mute again.")] : []),
           wink("An omen is a bell that rings before the hour and is not wrong. This one rang once and was right about nothing. It was still a bell."),
         ],
       }),
@@ -1381,10 +1380,9 @@ const CLEARING: Quest[] = [
         target: "seed-1",
         plate: "clearing-ring.jpg",
         done: ({ p, w }) => has(p, SF.SEED_TURNED) || poiIs(w, "seed-1", "seeded"),
-        onComplete: [
-          poi("seed-1", "seeded"),
-          worldFlag(SW.SEEDED),
-          news("Someone turned garden earth into the seed ground. A promise nobody can cash."),
+        // Skipped when the ground is seeded already (a Dweller's seed): the turning and its news are the turner's alone.
+        onComplete: ({ p }) => [
+          ...(has(p, SF.SEED_TURNED) ? [poi("seed-1", "seeded"), worldFlag(SW.SEEDED), news("Someone turned garden earth into the seed ground. A promise nobody can cash.")] : []),
           wink("A seed is a promise you cannot cash. You planted one with what a hole became."),
         ],
       }),

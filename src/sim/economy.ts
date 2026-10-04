@@ -73,7 +73,10 @@ const NODE_EXTRACTED = (amount: number, tax: number) =>
 const NODE_KEPT = "You leave it unspent. Readiness. No pay.";
 const NODE_KEEP_FIRST = "It has to be kept before it can be named safe.";
 const NODE_SEEDED = "A seed in the ground under the node. The Clearing will know it.";
-const REPAIR_USED = "The print holds again. Cult objects were never cracked.";
+// The repair paper mends a body, as the stall that sells it says; holding the insurance paper is not the death it is for
+// (LINES.INSURANCE_USED is the waking's, killPlayer's).
+const REPAIR_USED = "The body holds again. Cult objects were never cracked.";
+const INSURANCE_HELD = "You hold the paper. Death walks you back to where you fell, once.";
 const MARKET_GUEST = "A stall of lights. A guest cannot list or buy a sky they cannot see.";
 const MARKET_NOT_EXHIBITION = "Cult does not list. It stays in the hand that buried it.";
 const MARKET_NO_ITEM = "You do not hold that.";
@@ -321,7 +324,7 @@ export function applyUse(w: WorldState, id: string, itemId: string): WorldState 
   if (!hasItem(p, itemId)) return speak(w, p, LINES.CANT_USE);
   if (itemId === ITEM_INSURANCE) {
     if (p.insured) return speak(w, p, LINES.ALREADY);
-    return speak(w, removeItem({ ...p, insured: true }, itemId), LINES.INSURANCE_USED);
+    return speak(w, removeItem({ ...p, insured: true }, itemId), INSURANCE_HELD);
   }
   if (itemId === ITEM_REPAIR) {
     return speak(w, removeItem({ ...p, hp: MAX_HP }, itemId), REPAIR_USED);

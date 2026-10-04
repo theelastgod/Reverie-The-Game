@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CLAIM_CAP } from "../sim/constants";
-import { claimRow, holdClock, ledgerModel } from "./ledger";
+import { claimRow, holdClock, ledgerKey, ledgerModel } from "./ledger";
 
 const you = (over: Record<string, unknown> = {}) => ({
   id: "me", guest: false, bestand: 20, banked: 5, claimsFiled: 1,
@@ -65,5 +65,15 @@ describe("ledgerModel", () => {
     expect(m.exhibition[0].listable).toBe(true);
     expect(m.listings[0].canBuy).toBe(false);
     expect(m.claims).toEqual([]);
+  });
+});
+
+describe("ledgerKey", () => {
+  it("changes when a listing's price moves, so the row is redrawn with the city's new price", () => {
+    const city = (price: number) => ({ id: "listing:city:clearing", sellerId: "", sellerName: "the resistance", item: { id: "city:clearing", kind: "exhibition" as const, name: "A Clearing", qty: 1, value: 0 }, price, at: 0 });
+    const at40 = ledgerKey(ledgerModel({ now: 0, you: you() as never, market: [city(40)] }));
+    const at48 = ledgerKey(ledgerModel({ now: 0, you: you() as never, market: [city(48)] }));
+    expect(at48).not.toBe(at40);
+    expect(ledgerKey(ledgerModel({ now: 9, you: you() as never, market: [city(40)] })), "the clock alone does not rebuild").toBe(at40);
   });
 });

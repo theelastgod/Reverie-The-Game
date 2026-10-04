@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PAPER_INSURANCE, PAPER_REPAIR, browserOwns, escapeDoes, focusAfterClose, hudControlFocused, paperToUse } from "./keys";
+import { PAPER_INSURANCE, PAPER_REPAIR, browserOwns, escapeDoes, focusAfterClose, hudControlFocused, paperToUse, pointerReleasesFocus } from "./keys";
 import { ITEM_INSURANCE, ITEM_REPAIR } from "../sim/economy";
 
 /** A fake element: what it matches, whom it contains, and whether it is still in the document. */
@@ -110,5 +110,13 @@ describe("paperToUse (the I key)", () => {
     expect(paperToUse({ items: [repair], insured: false, hp: 100 }, 100)).toBeNull();
     expect(paperToUse({ items: [insurance, repair], insured: true, hp: 100 }, 100)).toBe(PAPER_INSURANCE);
     expect(paperToUse({ items: [{ id: "copy:wink", kind: "exhibition", qty: 1 }], insured: false, hp: 40 }, 100)).toBeNull();
+  });
+});
+
+describe("pointerReleasesFocus", () => {
+  it("a mouse or finger press gives the keys back to the game; a keyboard activation keeps its focus", () => {
+    expect(pointerReleasesFocus(1)).toBe(true); // a click
+    expect(pointerReleasesFocus(2)).toBe(true); // a double click
+    expect(pointerReleasesFocus(0)).toBe(false); // Space or Enter on a focused button
   });
 });

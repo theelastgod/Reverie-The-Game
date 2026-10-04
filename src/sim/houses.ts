@@ -28,14 +28,15 @@ const SITE_NAMES: Record<string, string> = { "clearing-ring": "the Clearing", "h
 const TITHE_WRONG_HALL = "This hall keeps another House standing. Yours is elsewhere.";
 const TITHE_PAID = (cost: number) => `Tithe. ${cost} Bestand. Upkeep, not a stick. The lamp holds.`;
 const BOUNTY_DARK = "The hall is dark. Read the plaque before you ask the pool for anything.";
-const BOUNTY_NONE = "No omen yet. Win the hole first.";
+const BOUNTY_NONE = "No omen yet. Win a hold first."; // the holds are at the ring and the hot street by turns
 const BOUNTY_POOL = "The pool is thin. Tithe is upkeep; bounty comes after.";
 const BOUNTY_HELD = "The bounty already paid. One omen, one purse.";
 const BOUNTY_PAID = `Bounty. ${BOUNTY_AMOUNT} Bestand from the tithe pool. It was already priced.`;
 const WAR_OPENS = (site: string) => `A House hold opens at ${site}. Stand there. Standing is all it pays.`;
 const WAR_WON = (house: Fourfold, site: string) => `${HOUSE_NAMES[house]} held ${site}. Standing and an omen. Not a bigger stick.`;
 const WAR_NONE = (site: string) => `The hold at ${site} passed. No House stood in it long enough.`;
-const WAR_OMEN = "Your House held the hole. Tithe eases while the omen lasts.";
+// The site the window was held at (the windows alternate between the ring and the hot street), as the news names it.
+const WAR_OMEN = (site: string) => `Your House held ${site}. Tithe eases while the omen lasts.`;
 
 // ---------------------------------------------------------------- helpers
 
@@ -146,7 +147,7 @@ export function tickHouseWar(w: WorldState, dt: number): WorldState {
   const players = new Map(next.players);
   for (const p of next.players.values()) {
     if (p.guest || p.house !== winner) continue;
-    players.set(p.id, notice(p, WAR_OMEN, next.now, "gold"));
+    players.set(p.id, notice(p, WAR_OMEN(siteName), next.now, "gold"));
   }
   return { ...next, players };
 }

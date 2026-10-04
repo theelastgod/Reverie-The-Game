@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 638 tests (2026-10-04), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 652 tests (2026-10-04), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -32,8 +32,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the render check fails on any file the city's own origin fails to serve.
   On 2026-10-04 a sweep for defects a player would meet (six lenses, each
   finding reproduced and then challenged by a skeptic) confirmed and
-  fixed twenty-one (see Done); a second round with six new lenses is the
-  routine's next work.
+  fixed twenty-one, and a second round with six new lenses eighteen more
+  (see Done).
 - **Two steps only you can take** (Backlog 1 and 2 have the detail): the
   Stage B art waits on the results host being reachable from a machine that
   runs `node scripts/pull-generated.mjs`; the deploy waits on either the
@@ -79,6 +79,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   log that no document asks for; `FLAG_NEWS_GAP`, revert it if you want
   every raise). The funeral desk sells readiness, +2 for 5 Bestand, as
   often as it is paid (a sink by design, or a purchase of the Passing?).
+- **From the sweep's second round** (2026-10-04): an enemy that fells a
+  body now lets it go (with every other enemy on it) and walks back to
+  its post; before, it chased the woken body and could stand pinned
+  inside its leash, blind to everyone, and a second guest felled Desk
+  Three without taking a hit. The skeptic called the old way the
+  contract's (CONTRACTS said the swing recovers on the same body) and
+  the change yours; it is kept because the pin is the same harm as a
+  confirmed finding (an enemy stuck walking home), and it is
+  revertable (`letGo` in world.ts and its two callers in combat.ts).
+  A held Clearing that cannot be contested again is joined rather than
+  looked at; the confirmed case is a spent reserve (the ring was locked
+  for the season), and I extended it to the half hour the asphalt sets,
+  which was a wait. Judged intended and left as they are, each yours to
+  change: a failed rite closes a live contest ("The hole closes"); a
+  Movement I guest's confronted hour ends Halla's sales for the city;
+  the Officer stands wherever the latest census or honest answer put
+  him; a Witness's Blitz traces offer Bury and Loot (verbs follow
+  sight); the last hold of a season loses its omen to the roll on the
+  same tick; the freeze desk says "a freeze holds" after the freeze has
+  lapsed; a purse of one banks nothing (the floor is the contract's).
 - **The story is now `SYNOPSIS.md`** (your brief of 2026-10-02, the
   afternoon). The enemy has a name and a shape: the Concern, the company
   that owns the numbers, and Anselm Caul, its chief, who is a guest (he
@@ -2162,6 +2182,45 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   (kept behind a five-minute guard, see the status block).
   `src/sim/sweep.test.ts`, and tests in session, economy, events, hud
   and wallet, hold every case.
+- The player-defect sweep, round two (2026-10-04, morning): six new
+  lenses (enemies and the body in a fight; the Clearing, the Passing
+  and the House holds; the money paths; the side hours in a shared
+  world; the client's input and panels; time at its edges), round
+  one's findings given as already found. Twenty-seven reported,
+  eighteen confirmed and fixed: a Clearing kept open by its contest and
+  then drained could never be prepared, joined or reopened until the
+  season rolled, so every later Angel stood at Movement IV's prepare
+  step (high; a held hole that cannot be contested again is joined); a
+  wreckage could be looted or buried by its id up to three minutes past
+  the hour the body could see it (high, twice; the server now takes
+  only what the prompt offers that body); an enemy whose walk home met
+  a pillar stayed in `return` for good, blind and free to fell (Desk
+  Three on the guest spine, Pell, the Foundry clerk, the cable desk:
+  set down whole at its post when the walk stalls or runs 30 s); a fall
+  to an enemy left a live ruin duel on both bodies (every fall ends it
+  now); an answered duel's fall after its grave's 45 s was not the
+  duel's (its sixty seconds keep the grave); the omen's notice named
+  the hole when the House held the hot street; the clinic and the
+  shrine sold repair to a whole body, a second insurance and aura past
+  full (offered only when they do something); the insurance paper spoke
+  the death's line on holding it and the repair paper spoke of a print;
+  three side steps that close on another body's act (the lamp, the mute
+  bell, the seed ground) posted that act's news and re-stamped the place
+  for every skipper; another body's copy hour moved Movement I's Quill
+  to the listing board and another's ledger hour moved Movement II's
+  Pim off the wake (each keeps its beat for the body on it, as the
+  Officer's corridor does); Pim held hours for Angels not yet under, a
+  marker behind a shut door; a locked guest was told it had lit the
+  altar or waved the van (side hours' verbs hold the lock); the ledger
+  never redrew a listing's new price, reset a price being typed to 9 on
+  any rebuild (another body's listing listed yours at 9), and could not
+  be closed with L at the desk; a HUD button clicked with the mouse kept
+  focus, so Space pressed it again instead of striking (the render check
+  now clicks the stance chip and fails on the old HUD); the prompt's T
+  named one body and truced another. The nine judged otherwise are in
+  the status block. `src/sim/sweep2.test.ts`, and tests in spine,
+  economy, side, ledger and keys, hold every case; each of the sweep2
+  cases fails on the commit before.
 
 ## Verified (2026-09-25, integration)
 
@@ -3184,6 +3243,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   clerk falls: socket closed"), and a hunt that does run out prints its
   last eight seconds. Movement I alone and then `test:campaign:4` on
   fresh worlds passed, and the render check after.
+- The player-defect sweep, round two (2026-10-04, morning): typecheck, 652 tests in
+  48 files (sweep2.test.ts's eleven cases, each failing on 857e4a9, and
+  the new cases in spine, economy, side, ledger and keys), the build, the
+  play build and the stage, and on a fresh local world (from a worktree)
+  the session smoke, `test:campaign:4` (Movements I–IV; once before the
+  side-hour and client fixes and once after all of them) and the render
+  check, whose new pointer step fails on a HUD without the release (run
+  both ways). The enemy changes were also driven in-sim before the wire:
+  Desk Three leashed against its row's pillar is set down whole at its
+  desk, and two cold desks on one felled body both walk back.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

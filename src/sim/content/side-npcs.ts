@@ -405,7 +405,16 @@ const sexton: NpcDef = {
   portrait: "plate-burial.jpg",
   sprite: "nara",
   party: false,
-  personal: (ctx) => (finished(ctx.p, SQ.LEDGER) ? { ...place("sexton-garden"), state: "garden" } : null),
+  personal: (ctx, shared) => {
+    if (finished(ctx.p, SQ.LEDGER)) return { ...place("sexton-garden"), state: "garden" };
+    // Movement II meets this body at the wake beside the shrine (the spine's `sexton`), wherever another body's ledger walked him
+    // (the player-defect sweep, round two; the Officer's corridor guard, above, is the same rule).
+    if (angel(ctx.p) && has(ctx.p, F.UNDER) && !has(ctx.p, F.TALKED_SEXTON) && shared.state !== "home") {
+      const home = NPC_HOMES.sexton;
+      return { x: home.x, y: home.y, district: home.district, present: true, state: "home" };
+    }
+    return null;
+  },
   // Movement II: an Angel who has just woken under the shrine is met at the wake, whatever they said to him before.
   entry: ({ p }) => (angel(p) && has(p, F.UNDER) && !has(p, F.TALKED_SEXTON) ? "wake" : has(p, SF.SEXTON_MET) ? "hub" : "greet"),
   nodes: {
@@ -441,9 +450,10 @@ const sexton: NpcDef = {
       text: sextonHub,
       effects: [tally(SF.SEXTON_VISITS)],
       choices: [
-        { id: "ledger", label: "The ledger in your coat.", when: ({ p }) => angel(p) && !offered(p, SQ.LEDGER), next: "ledger-offer" },
+        // Pim's hours are the Care's (Movement II): an Angel not yet under cannot reach him, so he holds none for it (the reach audit's rule)
+        { id: "ledger", label: "The ledger in your coat.", when: ({ p }) => angel(p) && has(p, F.UNDER) && !offered(p, SQ.LEDGER), next: "ledger-offer" },
         { id: "ledger-done", label: "Two more numbers.", when: ({ p }) => atStep(p, SQ.LEDGER, 1), next: "ledger-done" },
-        { id: "twelve", label: "Number twelve.", when: ({ p }) => angel(p) && offered(p, SQ.LEDGER) && !offered(p, SQ.TWELVE), next: "twelve-offer" },
+        { id: "twelve", label: "Number twelve.", when: ({ p }) => angel(p) && has(p, F.UNDER) && offered(p, SQ.LEDGER) && !offered(p, SQ.TWELVE), next: "twelve-offer" },
         { id: "twelve-named", label: "Twelve has a name.", when: ({ p }) => atStep(p, SQ.TWELVE, 2), next: "twelve-named" },
         { id: "lamp", label: "The lamp in the hall.", when: ({ p }) => angel(p) && has(p, F.HALL) && !offered(p, SQ.LAMP), next: "lamp-offer" },
         { id: "lamp-told", label: "It is lit.", when: ({ p }) => atStep(p, SQ.LAMP, 1), next: "lamp-told" },

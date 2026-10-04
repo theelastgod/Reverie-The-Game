@@ -366,10 +366,12 @@ describe("items", () => {
     const w = makeWorld([makePlayer({ hp: 10, items: [paper(ITEM_INSURANCE), paper(ITEM_REPAIR)] })]);
     const insured = applyUse(w, "p1", ITEM_INSURANCE);
     expect(you(insured).insured).toBe(true);
-    expect(you(insured).heard).toBe("INSURANCE_USED");
+    // holding the paper is not the death it is for: LINES.INSURANCE_USED is the waking's (killPlayer)
+    expect(you(insured).heard).toBe("You hold the paper. Death walks you back to where you fell, once.");
     expect(hasItem(you(insured), ITEM_INSURANCE)).toBe(false);
     const healed = applyUse(insured, "p1", ITEM_REPAIR);
     expect(you(healed).hp).toBe(MAX_HP);
+    expect(you(healed).heard, "the paper mends a body, as the stall says").toBe("The body holds again. Cult objects were never cracked.");
     expect(you(applyUse(healed, "p1", ITEM_REPAIR)).heard).toBe("CANT_USE");
     const cult = makeWorld([makePlayer({ items: [{ id: "cult:mark", kind: "cult", name: "mark", qty: 1, value: 0, bound: true }] })]);
     expect(you(applyUse(cult, "p1", "cult:mark")).heard).toBe("CANT_USE");

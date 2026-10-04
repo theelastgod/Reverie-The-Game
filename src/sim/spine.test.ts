@@ -1114,6 +1114,21 @@ describe("the ring's ground follows the hole", () => {
     expect(offered(w)).toEqual(["look"]);
     expect(me(interact(w, ME, "clearing-ring", "look")).heard).toContain("reserve is spent");
   });
+
+  it("a hole its last contest kept open, its reserve spent, is stood in: the late Angel joins it, takes its stance and reaches the rite", () => {
+    // Kept by its contest and drained after (the reserve fills back only while closed): nothing can open it again this season.
+    const held = atTheRing({ open: true, openedAt: 50, reserve: 0, contest: { active: false, keep: 1, extract: 1, endsAt: 170, votes: {} }, lastOutcome: "kept" }, "held");
+    const w = { ...held, now: 50 + 6000 };
+    expect(offered(w)).toEqual(["join"]);
+    const joined = interact(w, ME, "clearing-ring", "join");
+    expect(me(joined).flags[F.PREPARE]).toBe(1);
+    const kept = interact(joined, ME, "clearing-ring", "keep");
+    expect(me(kept).choices[C.CLEARING]).toBe("keep");
+    const step = tick(kept);
+    expect(offered(step), "the stance taken, the rite is offered").toContain("pass");
+    // still setting after a kept contest, the open hole is stood in too, not waited at
+    expect(offered({ ...held, now: 50 + 60, clearing: { ...held.clearing, reserve: 20 } })).toEqual(["join"]);
+  });
 });
 
 // ---------------------------------------------------------------- the desk and the window
