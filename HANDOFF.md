@@ -2233,14 +2233,20 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   hand, lens by lens, because the multi-agent run waited on an approval
   nobody was there to give): the K kits and the messengers, personas on
   the spine, two bodies on the spine together, reconnects and the
-  protocol's edges. One defect: a Dweller's K planted in the nearest
-  node in reach even when a seed was already there, said "Already." and
-  spent its thirty seconds; it now plants in the nearest bare node and a
-  press that plants nothing spends nothing (the need line says what it
-  needs). `src/sim/sweep3.test.ts` holds it; it fails on d352a45. One
-  owner call (seeds do nothing yet; status block). The rest came back
-  clean, by design where it differs (see Verified). The journal and map
-  and the weather's content are not yet swept this round.
+  protocol's edges, the content that reads the weather. Two defects: a
+  Dweller's K planted in the nearest node in reach even when a seed was
+  already there, said "Already." and spent its thirty seconds (it now
+  plants in the nearest bare node and a press that plants nothing spends
+  nothing; the need line says what it needs); and at the forecast glass
+  the front's read said "The drift is up." while the weather was easing
+  toward baseline (and the reverse), so a Sky Angel heard the glass
+  contradict itself between F and E, and the band ran into the next
+  sentence (both reads now say the glass's own drift line, `driftLine`
+  in pois.ts, the launch's climb included; SCRIPT.md's front lines take
+  the full stop). `src/sim/sweep3.test.ts` holds both; each fails on the
+  commit before. One owner call (seeds do nothing yet; status block).
+  The rest came back clean, by design where it differs (see Verified).
+  The journal and map are not yet swept this round.
 
 ## Verified (2026-09-25, integration)
 
@@ -3290,7 +3296,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   only the Dweller's misbehaved. The client's message checks refuse
   every malformed field (types, non-finite numbers, long strings,
   polluted keys, unknown ops), and the socket backs off to 10 s and
-  stops on 4001.
+  stops on 4001. Every rule that reads the weather compares the raw
+  figure at the line the floored band turns on (71, 91), so rule, band
+  and HUD agree; the glass's two reads now agree on the drift.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

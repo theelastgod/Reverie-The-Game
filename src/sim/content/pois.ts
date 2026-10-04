@@ -971,12 +971,17 @@ const glassLines = (ctx: Ctx): string => {
   if (ctx.p.choices[C.GLASS] !== "read") return crossing;
   return `${crossing} Your line is in it, the length of your readiness. The city's figure: ${cityFigure(ctx.w)}. In the hole: ${ctx.w.clearing.heldBy.length}.`;
 };
+/** Which way the weather is moving, in the glass's words: up while a lit launch climbs it, else toward baseline. The front's read (side-pois.ts) says the same. */
+export const driftLine = (w: Ctx["w"]): string =>
+  launchOpen(w) && !launchDark(w) ? "The drift is up: the launch climbs it a point at a time."
+    : w.gestell > GESTELL_BASELINE + 0.5 ? "The drift is down: the weather eases toward baseline."
+      : w.gestell < GESTELL_BASELINE - 0.5 ? "The drift is up: the weather climbs toward baseline."
+        : "No drift. The weather sits at baseline.";
 const forecastLine = (ctx: Ctx): string => {
   const band = weatherBand(ctx.w.gestell);
   const base = WEATHER_LABELS[band];
   if (ctx.p.house !== "sky") return `Forecast glass. ${base}${calendarLine(ctx)}${glassLines(ctx)}`;
-  const drift = launchOpen(ctx.w) && !launchDark(ctx.w) ? "The drift is up: the launch climbs it a point at a time." : ctx.w.gestell > GESTELL_BASELINE + 0.5 ? "The drift is down: the weather eases toward baseline." : ctx.w.gestell < GESTELL_BASELINE - 0.5 ? "The drift is up: the weather climbs toward baseline." : "No drift. The weather sits at baseline.";
-  return `Forecast glass. ${base} ${drift} Only Sky sees the front.${calendarLine(ctx)}${glassLines(ctx)}`;
+  return `Forecast glass. ${base} ${driftLine(ctx.w)} Only Sky sees the front.${calendarLine(ctx)}${glassLines(ctx)}`;
 };
 
 /** The oval on the wall of the room behind the glass: the one thing of Caul's in the city a hand can reach. Q puts it out, once the offer has been made and while the glass is undecided. */

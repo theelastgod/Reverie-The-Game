@@ -8,6 +8,9 @@ import { districtAt } from "./map";
 import { emptyWorld, spawnGuest } from "./world";
 import { applyAction } from "./actions";
 import { LINES } from "./content";
+import { SIDE_POI_VERBS } from "./content/side-pois";
+import { POI_CONFIGS } from "./content/pois";
+import type { Ctx } from "./types";
 
 function body(w: WorldState, id: string, x: number, y: number, patch: Partial<Player> = {}): WorldState {
   const players = new Map(w.players);
@@ -29,5 +32,24 @@ describe("the K kits", () => {
     w = applyAction(w, "b", { t: "kit" });
     expect(me(w, "b").kitCd, "nothing planted, nothing spent").toBe(0);
     expect(me(w, "b").heard).toBe(LINES.KIT_NEED.dweller);
+  });
+});
+
+describe("the content that reads the weather", () => {
+  const say = (verb: { say?: unknown } | undefined, ctx: Ctx): string => {
+    const s = verb?.say;
+    return typeof s === "function" ? (s as (c: Ctx) => string)(ctx) : String(s ?? "");
+  };
+  it("the front's read at the forecast glass says the drift the glass says, and the way the weather is moving", () => {
+    for (const gestell of [60, 20]) {
+      const w = { ...emptyWorld(), gestell };
+      const ctx: Ctx = { w, p: { ...spawnGuest("a"), guest: false, house: "sky" }, now: w.now };
+      const front = say(SIDE_POI_VERBS["forecast-glass"].find(v => v.choice === "side:front:read"), ctx);
+      const glass = say(POI_CONFIGS["forecast-glass"].verbs.find(v => v.choice === "read"), ctx);
+      const moving = gestell > 40 ? "The drift is down: the weather eases toward baseline." : "The drift is up: the weather climbs toward baseline.";
+      expect(glass, `the glass at ${gestell}`).toContain(moving);
+      expect(front, `the front's read at ${gestell}`).toContain(moving);
+      expect(front, "the band is its own sentence").toMatch(/^\w+ weather\. The drift/);
+    }
   });
 });

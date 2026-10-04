@@ -11,6 +11,7 @@ import { F } from "./ids";
 import type { Ctx, PoiVerb } from "../types";
 import { COPY_ITEM_ID, SC, SF, SQ, has, hasCopy, stepOf } from "./side";
 import { clearingPrice } from "./market";
+import { driftLine } from "./pois";
 
 const atStep = (questId: string, step: number) => ({ p }: Ctx): boolean => stepOf(p, questId) === step;
 const notAtStep = (questId: string, step: number) => ({ p }: Ctx): boolean => stepOf(p, questId) !== step;
@@ -266,8 +267,9 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
       when: either(atStep(SQ.FRONT, 0), atStep(SQ.SKY_GLASS, 0)), guest: "spectate", once: SF.FRONT_READ,
       say: ({ w, p }) => {
         const band = WEATHER_LABEL[weatherBand(w.gestell)];
-        const drift = w.gestell > 40 ? "The drift is up." : w.gestell < 40 ? "The drift is down." : "The drift is flat.";
-        return p.house === "sky" ? `${band} ${drift} Behind the band, a front. You can see its edge. Nobody else on the Kerb can.` : `${band} ${drift} Behind the band, a front. You cannot see its edge. You can see that it has one.`;
+        // The glass's own words for the drift (pois.ts driftLine): the same glass never says the weather climbs while it eases.
+        const drift = driftLine(w);
+        return p.house === "sky" ? `${band}. ${drift} Behind the band, a front. You can see its edge. Nobody else on the Kerb can.` : `${band}. ${drift} Behind the band, a front. You cannot see its edge. You can see that it has one.`;
       },
     },
     {

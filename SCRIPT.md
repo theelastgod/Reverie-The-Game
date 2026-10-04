@@ -2078,8 +2078,8 @@ The paper panel, the gold mark:
 *Movement II, the Kerb of Hours. Angels with a hall read; the forecast glass, then Halla Voss, for nothing. Plate `house-hall.jpg`. Changes a standing: Sky; the glass lit, for everyone. The read is shared with the omen-glass hour and is heard once, in whichever comes first.*
 
 **THE GLASS** — `forecast-glass` read the front, `side:front:read` (shipped; side-pois.ts)
-> {band} {drift} Behind the band, a front. You cannot see its edge. You can see that it has one.
-> *House of Sky:* {band} {drift} Behind the band, a front. You can see its edge. Nobody else on the Kerb can.
+> {band}. {drift} Behind the band, a front. You cannot see its edge. You can see that it has one.
+> *House of Sky:* {band}. {drift} Behind the band, a front. You can see its edge. Nobody else on the Kerb can.
 [SF.FRONT_READ]
 
 **HALLA VOSS** — `front-report`, from the hub's "There is a front behind the band." (shipped; side-npcs.ts)
@@ -2116,8 +2116,8 @@ The paper panel, the gold mark:
 *Movement II, the Kerb of Hours. Angels with a hall read, once the hour bell has struck; the glass read, then a sliver of it taken. Plate `house-hall.jpg`. Changes a cult object: omen glass.*
 
 **THE GLASS** — `forecast-glass` read the front, `side:front:read` (shipped; side-pois.ts; as in the storm-front hour, and skipped when already read there)
-> {band} {drift} Behind the band, a front. You cannot see its edge. You can see that it has one.
-> *House of Sky:* {band} {drift} Behind the band, a front. You can see its edge. Nobody else on the Kerb can.
+> {band}. {drift} Behind the band, a front. You cannot see its edge. You can see that it has one.
+> *House of Sky:* {band}. {drift} Behind the band, a front. You can see its edge. Nobody else on the Kerb can.
 
 **THE GLASS** — `forecast-glass` take the omen glass, `side:skyhall:take` (shipped; side-pois.ts)
 > A sliver of the forecast glass comes away in your hand. It shows the drift. It will never show the hour.
