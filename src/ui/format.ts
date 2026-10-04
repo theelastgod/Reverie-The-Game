@@ -4,7 +4,7 @@
  * snapshot and is only shaped for the eye.
  */
 import { bearing as mapBearing, DISTRICT_BY_ID } from "../sim/map";
-import { ANGEL_SUPPLY, AURA_DIM, TEST_SERIAL } from "../sim/constants";
+import { ANGEL_SUPPLY, AURA_DIM, AURA_PRESENT, TEST_SERIAL } from "../sim/constants";
 import type { DistrictId, House, Messenger, Objective, Vec } from "../sim/types";
 import type { GlassView } from "../sim/protocol";
 import { countdown } from "../sim/launch";
@@ -113,7 +113,7 @@ export function identityLine(you: { guest: boolean; serial: number | null; house
 export function auraTier(aura: number, guest: boolean): 0 | 1 | 2 | 3 {
   if (guest || !Number.isFinite(aura) || aura <= 0) return 0;
   if (aura < AURA_DIM) return 1;
-  if (aura < 60) return 2;
+  if (aura < AURA_PRESENT) return 2; // the server's tier (snapshot.ts publicPlayer), so a body reads the same everywhere
   return 3;
 }
 

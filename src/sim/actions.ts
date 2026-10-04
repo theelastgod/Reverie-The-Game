@@ -10,6 +10,7 @@ import { F } from "./content/ids";
 import { LINES } from "./content";
 import { auraSeed, formatSerial, historyMarkFor, houseFor, messengerFor, proofOf, serialHistoryMark, validLink, winkSchoolFor } from "./identity";
 import { say } from "./world";
+import { POSITIONS } from "./map";
 import { applyDodge, applyFlag, applyHeavy, applyKit, applyStance, applyStrike, applyTruce } from "./combat";
 import { applyMarket, applyUse } from "./economy";
 import { applyChoose, applyClose, applyTalk } from "./dialogue";
@@ -141,6 +142,34 @@ export function applyLink(w: WorldState, id: string, serial: number, proof: Link
   const mark = serialHistoryMark(serial) ?? historyMarkFor(serial, p.history, p.deaths);
   if (mark && !cur.history.some(m => m.id === mark.id)) cur = { ...cur, history: [...cur.history, mark] };
   return cur;
+}
+
+/**
+ * One body per Angel (PROMPT.md §10): the newest proven link holds a serial. A saved body whose serial another body now holds
+ * (relinked elsewhere, or the Angel sold and linked by its holder) comes back unsealed: its progress kept, its seal gone, a
+ * locked guest at the threshold that hears why; a link, the same Angel again or another, unlocks it where it stands.
+ */
+export function unsealBody(p: Player, now: number): Player {
+  const flags = { ...p.flags };
+  delete flags[F.ANGEL];
+  const at = POSITIONS["going-under"];
+  return say({
+    ...p,
+    guest: true,
+    serial: null,
+    name: "GUEST",
+    house: "",
+    messenger: "",
+    winkSchool: "",
+    flags,
+    locked: true,
+    flagged: false,
+    dialogue: null,
+    x: at.x,
+    y: at.y,
+    district: at.district,
+    respawn: { x: at.x, y: at.y, district: at.district },
+  }, LINES.LINK_MOVED, now);
 }
 
 // ---------------------------------------------------------------- the switch

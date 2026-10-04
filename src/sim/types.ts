@@ -190,6 +190,7 @@ export type YieldNode = {
   regenAt: number;
   kept: boolean; // marked kept; glows; Herald can announce it
   keptBy: string;
+  keepers?: string[]; // every body that kept it since its last extraction: each keeps a node once a cycle, whoever kept it first (never on the wire)
   announcedUntil: number;
   seed: boolean; // a Dweller planted a Clearing seed here
 };

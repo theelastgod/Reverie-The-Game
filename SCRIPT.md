@@ -250,8 +250,8 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 **THE RECORDER** — `memorial-recorder` listen (shipped, pois.ts)
 > *(before Nara:)* A recorder on a crate. A woman's voice in it, one word on a loop. Nara holds the grave open west of here. Speak with her first.
 > *(after Nara:)* A woman's voice, on a loop. One word, then the quiet, then the word again. The unit is older than the crate it sits on, and somebody keeps it running.
-> *(dismantled:)* The recorder is open. The coil is gone. The voice stopped mid-breath and did not start again. The copper is in a coffin.
-[F.HEARD_RECORDER once Nara has been met; the voice is Ione Kade's, from the counter, and nobody says so until IV.1; a guest hears half of the last word in the game here]
+> *(you took the copper:)* The recorder is open. The coil is gone. The voice stopped mid-breath and did not start again. The copper is in a coffin.
+[F.HEARD_RECORDER once Nara has been met; the voice is Ione Kade's, from the counter, and nobody says so until IV.1; a guest hears half of the last word in the game here. The recorder is each body's own since the player-defect sweep (2026-10-04): what you see and hear here follows your choice, never another body's, so every arrival has both E and Q]
 
 **THE RECORDER** — E dismantle the copper (shipped, pois.ts; the same line as Nara's `memorial-copper`)
 > You lift the coil from the recorder. The voice stops mid-breath. Nara folds the copper around the coffin. No part goes to market.
@@ -1201,6 +1201,7 @@ The paper panel, the gold mark:
 > Listed at {price}. Listing fee {fee}. Exhibition decays. *· with Glamour:* Listed at {price}. Glamour waived the fee. Exhibition still decays.
 > You sold a copy. Aura thins. Cult does not list.
 > *With nothing to sell:* Nothing in your hand is a print. Craft one first.
+> *A print decayed to nothing (new, the player-defect sweep, 2026-10-04; economy.ts, the stall's list):* That print has decayed to nothing. The stall does not list nothing.
 
 **THE BOARD** — the listing board, a buy of the Clearing (shipped since the movements audit, as II.8)
 > That is a price, not a sale. The hole does not travel.
@@ -1794,7 +1795,7 @@ The paper panel, the gold mark:
 *Skipped when the altar is already lit (anyone's Watch at it, pois.ts): the step closes on its own once the two nodes are kept, and the Wink lands.*
 
 ### side-nave-another-night — Another night
-*Movement II, the Nave of Tubes. Angels only, with the voice left running (anyone's `Q` at the recorder, I.8) and Nara's plot closed by your hand; the memorial recorder, twice, the second time from under. Plate `memorial-recorder-v1.jpg`. Changes a cult object: the silence between its words. Whose voice it is stays unsaid here; that is IV.1's.*
+*Movement II, the Nave of Tubes. Angels only, with the voice left running (your own `Q` at the recorder, I.8; another body's no longer counts since the player-defect sweep) and Nara's plot closed by your hand; the memorial recorder, twice, the second time from under. Plate `memorial-recorder-v1.jpg`. Changes a cult object: the silence between its words. Whose voice it is stays unsaid here; that is IV.1's.*
 
 **THE RECORDER** — `memorial-recorder` sit with the voice, `side:night:sit` (shipped; side-pois.ts)
 > The voice runs its length and starts again. Between the last word and the first there is a gap you did not notice the first time. You notice it now.
@@ -2051,6 +2052,7 @@ The paper panel, the gold mark:
 
 **CORVIN SLATE** — `hub`, at the Ring from now on (shipped; side-npcs.ts)
 > He is under the shrine of the mute bell with a form on a board. "Two with tongues. One without. Your count was right. I wanted to see the one without."
+> *To a body that never counted, when another's census walked him here (new, the player-defect sweep, 2026-10-04):* He is under the shrine of the mute bell with a form on a board. "Two with tongues. One without. Somebody counted them for Safety. I wanted to see the one without."
 
 ### side-kerb-hour-that-does-not-strike — The hour that does not strike
 *Movement I, the Kerb of Hours. From Halla Voss; under the hour bell three times without leaving, then her. Plate `wing-star.png`. Guest-legal. Changes a POI: `hour-bell` struck, for everyone.*

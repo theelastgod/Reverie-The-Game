@@ -298,12 +298,13 @@ describe("promptFor", () => {
     expect(guestPrompt.verbs.map(v => v.key)).toEqual(["F"]);
   });
 
-  it("hides a frozen node, skips a POI without verbs for the viewer, and offers Speak at an NPC", () => {
+  it("keeps a frozen node's choice in the prompt, skips a POI without verbs for the viewer, and offers Speak at an NPC", () => {
+    // the freeze postpones extraction, not the choice: E answers with the freeze's line (SCRIPT.md, "for everyone"), Q keeps
     const base = emptyWorld();
     const node = base.nodes[0];
     const frozen: WorldState = { ...base, frozen: { [node.district]: 100 } };
     const w = add(frozen, at(angel("a"), node.x, node.y));
-    expect(promptFor({ w, p: me(w, "a"), now: 0 })).toBeNull();
+    expect(promptFor({ w, p: me(w, "a"), now: 0 })?.verbs.map(v => v.choice)).toEqual(["extract", "keep"]);
 
     const shrine = POSITIONS["care-shrine"];
     const g = add(emptyWorld(), at(guest("g"), shrine.x, shrine.y));

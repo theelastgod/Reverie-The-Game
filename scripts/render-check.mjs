@@ -210,6 +210,19 @@ try {
   }
   console.log(`node: ${node}`);
 
+  // The ledger: L opens the panel and it lists the purse (the player-defect sweep: the panel was never filled, so nobody could
+  // buy, list or cancel on the Grid); L again closes it.
+  await page.keyboard.press('KeyL');
+  await page.waitForTimeout(400);
+  const ledgerPanel = await page.evaluate(() => {
+    const el = document.querySelector('#hud-ledger-panel');
+    return { shown: !!el && !el.hidden, text: (el?.textContent ?? '').replace(/\s+/g, ' ').trim() };
+  });
+  if (!ledgerPanel.shown || !/LEDGER/.test(ledgerPanel.text) || ledgerPanel.text.length < 40) failures.push(`L opened no filled ledger (${JSON.stringify(ledgerPanel.text.slice(0, 120))})`);
+  else console.log(`ledger: ${ledgerPanel.text.slice(0, 120)}`);
+  await page.keyboard.press('KeyL');
+  await page.waitForTimeout(200);
+
   // Keyboard reach: from the canvas, Shift+Tab enters the HUD's controls (the browser starts from their end),
   // another Shift+Tab moves within them, and Escape hands the keys back to the game (focus leaves the HUD).
   const focusedControl = () => page.evaluate(() => {

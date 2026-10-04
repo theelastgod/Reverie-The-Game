@@ -105,3 +105,10 @@ describe("the handshake", () => {
     expect(await linkWallet(challengeOnly as unknown as typeof fetch, pageWith(refuses))).toEqual({ ok: false, reason: "rejected" });
   });
 });
+
+describe("walletLine, the Angel that already walks (the player-defect sweep)", () => {
+  it("says the serial walks in another body, not that the wallet holds none", () => {
+    expect(walletLine({ ok: true, address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf", serial: null, walking: true })).toBe("That serial is already walking. One body per Angel.");
+    expect(walletLine({ ok: true, address: "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf", serial: null })).toContain("holds no Angel yet");
+  });
+});

@@ -6,7 +6,7 @@
 import type { Snap } from "../sim/protocol";
 import { weatherBand } from "../sim/protocol";
 import type { Notice, Prompt } from "../sim/types";
-import { AURA_MAX, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_MAX, RESTRAINT_MAX, RESTRAINT_WINK_MIN, STORM_RESTRAINT_BURN } from "../sim/constants";
+import { AURA_MAX, GESTELL_MELTDOWN, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_MAX, RESTRAINT_MAX, RESTRAINT_WINK_MIN, STORM_RESTRAINT_BURN } from "../sim/constants";
 import { F } from "../sim/content/ids";
 import { CREDITS } from "../sim/content/lines";
 import {
@@ -288,7 +288,8 @@ export class Hud {
     this.updateLock(snap);
     this.updateCredits(snap);
     this.events.set(eventRows(snap));
-    this.updateLedger(snap);
+    // the panel (the chip is updateLedger, above): it opens itself at the desk and the board, and fills whenever it is open
+    this.updateLedgerPanel(snap);
     this.dialogue.set(you.dialogue);
     this.journal.set(snap.objective, you, snap.sideObjectives, snap.pois.some(p => p.id === "hot-street" && p.state === "hot"), snap.glass, snap.now);
     this.minimap.update(snap);
@@ -436,10 +437,11 @@ export class Hud {
   }
 
   private updateWeather(snap: Snap): void {
-    const gestell = Math.round(snap.gestell);
+    const gestell = Math.floor(snap.gestell); // the band is the floored figure's (weatherBand): 90.5 reads 90, fat
     const band = weatherBand(snap.gestell);
     const frozen = snap.frozen.includes(snap.district);
-    const hot = snap.you.district === "wet" && band === "meltdown";
+    // the street flags itself at the rule's line (combat.ts weatherFlagged, GESTELL_MELTDOWN), not the band's (over 90)
+    const hot = snap.you.district === "wet" && snap.gestell >= GESTELL_MELTDOWN;
     const sig = [snap.weather, gestell, band, frozen, snap.weatherNamed, hot].join("|");
     if (sig === this.weatherSig) return;
     this.weatherSig = sig;

@@ -6,6 +6,7 @@ import type {
   HouseWar, Intent, Item, Listing, Messenger, Movement, Notice, NpcState, Objective, PartyState, PassingState, PoiState,
   Player, Prompt, SideObjective, Stance, WinkSchool, WorldState, Wreckage, YieldNode,
 } from "./types";
+import { GESTELL_CLEAR, GESTELL_FAT, GESTELL_MELTDOWN } from "./constants";
 
 /**
  * v3: the server sends a `fast` frame every step (you, players, enemies, the
@@ -72,8 +73,10 @@ export type NpcView = NpcState & { name: string; role: string; sprite: string; p
 export type PoiView = { id: string; state: string; count: number };
 
 /** `kitReadout` is the Ruin-angel kit reading the viewer's own history while Face is active. */
+/** `duelOffer` is a ruin duel another body has offered this viewer and not yet seen answered (the offer lives on the offerer's record). */
 /** The record's `notices` never ride in `you` on the wire: `Snap.notices` is their section (`YOU_OFF_WIRE` in frames.ts). */
-export type YouView = Omit<Player, "items" | "claims" | "notices"> & { items: Item[]; claims: Claim[]; notices?: Notice[]; kitReadout?: string[] };
+export type YouView = Omit<Player, "items" | "claims" | "notices"> & { items: Item[]; claims: Claim[]; notices?: Notice[]; kitReadout?: string[]; duelOffer?: DuelOffer };
+export type DuelOffer = { from: string; until: number };
 
 /**
  * The glass in a reader's journal (III.7, Phase C): what Caul's reader's post gives, "the launch's hour, the count in
@@ -159,10 +162,16 @@ export function cityFigure(w: WorldState): number {
 }
 
 export type WeatherBand = "clear" | "mixed" | "fat" | "meltdown";
+/**
+ * The band of the figure the HUD shows (gestell floored): PROMPT.md's 0–30, 31–70, 71–90, 91–100. The label, the
+ * weather's news and the HUD turn at the same line as the rules (GESTELL_FAT's yield, GESTELL_MELTDOWN's hot street and
+ * failing Passings), so a weather of 90.5 reads fat while the street is not yet flagged.
+ */
 export function weatherBand(gestell: number): WeatherBand {
-  if (gestell <= 30) return "clear";
-  if (gestell <= 70) return "mixed";
-  if (gestell <= 90) return "fat";
+  const g = Math.floor(gestell);
+  if (g <= GESTELL_CLEAR) return "clear";
+  if (g < GESTELL_FAT) return "mixed";
+  if (g < GESTELL_MELTDOWN) return "fat";
   return "meltdown";
 }
 export const WEATHER_LABEL: Record<WeatherBand, string> = {

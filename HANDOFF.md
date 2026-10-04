@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 615 tests (2026-10-04), the session smoke, the campaign smoke and the
+  fresh world; 638 tests (2026-10-04), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -63,6 +63,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   room behind the glass, Caul, the forge's reversal) is long; nothing was
   cut, since the synopsis wins. Whether its target moves or the third
   hour is trimmed is yours to say.
+- **Four small calls from the player-defect sweep** (2026-10-04): a
+  guest's Movement I purse follows the body into its Angel (PROMPT §5.1
+  says "wiped or capped at lock"; a skeptic found the documents and the
+  verified spine rely on it, so it stands; wiping it would close the
+  freeze to anyone who links at the lock). Ord's after-map line says
+  "You refused the water" to every body once anyone has refused the
+  Strait (it is SCRIPT.md's wording; whether he should say "Someone" is
+  yours). A raised flag on the hot street now makes the news once a
+  body per five minutes (an abuse guard on the marquee and the public
+  log that no document asks for; `FLAG_NEWS_GAP`, revert it if you want
+  every raise). The funeral desk sells readiness, +2 for 5 Bestand, as
+  often as it is paid (a sink by design, or a purchase of the Passing?).
 - **The story is now `SYNOPSIS.md`** (your brief of 2026-10-02, the
   afternoon). The enemy has a name and a shape: the Concern, the company
   that owns the numbers, and Anselm Caul, its chief, who is a guest (he
@@ -321,7 +333,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   registrable domain, which `workers.dev` on the public suffix list
   prevents; revisit on a custom apex), and a serial is never re-checked
   against the chain after linking (a holder could seal several saved
-  bodies by linking while the others are offline). Not in the review's
+  bodies by linking while the others are offline; closed on 2026-10-04 by
+  the player-defect sweep: the server's `serial:v2:` index names the body
+  that holds a serial and a saved body another holds comes back unsealed;
+  a re-read of the chain at the join, for a sale, still waits on Backlog
+  3's holder source). Not in the review's
   list, found later the same day: a socket could make the object
   checkpoint and broadcast at any rate; bounded since (see the object's
   message budget, below).
@@ -2076,6 +2092,73 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   comment in Halla's hub still said the window showed four choices.
   `src/sim/numbers.test.ts` holds it.
 
+- The player-defect sweep (2026-10-04, small hours): a workflow of six
+  finders, each a lens (the hard rules; state shared between bodies;
+  repeatable gains; save and restore; the dialogue graphs; the client
+  against the server), every finding reproduced through the real
+  reducers and then re-reproduced by a skeptic who tried to refute it
+  against the documents and this file. Twenty-four reported; the fixes,
+  each confirmed: Movement I's node choice could be taken from an
+  arrival by other bodies (a kept node offered no Keep to anyone, a
+  drained one no Extract), so each body now keeps a node once a cycle
+  whoever kept it first (`keepers`, off the wire) and E always answers;
+  a freeze hid the node verbs from everyone in the Nave for half an
+  hour (a guest's Movement I stopped there), so the choice stays and E
+  says the freeze's line, as SCRIPT.md has it "for everyone"; an Angel
+  linked in Movement I whose sexton walked out could never finish the
+  hour (the desk that brings her back is in the Care, shut to it until
+  the going-under since the reach audit), so she walks out on nobody
+  who has not gone under; "Face the trace" paid +2 readiness on every
+  press, the Passing's own number (now once, `F.TRACE`); a guest's fall
+  dropped its purse and prints as an Angel's spoils ("Guests are not
+  loot"); a locked guest still took, advanced and finished side hours
+  through dialogue and changed the city with its presses (startQuest,
+  the offer marker, the side hours and every verb with a cost, a once
+  or effects now hold the lock); a third body's truce could stop a live
+  ruin duel (a truce never reaches into one from outside); a reload
+  mid-duel left the partner in a ring alone (a one-sided duel ends on
+  the next tick); one Angel could walk as two bodies, its serial
+  restored with a saved body while another body carried it, or after a
+  sale (the server now keeps `serial:v2:<serial>` → the body that holds
+  it, and a saved body whose serial another holds comes back unsealed:
+  a locked guest at the threshold, its progress kept, told why, free to
+  link again; guests never pass the Care's or the Organs' doors whatever
+  flags they carry; the 2026-09-26 security review had noted this and
+  left it); the recorder could be dismantled by one body and "preserved"
+  by another, handing the coil's taker the voice's hour (the recorder is
+  each body's own now, as SYNOPSIS I.8 and IV.1 have it: "the one you
+  preserved or took the copper from ... she knows which"); the hour
+  bell's news fired on every strike (now the one strike's); the third
+  altar's and the unspent altar's news repeated for every body whose
+  step closed on another's light (now the lighter's alone); one fresh
+  print restored a decayed stack's value, and a print decayed to nothing
+  still listed (merged by weighted average; the stall refuses nothing);
+  Corvin Slate, walked to the Ring by another body's census, still said
+  he stood in the Annex corridor and thanked bodies that never counted
+  (the corridor beat keeps him in the Annex for its body; the Ring line
+  thanks only the counter). The client: the ledger panel never opened or
+  filled since the ledger was built, so nobody could buy, list or cancel
+  on the Grid (L and the desk and the board open it now, and the render
+  check presses L); the duel strip told the offerer "F at the wreckage",
+  which buries the ground and voids the offer (it waits now), and the
+  offered body saw nothing of the offer (the snapshot now derives
+  `you.duelOffer` from the offerer's record, and the strip shows "RUIN
+  DUEL ASKED · F on them answers"); Take at
+  the claims desk said nothing while a claim was held; the HOT STREET
+  tag, the HUD's band and the weather's news read meltdown from 90.5
+  while the street flags itself at 91 (the band is now the floored
+  figure's, PROMPT.md's 91–100, so label, news and rules turn together;
+  the same at 71 for fat); the HUD, the canvas and the server
+  tiered aura at three thresholds (one now, the server's); a holder whose
+  Angel already walks was told the wallet holds none; the Face readout
+  was sent and never shown (a row in the strip while the Face is up,
+  and the passings on the wreckage's label). Twenty-one confirmed and
+  fixed; three judged otherwise. Judged intended or the owner's and left: Ord's
+  after-map wording, the guest's purse at the link, the flag's news
+  (kept behind a five-minute guard, see the status block).
+  `src/sim/sweep.test.ts`, and tests in session, economy, events, hud
+  and wallet, hold every case.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3069,6 +3152,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the build, the play build and the stage, and on a fresh local world
   the session smoke, `test:campaign:4` (Movements I–IV, `failed` at
   readiness 52 as before) and the render check.
+- The player-defect sweep (2026-10-04, small hours): typecheck, 638 tests in 47 files
+  (sweep.test.ts and the new cases in session, economy, migrate, events,
+  hud and wallet; the server's three unseal tests fail on the old join,
+  the weather-band case on the old band, the render check's new ledger
+  step fails on the old HUD), the build,
+  the play build and the stage, and on a fresh local world (from a
+  worktree: its local log database migrated first) the session smoke,
+  `test:campaign:4` (Movements I–IV, `failed` at readiness 52) and the
+  render check, which now presses L and reads the filled ledger. Of six
+  campaign runs one failed in Movement I at "the slip was read at the
+  naming" and one stalled in Movement II waiting for a snapshot (the
+  first run in the worktree, its log table missing); neither recurred in
+  four more runs, and the slip's assertion now prints what the bot heard
+  so a recurrence names its cause. After the last three fixes (the
+  offered body's duel row, the weather band, the Face row's window) the
+  first `test:campaign:4` ran out the intake hunt's 40 s with the bot at
+  86 hp, 31 px from a clerk at 132 of 176 (no fall, so the walk-back did
+  not fire: the hunt's misses, Backlog 5); Movement I alone and then
+  `test:campaign:4` on fresh worlds passed, and the render check after.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

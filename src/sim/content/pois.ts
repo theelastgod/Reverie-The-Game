@@ -45,6 +45,7 @@ const sacredOpen = (ctx: Ctx): boolean => {
 const SACRED_DARK = "The door does not know you are here. Your aura is dark; the city does not look up. Restore it at the Care shrine.";
 const SACRED_DIM = "Fat weather. The sacred doors dim. The city looks up only at the present. Keep, bury, dwell; come back with more aura or less weather.";
 const sacredRefusal = (ctx: Ctx): string => (addressAura(ctx) < AURA_DIM ? SACRED_DARK : SACRED_DIM);
+const TRACE_FACED = "A place on the stone where the light is a different age. Nothing is here. It was, in the way a door was open. You face it. That is the whole visit.";
 /** Whether this Angel has a prior hour standing in the Care: a history mark of their own serial. */
 const hasHistoryMark = (ctx: Ctx): boolean => ctx.p.serial !== null && ctx.w.history.some(m => m.serial === ctx.p.serial);
 /** Once per season the ring takes the rite; the first one is the campaign's Turn. */
@@ -150,7 +151,9 @@ const NAVE: PoiConfig[] = [
   },
   {
     id: "memorial-recorder",
-    label: ctx => (poiState(ctx, "memorial-recorder") === "dismantled" ? "Memorial recorder — dismantled" : "Memorial recorder"),
+    // The recorder is each body's own (SYNOPSIS I.8, IV.1: "the one you preserved or took the copper from ... she knows which"):
+    // what a body sees and hears here follows its own choice, never another body's (the player-defect sweep).
+    label: ctx => (chose(ctx, C.MEMORIAL, "copper") ? "Memorial recorder — dismantled" : "Memorial recorder"),
     plate: "memorial-recorder-v1.jpg",
     verbs: [
       {
@@ -161,7 +164,7 @@ const NAVE: PoiConfig[] = [
         effects: ctx => (has(ctx, F.TALKED_NARA) ? [{ kind: "flag", key: F.HEARD_RECORDER }] : []),
         say: ctx => {
           if (!has(ctx, F.TALKED_NARA)) return "A recorder on a crate. A woman's voice in it, one word on a loop. Nara holds the grave open west of here. Speak with her first.";
-          if (poiState(ctx, "memorial-recorder") === "dismantled") return "The recorder is open. The coil is gone. The voice stopped mid-breath and did not start again. The copper is in a coffin.";
+          if (chose(ctx, C.MEMORIAL, "copper")) return "The recorder is open. The coil is gone. The voice stopped mid-breath and did not start again. The copper is in a coffin.";
           return "A woman's voice, on a loop. One word, then the quiet, then the word again. The unit is older than the crate it sits on, and somebody keeps it running.";
         },
       },
@@ -1038,10 +1041,11 @@ const KERB: PoiConfig[] = [
         say: ctx => (ctx.p.movement >= 3 && !has(ctx, F.FAILED)
           ? "You strike the hour bell once, on the way to the glass. The note goes over the Kerb and does not come back. On the terrace below, the omen-reader looks up from her slip with a time on it; the time is wrong by exactly one strike."
           : "You strike the hour bell. The note goes over the Kerb and does not come back. Somebody below looks up and then goes on extracting."),
-        effects: [
+        // The news is the one strike's (SCRIPT III.6); a body striking it again is not news, and cannot fill the marquee.
+        effects: ctx => [
           { kind: "flag", key: F.BELL },
           { kind: "poi", id: "hour-bell", state: "struck" },
-          { kind: "news", text: "The hour bell was struck on the Kerb." },
+          ...(has(ctx, F.BELL) ? [] : [{ kind: "news", text: "The hour bell was struck on the Kerb." } as Effect]),
         ],
       },
     ],
@@ -1156,9 +1160,10 @@ const RING: PoiConfig[] = [
         key: "F",
         label: "Face the trace",
         choice: "face",
-        when: ctx => ctx.p.winke >= 2 && sacredOpen(ctx),
+        when: ctx => ctx.p.winke >= 2 && sacredOpen(ctx) && !has(ctx, F.TRACE),
         guest: spectate,
-        say: "A place on the stone where the light is a different age. Nothing is here. It was, in the way a door was open. You face it. That is the whole visit.",
+        once: F.TRACE,
+        say: TRACE_FACED,
         effects: [
           { kind: "poi", id: "last-god-trace", state: "seen" },
           { kind: "wink", text: "You will not meet it. You will notice where it was standing." },
@@ -1169,11 +1174,11 @@ const RING: PoiConfig[] = [
         key: "F",
         label: "Look",
         choice: "look",
-        when: ctx => !(ctx.p.winke >= 2 && sacredOpen(ctx)),
+        when: ctx => !(ctx.p.winke >= 2 && sacredOpen(ctx)) || has(ctx, F.TRACE),
         guest: spectate,
         say: ctx => (ctx.p.winke < 2
           ? "A faint place on the stone. You do not have the Winke to see what it is a trace of. Keep two shrines."
-          : sacredRefusal(ctx)),
+          : !sacredOpen(ctx) ? sacredRefusal(ctx) : TRACE_FACED),
       },
     ],
   },

@@ -275,8 +275,8 @@ describe("nodes", () => {
     expect(spent.nodes[0].charges).toBe(0);
   });
 
-  it("Nara leaves the party at the threshold without a funeral", () => {
-    let w = makeWorld([atNode()]);
+  it("Nara leaves the party at the threshold without a funeral, once the body has gone under (the desk that brings her back is in the Care)", () => {
+    let w = makeWorld([atNode({ flags: { under: 1 } })]);
     const id = w.nodes[0].id;
     for (let i = 0; i < NARA_THRESHOLD - 1; i++) {
       w = { ...w, nodes: w.nodes.map(n => ({ ...n, charges: NODE_CHARGES })) };
@@ -300,6 +300,17 @@ describe("nodes", () => {
     expect(you(w).extractedSinceFuneral).toBe(NARA_THRESHOLD + 2);
     expect(you(w).party.nara).toBe("with");
     expect(you(w).heard).not.toBe("NARA_LEAVES");
+  });
+
+  it("Nara never walks out on an Angel who has not gone under either: the Care is shut to it until then (the player-defect sweep)", () => {
+    let w = makeWorld([atNode()]);
+    const id = w.nodes[0].id;
+    for (let i = 0; i < NARA_THRESHOLD + 2; i++) {
+      w = { ...w, nodes: w.nodes.map(n => ({ ...n, charges: NODE_CHARGES })) };
+      w = applyNode(w, "p1", id, "extract");
+    }
+    expect(you(w).guest).toBe(false);
+    expect(you(w).party.nara).toBe("with");
   });
 
   it("guests may extract in-instance Bestand", () => {
@@ -412,8 +423,9 @@ describe("claims desk (disarmed)", () => {
     const again = applyClaims(settled, "p1", "take", "claim:m2");
     expect(again).toBe(settled);
     expect(you(again).banked).toBe(CLAIM_AMOUNT);
-    // taking without an id picks the first ripe unsettled claim, and finds none now
-    expect(applyClaims(settled, "p1", "take")).toBe(settled);
+    // taking without an id picks the first ripe unsettled claim, and finds none now: the desk says so (the player-defect sweep)
+    expect(you(applyClaims(settled, "p1", "take")).heard).toBe("CLAIMS_NONE");
+    expect(you(applyClaims(w, "p1", "take")).heard, "a held claim, taken without its id").toBe("CLAIMS_HELD");
   });
 
   it("bank moves the purse into banked minus the fee", () => {

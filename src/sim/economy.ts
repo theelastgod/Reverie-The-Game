@@ -39,7 +39,7 @@ import {
 } from "./constants";
 import type { Claim, Item, Listing, Player, WorldState, YieldNode } from "./types";
 import { NODE_LIST, nearPoint } from "./map";
-import { EARNERS, F, SINKS, W, keptIn } from "./content/ids";
+import { EARNERS, F, SINKS, W, keepersOf, keptIn } from "./content/ids";
 import { LINES } from "./content";
 import { pushNews, say } from "./world";
 import { perception } from "./houses";
@@ -77,6 +77,7 @@ const REPAIR_USED = "The print holds again. Cult objects were never cracked.";
 const MARKET_GUEST = "A stall of lights. A guest cannot list or buy a sky they cannot see.";
 const MARKET_NOT_EXHIBITION = "Cult does not list. It stays in the hand that buried it.";
 const MARKET_NO_ITEM = "You do not hold that.";
+const MARKET_DECAYED = "That print has decayed to nothing. The stall does not list nothing.";
 const MARKET_BAD_PRICE = "Price it between one and nine hundred ninety-nine. The stall does not do zero.";
 const MARKET_LISTED = (price: number, fee: number) =>
   fee > 0 ? `Listed at ${price}. Listing fee ${fee}. Exhibition decays.` : `Listed at ${price}. Glamour waived the fee. Exhibition still decays.`;
@@ -149,6 +150,7 @@ export function initialNodes(): YieldNode[] {
     regenAt: 0,
     kept: false,
     keptBy: "",
+    keepers: [],
     announcedUntil: 0,
     seed: false,
   }));
@@ -215,6 +217,7 @@ export function applyNode(w: WorldState, id: string, nodeId: string, op: "extrac
         regenAt: node.regenAt > w.now ? node.regenAt : w.now + NODE_REGEN,
         kept: false,
         keptBy: "",
+        keepers: [],
         announcedUntil: 0,
       });
       next = { ...next, gestell: clampGestell(next.gestell + GESTELL_EXTRACT) };
@@ -224,8 +227,9 @@ export function applyNode(w: WorldState, id: string, nodeId: string, op: "extrac
       next = setPlayer(next, me);
       if (pay > 0) next = earn(next, id, pay, "node");
       me = next.players.get(id) ?? me;
-      // A guest is never walked out on: the funeral desk that brings her back is in the Care, past gates a guest cannot pass.
-      if (extractedSinceFuneral >= NARA_THRESHOLD && me.party.nara === "with" && !me.guest) {
+      // Nobody is walked out on before the going-under: the funeral desk that brings her back is in the Care, past the doors a
+      // guest never passes and an Angel opens only by going under (the dead-end audit for guests; the player-defect sweep for Angels).
+      if (extractedSinceFuneral >= NARA_THRESHOLD && me.party.nara === "with" && !me.guest && (me.flags[F.UNDER] ?? 0) > 0) {
         me = { ...me, party: { ...me.party, nara: "gone" } };
         return speak(next, me, LINES.NARA_LEAVES);
       }
@@ -233,8 +237,9 @@ export function applyNode(w: WorldState, id: string, nodeId: string, op: "extrac
     }
     case "keep": {
       if (!near) return w;
-      if (node.kept) return speak(w, p, LINES.ALREADY);
-      let next = withNode(w, { ...node, kept: true, keptBy: id });
+      // Keeping is each body's own act on a shared node: another body's keep does not take the choice away, a second keep of one's own does.
+      if (keepersOf(node).includes(id)) return speak(w, p, LINES.ALREADY);
+      let next = withNode(w, { ...node, kept: true, keptBy: id, keepers: [...keepersOf(node), id] });
       next = { ...next, gestell: clampGestell(next.gestell + GESTELL_KEEP) };
       const me: Player = {
         ...p,
@@ -289,7 +294,9 @@ export function addItem(p: Player, item: Item): Player {
   if (index < 0) return { ...p, items: [...p.items, { ...item, qty }] };
   const items = p.items.slice();
   const held = items[index];
-  items[index] = { ...held, qty: held.qty + qty, value: Math.max(held.value, item.value) };
+  // A print's value is what is left of it: a fresh one merged into a decayed stack is averaged in, never lent to the rest.
+  const value = held.kind === "exhibition" ? Math.floor((held.value * held.qty + item.value * qty) / (held.qty + qty)) : Math.max(held.value, item.value);
+  items[index] = { ...held, qty: held.qty + qty, value };
   return { ...p, items };
 }
 
@@ -361,7 +368,8 @@ export function applyClaims(w: WorldState, id: string, op: "file" | "bank" | "ta
     }
     case "take": {
       const index = claimId ? p.claims.findIndex(c => c.id === claimId) : p.claims.findIndex(c => !c.settled && c.readyAt <= w.now);
-      if (index < 0) return w;
+      // Take is always on the desk's prompt: a press with nothing ready says why (the player-defect sweep: it said nothing)
+      if (index < 0) return speak(w, p, p.claims.some(c => !c.settled) ? LINES.CLAIMS_HELD : LINES.CLAIMS_NONE);
       const claim = p.claims[index];
       if (claim.settled) return w; // never twice
       if (claim.readyAt > w.now) return speak(w, p, LINES.CLAIMS_HELD);
@@ -395,6 +403,7 @@ export function applyMarket(
       const held = p.items.find(i => i.id === itemId);
       if (!held) return speak(w, p, MARKET_NO_ITEM);
       if (held.kind !== "exhibition" || held.bound) return speak(w, p, MARKET_NOT_EXHIBITION);
+      if (held.value <= 0) return speak(w, p, MARKET_DECAYED);
       const price = args.price ?? 0;
       if (!Number.isInteger(price) || price < LISTING_PRICE_MIN || price > LISTING_PRICE_MAX) return speak(w, p, MARKET_BAD_PRICE);
       const fee = kitActive(p, "iridescent", w.now) ? 0 : LISTING_FEE;

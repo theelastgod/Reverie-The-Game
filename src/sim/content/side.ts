@@ -9,7 +9,7 @@
  * Keys are stable once shipped. Add, never rename.
  */
 import { POSITIONS, TILE } from "../map";
-import { C, F, W, keptIn } from "./ids";
+import { C, F, W, keepersOf, keptIn } from "./ids";
 import type { Ctx, DistrictId, Effect, Fourfold, Item, Player, Quest, QuestStep, Vec, WorldState } from "../types";
 
 // ---------------------------------------------------------------- ids
@@ -273,10 +273,10 @@ const NAVE: Quest[] = [
         target: "crt-altar-3", // its own screen since Phase D, not the catalog's lit altar at the aisle's south end (I.9)
         plate: "wing-star.png",
         done: ({ p, w }) => has(p, SF.ALTAR_LIT) || poiIs(w, "crt-altar-3", "lit"),
-        onComplete: [
-          poi("crt-altar-3", "lit"),
-          worldFlag(SW.ALTAR_LIT),
-          news("Someone lit the altar Safety did not count."),
+        // Skipped when another hand lit it (SCRIPT, the appendix): the step closes and the Wink lands; the light and its news are
+        // the lighter's (SF.ALTAR_LIT, the verb's once), so they fire once and never for a body that did not light it.
+        onComplete: ({ p }) => [
+          ...(has(p, SF.ALTAR_LIT) ? [poi("crt-altar-3", "lit"), worldFlag(SW.ALTAR_LIT), news("Someone lit the altar Safety did not count.")] : []),
           wink("Three screens. Two on the ledger. The one that is not counted is the one that is still a place."),
         ],
       }),
@@ -298,7 +298,7 @@ const NAVE: Quest[] = [
         id: "keep",
         title: "Keep two nodes",
         detail: "Two yield nodes, left with their charges in them. Stand at a node and press Q to keep it.",
-        target: ({ p, w }) => w.nodes.find(n => n.district === "nave" && !n.kept)?.id ?? (p.district === "nave" ? "nave-node-1" : "gate-nave-wet"),
+        target: ({ p, w }) => w.nodes.find(n => n.district === "nave" && !keepersOf(n).includes(p.id))?.id ?? (p.district === "nave" ? "nave-node-1" : "gate-nave-wet"),
         plate: "plate-arena.jpg",
         done: ({ p }) => p.kept - count(p, SF.UNSPENT_BASE) >= 2,
         onComplete: [notice("Two nodes kept. The ground noticed. Nothing else did, yet.")],
@@ -310,9 +310,8 @@ const NAVE: Quest[] = [
         target: "crt-altar-1",
         plate: "wing-star.png",
         done: ({ p, w }) => has(p, SF.UNSPENT_TOUCHED) || poiIs(w, "crt-altar-1", "lit"),
-        onComplete: [
-          poi("crt-altar-1", "lit"),
-          news("An altar in the Nave lit for two nodes nobody drained."),
+        onComplete: ({ p }) => [
+          ...(has(p, SF.UNSPENT_TOUCHED) ? [poi("crt-altar-1", "lit"), news("An altar in the Nave lit for two nodes nobody drained.")] : []),
           wink("A kept node is a place. An extracted node was one. The glass knows the difference."),
         ],
       }),
@@ -327,7 +326,8 @@ const NAVE: Quest[] = [
     district: "nave",
     guestLegal: false,
     changes: "cult",
-    available: ({ p, w }) => angel(p) && (w.flags[W.MEMORIAL_VOICE] ?? 0) === 1 && has(p, F.BURIED_NARA),
+    // the voice this body left running (its own Q at the recorder, I.8): one who took the copper is never handed an hour premised on it
+    available: ({ p }) => angel(p) && p.choices[C.MEMORIAL] === "voice" && has(p, F.BURIED_NARA),
     steps: [
       step({
         id: "sit",

@@ -9,7 +9,7 @@ import { houseLabel, setClass, setText, show } from "./format";
 
 export type EventTone = "ink" | "gold" | "hot" | "sky";
 export type EventRow = {
-  id: "war" | "war-next" | "contest" | "duel";
+  id: "war" | "war-next" | "contest" | "duel" | "duel-offer" | "face";
   tone: EventTone;
   label: string;
   detail: string;
@@ -69,8 +69,22 @@ export function eventRows(snap: Pick<Snap, "now" | "houses" | "clearing" | "you"
     const name = other ? other.name : "an Angel";
     rows.push(duel.accepted
       ? { id: "duel", tone: "hot", label: "RUIN DUEL", detail: `${name} · the grave is the ring · ${countdown(duel.until - now)}` }
-      : { id: "duel", tone: "sky", label: "RUIN DUEL OFFERED", detail: `${name} · F at the wreckage · ${countdown(duel.until - now)}` });
+      // an unanswered duel on your own body is the offer you made (the server keeps it on the offerer): F at the wreckage would
+      // bury the ground it is fought over, so the strip only waits; the one offered hears it, and their prompt leads with it
+      : { id: "duel", tone: "sky", label: "RUIN DUEL OFFERED", detail: `${name} · waiting for the answer · ${countdown(duel.until - now)}` });
   }
+  // a duel another body offers you lives on their record; the snapshot derives it for you (snapshot.ts duelOffers)
+  const offer = snap.you.duelOffer;
+  if (offer && offer.until > now && !(duel?.accepted && duel.until > now)) {
+    const other = snap.players.find((p) => p.id === offer.from);
+    const name = other ? other.name : "an Angel";
+    rows.push({ id: "duel-offer", tone: "gold", label: "RUIN DUEL ASKED", detail: `${name} · F on them answers · ${countdown(offer.until - now)}` });
+  }
+  // the Ruin-angel's Face reads the body's own history back while it lasts (snapshot.ts kitReadout); it was sent and never shown
+  // the readout rides the slow frame; the kit's own window (fast) ends the row the moment the Face is down
+  const you = snap.you as { kitReadout?: string[]; kit?: { verb: string; until: number } | null };
+  const readout = you.kitReadout;
+  if (readout?.length && (!you.kit || (you.kit.verb === "ruin" && you.kit.until > now))) rows.push({ id: "face", tone: "sky", label: "THE WRECKAGE, FACED", detail: readout.join(" · ") });
   return rows;
 }
 

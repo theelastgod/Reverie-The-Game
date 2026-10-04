@@ -6,7 +6,7 @@ const base = () => ({
   now: 1000,
   houses: { standing: { ...held }, tithe: 0, war: { active: false, startsAt: 5000, endsAt: 0, held: { ...held }, winner: "" as const, lastWinner: "" as const, site: "clearing-ring" } },
   clearing: { open: false, reserve: 40, contest: null, lastOutcome: "" as const, dwellers: 0 },
-  you: { duel: undefined } as { duel?: { with: string; until: number; accepted: boolean } },
+  you: { duel: undefined } as { duel?: { with: string; until: number; accepted: boolean }; duelOffer?: { from: string; until: number } },
   players: [{ id: "b", name: "#0042" }],
 });
 
@@ -47,17 +47,51 @@ describe("eventRows", () => {
     expect(rows[0].detail).toBe("KEEP 2 · EXTRACT 1 · 3 in the ring · 0:45");
   });
 
+  it("reads the Ruin-angel's Face back as a row while it lasts, and nothing without it (the player-defect sweep)", () => {
+    const s = base() as ReturnType<typeof base> & { you: { kitReadout?: string[] } };
+    expect(eventRows(s as never).some(r => r.id === "face")).toBe(false);
+    s.you.kitReadout = ["#0042 fell here once.", "Passings 2. Buried 3. Looted 1. Fell 4 times."];
+    expect(eventRows(s as never).find(r => r.id === "face")).toMatchObject({ label: "THE WRECKAGE, FACED", detail: "#0042 fell here once. · Passings 2. Buried 3. Looted 1. Fell 4 times." });
+    const facing = s as typeof s & { you: { kit?: { verb: string; until: number } | null } };
+    facing.you.kit = { verb: "ruin", until: 1010 };
+    expect(eventRows(facing as never).some(r => r.id === "face"), "while the Face is up").toBe(true);
+    facing.you.kit = { verb: "ruin", until: 1000 };
+    expect(eventRows(facing as never).some(r => r.id === "face"), "the Face is down before the slow frame says so").toBe(false);
+  });
+
   it("names the duel opponent from the public players and distinguishes an offer from a live duel", () => {
     const s = base();
     s.you.duel = { with: "b", until: 1020, accepted: false };
     let rows = eventRows(s as never);
     expect(rows[0]).toMatchObject({ id: "duel", tone: "sky", label: "RUIN DUEL OFFERED" });
     expect(rows[0].detail).toContain("#0042");
+    // the offer on your own body is the one you made: the strip waits, and never sends you to press F at the wreckage
+    expect(rows[0].detail).toContain("waiting for the answer");
+    expect(rows[0].detail).not.toContain("F at the wreckage");
     s.you.duel = { with: "b", until: 1060, accepted: true };
     rows = eventRows(s as never);
     expect(rows[0]).toMatchObject({ id: "duel", tone: "hot", label: "RUIN DUEL" });
     expect(rows[0].detail).toContain("1:00");
     s.you.duel = { with: "b", until: 900, accepted: true };
     expect(eventRows(s as never)).toEqual([]);
+  });
+
+  it("shows the offered body the duel it was asked to, with the key that answers, until it lapses or a duel is live", () => {
+    const s = base();
+    s.you.duelOffer = { from: "b", until: 1030 };
+    let rows = eventRows(s as never);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ id: "duel-offer", tone: "gold", label: "RUIN DUEL ASKED" });
+    expect(rows[0].detail).toBe("#0042 · F on them answers · 0:30");
+    s.you.duel = { with: "c", until: 1060, accepted: false }; // your own offer to another stands beside it, under its own id
+    rows = eventRows(s as never);
+    expect(rows.map(r => r.id)).toEqual(["duel", "duel-offer"]);
+    s.you.duel = { with: "c", until: 1060, accepted: true }; // in a live duel the ask is moot
+    expect(eventRows(s as never).map(r => r.id)).toEqual(["duel"]);
+    s.you.duel = undefined;
+    s.you.duelOffer = { from: "z", until: 999 };
+    expect(eventRows(s as never)).toEqual([]);
+    s.you.duelOffer = { from: "z", until: 1010 };
+    expect(eventRows(s as never)[0].detail).toContain("an Angel");
   });
 });

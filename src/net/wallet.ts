@@ -10,7 +10,7 @@ export type Announced = { info: ProviderInfo; provider: Eip1193 };
 
 export type WalletReason = "no-wallet" | "rejected" | "no-session" | "bad-signature" | "disarmed" | "chain" | "network";
 export type WalletOutcome =
-  | { ok: true; address: string; serial: number | null }
+  | { ok: true; address: string; serial: number | null; walking?: boolean }
   | { ok: false; reason: WalletReason; detail?: string };
 
 const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
@@ -98,8 +98,8 @@ export async function linkWallet(fetcher: typeof fetch = (...a) => fetch(...a), 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ address, signature }),
     });
-    const body = (await r.json().catch(() => ({}))) as { ok?: boolean; serial?: number | null; reason?: string };
-    if (r.ok && body.ok) return { ok: true, address: address.toLowerCase(), serial: typeof body.serial === "number" ? body.serial : null };
+    const body = (await r.json().catch(() => ({}))) as { ok?: boolean; serial?: number | null; walking?: boolean; reason?: string };
+    if (r.ok && body.ok) return { ok: true, address: address.toLowerCase(), serial: typeof body.serial === "number" ? body.serial : null, ...(body.walking === true ? { walking: true } : {}) };
     const reason: WalletReason = body.reason === "bad-signature" || body.reason === "no-session" || body.reason === "disarmed" || body.reason === "chain" ? body.reason : "network";
     return { ok: false, reason, detail: body.reason ?? String(r.status) };
   } catch {
@@ -110,6 +110,7 @@ export async function linkWallet(fetcher: typeof fetch = (...a) => fetch(...a), 
 /** One line for the lock panel, in the city's register. */
 export function walletLine(o: WalletOutcome): string {
   if (o.ok) {
+    if (o.serial === null && o.walking) return "That serial is already walking. One body per Angel.";
     return o.serial === null
       ? `This wallet holds no Angel yet. The city keeps ${short(o.address)}. You remain a guest.`
       : `Sealed. Angel #${String(o.serial).padStart(4, "0")} walks in ${short(o.address)}.`;

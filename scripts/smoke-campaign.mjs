@@ -569,7 +569,7 @@ try {
   assert.ok(you(me).flags['weather:ord'] && you(me).flags['weather:nara'], 'Ord and Nara each gave their weather');
   await useVerb(me, 'safety-plaque', verbs => verbs.find(v => v.key === 'E') ?? verbs.find(v => v.key === 'F'), () => !!you(me).flags['weather:named'], 'name the weather');
   assert.ok(you(me).choices.weather, 'the weather has a name');
-  if (slip) assert.match(you(me).heard, /pin the slip under the word|fold the slip away/, 'the slip was read at the naming');
+  if (slip) assert.match(you(me).heard, /pin the slip under the word|fold the slip away/, `the slip was read at the naming (heard: ${JSON.stringify(you(me).heard)})`);
 
   // The going-under threshold locks a guest.
   phase('walk: threshold');

@@ -64,16 +64,16 @@ export const launchOpen = (w: Pick<WorldState, "now" | "season" | "flags">): boo
 export const launchDark = (w: Pick<WorldState, "now" | "season" | "flags">): boolean =>
   launchOpen(w) && (w.flags[W.LAUNCH_DARK] ?? 0) > 0;
 
-/**
- * The highest the launch takes the weather on its own: the top of the fat band. The HUD's meltdown band starts above
- * it (protocol.ts weatherBand), and the rules' meltdown at GESTELL_MELTDOWN above that; the launch reaches neither.
- */
 /** The window's close is owed: this season's opened, its hour is out, and the close has not been taken (the tick takes it once, world.ts closeLaunch). */
 export function launchClosing(w: Pick<WorldState, "now" | "season" | "flags">): boolean {
   if (w.flags[W.LAUNCH_SEASON] !== w.season.id || w.flags[W.LAUNCH_CLOSED] === w.season.id) return false;
   return w.now >= launchMoment(w) + LAUNCH_WINDOW;
 }
 
+/**
+ * The highest the launch takes the weather on its own: the top of the fat band. The meltdown band (protocol.ts
+ * weatherBand) and the rules' meltdown both start at GESTELL_MELTDOWN, above it; the launch reaches neither.
+ */
 export const LAUNCH_CEILING = GESTELL_MELTDOWN - 1;
 
 /** The weather after one of the launch's points: a point up, never past the ceiling, never down. */

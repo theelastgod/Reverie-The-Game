@@ -79,11 +79,13 @@ export const KIT_COPY: Record<Kit, string> = {
 export const CLAIMS_GUEST = "A period on a ledger. Guests cannot claim.";
 export const CLAIMS_FILED = "Claim filed. It sits a day. Then TAKE moves it to the vault.";
 export const CLAIMS_HELD = "The hold is not done. The claim sits.";
+export const CLAIMS_NONE = "Nothing to take. File a claim first; it sits a day.";
 export const CLAIMS_TAKEN = "Taken. Banked. It does not drop and it does not strike.";
 export const CLAIMS_CAP = "Three claims is the campaign. The desk does not file a fourth.";
 export const BANKED = "Banked. It does not drop. It does not strike. The fee is the price of not dropping.";
 export const LINK_ELSEWHERE = "That serial is already walking. One body per Angel.";
 export const LINK_NO_ANGEL = "This wallet holds no Angel yet. The city keeps the address. You remain a guest.";
+export const LINK_MOVED = "Your Angel walks in another body now. This one is unsealed and waits at the threshold. Link again to walk on.";
 
 const HOUSE_LABEL: Record<string, string> = {
   earth: "House of Earth",

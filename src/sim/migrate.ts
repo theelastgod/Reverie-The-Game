@@ -156,6 +156,7 @@ export function migrateWorld(saved: unknown, now = 0): WorldState {
       regenAt: num(sn.regenAt, n.regenAt, 0),
       kept: bool(sn.kept, n.kept),
       keptBy: str(sn.keptBy, n.keptBy),
+      ...(Array.isArray(sn.keepers) ? { keepers: sn.keepers.filter((k): k is string => typeof k === "string") } : bool(sn.kept, n.kept) && str(sn.keptBy, "") ? { keepers: [str(sn.keptBy, "")] } : {}),
       announcedUntil: num(sn.announcedUntil, n.announcedUntil, 0),
       seed: bool(sn.seed, n.seed),
     };

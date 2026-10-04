@@ -410,7 +410,8 @@ export function gateOpenFor(p: Pick<Player, "guest" | "flags"> | null | undefine
   if (!g.requires) return true;
   if (!p) return false;
   if (g.requires === "angel") return !p.guest;
-  return (p.flags[g.requires] ?? 0) > 0;
+  // A guest never passes the Care's or the Organs' doors, whatever flags a body unsealed from an Angel still carries.
+  return !p.guest && (p.flags[g.requires] ?? 0) > 0;
 }
 
 /** True when the tile blocks this player: a wall, or a gate they may not pass. */

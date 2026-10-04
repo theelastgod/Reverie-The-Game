@@ -11,7 +11,7 @@ import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
 import { C, W } from "./content/ids";
 import { darkLights, glassDark, launchDark, launchDate, launchOpen, nextLaunch } from "./launch";
-import { PROTOCOL_VERSION, WEATHER_LABEL, cityFigure, weatherBand, type EnemyView, type GlassView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView } from "./protocol";
+import { PROTOCOL_VERSION, WEATHER_LABEL, cityFigure, weatherBand, type EnemyView, type GlassView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView, type DuelOffer } from "./protocol";
 import type { Ctx, Enemy, FailedPassing, HistoryMark, Listing, NpcState, Player, PoiConfig, Prompt, PromptVerb, Wreckage, WorldState, YieldNode } from "./types";
 import { nodeYield } from "./economy";
 import { perception } from "./houses";
@@ -238,6 +238,7 @@ export type StepViews = {
   historyFor: (serial: number) => HistoryMark[];
   figure: () => number; // the city's figure, summed once a step and only when a reader asks
   frames: FrameCache;
+  duelOffers: Map<string, DuelOffer>; // by the offered body's id: the newest open offer made to it
 };
 
 /** One output kept while its input is the same object. */
@@ -268,7 +269,10 @@ let keptFrozen: string[] = [];
 let lastFrames: FrameCache | null = null; // the last step's cache: the encodings of the sections that stand, and the bodies' splits
 const NO_FAILED: FailedPassing[] = [];
 
-const nodeView = (n: YieldNode, now: number): NodeView => ({ ...n, safe: n.announcedUntil > now });
+const nodeView = (n: YieldNode, now: number): NodeView => {
+  const { keepers: _keepers, ...shared } = n; // who kept it is the server's, not every viewer's
+  return { ...shared, safe: n.announcedUntil > now };
+};
 
 const publicListing = (l: Listing): Listing => {
   if (l.fee === undefined && l.forge === undefined) return l;
@@ -282,7 +286,12 @@ export function stepViews(w: WorldState): StepViews {
   const now = w.now;
 
   const players = new Map<string, PublicPlayer>();
-  for (const o of w.players.values()) players.set(o.id, publicPlayer(o, now));
+  const duelOffers = new Map<string, DuelOffer>();
+  for (const o of w.players.values()) {
+    players.set(o.id, publicPlayer(o, now));
+    const d = o.duel;
+    if (d && !d.accepted && d.until > now && (duelOffers.get(d.with)?.until ?? -1) < d.until) duelOffers.set(d.with, { from: o.id, until: d.until });
+  }
 
   const enemies: StepViews["enemies"] = [];
   for (const e of w.enemies) if (e.state !== "dead") enemies.push({ e, view: enemyView(e) });
@@ -324,6 +333,7 @@ export function stepViews(w: WorldState): StepViews {
     historyFor,
     figure: () => (figure ??= cityFigure(w)),
     frames,
+    duelOffers,
   };
   // A section that stood since the last step keeps its encoding too.
   if (lastFrames) {
@@ -496,6 +506,8 @@ export function snapshotFor(w: WorldState, viewerId: string, step: StepViews = s
   let you: YouView = { ...youOf(p) };
   for (const k of YOU_OFF_WIRE) delete you[k];
   if (slow.kitReadout) you = { ...you, kitReadout: slow.kitReadout };
+  const offer = step.duelOffers.get(p.id);
+  if (offer) you = { ...you, duelOffer: offer };
   return {
     t: "snap",
     v: PROTOCOL_VERSION,
@@ -534,6 +546,8 @@ export function framesFor(w: WorldState, viewerId: string, step: StepViews = ste
     youFast[k] = undefined;
   }
   for (const k of YOU_OFF_WIRE) youFast[k] = undefined;
+  const offer = step.duelOffers.get(view.ctx.p.id);
+  if (offer) youFast.duelOffer = offer;
   const fast: FastFrame = {
     t: "fast",
     v: PROTOCOL_VERSION,

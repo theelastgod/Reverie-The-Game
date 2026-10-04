@@ -9,7 +9,7 @@ import {
   DUEL_CHALLENGE_SECONDS, DUEL_SECONDS, ENEMY_LEASH, FACE_DURATION, GESTELL_CAMP, GESTELL_MELTDOWN, HEAVY_COOLDOWN, HEAVY_RANGE,
   HEAVY_WINDUP, HIT_STOP, KIT_COOLDOWN, KIT_DURATION, RESTRAINT_CHAIN_KILL_PENALTY, RESTRAINT_DODGE_BONUS, RUIN_DUEL_RADIUS,
   SPECTATE_CAP, SPECTATE_RADIUS, STORM_BAND_BONUS, STORM_FALLEN_PENALTY, STORM_GEARED_BESTAND, STRIKE_COOLDOWN, STRIKE_RANGE,
-  TRUCE_SECONDS, WRECKAGE_TTL,
+  TRUCE_SECONDS, WRECKAGE_TTL, FLAG_NEWS_GAP,
 } from "./constants";
 import { circleHitsWalls, DISTRICT_BY_ID, inPatch, POSITIONS } from "./map";
 import { F } from "./content/ids";
@@ -627,8 +627,21 @@ export function applyFlag(w: WorldState, id: string): WorldState {
   if (p.truceUntil > now) return setPlayer(w, say(p, LINES.TRUCE_ACTIVE, now));
   const flagged = !p.flagged;
   let cur = setPlayer(w, say({ ...p, flagged }, flagged ? LINES.FLAG_ON : LINES.FLAG_OFF, now));
-  if (flagged && p.district === "wet") cur = pushNews(cur, `${p.name} raised a flag on the hot street.`);
+  // The street says who raised a flag, not every press of V: once a body per FLAG_NEWS_GAP, so one body cannot fill the marquee.
+  const lastNews = p.flags[F.FLAG_NEWS] ?? -Infinity;
+  if (flagged && p.district === "wet" && now - lastNews >= FLAG_NEWS_GAP) {
+    const me = cur.players.get(id)!;
+    cur = setPlayer(cur, { ...me, flags: { ...me.flags, [F.FLAG_NEWS]: now } });
+    cur = pushNews(cur, `${p.name} raised a flag on the hot street.`);
+  }
   return cur;
+}
+
+/** A truce never reaches into a live ruin duel from outside it (DESIGN §2 rule 7): a duelist calls one only with its partner. */
+export function truceAllowed(p: Player, other: Player, now: number): boolean {
+  const mine = liveDuel(p, now);
+  const theirs = liveDuel(other, now);
+  return (!mine || mine.with === other.id) && (!theirs || theirs.with === p.id);
 }
 
 /** Both unflag. Seconds, not a stick. Only a flagged Angel can call one: the prompt's rule, kept by the server. */
@@ -638,7 +651,7 @@ export function applyTruce(w: WorldState, id: string): WorldState {
   const now = w.now;
   if (!p.flagged) return setPlayer(w, say(p, LINES.PVP_FLAG_REQUIRED, now));
   if (p.truceUntil > now) return setPlayer(w, say(p, LINES.TRUCE_ACTIVE, now));
-  const other = nearestPlayer(w, p, 96, q => q.id !== id && q.flagged && !q.guest && !q.locked && !q.dead);
+  const other = nearestPlayer(w, p, 96, q => q.id !== id && q.flagged && !q.guest && !q.locked && !q.dead && truceAllowed(p, q, now));
   if (!other) return w;
   const until = now + TRUCE_SECONDS;
   let cur = setPlayer(w, say({ ...p, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));

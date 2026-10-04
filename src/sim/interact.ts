@@ -11,8 +11,9 @@ import { say } from "./world";
 import { applyNode, applyClaims, applyForge, spend } from "./economy";
 import { applyBounty, applyTithe } from "./houses";
 import { applyPassing } from "./clearing";
-import { applyDuel, duelBlockReason } from "./combat";
+import { applyDuel, duelBlockReason, truceAllowed } from "./combat";
 import { applyEffects } from "./effects";
+import { keepersOf } from "./content/ids";
 import { applyTalk } from "./dialogue";
 import { visibleWreckage } from "./snapshot";
 
@@ -33,6 +34,9 @@ function setPlayer(w: WorldState, p: Player): WorldState {
 function speak(w: WorldState, p: Player, text: string): WorldState {
   return setPlayer(w, say(p, text, w.now));
 }
+
+/** What a locked guest's press may still do: read, and mark its own reading. */
+const LOCKED_MAY = new Set(["flag", "say", "notice"]);
 
 function isFrozen(w: WorldState, district: string): boolean {
   return (w.frozen[district] ?? 0) > w.now;
@@ -65,6 +69,12 @@ function interactPoi(w: WorldState, p: Player, cfg: PoiConfig, choice: string): 
     const policy = verb.guest ?? "allow";
     if (policy === "deny") return speak(w, p, LINES.GUEST_LOCK);
     if (policy === "spectate") return speak(w, p, LINES.SPECTATOR);
+  }
+  // A locked guest walks and reads; nothing it presses costs or changes the city (the lock ends guest play): a verb whose
+  // effects reach past the body's own flags and lines answers with the lock.
+  if (p.locked) {
+    const effects = typeof verb.effects === "function" ? verb.effects(ctx) : verb.effects ?? [];
+    if (verb.cost || effects.some(e => !LOCKED_MAY.has(e.kind))) return speak(w, p, LINES.GUEST_LOCK);
   }
   if (verb.once && (p.flags[verb.once] ?? 0) > 0) return speak(w, p, LINES.ALREADY);
 
@@ -140,11 +150,13 @@ const SPEAK: PromptVerb[] = [{ key: "F", label: "Speak", choice: "talk" }];
 export const npcVerbs = (): PromptVerb[] => SPEAK.slice();
 
 export function nodeVerbs(ctx: Ctx, node: YieldNode): PromptVerb[] {
-  const { w, p } = ctx;
-  if (isFrozen(w, node.district) || p.locked) return [];
-  const out: PromptVerb[] = [];
-  if (node.charges > 0) out.push({ key: "E", label: "Extract", choice: "extract" });
-  if (!node.kept) out.push({ key: "Q", label: "Keep", choice: "keep" });
+  const { p } = ctx;
+  // A freeze postpones extraction, not the choice: E stays in the prompt and answers the freeze's line (applyNode), and Q keeps.
+  if (p.locked) return [];
+  // Another body's keep or drain never takes the choice away: E stays (a spent node answers that it is spent), and Q is offered
+  // to every body that has not kept this node since its last extraction.
+  const out: PromptVerb[] = [{ key: "E", label: "Extract", choice: "extract" }];
+  if (!keepersOf(node).includes(p.id)) out.push({ key: "Q", label: "Keep", choice: "keep" });
   return out;
 }
 
@@ -166,7 +178,7 @@ export function playerVerbs(ctx: Ctx, other: Player): PromptVerb[] {
     out.push({ key: "F", label: offered ? "Answer the duel" : "Ruin duel", choice: "duel" });
   }
   if (DISTRICT_BY_ID[p.district].flagLegal && p.truceUntil <= w.now) out.push({ key: "V", label: p.flagged ? "Unflag" : "Flag", choice: "flag" });
-  if (p.flagged && other.flagged) out.push({ key: "T", label: "Truce", choice: "truce" });
+  if (p.flagged && other.flagged && truceAllowed(p, other, w.now)) out.push({ key: "T", label: "Truce", choice: "truce" });
   return out;
 }
 

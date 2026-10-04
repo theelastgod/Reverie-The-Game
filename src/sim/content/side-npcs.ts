@@ -53,7 +53,10 @@ const officerHub = (ctx: Ctx): string => {
   if (state === "clearing") return "You are standing where the Passing failed. He does not turn around. \"The freeze held. I have the paperwork. Say what you came to say.\"";
   // IV.7: Safety's door; he has the form the Angel's hour was claimed on, at the Annex or under the mute bell
   if (has(p, F.HIJACKED_SAFETY) && (state === "home" || state === "ring")) return "\"The freeze held.\" He has your form. He turns it over. \"Funded by. I have read it. It is mine when I sign it. I signed it.\"";
-  if (state === "ring") return "He is under the shrine of the mute bell with a form on a board. \"Two with tongues. One without. Your count was right. I wanted to see the one without.\"";
+  // the count is the counter's: another body's census walked him here, and he does not thank a body that never counted
+  if (state === "ring") return finished(p, SQ.CENSUS)
+    ? "He is under the shrine of the mute bell with a form on a board. \"Two with tongues. One without. Your count was right. I wanted to see the one without.\""
+    : "He is under the shrine of the mute bell with a form on a board. \"Two with tongues. One without. Somebody counted them for Safety. I wanted to see the one without.\"";
   if (p.guest) return "\"Unsealed. You can still carry paper. Safety has paper that needs carrying.\"";
   // IV.7, every other door: the rite done, the Annex desk reads like its plaque
   if (has(p, F.PASSING) && state === "home") return "\"Officer of Safety. The district is stable.\" He says it the way a plaque says it. The form on his desk is blank where a signature would be. He does not ask how the hour went; Safety does not keep that column.";
@@ -71,10 +74,11 @@ const officer: NpcDef = {
   personal: (ctx, shared) => {
     if (finished(ctx.p, SQ.HONEST)) return { ...place("officer-clearing"), state: "clearing" };
     if (finished(ctx.p, SQ.CENSUS)) return { ...place("officer-ring"), state: "ring" };
-    if (ctx.p.guest && shared.state === "clearing") {
-      const home = NPC_HOMES.officer;
-      return { x: home.x, y: home.y, district: home.district, present: true, state: "home" };
-    }
+    const home = NPC_HOMES.officer;
+    const atHome = { x: home.x, y: home.y, district: home.district, present: true, state: "home" };
+    // Movement II stops this body in the Annex corridor (the spine's `officer`), wherever another body's hour has walked him
+    if (angel(ctx.p) && has(ctx.p, F.HALL) && !has(ctx.p, F.TALKED_OFFICER) && shared.state !== "home") return atHome;
+    if (ctx.p.guest && shared.state === "clearing") return atHome;
     return null;
   },
   // Movement II: an Angel who has read their hall and not yet been stopped in the corridor is stopped, whatever they said to him before.

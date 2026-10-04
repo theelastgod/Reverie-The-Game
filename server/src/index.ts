@@ -10,7 +10,7 @@
 import { emptyWorld, spawnGuest, tickWorld } from "../../src/sim/world.ts";
 import { migratePlayer, migrateWorld, SHAPE } from "../../src/sim/migrate.ts";
 import { DT } from "../../src/sim/constants.ts";
-import { applyAction, applyLink, applyWallet } from "../../src/sim/actions.ts";
+import { applyAction, applyLink, applyWallet, unsealBody } from "../../src/sim/actions.ts";
 import { LINES } from "../../src/sim/content/index.ts";
 import { CHALLENGE_TTL_MS, challengeMessage, isAddress, normalizeAddress, recoverAddress } from "./wallet.ts";
 import { serialFor, type HolderCache } from "./holders.ts";
@@ -39,6 +39,9 @@ type Env = {
 const SESSION_COOKIE = "reverie_session";
 const WORLD_KEY = "world:v2";
 const PLAYER_PREFIX = "player:v2:";
+/** `serial:v2:<serial>` → the session token whose body holds that Angel: the newest body checkpointed with it, so the newest proven link. */
+const SERIAL_PREFIX = "serial:v2:";
+const serialKey = (serial: number): string => `${SERIAL_PREFIX}${serial}`;
 const WORLD_NAME = "city-v2";
 const MAX_MESSAGE = 4096;
 const CHALLENGE_PREFIX = "challenge:v1:";
@@ -166,6 +169,7 @@ export class ReverieWorld {
   private actionAt = -Infinity; // wall clock of the last broadcast an action forced (a join's or a close's does not count)
   private readonly stamped = new Set<string>(); // tokens whose seen stamp this instance wrote; the close writes it again
   private readonly saved = new Map<string, Player>(); // by body id, the object last written to its record: the same one needs no write
+  private readonly serialOwners = new Map<number, string>(); // serial → the token the index names, as this instance last wrote or read it
   private sweptAt = 0; // wall clock of the last sweep of saved bodies (from storage; a new city waits an hour)
   private sweepAfter: string | undefined; // the sweep's cursor: the last saved-body key it read; undefined starts over
 
@@ -212,9 +216,15 @@ export class ReverieWorld {
     const seen = Date.now();
     const written: [string, Player][] = [];
     const stamping: string[] = [];
+    const claimed: [number, string][] = [];
     for (const session of this.sessions.values()) {
       const player = this.w.players.get(session.id);
       if (!player) continue;
+      // One body per Angel: a live body with a serial holds it (a link elsewhere is refused while it walks), so it is the index's.
+      if (!player.guest && player.serial !== null && this.serialOwners.get(player.serial) !== session.token) {
+        records[serialKey(player.serial)] = session.token;
+        claimed.push([player.serial, session.token]);
+      }
       if (this.saved.get(session.id) !== player) { // the sim replaces a body's object when it changes: the same one stands
         records[playerKey(session.token)] = player;
         written.push([session.id, player]);
@@ -229,6 +239,7 @@ export class ReverieWorld {
     // Only a write that landed counts: a put that threw leaves every body owed to the next checkpoint.
     for (const [id, player] of written) this.saved.set(id, player);
     for (const token of stamping) this.stamped.add(token);
+    for (const [serial, token] of claimed) this.serialOwners.set(serial, token);
     this.load.checkpointed(Date.now() - began, Date.now());
     this.checkpointAt = this.w.now;
     // The log reads the difference since the last checkpoint, never per tick; a flush never holds the tick.
@@ -302,7 +313,9 @@ export class ReverieWorld {
     await this.checkpoint();
     this.broadcast(true);
     const me = this.w.players.get(live.id);
-    return Response.json({ ok: true, address, serial: me && !me.guest ? me.serial : null }, { headers });
+    // a holder whose Angel already walks in another body is told that, not that the wallet holds none
+    const walking = serial !== null && !!me && me.guest;
+    return Response.json({ ok: true, address, serial: me && !me.guest ? me.serial : null, ...(walking ? { walking: true } : {}) }, { headers });
   }
 
   async fetch(req: Request): Promise<Response> {
@@ -333,7 +346,15 @@ export class ReverieWorld {
       const record = await this.ctx.storage.get<unknown>(playerKey(token));
       const saved = record !== undefined ? migratePlayer(record, bodyId(), this.w.now) : undefined; // the shape migration, as on every read
       const active = [...this.sessions.entries()].find(([, session]) => session.token === token);
-      const player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(bodyId(), this.w.now);
+      let player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(bodyId(), this.w.now);
+      // A saved Angel whose serial another body now holds (walking now, or the index's since a newer link) comes back unsealed.
+      if (player === saved && !saved.guest && saved.serial !== null) {
+        const serial = saved.serial;
+        const walking = [...this.w.players.values()].some(o => o.id !== saved.id && !o.guest && o.serial === serial);
+        const owner = this.serialOwners.get(serial) ?? (await this.ctx.storage.get<string>(serialKey(serial)));
+        if (owner !== undefined) this.serialOwners.set(serial, owner);
+        if (walking || (owner !== undefined && owner !== token)) player = unsealBody(saved, this.w.now);
+      }
       // A body back from its record is as its record has it: the join's checkpoint need not write it again.
       if (player === saved) this.saved.set(player.id, player);
       if (active) {

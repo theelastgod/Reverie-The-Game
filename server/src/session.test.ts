@@ -519,6 +519,17 @@ describe("wallet login", () => {
     expect(await again.json()).toEqual({ ok: false, reason: "no-challenge" });
   });
 
+  it("tells a holder whose Angel walks in another body that it walks, not that the wallet holds none (the player-defect sweep)", async () => {
+    const { world } = await worldHarness(null);
+    await world.join(token, socket() as never);
+    let message = await challenge(world, HOLDER);
+    expect(await (await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }))).json()).toMatchObject({ serial: 42 });
+    await world.join(otherToken, socket("b", otherToken) as never);
+    message = await challenge(world, HOLDER, otherToken);
+    const second = await world.fetch(post("/wallet/link", otherToken, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    expect(await second.json()).toEqual({ ok: true, address: addressOf(HOLDER), serial: null, walking: true });
+  });
+
   it("binds a wallet that holds no Angel without sealing it, and says so", async () => {
     const { world } = await worldHarness(null);
     const ws = socket();
@@ -967,5 +978,49 @@ describe("the writeback log", () => {
     expect((await worker.fetch(new Request("https://game.example/log/recent?limit=51"), env as never)).status).toBe(400);
     const none = { ...env, LOG: undefined };
     expect((await worker.fetch(new Request("https://game.example/log/recent"), none as never)).status).toBe(404);
+  });
+});
+
+describe("one body per Angel (the player-defect sweep, 2026-10-04)", () => {
+  // Two sessions, one Angel: the first walked as it and was saved; the second linked it while the first was away. The index
+  // (serial:v2:<serial>) names the newest body checkpointed with the serial, and the first comes back unsealed.
+  const first = () => angel("a", { serial: TEST_SERIAL, name: "#7777", movement: 3, flags: { angel: 1, under: 1, m3: 1 }, quests: { "m3-organs": 2 }, x: 3000, y: 2000, district: "organs" });
+
+  async function relinkedElsewhere() {
+    const h = await worldHarness(saved(), [], [[playerKey(token), first()]]);
+    const ws2 = socket("b", otherToken);
+    await h.world.join(otherToken, ws2 as never);
+    await h.world.webSocketMessage(ws2 as never, JSON.stringify({ t: "link", serial: TEST_SERIAL, sig: "mock" }));
+    expect(h.data.get(`serial:v2:${TEST_SERIAL}`), "the index names the newest body with the serial").toBe(otherToken);
+    return { ...h, ws2 };
+  }
+
+  it("while the other body walks, the saved one comes back unsealed: a locked guest at the threshold, its progress kept, told why", async () => {
+    const { world, data, ws2 } = await relinkedElsewhere();
+    const ws1 = socket("a", token);
+    const hello = await world.join(token, ws1 as never);
+    expect(hello).toMatchObject({ guest: true });
+    const back = data.get(playerKey(token)) as Player;
+    expect(back).toMatchObject({ guest: true, serial: null, locked: true, movement: 3, district: "nave", heard: LINES.LINK_MOVED });
+    expect(back.quests["m3-organs"], "progress stays with the body").toBe(2);
+    expect(back.flags.angel).toBeUndefined();
+    expect(last(ws2).you).toMatchObject({ guest: false, serial: TEST_SERIAL });
+  });
+
+  it("with the other body away, the index still decides; and the body the index names comes back sealed", async () => {
+    const { world, data, ws2 } = await relinkedElsewhere();
+    await world.webSocketClose(ws2 as never);
+    await world.join(token, socket("a", token) as never);
+    expect(data.get(playerKey(token))).toMatchObject({ guest: true, serial: null, locked: true });
+    const { world: later, data: d2 } = await worldHarness(saved(), [], [...data.entries()].filter(([k]) => k !== "world:v2"));
+    await later.join(otherToken, socket("b", otherToken) as never);
+    expect(d2.get(playerKey(otherToken))).toMatchObject({ guest: false, serial: TEST_SERIAL });
+  });
+
+  it("a saved Angel nobody else holds comes back as it was, and claims the index", async () => {
+    const { world, data } = await worldHarness(saved(), [], [[playerKey(token), first()]]);
+    await world.join(token, socket("a", token) as never);
+    expect(data.get(playerKey(token))).toMatchObject({ guest: false, serial: TEST_SERIAL, district: "organs" });
+    expect(data.get(`serial:v2:${TEST_SERIAL}`)).toBe(token);
   });
 });

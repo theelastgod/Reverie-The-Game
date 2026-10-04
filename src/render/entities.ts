@@ -6,7 +6,7 @@
  * within LABEL_RANGE of you. Positions lerp toward the snapshot.
  */
 import Phaser from "phaser";
-import { ENEMY, AURA_DIM, CLEARING_RADIUS, GESTELL_MELTDOWN, MAX_HP } from "../sim/constants";
+import { ENEMY, AURA_DIM, AURA_PRESENT, CLEARING_RADIUS, GESTELL_MELTDOWN, MAX_HP } from "../sim/constants";
 import { DISTRICT_BY_ID, PATCHES, POIS, POI_LIST, TILE } from "../sim/map";
 import type { EnemyView, NodeView, NpcView, PublicPlayer, Snap, WreckageView, YouView } from "../sim/protocol";
 import type { Messenger, Stance } from "../sim/types";
@@ -111,7 +111,7 @@ const LOW_HP_TINT = 0xff8fa8;
 export function auraTierFor(guest: boolean, aura: number): 0 | 1 | 2 | 3 {
   if (guest) return 0;
   if (aura < AURA_DIM) return 1;
-  if (aura < 50) return 2;
+  if (aura < AURA_PRESENT) return 2; // the server's tier for every other body (snapshot.ts publicPlayer)
   return 3;
 }
 
@@ -734,7 +734,9 @@ export class Entities {
       }
       for (const w of snap.wreckage) {
         if (w.buried || !near(w.x, w.y)) continue;
-        this.label(`w:${w.id}`, `${w.fromName}${w.bestand ? ` · ${w.bestand}` : ""}`, w.x, w.y - 44, w.yours ? "#e8d5a3" : "#f2eefb");
+        // the fallen Angel's Passings, sent only to a Ruin-angel facing the wreckage (snapshot.ts), are read on its label
+        const passings = w.passings !== undefined ? ` · ${w.passings} passing${w.passings === 1 ? "" : "s"}` : "";
+        this.label(`w:${w.id}`, `${w.fromName}${w.bestand ? ` · ${w.bestand}` : ""}${passings}`, w.x, w.y - 44, w.yours ? "#e8d5a3" : "#f2eefb");
       }
       for (const h of snap.history) if (near(h.x, h.y)) this.label(`h:${h.id}`, h.line, h.x, h.y - 32, "#e8d5a3");
       for (const f of snap.failed) if (near(f.x, f.y)) this.label(`f:${f.id}`, f.line, f.x, f.y - 26, "#cdc4ea");

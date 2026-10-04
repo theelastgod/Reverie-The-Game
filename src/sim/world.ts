@@ -344,6 +344,16 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
     p = driftPlayer(p, dt, auraRate, now);
     players.set(id, p);
   }
+  // A duel is two bodies' or none: one whose partner has left, or no longer holds it back (a reload drops a restored body's
+  // duel, migrate.ts), ends for the one still in it, so nobody stands locked in a ring with a body that is open to anyone.
+  for (const [id, p] of players) {
+    if (!p.duel) continue;
+    const partner = players.get(p.duel.with);
+    const held = !!partner && (!p.duel.accepted || (partner.duel?.with === id && partner.duel.accepted));
+    if (held) continue;
+    const { duel: _gone, ...rest } = p;
+    players.set(id, rest);
+  }
 
   let cur: WorldState = { ...w, now, tick: w.tick + 1, players, intents };
   for (const id of heavyFired) cur = resolveHeavy(cur, id);
@@ -517,7 +527,8 @@ export function killPlayer(w: WorldState, victimId: string, killerId: string, ca
   let bestand = v.bestand;
   const dropped: Item[] = [];
   let kept: Item[] = v.items;
-  if (!insured) {
+  // Guests are not loot (the hot street, SCRIPT IV.6): a guest's fall leaves a body to bury and nothing to take.
+  if (!insured && !v.guest) {
     droppedBestand = Math.floor(v.bestand * UNBANKED_DROP);
     bestand = v.bestand - droppedBestand;
     kept = [];

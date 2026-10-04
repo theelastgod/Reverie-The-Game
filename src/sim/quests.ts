@@ -62,7 +62,7 @@ function offerCandidates(def: NpcDef): OfferCandidate[] {
 export function npcOffers(ctx: Ctx, def: NpcDef): boolean {
   const { p } = ctx;
   const holdable = (questId: string): boolean => {
-    if (p.quests[questId] !== undefined) return false;
+    if (p.locked || p.quests[questId] !== undefined) return false;
     const q = questById(questId);
     return !!q && q.kind === "side" && (q.guestLegal || !p.guest);
   };
@@ -91,11 +91,13 @@ function setStep(w: WorldState, id: string, questId: string, step: number): Worl
 
 // ---------------------------------------------------------------- transitions
 
-/** Starts a quest for a player (no-op when already started or unknown) and applies onStart. */
+/** Starts a quest for a player (no-op when already started or unknown, for a locked body, or for a guest an Angel's hour) and applies onStart. */
 export function startQuest(w: WorldState, id: string, questId: string): WorldState {
   const q = questById(questId);
   const p = w.players.get(id);
   if (!q || !p || p.quests[questId] !== undefined) return w;
+  // The rule canStart keeps for the tick, kept for every other way in (a dialogue's hand-out): the lock ends guest play.
+  if (p.locked || (p.guest && !q.guestLegal)) return w;
   let cur = setStep(w, id, questId, 0);
   cur = applyEffects(cur, id, q.onStart);
   // A quest with no steps finishes as it starts.
@@ -174,6 +176,8 @@ export function tickQuests(w: WorldState, id: string): WorldState {
       for (const q of QUESTS) {
         const step = p.quests[q.id];
         if (step === undefined || step >= q.steps.length) continue;
+        // A locked guest's side hours stand where the lock found them; the spine's last step still closes on the tick after it.
+        if (p.locked && q.kind === "side") continue;
         if (!q.steps[step].done(ctx)) continue;
         cur = advanceQuest(cur, id, q.id);
         changed = true;

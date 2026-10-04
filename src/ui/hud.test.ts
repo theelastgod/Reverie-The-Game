@@ -5,6 +5,7 @@ import {
   glassRows, creditRows,
 } from "./format";
 import { TILE } from "../sim/map";
+import { AURA_PRESENT } from "../sim/constants";
 import { CREDITS as LINES_CREDITS } from "../sim/content/lines";
 
 describe("formatSerial", () => {
@@ -134,6 +135,9 @@ describe("identity and ledger", () => {
     expect(auraTier(3, false)).toBe(1);
     expect(auraTier(30, false)).toBe(2);
     expect(auraTier(75, false)).toBe(3);
+    // the server's tier (publicPlayer): at AURA_PRESENT a body is tier 3 on the HUD as it is to every other viewer
+    expect(auraTier(AURA_PRESENT - 1, false)).toBe(2);
+    expect(auraTier(AURA_PRESENT, false)).toBe(3);
   });
 });
 
