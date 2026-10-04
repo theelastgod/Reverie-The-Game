@@ -3169,8 +3169,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   offered body's duel row, the weather band, the Face row's window) the
   first `test:campaign:4` ran out the intake hunt's 40 s with the bot at
   86 hp, 31 px from a clerk at 132 of 176 (no fall, so the walk-back did
-  not fire: the hunt's misses, Backlog 5); Movement I alone and then
-  `test:campaign:4` on fresh worlds passed, and the render check after.
+  not fire). The cause is not known: that run overlapped a client build
+  on the same machine, and the hunt's own steering driven in-sim
+  against the real clerk (six starts, its view up to 450 ms stale)
+  always finished, in 4.4–5 s fresh and at worst after one fall and the
+  walk back; Movement I alone and then `test:campaign:4` on fresh worlds
+  passed, and the render check after.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
