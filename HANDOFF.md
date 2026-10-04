@@ -2229,16 +2229,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the status block. `src/sim/sweep2.test.ts`, and tests in spine,
   economy, side, ledger and keys, hold every case; each of the sweep2
   cases fails on the commit before.
-- The player-defect sweep, round three (2026-10-04, afternoon; in
-  progress, run by hand lens by lens): the K kits and the messengers,
-  personas on the spine, two bodies on the spine together, the journal
-  and the map, reconnects and the protocol's edges, the content that
-  reads the weather. Landed so far: a Dweller's K planted in the nearest
+- The player-defect sweep, round three (2026-10-04, afternoon; run by
+  hand, lens by lens, because the multi-agent run waited on an approval
+  nobody was there to give): the K kits and the messengers, personas on
+  the spine, two bodies on the spine together, reconnects and the
+  protocol's edges. One defect: a Dweller's K planted in the nearest
   node in reach even when a seed was already there, said "Already." and
   spent its thirty seconds; it now plants in the nearest bare node and a
   press that plants nothing spends nothing (the need line says what it
-  needs). `src/sim/sweep3.test.ts` holds each case; each fails on the
-  commit before.
+  needs). `src/sim/sweep3.test.ts` holds it; it fails on d352a45. One
+  owner call (seeds do nothing yet; status block). The rest came back
+  clean, by design where it differs (see Verified). The journal and map
+  and the weather's content are not yet swept this round.
 
 ## Verified (2026-09-25, integration)
 
@@ -3271,6 +3273,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   both ways). The enemy changes were also driven in-sim before the wire:
   Desk Three leashed against its row's pillar is set down whole at its
   desk, and two cold desks on one felled body both walk back.
+- The player-defect sweep, round three (2026-10-04, afternoon): typecheck,
+  653 tests in 49 files, the build. By hand, against the spine's own
+  walker (src/sim/spine.test.ts's helpers, copied into probes and
+  deleted): every House and messenger a serial can give (serials 1 to
+  12) walks Movements I to IV through every Passing outcome and the
+  credits; the only differences are authored (an Earth Angel's hall step
+  passes on the shrine because the hall is behind the Organs door; a
+  Sky or Ruin-angel sees last season's failed hole without Storm). A
+  second Angel walking the whole spine in the world the first already
+  walked finishes it, the credits included: it waits out Desk Three's
+  and the Runner's respawn, its link refuses the first Angel's serial
+  (one body per Angel), and at the ring it joins the first's open hole
+  and keeps it with them; world counts and the Clearing's price move
+  for both, as they should. The six kits read against DESIGN's table:
+  only the Dweller's misbehaved. The client's message checks refuse
+  every malformed field (types, non-finite numbers, long strings,
+  polluted keys, unknown ops), and the socket backs off to 10 s and
+  stops on 4001.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen
