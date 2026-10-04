@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 652 tests (2026-10-04), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 654 tests (2026-10-04), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -3280,7 +3280,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Desk Three leashed against its row's pillar is set down whole at its
   desk, and two cold desks on one felled body both walk back.
 - The player-defect sweep, round three (2026-10-04, afternoon): typecheck,
-  653 tests in 49 files, the build. By hand, against the spine's own
+  654 tests in 49 files, the build. By hand, against the spine's own
   walker (src/sim/spine.test.ts's helpers, copied into probes and
   deleted): every House and messenger a serial can give (serials 1 to
   12) walks Movements I to IV through every Passing outcome and the
