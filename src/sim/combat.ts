@@ -576,9 +576,12 @@ export function applyKit(w: WorldState, id: string, _targetId?: string): WorldSt
     case "ruin":
       return setPlayer(w, armed({ ...p, kit: { verb: "ruin", until: now + FACE_DURATION } }));
     case "dweller": {
+      // The nearest bare node in reach: a seed already in the ground is nobody's to plant again, and a press that plants
+      // nothing spends nothing (the player-defect sweep, round three).
       let best: string | null = null;
       let bestD = 96 * 96;
       for (const n of w.nodes) {
+        if (n.seed) continue;
         const d = d2(p, n);
         if (d <= bestD) { bestD = d; best = n.id; }
       }

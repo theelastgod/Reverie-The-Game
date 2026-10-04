@@ -99,6 +99,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   sight); the last hold of a season loses its omen to the roll on the
   same tick; the freeze desk says "a freeze holds" after the freeze has
   lapsed; a purse of one banks nothing (the floor is the contract's).
+- **From the sweep's third round** (2026-10-04, yours to decide): a
+  seed does nothing yet. A Dweller's K and the ring's four seed grounds
+  both plant one, and the seed ground's line (SCRIPT.md IV.4) promises
+  "The Clearing will hold a little longer for it", but `clearing.seeds`
+  and the grounds' `seeded` state are read by nothing but the drawing.
+  The smallest mechanic that keeps the line: each seed in the ring adds
+  a few seconds to an opened hole's contest (`endsAt`); the season roll
+  keeps the seeds today. Say the word, or have the line cut.
 - **The story is now `SYNOPSIS.md`** (your brief of 2026-10-02, the
   afternoon). The enemy has a name and a shape: the Concern, the company
   that owns the numbers, and Anselm Caul, its chief, who is a guest (he
@@ -2221,6 +2229,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the status block. `src/sim/sweep2.test.ts`, and tests in spine,
   economy, side, ledger and keys, hold every case; each of the sweep2
   cases fails on the commit before.
+- The player-defect sweep, round three (2026-10-04, afternoon; in
+  progress, run by hand lens by lens): the K kits and the messengers,
+  personas on the spine, two bodies on the spine together, the journal
+  and the map, reconnects and the protocol's edges, the content that
+  reads the weather. Landed so far: a Dweller's K planted in the nearest
+  node in reach even when a seed was already there, said "Already." and
+  spent its thirty seconds; it now plants in the nearest bare node and a
+  press that plants nothing spends nothing (the need line says what it
+  needs). `src/sim/sweep3.test.ts` holds each case; each fails on the
+  commit before.
 
 ## Verified (2026-09-25, integration)
 

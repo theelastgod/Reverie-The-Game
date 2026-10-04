@@ -60,7 +60,7 @@ export const KIT_NEED: Record<Kit, string> = {
   herald: "Only a Herald can name a safe node, and only one that was kept.",
   witness: "Only a Witness traces wreckage, and only where someone fell.",
   ruin: "Only a Ruin-angel names the storm, and only with the wreckage in front.",
-  dweller: "Only a Dweller plants a seed, and only on a kept node.",
+  dweller: "Only a Dweller plants a seed, and only in bare ground by a node. None is in reach.",
   cybernetic: "Only a cybernetic angel reads a live node as process.",
   iridescent: "Only an Iridescent angel paints a stall as surface.",
 };
