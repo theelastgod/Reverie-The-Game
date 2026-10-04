@@ -223,7 +223,7 @@ const omen: NpcDef = {
       text: omenHub,
       effects: [tally(SF.OMEN_VISITS)],
       choices: [
-        // what the journal sends you back with comes first: the window shows four choices on keys 1 to 4 before the rest
+        // what the journal sends you back with comes first, on the lowest number keys
         { id: "struck", label: "It struck.", when: ({ p }) => atStep(p, SQ.HOUR, 1), next: "hour-told" },
         { id: "confront", label: "The hour I bought did not come.", when: ({ p }) => atStep(p, SQ.HOURS, 2), next: "hours-confront" },
         { id: "front", label: "There is a front behind the band.", when: ({ p }) => atStep(p, SQ.FRONT, 1), next: "front-report" },

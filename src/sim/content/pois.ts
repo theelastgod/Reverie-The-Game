@@ -6,7 +6,7 @@
  */
 import type { Ctx, Effect, Fourfold, PoiConfig, PoiVerb, WinkBySchool } from "../types";
 import {
-  AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_PRESENT, CLEARING_LIST_PRICE, FREEZE_FEE, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
+  AURA_ADDRESS_GLAMOUR, AURA_DIM, AURA_PRESENT, CLEARING_LIST_PRICE, FREEZE_FEE, FREEZE_SECONDS, FUNERAL_COST, GESTELL_BASELINE, GESTELL_FAT, INSURE_COST, M3_DOOR_PRICE, MAX_HP,
   OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_REFUSE, READINESS_WATCH, REPAIR_COST, RESTORE_AURA, RESTORE_COST, RESTRAINT_BURY_GAIN, TITHE_COST, UPKEEP_COST,
   WAR_PERIOD,
 } from "../constants";
@@ -826,7 +826,7 @@ const ANNEX: PoiConfig[] = [
           + (chose(ctx, C.ANNEX, "hungry") ? " You said hungry in the corridor. The signature says otherwise. Safety keeps both." : ""),
         effects: [
           { kind: "choice", key: C.FREEZE, value: "signed" },
-          { kind: "freeze", district: "nave", seconds: 1800 },
+          { kind: "freeze", district: "nave", seconds: FREEZE_SECONDS },
           { kind: "poi", id: "safety-desk", state: "frozen" },
           { kind: "wink", text: "You bought time. You spent an hour. The signature does not get it back." },
           { kind: "news", text: "A freeze was signed at the Annex, on the Concern's paper. The Nave holds for half an hour." },

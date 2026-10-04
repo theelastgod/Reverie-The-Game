@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   eighteen decisions, about 48 minutes on the spine) plays over the wire on a
-  fresh world; 610 tests (2026-10-03), the session smoke, the campaign smoke and the
+  fresh world; 615 tests (2026-10-04), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -2059,6 +2059,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   spine; every live hand-out's speaker and steps; no Angel's hour handed
   to a guest), and `resolveTarget` is exported for it.
 
+- The numbers audit (2026-10-04, small hours): every price, count and
+  time a line, a label, a journal step or a notice names, read against
+  the number the server uses (about seventy, in the content, the sim and
+  the HUD). One was false: the Witness's Blitz says "The last eight who
+  fell are traced on the ground", as `PROMPT.md` and `DESIGN.md` specify,
+  but it showed every wreckage the city still held, however many;
+  `BLITZ_COUNT` (8) was defined and never read. It now adds the last
+  eight who fell (by the time of the fall, however old their wreckage)
+  to what the body already sees, and never hides what it sees. The rest
+  hold: every place that charges Bestand says and labels the price it
+  charges (now a test over every costed verb), the kits' seconds and
+  minute, the truce, the claims cap, the freeze's half hour (now
+  `FREEZE_SECONDS`, 1800, used by the desk), the tax as the weather
+  over four, the seed grounds, the shrines, the copy's nine. A stale
+  comment in Halla's hub still said the window showed four choices.
+  `src/sim/numbers.test.ts` holds it.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3045,6 +3062,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the map test and the restore test on the old door and the old
   restore, the reach check on a Kerb shut behind `m3` (five side-hour
   steps named).
+- The numbers audit (2026-10-04, small hours): typecheck, 615 tests in
+  46 files (numbers.test.ts: every costed verb's label and line against
+  its cost, the kits', truce's and desk's numbers, the freeze's half
+  hour, and the Blitz's last eight, which fails on the old snapshot),
+  the build, the play build and the stage, and on a fresh local world
+  the session smoke, `test:campaign:4` (Movements I–IV, `failed` at
+  readiness 52 as before) and the render check.
 - Not verified: a deploy (the Cloudflare API is denied by the network
   policy and the connector cannot upload a Worker), the Stage B assets
   (results host denied), rendered play on real hardware (a screen

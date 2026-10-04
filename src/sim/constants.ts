@@ -36,7 +36,7 @@ export const STORM_RESTRAINT_BURN = 1; // per second while in Storm stance
 export const KIT_COOLDOWN = 30;
 export const KIT_DURATION = 60;
 export const BLITZ_DURATION = 20;
-export const BLITZ_COUNT = 8;
+export const BLITZ_COUNT = 8; // a Witness's Blitz traces the last this many who fell, whatever their wreckage's age
 export const FACE_DURATION = 20;
 
 // Enemies
@@ -110,6 +110,7 @@ export const RESTORE_AURA = 4;
 export const UPKEEP_COST = 5;
 export const TITHE_COST = 4;
 export const FREEZE_FEE = 15;
+export const FREEZE_SECONDS = 1800; // a signed freeze holds the Nave this long: "half an hour" in every line that names it
 export const LISTING_FEE = 2;
 export const LISTING_PRICE_MIN = 1; // the stall's bounds, for a player's print and for the city's own listing alike
 export const LISTING_PRICE_MAX = 999;

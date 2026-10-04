@@ -6,7 +6,7 @@
  * history marks go only to their owner; failed Passings only to Ruin-sight,
  * Storm stance or the House of Sky.
  */
-import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, CITY_SELLER, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
+import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, BLITZ_COUNT, CITY_SELLER, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
 import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
 import { C, W } from "./content/ids";
@@ -98,11 +98,12 @@ export function npcView(ctx: Ctx, npc: NpcState): NpcView | null {
   return state ? npcViewOf(ctx, state) : null;
 }
 
-/** Wreckage this viewer can see: until, plus the House / messenger bonus, plus the storm; a Witness blitz shows all. */
+/** Wreckage this viewer can see: until, plus the House / messenger bonus, plus the storm; a Witness blitz adds the last BLITZ_COUNT who fell. */
 export function visibleWreckage(w: WorldState, p: Player): Wreckage[] {
-  if (kitActive(p, "witness", w.now)) return w.wreckage;
   const bonus = perception(p).wreckageBonus + (!p.guest && p.stance === "storm" ? WRECKAGE_TTL_BONUS : 0);
-  return w.wreckage.filter(r => r.until + bonus > w.now);
+  if (!kitActive(p, "witness", w.now)) return w.wreckage.filter(r => r.until + bonus > w.now);
+  const last = new Set(w.wreckage.slice().sort((a, b) => b.at - a.at).slice(0, BLITZ_COUNT));
+  return w.wreckage.filter(r => last.has(r) || r.until + bonus > w.now);
 }
 
 // ---------------------------------------------------------------- prompt
