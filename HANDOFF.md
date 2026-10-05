@@ -17,7 +17,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   since the 26th: a message and join budget, an hourly sweep of stale guest
   bodies, a world record without bodies and body records written only when
   they change, each reviewed and security-reviewed (see Done). The dev
-  tools are current (vite 8.3, vitest 5, wrangler 4.146, TypeScript 7 and
+  tools are current (vite 8.3, vitest 5, wrangler 4.147, TypeScript 7 and
   Phaser 4.2 since 2026-10-02; `npm audit` reads 0 for production and dev
   dependencies alike and `npm outdated` lists nothing). Since 2026-10-01 every
   push runs the typecheck, the tests, the client build and a dry-run
@@ -2508,6 +2508,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the ring for a body that kept watch at the garden (shipped words);
   the honest answer's news says "left the Annex" when the Officer was at
   the Ring.
+
+- Dependencies (2026-10-05): wrangler 4.147.0 and @cloudflare/workers-types
+  5.20261004.1, inside `package.json`'s ranges (`npm update`); `npm audit`
+  reads 0 and `npm outdated` lists nothing. Typecheck, 716 tests, the build,
+  the session smoke, the render check and a dry-run bundle (660.7 KiB,
+  176.8 KiB gzipped) pass under them.
 
 ## Verified (2026-09-25, integration)
 
