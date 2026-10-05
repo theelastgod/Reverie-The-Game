@@ -5,7 +5,7 @@
  * spent restraint.
  */
 import { LINES, NPCS } from "./content";
-import type { Ctx, DialogueChoiceView, DialogueNode, DialogueView, NpcDef, Player, WinkText, WorldState } from "./types";
+import type { Ctx, DialogueChoice, DialogueChoiceView, DialogueNode, DialogueView, NpcDef, Player, WinkText, WorldState } from "./types";
 import { canSeeWink, wink } from "./world";
 import { perception } from "./houses";
 import { isWinkSeed } from "./identity";
@@ -71,8 +71,24 @@ function sentences(text: string): string[] {
   return text.split(/(?<=[.!?])\s+/).map(x => x.trim()).filter(Boolean);
 }
 
-function visibleChoices(ctx: Ctx, node: DialogueNode): DialogueChoiceView[] {
-  return (node.choices ?? []).filter(c => !c.when || c.when(ctx)).map(c => ({ id: c.id, label: c.label }));
+/** Effects that hand out or report a side hour: a quest started, or a side hour's flag set. */
+function touchesSideHour(ctx: Ctx, effects: DialogueNode["effects"]): boolean {
+  const list = typeof effects === "function" ? effects(ctx) : effects ?? [];
+  return list.some(e => (e.kind === "quest" && e.op === "start") || (e.kind === "flag" && e.key.startsWith("side:")));
+}
+
+/**
+ * A locked body's side hours stand where the lock found them (quests.ts), so a person does not hand it an hour or hear
+ * its report: the line would say the act landed while the hour stays frozen, as the places already refuse (interact.ts
+ * isSideVerb; the player-defect sweep, round five).
+ */
+function lockedOut(ctx: Ctx, def: NpcDef, c: DialogueChoice): boolean {
+  if (!ctx.p.locked) return false;
+  return touchesSideHour(ctx, c.effects) || (!!c.next && touchesSideHour(ctx, def.nodes[c.next]?.effects));
+}
+
+function visibleChoices(ctx: Ctx, def: NpcDef, node: DialogueNode): DialogueChoiceView[] {
+  return (node.choices ?? []).filter(c => (!c.when || c.when(ctx)) && !lockedOut(ctx, def, c)).map(c => ({ id: c.id, label: c.label }));
 }
 
 function nodeOf(p: Player): { def: NpcDef; node: DialogueNode } | null {
@@ -120,7 +136,7 @@ export function openNode(w: WorldState, id: string, npcId: string, nodeId: strin
     portrait: speakerDef.portrait,
     text: text(ctx, node.text),
     wink: winkText,
-    choices: visibleChoices(ctx, node),
+    choices: visibleChoices(ctx, def, node),
   };
 
   let cur = applyEffects(w, id, node.effects);
@@ -143,6 +159,7 @@ export function applyChoose(w: WorldState, id: string, choiceId: string): WorldS
   const ctx: Ctx = { w, p, now: w.now };
   const choice = (open.node.choices ?? []).find(c => c.id === choiceId && (!c.when || c.when(ctx)));
   if (!choice) return w;
+  if (lockedOut(ctx, open.def, choice)) return w;
   const npcId = p.dialogue.npc;
   let cur = applyEffects(w, id, choice.effects);
   if (choice.next) return openNode(cur, id, npcId, choice.next);

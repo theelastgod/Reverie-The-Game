@@ -28,9 +28,10 @@ const SITE_NAMES: Record<string, string> = { "clearing-ring": "the Clearing", "h
 const TITHE_WRONG_HALL = "This hall keeps another House standing. Yours is elsewhere.";
 const TITHE_PAID = (cost: number) => `Tithe. ${cost} Bestand. Upkeep, not a stick. The lamp holds.`;
 const BOUNTY_DARK = "The hall is dark. Read the plaque before you ask the pool for anything.";
-const BOUNTY_NONE = "No omen yet. Win a hold first."; // the holds are at the ring and the hot street by turns
+// The bounty's gate is standing, the pool and a purse a war's span (CONTRACTS applyBounty), not the omen: the refusals say so.
+const BOUNTY_NONE = "Your House has no standing here yet. Tithe, or hold a site.";
 const BOUNTY_POOL = "The pool is thin. Tithe is upkeep; bounty comes after.";
-const BOUNTY_HELD = "The bounty already paid. One omen, one purse.";
+const BOUNTY_HELD = "The bounty already paid. One purse a war's span.";
 const BOUNTY_PAID = `Bounty. ${BOUNTY_AMOUNT} Bestand from the tithe pool. It was already priced.`;
 const WAR_OPENS = (site: string) => `A House hold opens at ${site}. Stand there. Standing is all it pays.`;
 const WAR_WON = (house: Fourfold, site: string) => `${HOUSE_NAMES[house]} held ${site}. Standing and an omen. Not a bigger stick.`;

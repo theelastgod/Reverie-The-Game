@@ -7,7 +7,7 @@
  * ticks from an alarm, checkpoints before it broadcasts, and sends every
  * viewer their own `snapshotFor` view. The client never computes a number.
  */
-import { emptyWorld, say, spawnGuest, tickWorld } from "../../src/sim/world.ts";
+import { emptyWorld, rebindBody, say, spawnGuest, tickWorld } from "../../src/sim/world.ts";
 import { migratePlayer, migrateWorld, SHAPE } from "../../src/sim/migrate.ts";
 import { DT } from "../../src/sim/constants.ts";
 import { applyAction, applyLink, applyWallet, unsealBody } from "../../src/sim/actions.ts";
@@ -352,8 +352,11 @@ export class ReverieWorld {
     // gate, came between reading `fresh` and here, so the guard holds the body as the request found it.
     const restored = !!kept && this.w.players.get(live.id) === fresh;
     if (kept && restored) {
-      const back = { ...migratePlayer(kept.record, live.id, this.w.now), id: live.id }; // the session's body id, not the record's
+      const record = migratePlayer(kept.record, live.id, this.w.now);
+      const back = { ...record, id: live.id }; // the session's body id, not the record's
       this.withBody(live.id, say({ ...back, dialogue: null }, LINES.LINK_COPY(back.serial ?? serial!, back.house, back.messenger), this.w.now));
+      // what the city holds of the Angel under its old id (its listings, its keeps, its wreckage) follows it to this one
+      this.w = rebindBody(this.w, record.id, live.id);
       this.slow.forget(live.id); // the whole record changed under the session: its next frame is a full one
     }
     this.advanceWorld(Date.now());

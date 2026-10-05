@@ -180,7 +180,9 @@ export function wreckageVerbs(ctx: Ctx, wreck: Wreckage): PromptVerb[] {
   const { w, p } = ctx;
   if (wreck.buried || p.locked || !visibleWreckage(w, p).some(r => r.id === wreck.id)) return [];
   const out: PromptVerb[] = [{ key: "F", label: "Bury", choice: "bury" }];
-  if (!p.guest && !wreck.looted && (wreck.bestand > 0 || wreck.items.length > 0)) out.push({ key: "E", label: "Loot", choice: "loot" });
+  // Nobody loots their own fall: what death drops is lost to the body that fell (PROMPT §8.2; insurance is the sink that
+  // keeps it), and spoils come from other bodies (the player-defect sweep, round five).
+  if (!p.guest && wreck.fromId !== p.id && !wreck.looted && (wreck.bestand > 0 || wreck.items.length > 0)) out.push({ key: "E", label: "Loot", choice: "loot" });
   return out;
 }
 

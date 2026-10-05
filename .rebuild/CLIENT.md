@@ -117,9 +117,12 @@ stands still and the focused dialog scrolls it, the hint pinned clear of the las
   the way the stick or the keys point, else the way the body faces. The
   prompt's verbs, the stance, the kit and the dialogue's choices are
   buttons already, and so are I and V: `#hud-use` (USE PAPER) shows while
-  the purse holds a paper worth using and `#hud-flag` (RAISE FLAG or LOWER
+  the purse holds a paper worth using (a guest's too, since 2026-10-05: the
+  server lets a guest use what the stall sold it) and `#hud-flag` (RAISE FLAG or LOWER
   FLAG) where the street allows a flag and no truce runs (`chipVerbs` in
-  `format.ts`; since 2026-10-04).
+  `format.ts`; since 2026-10-04). `#hud-audio` (AUDIO ON/OFF) is
+  `.interactive` like every HUD button, so a finger can mute (a phone has no
+  O key; since 2026-10-05).
 - 60 fps target: no per-tile GameObjects; reuse sprites by id; cull labels.
 
 ## Network (D1)

@@ -90,6 +90,9 @@ function bury(w: WorldState, p: Player, id?: string): WorldState {
     extractedSinceFuneral: 0,
     history: { ...p.history, buried: p.history.buried + 1 },
   };
+  // A clerk's wreckage is counted apart: the job hour asks for a clerk in the ground, not any burial (the sweep, round five).
+  const fell = w.enemies.find(e => e.id === r.fromId);
+  if (fell && (fell.kind === "clerk" || fell.kind === "intake")) me = { ...me, flags: { ...me.flags, [F.CLERKS_BURIED]: (me.flags[F.CLERKS_BURIED] ?? 0) + 1 } };
   if (me.party.nara === "gone") {
     me = notice({ ...me, party: { ...me.party, nara: "waiting" } }, LINES.NARA_WAITS, now, "ink");
   }

@@ -50,6 +50,8 @@ describe("the HUD's markup for assistive technology", () => {
     }
     expect(html).toMatch(/id="hud-use"[^>]*>.*USE PAPER/);
     expect(html).toMatch(/id="hud-flag"[^>]*>.*RAISE FLAG/);
+    // the AUDIO chip takes the pointer like every other HUD button: a phone's only mute (the sweep, round five)
+    has(tag("hud-audio"), "interactive");
   });
   it("makes the four bars meters with a name and a range", () => {
     for (const bar of ["hp", "aura", "restraint", "readiness"]) {

@@ -332,7 +332,7 @@ export function noticeDiff(shown: readonly string[], next: readonly string[]): {
 
 /**
  * The verbs the HUD's buttons must repeat for a finger (CLIENT.md: every verb has a key, and the HUD's buttons repeat
- * them): I uses a paper while the purse holds one worth using, V raises or lowers the flag where the street allows it.
+ * them): I uses a paper while the purse holds one worth using (a guest's too), V raises or lowers the flag where the street allows it.
  * Without these a phone could buy a paper and never use it, and flag only while another Angel was the prompt's target
  * (the player-defect sweep, round four). Null for a chip that has nothing to do.
  */
@@ -340,7 +340,8 @@ export function chipVerbs(you: { guest: boolean; locked: boolean; dead: boolean;
   const angel = !you.guest && !you.locked && !you.dead;
   const flagLegal = !!DISTRICT_BY_ID[you.district]?.flagLegal;
   return {
-    use: angel && paper !== null,
+    // any living body that holds a paper worth using: the server lets a guest use what the stall sold it
+    use: !you.dead && paper !== null,
     flag: angel && flagLegal && !(you.truceUntil > now) ? (you.flagged ? "LOWER FLAG" : "RAISE FLAG") : null,
   };
 }

@@ -230,6 +230,13 @@ const moveNpc = (id: string, place: string, state: string): Effect => {
   return { kind: "npc", id, x: pos.x, y: pos.y, district: pos.district, present: true, state };
 };
 
+/**
+ * A person's walk is one change in a shared city: once another body's hour has put them there, a later report moves no
+ * one and the marquee does not announce the walk again (the player-defect sweep, round five).
+ */
+const walkOnce = (ctx: Ctx, id: string, place: string, state: string, line: string): Effect[] =>
+  ctx.w.npcs[id]?.state === state ? [] : [moveNpc(id, place, state), news(line)];
+
 const HOUSE_NAME: Record<Fourfold, string> = { earth: "House of Earth", sky: "House of Sky", mortals: "House of Mortals", divinities: "House of Divinities" };
 const ownHouse = (p: Player): Fourfold | null => (p.house === "" ? null : p.house);
 
@@ -362,7 +369,8 @@ const NAVE: Quest[] = [
     guestLegal: false,
     changes: "standing",
     available: ({ p }) => angel(p) && has(p, F.INTAKE),
-    onStart: ({ p }) => [flag(SF.JOB_BASE, p.history.buried)],
+    // Clerks buried, not burials: a plate, a garden or another Angel's wreckage is not a clerk (the sweep, round five).
+    onStart: ({ p }) => [flag(SF.JOB_BASE, count(p, F.CLERKS_BURIED))],
     steps: [
       step({
         id: "bury",
@@ -370,7 +378,7 @@ const NAVE: Quest[] = [
         detail: "A clerk falls and leaves wreckage on the aisle. Find it before the weather takes it. Press F to bury.",
         target: "enemy:desk-three",
         plate: "plate-burial.jpg",
-        done: ({ p }) => p.history.buried - count(p, SF.JOB_BASE) >= 1,
+        done: ({ p }) => count(p, F.CLERKS_BURIED) - count(p, SF.JOB_BASE) >= 1,
         onComplete: [notice("A clerk is in the ground. They had a desk number. Now they have earth.")],
       }),
       step({
@@ -455,9 +463,8 @@ const WET: Quest[] = [
         target: "listing-board",
         plate: "clearing-stall.jpg",
         done: ({ p }) => has(p, SF.COPY_DOWN),
-        onComplete: [
-          moveNpc("quill", "quill-board", "board"),
-          news("Someone took a Clearing off the listing board. Quill went to look."),
+        onComplete: ctx => [
+          ...walkOnce(ctx, "quill", "quill-board", "board", "Someone took a Clearing off the listing board. Quill went to look."),
           wink("A copy travels. The hole does not. You paid to make the board say nothing. That is not nothing."),
         ],
       }),
@@ -600,9 +607,8 @@ const CARE: Quest[] = [
         done: ({ p }) => has(p, SF.LEDGER_REPORTED),
       }),
     ],
-    onFinish: [
-      moveNpc("sexton", "sexton-garden", "garden"),
-      news("The sexton's apprentice took his ledger into the wreckage garden. He is numbering what is there."),
+    onFinish: ctx => [
+      ...walkOnce(ctx, "sexton", "sexton-garden", "garden", "The sexton's apprentice took his ledger into the wreckage garden. He is numbering what is there."),
       wink("A ledger of the unnamed is still a ledger. It is the only one in the city that shrinks when someone does their job."),
     ],
   }),
@@ -787,10 +793,9 @@ const ANNEX: Quest[] = [
         done: ({ p }) => has(p, SF.HONEST_TOLD),
       }),
     ],
-    onFinish: [
-      moveNpc("officer", "officer-clearing", "clearing"),
+    onFinish: ctx => [
+      ...walkOnce(ctx, "officer", "officer-clearing", "clearing", "The Officer of Safety left the Annex. He is standing where the Passing failed."),
       worldFlag(SW.OFFICER_WALKED),
-      news("The Officer of Safety left the Annex. He is standing where the Passing failed."),
       wink("Safety was the other honest answer. He still is. He just stopped saying it where it was safe."),
     ],
   }),
@@ -857,9 +862,8 @@ const ANNEX: Quest[] = [
         done: ({ p }) => has(p, SF.NOTICE_REPORTED),
       }),
     ],
-    onFinish: [
-      moveNpc("keeper", "keeper-bell", "guarding"),
-      news("The keeper of the Ring refused a Safety notice. He is standing under the mute bell."),
+    onFinish: ctx => [
+      ...walkOnce(ctx, "keeper", "keeper-bell", "guarding", "The keeper of the Ring refused a Safety notice. He is standing under the mute bell."),
       wink("A bell with no tongue cannot be scheduled. That was the point of cutting it."),
     ],
   }),
@@ -898,9 +902,8 @@ const ANNEX: Quest[] = [
         done: ({ p }) => has(p, SF.CENSUS_REPORTED),
       }),
     ],
-    onFinish: [
-      moveNpc("officer", "officer-ring", "ring"),
-      news("The Officer of Safety went to the Ring to count the bells himself."),
+    onFinish: ctx => [
+      ...walkOnce(ctx, "officer", "officer-ring", "ring", "The Officer of Safety went to the Ring to count the bells himself."),
       wink("He did not want the count. He wanted to know if the keeper would talk to someone Safety sent."),
     ],
   }),
@@ -1014,9 +1017,8 @@ const KERB: Quest[] = [
         done: ({ p }) => has(p, SF.HOURS_CONFRONTED),
       }),
     ],
-    onFinish: [
-      moveNpc("omen", "omen-glass", "glass"),
-      news("Halla Voss stopped selling hours. She is reading the forecast glass for nothing."),
+    onFinish: ctx => [
+      ...walkOnce(ctx, "omen", "omen-glass", "glass", "Halla Voss stopped selling hours. She is reading the forecast glass for nothing."),
       wink("A forecast is a lie with a time on it. She stopped putting the time on. The lie stayed. So did she."),
       { kind: "readiness", delta: 1 },
     ],
@@ -1304,9 +1306,8 @@ const ORGANS: Quest[] = [
         done: ({ p }) => has(p, SF.FOUNDRY_TOLD),
       }),
     ],
-    onFinish: [
-      moveNpc("desk", "desk-foundry", "foundry"),
-      news("The cold desk clerk left the desk. He is standing at the dark Foundry with the number."),
+    onFinish: ctx => [
+      ...walkOnce(ctx, "desk", "desk-foundry", "foundry", "The cold desk clerk left the desk. He is standing at the dark Foundry with the number."),
       wink("Every furnace is a mouth. Every mouth was a place. He went to see what the place was."),
     ],
   }),

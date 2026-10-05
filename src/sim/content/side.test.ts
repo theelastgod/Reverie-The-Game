@@ -157,7 +157,7 @@ const SATISFIERS: Record<string, Sat[][]> = {
   [SQ.THIRD_ALTAR]: [[f(SF.ALTAR_COUNTED)], [f(SF.ALTAR_LIT), poi("crt-altar-3", "lit")]],
   [SQ.UNSPENT]: [[{ kept: 2 }], [f(SF.UNSPENT_TOUCHED), poi("crt-altar-1", "lit")]],
   [SQ.ANOTHER_NIGHT]: [[f(SF.NIGHT_SAT)], [f(SF.NIGHT_HEARD)]],
-  [SQ.DOING_A_JOB]: [[{ buried: 1 }], [f(SF.JOB_NAMES)]],
+  [SQ.DOING_A_JOB]: [[f(F.CLERKS_BURIED)], [f(SF.JOB_NAMES)]], // a clerk's wreckage buried, not any burial (the sweep, round five)
   [SQ.VAN]: [[f(SF.VAN_ASKED)], [f(SF.VAN_WAVED), poi("hot-street", "hot")]],
   [SQ.COPY]: [[f(SF.COPY_READ)], [f(SF.COPY_DOWN)]],
   [SQ.LISTING_FEE]: [[f(SF.FEE_1, SF.FEE_2)], [f(SF.FEE_3, SF.FEE_4)]],
@@ -382,7 +382,8 @@ describe("side quests", () => {
 
   it("every step's predicate is satisfied only by flags, choices, POI states and counters the side content itself sets", () => {
     const sets = everythingSet();
-    const flags = new Set([...sets.quests.flags, ...sets.verbs.flags, ...sets.npcs.flags]);
+    // F.CLERKS_BURIED is a counter the engine's bury keeps, as history.buried is (effects.ts): a clerk's wreckage buried
+    const flags = new Set([...sets.quests.flags, ...sets.verbs.flags, ...sets.npcs.flags, F.CLERKS_BURIED]);
     const choices = new Set([...sets.quests.choices, ...sets.verbs.choices, ...sets.npcs.choices]);
     const pois = new Set([...sets.quests.pois]); // the world change is the quest's own doing, never the verb's
     for (const q of SIDE) {

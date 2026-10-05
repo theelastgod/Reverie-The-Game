@@ -569,6 +569,25 @@ describe("wallet login", () => {
     expect(data.has(playerKey(otherToken))).toBe(false);
   });
 
+  it("a restored Angel keeps what the city holds of it: its listing is still its own to cancel (the sweep, round five)", async () => {
+    const kept = angel("oldbody", { wallet: addressOf(HOLDER), movement: 3 });
+    const w = emptyWorld();
+    const print = { id: "copy:wink-hint", kind: "exhibition" as const, name: "A copy", value: 20, qty: 1 };
+    w.market = [{ id: "listing:oldbody:5:1", sellerId: "oldbody", sellerName: "#0042", item: print, price: 20, at: 5 }];
+    const { world } = await worldHarness(w, [], [[playerKey(otherToken), kept], ["serial:v2:42", otherToken]]);
+    const ws = socket();
+    const hello = await world.join(token, ws as never);
+    const message = await challenge(world, HOLDER);
+    await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    expect(last(ws).you).toMatchObject({ id: hello!.id, serial: 42, movement: 3 });
+    vi.setSystemTime(1000);
+    await world.webSocketMessage(ws as never, JSON.stringify({ t: "market", op: "cancel", listingId: "listing:oldbody:5:1" }));
+    const you = last(ws).you;
+    expect(you.heard).not.toBe("That listing is gone.");
+    expect(you.items.some((i: { id: string }) => i.id === "copy:wink-hint")).toBe(true);
+    expect(last(ws).market ?? []).toHaveLength(0);
+  });
+
   it("restores no body sealed to another wallet, none that walks, and never replaces a body that was an Angel", async () => {
     // a sold Angel: the record under the old cookie is sealed to the seller's wallet; the buyer's link seals the buyer's body
     const sold = angel("old", { wallet: addressOf(STRANGER), movement: 3, banked: 480 });

@@ -6,7 +6,7 @@
  */
 import { CLIENT_MSG_TYPES, type ClientMsg } from "./protocol";
 import type { Intent, LinkProof, Player, WorldState } from "./types";
-import { F } from "./content/ids";
+import { F, Q } from "./content/ids";
 import { LINES } from "./content";
 import { auraSeed, formatSerial, historyMarkFor, houseFor, messengerFor, proofOf, serialHistoryMark, validLink, winkSchoolFor } from "./identity";
 import { say } from "./world";
@@ -15,6 +15,7 @@ import { applyDodge, applyFlag, applyHeavy, applyKit, applyStance, applyStrike, 
 import { applyMarket, applyUse } from "./economy";
 import { applyChoose, applyClose, applyTalk } from "./dialogue";
 import { applyInteract } from "./interact";
+import { questById } from "./quests";
 
 const MAX_STRING = 64;
 const POLLUTION = new Set(["__proto__", "constructor", "prototype"]);
@@ -107,6 +108,18 @@ export function applyWallet(w: WorldState, id: string, address: string, line?: s
   return setPlayer(w, line ? say(bound, line, w.now) : bound);
 }
 
+/**
+ * A guest's Movement I closes at the lip on its lock; a body linked there has still to go under, as an Angel. Its
+ * going-under step is opened again so the field notes lead it to the threshold and the Angel's news and notices, and
+ * Movement I's close, are posted when it goes (SCRIPT.md I.11; the player-defect sweep, round five).
+ */
+function reopenThreshold(p: Player): Player["quests"] {
+  const m1 = questById(Q.M1);
+  if (!m1 || !p.locked || (p.flags[F.UNDER] ?? 0) > 0 || (p.quests[Q.M1] ?? -1) < m1.steps.length) return p.quests;
+  const at = m1.steps.findIndex(s => s.id === "going-under");
+  return at < 0 ? p.quests : { ...p.quests, [Q.M1]: at };
+}
+
 export function applyLink(w: WorldState, id: string, serial: number, proof: LinkProof | string): WorldState {
   const p = w.players.get(id);
   if (!p) return w;
@@ -136,6 +149,7 @@ export function applyLink(w: WorldState, id: string, serial: number, proof: Link
     wallet: how.kind === "wallet" ? how.address : p.wallet,
     linkedAt: w.now,
     history: { ...p.history, houses },
+    quests: reopenThreshold(p),
   };
   let cur = setPlayer(w, say(me, LINES.LINK_COPY(serial, house, messenger), w.now));
   // The serial's prior hour: the authored one for the test serial, else what this body's own log has written back.

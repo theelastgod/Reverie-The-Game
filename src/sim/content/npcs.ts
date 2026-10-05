@@ -9,7 +9,7 @@ import { caulAtLip, coldClaimed as coldClaimedBy } from "./caul";
 import { AURA_ADDRESS_GLAMOUR, AURA_DIM, CLEARING_HOLD_ANGELS, CLEARING_LIST_PRICE, COPY_PRICE, GESTELL_MELTDOWN, M3_DOOR_PRICE, OPERATOR_YIELD, READINESS_APPEARANCE_MIN, READINESS_BURY, READINESS_PASSING_MIN, READINESS_REFUSE, READINESS_WATCH } from "../constants";
 import { C, F, W, seasonPassingFlag } from "./ids";
 import { clearingPrice, moveClearing } from "./market";
-import { PARTY_BLIND } from "./lines";
+import { PARTY_BLIND, SPECTATOR } from "./lines";
 import { glassDark, launchDark, launchOpen } from "../launch";
 import { descentLive } from "../descent";
 
@@ -834,6 +834,8 @@ const ORD_NODES: Record<string, DialogueNode> = {
 // ================================================================ VESPER HALE — concentrator
 
 function vesperRoute(ctx: Ctx): string {
+  // Angels only (SCRIPT.md II.10): a guest has no House and no hour to sell; it sees what the desk shows a spectator.
+  if (ctx.p.guest) return "guest";
   if (!has(ctx, F.HALL)) return "cold";
   if (has(ctx, F.OPERATOR)) {
     if (ctx.p.movement >= 5 || has(ctx, F.PASSING)) return "after";
@@ -844,6 +846,7 @@ function vesperRoute(ctx: Ctx): string {
 }
 
 const VESPER_NODES: Record<string, DialogueNode> = {
+  guest: { id: "guest", text: SPECTATOR },
   dark: {
     id: "dark",
     text: "Vesper Hale does not price what the city cannot see. She does not look up. Come back with an aura on you and she will tell you what your hour is worth.",

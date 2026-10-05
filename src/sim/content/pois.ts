@@ -217,7 +217,9 @@ const NAVE: PoiConfig[] = [
         when: ctx => has(ctx, F.MEMORIAL) && !has(ctx, F.BURIED_NARA),
         guest: "allow",
         say: ctx => {
-          const shared = poiState(ctx, "nara-plot") === "closed";
+          // The line is read after this act's own effects close the plot, so "before you" is a second closing: the count, as
+          // the wreckage garden reads it (the player-defect sweep, round five).
+          const shared = (ctx.w.pois["nara-plot"]?.count ?? 0) > 1;
           if (shared) return "Someone closed the earth before you. Nara makes room beside the name. The watch is still yours to keep.";
           return chose(ctx, C.MEMORIAL, "copper")
             ? "The copper holds. Under the earth, something that spoke has become something that carries. Nara waits until your hands are empty."
@@ -799,11 +801,14 @@ const hall = (house: "mortals" | "sky" | "divinities" | "earth", plaque: string,
         when: ctx => ctx.p.house === house,
         guest: spectate,
         say: ctx => `${plaque} Tithe ${gestellTax(ctx.w.gestell)} percent. The nodes are the House's on paper; the paper is the Concern's, and the House rents back what it owns. The tax is climate. It will never make you hit harder.`,
+        // The body wakes at the last Care shrine or House hall it touched (PROMPT §8.2, DESIGN §2 rule 5): reading its own
+        // hall puts it back here, as the shrine's Rest puts it back there (the player-defect sweep, round five).
         effects: [
           { kind: "flag", key: F.HALL },
           { kind: "poi", id, state: "lit" },
+          { kind: "respawnAt", poi: id },
           { kind: "wink", text: "Who owns the nodes: the Houses on paper, the Concern on the paper's back, and the weather in fact." },
-          { kind: "notice", text: `${HOUSE_NAME[house]}. Your hall is lit.`, tone: "sky" },
+          { kind: "notice", text: `${HOUSE_NAME[house]}. Your hall is lit. The city puts you back here now.`, tone: "sky" },
         ],
       },
       {

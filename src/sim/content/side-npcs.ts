@@ -144,7 +144,9 @@ const officer: NpcDef = {
     }),
     "census-report": node({
       id: "census-report",
-      text: "\"Two with tongues. One without.\" He writes 'one without' and underlines it. \"I will go and see it. A bell that cannot be scheduled is a bell that cannot be made safe.\"",
+      text: ({ w }) => (w.npcs.officer?.state === "ring"
+        ? "\"Two with tongues. One without.\" He writes 'one without' and underlines it, under the bell he came to see. \"I see it. A bell that cannot be scheduled is a bell that cannot be made safe.\""
+        : "\"Two with tongues. One without.\" He writes 'one without' and underlines it. \"I will go and see it. A bell that cannot be scheduled is a bell that cannot be made safe.\""),
       effects: [flag(SF.CENSUS_REPORTED)],
     }),
     notice: node({
@@ -173,7 +175,9 @@ const officer: NpcDef = {
     }),
     "grief-return": node({
       id: "grief-return",
-      text: "\"Twelve.\" He says it once. He puts the form down, face up, the small line at the foot of it showing: funded by. He has signed over it a hundred times. \"The freeze held. The district was stable. He went under stable.\" He takes his coat. \"I am going to stand where the Passing failed. Somebody from Safety should have.\"",
+      text: ({ w }) => (w.npcs.officer?.state === "clearing"
+        ? "\"Twelve.\" He says it once. He puts the form down, face up, the small line at the foot of it showing: funded by. He has signed over it a hundred times. \"The freeze held. The district was stable. He went under stable.\" He already has his coat on. \"I am standing where the Passing failed. Somebody from Safety should have, sooner.\""
+        : "\"Twelve.\" He says it once. He puts the form down, face up, the small line at the foot of it showing: funded by. He has signed over it a hundred times. \"The freeze held. The district was stable. He went under stable.\" He takes his coat. \"I am going to stand where the Passing failed. Somebody from Safety should have.\""),
       effects: [flag(SF.HONEST_TOLD)],
     }),
   },
@@ -271,7 +275,9 @@ const omen: NpcDef = {
     }),
     "hours-confront": node({
       id: "hours-confront",
-      text: "\"It did not come.\" She takes the slip back. \"No. The times are the Concern's bell schedule; Safety carries it and I copy it. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it, and the time was theirs.\" She tears the slip. \"I am going to stand at the glass. I will read the front, which I can see, for nothing, which is what it is worth.\"",
+      text: ({ w }) => (w.npcs.omen?.state === "glass"
+        ? "\"It did not come.\" She takes the slip back. \"No. The times are the Concern's bell schedule; Safety carries it and I copy it. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it, and the time was theirs.\" She tears the slip and looks back at the glass. \"I am here now. I read the front, which I can see, for nothing, which is what it is worth.\""
+        : "\"It did not come.\" She takes the slip back. \"No. The times are the Concern's bell schedule; Safety carries it and I copy it. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it, and the time was theirs.\" She tears the slip. \"I am going to stand at the glass. I will read the front, which I can see, for nothing, which is what it is worth.\""),
       effects: [flag(SF.HOURS_CONFRONTED)],
     }),
     "front-report": node({
@@ -469,7 +475,9 @@ const sexton: NpcDef = {
     }),
     "ledger-done": node({
       id: "ledger-done",
-      text: "He writes two lines and closes the book. \"That is fourteen. It is the only ledger in the city that gets shorter when someone does their job.\" He looks at the garden. \"I am going out there. It is faster to number where they are.\"",
+      text: ({ w }) => (w.npcs.sexton?.state === "garden"
+        ? "He writes two lines and closes the book. \"That is fourteen. It is the only ledger in the city that gets shorter when someone does their job.\" He does not look up from the garden. \"I am already out here. It is faster to number where they are.\""
+        : "He writes two lines and closes the book. \"That is fourteen. It is the only ledger in the city that gets shorter when someone does their job.\" He looks at the garden. \"I am going out there. It is faster to number where they are.\""),
       effects: [flag(SF.LEDGER_REPORTED)],
     }),
     "twelve-offer": node({
@@ -594,7 +602,10 @@ const desk: NpcDef = {
     }),
     "foundry-told": node({
       id: "foundry-told",
-      text: "He writes a zero. He looks at it. \"I have posted that number for three years and never seen the front of it.\" He picks up the card. \"I am going to stand at the Foundry. Somebody who posts the number should see what zero looks like from the front.\"",
+      // Another body's hour already walked him here: he does not say he is going (the player-defect sweep, round five).
+      text: ({ w }) => (w.npcs.desk?.state === "foundry"
+        ? "He writes a zero under the one already on the card. \"Again. Zero.\" He holds the card up to the dark Foundry. \"It looks the same from the front the second time. I am staying where I can see it.\""
+        : "He writes a zero. He looks at it. \"I have posted that number for three years and never seen the front of it.\" He picks up the card. \"I am going to stand at the Foundry. Somebody who posts the number should see what zero looks like from the front.\""),
       effects: [flag(SF.FOUNDRY_TOLD)],
     }),
     "column-offer": node({

@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 679 tests (2026-10-05), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 693 tests (2026-10-05), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -33,8 +33,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   On 2026-10-04 a sweep for defects a player would meet (six lenses, each
   finding reproduced and then challenged by a skeptic) confirmed and
   fixed twenty-one, a second round with six new lenses eighteen more,
-  a third, run by hand, two, and a fourth twenty-two, among them the
-  wallet as the login (see Done).
+  a third, run by hand, two, a fourth twenty-two, among them the
+  wallet as the login, and a fifth (2026-10-05) sixteen (see Done).
+- **A rule for after the first deploy** (from round five): a body's
+  record keeps its place on the spine as a step index, so once this
+  branch is deployed and real bodies are saved, never insert a step
+  between two shipped steps of a quest; add steps only at a quest's end.
+  Before the first deploy nothing saved under `city-v2` exists, so the
+  spine is still free to change.
 - **Two steps only you can take** (Backlog 1 and 2 have the detail): the
   Stage B art waits on the results host being reachable from a machine that
   runs `node scripts/pull-generated.mjs`; the deploy waits on either the
@@ -2375,6 +2381,61 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   city and claims an unclaimed seal as it writes the leaving body. A
   session test fails on b86554f.
 
+- The player-defect sweep, round five (2026-10-05; six lenses: death and
+  the wreckage, the Houses, the first ten minutes, the side hours' lines
+  against their effects, saved records and migrations, the object under
+  interleavings; each finding reproduced, then challenged by a skeptic).
+  Two landed on their own above (the wallet restore before the step, the
+  close inside the coalescing window); fourteen more, confirmed and fixed:
+  - Death and the wreckage: a fall no longer raises an aura that sat
+    under its seed (the wound floors at the seed, never lifts to it);
+    the body that fell is offered no Loot on its own wreckage (the drop
+    is lost to it; another Angel may loot); a bystander who buries the
+    grave a live duel is fought over no longer takes the ring out of the
+    duel (the fall stays the duel's, watchers and all).
+  - The Houses: reading your own hall now makes it where you wake (PROMPT
+    §8.2: the last Care shrine or House hall touched), and its notice
+    says so; the bounty's refusals name its real gate (standing, then one
+    purse a war's span), never an omen it does not check.
+  - The first ten minutes: a guest who linked while locked at the lip is
+    led back to the threshold and goes under as an Angel, with the
+    Angel's news and notices, instead of standing on a Movement I that
+    closed on the lock; a guest holding a paper has the USE PAPER chip
+    (the server already let it use one); the AUDIO chip takes a finger,
+    so a phone can mute.
+  - The side hours: Vesper Hale gives a guest the spectator's line, never
+    a hall to read (SCRIPT.md II.10, Angels only); "Doing a job" closes
+    on a clerk's burial, never on another Angel's wreckage or a plate (a
+    counter the bury effect keeps, `F.CLERKS_BURIED`); a locked body is
+    neither offered nor answered a person's hand-out or report that its
+    frozen hours would not land; a person whom another body's hour has
+    already walked (Halla to the glass, Renn to the Foundry, Pim to the
+    garden, the Officer twice, the keeper, Quill) is not walked again and
+    the marquee does not announce it twice, and the second reporter hears
+    a line that does not promise the walk (SCRIPT.md has the variants).
+  - The first hands at Nara's plot heard "Someone closed the earth before
+    you": the line was read after the act's own effect closed the plot.
+    It now reads the closing count, as the wreckage garden does; a scan
+    of every place's verbs found no other line that reads its own effect.
+  - Saved records: a wallet-restored body takes the session's body id, and
+    `rebindBody` moves every reference the city held to the old id (its
+    listings, kept nodes, wreckage, enemy targets, graves, the places it
+    marked, contest votes, the Passing's last hand, other bodies' duels
+    and last kills), so a restored seller can cancel their own listing.
+  `src/sim/sweep5.test.ts` (thirteen cases), and tests in fairness, side,
+  hud, a11y and session, hold every case; each fails on ff2c79c. Judged
+  otherwise, each with the reason the skeptic gave: a restored body's
+  old socket (none can exist: the restore needs the old session to have
+  no socket here); a saved step index (sound before the first deploy;
+  the rule for after it is in the status block); odd saved records
+  (migratePlayer already fills every field); the front line for a
+  non-Sky Angel, the lamp lines for Mortals and the Divinities plaque
+  (as SCRIPT.md has them); a flagged body that falls stays flagged (the
+  flag is a choice, not a state of the body; DESIGN §2); a duel offered
+  to a fallen body (it wakes in the same call, so it never reads as
+  fallen); a locked guest's objectives (the journal already says the
+  lock); and the title's theme (yours, with the art).
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3448,6 +3509,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   On a fresh local world
   from a worktree: the session smoke, `test:campaign:4` (Movements I to
   IV, the credits) and the render check (desktop and phone).
+
+- The player-defect sweep, round five (2026-10-05): typecheck, 693 tests
+  in 51 files, the build. Every new or changed case was run against the
+  commit before (ff2c79c) and fails there: the thirteen in
+  `src/sim/sweep5.test.ts`, fairness's aura case, side's satisfier for
+  the clerk counter, hud's guest paper chip and a11y's audio chip, and
+  the session's restored listing. On a fresh local world from a
+  worktree: the session smoke, `test:campaign:4` (Movements I to IV, the
+  credits) and the render check (desktop and phone; the worktree's local
+  log needed `npm run d1:migrate` first, or `/log/recent` answers 503).
 
 ## Backlog
 

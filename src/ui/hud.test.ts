@@ -268,10 +268,11 @@ describe("noticeDiff", () => {
 
 describe("chipVerbs", () => {
   const angel = { guest: false, locked: false, dead: false, flagged: false, truceUntil: 0, district: "wet" as const };
-  it("shows USE while a paper is worth using, and only to a body that may use it", () => {
+  it("shows USE while a paper is worth using, to any living body that holds one", () => {
     expect(chipVerbs(angel, "item-repair", 10).use).toBe(true);
     expect(chipVerbs(angel, null, 10).use).toBe(false);
-    expect(chipVerbs({ ...angel, guest: true }, "item-repair", 10).use).toBe(false);
+    // a guest may buy paper at the stall and use it: the chip repeats I for it too (the player-defect sweep, round five)
+    expect(chipVerbs({ ...angel, guest: true }, "item-repair", 10).use).toBe(true);
     expect(chipVerbs({ ...angel, dead: true }, "item-repair", 10).use).toBe(false);
   });
   it("shows the flag where the street allows it, worded for what V would do, and hides it in a truce or a quiet district", () => {

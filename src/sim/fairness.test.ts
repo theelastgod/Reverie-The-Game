@@ -408,6 +408,10 @@ describe("death", () => {
     w = put(w, spawnGuest("g"));
     w = killPlayer(w, "g", "x", "gone");
     expect(w.players.get("g")!.aura).toBe(0);
+    // an aura already under the seed (spent on loot, camping, a listing) is not raised by the fall: a fall is no restore
+    w = put(w, angel("d", 42, { aura: 3 }));
+    w = killPlayer(w, "d", "x", "gone");
+    expect(w.players.get("d")!.aura).toBe(3);
   });
 });
 

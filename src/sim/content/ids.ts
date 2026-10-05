@@ -17,6 +17,7 @@ export const F = {
   TALKED_NARA: "talked:nara",
   MEMORIAL: "memorial", // decided the recorder
   BURIED_NARA: "buried:nara", // closed Nara's plot
+  CLERKS_BURIED: "buried:clerks", // a count: clerks' wreckage this body buried (the job hour reads it; any other burial is not a clerk)
   WEATHER_SAFETY: "weather:safety", // read the Office of Safety plaque
   WEATHER_ORD: "weather:ord",
   WEATHER_NARA: "weather:nara",

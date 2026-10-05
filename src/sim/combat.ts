@@ -415,7 +415,8 @@ function pvpKill(w: WorldState, killerId: string, victimId: string): WorldState 
   // An answered duel runs its sixty seconds at its grave even when the wreckage's own hour ends inside them (answered only
   // while it is under WRECKAGE_TTL old; the city keeps it WRECKAGE_GRACE longer): the fall is the duel's, watchers and all.
   const dueling = k0.duel?.with === victimId && !!k0.duel.accepted && v0.duel?.with === killerId && !!v0.duel.accepted;
-  const graves = dueling ? w.wreckage.filter(r => !r.buried) : liveWreckage(w);
+  // A bystander's burial does not take the ring out of a live duel: its grave is its grave buried or not (the sweep, round five).
+  const graves = dueling ? w.wreckage : liveWreckage(w);
   const duelWreck = graves.find(r => within(r, k0, RUIN_DUEL_RADIUS) && within(r, v0, RUIN_DUEL_RADIUS)) ?? null;
   const hasKilled = k0.lastKillId !== "";
   const chained = hasKilled && now - k0.lastKillAt < CHAIN_KILL_WINDOW;

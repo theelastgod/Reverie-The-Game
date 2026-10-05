@@ -511,6 +511,39 @@ function tickSeason(w: WorldState): WorldState {
 // ---------------------------------------------------------------- death
 
 /**
+ * Every reference the city holds to a body under one id, moved to another: the market's sellers, the nodes' keepers, the
+ * wreckage's fallen and killers, the enemies' targets and participants, the graves, the places' last hands, the contest's
+ * votes, the rite's last name, and the other bodies' duels and kills. The wallet's restore uses it (server/src/index.ts):
+ * an Angel back from its record takes the session's id and keeps what the city holds of it (the player-defect sweep,
+ * round five). The body itself is the caller's to place under the new id.
+ */
+export function rebindBody(w: WorldState, from: string, to: string): WorldState {
+  if (!from || from === to) return w;
+  const swap = (id: string): string => (id === from ? to : id);
+  const players = new Map(w.players);
+  for (const [id, p] of players) {
+    const duel = p.duel && p.duel.with === from ? { ...p.duel, with: to } : p.duel;
+    if (duel !== p.duel || p.lastKillId === from) players.set(id, { ...p, duel, lastKillId: swap(p.lastKillId) });
+  }
+  const votes = w.clearing.contest?.votes;
+  const contest = votes && from in votes
+    ? { ...w.clearing.contest!, votes: Object.fromEntries(Object.entries(votes).map(([k, v]) => [swap(k), v])) }
+    : w.clearing.contest;
+  return {
+    ...w,
+    players,
+    market: w.market.map(l => (l.sellerId === from ? { ...l, sellerId: to } : l)),
+    nodes: w.nodes.map(n => (n.keptBy === from || n.keepers?.includes(from) ? { ...n, keptBy: swap(n.keptBy), ...(n.keepers ? { keepers: n.keepers.map(swap) } : {}) } : n)),
+    wreckage: w.wreckage.map(r => (r.fromId === from || r.killerId === from ? { ...r, fromId: swap(r.fromId), killerId: swap(r.killerId) } : r)),
+    enemies: w.enemies.map(e => (e.targetId === from || e.participants.includes(from) ? { ...e, targetId: swap(e.targetId), participants: e.participants.map(swap) } : e)),
+    graves: w.graves.map(g => (g.by === from ? { ...g, by: to } : g)),
+    pois: Object.fromEntries(Object.entries(w.pois).map(([k, p]) => [k, p.by === from ? { ...p, by: to } : p])),
+    clearing: contest === w.clearing.contest ? w.clearing : { ...w.clearing, contest },
+    passing: w.passing.lastBy === from ? { ...w.passing, lastBy: to } : w.passing,
+  };
+}
+
+/**
  * A death. Unbanked purse and exhibition items may fall onto a wreckage at
  * the body; cult objects and banked value never do. Aura wounds toward the
  * seed and never below it for an Angel. The body wakes at once at its
@@ -559,7 +592,9 @@ export function killPlayer(w: WorldState, victimId: string, killerId: string, ca
     fromHistory: { passings: v.history.passings, buried: v.history.buried, looted: v.history.looted },
   };
 
-  const aura = v.guest ? 0 : Math.max(v.auraSeed, v.aura - AURA_WOUND);
+  // Death wounds aura toward the seed and never past it; an aura already under the seed is not raised by a fall (a fall is
+  // no restore: the Care shrine sells that; the player-defect sweep, round five).
+  const aura = v.guest ? 0 : Math.min(v.aura, Math.max(v.auraSeed, v.aura - AURA_WOUND));
   const dead: Player = {
     ...v,
     hp: 0,

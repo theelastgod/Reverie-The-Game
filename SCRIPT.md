@@ -446,7 +446,7 @@ The paper panel, the gold mark:
 > House of Earth. Ground, ore, withdrawal. The tax bites less on ground nodes. Tithe {rate} percent. The nodes are the House's on paper; the paper is the Concern's, and the House rents back what it owns. The tax is climate. It will never make you hit harder.
 
 ✦ *Who owns the nodes: the Houses on paper, the Concern on the paper's back, and the weather in fact.* (shipped, at any of the four)
-[F.HALL; the hall lit; E Tithe and Q Bounty are the lit hall's verbs and speak through the engine, not here]
+[F.HALL; the hall lit; the body wakes here from now on, until it rests at a Care shrine (PROMPT §8.2; since 2026-10-05); E Tithe and Q Bounty are the lit hall's verbs and speak through the engine, not here]
 
 **THE PLAQUE** — `read-other` F, another House's hall (shipped)
 > *(Mortals)* A hall of names you cannot gather. This hall keeps House of Mortals standing. Your House is House of ...; its hall is elsewhere.
@@ -648,8 +648,9 @@ The paper panel, the gold mark:
 
 **HALLA VOSS** — `hours-confront` (shipped; the reversal lands here)
 > "It did not come." She takes the slip back. "No. The times are the Concern's bell schedule; Safety carries it and I copy it. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it, and the time was theirs." She tears the slip. "I am going to stand at the glass. I will read the front, which I can see, for nothing, which is what it is worth."
+> *(another body's hour already put her at the glass:)* "It did not come." She takes the slip back. "No. The times are the Concern's bell schedule; Safety carries it and I copy it. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it, and the time was theirs." She tears the slip and looks back at the glass. "I am here now. I read the front, which I can see, for nothing, which is what it is worth."
 ✦ *A forecast is a lie with a time on it. She stopped putting the time on. The lie stayed. So did she.*
-[Halla moves to the glass, for everyone; readiness +1; news: "Halla Voss stopped selling hours. She is reading the forecast glass for nothing."]
+[Halla moves to the glass, for everyone; readiness +1; news: "Halla Voss stopped selling hours. She is reading the forecast glass for nothing."; once for the city: when another body's hour has already walked them there, a later report moves no one and posts no second news (since 2026-10-05)]
 
 **HALLA VOSS** — `hour` (shipped)
 > "The hour bell does not strike. It is on a schedule nobody signed and the schedule has no hours on it. If you want to hear it, wait under it. Three times. Do not leave between. It will not strike. I am telling you so you do not blame me."
@@ -822,7 +823,7 @@ The paper panel, the gold mark:
 **THE PLAQUE** — the House of Earth hall, `read` (shipped, pois.ts; an Earth Angel reads their hall here, the one hall behind the Organs door, with the oldest copy of the lease)
 > House of Earth. Ground, ore, withdrawal. The tax bites less on ground nodes. Tithe {rate} percent. The nodes are the House's on paper; the paper is the Concern's, and the House rents back what it owns. The tax is climate. It will never make you hit harder.
 ✦ *Who owns the nodes: the Houses on paper, the Concern on the paper's back, and the weather in fact.*
-[F.HALL; hall-earth lit]
+[F.HALL; hall-earth lit; the body wakes here from now on, until it rests at a Care shrine]
 
 ### III.2 What the heat consumes
 *Step `foundry` (shipped). North-centre of the Organs: the Foundry, and Renn Coil's cold desk beside it. Plate `organ-foundry-dark.jpg`; the desk's own plate is `plate-vesper.jpg`. Angels only.*
@@ -873,8 +874,9 @@ The paper panel, the gold mark:
 
 **RENN COIL** — `foundry-told` (shipped)
 > He writes a zero. He looks at it. "I have posted that number for three years and never seen the front of it." He picks up the card. "I am going to stand at the Foundry. Somebody who posts the number should see what zero looks like from the front."
+> *(another body's hour already put him at the Foundry:)* He writes a zero under the one already on the card. "Again. Zero." He holds the card up to the dark Foundry. "It looks the same from the front the second time. I am staying where I can see it."
 ✦ *Every furnace is a mouth. Every mouth was a place. He went to see what the place was.*
-[Renn Coil leaves the desk for the dark Foundry; news "The cold desk clerk left the desk. He is standing at the dark Foundry with the number."]
+[Renn Coil leaves the desk for the dark Foundry; news "The cold desk clerk left the desk. He is standing at the dark Foundry with the number."; once for the city: when another body's hour has already walked them there, a later report moves no one and posts no second news (since 2026-10-05)]
 
 **RENN COIL** — `hub`, at the dark Foundry (shipped)
 > He is at the dark Foundry with the number on a card. Zero. "I wanted to see what a zero looks like from the front."
@@ -1840,7 +1842,7 @@ The paper panel, the gold mark:
 **THE BOARD** — `listing-board` take it down, `side:copy:down` (shipped since Phase D, the side hours; side-pois.ts: the resistance's price stays on the board, II.8; costs the listing fee, sink listing)
 > You pay the fee the seller paid and the copy comes down. The price stays up where the hole was priced; a price is not a copy. Somewhere on the Grid, Quill feels the space.
 ✦ *A copy travels. The hole does not. You paid to make the board say nothing. That is not nothing.* (shipped; side.ts; Angels only)
-[Quill walks to the board; news "Someone took a Clearing off the listing board. Quill went to look."; aura +1]
+[Quill walks to the board; news "Someone took a Clearing off the listing board. Quill went to look."; aura +1; once for the city: when another body's hour has already walked them there, a later report moves no one and posts no second news (since 2026-10-05)]
 
 ### side-wet-listing-fee — Listing fee
 *Movement II, the Wet Grid. Angels with a House, after the board; four stalls, one name. Plate `stall-surface.jpg`. Changes a standing: your House. Sink: the listing fee, four times.*
@@ -1896,8 +1898,9 @@ The paper panel, the gold mark:
 
 **PIM ASHE** — `ledger-done`, from the hub's "Two more numbers." (shipped; side-npcs.ts)
 > He writes two lines and closes the book. "That is fourteen. It is the only ledger in the city that gets shorter when someone does their job." He looks at the garden. "I am going out there. It is faster to number where they are."
+> *(another body's hour already put him in the garden:)* He writes two lines and closes the book. "That is fourteen. It is the only ledger in the city that gets shorter when someone does their job." He does not look up from the garden. "I am already out here. It is faster to number where they are."
 ✦ *A ledger of the unnamed is still a ledger. It is the only one in the city that shrinks when someone does their job.* (shipped; side.ts)
-[SF.LEDGER_REPORTED; Pim to the wreckage garden; news "The sexton's apprentice took his ledger into the wreckage garden. He is numbering what is there."]
+[SF.LEDGER_REPORTED; Pim to the wreckage garden; news "The sexton's apprentice took his ledger into the wreckage garden. He is numbering what is there."; once for the city: when another body's hour has already walked them there, a later report moves no one and posts no second news (since 2026-10-05)]
 
 **PIM ASHE** — `hub`, in the garden from now on (shipped; side-npcs.ts)
 > He is in the wreckage garden with the ledger open on his knee. "I am numbering. It is faster out here. Nara does not come out here."
@@ -1988,8 +1991,9 @@ The paper panel, the gold mark:
 
 **CORVIN SLATE** — `grief-return`, from the hub's "Number twelve." (shipped since Phase D, the side hours; side-npcs.ts: the form's small line)
 > "Twelve." He says it once. He puts the form down, face up, the small line at the foot of it showing: funded by. He has signed over it a hundred times. "The freeze held. The district was stable. He went under stable." He takes his coat. "I am going to stand where the Passing failed. Somebody from Safety should have."
+> *(another body's hour already walked him there:)* "Twelve." He says it once. He puts the form down, face up, the small line at the foot of it showing: funded by. He has signed over it a hundred times. "The freeze held. The district was stable. He went under stable." He already has his coat on. "I am standing where the Passing failed. Somebody from Safety should have, sooner."
 ✦ *Safety was the other honest answer. He still is. He just stopped saying it where it was safe.* (shipped; side.ts)
-[SF.HONEST_TOLD; the Officer walks to where the Passing failed; SW.OFFICER_WALKED; news "The Officer of Safety left the Annex. He is standing where the Passing failed."; a guest keeps him at the Annex desk]
+[SF.HONEST_TOLD; the Officer walks to where the Passing failed; SW.OFFICER_WALKED; news "The Officer of Safety left the Annex. He is standing where the Passing failed."; a guest keeps him at the Annex desk; once for the city: when another body's hour has already walked them there, a later report moves no one and posts no second news (since 2026-10-05)]
 
 **CORVIN SLATE** — `hub`, where the Passing failed from now on (shipped; side-npcs.ts)
 > You are standing where the Passing failed. He does not turn around. "The freeze held. I have the paperwork. Say what you came to say."
@@ -2021,7 +2025,7 @@ The paper panel, the gold mark:
 **CORVIN SLATE** — `notice-report`, from the hub's "The keeper refused it." (shipped; side-npcs.ts)
 > "He refused." Corvin Slate files a refusal in the same drawer as a signature. "Then the bell stays off the schedule. And he stays under it. That is his freeze. I understand it better than he thinks."
 ✦ *A bell with no tongue cannot be scheduled. That was the point of cutting it.* (shipped; side.ts; Angels only)
-[SF.NOTICE_REPORTED; the keeper to the mute bell; news "The keeper of the Ring refused a Safety notice. He is standing under the mute bell."]
+[SF.NOTICE_REPORTED; the keeper to the mute bell; news "The keeper of the Ring refused a Safety notice. He is standing under the mute bell."; once for the city: when another body's hour has already walked them there, a later report moves no one and posts no second news (since 2026-10-05)]
 
 **DOV MARROW** — `hub`, under the mute bell from now on (shipped; side-npcs.ts)
 > He is under the mute bell with the notice folded into the shrine cloth. "They will send another. I will be here for that one too."
@@ -2047,8 +2051,9 @@ The paper panel, the gold mark:
 
 **CORVIN SLATE** — `census-report`, from the hub's "Two with tongues. One without." (shipped; side-npcs.ts)
 > "Two with tongues. One without." He writes 'one without' and underlines it. "I will go and see it. A bell that cannot be scheduled is a bell that cannot be made safe."
+> *(another body's hour already put him at the Ring:)* "Two with tongues. One without." He writes 'one without' and underlines it, under the bell he came to see. "I see it. A bell that cannot be scheduled is a bell that cannot be made safe."
 ✦ *He did not want the count. He wanted to know if the keeper would talk to someone Safety sent.* (shipped; side.ts; Angels only)
-[SF.CENSUS_REPORTED; the Officer to the Ring; news "The Officer of Safety went to the Ring to count the bells himself."]
+[SF.CENSUS_REPORTED; the Officer to the Ring; news "The Officer of Safety went to the Ring to count the bells himself."; once for the city: when another body's hour has already walked them there, a later report moves no one and posts no second news (since 2026-10-05)]
 
 **CORVIN SLATE** — `hub`, at the Ring from now on (shipped; side-npcs.ts)
 > He is under the shrine of the mute bell with a form on a board. "Two with tongues. One without. Your count was right. I wanted to see the one without."
@@ -2106,8 +2111,9 @@ The paper panel, the gold mark:
 
 **HALLA VOSS** — `hours-confront`, from the hub's "The hour I bought did not come." (shipped; side-npcs.ts)
 > "It did not come." She takes the slip back. "No. The times are the Concern's bell schedule; Safety carries it and I copy it. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it, and the time was theirs." She tears the slip. "I am going to stand at the glass. I will read the front, which I can see, for nothing, which is what it is worth."
+> *(another body's hour already put her at the glass:)* "It did not come." She takes the slip back. "No. The times are the Concern's bell schedule; Safety carries it and I copy it. The bell is on the schedule; the schedule is not on the bell. I sold you a lie with a time on it, and the time was theirs." She tears the slip and looks back at the glass. "I am here now. I read the front, which I can see, for nothing, which is what it is worth."
 ✦ *A forecast is a lie with a time on it. She stopped putting the time on. The lie stayed. So did she.* (shipped; side.ts; Angels only)
-[SF.HOURS_CONFRONTED; Halla to the forecast glass; news "Halla Voss stopped selling hours. She is reading the forecast glass for nothing."; readiness +1]
+[SF.HOURS_CONFRONTED; Halla to the forecast glass; news "Halla Voss stopped selling hours. She is reading the forecast glass for nothing."; readiness +1; once for the city: when another body's hour has already walked them there, a later report moves no one and posts no second news (since 2026-10-05)]
 
 **HALLA VOSS** — `hub`, at the glass from now on (shipped; side-npcs.ts)
 > She is at the forecast glass with nothing to sell. "I read the front now. For nothing. It is worse. It is better."
@@ -2247,8 +2253,9 @@ The paper panel, the gold mark:
 
 **RENN COIL** — `foundry-told`, from the hub's "The Foundry is dark." (shipped; side-npcs.ts)
 > He writes a zero. He looks at it. "I have posted that number for three years and never seen the front of it." He picks up the card. "I am going to stand at the Foundry. Somebody who posts the number should see what zero looks like from the front."
+> *(another body's hour already put him at the Foundry:)* He writes a zero under the one already on the card. "Again. Zero." He holds the card up to the dark Foundry. "It looks the same from the front the second time. I am staying where I can see it."
 ✦ *Every furnace is a mouth. Every mouth was a place. He went to see what the place was.* (shipped; side.ts)
-[SF.FOUNDRY_TOLD; Renn to the dark Foundry; news "The cold desk clerk left the desk. He is standing at the dark Foundry with the number."]
+[SF.FOUNDRY_TOLD; Renn to the dark Foundry; news "The cold desk clerk left the desk. He is standing at the dark Foundry with the number."; once for the city: when another body's hour has already walked them there, a later report moves no one and posts no second news (since 2026-10-05)]
 
 **RENN COIL** — `hub`, at the Foundry from now on (shipped; side-npcs.ts)
 > He is at the dark Foundry with the number on a card. Zero. "I wanted to see what a zero looks like from the front."
