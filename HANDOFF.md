@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 677 tests (2026-10-04), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 678 tests (2026-10-05), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -2355,6 +2355,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   light, does not ask the question a second time at the glass.
   `src/sim/sweep4.test.ts` holds it and fails on 0f17f31; SCRIPT.md
   notes the routing.
+
+- The wallet restore, taken before the step (2026-10-05, the sweep's
+  fifth round): round four's restore compared the body after the link
+  had stepped the world, and a guest whose restraint is still filling
+  gets a new body object every step, so a link that landed after a step
+  was due (about one in four) sealed the fresh guest and then deleted
+  the Angel's record it had meant to restore. The restore is now taken
+  before the step, and the old record is deleted only when it came
+  back. A session test lands the link after a due step with a filling
+  guest; it fails on 6f4b0be.
 
 ## Verified (2026-09-25, integration)
 

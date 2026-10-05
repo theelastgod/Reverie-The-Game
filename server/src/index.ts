@@ -347,12 +347,16 @@ export class ReverieWorld {
     const fresh = this.w.players.get(live.id);
     const kept = serial === null || !fresh?.guest || fresh.history.houses.length > 0 ? null : await this.sealedElsewhere(serial, address, token);
     if (!this.w.players.has(live.id)) return refuse(409, "no-session"); // the body left while the chain answered
-    this.advanceWorld(Date.now());
-    if (kept && this.w.players.get(live.id) === fresh) { // unless the body changed while storage answered
+    // The restore is taken before the world steps: a step replaces a changing body's object (a guest's restraint still
+    // filling, for one), and the restore must not wait on a body standing still. Only storage reads, under the input
+    // gate, came between reading `fresh` and here, so the guard holds the body as the request found it.
+    const restored = !!kept && this.w.players.get(live.id) === fresh;
+    if (kept && restored) {
       const back = { ...migratePlayer(kept.record, live.id, this.w.now), id: live.id }; // the session's body id, not the record's
       this.withBody(live.id, say({ ...back, dialogue: null }, LINES.LINK_COPY(back.serial ?? serial!, back.house, back.messenger), this.w.now));
       this.slow.forget(live.id); // the whole record changed under the session: its next frame is a full one
     }
+    this.advanceWorld(Date.now());
     this.w = serial === null
       ? applyWallet(this.w, live.id, address, LINES.LINK_NO_ANGEL)
       : applyLink(applyWallet(this.w, live.id, address), live.id, serial, { kind: "wallet", address });
@@ -361,12 +365,13 @@ export class ReverieWorld {
     // old record is deleted only after the new one landed (the serial's index moves with the checkpoint).
     this.pending = true;
     const now = Date.now();
-    if (kept || now - this.actionAt >= ACTION_BROADCAST_MIN_MS) {
+    if (restored || now - this.actionAt >= ACTION_BROADCAST_MIN_MS) {
       this.actionAt = now;
       await this.checkpoint();
       this.broadcast(true);
     }
-    if (kept) await this.ctx.storage.delete([playerKey(kept.token), seenKey(kept.token), `${CHALLENGE_PREFIX}${kept.token}`]);
+    // Only a record that came back is deleted: one the restore passed over stays, and returns unsealed under its own cookie.
+    if (kept && restored) await this.ctx.storage.delete([playerKey(kept.token), seenKey(kept.token), `${CHALLENGE_PREFIX}${kept.token}`]);
     const me = this.w.players.get(live.id);
     // a holder whose Angel already walks in another body is told that, not that the wallet holds none
     const walking = serial !== null && !!me && me.guest;

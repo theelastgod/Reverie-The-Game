@@ -552,6 +552,23 @@ describe("wallet login", () => {
     expect(data.has(`challenge:v1:${otherToken}`)).toBe(false);
   });
 
+  it("restores the Angel when the link lands after a step is due and the guest's body changes on every step (the sweep, round five)", async () => {
+    // a guest at the lock whose restraint is still filling: every step replaces its body object
+    const filling = { ...spawnGuest("g"), restraint: 40 };
+    const kept = angel("old", { wallet: addressOf(HOLDER), movement: 3, banked: 480 });
+    const { world, data } = await worldHarness(null, [], [[playerKey(token), filling], [playerKey(otherToken), kept], ["serial:v2:42", otherToken]]);
+    const ws = socket();
+    await world.join(token, ws as never);
+    vi.setSystemTime(1000);
+    await world.alarm();
+    const message = await challenge(world, HOLDER);
+    vi.setSystemTime(1060); // a step is due when the link lands: the handler steps the world itself
+    await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    expect(last(ws).you).toMatchObject({ guest: false, serial: 42, movement: 3, banked: 480 });
+    expect(data.get(playerKey(token))).toMatchObject({ movement: 3, banked: 480 });
+    expect(data.has(playerKey(otherToken))).toBe(false);
+  });
+
   it("restores no body sealed to another wallet, none that walks, and never replaces a body that was an Angel", async () => {
     // a sold Angel: the record under the old cookie is sealed to the seller's wallet; the buyer's link seals the buyer's body
     const sold = angel("old", { wallet: addressOf(STRANGER), movement: 3, banked: 480 });
