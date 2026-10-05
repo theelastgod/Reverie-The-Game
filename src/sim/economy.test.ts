@@ -578,16 +578,16 @@ describe("market", () => {
       w = applyListing(w, post);
       expect(w.market).toHaveLength(1);
       expect(w.market[0]).toMatchObject({ id: post.id, sellerId: CITY_SELLER, sellerName: "the resistance", price: 40, item: { name: "A Clearing", qty: 1 } });
-      expect(last(w)).toBe("the resistance lists A Clearing at 40.");
+      expect(last(w)).toBe("The resistance lists A Clearing. 40 Bestand.");
       expect(applyListing(w, post)).toBe(w); // a second post leaves it as it stands
       const moved = applyListing(w, { id: post.id, delta: 8 });
       expect(moved.market[0].price).toBe(48);
-      expect(last(moved)).toBe("the resistance prices A Clearing at 48, up from 40.");
+      expect(last(moved)).toBe("The resistance prices A Clearing. 48 Bestand, up from 40.");
       expect(applyListing(moved, post)).toBe(moved); // a repost does not reset the price
       expect(applyListing(moved, { id: post.id, delta: 0 })).toBe(moved);
       const down = applyListing(moved, { id: post.id, delta: -4 });
       expect(down.market[0].price).toBe(44);
-      expect(last(down)).toBe("the resistance prices A Clearing at 44, down from 48.");
+      expect(last(down)).toBe("The resistance prices A Clearing. 44 Bestand, down from 48.");
       const floor = applyListing(moved, { id: post.id, delta: -1000 });
       expect(floor.market[0].price).toBe(1);
       expect(applyListing(floor, { id: post.id, delta: -1 })).toBe(floor);

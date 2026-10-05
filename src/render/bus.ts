@@ -7,8 +7,8 @@ import type { WorldSocket } from "../net/worldSocket";
 
 /** Verbs the HUD can ask the scene to perform. The scene registers them at create(). */
 export type SceneActions = {
-  choose: (choiceId: string) => void;
-  close: () => void;
+  choose: (choiceId: string, node?: string) => void; // node: the window the press was made against (round seven)
+  close: (node?: string) => void;
   link: (serial: number) => void;
   interact: (targetId: string, choice: string) => void;
   stance: () => void;

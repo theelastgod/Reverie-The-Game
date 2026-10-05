@@ -544,6 +544,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   expect(snapshotFor(w, ME).objective).toMatchObject({ step: "officer", target: POSITIONS["home:officer"] });
   w = talkTo(w, ME, "officer");
   expect(me(w).dialogue?.node).toBe("corridor");
+  expect(me(w).dialogue?.text, "a hall read is a hall named").toContain("You have read your hall. Good.");
   expect(me(w).dialogue?.choices.map(c => c.id)).toEqual(["held", "hungry"]);
   const said = o.freeze === "sign" ? "hungry" : "held"; // the desk contradicts the corridor either way
   w = closeAll(choose(w, ME, said), ME);
@@ -614,7 +615,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
   expect(me(w).heard).toContain(`${CLEARING_LIST_PRICE} Bestand, the resistance's price today`);
   expect(snapshotFor(w, ME).prompt?.name).toBe(`Listing board — a Clearing at ${CLEARING_LIST_PRICE}`);
   expect(snapshotFor(w, ME).market[0]?.id).toBe(CLEARING_LISTING);
-  expect(w.news[w.news.length - 1].text).toBe(`the resistance lists A Clearing, the hole scheduled at ${CLEARING_LIST_PRICE}.`);
+  expect(w.news[w.news.length - 1].text).toBe(`The resistance lists A Clearing, the hole scheduled. ${CLEARING_LIST_PRICE} Bestand.`);
   expect(tick(use(w, "listing-board", "read")).market.find(l => l.id === CLEARING_LISTING)?.price, "a second read leaves the price").toBe(CLEARING_LIST_PRICE);
 
   const organs = POSITIONS["gate-wet-organs"];
@@ -639,7 +640,7 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
     expect(w.pois["operator-desk"].state).toBe("closed");
     // Cold bought an hour: the resistance's price moves up, and the news says by how much
     expect(priced()?.price).toBe(CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.taken);
-    expect(w.news.some(n => n.text === `the resistance prices A Clearing, the hole scheduled at ${CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.taken}, up from ${CLEARING_LIST_PRICE}.`)).toBe(true);
+    expect(w.news.some(n => n.text === `The resistance prices A Clearing, the hole scheduled. ${CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.taken} Bestand, up from ${CLEARING_LIST_PRICE}.`)).toBe(true);
     w = tick(w);
     // the offer and the door fall in one tick; the movement turns
     expect(snapshotFor(w, ME).npcs.some(n => n.id === "vesper")).toBe(false);

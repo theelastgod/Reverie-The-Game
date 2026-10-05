@@ -95,6 +95,12 @@ const pinnedLine = (ctx: Ctx): string => {
   return ` Under the word, pinned in someone's hand: the Annex's own number${n === undefined ? "" : `, ${n}`}.`;
 };
 
+/** The plaque's first reading counts what is left to hear of Ord's and Nara's names. */
+const namesLeft = (ctx: Ctx): string => {
+  const left = [F.WEATHER_ORD, F.WEATHER_NARA].filter(k => !has(ctx, k)).length;
+  return left === 2 ? "Two more names to hear." : left === 1 ? "One more name to hear." : "You have three names now.";
+};
+
 const weatherNameVerb = (key: PoiVerb["key"], choice: "stability" | "process" | "end", label: string): PoiVerb => ({
   key,
   label,
@@ -137,7 +143,8 @@ const NAVE: PoiConfig[] = [
           ? "Office of Safety. Stability was the name they sold. Someone struck it. The weather has another name now. Speak with the living before you pick one."
           : "Office of Safety. This district is stable. Extraction is civic duty. Do not name the weather otherwise. Under it, smaller: do not name it from a plaque. Speak with the living.")
           + pinnedLine(ctx) + bulletinLine(ctx),
-        effects: [{ kind: "notice", text: "Safety calls it stability. Two more names to hear.", tone: "ink" }],
+        // the count is the names still to hear: Ord's and Nara's can come first (the player-defect sweep, round seven)
+        effects: ctx => [{ kind: "notice", text: `Safety calls it stability. ${namesLeft(ctx)}`, tone: "ink" }],
       },
       weatherNameVerb("F", "stability", "Name it: stability"),
       weatherNameVerb("E", "process", "Name it: the process"),
@@ -150,6 +157,8 @@ const NAVE: PoiConfig[] = [
         guest: "allow",
         say: ctx => (has(ctx, F.WEATHER_NAMED)
           ? `Office of Safety. You called it ${ctx.p.choices[C.WEATHER] === "end" ? "the end of world as world" : ctx.p.choices[C.WEATHER] === "process" ? "the process" : "stability"}. The plaque still says stability. Plaques do.`
+          : has(ctx, F.WEATHER_ORD) ? "Office of Safety. Stability, it says. You have two names. Nara has the third. Do not name it from a plaque."
+          : has(ctx, F.WEATHER_NARA) ? "Office of Safety. Stability, it says. You have two names. Ord has the third. Do not name it from a plaque."
           : "Office of Safety. Stability, it says. You have one name. Ord and Nara have the other two. Do not name it from a plaque.")
           + pinnedLine(ctx) + bulletinLine(ctx),
       },

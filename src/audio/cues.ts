@@ -41,7 +41,8 @@ export function musicInputs(snap: Pick<Snap, "district" | "you" | "enemies">, sc
   const { you } = snap;
   const combat = snap.enemies.some(e => FIGHTING.has(e.state) && Math.hypot(e.x - you.x, e.y - you.y) <= COMBAT_RANGE);
   const atPlot = !!PLOT && Math.hypot(PLOT.x - you.x, PLOT.y - you.y) <= PLOT_RANGE;
-  return { scene, district: snap.district, combat, grief: you.dead || snap.district === "care" || atPlot };
+  // a fallen body wakes in the same step (CONTRACTS killPlayer), so there is no "while dead" to mourn in: the Care and the plot
+  return { scene, district: snap.district, combat, grief: snap.district === "care" || atPlot };
 }
 
 export type MusicState = { track: MusicTrack | null; pulse: boolean; contactSince: number | null; lastContact: number };
@@ -99,8 +100,9 @@ export function sfxFor(prev: Snap | null, next: Snap): SfxName[] {
   const a = prev.you;
   const b = next.you;
   const out: SfxName[] = [];
-  if (b.dead && !a.dead) out.push("death");
-  else if (b.hp < a.hp && !b.dead) out.push("hit");
+  // a fall is the fall count rising: the body wakes in the step it fell, so no frame ever reads it dead (round seven)
+  if (b.deaths > a.deaths) out.push("death");
+  else if (b.hp < a.hp) out.push("hit");
   if (b.kept > a.kept) out.push("keep");
   if (b.extracted > a.extracted) out.push("extract");
   if (b.wink && b.wink !== a.wink) out.push("wink");

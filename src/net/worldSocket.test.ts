@@ -275,7 +275,9 @@ describe("senders emit exact ClientMsg shapes", () => {
     net.interact("safety-plaque", "read");
     net.talk("nara");
     net.choose("c1");
+    net.choose("c1", "offer");
     net.close();
+    net.close("reader");
     net.link(7777);
     net.link(42, "sig");
     net.flag();
@@ -296,7 +298,9 @@ describe("senders emit exact ClientMsg shapes", () => {
       { t: "interact", targetId: "safety-plaque", choice: "read" },
       { t: "talk", npcId: "nara" },
       { t: "choose", choiceId: "c1" },
+      { t: "choose", choiceId: "c1", node: "offer" },
       { t: "close" },
+      { t: "close", node: "reader" },
       { t: "link", serial: 7777, sig: "mock" },
       { t: "link", serial: 42, sig: "sig" },
       { t: "flag" },

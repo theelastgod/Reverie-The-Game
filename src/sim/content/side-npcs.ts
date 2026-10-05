@@ -5,7 +5,7 @@
  * moves the shared body and `personal` keeps the viewer's own version honest.
  */
 import type { Ctx, DialogueChoice, DialogueNode, Effect, NpcDef, NpcState, Player } from "../types";
-import { NPC_HOMES } from "../map";
+import { NPC_HOMES, nearPoint } from "../map";
 import { C, F } from "./ids";
 import { GUEST_LOCK } from "./lines";
 import { glassDark } from "../launch";
@@ -31,6 +31,12 @@ const place = (id: string): Partial<NpcState> => {
 
 const leave: DialogueChoice = { id: "leave", label: "Leave." };
 const node = (n: DialogueNode): DialogueNode => n;
+
+/**
+ * The House of Earth's hall is behind the Organs door until the third hour: its hall step passes on the shrine with the tax
+ * read from the window instead, so the corridor does not tell it the hall was read (spine.ts `hall`; round seven).
+ */
+const readHall = (p: Player): boolean => !(p.house === "earth" && p.movement < 3);
 
 // ---------------------------------------------------------------- Corvin Slate, Officer of Safety
 
@@ -99,7 +105,7 @@ const officer: NpcDef = {
     }),
     corridor: node({
       id: "corridor",
-      text: ({ p }) => `${has(p, SF.OFFICER_MET) ? "He is in the corridor this time, between the gate and the desk, and he does not step aside." : "\"Corvin Slate. Officer of Safety.\" He is in the corridor between the gate and the desk, and he does not step aside."} "You have read your hall. Good. The desk ahead will sell you a freeze: fifteen Bestand, the Nave holds for half an hour, nobody goes under in it. I sign them. They come on the Concern's paper; they are mine when I sign them. I will tell you what the plaque does not, because the desk will not ask: while the Nave holds, the Passing goes hungry. A held district feeds nothing. Peace is a kind of weather.\" He waits. "Tell me what you want the weather to be. Then go and sign, or do not."`,
+      text: ({ p }) => `${has(p, SF.OFFICER_MET) ? "He is in the corridor this time, between the gate and the desk, and he does not step aside." : "\"Corvin Slate. Officer of Safety.\" He is in the corridor between the gate and the desk, and he does not step aside."} "${readHall(p) ? "You have read your hall. Good. " : ""}The desk ahead will sell you a freeze: fifteen Bestand, the Nave holds for half an hour, nobody goes under in it. I sign them. They come on the Concern's paper; they are mine when I sign them. I will tell you what the plaque does not, because the desk will not ask: while the Nave holds, the Passing goes hungry. A held district feeds nothing. Peace is a kind of weather.\" He waits. "Tell me what you want the weather to be. Then go and sign, or do not."`,
       wink: "He is asking you to say it out loud so that the form has a witness. The form is the point. The witness is you.",
       effects: [flag(SF.OFFICER_MET), tally(SF.OFFICER_VISITS)],
       choices: [
@@ -403,9 +409,22 @@ const keeper: NpcDef = {
 
 // ---------------------------------------------------------------- Pim Ashe, sexton's apprentice
 
-const sextonHub = (ctx: Ctx): string => {
+/**
+ * Where Pim stands for this body: the garden once its own ledger is done; at the wake beside the shrine for an Angel just
+ * woken under it, and for the whole of that wake's window (the wake's own opening sets F.TALKED_SEXTON; a window opened at
+ * his home keeps him there, so the beat is not cut off by another body's ledger; the player-defect sweep, round seven);
+ * else wherever the city's ledger left him. 72 is the talk reach (dialogue.ts TALK_REACH; importing it here is a cycle).
+ */
+const sextonState = (ctx: Ctx): string => {
   const { p, w } = ctx;
-  if (finished(p, SQ.LEDGER) || w.npcs["sexton"]?.state === "garden") return "He is in the wreckage garden with the ledger open on his knee. \"I am numbering. It is faster out here. Nara does not come out here.\"";
+  if (finished(p, SQ.LEDGER)) return "garden";
+  const home = NPC_HOMES.sexton;
+  const atWake = !has(p, F.TALKED_SEXTON) || (p.dialogue?.npc === "sexton" && nearPoint(p.x, p.y, home.x, home.y, 72));
+  return angel(p) && has(p, F.UNDER) && atWake ? "home" : w.npcs["sexton"]?.state ?? "home";
+};
+
+const sextonHub = (ctx: Ctx): string => {
+  if (sextonState(ctx) === "garden") return "He is in the wreckage garden with the ledger open on his knee. \"I am numbering. It is faster out here. Nara does not come out here.\"";
   return "\"Sexton's apprentice. I dig. Nara buries. Every grave in the Care has a name.\" His coat has a ledger in it and the ledger has a corner showing.";
 };
 
@@ -420,8 +439,8 @@ const sexton: NpcDef = {
   personal: (ctx, shared) => {
     if (finished(ctx.p, SQ.LEDGER)) return { ...place("sexton-garden"), state: "garden" };
     // Movement II meets this body at the wake beside the shrine (the spine's `sexton`), wherever another body's ledger walked him
-    // (the player-defect sweep, round two; the Officer's corridor guard, above, is the same rule).
-    if (angel(ctx.p) && has(ctx.p, F.UNDER) && !has(ctx.p, F.TALKED_SEXTON) && shared.state !== "home") {
+    // (the player-defect sweep, round two; the Officer's corridor guard, above, is the same rule), the wake's window included.
+    if (sextonState(ctx) === "home" && shared.state !== "home") {
       const home = NPC_HOMES.sexton;
       return { x: home.x, y: home.y, district: home.district, present: true, state: "home" };
     }

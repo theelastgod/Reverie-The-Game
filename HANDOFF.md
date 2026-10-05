@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 716 tests (2026-10-05), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 732 tests (2026-10-05), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -34,8 +34,9 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   finding reproduced and then challenged by a skeptic) confirmed and
   fixed twenty-one, a second round with six new lenses eighteen more,
   a third, run by hand, two, a fourth twenty-two, among them the
-  wallet as the login, a fifth (2026-10-05) sixteen, and a sixth (2026-10-05)
-  twenty-three, among them two PvP exploits (see Done).
+  wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
+  twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
+  fourteen (see Done).
 - **A rule for after the first deploy** (from round five): a body's
   record keeps its place on the spine as a step index, so once this
   branch is deployed and real bodies are saved, never insert a step
@@ -912,7 +913,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - Audio system (2026-09-26, Stage B prep): `src/audio/cues.ts` decides the
   bed by district, the music track (title theme on the title and the
   credits; Nave and Annex underscore; Grid underscore on the Wet Grid and the
-  Kerb; the burial elegy at the plot, in the Care and while dead; the rite in
+  Kerb; the burial elegy at the plot and in the Care (a fallen body wakes in the step it fell, so there is no while dead); the rite in
   the Clearing and the Ring; the beds alone in the Organs; the combat pulse
   after half a second of a fighting enemy within 320 px, held four seconds
   past the last contact) and the effects from snapshot diffs (hit, death,
@@ -2515,6 +2516,71 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the session smoke, the render check and a dry-run bundle (660.7 KiB,
   176.8 KiB gzipped) pass under them.
 
+- The player-defect sweep, round seven (2026-10-05; five lenses: time
+  jumps, a cheater on a raw socket, dialogue against a moving world, the
+  season boundary in the middle of an hour, text against state; each
+  finding reproduced, then challenged by a skeptic). Fourteen confirmed
+  and fixed:
+  - Time: no frame ever reads a fallen body dead (it wakes in the step it
+    fell), so the death cue never played and a killing blow sounded as a
+    hit; the cue now reads the fall count, the HUD's DOWN tag and the
+    elegy's "while dead" are gone. A late alarm's catch-up of five steps
+    could keep landing off `tick % 5`, starving the slow frame (a House
+    war began unseen); the slow side is now due five steps after the last
+    one sent.
+  - The season's roll mid-hour: Caul's word on a rite, held open across the
+    roll, was filed under the new season and silenced him for it; the word
+    is now marked by its first node. The stance step said "The hole is
+    open" after a roll or an extract had closed it; it says the Clearing
+    is not open and that F prepares it.
+  - Dialogue: a double click or a second Escape closed or picked in a
+    window the player never saw (Caul's question after the reader's
+    post, gone unread); choose and close now carry the node they were
+    pressed on and the server refuses a stale one. Pim left the wake for
+    the garden the moment it opened when another body's ledger had walked
+    him there, and his hub then spoke of the garden at the shrine; he
+    stays for the wake's window. Nara left the garden as her plate's
+    question opened; she kneels there while it is open and through the
+    answer.
+  - Text: a dense body's plate Wink repeated a sentence the burial's Wink
+    had just said (190 of the first 7,777 serials, #0052 among them); the
+    pick now walks past the Wink it follows. The Face read "Fell 1 times."
+    The plaque's first reading said "Two more names to hear." to a body
+    that had Ord's (the smoke's own path), its reread said "You have one
+    name" to a body with two, and Nara told a body with one name it had
+    three; each now counts the names heard (new lines in SCRIPT.md I.10).
+    Corvin told a House of Earth Angel, whose hall is behind the Organs
+    door, "You have read your hall"; the sentence is dropped for it. The
+    resistance's listing news began lowercase on the landing page's log
+    and read "the hole scheduled at 48" as a time; it reads "The
+    resistance prices A Clearing, the hole scheduled. 48 Bestand, up
+    from 40." A duel at an enforcer's wreckage read "Cold desk · one's
+    wreckage" (the marquee's separator); a wreckage without a serial is
+    "a wreckage". An opened hole posted two news lines, one of them
+    unscripted; it posts the prepare verb's one.
+  `src/sim/sweep7.test.ts` (fifteen cases) and cases in cues, session, the
+  socket and the spine walk hold every fix; each new case fails on 6e6a930. Judged otherwise,
+  each with its reason: a body struck while a window is open (Escape or
+  Leave frees it in one press, every hit is announced; closing the window
+  on a landed blow, with a notice, is yours if wanted); the frozen choices
+  of an open window (the contract freezes it, applyChoose re-checks, and
+  refreshing would shift numbered choices under the reader); the House
+  war's holders zeroed on the roll step (contracted; a 50 ms window);
+  closing the tab inside the flag hold to keep the purse (T, the truce,
+  gives the same outcome by contract and at once, and the closer comes
+  back flagged where it stood); the ring's "1 seconds." (scripted
+  shipped words, the last second of a 600 s wait); the HUD's aura figure
+  rounding across 6 and 40 (the bar's tier reads the raw value and no
+  label contradicts it); the map's "in The Care" (a screen reader's
+  label; the district's proper name). Left for you: a mourning window
+  after a fall (the cue is a one-shot now; a few seconds of the elegy
+  would need its own timer); a truce on the meltdown street, where an
+  attacker who never raised a flag cannot be truced and closing the tab
+  is the only exit (letting T reach a weather-flagged body in reach would
+  be the smallest change; keeping a closed body standing out its hold
+  would close combat logging everywhere); the ring's and the aura
+  figure's wording if you want them exact.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3609,6 +3675,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   world from a worktree: the session smoke, `test:campaign:4` (Movement I
   17.6 min, II 13.3, III 19.0, IV 9.6; the rite `failed` at readiness 52
   as before) and the render check (desktop and phone).
+
+- The player-defect sweep, round seven (2026-10-05): typecheck, 732 tests
+  in 53 files, the build. Every new case was run against the commit
+  before (6e6a930) and fails there for the reason it names: the fifteen
+  in `src/sim/sweep7.test.ts`, the cue's two (no grief read off a dead
+  flag; the death by the fall count and on a killing blow) and the session's late-alarm case; the socket's message
+  test carries the node-bearing choose and close. On a fresh local world
+  from a worktree: the session smoke, `test:campaign:4` (Movement I 17.6
+  min, II 13.2, III 19.0, IV 9.6; the rite `failed` at readiness 52 as
+  before) and the render check (desktop and phone).
 
 ## Backlog
 

@@ -225,7 +225,7 @@ export function applyClearing(w: WorldState, id: string, op: "open" | "keep" | "
         clearing: { ...clearing, open: true, openedAt: w.now, contest: { active: true, keep: 0, extract: 0, endsAt: w.now + hold, votes: {} } },
       };
       next = setRing(next, "open", id);
-      next = pushNews(next, `${p.name} opened the Clearing. Keep it or extract it. The hold lasts ${Math.round(hold)} seconds.`);
+      // the city's one line for an opened hole is the prepare verb's "A Clearing was prepared." (pois.ts; round seven)
       return speak(next, p, CLEARING_OPENED);
     }
     case "keep": {

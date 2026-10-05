@@ -7,7 +7,7 @@ import { LINES } from "../../src/sim/content";
 const WORLD_KEY = "world:v2";
 const PLAYER_PREFIX = "player:v2:";
 import { emptyWorld, spawnGuest, tickWorld } from "../../src/sim/world";
-import { DODGE_COOLDOWN, DODGE_DURATION, RESTRAINT_DODGE_BONUS, RESTRAINT_MAX, TEST_SERIAL } from "../../src/sim/constants";
+import { DODGE_COOLDOWN, DODGE_DURATION, RESTRAINT_DODGE_BONUS, RESTRAINT_MAX, TEST_SERIAL, WAR_PERIOD } from "../../src/sim/constants";
 import { PROTOCOL_VERSION, type FastFrame } from "../../src/sim/protocol";
 import { applySlow, mergeFrames, type SlowState } from "../../src/sim/frames";
 import type { Player, WorldState } from "../../src/sim/types";
@@ -1070,6 +1070,25 @@ describe("the writeback log", () => {
     expect(d.batches.flat().map(st => st.values[2])).toContain("link");
     expect(data.get(`serial:v2:${TEST_SERIAL}`), "the newest proven link holds the serial's index").toBe(token);
     expect((data.get(playerKey(token)) as Player).serial).toBe(TEST_SERIAL);
+  });
+
+  it("a late alarm's catch-up never keeps the slow side from its turn: an idle viewer still hears the war (round seven)", async () => {
+    // alarms 300 ms apart each take the capped five steps, as long as the slow cadence: `tick % 5` would never come round
+    for (const gap of [300, 125]) {
+      const w = emptyWorld();
+      w.tick = 1;
+      w.now = WAR_PERIOD - 0.6;
+      w.players.set("a", { ...spawnGuest("a"), restraint: 100 });
+      const ws = socket();
+      const { world } = await worldHarness(w, [ws]);
+      let t = 0;
+      for (let i = 0; i < 40; i++) {
+        t += gap;
+        vi.setSystemTime(t);
+        await world.alarm();
+      }
+      expect(last(ws).houses?.war?.active, `${gap} ms alarms`).toBe(true);
+    }
   });
 
   it("writes nothing and never touches waitUntil without the binding", async () => {

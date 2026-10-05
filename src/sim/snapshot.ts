@@ -198,7 +198,7 @@ export function promptFor(ctx: Ctx, npcs: readonly NpcPlace[] = npcStatesFor(ctx
 /** What the Face reads off an Angel's own log: the marks they can see, then the counts, then the last outcome. */
 function kitReadout(p: Player, marks: string[]): string[] {
   const h = p.history;
-  const out = [...marks, `Passings ${h.passings}. Buried ${h.buried}. Looted ${h.looted}. Fell ${p.deaths} times.`];
+  const out = [...marks, `Passings ${h.passings}. Buried ${h.buried}. Looted ${h.looted}. Fell ${p.deaths} ${p.deaths === 1 ? "time" : "times"}.`];
   const last = h.outcomes[h.outcomes.length - 1];
   if (last) out.push(`The last hour: ${last}.`);
   return out;

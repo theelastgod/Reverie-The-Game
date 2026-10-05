@@ -302,7 +302,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 > *(someone on the server struck it first:)* Office of Safety. Stability was the name they sold. Someone struck it. The weather has another name now. Speak with the living before you pick one.
 > *(a number pinned under the word:)* Under the word, pinned in someone's hand: the Annex's own number, {number}.
 > *(the slip in your coat, before the naming:)* The slip in your coat is Safety's own, on the Concern's paper, sealed for the funeral street. It does not say stability. It says {number}.
-[F.WEATHER_SAFETY]
+[F.WEATHER_SAFETY; notice, by the names still to hear of Ord's and Nara's: "Safety calls it stability. Two more names to hear." / "… One more name to hear." / "… You have three names now." (revised, round seven: Ord's name can come before the plaque, and Nara's after the burial)]
 
 **THE RUNNER** — the Annex Runner falls, `FALL_LINES.bulletin` (shipped, lines.ts; the courier never starts a fight)
 > The Runner drops. A folded slip: the Office of Safety's number for this hour, on the Concern's paper, sealed for the funeral street. It is in your coat now.
@@ -318,8 +318,11 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 ✦ *Three names. Only one of them has a body under it.*
 [F.WEATHER_NARA]
 
-**NARA** — `buried` (shipped; three names heard, the plaque not yet named)
-> You have three names now. Go to the plaque by the Annex gate and give the weather one of them. Not from a plaque. From what you heard.
+**NARA** — `buried` (shipped; her name given, the plaque not yet named)
+> *(the plaque read and Ord heard:)* You have three names now. Go to the plaque by the Annex gate and give the weather one of them. Not from a plaque. From what you heard.
+> *(the plaque read, Ord not heard; new, round seven:)* Ord has not given you his. He is at the Annex gate. Hear it from him, then give the weather one of them at the plaque. Not from a plaque. From what you heard.
+> *(Ord heard, the plaque not read; new, round seven:)* The plaque by the Annex gate has Safety's. Read it, then give the weather one of them there. Not from a plaque. From what you heard.
+> *(neither; new, round seven:)* Ord has not given you his, and the plaque by the Annex gate has Safety's. Hear them both, then give the weather one of them at the plaque. Not from a plaque. From what you heard.
 
 **THE PLAQUE** — F, name it: stability (shipped, lines.ts WEATHER_NAMED and pois.ts)
 > You called it stability. Safety will thank you in writing. The plaque stays as it was.
@@ -338,6 +341,8 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 
 **THE PLAQUE** — reread (shipped)
 > *(one name heard:)* Office of Safety. Stability, it says. You have one name. Ord and Nara have the other two. Do not name it from a plaque.
+> *(two names heard, Ord's; new, round seven:)* Office of Safety. Stability, it says. You have two names. Nara has the third. Do not name it from a plaque.
+> *(two names heard, Nara's; new, round seven:)* Office of Safety. Stability, it says. You have two names. Ord has the third. Do not name it from a plaque.
 > *(named:)* Office of Safety. You called it stability / the process / the end of world as world. The plaque still says stability. Plaques do.
 > *(then the pinned number and the slip, as the read)*
 
@@ -472,9 +477,10 @@ The paper panel, the gold mark:
 ### II.4 The other honest answer
 *Step `officer` (shipped). Corvin Slate in the Annex corridor between the gate and the freeze desk. Plate `safety-annex.jpg`. Angels only.*
 
-**CORVIN SLATE** — `corridor` (shipped, side-npcs.ts; the entry for an Angel who has read their hall and not yet been stopped here, whatever they said to him in I)
+**CORVIN SLATE** — `corridor` (shipped, side-npcs.ts; the entry for an Angel who has read their hall, or a House of Earth Angel whose hall step passed on the shrine, and not yet been stopped here, whatever they said to him in I)
 > "Corvin Slate. Officer of Safety." He is in the corridor between the gate and the desk, and he does not step aside. "You have read your hall. Good. The desk ahead will sell you a freeze: fifteen Bestand, the Nave holds for half an hour, nobody goes under in it. I sign them. They come on the Concern's paper; they are mine when I sign them. I will tell you what the plaque does not, because the desk will not ask: while the Nave holds, the Passing goes hungry. A held district feeds nothing. Peace is a kind of weather." He waits. "Tell me what you want the weather to be. Then go and sign, or do not."
 > *(met in I)* He is in the corridor this time, between the gate and the desk, and he does not step aside. "You have read your hall. ..." and the rest the same.
+> *(House of Earth, whose hall is behind the Organs door until III; revised, round seven:)* the same without "You have read your hall. Good."
 ✦ *He is asking you to say it out loud so that the form has a witness. The form is the point. The witness is you.*
 - ▸ "I want it held." → `corridor-held`
 - ▸ "Hungry is honest." → `corridor-hungry`
@@ -587,7 +593,7 @@ The paper panel, the gold mark:
 **THE BOARD** — `read` F, Read the board (shipped, pois.ts listing-board; the first read posts the Clearing for everyone, a later read reads where the city moved it)
 > Quill listed a Clearing, on commission, for a buyer she never met. 40 Bestand, the resistance's price today. Copies travel. The hole does not. Below it, smaller hands: keep-groups, hold-rates, a schedule of who will stand in which hole for what. The number is on the Grid now, in your ledger, and it moves when the city does.
 ✦ *It looks like freedom. It is a stall. The sky is already priced.*
-[F.BOARD; W.CLEARING_LISTED; the city's listing "A Clearing, the hole scheduled" posted at 40 by the resistance, for everyone; it moves when the city does: +8 when a private hour is sold, −4 when one is refused]
+[F.BOARD; W.CLEARING_LISTED; the city's listing "A Clearing, the hole scheduled" posted at 40 by the resistance, for everyone; it moves when the city does: +8 when a private hour is sold, −4 when one is refused; news "The resistance lists A Clearing, the hole scheduled. 40 Bestand." and on each move "The resistance prices A Clearing, the hole scheduled. {price} Bestand, up / down from {from}." (revised, round seven)]
 
 **THE BOARD** — when anyone tries to buy the Clearing (shipped since the movements audit, economy.ts MARKET_CITY_LISTING: the synopsis's "That is" added)
 > That is a price, not a sale. The hole does not travel.
@@ -1353,7 +1359,7 @@ The paper panel, the gold mark:
 > You keep the hole. The party still willing stands in it. The Passing is not yet the weather.
 [F.PREPARE; the hole opens for everyone; news: "A Clearing was prepared."]
 
-**THE RING** — the hole opening (shipped, clearing.ts)
+**THE RING** — the hole opening (shipped, clearing.ts; not said: the prepare verb's line replaces it in the same press, and since round seven it posts no news of its own, so an opened hole is the one line above)
 > You open the hole. Keep it or extract it; the hour watches which.
 
 **THE RING** — join, F (shipped, pois.ts), when another Angel's hole is open

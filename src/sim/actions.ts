@@ -57,10 +57,11 @@ function validate(msg: unknown): ClientMsg | null {
     case "strike":
     case "heavy":
     case "stance":
-    case "close":
     case "flag":
     case "truce":
-      return { t: t as "strike" | "heavy" | "stance" | "close" | "flag" | "truce" };
+      return { t: t as "strike" | "heavy" | "stance" | "flag" | "truce" };
+    case "close":
+      return optStr(msg.node) ? (msg.node === undefined ? { t: "close" } : { t: "close", node: msg.node }) : null;
     case "kit":
       return optStr(msg.targetId) ? (msg.targetId === undefined ? { t: "kit" } : { t: "kit", targetId: msg.targetId }) : null;
     case "interact":
@@ -68,7 +69,8 @@ function validate(msg: unknown): ClientMsg | null {
     case "talk":
       return str(msg.npcId) ? { t: "talk", npcId: msg.npcId } : null;
     case "choose":
-      return str(msg.choiceId) ? { t: "choose", choiceId: msg.choiceId } : null;
+      if (!str(msg.choiceId) || !optStr(msg.node)) return null;
+      return msg.node === undefined ? { t: "choose", choiceId: msg.choiceId } : { t: "choose", choiceId: msg.choiceId, node: msg.node };
     case "link":
       return num(msg.serial) && str(msg.sig) ? { t: "link", serial: msg.serial, sig: msg.sig } : null;
     case "use":
@@ -212,9 +214,9 @@ export function applyAction(w: WorldState, id: string, msg: ClientMsg): WorldSta
     case "talk":
       return applyTalk(w, id, m.npcId);
     case "choose":
-      return applyChoose(w, id, m.choiceId);
+      return applyChoose(w, id, m.choiceId, m.node);
     case "close":
-      return applyClose(w, id);
+      return applyClose(w, id, m.node);
     case "link":
       return applyLink(w, id, m.serial, m.sig);
     case "flag":

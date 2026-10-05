@@ -147,8 +147,8 @@ export class CityScene extends Phaser.Scene {
 
   private actions(): SceneActions {
     return {
-      choose: (id) => this.net.choose(id),
-      close: () => this.net.close(),
+      choose: (id, node) => this.net.choose(id, node),
+      close: (node) => this.net.close(node),
       link: (serial) => {
         if (!this.net.link(serial)) bus.pendingSerial = serial;
       },
@@ -221,7 +221,7 @@ export class CityScene extends Phaser.Scene {
         const inside = !!panel && panel.contains(document.activeElement);
         const does = escapeDoes(focused, inside, dialogue);
         if (does === "blur") (document.activeElement as HTMLElement | null)?.blur();
-        else if (does === "close") this.net.close();
+        else if (does === "close") this.net.close(you?.dialogue?.node);
         return;
       }
       case "Digit1": case "Digit2": case "Digit3": case "Digit4": case "Digit5": case "Digit6": case "Digit7": case "Digit8": case "Digit9":
@@ -229,7 +229,7 @@ export class CityScene extends Phaser.Scene {
         if (!dialogue || !you) return;
         const i = Number(e.code.slice(-1)) - 1;
         const choice = you.dialogue!.choices[i];
-        if (choice) this.net.choose(choice.id);
+        if (choice) this.net.choose(choice.id, you.dialogue!.node);
         return;
       }
       case "ShiftLeft": case "ShiftRight":

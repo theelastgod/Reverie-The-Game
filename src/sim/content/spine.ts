@@ -416,7 +416,11 @@ const M4_STEPS: QuestStep[] = [
     // The first stance is the spine's: the rest of life takes one per contest.
     id: "stance",
     title: "Keep it or extract it",
-    detail: ctx => `The hole is open and the ring is counting. E keeps it: readiness and restraint, the dwelling vote. Q extracts it: Bestand from the reserve, aura and the weather pay. One stance per contest. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}.`,
+    // the hole as it is: a season's roll or another body's extract closes it under a body still deciding, and E then refuses;
+    // F prepares the ground again (pois.ts stancePending; the player-defect sweep, round seven)
+    detail: ctx => ctx.w.clearing.open
+      ? `The hole is open and the ring is counting. E keeps it: readiness and restraint, the dwelling vote. Q extracts it: Bestand from the reserve, aura and the weather pay. One stance per contest. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}.`
+      : `The Clearing is not open. Open it first, or stand in it while someone does: press F at the ring to prepare the ground. E keeps it. Q extracts it. One stance per contest. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}.`,
     target: "clearing-ring",
     plate: "clearing-ring.jpg",
     done: ctx => chose(ctx, C.CLEARING, "keep") || chose(ctx, C.CLEARING, "extract") || !!ctx.w.clearing.contest?.votes?.[ctx.p.id],

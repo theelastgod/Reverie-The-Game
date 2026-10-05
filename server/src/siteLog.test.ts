@@ -22,7 +22,7 @@ describe("the city's log on the landing page", () => {
   it("keeps the news lines with a text, newest first as the route gives them, eight at most, and leaves everything else out", () => {
     const events = [
       news("An Angel took the private yield.", 30_000),
-      news("the resistance prices A Clearing, the hole scheduled at 48, up from 40.", 90_000),
+      news("The resistance prices A Clearing, the hole scheduled. 48 Bestand, up from 40.", 90_000),
       { at: NOW, kind: "passing", player: "#0042", serial: 42, detail: { outcome: "appearance" } },
       news("", 1000),
       news("   ", 1000),
@@ -34,7 +34,7 @@ describe("the city's log on the landing page", () => {
     const lines = logLines(events, NOW);
     expect(lines).toHaveLength(8);
     expect(lines[0]).toEqual({ text: "An Angel took the private yield.", when: "just now" });
-    expect(lines[1]).toEqual({ text: "the resistance prices A Clearing, the hole scheduled at 48, up from 40.", when: "a minute ago" });
+    expect(lines[1]).toEqual({ text: "The resistance prices A Clearing, the hole scheduled. 48 Bestand, up from 40.", when: "a minute ago" });
     expect(lines.slice(2).map(l => l.text)).toEqual(["Line 0.", "Line 1.", "Line 2.", "Line 3.", "Line 4.", "Line 5."]);
     expect(logLines(undefined, NOW)).toEqual([]);
     expect(logLines({ not: "a list" }, NOW)).toEqual([]);

@@ -10,7 +10,7 @@ type Over = { district?: Snap["district"]; you?: Partial<Snap["you"]>; enemies?:
 /** The slice of a snapshot the cues read. */
 function snap(over: Over = {}): Snap {
   const you = {
-    x: 1000, y: 1000, hp: 100, dead: false, kept: 0, extracted: 0, wink: "", flags: {}, choices: {}, history: { buried: 0 },
+    x: 1000, y: 1000, hp: 100, dead: false, deaths: 0, kept: 0, extracted: 0, wink: "", flags: {}, choices: {}, history: { buried: 0 },
     ...over.you,
   };
   const enemies = (over.enemies ?? []).map((e, i) => ({ id: `e${i}`, state: "idle", x: 0, y: 0, ...e }));
@@ -33,12 +33,12 @@ describe("musicInputs", () => {
     expect(musicInputs(snap({ enemies: [{ state: "idle", x: 1010, y: 1000 }, { state: "dead", x: 1000, y: 1000 }] }), "city").combat).toBe(false);
   });
 
-  it("grieves at the plot, in the Care and when dead", () => {
+  it("grieves at the plot and in the Care; a fallen body wakes in its step, so there is no while-dead (round seven)", () => {
     const plot = POSITIONS["nara-plot"];
     expect(musicInputs(snap({ you: { x: plot.x + 100, y: plot.y } }), "city").grief).toBe(true);
     expect(musicInputs(snap({ you: { x: plot.x + 400, y: plot.y } }), "city").grief).toBe(false);
     expect(musicInputs(snap({ district: "care" }), "city").grief).toBe(true);
-    expect(musicInputs(snap({ you: { dead: true } }), "city").grief).toBe(true);
+    expect(musicInputs(snap({ you: { dead: true } }), "city").grief).toBe(false);
   });
 });
 
@@ -102,7 +102,9 @@ describe("sfxFor", () => {
   it("hears every diff once", () => {
     const a = snap();
     expect(sfxFor(a, snap({ you: { hp: 80 } }))).toEqual(["hit"]);
-    expect(sfxFor(a, snap({ you: { hp: 0, dead: true } }))).toEqual(["death"]);
+    // a fall is the fall count rising, the body already awake and whole (round seven): the cue is the death, not a hit
+    expect(sfxFor(a, snap({ you: { deaths: 1 } }))).toEqual(["death"]);
+    expect(sfxFor(snap({ you: { hp: 5 } }), snap({ you: { hp: 100, deaths: 1 } }))).toEqual(["death"]);
     expect(sfxFor(a, snap({ you: { kept: 1 } }))).toEqual(["keep"]);
     expect(sfxFor(a, snap({ you: { extracted: 1 } }))).toEqual(["extract"]);
     expect(sfxFor(a, snap({ you: { wink: "A hint." } }))).toEqual(["wink"]);

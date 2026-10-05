@@ -474,7 +474,7 @@ describe("applyPassing", () => {
     const failed = applyPassing(failing, "p1");
     expect(you(failed).choices[C.PASSING]).toBe("failed");
     expect(failed.market[0].price).toBe(CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.failed);
-    expect(failed.news.some(n => n.text.includes(`at ${CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.failed}, down from ${CLEARING_LIST_PRICE}`))).toBe(true);
+    expect(failed.news.some(n => n.text.includes(`${CLEARING_LIST_PRICE + CLEARING_PRICE_MOVE.failed} Bestand, down from ${CLEARING_LIST_PRICE}`))).toBe(true);
   });
 
   it("is once per Angel per season; the next season takes the rite again and writes it after the first", () => {

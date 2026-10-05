@@ -650,7 +650,9 @@ export function applyDuel(w: WorldState, id: string, targetId: string): WorldSta
     const duel = (other: string): DuelState => ({ with: other, until, accepted: true });
     let cur = setPlayer(w, say({ ...p, duel: duel(t.id) }, DUEL_OPEN, now));
     cur = setPlayer(cur, say({ ...t, duel: duel(p.id) }, DUEL_OPEN, now));
-    return pushNews(cur, `A ruin duel at ${wreck.fromName}'s wreckage. ${p.name} and ${t.name}. The grave is the ring.`);
+    // an Angel's wreckage is named; an enforcer's ("Cold desk · one") or a guest's reads as a wreckage (round seven)
+    const where = wreck.fromSerial !== null ? `${wreck.fromName}'s wreckage` : "a wreckage";
+    return pushNews(cur, `A ruin duel at ${where}. ${p.name} and ${t.name}. The grave is the ring.`);
   }
   const offer: DuelState = { with: t.id, until: now + DUEL_CHALLENGE_SECONDS, accepted: false };
   let cur = setPlayer(w, say({ ...p, duel: offer }, DUEL_CHALLENGE, now));

@@ -37,9 +37,10 @@ function hash(s: string): number {
  * the school's own line is chosen; authored once, everyone hears the same
  * words. The House of Divinities and the Wink-seed serials hear the Winke
  * dense: their school's own line follows, picked once and for all by serial
- * and place. Guests and the dark hear nothing, decided by canSeeWink.
+ * and place. Guests and the dark hear nothing, decided by canSeeWink. `prior`
+ * is a Wink the same act already gave, which this one will follow on the HUD.
  */
-export function resolveWink(ctx: Ctx, authored: WinkText | ((ctx: Ctx) => WinkText) | undefined): string {
+export function resolveWink(ctx: Ctx, authored: WinkText | ((ctx: Ctx) => WinkText) | undefined, prior = ""): string {
   if (authored === undefined) return "";
   const { p, w } = ctx;
   const value = typeof authored === "function" ? authored(ctx) : authored;
@@ -51,8 +52,9 @@ export function resolveWink(ctx: Ctx, authored: WinkText | ((ctx: Ctx) => WinkTe
     const lines = LINES.WINKE[school] ?? [];
     // The school's own line, picked by serial and place, is a second line, never the first said again: the pick walks on past
     // a pool line that shares a sentence with the authored one, and past "A prior hour" for a serial with no hour written back
-    // (only a serial with a history mark has one). The player-defect sweep, round four.
-    const said = sentences(line);
+    // (only a serial with a history mark has one). The player-defect sweep, round four. Nor a sentence of the Wink this one
+    // follows in the same step (the garden's burial before Nara's plate; round seven); the pick still starts where it did.
+    const said = sentences(`${prior} ${line}`);
     const priorHour = !w.history.some(m => m.serial === p.serial);
     const start = (hash(line) + Math.abs(p.serial ?? 0)) % Math.max(1, lines.length);
     for (let i = 0; i < lines.length; i++) {
@@ -128,7 +130,8 @@ export function openNode(w: WorldState, id: string, npcId: string, nodeId: strin
   const ctx: Ctx = { w, p, now: w.now };
 
   const speakerDef = node.speaker ? NPCS[node.speaker] ?? def : def;
-  const winkText = canSeeWink(p, w.now, w.gestell) ? resolveWink(ctx, node.wink) : "";
+  const prior = p.winkAt === w.now ? p.wink : "";
+  const winkText = canSeeWink(p, w.now, w.gestell) ? resolveWink(ctx, node.wink, prior) : "";
   const view: DialogueView = {
     npc: npcId,
     node: nodeId,
@@ -151,9 +154,12 @@ export function openNode(w: WorldState, id: string, npcId: string, nodeId: strin
 }
 
 /** Picks a visible choice: its effects, then its next node, or the dialogue closes. */
-export function applyChoose(w: WorldState, id: string, choiceId: string): WorldState {
+export function applyChoose(w: WorldState, id: string, choiceId: string, node?: string): WorldState {
   const p = w.players.get(id);
   if (!p || !p.dialogue) return w;
+  // a press made against a window the server has already moved past (a double click, a second Escape) picks nothing
+  // the player has not seen (CLIENT.md, the dialogue's focus; the player-defect sweep, round seven)
+  if (node !== undefined && node !== p.dialogue.node) return w;
   const open = nodeOf(p);
   if (!open) return setPlayer(w, { ...p, dialogue: null });
   const ctx: Ctx = { w, p, now: w.now };
@@ -170,9 +176,10 @@ export function applyChoose(w: WorldState, id: string, choiceId: string): WorldS
 }
 
 /** Continue: a node without choices follows its `next`; anything else closes. */
-export function applyClose(w: WorldState, id: string): WorldState {
+export function applyClose(w: WorldState, id: string, node?: string): WorldState {
   const p = w.players.get(id);
   if (!p || !p.dialogue) return w;
+  if (node !== undefined && node !== p.dialogue.node) return w; // a stale Continue or Escape closes nothing unseen (round seven)
   const open = nodeOf(p);
   if (open && p.dialogue.choices.length === 0) {
     const ctx: Ctx = { w, p, now: w.now };

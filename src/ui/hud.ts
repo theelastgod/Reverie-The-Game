@@ -27,8 +27,8 @@ import { badgeFor, sealFor } from "../assets/slots";
 import { paperToUse, pointerReleasesFocus } from "./keys";
 
 export type HudCallbacks = {
-  choose: (choiceId: string) => void; // dialogue choice clicked
-  close: () => void; // dialogue closed / Esc
+  choose: (choiceId: string, node?: string) => void; // dialogue choice clicked, against the window it was drawn for
+  close: (node?: string) => void; // dialogue closed / Esc
   link: (serial: number) => void; // mock Angel link from the lock panel or the title
   wallet: () => Promise<WalletOutcome>; // the wallet handshake; the lock panel shows the outcome line
   interact: (targetId: string, choice: string) => void; // prompt verb clicked (touch/mouse)
@@ -235,7 +235,7 @@ export class Hud {
     this.loadingText = this.loading ? q(this.loading, ".chip-text") : null;
     this.loadingPct = this.loading ? q(this.loading, ".loading-pct") : null;
 
-    this.dialogue = mountDialogue(root, { choose: id => this.cb.choose(id), close: () => this.cb.close() });
+    this.dialogue = mountDialogue(root, { choose: (id, node) => this.cb.choose(id, node), close: node => this.cb.close(node) });
     this.journal = mountJournal(root);
     this.minimap = mountMinimap(root);
     this.lock = mountLock(root, serial => this.cb.link(serial), () => this.cb.wallet());
@@ -445,7 +445,7 @@ export class Hud {
   private updateIdentity(snap: Snap): void {
     const you = snap.you;
     const truce = you.truceUntil > snap.now;
-    const sig = [you.guest, you.serial, you.house, you.messenger, you.flagged, truce, you.locked, you.dead].join("|");
+    const sig = [you.guest, you.serial, you.house, you.messenger, you.flagged, truce, you.locked].join("|");
     if (sig === this.identitySig) return;
     this.identitySig = sig;
     setText(this.identityText, identityLine(you));
@@ -457,7 +457,6 @@ export class Hud {
     show(this.identitySeal, !!sealUrl);
     if (this.identityTags) {
       this.identityTags.replaceChildren();
-      if (you.dead) this.identityTags.append(tag("DOWN", "hot"));
       if (you.locked) this.identityTags.append(tag("LOCKED", "ink"));
       if (you.flagged) this.identityTags.append(tag("FLAGGED", "acid"));
       if (truce) this.identityTags.append(tag("TRUCE", "grid"));

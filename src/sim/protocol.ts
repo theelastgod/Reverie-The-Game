@@ -26,8 +26,9 @@ export type ClientMsg =
   | { t: "kit"; targetId?: string }
   | { t: "interact"; targetId: string; choice: string }
   | { t: "talk"; npcId: string }
-  | { t: "choose"; choiceId: string }
-  | { t: "close" }
+  // node: the window the press was made against; a press on a window the server has already replaced is refused (round seven)
+  | { t: "choose"; choiceId: string; node?: string }
+  | { t: "close"; node?: string }
   | { t: "link"; serial: number; sig: string }
   | { t: "flag" }
   | { t: "truce" }

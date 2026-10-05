@@ -177,11 +177,12 @@ export class WorldSocket {
   talk(npcId: string): boolean {
     return this.send({ t: "talk", npcId });
   }
-  choose(choiceId: string): boolean {
-    return this.send({ t: "choose", choiceId });
+  /** `node`: the window the press was made against, so a second press after the server moved on picks nothing unseen. */
+  choose(choiceId: string, node?: string): boolean {
+    return this.send(node === undefined ? { t: "choose", choiceId } : { t: "choose", choiceId, node });
   }
-  close(): boolean {
-    return this.send({ t: "close" });
+  close(node?: string): boolean {
+    return this.send(node === undefined ? { t: "close" } : { t: "close", node });
   }
   link(serial: number, sig: string = MOCK_LINK_SIG): boolean {
     return this.send({ t: "link", serial, sig });

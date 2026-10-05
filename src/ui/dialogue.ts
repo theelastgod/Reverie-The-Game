@@ -25,7 +25,7 @@ export type DialoguePanel = {
   destroy(): void;
 };
 
-export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId: string) => void; close: () => void }): DialoguePanel {
+export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId: string, node?: string) => void; close: (node?: string) => void }): DialoguePanel {
   const panel = root.querySelector<HTMLElement>("#hud-dialogue");
   const portrait = panel?.querySelector<HTMLImageElement>(".dlg-portrait") ?? null;
   const speaker = panel?.querySelector<HTMLElement>(".dlg-speaker") ?? null;
@@ -35,6 +35,7 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
   const choices = panel?.querySelector<HTMLElement>(".dlg-choices") ?? null;
 
   let signature = "";
+  let drawn = ""; // the node the panel shows: a click is a press against it, never against a window the server has moved to
   let currentPortrait = "";
   let isOpen = false;
   const focus = focusKeeper(panel, root);
@@ -44,8 +45,8 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
     if (!t) return;
     ev.preventDefault();
     const id = t.dataset.choice ?? "";
-    if (id === "") callbacks.close();
-    else callbacks.choose(id);
+    if (id === "") callbacks.close(drawn || undefined);
+    else callbacks.choose(id, drawn || undefined);
   };
   choices?.addEventListener("click", onChoicesClick);
 
@@ -86,6 +87,7 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
         if (isOpen) {
           isOpen = false;
           signature = "";
+          drawn = "";
           focus.release(() => {
             show(panel, false);
             root.classList.remove("dialogue-open");
@@ -96,6 +98,7 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
       const sig = [view.npc, view.node, view.speaker, view.portrait, view.text, view.wink, view.choices.map(c => c.id + "=" + c.label).join("|")].join("\u0000");
       if (sig === signature) return;
       signature = sig;
+      drawn = view.node;
       // A generated portrait for the secondary people when the manifest has it; else the content's plate.
       const src = pickGen(gen.current, portraitFor(view.npc), assetUrl(view.portrait || "guest.jpg"));
       if (portrait && currentPortrait !== src) {

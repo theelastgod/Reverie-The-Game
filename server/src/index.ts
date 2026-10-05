@@ -195,6 +195,7 @@ export class ReverieWorld {
   private readonly cityJoins: Budget = { tokens: CITY_JOIN_BURST, at: 0 }; // what the object still admits in joins from everyone
   private pending = false; // an action since the last broadcast: the next alarm checkpoints first, then broadcasts forced
   private actionAt = -Infinity; // wall clock of the last broadcast an action forced (a join's or a close's does not count)
+  private slowTick = -Infinity; // the step of the last slow check, forced or due: the next is due SLOW_EVERY_TICKS steps on
   private readonly stamped = new Set<string>(); // tokens whose seen stamp this instance wrote; the close writes it again
   private readonly saved = new Map<string, Player>(); // by body id, the object last written to its record: the same one needs no write
   private readonly wallets = new Map<string, Budget>(); // the wallet routes' bucket per session token
@@ -701,7 +702,10 @@ export class ReverieWorld {
   /**
    * Every viewer gets their own snapshot: Winke, purse, claims and marks are
    * never shared. The fast frame goes every time; the slow sections go when
-   * they changed, checked every SLOW_EVERY_TICKS steps, at once for a viewer
+   * they changed, checked every SLOW_EVERY_TICKS steps since the last check
+   * (however many steps a broadcast advanced: a late alarm's catch-up is as
+   * long as the cadence, so `tick % 5` could stay off it for good; round
+   * seven), at once for a viewer
    * who has none yet, at once when `force` (after an action), and at once
    * when the viewer's own record changed under them on a tick (a death
    * closing a dialogue) or the bodies in view changed. On the steps between,
@@ -711,7 +715,8 @@ export class ReverieWorld {
     let chars = 0;
     let viewers = 0;
     this.pending = false;
-    const slowDue = force || this.w.tick % SLOW_EVERY_TICKS === 0;
+    const slowDue = force || this.w.tick - this.slowTick >= SLOW_EVERY_TICKS;
+    if (slowDue) this.slowTick = this.w.tick;
     const step = stepViews(this.w); // the views and encodings every viewer of this step shares
     for (const [ws, session] of this.sessions) {
       try {

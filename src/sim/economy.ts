@@ -90,8 +90,10 @@ const MARKET_LISTED = (price: number, fee: number) =>
 const MARKET_NO_LISTING = "That listing is gone.";
 const MARKET_SELLER_AWAY = "The seller is not on the Grid. The listing waits.";
 const MARKET_CITY_LISTING = "That is a price, not a sale. The hole does not travel.";
-const MARKET_CITY_LISTED = (seller: string, item: string, price: number) => `${seller} lists ${item} at ${price}.`;
-const MARKET_CITY_MOVED = (seller: string, item: string, price: number, from: number) => `${seller} prices ${item} at ${price}, ${price > from ? "up" : "down"} from ${from}.`;
+// A news line opens with a capital, and a price reads as Bestand, not as an hour after "the hole scheduled" (round seven).
+const opening = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+const MARKET_CITY_LISTED = (seller: string, item: string, price: number) => `${opening(seller)} lists ${item}. ${price} Bestand.`;
+const MARKET_CITY_MOVED = (seller: string, item: string, price: number, from: number) => `${opening(seller)} prices ${item}. ${price} Bestand, ${price > from ? "up" : "down"} from ${from}.`;
 const MARKET_OWN_LISTING = "It is your listing. Cancel it if you want it back.";
 const MARKET_BOUGHT = (price: number) => `Bought for ${price}. A copy travels. The hole does not.`;
 const MARKET_SOLD_FEE_KEPT = (price: number, kept: number) => `Your print sold at ${price}. The stall kept its fee, ${kept}. The rest is banked.`;

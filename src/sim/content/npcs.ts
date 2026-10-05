@@ -155,7 +155,16 @@ const NARA_NODES: Record<string, DialogueNode> = {
   },
   buried: {
     id: "buried",
-    text: "You have three names now. Go to the plaque by the Annex gate and give the weather one of them. Not from a plaque. From what you heard.",
+    // "three names" once the plaque and Ord have given theirs; her route reaches this node from her own name on, whatever
+    // order the other two came in (the player-defect sweep, round seven)
+    text: ctx => {
+      const safety = has(ctx, F.WEATHER_SAFETY);
+      const ord = has(ctx, F.WEATHER_ORD);
+      if (safety && ord) return "You have three names now. Go to the plaque by the Annex gate and give the weather one of them. Not from a plaque. From what you heard.";
+      if (safety) return "Ord has not given you his. He is at the Annex gate. Hear it from him, then give the weather one of them at the plaque. Not from a plaque. From what you heard.";
+      if (ord) return "The plaque by the Annex gate has Safety's. Read it, then give the weather one of them there. Not from a plaque. From what you heard.";
+      return "Ord has not given you his, and the plaque by the Annex gate has Safety's. Hear them both, then give the weather one of them at the plaque. Not from a plaque. From what you heard.";
+    },
   },
   threshold: {
     id: "threshold",
@@ -1249,22 +1258,24 @@ const CAUL_NODES: Record<string, DialogueNode> = {
   "lip-crew": {
     id: "lip-crew",
     text: "At the van beside the lip, to the crew: \"Play it again.\" The crew, in the van, rewinding: \"There is nothing on it.\" \"Then sell that.\"",
+    // the word is filed under the season it began in, as lip-hijack's and lip-failed's are: a window held open across the
+    // roll does not take the next season's word with it (the player-defect sweep, round seven)
+    effects: lipSaid,
     next: "lip-appearance",
   },
   "lip-appearance": {
     id: "lip-appearance",
     text: "He has not moved. The tile does not let a guest go down and he did not go back. The second time, the only question he asks twice: \"What did it look like.\"",
-    effects: lipSaid,
   },
   "oval-absence": {
     id: "oval-absence",
     text: "Through the mast's oval, after a while: \"Absence has a margin too.\"",
+    effects: lipSaid, // filed under the season it began in (round seven)
     next: "lip-absence",
   },
   "lip-absence": {
     id: "lip-absence",
     text: "Pleasantly, to you: \"Next season. Same ring. I will have the number by then.\"",
-    effects: lipSaid,
   },
   "lip-hijack": {
     id: "lip-hijack",
@@ -1317,6 +1328,12 @@ export const NPCS: Record<string, NpcDef> = {
       if (chose(ctx, C.PASSING, "absence") && p.party.nara !== "gone") return { ...station("nara-clearing"), state: "clearing" };
       if (p.movement >= 5) return null;
       if (has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)) return { ...station("nara-garden"), state: "garden" };
+      // She kneels as the earth closes (SCRIPT.md III.5): at the garden while her plate is this body's to answer, and through
+      // the answer's own window, not on the funeral street the burial's flag would send her to (the player-defect sweep, round seven).
+      const d = p.dialogue;
+      if (naraRoute(ctx) === "garden-plate" || (d?.npc === "nara" && (d.node === "garden-numbered" || d.node === "garden-unnumbered"))) {
+        return { ...station("nara-garden"), state: "garden" };
+      }
       // From the mortality act on she is at the ring, before the ground is kept: the first person there reads the number.
       if ((has(ctx, F.PREPARE) || (has(ctx, F.MORTALITY) && p.movement >= 4)) && p.party.nara !== "gone" && !has(ctx, F.PASSING)) return { ...station("nara-clearing"), state: "clearing" };
       if (has(ctx, F.UNDER) && !has(ctx, F.OPERATOR) && p.party.nara !== "waiting") return { ...station("nara-care"), state: "care" };

@@ -10,7 +10,9 @@ computes a number that matters; it may use `src/sim/map.ts` for the level and
   `src/scenes/CityScene.ts`, `src/render/floors.ts`, `src/render/entities.ts`,
   `src/render/fx.ts`, `src/net/worldSocket.ts`, `src/net/worldSocket.test.ts`,
 `src/audio/cues.ts` (pure: the bed by district, the music machine with its combat
-hysteresis, effects from snapshot diffs), `src/audio/settings.ts` (volume and mute
+hysteresis, effects from snapshot diffs: the death cue on the body's fall count
+rising, since a fallen body wakes in the step it fell and no frame reads it dead;
+round seven), `src/audio/settings.ts` (volume and mute
 under localStorage `reverie.audio`), `src/audio/bus.ts` (WebAudio: one bed that
 cross-fades, one track that ducks it, one-shot effects; absent files are silence,
 fetched once), `src/assets/url.ts` (`genUrl` for `assets/gen/<target>`),
@@ -25,8 +27,8 @@ fetched once), `src/assets/url.ts` (`genUrl` for `assets/gen/<target>`),
 `src/ui/hud.ts` exports:
 ```ts
 export type HudCallbacks = {
-  choose: (choiceId: string) => void;     // dialogue choice clicked
-  close: () => void;                      // dialogue closed / Esc
+  choose: (choiceId: string, node?: string) => void; // dialogue choice clicked; `node` is the window it was drawn on
+  close: (node?: string) => void;         // dialogue closed / Esc, with the node of the window shown
   link: (serial: number) => void;         // mock Angel link from the lock panel or the title
   interact: (targetId: string, choice: string) => void; // prompt verb clicked (touch/mouse)
   stance: () => void; kit: () => void; flag: () => void; truce: () => void; use: () => void;
@@ -184,6 +186,11 @@ button; Escape hands the keys back and the panel stays), and the credits
 dialogue closes it (`escapeDoes`), and every close returns focus to the
 HUD control that had it when the panel appeared, else to the canvas
 (`focusAfterClose`; the prompt and the bars are hidden while a dialogue
-is open, so the return waits until the panel is hidden). The title's
+is open, so the return waits until the panel is hidden). Every choose and
+close carries the node of the window it was pressed on (the panel's drawn
+node for a click, the open node for a digit or Escape), and the server
+refuses one whose node is no longer open, so a double click or a second
+Escape cannot pick or close a window the player has not seen (round
+seven). The title's
 Enter button has focus at boot. Not done: the news marquee, which stays
 silent by design.
