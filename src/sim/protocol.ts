@@ -93,7 +93,7 @@ export type Snap = {
   tick: number;
   gestell: number;
   weather: string; // display label for the climate band
-  weatherNamed: boolean;
+  weatherNamed: boolean; // the viewer named the weather at the plaque (its own F.WEATHER_NAMED; the HUD's UNNAMED tag)
   frozen: string[]; // district ids under a freeze
   district: DistrictId; // the viewer's district
   you: YouView;

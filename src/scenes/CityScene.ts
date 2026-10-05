@@ -5,7 +5,7 @@
 import Phaser from "phaser";
 import { WORLD_H, WORLD_W } from "../sim/map";
 import { weatherBand, type Snap, type WeatherBand, type YouView } from "../sim/protocol";
-import type { Intent } from "../sim/types";
+import type { Intent, PassingOutcome } from "../sim/types";
 import { WorldSocket, type SocketStatus } from "../net/worldSocket";
 import { bus, type SceneActions } from "../render/bus";
 import { Entities } from "../render/entities";
@@ -14,6 +14,7 @@ import { Fx } from "../render/fx";
 import { flickerStep, reducedMotion } from "../render/motion";
 import { audio } from "../audio/bus";
 import { VOLUME_STEP } from "../audio/settings";
+import { riteHeard } from "../audio/cues";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
 import { browserOwns, escapeDoes, hudControlFocused, paperToUse } from "../ui/keys";
@@ -40,7 +41,7 @@ type YouDiff = {
   winkAt: number;
   deaths: number;
   under: number;
-  passing: number;
+  passings: number; // the body's own Passing count: every season's rite plays, not the first only (round six)
   wink: string;
 };
 
@@ -74,7 +75,7 @@ export class CityScene extends Phaser.Scene {
   private lastGates = "";
   private following = false;
   private heard: Snap | null = null; // the last snapshot the audio bus was given
-  private readonly prev: YouDiff = { init: false, dodgeT: 0, hitStop: 0, heavyWindup: 0, winkAt: 0, deaths: 0, under: 0, passing: 0, wink: "" };
+  private readonly prev: YouDiff = { init: false, dodgeT: 0, hitStop: 0, heavyWindup: 0, winkAt: 0, deaths: 0, under: 0, passings: 0, wink: "" };
   private readonly at = { x: 0, y: 0 };
 
   private onKeyDown = (e: KeyboardEvent) => this.keyDown(e);
@@ -488,7 +489,7 @@ export class CityScene extends Phaser.Scene {
   private effects(you: YouView, snap: Snap): void {
     const prev = this.prev;
     const under = you.flags.under ?? 0;
-    const passing = you.flags.passing ?? 0;
+    const passings = you.history.passings ?? 0;
     if (prev.init) {
       const at = this.entities.youAt(this.at);
       if (you.dodgeT > 0 && prev.dodgeT <= 0) {
@@ -507,9 +508,11 @@ export class CityScene extends Phaser.Scene {
         this.fx.goingUnder();
         overlayLoop(document.getElementById("hud"), loopFor("going-under"), 4000);
       }
-      if (passing === 1 && prev.passing === 0) {
-        this.fx.passing(snap.passing.lastOutcome);
-        overlayLoop(document.getElementById("hud"), passingLoopFor(snap.passing.lastOutcome));
+      // the body's own rite (its own outcome, not the last rite anyone stood for), every season it stands
+      const rite = riteHeard({ history: { passings: prev.passings } }, you) as PassingOutcome;
+      if (rite) {
+        this.fx.passing(rite);
+        overlayLoop(document.getElementById("hud"), passingLoopFor(rite));
       }
     }
     prev.init = true;
@@ -520,6 +523,6 @@ export class CityScene extends Phaser.Scene {
     prev.wink = you.wink;
     prev.deaths = you.deaths;
     prev.under = under;
-    prev.passing = passing;
+    prev.passings = passings;
   }
 }

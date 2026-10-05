@@ -397,7 +397,7 @@ function movementOne(w0: WorldState, o: Opening): WorldState {
   w = interact(w, ME, "safety-plaque", o.weather);
   if (o.bulletin) {
     expect(me(w).heard, "the naming reads the slip").toContain(o.weather === "stability" ? "fold the slip away" : "pin the slip under the word");
-    expect(me(w).heard).toContain(String(Math.round(w.gestell)));
+    expect(me(w).heard).toContain(String(Math.floor(w.gestell)));
   }
   w = tick(w);
   expectStep(w, Q.M1, 14);
@@ -407,9 +407,9 @@ function movementOne(w0: WorldState, o: Opening): WorldState {
   expect(w.flags[W.WEATHER_NAMES]).toBe(1);
   if (o.bulletin && o.weather !== "stability") {
     expect(w.flags[W.BULLETIN_POSTED]).toBe(1);
-    expect(w.flags[W.BULLETIN_NUMBER], "the figure is pinned with the pin").toBe(Math.round(w.gestell));
-    expect(w.news.some(n => n.text.includes(`pinned the Annex's own number, ${Math.round(w.gestell)},`))).toBe(true);
-    expect(me(interact(w, ME, "safety-plaque", "reread")).heard).toContain(`pinned in someone's hand: the Annex's own number, ${Math.round(w.gestell)}.`);
+    expect(w.flags[W.BULLETIN_NUMBER], "the figure is pinned with the pin").toBe(Math.floor(w.gestell));
+    expect(w.news.some(n => n.text.includes(`pinned the Annex's own number, ${Math.floor(w.gestell)},`))).toBe(true);
+    expect(me(interact(w, ME, "safety-plaque", "reread")).heard).toContain(`pinned in someone's hand: the Annex's own number, ${Math.floor(w.gestell)}.`);
   } else {
     expect(w.flags[W.BULLETIN_POSTED]).toBeUndefined();
     expect(w.news.some(n => n.text.includes("pinned"))).toBe(false);
@@ -948,7 +948,7 @@ function movementFourToTheRing(w0: WorldState, party: "with" | "alone"): WorldSt
   expect(me(w).dialogue?.node).toBe("brink");
   expect(me(w).dialogue?.text).toContain(`Readiness ${Math.round(me(w).readiness)}`);
   expect(me(w).dialogue?.text).toContain(`floor is ${READINESS_PASSING_MIN}`);
-  expect(me(w).dialogue?.text, "three numbers").toContain(`The weather at ${Math.round(w.gestell)}. Then the bodies: ${w.clearing.heldBy.length} in the ring.`);
+  expect(me(w).dialogue?.text, "three numbers").toContain(`The weather at ${Math.floor(w.gestell)}. Then the bodies: ${w.clearing.heldBy.length} in the ring.`);
   w = act(w, ME, { t: "close" });
   expect(me(w).dialogue?.node, "her confession follows, once, with the garden in the ground").toBe("lid");
   expect(me(w).dialogue?.text).toContain("A Clearing is a grave with the lid off.");

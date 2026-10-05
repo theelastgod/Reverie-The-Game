@@ -4,7 +4,8 @@
  * snapshot and is only shaped for the eye.
  */
 import { bearing as mapBearing, DISTRICT_BY_ID } from "../sim/map";
-import { ANGEL_SUPPLY, AURA_DIM, AURA_PRESENT, TEST_SERIAL } from "../sim/constants";
+import { ANGEL_SUPPLY, AURA_DIM, AURA_PRESENT, RESTRAINT_WINK_MIN, TEST_SERIAL } from "../sim/constants";
+import { GUEST_LOCK } from "../sim/content/lines";
 import type { DistrictId, House, Messenger, Objective, Vec } from "../sim/types";
 import type { GlassView } from "../sim/protocol";
 import { countdown } from "../sim/launch";
@@ -214,12 +215,22 @@ export function dodgeLine(cooldown: number, touch = false): string {
   return touch ? "DODGE" : "SHIFT + MOVE · DODGE";
 }
 
-/** Stance chip text with the burn hint. */
-export function stanceLine(stance: "restraint" | "storm", faceActive: boolean, burnPerSecond: number): { text: string; hint: string } {
+/** Stance chip text with the burn hint. A guest never sees a Wink (DESIGN §2.2), so its hint promises only the step (round six). */
+export function stanceLine(stance: "restraint" | "storm", faceActive: boolean, burnPerSecond: number, guest = false): { text: string; hint: string } {
   if (stance === "storm") {
     return { text: "STORM", hint: faceActive ? "FACE · NO BURN" : `BURNS RESTRAINT ${num(burnPerSecond)}/S` };
   }
-  return { text: "RESTRAINT", hint: "SEE WINKE · WIDER STEP" };
+  return { text: "RESTRAINT", hint: guest ? "WIDER STEP" : "SEE WINKE · WIDER STEP" };
+}
+
+/**
+ * The restraint bar: the floored figure, so the number, WINKE DARK and the meter turn at the line canWink reads on the raw
+ * value (world.ts), as the weather band does for the gestell (protocol.ts; the player-defect sweep, round six).
+ */
+export function restraintBar(restraint: number, burning: boolean): { value: number; dark: boolean; label: string } {
+  const value = Math.floor(restraint);
+  const dark = value < RESTRAINT_WINK_MIN;
+  return { value, dark, label: burning ? "RESTRAINT · BURNING" : dark ? "RESTRAINT · WINKE DARK" : "RESTRAINT" };
 }
 
 /** Kit chip text: the verb, its cooldown or its active state. */
@@ -266,6 +277,25 @@ export function heardStep(
   }
   if (state.held && !open) return { state: { at: state.at, held: false }, show: null, arm: true };
   return { state, show: null, arm: false };
+}
+
+// ---------------------------------------------------------------- the lock panel
+/**
+ * The lock panel (the wallet's way in) shows when a body is first seen locked or becomes locked, and hides when it is
+ * unlocked. Dismissed with REMAIN IN THE NAVE, it comes back when the locked body presses the threshold again and hears
+ * the lock line there; not for the same line at a stall or a node (the player-defect sweep, round six).
+ */
+export function lockStep(
+  last: { locked: boolean; heardAt: number } | null,
+  you: { locked: boolean; heard: string; heardAt: number },
+  target: string | null,
+  visible: boolean,
+): "show" | "hide" | null {
+  if (you.locked && (!last || !last.locked)) return "show";
+  if (!you.locked) return last && last.locked ? "hide" : null;
+  if (!last) return null;
+  const askedAgain = you.heardAt !== last.heardAt && you.heard === GUEST_LOCK && target === "going-under";
+  return askedAgain && !visible ? "show" : null;
 }
 
 // ---------------------------------------------------------------- DOM helpers
@@ -332,7 +362,8 @@ export function noticeDiff(shown: readonly string[], next: readonly string[]): {
 
 /**
  * The verbs the HUD's buttons must repeat for a finger (CLIENT.md: every verb has a key, and the HUD's buttons repeat
- * them): I uses a paper while the purse holds one worth using (a guest's too), V raises or lowers the flag where the street allows it.
+ * them): I uses a paper while the purse holds one worth using (a guest's too), V raises the flag where the street allows it and
+ * lowers a raised one anywhere (the player-defect sweep, round six).
  * Without these a phone could buy a paper and never use it, and flag only while another Angel was the prompt's target
  * (the player-defect sweep, round four). Null for a chip that has nothing to do.
  */
@@ -342,6 +373,6 @@ export function chipVerbs(you: { guest: boolean; locked: boolean; dead: boolean;
   return {
     // any living body that holds a paper worth using: the server lets a guest use what the stall sold it
     use: !you.dead && paper !== null,
-    flag: angel && flagLegal && !(you.truceUntil > now) ? (you.flagged ? "LOWER FLAG" : "RAISE FLAG") : null,
+    flag: angel && (you.flagged || flagLegal) && !(you.truceUntil > now) ? (you.flagged ? "LOWER FLAG" : "RAISE FLAG") : null,
   };
 }

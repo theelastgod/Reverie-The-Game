@@ -114,7 +114,9 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
       say: "Vans. The fee is the same as for plants. The stallholder finds that funny and does not say why.",
     },
   ]),
-  "hot-street": [
+  // at the van itself, clear of both hot-street enforcers' aggro as its look is, so a guest who waves is not engaged (the
+  // street's own POI is usable only inside enforcer one's reach; the player-defect sweep, round six)
+  "armored-van": [
     {
       key: "E", label: "Wave the van through", choice: "side:van:wave",
       when: atStep(SQ.VAN, 1), guest: "allow", once: SF.VAN_WAVED,

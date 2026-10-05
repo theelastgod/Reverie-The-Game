@@ -245,7 +245,8 @@ const NARA_NODES: Record<string, DialogueNode> = {
       const read = r >= READINESS_APPEARANCE_MIN ? `Readiness ${r}. Enough for a trace, if the weather lets it.`
         : r >= READINESS_PASSING_MIN ? `Readiness ${r}. The floor is ${READINESS_PASSING_MIN}; you are over it. A trace wants ${READINESS_APPEARANCE_MIN}.`
           : `Readiness ${r}. The floor is ${READINESS_PASSING_MIN}. You are short, and I will say so now rather than after: the hours you did not take, the nodes you did not keep, the freeze you signed or did not. It is not a sin. It is a number.`;
-      const g = Math.round(ctx.w.gestell);
+      // the HUD's floored figure, so the meltdown she names is the one the rite applies (protocol.ts weatherBand; round six)
+      const g = Math.floor(ctx.w.gestell);
       const bodies = ctx.w.clearing.heldBy.length;
       const meltdown = g >= GESTELL_MELTDOWN;
       const weather = `Then the weather. The weather at ${g}.${meltdown ? " At ninety-one a hole holds only as long as bodies stand in it." : ""} Then the bodies: ${bodies} in the ring.${meltdown && bodies < CLEARING_HOLD_ANGELS ? ` Fewer than ${CLEARING_HOLD_ANGELS} and nothing passes, whatever you are.` : ""}`;
@@ -271,7 +272,7 @@ const NARA_NODES: Record<string, DialogueNode> = {
   },
   ring: {
     id: "ring",
-    text: (ctx) => `I am in the ring. I will stand in the hole as long as it is a hole. If the process takes it I will still be here; I will just be standing in stock. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}. The weather at ${Math.round(ctx.w.gestell)}. Bodies ${ctx.w.clearing.heldBy.length}. Press F at the ring when the party is ready.`,
+    text: (ctx) => `I am in the ring. I will stand in the hole as long as it is a hole. If the process takes it I will still be here; I will just be standing in stock. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}. The weather at ${Math.floor(ctx.w.gestell)}. Bodies ${ctx.w.clearing.heldBy.length}. Press F at the ring when the party is ready.`,
     wink: "The Clearing holds when people do.",
   },
   after: {
@@ -546,7 +547,8 @@ const mapEffects = (cut: "strait" | "foundry" | "cable" | "whole"): Effect[] => 
 ];
 
 const honestNumber = (ctx: Ctx): string => {
-  const g = Math.round(ctx.w.gestell);
+  // the HUD's floored figure and the tax the node charges (economy.ts gestellTax; the player-defect sweep, round six)
+  const g = Math.floor(ctx.w.gestell);
   const tax = Math.floor(Math.max(0, Math.min(100, g)) / 4);
   return `The process, at ${g}. Tax ${tax} percent on every node. The number goes up because people extract. I will not pretty it.`;
 };

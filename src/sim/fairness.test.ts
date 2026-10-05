@@ -17,6 +17,7 @@ vi.mock("./content/lines", () => ({
   FLAG_WHERE: "Not on this street.",
   FLAG_ON: "You flagged.",
   FLAG_OFF: "You unflagged.",
+  FLAG_HELD: "The fight is warm.",
   TRUCE_COPY: "Both unflag. Seconds, not a stick.",
   SPOILS_COPY: "Spoils from a person.",
   CAMP_COPY: "Camping the same grave feeds the Gestell.",

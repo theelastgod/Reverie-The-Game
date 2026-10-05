@@ -125,8 +125,12 @@ export function serializeWorld(w: WorldState): SavedWorld {
  * The world as the object checkpoints it: without the bodies. Each live body
  * has its own record (`player:v2:<token>`), written only when it changed, and
  * the constructor restores the bodies of hibernated sockets from those, so the
- * world record stays the size of the city and not of its population. A world
- * saved before this (bodies embedded) still restores: see the constructor.
+ * world record stays the size of the city and not of its population. One part
+ * still grows with the Angels: the history marks, one (about 160 B) per serial
+ * ever linked, bounded by the supply at about 1.25 MB, under the row cap (the
+ * player-defect sweep, round six; moving them to their own keys is the lever if
+ * the checkpoint's time ever shows it). A world saved before this (bodies
+ * embedded) still restores: see the constructor.
  */
 export function serializeCity(w: WorldState): SavedWorld {
   return serializeWorld({ ...w, players: new Map() });
@@ -358,6 +362,11 @@ export class ReverieWorld {
       // what the city holds of the Angel under its old id (its listings, its keeps, its wreckage) follows it to this one
       this.w = rebindBody(this.w, record.id, live.id);
       this.slow.forget(live.id); // the whole record changed under the session: its next frame is a full one
+      // The log's baseline takes the restored body too: the next diff reads the Angel against itself, not against the guest it
+      // replaced, so a restore writes no link, burial or claim it did not just make (the player-defect sweep, round six).
+      const logged = new Map(this.logged.players);
+      logged.set(live.id, this.w.players.get(live.id)!);
+      this.logged = { ...this.logged, players: logged };
     }
     this.advanceWorld(Date.now());
     this.w = serial === null

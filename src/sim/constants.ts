@@ -133,6 +133,7 @@ export const CLEARING_PRICE_MOVE = { taken: 8, refused: -4, appearance: 12, abse
 // PvP
 export const TRUCE_SECONDS = 20;
 export const FLAG_NEWS_GAP = 300; // seconds: a body's raised flag makes the news at most this often
+export const FLAG_HOLD = 10; // seconds: a landed blow between Angels holds both raised flags up this long (a truce or a fall still lowers them)
 export const RUIN_DUEL_RADIUS = 72;
 export const SPECTATE_RADIUS = 96;
 export const CAMP_WINDOW = 120; // seconds; killing the same Angel twice inside it is camping

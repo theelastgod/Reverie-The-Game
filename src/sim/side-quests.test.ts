@@ -253,7 +253,7 @@ const SCRIPTS: Script[] = [
   {
     id: SQ.VAN,
     at: "stall-4",
-    steps: [[poi("stall-4", "side:van:ask")], [poi("hot-street", "side:van:wave")]],
+    steps: [[poi("stall-4", "side:van:ask")], [poi("armored-van", "side:van:wave")]],
     check: all(poiIs("hot-street", "hot"), w => expect(w.flags[SW.VAN_PARKED]).toBe(1)),
   },
   {
@@ -652,7 +652,7 @@ describe("the armored van on a street already hot", () => {
     w = perform(w, poi("stall-4", "side:van:ask"));
     w = tick(w, 2);
     expect(questProgress(me(w), SQ.VAN).step, "the wave is the street's again to ask for").toBe(1);
-    w = perform(w, poi("hot-street", "side:van:wave"));
+    w = perform(w, poi("armored-van", "side:van:wave"));
     w = tick(w, 2);
     expect(w.pois["hot-street"].state).toBe("hot");
     expect(w.news.map(n => n.text)).toContain("An armored van parked on the wet street. The street went hot.");

@@ -148,7 +148,7 @@ See `src/sim/types.ts`. Summary:
 | E / Q | `interact` (verb `E` / `Q`) | secondary verbs (extract / keep, take / refuse, spot / sell, loot / bury) |
 | 1–4 | `choose` | dialogue choice |
 | Esc | `close` | close dialogue |
-| V | `flag` | toggle PvP flag; only Angels, only in flag-legal areas |
+| V | `flag` | toggle PvP flag; only Angels; raised only in flag-legal areas, lowered anywhere; held up `FLAG_HOLD` (10 s) past the last landed blow between Angels (a truce or a fall still lowers it) |
 | T | `truce` | request a 20 s truce with the nearest flagged Angel; unflags both |
 | I | `use` | use the first paper item (insurance / repair) |
 | M | (client) | minimap toggle |

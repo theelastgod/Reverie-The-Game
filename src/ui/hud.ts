@@ -6,12 +6,12 @@
 import type { Snap } from "../sim/protocol";
 import { weatherBand } from "../sim/protocol";
 import type { Notice, Prompt } from "../sim/types";
-import { AURA_MAX, GESTELL_MELTDOWN, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_MAX, RESTRAINT_MAX, RESTRAINT_WINK_MIN, STORM_RESTRAINT_BURN } from "../sim/constants";
+import { AURA_MAX, GESTELL_MELTDOWN, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_MAX, RESTRAINT_MAX, STORM_RESTRAINT_BURN } from "../sim/constants";
 import { F } from "../sim/content/ids";
 import { CREDITS } from "../sim/content/lines";
 import {
-  auraTier, chipVerbs, districtFourfold, districtName, dodgeLine, heardStep, identityLine, joinNews, kitLine, ledgerLine, marqueeSeconds, noticeDiff, num, pct,
-  setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine, creditRows,
+  auraTier, chipVerbs, districtFourfold, districtName, dodgeLine, heardStep, identityLine, joinNews, kitLine, ledgerLine, lockStep, marqueeSeconds, noticeDiff, num, pct,
+  restraintBar, setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine, creditRows,
 } from "./format";
 import { mountDialogue, type DialoguePanel } from "./dialogue";
 import { mountJournal, type JournalPanel } from "./journal";
@@ -503,7 +503,7 @@ export class Hud {
     const you = snap.you;
     const hp = Math.round(you.hp);
     const aura = Math.round(you.aura);
-    const restraint = Math.round(you.restraint);
+    const restraint = restraintBar(you.restraint, false).value; // floored, at the server's line (round six)
     const readiness = Math.round(you.readiness);
     const tier = auraTier(you.aura, you.guest);
     const burning = you.stance === "storm" && !(you.kit && you.kit.verb === "ruin" && you.kit.until > snap.now);
@@ -519,10 +519,11 @@ export class Hud {
     for (let t = 0; t <= 3; t++) setClass(b.aura.row, `tier-${t}`, t === tier);
     setText(b.aura.label, you.guest ? "AURA · GUEST" : "AURA");
 
-    this.setBar(b.restraint, restraint, RESTRAINT_MAX);
-    setClass(b.restraint.row, "dark", restraint < RESTRAINT_WINK_MIN);
+    const rb = restraintBar(you.restraint, burning);
+    this.setBar(b.restraint, rb.value, RESTRAINT_MAX);
+    setClass(b.restraint.row, "dark", rb.dark);
     setClass(b.restraint.row, "burning", burning);
-    setText(b.restraint.label, burning ? "RESTRAINT · BURNING" : restraint < RESTRAINT_WINK_MIN ? "RESTRAINT · WINKE DARK" : "RESTRAINT");
+    setText(b.restraint.label, rb.label);
 
     this.setBar(b.readiness, readiness, READINESS_MAX);
   }
@@ -542,7 +543,7 @@ export class Hud {
     const sig = [you.stance, face, you.guest].join("|");
     if (sig === this.stanceSig) return;
     this.stanceSig = sig;
-    const line = stanceLine(you.stance, face, STORM_RESTRAINT_BURN);
+    const line = stanceLine(you.stance, face, STORM_RESTRAINT_BURN, you.guest);
     setText(this.stanceText, line.text);
     setText(this.stanceHint, line.hint);
     setClass(this.stance, "storm", you.stance === "storm");
@@ -709,10 +710,9 @@ export class Hud {
   }
 
   private updateLock(snap: Snap): void {
-    const locked = snap.you.locked;
-    const wasLocked = this.last ? this.last.you.locked : false;
-    if (locked && (!this.last || !wasLocked)) this.lock.show();
-    else if (!locked && wasLocked) this.lock.hide();
+    const step = lockStep(this.last ? this.last.you : null, snap.you, snap.prompt?.targetId ?? null, this.lock.visible);
+    if (step === "show") this.lock.show();
+    else if (step === "hide") this.lock.hide();
   }
 
   private updateCredits(snap: Snap): void {

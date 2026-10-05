@@ -624,6 +624,7 @@ export function killPlayer(w: WorldState, victimId: string, killerId: string, ca
     dodgeCd: 0,
     dialogue: null,
     insured: false,
+    flagHeldUntil: 0, // the fallen body stands down from the fight that felled it; the killer's hold runs on
   };
   if (insured) woke = notice(woke, LINES.INSURANCE_USED, now, "gold");
 

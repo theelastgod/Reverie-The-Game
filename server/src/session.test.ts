@@ -93,11 +93,11 @@ const savedWorld = (data: Map<string, unknown>) => data.get(WORLD_KEY) as Return
 
 describe("durable world sessions", () => {
   it("restores the world and live bodies after hibernation, with idle movement", async () => {
-    const player = { ...spawnGuest("a"), bestand: 91, banked: 33 };
+    // the weather's name is the body's own (round six): the restored body named it before it slept
+    const player = { ...spawnGuest("a"), bestand: 91, banked: 33, flags: { "weather:named": 1 } };
     const w = saved(player, spawnGuest("orphan"));
     w.intents.set("a", { up: false, down: false, left: false, right: true });
     w.gestell = 74;
-    w.weatherNamed = true;
     const ws = socket();
     const { world, storage, data } = await worldHarness(w, [ws]);
     vi.setSystemTime(200);
@@ -586,6 +586,22 @@ describe("wallet login", () => {
     expect(you.heard).not.toBe("That listing is gone.");
     expect(you.items.some((i: { id: string }) => i.id === "copy:wink-hint")).toBe(true);
     expect(last(ws).market ?? []).toHaveLength(0);
+  });
+
+  it("a restore writes no log rows the Angel did not just make: it is not a new link, burial or going-under (the sweep, round six)", async () => {
+    const d = logDb();
+    const kept = angel("old", { wallet: addressOf(HOLDER), movement: 3, flags: { under: 1 }, history: { ...spawnGuest("x").history, buried: 4 } });
+    const { world, ctx } = await worldHarness(null, [], [[playerKey(otherToken), kept], ["serial:v2:42", otherToken]], { ...DEV_ENV, LOG: d as never } as never);
+    const ws = socket();
+    await world.join(token, ws as never);
+    const message = await challenge(world, HOLDER);
+    await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    expect(last(ws).you).toMatchObject({ serial: 42, movement: 3 });
+    vi.setSystemTime(1000);
+    await world.alarm();
+    for (const call of (ctx.waitUntil as ReturnType<typeof vi.fn>).mock.calls) await call[0];
+    const kinds = d.batches.flat().map(st => st.values[2]);
+    for (const kind of ["link", "wallet", "under", "burial"]) expect(kinds, kind).not.toContain(kind);
   });
 
   it("restores no body sealed to another wallet, none that walks, and never replaces a body that was an Angel", async () => {

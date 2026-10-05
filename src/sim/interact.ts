@@ -195,7 +195,7 @@ export function playerVerbs(ctx: Ctx, other: Player): PromptVerb[] {
     const offered = !!other.duel && !other.duel.accepted && other.duel.with === p.id && other.duel.until > w.now;
     out.push({ key: "F", label: offered ? "Answer the duel" : "Ruin duel", choice: "duel" });
   }
-  if (DISTRICT_BY_ID[p.district].flagLegal && p.truceUntil <= w.now) out.push({ key: "V", label: p.flagged ? "Unflag" : "Flag", choice: "flag" });
+  if ((p.flagged || DISTRICT_BY_ID[p.district].flagLegal) && p.truceUntil <= w.now) out.push({ key: "V", label: p.flagged ? "Unflag" : "Flag", choice: "flag" });
   // T carries no target (the server calls it with the nearest flagged Angel): it is offered on that body only, so the prompt
   // never names one body and truces another (the player-defect sweep, round two)
   if (p.flagged && other.flagged && truceTarget(w, p)?.id === other.id) out.push({ key: "T", label: "Truce", choice: "truce" });

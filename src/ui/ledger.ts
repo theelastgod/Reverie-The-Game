@@ -11,7 +11,7 @@ import { num, setText, show } from "./format";
 export type ItemRow = { id: string; name: string; qty: number; note: string; listable: boolean };
 export type ClaimRow = { id: string; label: string; amount: number; status: "hold" | "ready" | "settled"; detail: string };
 /** `city`: a listing the city posted, a price to watch and never a sale; it has no button. */
-export type ListingRow = { id: string; seller: string; item: string; price: number; mine: boolean; canBuy: boolean; city: boolean };
+export type ListingRow = { id: string; seller: string; item: string; price: number; mine: boolean; canBuy: boolean; city: boolean; away: boolean };
 
 export type LedgerModel = {
   guest: boolean;
@@ -42,7 +42,8 @@ export function holdClock(seconds: number): string {
 
 function itemRow(i: Item): ItemRow {
   const note = i.kind === "cult" ? "cult · does not list" : i.kind === "exhibition" ? `value ${num(i.value)} · decays` : "paper · I uses";
-  return { id: i.id, name: i.name, qty: i.qty, note, listable: i.kind === "exhibition" && !i.bound && i.qty > 0 };
+  // a print decayed to nothing does not list (economy.ts refuses it; the player-defect sweep, round six)
+  return { id: i.id, name: i.name, qty: i.qty, note, listable: i.kind === "exhibition" && !i.bound && i.qty > 0 && i.value > 0 };
 }
 
 export function claimRow(c: Claim, now: number): ClaimRow {
@@ -66,14 +67,17 @@ export function ledgerModel(snap: Pick<Snap, "now" | "you" | "market">): LedgerM
     : `F files a claim from the purse · E banks the purse (${Math.round(BANK_FEE * 100)}% fee) · Q takes a ready claim into the vault`;
   const listings: ListingRow[] = (snap.market ?? []).map((l: Listing) => {
     const city = l.sellerId === CITY_SELLER;
+    // a seller not on the Grid cannot sell: the buy waits for them (economy.ts), so BUY waits too (round six)
+    const away = !city && !!l.away;
     return {
       id: l.id,
       seller: l.sellerName,
       item: `${l.item.name}${l.item.qty > 1 ? ` ×${l.item.qty}` : ""}`,
       price: l.price,
       mine: !city && l.sellerId === you.id,
-      canBuy: !guest && !city && l.sellerId !== you.id && you.bestand >= l.price,
+      canBuy: !guest && !city && !away && l.sellerId !== you.id && you.bestand >= l.price,
       city,
+      away,
     };
   });
   const marketLine = guest ? "A stall of lights. You cannot afford a sky you cannot see." : `listing fee ${LISTING_FEE} · exhibition only · cult never lists`;
@@ -105,7 +109,7 @@ export function ledgerKey(m: LedgerModel): string {
     m.exhibition.map((r) => r.id + r.qty + r.note).join(","),
     m.paper.map((r) => r.id + r.qty).join(","),
     m.claims.map((r) => r.id + r.status).join(","),
-    m.listings.map((r) => r.id + r.canBuy + ":" + r.price).join(","),
+    m.listings.map((r) => r.id + r.canBuy + ":" + r.price + (r.away ? ":away" : "")).join(","),
   ].join("|");
 }
 
@@ -199,7 +203,7 @@ export function mountLedger(root: HTMLElement | null, cb: LedgerCallbacks): Ledg
       if (!m.listings.length) rows.append(el("div", "ledger-empty", "nothing listed"));
       for (const l of m.listings) {
         const row = el("div", "ledger-row");
-        row.append(el("span", "ledger-name", l.item), el("span", "ledger-note", `${l.seller} · ${num(l.price)}${l.city ? " · a price, not a sale" : ""}`));
+        row.append(el("span", "ledger-name", l.item), el("span", "ledger-note", `${l.seller} · ${num(l.price)}${l.city ? " · a price, not a sale" : l.away ? " · seller away" : ""}`));
         if (!l.city) {
           const btn = el("button", "ledger-btn", l.mine ? "CANCEL" : "BUY") as HTMLButtonElement;
           btn.type = "button";

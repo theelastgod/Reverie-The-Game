@@ -9,7 +9,7 @@
 import { AOI_RADIUS, AURA_DIM, AURA_PRESENT, BLITZ_COUNT, CITY_SELLER, MAX_HP, WRECKAGE_TTL_BONUS } from "./constants";
 import { POSITIONS } from "./map";
 import { NPCS, POI_CONFIGS } from "./content";
-import { C, W } from "./content/ids";
+import { C, F, W } from "./content/ids";
 import { darkLights, glassDark, launchDark, launchDate, launchOpen, nextLaunch } from "./launch";
 import { PROTOCOL_VERSION, WEATHER_LABEL, cityFigure, weatherBand, type EnemyView, type GlassView, type FastFrame, type NodeView, type NpcView, type PoiView, type PublicPlayer, type SlowFrame, type SlowKey, type Snap, type WreckageView, type YouView, type DuelOffer } from "./protocol";
 import type { Ctx, Enemy, FailedPassing, HistoryMark, Listing, NpcState, Player, PoiConfig, Prompt, PromptVerb, Wreckage, WorldState, YieldNode } from "./types";
@@ -300,6 +300,20 @@ export function stepViews(w: WorldState): StepViews {
   let nodes = keptNodes.get(w.nodes, list => list.map(n => nodeView(n, now)));
   if (nodes.some((v, i) => v.safe !== (w.nodes[i].announcedUntil > now))) nodes = keptNodes.set(w.nodes, w.nodes.map(n => nodeView(n, now)));
 
+  // The city's own listings stand first, whatever else is up: a price to watch, never pushed off the board by prints.
+  // A fee the stall kept back is the seller's business with the stall, not the board's: it stays off the wire. A row whose
+  // seller is not on the Grid is marked away (a buy waits for them, economy.ts): the kept board stands while every mark
+  // still reads the same (the player-defect sweep, round six).
+  const board = (list: WorldState["market"]): Snap["market"] => [
+    ...list.filter(l => l.sellerId === CITY_SELLER),
+    ...list.filter(l => l.sellerId !== CITY_SELLER).slice(-MARKET_TOP).reverse().map(l => {
+      const pub = publicListing(l);
+      return w.players.has(l.sellerId) ? pub : { ...pub, away: true as const };
+    }),
+  ];
+  let market = keptMarket.get(w.market, board);
+  if (market.some(l => l.sellerId !== CITY_SELLER && !!l.away === w.players.has(l.sellerId))) market = keptMarket.set(w.market, board(w.market));
+
   const frozen = Object.entries(w.frozen).filter(([, until]) => until > now).map(([d]) => d);
   if (!sameList(frozen, keptFrozen)) keptFrozen = frozen;
 
@@ -321,12 +335,7 @@ export function stepViews(w: WorldState): StepViews {
     nodes,
     pois: keptPois.get(w.pois, pois => Object.entries(pois).map(([id, s]) => ({ id, state: s.state, count: s.count }))),
     frozen: keptFrozen,
-    // The city's own listings stand first, whatever else is up: a price to watch, never pushed off the board by prints.
-    // A fee the stall kept back is the seller's business with the stall, not the board's: it stays off the wire.
-    market: keptMarket.get(w.market, market => [
-      ...market.filter(l => l.sellerId === CITY_SELLER),
-      ...market.filter(l => l.sellerId !== CITY_SELLER).slice(-MARKET_TOP).reverse().map(publicListing),
-    ]),
+    market,
     news: keptNews.get(w.news, news => news.map(n => n.text)),
     clearing: keptClearing.get(w.clearing, c => ({ open: c.open, reserve: c.reserve, contest: c.contest, lastOutcome: c.lastOutcome, dwellers: c.heldBy.length })),
     passing: keptPassing.get(w.passing, () => new Keep()).get(w.season.id, season => ({ ...w.passing, season })),
@@ -459,7 +468,8 @@ function sectionsOf(fast: ViewerFast, slow: ViewerSlow): Pick<Snap, SlowKey> {
   return {
     gestell: w.gestell,
     weather: WEATHER_LABEL[weatherBand(w.gestell)],
-    weatherNamed: w.weatherNamed,
+    // the viewer's own naming at the plaque (PROMPT §6.2 "name the weather", per body as every reader of it is; round six)
+    weatherNamed: (p.flags[F.WEATHER_NAMED] ?? 0) > 0,
     frozen: shared.frozen,
     district: p.district,
     npcs: slow.npcs,

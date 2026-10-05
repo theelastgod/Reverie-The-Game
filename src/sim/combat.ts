@@ -9,7 +9,7 @@ import {
   DUEL_CHALLENGE_SECONDS, DUEL_SECONDS, ENEMY_LEASH, FACE_DURATION, GESTELL_CAMP, GESTELL_MELTDOWN, HEAVY_COOLDOWN, HEAVY_RANGE,
   HEAVY_WINDUP, HIT_STOP, KIT_COOLDOWN, KIT_DURATION, RESTRAINT_CHAIN_KILL_PENALTY, RESTRAINT_DODGE_BONUS, RUIN_DUEL_RADIUS,
   SPECTATE_CAP, SPECTATE_RADIUS, STORM_BAND_BONUS, STORM_FALLEN_PENALTY, STORM_GEARED_BESTAND, STRIKE_COOLDOWN, STRIKE_RANGE,
-  TRUCE_SECONDS, WRECKAGE_TTL, FLAG_NEWS_GAP,
+  TRUCE_SECONDS, WRECKAGE_TTL, FLAG_NEWS_GAP, FLAG_HOLD,
 } from "./constants";
 import { circleHitsWalls, DISTRICT_BY_ID, inPatch, POSITIONS } from "./map";
 import { F } from "./content/ids";
@@ -396,7 +396,12 @@ function hitPlayer(w: WorldState, attackerId: string, targetId: string, base: nu
   if (mult > 1) cur = setPlayer(cur, say(a, LINES.STORM_PRESS, w.now));
   else if (mult < 1) cur = setPlayer(cur, say(a, LINES.STORM_FALLEN, w.now));
   const hp = b.hp - dmg;
-  cur = setPlayer(cur, { ...b, hp });
+  // A landed blow holds both raised flags up for FLAG_HOLD: a flag lowered around its own strike would let one body hit
+  // another that can never hit back (DESIGN §2 rule 7, PvP needs both flags; the player-defect sweep, round six).
+  const held = w.now + FLAG_HOLD;
+  const a1 = cur.players.get(attackerId)!;
+  cur = setPlayer(cur, { ...a1, flagHeldUntil: held });
+  cur = setPlayer(cur, { ...b, hp, flagHeldUntil: held });
   if (hp <= 0) cur = pvpKill(cur, attackerId, targetId);
   return { w: cur, hit: true };
 }
@@ -459,7 +464,13 @@ function pvpKill(w: WorldState, killerId: string, victimId: string): WorldState 
   if (camping) {
     // The camp line is the one the camper hears, even at a duel's grave.
     k = say({ ...k, aura: Math.max(0, k.aura - AURA_CAMP_PENALTY), campCount: k.campCount + 1 }, LINES.CAMP_COPY, now);
-    cur = { ...cur, gestell: Math.min(100, cur.gestell + GESTELL_CAMP) };
+    // The camper's aura pays every camp; the city's weather is fed once a CAMP_WINDOW per camper, so two bodies trading
+    // falls cannot carry every street into meltdown in a minute (the player-defect sweep, round six).
+    const fed = k.flags[F.CAMP_FED] ?? -Infinity;
+    if (now - fed >= CAMP_WINDOW) {
+      k = { ...k, flags: { ...k.flags, [F.CAMP_FED]: now } };
+      cur = { ...cur, gestell: Math.min(100, cur.gestell + GESTELL_CAMP) };
+    }
   }
   cur = setPlayer(cur, k);
 
@@ -654,8 +665,11 @@ export function applyFlag(w: WorldState, id: string): WorldState {
   if (!p || p.dead) return w;
   const now = w.now;
   if (p.guest || p.locked) return setPlayer(w, say(p, LINES.FLAG_GUEST, now));
-  if (!DISTRICT_BY_ID[p.district].flagLegal) return setPlayer(w, say(p, LINES.FLAG_WHERE, now));
+  // Flags are raised only where the street allows; a raised flag is lowered anywhere, so a body that falls flagged and
+  // wakes at the Care shrine can stand down there (the player-defect sweep, round six).
+  if (!p.flagged && !DISTRICT_BY_ID[p.district].flagLegal) return setPlayer(w, say(p, LINES.FLAG_WHERE, now));
   if (p.truceUntil > now) return setPlayer(w, say(p, LINES.TRUCE_ACTIVE, now));
+  if (p.flagged && (p.flagHeldUntil ?? 0) > now) return setPlayer(w, say(p, LINES.FLAG_HELD, now));
   const flagged = !p.flagged;
   let cur = setPlayer(w, say({ ...p, flagged }, flagged ? LINES.FLAG_ON : LINES.FLAG_OFF, now));
   // The street says who raised a flag, not every press of V: once a body per FLAG_NEWS_GAP, so one body cannot fill the marquee.

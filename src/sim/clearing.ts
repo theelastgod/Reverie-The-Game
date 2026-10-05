@@ -114,7 +114,6 @@ function dwells(p: Player): boolean {
 const sameIds = (a: string[], b: string[]) => a.length === b.length && a.every((v, i) => v === b[i]);
 
 /** The personal once-flag for the readiness a contest pays: one keep per Angel per contest. */
-const keptKey = (openedAt: number): string => `clearing:kept:${openedAt}`;
 const passedKey = seasonPassingFlag;
 
 /** Counts the stances of the Angels still standing in the ring. A vote left with the body is not a vote. */
@@ -231,8 +230,8 @@ export function applyClearing(w: WorldState, id: string, op: "open" | "keep" | "
     }
     case "keep": {
       if (!clearing.open) return speak(w, p, CLEARING_NOT_OPEN);
-      const key = keptKey(clearing.openedAt);
-      const already = (p.flags[key] ?? 0) > 0;
+      // one flag holding the contest last kept, not one per contest a body ever kept: the record stays its size (round six)
+      const already = p.flags[F.CLEARING_KEPT] === clearing.openedAt;
       const votedKeep = clearing.contest?.active && clearing.contest.votes?.[id] === "keep";
       if (already && (votedKeep || !clearing.contest?.active)) return speak(w, p, CLEARING_KEPT_AGAIN);
       const next: WorldState = { ...w, clearing: castVote(w, id, "keep") };
@@ -243,7 +242,7 @@ export function applyClearing(w: WorldState, id: string, op: "open" | "keep" | "
             ...p,
             readiness: clamp(p.readiness + READINESS_KEEP * 2, 0, READINESS_MAX),
             restraint: clamp(p.restraint + RESTRAINT_KEEP_GAIN, 0, RESTRAINT_MAX),
-            flags: { ...p.flags, [key]: 1 },
+            flags: { ...p.flags, [F.CLEARING_KEPT]: clearing.openedAt },
             choices: { ...p.choices, [C.CLEARING]: "keep" },
           };
       return speak(next, me, CLEARING_KEPT);

@@ -43,6 +43,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 - A fall, anyone's: **{name} did their job.** *(shipped, `combat.ts` DEATH_BY; the clerks, the wardens, the cold desks and the Runner are people doing jobs, and the line is the same when the job finishes you)*
 - The waking hint, the first of an Angel's life, in the Care: ✦ *They have your name. You went under where the book could not follow. It will follow now.* *(shipped, WAKING_WINK; Movement II's start)*
 - A strike or a ruin duel between Angels who have not both flagged: to the one who has not, **Both Angels must flag. Press V on a wet street to enter.** *(shipped, `lines.ts` PVP_FLAG_REQUIRED)*; to the one who has, whose V would lower their own flag, **They have not flagged. A strike needs both.** *(shipped since the key audit, `lines.ts` PVP_OTHER_UNFLAGGED)*
+- A flag lowered while a fight is warm (a landed blow between Angels in the last ten seconds): **The fight is warm. The flag stays up ten seconds past the last blow. A truce lowers it.** *(new, round six; `lines.ts` FLAG_HELD; a raised flag is lowered anywhere, raised only where the street allows)*
 - The Runner's fall: **The Runner drops. A folded slip: the Office of Safety's number for this hour, on the Concern's paper, sealed for the funeral street. It is in your coat now.** *(shipped, FALL_LINES.bulletin)*
 
 
@@ -59,7 +60,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 **THE ALTAR** — `crt-altar-1` watch (shipped, pois.ts)
 > A stack of screens with the tubes still warm. Static, then a room, then static. Nobody is in the room.
 ✦ *The room on the screen is this one. It is empty because you are looking at the screen.*
-[poi crt-altar-1 lit]
+[poi crt-altar-1 lit; a locked guest reads it and leaves the light as it was (round six)]
 
 ### I.2 Your name in the ledger
 *Step `intake` (shipped). The southern aisle; the Intake Clerk bars it. Plate `plate-arena.jpg`. Guest-legal.*
@@ -704,7 +705,7 @@ The paper panel, the gold mark:
 
 **VESPER HALE** — `take` (shipped)
 > You took the private yield. Cold is a current, not a costume. The Organs door is paid for out of it; I keep the door's price back and open it. Nara Vale has gone to the garden; she will not speak until it is in the ground. I would not wait. Sextons keep accounts too.
-[C.OPERATOR take; F.OPERATOR; F.M3; Bestand +60, earner operator, then −40, sink door; current Cold; W.VESPER_GONE, the desk vacant for everyone; Nara waiting, at the garden; the Clearing's listing +8; news: "An Angel took the private yield."] → `oval-taken`
+[C.OPERATOR take; F.OPERATOR; F.M3; Bestand +60, earner operator, then −40, sink door; current Cold; W.VESPER_GONE, the desk vacant for everyone who has decided (she keeps it, and her offer, for anyone who has not; round six); Nara waiting, at the garden; the Clearing's listing +8; news: "An Angel took the private yield."] → `oval-taken`
 
 **THE DESK** — `take` E, Take the private yield (shipped; the same choice from the prompt, with the same consequences)
 > You took the private yield. Cold is a current, not a costume. The Organs door is paid for out of it. Nara Vale has gone to the garden and will not speak until it is in the ground.
@@ -751,7 +752,7 @@ The paper panel, the gold mark:
 > The node from the first hour is wreckage now. You put it in the ground. Nara Vale will speak.
 > *(someone closed it before you)* The garden has been buried. You stay beside it until the city stops counting your time. Nara Vale will speak.
 ✦ *You took a hole and called it weather. It came back as earth. Only burial makes it world again.*
-[F.GARDEN; F.M3; wreckage-garden buried; W.GARDEN_BURIED; readiness +8; restraint +8; Nara with; history buried +1; the Organs door opens] → `garden-plate`
+[F.GARDEN; F.M3; wreckage-garden buried; W.GARDEN_BURIED; readiness +8; restraint +8; Nara with, her four extractions counted again from none (round six); history buried +1; the Organs door opens] → `garden-plate`
 
 **THE GARDEN** — `look` F, Look at the garden (shipped)
 > *(before)* A hole with a fence around it. Wreckage in the shape of a node. Someone will have to answer for it before it can be earth.
@@ -779,7 +780,7 @@ The paper panel, the gold mark:
 > *(blank)* You put it in the earth and left the plate blank. I will not forgive the factory. I will walk to the Strait if you go there. I will not carry the earth for you twice.
 ✦ *A person who buried someone. Not a function.*
 
-**NARA** — `waiting` (shipped; the second silence's door only: four extractions without a funeral send her gone, a burial brings her to waiting, and the desk paid brings her back. The sold hour never reaches this line: `garden-silent` is routed before it, and the garden in the ground is what gives her voice back)
+**NARA** — `waiting` (shipped; the second silence's door only: four extractions without a funeral send her gone, a burial brings her to waiting, and the desk paid brings her back (each burial, the desk paid and the garden buried start the four again; round six). The sold hour never reaches this line: `garden-silent` is routed before it, and the garden in the ground is what gives her voice back)
 > I am on the funeral street. I have not left. There is a body that nobody has paid to bury and you are the one who made it. Pay the desk. Then we talk.
 ✦ *Waiting is not forgiveness. It is a held door.*
 [the engine's line when a burial brings her from gone to waiting: "Nara Vale is waiting on the funeral street. Pay for a burial and she will speak." (`lines.ts` NARA_WAITS)]
@@ -792,7 +793,7 @@ The paper panel, the gold mark:
 > *(she is waiting, the second silence)* You paid Nara Vale's street. Five Bestand. The body is in the ground. She will speak again.
 > *(she is waiting, the hour sold and the garden not yet in the ground)* You paid Nara Vale's street. Five Bestand. She will stand with you. She will not speak until the garden is in the ground.
 > *(otherwise)* You paid Nara Vale's street. Five Bestand. A body nobody claimed is in the ground. The desk writes a name it made up.
-[Bestand −5, sink funeral; readiness +2; W.BURIALS +1; Nara with, if she was waiting; her voice only when the garden is in the ground, if the hour was sold]
+[Bestand −5, sink funeral; readiness +2; W.BURIALS +1; Nara with, if she was waiting, and her four extractions counted again from none (round six); her voice only when the garden is in the ground, if the hour was sold]
 
 ---
 
@@ -970,7 +971,7 @@ The paper panel, the gold mark:
 > The node from the first hour is wreckage now. You put it in the ground. Nara Vale will speak.
 > *If someone closed it before you:* The garden has been buried. You stay beside it until the city stops counting your time. Nara Vale will speak.
 ✦ *You took a hole and called it weather. It came back as earth. Only burial makes it world again.*
-[F.GARDEN; F.M3; wreckage-garden buried, for everyone; readiness +8; restraint +8; a burial in your history; Nara with you again; she kneels: `garden-plate`]
+[F.GARDEN; F.M3; wreckage-garden buried, for everyone; readiness +8; restraint +8; a burial in your history; Nara with you again, her count of extractions started again; she kneels: `garden-plate`]
 
 **NARA** — `garden-plate` (shipped)
 > It is in the earth. Nara Vale kneels and puts her hand flat on it. There is a plate. It has the node's number on it, or it does not. The Care keeps the numbered ones in the book. The unnumbered ones it keeps anyway. Which is this one?
@@ -1310,7 +1311,7 @@ The paper panel, the gold mark:
 
 **THE DESK** — `funeral-desk` pay, F (shipped, pois.ts)
 > You paid Nara Vale's street. Five Bestand. The body is in the ground. She will speak again.
-[5 Bestand, sink funeral; party nara with; readiness +2]
+[5 Bestand, sink funeral; party nara with, her count started again; readiness +2]
 
 **NARA** — `gone` (shipped)
 > She does not turn. She will not stand with a city that will not bury. The hole in the Care is still a grave. Put it in the ground and she will speak.
@@ -1671,6 +1672,7 @@ The paper panel, the gold mark:
 **CORVIN SLATE** — `hub` (shipped; side-npcs.ts)
 > "Officer of Safety. The district is stable. If you have come about the freeze, it holds. If you have come about something else, say it."
 > *Guest:* "Unsealed. You can still carry paper. Safety has paper that needs carrying."
+> *A guest locked at the lip* (offered no hour): A guest cannot prepare the ground. *(the fixed line, `lines.ts` GUEST_LOCK; round six)*
 - ▸ "The bell census." → `census`
 - ▸ "A notice for the bell." → `notice` (once the census is offered)
 - ▸ "Form 9." → `form9` (Angels who signed the freeze)
@@ -1697,6 +1699,7 @@ The paper panel, the gold mark:
 **HALLA VOSS** — `hub` (shipped; side-npcs.ts)
 > "Omen-reader. I read the front and I sell the hour. Ask for one or the other. Not both at once; they do not agree."
 > *Guest:* "Unsealed and on the Kerb. You cannot see the front. You can wait under a bell. Anyone can wait."
+> *A guest locked at the lip:* A guest cannot prepare the ground. *(GUEST_LOCK; round six)*
 - ▸ "Sell me an hour." → `hours` (while she still sells, until the hour is offered)
 - ▸ "Does the bell strike?" → `hour`
 - ▸ "I struck it once, on the way." → `struck` (F.BELL, until she has heard it; III.6, written there)
@@ -1721,6 +1724,7 @@ The paper panel, the gold mark:
 **DOV MARROW** — `hub` (shipped; side-npcs.ts)
 > "Keeper. Three shrines, one vault, one bell that was cast without a tongue. Upkeep is Bestand. Everything else here is not for sale. Say what you want."
 > *Guest:* "Unsealed. You cannot keep a shrine. You can hold a broom. The city will not know the difference. I will."
+> *A guest locked at the lip:* A guest cannot prepare the ground. *(GUEST_LOCK; round six; the census aside is not offered to it either)*
 - ▸ "I could sweep." → `step`
 - ▸ "Upkeep." → `upkeep-offer` (Angels)
 - ▸ "The bell was not cast mute." → `mute-offer` (Angels, on a second visit)
@@ -1826,7 +1830,7 @@ The paper panel, the gold mark:
 > Armored. For moving Bestand between desks, the clerk says, because that is what the clerk was told to say. They carry recorders. No markings; everyone on this street knows whose. This one wants the south end.
 [SF.VAN_ASKED]
 
-**THE STREET** — `hot-street` wave the van through, `side:van:wave` (shipped; side-pois.ts)
+**THE VAN** — `armored-van` wave the van through, `side:van:wave` (shipped; side-pois.ts; at the van itself since round six, clear of both hot-street enforcers' reach as the van's look is: the street's own sign can be used only inside enforcer one's)
 > You step aside. The van takes the corner and parks across the mouth of the street. Doors stay shut. The street is a different temperature now.
 ✦ *It looks like freedom. It is a stall with wheels. The street it parks on stops being a street.* (shipped; side.ts; Angels only)
 [poi `hot-street` hot, for everyone; SW.VAN_PARKED; news "An armored van parked on the wet street. The street went hot."; the launch window's close cools it (since Phase C, the cool-down), and the next one to wave a van through parks it again with this line]

@@ -190,6 +190,10 @@ function applyOne(w: WorldState, id: string, e: Effect): WorldState {
       return setPlayer(w, { ...p, movement: e.value });
     case "party":
       return setPlayer(w, { ...p, party: { ...p.party, [e.npc]: e.state } });
+    case "funeral":
+      // The desk paid or the garden buried brings Nara back; her four extractions without a funeral start again from here,
+      // as a wreckage burial's do (PROMPT §5, SCRIPT.md II; the player-defect sweep, round six).
+      return setPlayer(w, { ...p, extractedSinceFuneral: 0 });
     case "npc": {
       const shared = w.npcs[e.id] ?? { id: e.id, x: 0, y: 0, district: "nave", present: false, state: "home" };
       const next: NpcState = {

@@ -84,7 +84,7 @@ const spectate: PoiVerb["guest"] = "spectate";
 // ---------------------------------------------------------------- the Nave of Tubes
 
 /** The slip off the Annex Runner: Safety's own number for the hour, which the plaque never prints. */
-const slipNumber = (ctx: Ctx): number => Math.round(ctx.w.gestell);
+const slipNumber = (ctx: Ctx): number => Math.floor(ctx.w.gestell); // the HUD's figure (round six)
 const bulletinLine = (ctx: Ctx): string => (has(ctx, F.BULLETIN) && !has(ctx, F.WEATHER_NAMED)
   ? ` The slip in your coat is Safety's own, on the Concern's paper, sealed for the funeral street. It does not say stability. It says ${slipNumber(ctx)}.`
   : "");
@@ -299,7 +299,8 @@ const NAVE: PoiConfig[] = [
         effects: ctx => [
           ...launchReelEffects(ctx),
           ...(launchReel(ctx) || ownReel(ctx) ? [] : [{ kind: "wink", text: "The room on the screen is this one. It is empty because you are looking at the screen." } as Effect]),
-          { kind: "poi", id: "crt-altar-1", state: "lit" } as Effect,
+          // a locked guest reads the altar and leaves its light as it was (CONTRACTS: a locked guest walks and reads; round six)
+          ...(ctx.p.locked ? [] : [{ kind: "poi", id: "crt-altar-1", state: "lit" } as Effect]),
         ],
       },
     ],
@@ -368,7 +369,8 @@ const ownReel = (ctx: Ctx): boolean => Boolean(hijackReel(ctx) ?? absenceReel(ct
 
 // ---------------------------------------------------------------- the Wet Grid
 
-const browse = (id: string, say: string): PoiVerb => ({ key: "F", label: "Browse", choice: "browse", guest: "allow", say, effects: [{ kind: "poi", id, state: "open" }] });
+// a locked guest browses and leaves no mark on the stall (round six)
+const browse = (id: string, say: string): PoiVerb => ({ key: "F", label: "Browse", choice: "browse", guest: "allow", say, effects: ctx => (ctx.p.locked ? [] : [{ kind: "poi", id, state: "open" }]) });
 
 const WET: PoiConfig[] = [
   {
@@ -514,7 +516,8 @@ const WET: PoiConfig[] = [
   },
   {
     id: "operator-desk",
-    label: ctx => (poiState(ctx, "operator-desk") === "closed" ? "Operator's desk — vacant" : "Operator's desk"),
+    // vacant for a body she is gone for: she keeps the desk and her offer for anyone who has not decided (npcs.ts; round six)
+    label: ctx => (poiState(ctx, "operator-desk") === "closed" && has(ctx, F.OPERATOR) ? "Operator's desk — vacant" : "Operator's desk"),
     plate: "plate-operator.jpg",
     verbs: [
       {
@@ -596,7 +599,8 @@ const WET: PoiConfig[] = [
   },
   {
     id: "hot-street",
-    label: ctx => (poiState(ctx, "hot-street") === "hot" ? "Hot street — flagged" : "Hot street"),
+    // hot is not flagged: the street flags itself only in meltdown weather (DESIGN §2 rule 7; the player-defect sweep, round six)
+    label: ctx => (poiState(ctx, "hot-street") === "hot" ? "Hot street — hot" : "Hot street"),
     plate: "house-war.jpg",
     verbs: [
       {
@@ -711,7 +715,7 @@ const CARE: PoiConfig[] = [
             { kind: "readiness", delta: 2 },
             { kind: "worldCount", key: W.BURIALS, delta: 1 },
           ];
-          if (waiting) out.push({ kind: "party", npc: "nara", state: "with" });
+          if (waiting) out.push({ kind: "party", npc: "nara", state: "with" }, { kind: "funeral" });
           out.push({
             kind: "say",
             text: sold
@@ -750,6 +754,7 @@ const CARE: PoiConfig[] = [
           { kind: "readiness", delta: READINESS_BURY },
           { kind: "restraint", delta: RESTRAINT_BURY_GAIN },
           { kind: "party", npc: "nara", state: "with" },
+          { kind: "funeral" },
           { kind: "history", buried: 1 },
           { kind: "wink", text: "You took a hole and called it weather. It came back as earth. Only burial makes it world again." },
           { kind: "notice", text: "The garden is in the ground. The Organs door is open.", tone: "gold" },
@@ -1340,7 +1345,7 @@ const ORGANS: PoiConfig[] = [
         choice: "read",
         guest: spectate,
         say: ctx => {
-          const g = Math.round(ctx.w.gestell);
+          const g = Math.floor(ctx.w.gestell); // the HUD's figure; the tax below is the one the node charges (round six)
           const ex = ctx.w.flags[W.EXTRACTIONS] ?? 0;
           const bu = ctx.w.flags[W.BURIALS] ?? 0;
           return `Cold desk. The weather at ${g}. Extractions ${ex}. Burials ${bu}. Tax ${gestellTax(g)} percent. Nobody at this desk will pretty it.`;

@@ -35,6 +35,7 @@ export const FLAG_GUEST = "A wet street. You are not flagged. You are not spoils
 export const FLAG_WHERE = "Not here. Flags are raised on the Wet Grid, in the Organs, in the Clearing.";
 export const FLAG_ON = "You flagged. Spoils are unbanked Bestand and exhibition copies. Cult and banked stay. Guests are not loot.";
 export const FLAG_OFF = "You lowered the flag. The street goes back to being a street.";
+export const FLAG_HELD = "The fight is warm. The flag stays up ten seconds past the last blow. A truce lowers it.";
 export const TRUCE_COPY = "Both unflag. Twenty seconds. Spoils stay where they are.";
 export const SPOILS_COPY = "Spoils from a person. Unbanked and copies. The cult hint stayed in the grave.";
 export const CAMP_COPY = "Camping the same grave feeds the Gestell. Your aura thins.";

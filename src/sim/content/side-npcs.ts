@@ -7,6 +7,7 @@
 import type { Ctx, DialogueChoice, DialogueNode, Effect, NpcDef, NpcState, Player } from "../types";
 import { NPC_HOMES } from "../map";
 import { C, F } from "./ids";
+import { GUEST_LOCK } from "./lines";
 import { glassDark } from "../launch";
 import { SF, SIDE_BY_ID, SIDE_PLACES, SQ, has, offerKey, offered, stepOf } from "./side";
 
@@ -57,6 +58,8 @@ const officerHub = (ctx: Ctx): string => {
   if (state === "ring") return finished(p, SQ.CENSUS)
     ? "He is under the shrine of the mute bell with a form on a board. \"Two with tongues. One without. Your count was right. I wanted to see the one without.\""
     : "He is under the shrine of the mute bell with a form on a board. \"Two with tongues. One without. Somebody counted them for Safety. I wanted to see the one without.\"";
+  // a locked guest is offered no hour (dialogue.ts lockedOut), so it is not invited to one either (round six)
+  if (p.locked) return GUEST_LOCK;
   if (p.guest) return "\"Unsealed. You can still carry paper. Safety has paper that needs carrying.\"";
   // IV.7, every other door: the rite done, the Annex desk reads like its plaque
   if (has(p, F.PASSING) && state === "home") return "\"Officer of Safety. The district is stable.\" He says it the way a plaque says it. The form on his desk is blank where a signature would be. He does not ask how the hour went; Safety does not keep that column.";
@@ -191,6 +194,7 @@ const omenAtGlass = (ctx: Ctx): boolean => finished(ctx.p, SQ.HOURS) || ctx.w.np
 const omenHub = (ctx: Ctx): string => {
   const { p, w } = ctx;
   if (finished(p, SQ.HOURS) || w.npcs["omen"]?.state === "glass") return "She is at the forecast glass with nothing to sell. \"I read the front now. For nothing. It is worse. It is better.\"";
+  if (p.locked) return GUEST_LOCK; // no hour to wait for (round six)
   if (p.guest) return "\"Unsealed and on the Kerb. You cannot see the front. You can wait under a bell. Anyone can wait.\"";
   return "\"Omen-reader. I read the front and I sell the hour. Ask for one or the other. Not both at once; they do not agree.\"";
 };
@@ -299,6 +303,7 @@ const omen: NpcDef = {
 const keeperHub = (ctx: Ctx): string => {
   const { p, w } = ctx;
   if (finished(p, SQ.NOTICE) || w.npcs["keeper"]?.state === "guarding") return "He is under the mute bell with the notice folded into the shrine cloth. \"They will send another. I will be here for that one too.\"";
+  if (p.locked) return GUEST_LOCK; // no broom to hold (round six)
   if (p.guest) return "\"Unsealed. You cannot keep a shrine. You can hold a broom. The city will not know the difference. I will.\"";
   return "\"Keeper. Three shrines, one vault, one bell that was cast without a tongue. Upkeep is Bestand. Everything else here is not for sale. Say what you want.\"";
 };
@@ -338,7 +343,8 @@ const keeper: NpcDef = {
       choices: [
         // what the journal sends you back with comes first, the offers after
         { id: "notice", label: "Safety sent a notice.", when: ({ p }) => atStep(p, SQ.NOTICE, 0), next: "notice-refuse" },
-        { id: "census", label: "I am counting bells for Safety.", when: ({ p }) => atStep(p, SQ.CENSUS, 0) || atStep(p, SQ.CENSUS, 1), next: "census-aside" },
+        // the count stands where the lock found it, so a locked body is not sent counting (round six)
+        { id: "census", label: "I am counting bells for Safety.", when: ({ p }) => !p.locked && (atStep(p, SQ.CENSUS, 0) || atStep(p, SQ.CENSUS, 1)), next: "census-aside" },
         { id: "swept", label: "The step is swept.", when: ({ p }) => atStep(p, SQ.STEP, 1), next: "step-done" },
         { id: "vault-done", label: "The copy is in the vault.", when: ({ p }) => atStep(p, SQ.VAULT, 1), next: "vault-take" },
         { id: "sweep", label: "I could sweep.", when: ({ p }) => !offered(p, SQ.STEP), next: "step" },

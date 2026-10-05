@@ -85,6 +85,14 @@ export function musicStep(state: MusicState, inputs: MusicInputs, nowMs: number)
   return { track, pulse, contactSince, lastContact };
 }
 
+/**
+ * The rite this body just stood for, or "": once per rite, when its own Passing count rises, whichever season it is and
+ * whatever the last season's outcome was (F.PASSING marks only the campaign's first; the player-defect sweep, round six).
+ */
+export function riteHeard(prev: { history: { passings?: number } }, next: { history: { passings?: number }; choices: Record<string, string> }): string {
+  return (next.history.passings ?? 0) > (prev.history.passings ?? 0) ? next.choices[C.PASSING] ?? "" : "";
+}
+
 /** The effects the difference between two snapshots calls for. Input cues (strike, heavy, dodge, page) are played by the scene and the HUD. */
 export function sfxFor(prev: Snap | null, next: Snap): SfxName[] {
   if (!prev) return [];
@@ -99,10 +107,8 @@ export function sfxFor(prev: Snap | null, next: Snap): SfxName[] {
   if ((b.flags[F.UNDER] ?? 0) > 0 && !(a.flags[F.UNDER] ?? 0)) out.push("under");
   if (b.history.buried > a.history.buried) out.push("bury");
   if ((b.flags[F.FREEZE] ?? 0) > 0 && !(a.flags[F.FREEZE] ?? 0)) out.push("freeze");
-  const passing = b.choices[C.PASSING];
-  if (passing !== a.choices[C.PASSING]) {
-    if (passing === "appearance") out.push("appearance");
-    else if (passing === "hijack") out.push("hijack");
-  }
+  const passing = riteHeard(a, b);
+  if (passing === "appearance") out.push("appearance");
+  else if (passing === "hijack") out.push("hijack");
   return out;
 }

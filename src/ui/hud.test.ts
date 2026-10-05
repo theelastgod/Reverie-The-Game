@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   auraTier, bearingTo, dodgeLine, formatSerial, heardStep, identityLine, joinNews, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
-  noticeDiff, pad2, parseSerial, pct, questLabel, questRows, roman, seconds, stanceLine, statusLine,
+  lockStep, noticeDiff, pad2, parseSerial, pct, questLabel, questRows, restraintBar, roman, seconds, stanceLine, statusLine,
   glassRows, creditRows, chipVerbs,
 } from "./format";
 import { TILE } from "../sim/map";
 import { AURA_PRESENT } from "../sim/constants";
-import { CREDITS as LINES_CREDITS } from "../sim/content/lines";
+import { CREDITS as LINES_CREDITS, GUEST_LOCK } from "../sim/content/lines";
+import { canSeeWink, spawnGuest } from "../sim/world";
 
 describe("formatSerial", () => {
   it("pads to four digits", () => {
@@ -282,5 +283,34 @@ describe("chipVerbs", () => {
     expect(chipVerbs({ ...angel, district: "kerb" }, null, 10).flag).toBeNull();
     expect(chipVerbs({ ...angel, truceUntil: 20 }, null, 10).flag).toBeNull();
     expect(chipVerbs({ ...angel, locked: true }, null, 10).flag).toBeNull();
+  });
+});
+
+describe("the player-defect sweep, round six", () => {
+  it("promises a guest only the wider step: a guest never sees a Wink", () => {
+    expect(stanceLine("restraint", false, 1, true)).toEqual({ text: "RESTRAINT", hint: "WIDER STEP" });
+    expect(stanceLine("storm", false, 1, true)).toEqual({ text: "STORM", hint: "BURNS RESTRAINT 1/S" });
+  });
+
+  it("floors the restraint figure, so WINKE DARK turns at the line the server reads", () => {
+    expect(restraintBar(29.6, false)).toEqual({ value: 29, dark: true, label: "RESTRAINT · WINKE DARK" });
+    expect(restraintBar(30, false)).toEqual({ value: 30, dark: false, label: "RESTRAINT" });
+    expect(restraintBar(10, true).label).toBe("RESTRAINT · BURNING");
+    const angel = { ...spawnGuest("a"), guest: false, aura: 50 };
+    for (let i = 0; i <= 15; i++) {
+      const r = 29 + i / 10;
+      expect(restraintBar(r, false).dark, String(r)).toBe(!canSeeWink({ ...angel, restraint: r }, 0, 50));
+    }
+  });
+
+  it("shows the lock panel again when the locked body presses the threshold once more, and nowhere else", () => {
+    const you = (locked: boolean, heardAt = 0, heard = "") => ({ locked, heard, heardAt });
+    expect(lockStep(null, you(true), null, false), "the first locked frame").toBe("show");
+    expect(lockStep(you(false), you(true), null, false), "the lock comes down").toBe("show");
+    expect(lockStep(you(true, 1), you(true, 1, GUEST_LOCK), "going-under", false), "nothing new heard").toBeNull();
+    expect(lockStep(you(true, 1), you(true, 2, GUEST_LOCK), "going-under", false), "asked again at the threshold").toBe("show");
+    expect(lockStep(you(true, 1), you(true, 2, GUEST_LOCK), "stall-1", false), "the same line at a stall").toBeNull();
+    expect(lockStep(you(true, 1), you(true, 2, GUEST_LOCK), "going-under", true), "already up").toBeNull();
+    expect(lockStep(you(true), you(false), null, true), "unlocked").toBe("hide");
   });
 });

@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 693 tests (2026-10-05), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 716 tests (2026-10-05), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -34,7 +34,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   finding reproduced and then challenged by a skeptic) confirmed and
   fixed twenty-one, a second round with six new lenses eighteen more,
   a third, run by hand, two, a fourth twenty-two, among them the
-  wallet as the login, and a fifth (2026-10-05) sixteen (see Done).
+  wallet as the login, a fifth (2026-10-05) sixteen, and a sixth (2026-10-05)
+  twenty-three, among them two PvP exploits (see Done).
 - **A rule for after the first deploy** (from round five): a body's
   record keeps its place on the spine as a step index, so once this
   branch is deployed and real bodies are saved, never insert a step
@@ -2436,6 +2437,78 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   fallen); a locked guest's objectives (the journal already says the
   lock); and the title's theme (yours, with the art).
 
+- The player-defect sweep, round six (2026-10-05; six lenses: a city run
+  for weeks, guests everywhere, every number in the purse, one Angel
+  griefing another, where a body can stand, the screen against the
+  server; each finding reproduced, then challenged by a skeptic).
+  Twenty-three confirmed and fixed:
+  - PvP: a flag raised, struck behind and lowered in the same instant let
+    one Angel hit another that could never hit back. A landed blow
+    between Angels now holds both raised flags up `FLAG_HOLD` (10 s; "The
+    fight is warm. The flag stays up ten seconds past the last blow. A
+    truce lowers it."); a truce still lowers both and a fall frees the
+    fallen. Two bodies trading falls at the Care shrine carried the whole
+    city into meltdown in 37 s: camping now feeds the weather once a
+    `CAMP_WINDOW` per camper, while the camper's aura pays every camp. A
+    flag is now lowered anywhere (raised only on flag ground), so a body
+    that falls flagged can stand down where it wakes.
+  - Guests: the lock panel (the wallet's way in) comes back when a locked
+    guest presses the threshold again after REMAIN IN THE NAVE, instead of
+    only on a reload; a locked guest reads the first altar and browses the
+    stalls (they answered the lock line), leaving no mark on the place;
+    the Officer, Halla and Dov answer a locked guest with the lock line
+    instead of inviting it to an hour it cannot take; the stance chip
+    promises a guest only the wider step; the van hour's wave moved onto
+    the van itself, out of the hot-street enforcer's reach (the street's
+    own sign could be used only inside it).
+  - The purse: the funeral desk paid, or the garden buried, brought Nara
+    back with her count of extractions still at four, so she left at the
+    very next one; both now start the count again (a `funeral` effect).
+    Ord, the cold desk, Nara and the slip quote the weather floored, as
+    the HUD and the rules read it, so they name the tax and the meltdown
+    that apply; a whole body keeps its repair paper; the upkeep hour's
+    journal no longer promises a weather change the sweeps never make;
+    the restraint bar is floored, so WINKE DARK turns at the server's line.
+  - A city run for weeks: later seasons' rites play their flash, video and
+    sound (the cue reads the body's own Passing count, not the first
+    rite's flag); an extraction digs a node's seed up, so Dwellers' K
+    does not die once the twelve nodes are seeded; a body keeps one flag
+    for the contest it last kept, not one per contest (old keys fold in
+    on read).
+  - The screen: the weather chip read UNNAMED for the whole game for
+    everyone; it reads the viewer's own naming. A hot street read
+    "flagged" and was drawn as a flag zone while no fight there was
+    flagged; it reads "Hot street — hot", and the red edge is the Wet
+    Grid's in meltdown weather only. The ledger lit BUY for a seller not
+    on the Grid (the board marks those rows away) and LIST for a print
+    decayed to nothing. The operator's desk read vacant while Vesper sat
+    beside it with her offer for anyone undecided. The prepare step said
+    Nara was at the ring while she stood silent at the garden.
+  - The server: a wallet restore swapped the record under the session's
+    body, and the next log diff compared the guest with the restored
+    Angel, writing false public rows (a link, a going-under, its whole
+    burial count); the log's baseline now takes the restored body.
+  `src/sim/sweep6.test.ts` (eighteen cases) and cases in hud, cues,
+  side-quests and session hold every fix; each fails on 42c8ab6. Judged
+  otherwise, each with its reason: a checkpoint over 128 keys (a local
+  SQLite-backed object took 1,000 in one put; the 128 check in the
+  runtime is on a KV object's multi-key get); the defender charged as
+  the camper, and one kill between wiping the camping record (CONTRACTS
+  defines camping by the killer's last kill, and T or V ends a fight;
+  the per-body aggressor and per-victim log are yours if you want
+  them); the truce imposed rather than requested (the one-press truce is
+  the contracted way out of a fight; a flag warm-up before T works is
+  yours if wanted); a guest's census walking the Officer out of the
+  Clearing (judged intended in round two); the history marks in the
+  world record (bounded by the supply at about 1.25 MB; the comment now
+  says so); notices a returning body sees for a frame; and two rites in
+  one log diff (narrow, and the news rows keep both). Left for you: the
+  street's own F read still sits inside enforcer one's reach (moving the
+  POI moves the House war's hold); Ord's gate lines still say Nara is at
+  the ring for a body that kept watch at the garden (shipped words);
+  the honest answer's news says "left the Annex" when the Officer was at
+  the Ring.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3519,6 +3592,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   worktree: the session smoke, `test:campaign:4` (Movements I to IV, the
   credits) and the render check (desktop and phone; the worktree's local
   log needed `npm run d1:migrate` first, or `/log/recent` answers 503).
+
+- The player-defect sweep, round six (2026-10-05): typecheck, 716 tests
+  in 52 files, the build. Every new or changed case was run against the
+  commit before (42c8ab6) and fails there: the eighteen in
+  `src/sim/sweep6.test.ts`, the HUD's three (the guest's stance hint,
+  the floored restraint bar, the lock panel's step), the cue's two (a
+  later season's rite), the session's two (the weather's name read per
+  body, the restore's log rows) and the van hour's two. On a fresh local
+  world from a worktree: the session smoke, `test:campaign:4` (Movement I
+  17.6 min, II 13.3, III 19.0, IV 9.6; the rite `failed` at readiness 52
+  as before) and the render check (desktop and phone).
 
 ## Backlog
 

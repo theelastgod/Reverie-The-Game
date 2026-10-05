@@ -10,7 +10,7 @@
 import { BODY_R, LISTING_PRICE_MAX, LISTING_PRICE_MIN, MAX_HP, NODE_CHARGES } from "./constants";
 import { HOUSES } from "./identity";
 import { circleHitsWalls, walksBetween } from "./map";
-import { POI_STATES } from "./content/ids";
+import { F, POI_STATES } from "./content/ids";
 import type { Fourfold, Item, Listing, Player, WorldState } from "./types";
 import { emptyWorld, spawnGuest } from "./world";
 
@@ -25,6 +25,23 @@ const num = (v: unknown, fallback: number, min = -Infinity, max = Infinity): num
 const bool = (v: unknown, fallback: boolean): boolean => (typeof v === "boolean" ? v : fallback);
 const str = (v: unknown, fallback: string): string => (typeof v === "string" ? v : fallback);
 const arr = <T>(v: unknown, keep: (x: unknown) => x is T): T[] => (Array.isArray(v) ? v.filter(keep) : []);
+
+/**
+ * A record saved before round six kept one `clearing:kept:<openedAt>` flag per contest it kept; they fold into the one
+ * flag holding the last, so a contest live at the deploy does not pay twice and the record stops growing.
+ */
+function foldKept(flags: Record<string, number>): Record<string, number> {
+  const prefix = `${F.CLEARING_KEPT}:`;
+  let last: number | null = null;
+  for (const key of Object.keys(flags)) {
+    if (!key.startsWith(prefix)) continue;
+    const at = Number(key.slice(prefix.length));
+    if (Number.isFinite(at) && (last === null || at > last)) last = at;
+    delete flags[key];
+  }
+  if (last !== null && !(typeof flags[F.CLEARING_KEPT] === "number" && flags[F.CLEARING_KEPT] >= last)) flags[F.CLEARING_KEPT] = last;
+  return flags;
+}
 
 /** A record whose values are all finite numbers. */
 function numRecord(v: unknown): Record<string, number> {
@@ -103,7 +120,7 @@ export function migratePlayer(saved: unknown, fallbackId: string, now = 0): Play
   p.movement = ([1, 2, 3, 4, 5] as const).includes(p.movement) ? p.movement : 1;
   p.facing = isDict(s.facing) ? { dx: num(s.facing.dx, 1), dy: num(s.facing.dy, 0) } : base.facing;
   p.party = { ...base.party, ...(isDict(s.party) ? strRecord(s.party) : {}) } as Player["party"];
-  p.flags = numRecord(s.flags);
+  p.flags = foldKept(numRecord(s.flags));
   p.quests = numRecord(s.quests);
   p.choices = strRecord(s.choices);
   const r = isDict(s.respawn) ? s.respawn : {};

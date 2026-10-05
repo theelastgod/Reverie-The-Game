@@ -45,6 +45,8 @@ export const F = {
   BELL: "bell", // Movement III: struck the hour bell once on the way to the glass
   FAILED: "failed", // saw a failed Passing
   FLAG_NEWS: "news:flag", // when this body's last flag on the hot street made the news (once per FLAG_NEWS_GAP)
+  CLEARING_KEPT: "clearing:kept", // the openedAt of the last contest this body kept: its keep pays once per contest (round six)
+  CAMP_FED: "camp:fed", // when this body's camping last fed the weather (once per CAMP_WINDOW; the player-defect sweep, round six)
   TRACE: "trace", // faced the trace at the Gold Ring: once, for its readiness (the player-defect sweep: it paid on every press)
   GLASS_FAILED: "failed:glass", // saw it in the forecast glass itself (III.7's "Face last season"); standing at the hole sets FAILED alone
   FIGURE: "figure", // Movement III: heard Ord's figure for last season at the glass (it was captured, not short)

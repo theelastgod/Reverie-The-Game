@@ -3,7 +3,7 @@ import { POSITIONS } from "../sim/map";
 import { C, F } from "../sim/content/ids";
 import type { Snap } from "../sim/protocol";
 import type { Enemy } from "../sim/types";
-import { COMBAT_ENTER_MS, COMBAT_LEAVE_MS, MUSIC_IDLE, baseTrack, bedFor, musicInputs, musicStep, sfxFor, type MusicInputs, type MusicState } from "./cues";
+import { COMBAT_ENTER_MS, COMBAT_LEAVE_MS, MUSIC_IDLE, baseTrack, bedFor, musicInputs, musicStep, riteHeard, sfxFor, type MusicInputs, type MusicState } from "./cues";
 
 type Over = { district?: Snap["district"]; you?: Partial<Snap["you"]>; enemies?: Partial<Enemy>[] };
 
@@ -110,11 +110,23 @@ describe("sfxFor", () => {
     expect(sfxFor(a, snap({ you: { flags: { [F.UNDER]: 1 } } }))).toEqual(["under"]);
     expect(sfxFor(a, snap({ you: { history: { buried: 1 } as never } }))).toEqual(["bury"]);
     expect(sfxFor(a, snap({ you: { flags: { [F.FREEZE]: 1 } } }))).toEqual(["freeze"]);
-    expect(sfxFor(a, snap({ you: { choices: { [C.PASSING]: "appearance" } } }))).toEqual(["appearance"]);
-    expect(sfxFor(a, snap({ you: { choices: { [C.PASSING]: "hijack" } } }))).toEqual(["hijack"]);
-    expect(sfxFor(a, snap({ you: { choices: { [C.PASSING]: "failed" } } }))).toEqual([]);
-    const same = snap({ you: { choices: { [C.PASSING]: "appearance" } } });
+    // a rite is the body's own Passing count rising (round six): every season's, whatever the last outcome was
+    const rite = (passings: number, outcome: string) => snap({ you: { history: { passings, buried: 0, looted: 0, houses: [] } as never, choices: { [C.PASSING]: outcome } } });
+    expect(sfxFor(a, rite(1, "appearance"))).toEqual(["appearance"]);
+    expect(sfxFor(a, rite(1, "hijack"))).toEqual(["hijack"]);
+    expect(sfxFor(a, rite(1, "failed"))).toEqual([]);
+    const same = rite(1, "appearance");
     expect(sfxFor(same, same)).toEqual([]);
+    expect(sfxFor(rite(1, "appearance"), rite(2, "appearance")), "a later season's same outcome still sounds").toEqual(["appearance"]);
+    expect(sfxFor(rite(1, "hijack"), rite(1, "appearance")), "a choice changed with no rite is quiet").toEqual([]);
+  });
+
+  it("hears a rite once per rise of the body's own Passing count, with its own outcome (round six)", () => {
+    const you = (passings: number, outcome = "appearance") => ({ history: { passings }, choices: { [C.PASSING]: outcome } });
+    expect(riteHeard(you(0), you(1))).toBe("appearance");
+    expect(riteHeard(you(1), you(2, "hijack"))).toBe("hijack");
+    expect(riteHeard(you(2), you(2))).toBe("");
+    expect(riteHeard({ history: {} }, { history: {}, choices: {} })).toBe("");
   });
 
   it("orders several diffs the way they happened to the body", () => {

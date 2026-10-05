@@ -422,7 +422,7 @@ const WET: Quest[] = [
         id: "wave",
         title: "Wave it through",
         detail: "The van wants the street at the south end. Press E to wave it through.",
-        target: "hot-street",
+        target: "armored-van", // the van at the south end, out of the enforcers' reach (round six)
         plate: "stall-surface.jpg",
         done: ({ p, w }) => has(p, SF.VAN_WAVED) || poiIs(w, "hot-street", "hot"),
         // The one who waved it through parks it; a street already hot (another van, or a print pulled off the Grid) closes the step with no van and no news.
@@ -1108,7 +1108,7 @@ const RING: Quest[] = [
       step({
         id: "two",
         title: "Sweep the first two shrines",
-        detail: "Upkeep costs Bestand. Press Q at the first shrine, then the second. The Gestell thins a little for each.",
+        detail: "Upkeep costs Bestand. Press Q at the first shrine, then the second. The weather thins by an amount nobody feels.",
         target: ({ p }) => (has(p, SF.SWEEP_1) ? "shrine-2" : "shrine-1"),
         plate: "shrine-upkeep.jpg",
         done: ({ p }) => has(p, SF.SWEEP_1) && has(p, SF.SWEEP_2),

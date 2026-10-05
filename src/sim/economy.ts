@@ -76,6 +76,9 @@ const NODE_SEEDED = "A seed in the ground under the node. The Clearing will know
 // The repair paper mends a body, as the stall that sells it says; holding the insurance paper is not the death it is for
 // (LINES.INSURANCE_USED is the waking's, killPlayer's).
 const REPAIR_USED = "The body holds again. Cult objects were never cracked.";
+// A whole body keeps its paper (the stall's rule, pois.ts; the client's line for the same press): the server holds it too, so a
+// second press before the healed frame arrives spends nothing (the player-defect sweep, round six).
+const NOTHING_TO_MEND = "Nothing to mend. The paper keeps.";
 const INSURANCE_HELD = "You hold the paper. Death walks you back to where you fell, once.";
 const MARKET_GUEST = "A stall of lights. A guest cannot list or buy a sky they cannot see.";
 const MARKET_NOT_EXHIBITION = "Cult does not list. It stays in the hand that buried it.";
@@ -222,7 +225,10 @@ export function applyNode(w: WorldState, id: string, nodeId: string, op: "extrac
         keptBy: "",
         keepers: [],
         announcedUntil: 0,
+        // an extraction digs the seed up, as it unkeeps the node: the next Dweller's K has ground again (round six)
+        seed: false,
       });
+      if (node.seed) next = { ...next, clearing: { ...next.clearing, seeds: next.clearing.seeds.filter(s => s !== node.id) } };
       next = { ...next, gestell: clampGestell(next.gestell + GESTELL_EXTRACT) };
       next = bumpFlag(next, W.EXTRACTIONS, 1);
       const extractedSinceFuneral = p.extractedSinceFuneral + 1;
@@ -327,6 +333,7 @@ export function applyUse(w: WorldState, id: string, itemId: string): WorldState 
     return speak(w, removeItem({ ...p, insured: true }, itemId), INSURANCE_HELD);
   }
   if (itemId === ITEM_REPAIR) {
+    if (p.hp >= MAX_HP) return speak(w, p, NOTHING_TO_MEND);
     return speak(w, removeItem({ ...p, hp: MAX_HP }, itemId), REPAIR_USED);
   }
   return speak(w, p, LINES.CANT_USE);

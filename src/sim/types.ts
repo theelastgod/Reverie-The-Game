@@ -126,6 +126,7 @@ export type Player = {
   // pvp
   flagged: boolean;
   truceUntil: number;
+  flagHeldUntil?: number; // a landed blow between Angels holds both raised flags up until then (FLAG_HOLD; the player-defect sweep, round six)
   lastKillId: string;
   lastKillAt: number;
   campCount: number;
@@ -239,7 +240,8 @@ export type HouseWar = {
 
 /** `fee` is a listing fee kept back from the sale (or charged on the cancel) when the seller could not pay it at the stall. */
 // forge: posted by Quill's forge through the `list` effect; its sale, and only its, is the one her line after the forge reads (F.FORGE_SOLD)
-export type Listing = { id: string; sellerId: string; sellerName: string; item: Item; price: number; at: number; fee?: number; forge?: true };
+// away: wire-only, the snapshot's mark on a listing whose seller is not on the Grid (a buy waits for them; round six)
+export type Listing = { id: string; sellerId: string; sellerName: string; item: Item; price: number; at: number; fee?: number; forge?: true; away?: true };
 
 export type ClearingState = {
   open: boolean;
@@ -321,6 +323,7 @@ export type Effect =
   | { kind: "current"; value: Current }
   | { kind: "movement"; value: Movement }
   | { kind: "party"; npc: string; state: PartyState }
+  | { kind: "funeral" } // a funeral paid or the garden buried: the extractions Nara counts start again (round six)
   | { kind: "npc"; id: string; x?: number; y?: number; district?: DistrictId; present?: boolean; state?: string }
   | { kind: "poi"; id: string; state: string }
   | { kind: "news"; text: string }

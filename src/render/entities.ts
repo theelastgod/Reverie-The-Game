@@ -7,7 +7,7 @@
  */
 import Phaser from "phaser";
 import { ENEMY, AURA_DIM, AURA_PRESENT, CLEARING_RADIUS, GESTELL_MELTDOWN, MAX_HP } from "../sim/constants";
-import { DISTRICT_BY_ID, PATCHES, POIS, POI_LIST, TILE } from "../sim/map";
+import { DISTRICT_BY_ID, POIS, POI_LIST, TILE } from "../sim/map";
 import type { EnemyView, NodeView, NpcView, PublicPlayer, Snap, WreckageView, YouView } from "../sim/protocol";
 import type { Messenger, Stance } from "../sim/types";
 import { COLOR, DEPTH, NPC_SPRITES, TEX, UI_FONT, bodyDepth } from "./floors";
@@ -104,7 +104,6 @@ const ENEMY_TINT: Record<EnemyView["tint"], number> = {
   paper: 0xffffff,
 };
 const AURA_SIZE = [0, 64, 80, 98] as const;
-const HOT_STREET = PATCHES.find((p) => p.id === "patch-hot-street");
 const LOW_HP = 0.35;
 const LOW_HP_TINT = 0xff8fa8;
 
@@ -555,11 +554,10 @@ export class Entities {
     }
     for (const gr of snap.graves) this.drawSlab(g, gr.x, gr.y);
 
-    // The flag zone: the hot street when it is hot, the whole Wet Grid in meltdown weather.
-    if (you.id && this.youBody && snap.district === "wet") {
-      const meltdown = snap.gestell >= GESTELL_MELTDOWN;
-      const hot = this.poiState("hot-street") === "hot";
-      const rect = meltdown ? DISTRICT_BY_ID.wet.rect : hot ? HOT_STREET?.rect : undefined;
+    // The flag zone: the whole Wet Grid in meltdown weather, where the street flags every body itself (DESIGN §2 rule 7). A hot
+    // street is opt-in like any other and is drawn by its tint, not as a zone (the player-defect sweep, round six).
+    if (you.id && this.youBody && snap.district === "wet" && snap.gestell >= GESTELL_MELTDOWN) {
+      const rect = DISTRICT_BY_ID.wet.rect;
       if (rect) {
         g.lineStyle(2, COLOR.hot, 0.45 + 0.35 * pulse);
         g.strokeRect(rect.x * TILE + 3, rect.y * TILE + 3, rect.w * TILE - 6, rect.h * TILE - 6);

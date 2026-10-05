@@ -58,7 +58,8 @@ and knob, planted where a finger lands), `hud-prompt` (nearest interaction with 
 text, wink, choices), `hud-journal` (field notes: plate, movement, title,
 detail, bearing, the glass for a reader (`.journal-glass`, hidden for anyone else: Snap.glass through `format.ts` `glassRows`, its count run down against `snap.now`), quests list), `hud-minimap` (canvas), `hud-lock` (guest lock
 panel: mark, "A GUEST CANNOT PREPARE THE GROUND", link test Angel button and a
-serial input 1–7777), `hud-connection`, `hud-credits` (shown when `you.flags.credits`
+serial input 1–7777; shown when the body is first seen locked or becomes locked, and, after REMAIN IN THE NAVE, again
+when the locked body presses the threshold and hears the lock line there: `format.ts` `lockStep`, round six), `hud-connection`, `hud-credits` (shown when `you.flags.credits`
 turns 1; names only the game: the roll is `LINES.CREDITS`, which the HUD appends
 under the mark at mount through `format.ts` `creditRows`, the game's name as a
 title and every other line as `.credits-prose`; under reduced motion the roll
@@ -87,7 +88,9 @@ stands still and the focused dialog scrolls it, the hint pinned clear of the las
   (`serial-wreckage.jpg` 48², ADD), failed passings (`failed-passing.jpg`
   56×32), POI markers (a thin gold ring at interactable POIs when a verb is
   available; label in proximity only), clearing ring state (gold when open,
-  wine when failed), hot street tint, frozen districts (lavender scanline overlay).
+  wine when failed), hot street tint, frozen districts (lavender scanline overlay). The flag
+  zone's red edge is the Wet Grid's in meltdown weather only, where the street flags every body itself; a
+  hot street is opt-in like any other and shows by its tint and its label "Hot street — hot" (round six).
 - Camera: follows `you` with lerp 0.12, zoom 1.15 at ≥1280 wide else 1.0,
   bounds = world. Depth: floors 0, patches 1, walls 2, props 3, ground marks 4,
   bodies by y (10 + y/1000), labels 20, fx 30.
@@ -104,7 +107,8 @@ stands still and the focused dialog scrolls it, the hint pinned clear of the las
   at the claims desk and the listing board; closed with L there, it stays closed until the body
   walks to something else). The ledger rebuilds its rows when `ledgerKey` changes (a listing's
   price included, so the resistance's Clearing reads the city's number) and keeps a price being
-  typed, and its focus, across the rebuild.
+  typed, and its focus, across the rebuild. BUY is dark on a row whose seller is not on the Grid (the snapshot's
+  `away`; the note says "seller away"), and LIST shows only on a print with value left (round six).
   Touch (`src/ui/stick.ts`, pure and unit-tested; the scene applies it): a
   finger down on the canvas plants a stick where it lands (`Hud.showStick`),
   a drag from there is the eight-way intent the keys send (45-degree
@@ -119,10 +123,12 @@ stands still and the focused dialog scrolls it, the hint pinned clear of the las
   buttons already, and so are I and V: `#hud-use` (USE PAPER) shows while
   the purse holds a paper worth using (a guest's too, since 2026-10-05: the
   server lets a guest use what the stall sold it) and `#hud-flag` (RAISE FLAG or LOWER
-  FLAG) where the street allows a flag and no truce runs (`chipVerbs` in
+  FLAG) where the street allows a flag, LOWER FLAG wherever a raised one stands (round six), and no truce runs (`chipVerbs` in
   `format.ts`; since 2026-10-04). `#hud-audio` (AUDIO ON/OFF) is
   `.interactive` like every HUD button, so a finger can mute (a phone has no
-  O key; since 2026-10-05).
+  O key; since 2026-10-05). The stance chip's hint for a guest is "WIDER STEP" (a guest never sees a Wink);
+  the restraint bar shows the floored figure, so WINKE DARK turns at the line the server reads (`restraintBar`;
+  round six).
 - 60 fps target: no per-tile GameObjects; reuse sprites by id; cull labels.
 
 ## Network (D1)
