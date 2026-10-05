@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 678 tests (2026-10-05), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 679 tests (2026-10-05), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -2365,6 +2365,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   before the step, and the old record is deleted only when it came
   back. A session test lands the link after a due step with a filling
   guest; it fails on 6f4b0be.
+
+- A close inside the coalescing window (2026-10-05, the sweep's fifth
+  round): a tab that closed within the 20 ms before the next alarm took
+  its coalesced action's writeback rows with it (the close removed the
+  body before the log read the city), and a link coalesced there never
+  moved the serial's index, so a later wallet link could not find the
+  Angel. The close now reads the log while the body is still in the
+  city and claims an unclaimed seal as it writes the leaving body. A
+  session test fails on b86554f.
 
 ## Verified (2026-09-25, integration)
 

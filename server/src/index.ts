@@ -531,6 +531,14 @@ export class ReverieWorld {
     // The leaving body is written when it changed since its last write, and its stamp always.
     const leaving: Record<string, unknown> = player ? { [seenKey(session.token)]: Date.now() } : {};
     if (player && this.saved.get(session.id) !== player) leaving[playerKey(session.token)] = player;
+    // A seal its last checkpoint had not yet claimed (a link coalesced into the next alarm) is claimed as it leaves, as a
+    // live body's would have been: the serial's index names the newest proven link.
+    const claim = player && !player.guest && player.serial !== null && this.serialOwners.get(player.serial) !== session.token ? player.serial : null;
+    if (claim !== null) leaving[serialKey(claim)] = session.token;
+    // The writeback log reads the city while the body is still in it: what it did since the last diff (a coalesced link,
+    // a burial) is logged, not lost with the body (the player-defect sweep, round five).
+    const closing = logEventsFor(this.logged, this.w, Date.now());
+    this.logged = this.w;
     this.sessions.delete(ws);
     this.stamped.delete(session.token);
     if (![...this.sessions.values()].some(s => s.token === session.token)) this.wallets.delete(session.token);
@@ -539,6 +547,11 @@ export class ReverieWorld {
     this.withBody(session.id, null);
     this.intentAt.delete(session.id);
     await this.checkpoint(leaving);
+    if (claim !== null) this.serialOwners.set(claim, session.token);
+    if (closing.length) {
+      this.sink.push(closing);
+      if (this.env?.LOG) this.ctx.waitUntil(this.sink.flush(this.env.LOG));
+    }
     this.broadcast(true);
   }
 

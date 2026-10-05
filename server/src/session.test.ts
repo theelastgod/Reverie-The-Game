@@ -1018,6 +1018,25 @@ describe("the writeback log", () => {
     expect(d.batches.flat().length).toBe(1);
   });
 
+  it("logs a coalesced link and claims its serial when the tab closes before the next alarm (the sweep, round five)", async () => {
+    const d = logDb();
+    const { world, ctx, data } = await worldHarness(null, [], [], { ...DEV_ENV, LOG: d as never });
+    const a = socket();
+    const b = socket("b", otherToken);
+    await world.join(token, a as never);
+    await world.join(otherToken, b as never);
+    vi.setSystemTime(1000);
+    await world.webSocketMessage(b as never, '{"t":"stance"}'); // opens the 20 ms window
+    vi.setSystemTime(1005);
+    await world.webSocketMessage(a as never, JSON.stringify({ t: "link", serial: TEST_SERIAL, sig: "mock" })); // rides the next alarm
+    vi.setSystemTime(1010);
+    await world.webSocketClose(a as never); // and the tab is gone before it
+    for (const call of (ctx.waitUntil as ReturnType<typeof vi.fn>).mock.calls) await call[0];
+    expect(d.batches.flat().map(st => st.values[2])).toContain("link");
+    expect(data.get(`serial:v2:${TEST_SERIAL}`), "the newest proven link holds the serial's index").toBe(token);
+    expect((data.get(playerKey(token)) as Player).serial).toBe(TEST_SERIAL);
+  });
+
   it("writes nothing and never touches waitUntil without the binding", async () => {
     const { world, ctx } = await worldHarness(null);
     const ws = socket();
