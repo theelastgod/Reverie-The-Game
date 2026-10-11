@@ -387,7 +387,8 @@ const M4_STEPS: QuestStep[] = [
     title: "The act",
     // Nara offers the burial only while she is with the body (round fifteen)
     detail: ctx => `A mortality act before the ring takes anyone. Q at the buried garden keeps watch. ${ctx.p.party.nara === "gone" ? NARA_LEAVES : ctx.p.party.nara === "waiting" ? NARA_WAITS : "Nara offers a burial."} Ione Kade in the Care has a last word; she will not return. F speaks.`,
-    target: ctx => (chose(ctx, C.MORTALITY, "lastword") || (ctx.w.flags[W.IONE_GONE] ?? 0) > 0 ? "wreckage-garden" : "home:ione"),
+    // Ione is on her bench for every body but the one she gave her last word to (npcs.ts personal): the bearing follows her (round seventeen)
+    target: ctx => (chose(ctx, C.MORTALITY, "lastword") ? "wreckage-garden" : "home:ione"),
     plate: "plate-ione.jpg",
     done: ctx => has(ctx, F.MORTALITY),
     onComplete: ctx => [notice(chose(ctx, C.MORTALITY, "lastword") ? "That was the last word. Do not make a story of it." : chose(ctx, C.MORTALITY, "burial") ? "You stood at the grave. It counts." : "You kept watch. It counts.", "gold")],

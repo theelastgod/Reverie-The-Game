@@ -2887,6 +2887,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   aura, spent restraint, the weather), and the engine's news and
   notices hold.
 
+- The player-defect sweep, round seventeen (2026-10-11; Backlog 0, the
+  dialogue-path scan: every person's choices walked to depth five for
+  2,500 coherent bodies, 24,765 dialogues reaching 167 of 185 nodes;
+  cases in `sweep17.test.ts`). Fixed: Ord's "Alone" reply at the Care
+  gate said "Nara will not leave the ring for it" to a body whose Nara
+  had walked or waited on her street, one node after his gate line said
+  otherwise; it reads her state as the gate does. And the mortality
+  step's bearing went to the garden once any Angel had Ione's last word,
+  though she is still on her bench for every other body and still offers
+  it; the bearing follows her for this body. Found sound: no missing
+  node or broken `next`, no choice that does nothing but a deliberate
+  leave, no refused effect taken silently, no reward paid twice on a
+  reopen, and every text read after a choice against the state the
+  choice left.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -4020,12 +4035,6 @@ they are discovered; keep this list honest. As of 2026-10-02 items 1–8 and
 10–12 are the owner's, a real device's or the network's to finish, and 9 is
 done; item A is the owner's new direction and the routine's work from now
 on; after it, the routine takes whatever it discovers, and adds what it finds.
-
-0. **The dialogue-path scan (round sixteen's second lens), not yet
-   run** (stopped at the usage limit): every person's choices walked to
-   depth five for coherent bodies, checking choices that do nothing,
-   text after a choice against the state its effects left, refused
-   effects answered with a line, and rewards a reopened path pays twice.
 
 A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    a story of the quality the master brief asks for, the enemy a shadow

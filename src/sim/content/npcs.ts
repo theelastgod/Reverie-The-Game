@@ -797,7 +797,8 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   "gate-alone": {
     id: "gate-alone",
-    text: "He writes it without looking up. Alone. Your own counsel, then; the hour cannot be claimed off a person who is not selling anything. We count from the gate. Nara will not leave the ring for it. I would not ask her to.",
+    // Nara's clause as she stands for this body, as the gate's own line has it (round seventeen)
+    text: (ctx: Ctx) => `He writes it without looking up. Alone. Your own counsel, then; the hour cannot be claimed off a person who is not selling anything. We count from the gate. ${naraClause(ctx, "Nara will not leave the ring for it. I would not ask her to.", "Nobody reads the number at the ring. I will read it from here.", "Nara is on her street; I will read the number from here.")}`,
     wink: "Alone is not brave and it is not sad. It is the second column, and somebody finally filled it.",
     effects: [
       { kind: "choice", key: C.PARTY, value: "alone" },

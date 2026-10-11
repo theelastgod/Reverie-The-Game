@@ -1290,7 +1290,7 @@ The paper panel, the gold mark:
 [C.PARTY with; F.GATE; readiness +4; his station moves into the ring once the ground is kept]
 
 **ORD** — `gate-alone` (shipped)
-> He writes it without looking up. Alone. Your own counsel, then; the hour cannot be claimed off a person who is not selling anything. We count from the gate. Nara will not leave the ring for it. I would not ask her to.
+> He writes it without looking up. Alone. Your own counsel, then; the hour cannot be claimed off a person who is not selling anything. We count from the gate. Nara will not leave the ring for it. I would not ask her to. *(Nara gone or on her street: "Nobody reads the number at the ring. I will read it from here." / "Nara is on her street; I will read the number from here."; round seventeen)*
 ✦ *Alone is not brave and it is not sad. It is the second column, and somebody finally filled it.*
 [C.PARTY alone; F.GATE; restraint +8 (Safety's door into the rite shuts past 50); he keeps the gate; news (shipped since the movements audit): "An Angel chose to stand alone in the Clearing. Ord counts from the gate."]
 
