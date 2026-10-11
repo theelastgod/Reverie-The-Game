@@ -12,7 +12,7 @@ import {
 } from "../constants";
 import { cityFigure, weatherBand } from "../protocol";
 import { C, F, W, seasonPassingFlag } from "./ids";
-import { WEATHER_LABELS, WEATHER_NAMED } from "./lines";
+import { GUEST_LOCK, WEATHER_LABELS, WEATHER_NAMED } from "./lines";
 import { clearingPrice, listClearing, moveClearing } from "./market";
 import { SIDE_PLACES } from "./side";
 import { coldClaimed } from "./caul";
@@ -277,7 +277,9 @@ const NAVE: PoiConfig[] = [
         when: ctx => !(has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA)) || has(ctx, F.UNDER),
         guest: "allow",
         say: ctx => {
-          if (has(ctx, F.UNDER)) return "The threshold. You have been under it. The Care is south, through the gate.";
+          // an Angel unsealed back to a guest (its serial walks in another body) is locked here like any guest: the lock line
+          // brings its panel back (round nine)
+          if (has(ctx, F.UNDER)) return ctx.p.guest ? GUEST_LOCK : "The threshold. You have been under it. The Care is south, through the gate.";
           if (!has(ctx, F.BURIED_NARA)) return "A lip of concrete and under it, a dark that is a floor. Nara holds a grave open. Close it first.";
           return "A lip of concrete. The weather has no name yet. Give it one at the plaque before you go under it.";
         },

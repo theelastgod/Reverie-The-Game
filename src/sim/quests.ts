@@ -278,6 +278,8 @@ export function activeQuests(ctx: Ctx): { quest: Quest; step: QuestStep }[] {
 export function objectiveFor(ctx: Ctx): Objective | null {
   const p = ctx.p;
   for (const q of spine()) {
+    // a guest's journal shows no step it cannot take: an unsealed Angel's Movement II waits for its seal (round nine)
+    if (p.guest && !q.guestLegal) continue;
     const s = p.quests[q.id];
     if (s !== undefined && s < q.steps.length) return objectiveOf(ctx, q, q.steps[s]);
   }

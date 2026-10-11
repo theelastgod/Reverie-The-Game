@@ -3,9 +3,11 @@
 import { describe, expect, it } from "vitest";
 import type { Player, WorldState } from "./types";
 import { DT, LAUNCH_OFFSET } from "./constants";
-import { NPC_STATIONS, districtAt } from "./map";
+import { NPC_STATIONS, POSITIONS, districtAt } from "./map";
 import { emptyWorld, spawnGuest, tickWorld } from "./world";
-import { npcView } from "./snapshot";
+import { npcView, snapshotFor } from "./snapshot";
+import { applyAction, unsealBody } from "./actions";
+import { GUEST_LOCK } from "./content/lines";
 import { F } from "./content/ids";
 
 function body(w: WorldState, id: string, at: { x: number; y: number }, patch: Partial<Player> = {}): WorldState {
@@ -25,5 +27,20 @@ describe("systems colliding in one step", () => {
     expect(me(w).dialogue?.node).toBe("oval-launch");
     expect(npcView({ w, p: me(w), now: w.now }, w.npcs.caul)?.state).toBe("glass");
     expect(me(w).dialogue?.text).not.toContain("Grid's gate");
+  });
+});
+
+describe("a guest becoming an Angel, and an Angel unsealed back to a guest", () => {
+  it("an unsealed Angel at the threshold hears the guest's lock, and its journal holds no Movement II step it cannot take", () => {
+    let w = body(emptyWorld(), "a", { x: 0, y: 0 }, { movement: 2, flags: { [F.ANGEL]: 1, [F.UNDER]: 1 } });
+    const players = new Map(w.players);
+    players.set("a", unsealBody(me(w), w.now));
+    w = tickWorld({ ...w, players }, DT);
+    const at = POSITIONS["going-under"];
+    expect(Math.hypot(me(w).x - at.x, me(w).y - at.y)).toBeLessThan(80);
+    w = applyAction(w, "a", { t: "interact", targetId: "going-under", choice: "look" });
+    expect(me(w).heard).toBe(GUEST_LOCK);
+    const objective = snapshotFor(w, "a").objective;
+    expect(objective?.id ?? "", "no Movement II step for a sealless body").not.toMatch(/^m2/);
   });
 });

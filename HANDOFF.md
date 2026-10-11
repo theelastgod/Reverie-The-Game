@@ -2709,6 +2709,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the ring in the step before a rite (the finder's rite failed at
   meltdown on any step, roll or not: the rule needs an open, held
   Clearing, not two bodies standing in a set one).
+  From the guest lens, two fixed (second part). A wallet link with a
+  second wallet on a body already sealed rebound the body: the Angel's
+  serial was dropped for the new address's (none: "the wallet holds no
+  Angel"), the holder's seal gone from a living body; the link now
+  answers with the body's own address and serial and changes nothing
+  (`session.test.ts`). And an Angel unsealed back to a locked guest at
+  the threshold (its serial relinked elsewhere) read "You have been under
+  it. The Care is south" at the going-under, and its journal kept its
+  Movement II step it could not take; the look says the guest's lock and
+  the journal skips the spine steps a guest cannot take
+  (`sweep9.test.ts`).
 
 ## Verified (2026-09-25, integration)
 

@@ -350,6 +350,11 @@ export class ReverieWorld {
     // device, cleared cookies, a cookie past its month), comes back into this session rather than a new body taking the seal.
     // Only a body never sealed gives way: one that was an Angel keeps its own progress and is resealed as before.
     const fresh = this.w.players.get(live.id);
+    // One body, one seal: an Angel already bound to an address is not rebound by another (a stale tab's wallet button on the
+    // same cookie would overwrite the binding the holder logs in with, and strand the Angel's record; round nine).
+    if (fresh && !fresh.guest && fresh.wallet && fresh.wallet !== address) {
+      return Response.json({ ok: true, address: fresh.wallet, serial: fresh.serial }, { headers });
+    }
     const kept = serial === null || !fresh?.guest || fresh.history.houses.length > 0 ? null : await this.sealedElsewhere(serial, address, token);
     if (!this.w.players.has(live.id)) return refuse(409, "no-session"); // the body left while the chain answered
     // The restore is taken before the world steps: a step replaces a changing body's object (a guest's restraint still

@@ -530,6 +530,20 @@ describe("wallet login", () => {
     expect(await second.json()).toEqual({ ok: true, address: addressOf(HOLDER), serial: null, walking: true });
   });
 
+  it("a second wallet linked to a body already sealed leaves the Angel and its wallet as they were (round nine)", async () => {
+    const { world } = await worldHarness(null);
+    const ws = socket();
+    await world.join(token, ws as never);
+    let message = await challenge(world, HOLDER);
+    await world.fetch(post("/wallet/link", token, { address: addressOf(HOLDER), signature: ethSign(message, HOLDER) }));
+    message = await challenge(world, STRANGER);
+    const res = await world.fetch(post("/wallet/link", token, { address: addressOf(STRANGER), signature: ethSign(message, STRANGER) }));
+    expect(await res.json()).toEqual({ ok: true, address: addressOf(HOLDER), serial: 42 });
+    const you = last(ws).you;
+    expect(you).toMatchObject({ guest: false, serial: 42, wallet: addressOf(HOLDER) });
+    expect(you.heard).not.toBe(LINES.LINK_NO_ANGEL);
+  });
+
   it("restores the Angel this wallet sealed under a session no longer at hand, rather than sealing a new body (wallet is login)", async () => {
     // the holder's Angel, saved under a cookie that is gone: Movement III, banked Bestand, the serial's index naming it
     const kept = angel("old", { wallet: addressOf(HOLDER), movement: 3, banked: 480, quests: { "m3-organs": 2 } });
