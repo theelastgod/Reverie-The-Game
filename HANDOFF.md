@@ -2801,6 +2801,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   vault reads "open" to everyone after one body's hour; the storm front's
   and Form 9's news repeat per body, each its own act.
 
+- The player-defect sweep, round thirteen (2026-10-11): what grows
+  without bound over a long life, checked by hand (the finder and a
+  security reviewer stopped at the account's usage limit before
+  reporting). Bounded: the city's news (NEWS_KEEP) and a body's notices
+  (NOTICE_KEEP); wreckage and graves, dropped on the tick past their
+  hour; the Grid, where only exhibition items list and they decay to
+  nothing (the wire shows MARKET_TOP rows); the city's history marks,
+  one per serial at a link; a body's per-season Passing flag, one a
+  season; saved guest records, swept after SAVED_TTL_MS. Nothing
+  changed. The security review of the day's server changes is the
+  Backlog's next item.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3934,6 +3946,18 @@ they are discovered; keep this list honest. As of 2026-10-02 items 1–8 and
 10–12 are the owner's, a real device's or the network's to finish, and 9 is
 done; item A is the owner's new direction and the routine's work from now
 on; after it, the routine takes whatever it discovers, and adds what it finds.
+
+0. **Security review of the day's server changes (2026-10-11), not yet
+   run** (the reviewer stopped at the usage limit): the wallet link that
+   refuses to rebind a sealed body, the listings withdrawn at an
+   unsealed join, the bodies that stand in a fight after their socket
+   closes (`lingering`, `releaseLingering`, the join taking one back by
+   token, the checkpoint writing them), the relink keeping its aura, the
+   client holding a slow frame for its fast one. Threat model: a raw
+   socket with cookies, many sessions, any admitted message. Reasoned
+   so far: a standing body leaves when its flag's hold or its duel ends
+   or it falls (every blow lands 16 or more, nothing heals it), so no
+   body stands for long; only its own cookie takes it back.
 
 A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    a story of the quality the master brief asks for, the enemy a shadow
