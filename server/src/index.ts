@@ -373,7 +373,8 @@ export class ReverieWorld {
       return Response.json({ ok: true, address: fresh.wallet, serial: fresh.serial }, { headers });
     }
     const kept = serial === null || !fresh?.guest || fresh.history.houses.length > 0 ? null : await this.sealedElsewhere(serial, address, token);
-    if (!this.w.players.has(live.id)) return refuse(409, "no-session"); // the body left while the chain answered
+    // the body left while the chain answered, or its socket closed and it only stands in a fight (round thirteen's review)
+    if (!this.w.players.has(live.id) || ![...this.sessions.values()].includes(live)) return refuse(409, "no-session");
     // The restore is taken before the world steps: a step replaces a changing body's object (a guest's restraint still
     // filling, for one), and the restore must not wait on a body standing still. Only storage reads, under the input
     // gate, came between reading `fresh` and here, so the guard holds the body as the request found it.

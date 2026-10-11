@@ -2813,6 +2813,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   changed. The security review of the day's server changes is the
   Backlog's next item.
 
+- Security review of the day's server changes (2026-10-11, Backlog 0;
+  6d0a2a4..ce113f9: the wallet link that will not rebind a sealed body,
+  the listings withdrawn at an unsealed join, the bodies that stand in a
+  fight after their socket closes, the relink's aura, the client holding
+  a slow frame). No issue confirmed: a standing body is taken back only
+  by its own cookie (probed: another token joining gets a fresh guest),
+  one body per Angel holds while it stands, it cannot act or start a
+  fight and falls within about five blows, a duel caps at a minute, and
+  every write lands before a body leaves. Hardened: a wallet link whose
+  socket closed while the chain answered now refuses (`no-session`)
+  rather than linking a body that only stands. Noted: while a body
+  stands (a minute at most) its holder cannot restore that Angel from
+  another cookie; storage that keeps failing stops the tick until the
+  platform retries the alarm, as before.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3946,18 +3961,6 @@ they are discovered; keep this list honest. As of 2026-10-02 items 1–8 and
 10–12 are the owner's, a real device's or the network's to finish, and 9 is
 done; item A is the owner's new direction and the routine's work from now
 on; after it, the routine takes whatever it discovers, and adds what it finds.
-
-0. **Security review of the day's server changes (2026-10-11), not yet
-   run** (the reviewer stopped at the usage limit): the wallet link that
-   refuses to rebind a sealed body, the listings withdrawn at an
-   unsealed join, the bodies that stand in a fight after their socket
-   closes (`lingering`, `releaseLingering`, the join taking one back by
-   token, the checkpoint writing them), the relink keeping its aura, the
-   client holding a slow frame for its fast one. Threat model: a raw
-   socket with cookies, many sessions, any admitted message. Reasoned
-   so far: a standing body leaves when its flag's hold or its duel ends
-   or it falls (every blow lands 16 or more, nothing heals it), so no
-   body stands for long; only its own cookie takes it back.
 
 A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    a story of the quality the master brief asks for, the enemy a shadow
