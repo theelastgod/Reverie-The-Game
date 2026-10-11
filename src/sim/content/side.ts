@@ -252,6 +252,8 @@ const angel = (p: Player): boolean => !p.guest && !p.locked;
 type Draft = Omit<Quest, "kind"> & { kind?: "side" };
 const quest = (q: Draft): Quest => ({ ...q, kind: "side" });
 const step = (s: QuestStep): QuestStep => s;
+/** How far from the hour bell a body may stand and still be waiting under it (the terrace); past it, it has left. */
+const HOUR_BELL_STAY = 3 * TILE;
 
 // ---------------------------------------------------------------- the Nave of Tubes
 
@@ -929,6 +931,8 @@ const KERB: Quest[] = [
         target: "hour-bell",
         plate: "wing-star.png",
         done: ({ p }) => count(p, SF.HOUR_WAITED) >= 3,
+        // "Do not leave between": a body that walks off the terrace starts its three waits over (round eleven)
+        lapse: { when: ({ p }) => Math.hypot(p.x - POSITIONS["hour-bell"].x, p.y - POSITIONS["hour-bell"].y) > HOUR_BELL_STAY, counter: SF.HOUR_WAITED },
         onComplete: [
           poi("hour-bell", "struck"),
           worldFlag(SW.HOUR_STRUCK),

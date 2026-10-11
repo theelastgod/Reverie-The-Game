@@ -145,7 +145,9 @@ export function applyLink(w: WorldState, id: string, serial: number, proof: Link
     messenger,
     winkSchool: winkSchoolFor(serial),
     auraSeed: seed,
-    aura: Math.max(p.aura, seed),
+    // the seed is a first link's: a body that was an Angel before (relinked, unsealed and linked again) keeps the aura it has,
+    // or a relink would be a free restore (the shrine sells it; the player-defect sweep, round eleven)
+    aura: p.history.houses.length === 0 ? Math.max(p.aura, seed) : p.aura,
     flags: { ...p.flags, [F.ANGEL]: 1 },
     locked: false,
     wallet: how.kind === "wallet" ? how.address : p.wallet,

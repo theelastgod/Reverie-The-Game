@@ -160,7 +160,7 @@ function canStart(ctx: Ctx, q: Quest, order: Quest[]): boolean {
  * at most MAX_ADVANCES changes per call keep the tick bounded.
  */
 export function tickQuests(w: WorldState, id: string): WorldState {
-  let cur = w;
+  let cur = lapsed(w, id);
   let advances = 0;
   const order = spine();
   while (advances < MAX_ADVANCES) {
@@ -191,6 +191,24 @@ export function tickQuests(w: WorldState, id: string): WorldState {
     advances++;
   }
   return heldWakingHint(cur, id);
+}
+
+/** A live step's presses-in-one-stay counter goes back to 0 once the body has left (QuestStep.lapse; round eleven). */
+function lapsed(w: WorldState, id: string): WorldState {
+  const p = w.players.get(id);
+  if (!p) return w;
+  let flags: Player["flags"] | null = null;
+  for (const q of QUESTS) {
+    const s = p.quests[q.id];
+    const lapse = s !== undefined ? q.steps[s]?.lapse : undefined;
+    if (!lapse || !(p.flags[lapse.counter] ?? 0)) continue;
+    if (!lapse.when({ w, p, now: w.now })) continue;
+    flags = { ...(flags ?? p.flags), [lapse.counter]: 0 };
+  }
+  if (!flags) return w;
+  const players = new Map(w.players);
+  players.set(id, { ...p, flags });
+  return { ...w, players };
 }
 
 /**

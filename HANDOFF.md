@@ -2769,8 +2769,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Quill's print at the forge and Caul's "Tell him." spoke of a hint the
   body never heard; each reads `F.WAKING`. The Care's restore promised
   "The Wink can be held again" to a body it left dark (four aura from
-  none, or a spent restraint); it says so only when true. The third lens
-  (pressed twice) reports in the second part.
+  none, or a spent restraint); it says so only when true. Second part,
+  the pressed-twice lens (every place verb and every dialogue path to six
+  choices, pressed again after a close, a walk and a tick, over some
+  1,500 random bodies; repeat sinks, the funeral desk's pay and the
+  capped claims desk repeat by design): the hour bell struck on three
+  waits however long the body was gone between, though the journal and
+  Halla say "do not leave between"; a step can now carry a `lapse`, and
+  the bell's count goes back to nothing when the body leaves the terrace
+  (three tiles). And an Angel unsealed and linked again was lifted to its
+  aura seed, a free restore the shrine sells for Bestand; the seed is a
+  first link's only (a body that was an Angel before keeps its aura).
 
 ## Verified (2026-09-25, integration)
 

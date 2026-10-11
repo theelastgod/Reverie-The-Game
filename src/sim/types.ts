@@ -382,6 +382,8 @@ export type QuestStep = {
   plate?: string;
   done: (ctx: Ctx) => boolean;
   onComplete?: Effect[] | ((ctx: Ctx) => Effect[]);
+  /** A step that asks for presses in one stay: while it is live and `when` holds (the body has left), `counter` goes back to 0. */
+  lapse?: { when: (ctx: Ctx) => boolean; counter: string };
 };
 
 export type Quest = {
