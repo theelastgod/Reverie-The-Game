@@ -251,7 +251,7 @@ const NARA_NODES: Record<string, DialogueNode> = {
       { kind: "choice", key: C.MORTALITY, value: "burial" },
       { kind: "flag", key: F.MORTALITY },
       { kind: "readiness", delta: READINESS_BURY },
-      { kind: "notice", text: "A mortality act. Burial. The Clearing will take you now.", tone: "gold" },
+      { kind: "notice", text: "A mortality act. Burial. Ord is at the Care gate.", tone: "gold" },
     ],
   },
   // Three numbers at the brink: the Angel's readiness against the floor, the weather, and the bodies in the ring.
@@ -787,11 +787,12 @@ const ORD_NODES: Record<string, DialogueNode> = {
     id: "gate-with",
     text: "He closes the ledger. Then it is a party. A willing one counts: it is the one number about the hour that is not weather. We stand in it with you. If it fails, it failed with people in it, and I will write that.",
     wink: "Willingness is readiness that has other names on it.",
-    effects: [
+    // a party short of Nara is written, not standing: the ring will not take it until she is back on her street (round sixteen)
+    effects: (ctx: Ctx) => [
       { kind: "choice", key: C.PARTY, value: "with" },
       { kind: "flag", key: F.GATE },
       { kind: "readiness", delta: 4 },
-      { kind: "notice", text: "The party stands with you. Readiness.", tone: "gold" },
+      { kind: "notice", text: ctx.p.party.nara === "gone" ? "The party is written. Nara is not in it until she is back on her street." : "The party stands with you. Readiness.", tone: "gold" },
     ],
   },
   "gate-alone": {

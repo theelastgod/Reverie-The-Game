@@ -525,7 +525,8 @@ const WET: Quest[] = [
         plate: "plate-forge.jpg",
         // Your own hands on the coals, not the shared tray: a warm tray someone else banked does not do this hour for you.
         done: ({ p }) => has(p, SF.TRAY_BANKED),
-        onComplete: [poi("forge-tray", "warm"), news("Someone banked the forge tray. The print that was not a print stays warm.")],
+        // each hand banks its own coals; the city hears it once (round sixteen)
+        onComplete: ({ w }) => (poiIs(w, "forge-tray", "warm") ? [] : [poi("forge-tray", "warm"), news("Someone banked the forge tray. The print that was not a print stays warm.")]),
       }),
       step({
         id: "take",
@@ -1202,9 +1203,8 @@ const RING: Quest[] = [
         done: ({ p }) => has(p, SF.STEP_TOLD),
       }),
     ],
-    onFinish: [
-      poi("shrine-1", "kept"),
-      news("Someone swept the first shrine's step. The city counts it as kept. That is the city's problem."),
+    onFinish: ({ w }) => [
+      ...(poiIs(w, "shrine-1", "kept") ? [] : [poi("shrine-1", "kept"), news("Someone swept the first shrine's step. The city counts it as kept. That is the city's problem.")]),
       notice("The step is swept. The ledger says kept. The keeper says sweeping is not keeping. Both are true."),
     ],
   }),
@@ -1278,10 +1278,9 @@ const ORGANS: Quest[] = [
         done: ({ p }) => has(p, SF.CABLE_TOLD),
       }),
     ],
-    onFinish: [
-      poi("organ-cable", "quiet"),
-      worldFlag(SW.CABLE_QUIET),
-      news("Someone kept a node. The hum is less. The Foundry notices."),
+    // the Cable goes quiet once for the city; each body keeps its Wink (round sixteen)
+    onFinish: ({ w }) => [
+      ...(poiIs(w, "organ-cable", "quiet") ? [] : [poi("organ-cable", "quiet"), worldFlag(SW.CABLE_QUIET), news("Someone kept a node. The hum is less. The Foundry notices.")]),
       wink("Quiet was a keep. Dark would be a grave. You chose the one you can still hear."),
     ],
   }),

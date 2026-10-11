@@ -2869,6 +2869,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   paying" after a refusal, the funeral desk's "Nara Vale's street" with
   her gone, the struck bell's "does not strike" line under its name.
 
+- The player-defect sweep, round sixteen (2026-10-11; every notice, news
+  line and Wink an act produces, against the state after it: some 120
+  content emitters and 26 in the engine; cases in `sweep16.test.ts`; the
+  scan of dialogue paths past the opening stopped at the usage limit and
+  is the Backlog's next item). Fixed: studying the Strait or the Foundry
+  after another body refused or darkened it gave a notice saying the
+  organ still fed the next; the notice reads the organ now. The
+  mortality act's notice said "The Clearing will take you now" while the
+  ring waits on Ord's question at the Care gate; it says Ord is at the
+  gate. "The party stands with you" after choosing the party at Ord's
+  gate with Nara gone (the ring will not take it); it says the party is
+  written and she is not in it until she is back on her street. And the
+  Cable's quiet, the forge tray's banking and the first shrine's sweep
+  posted their city news once per body; once now, each body keeping its
+  own line. Found sound: every Wink passes `canSeeWink` (guests, dark
+  aura, spent restraint, the weather), and the engine's news and
+  notices hold.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -4002,6 +4020,12 @@ they are discovered; keep this list honest. As of 2026-10-02 items 1–8 and
 10–12 are the owner's, a real device's or the network's to finish, and 9 is
 done; item A is the owner's new direction and the routine's work from now
 on; after it, the routine takes whatever it discovers, and adds what it finds.
+
+0. **The dialogue-path scan (round sixteen's second lens), not yet
+   run** (stopped at the usage limit): every person's choices walked to
+   depth five for coherent bodies, checking choices that do nothing,
+   text after a choice against the state its effects left, refused
+   effects answered with a line, and rewards a reopened path pays twice.
 
 A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    a story of the quality the master brief asks for, the enemy a shadow

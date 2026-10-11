@@ -795,7 +795,8 @@ const CARE: PoiConfig[] = [
           { kind: "readiness", delta: READINESS_WATCH },
           { kind: "flag", key: F.MORTALITY },
           { kind: "choice", key: C.MORTALITY, value: "watch" },
-          { kind: "notice", text: "A mortality act. Watch. The Clearing will take you now.", tone: "gold" },
+          // the ring waits on Ord's question at the Care gate first (spine: party before prepare; round sixteen)
+          { kind: "notice", text: "A mortality act. Watch. Ord is at the Care gate.", tone: "gold" },
         ],
       },
       {
@@ -1284,7 +1285,8 @@ const ORGANS: PoiConfig[] = [
         say: ctx => (poiState(ctx, "organ-strait") === "refused"
           ? "The Strait. Someone stopped the water. No country here. Only a closed mouth."
           : "The Strait. Water that is not water. Ore and hulls pass. Extract here and the Foundry breathes."),
-        effects: [{ kind: "flag", key: F.STRAIT }, { kind: "notice", text: "The Strait feeds the Foundry.", tone: "sky" }],
+        // the notice reads the organ as it stands: another body may have refused it (round sixteen)
+        effects: ctx => [{ kind: "flag", key: F.STRAIT }, { kind: "notice", text: poiState(ctx, "organ-strait") === "refused" ? "The Strait is refused. The Foundry burns what was already paid." : "The Strait feeds the Foundry.", tone: "sky" }],
       },
       {
         key: "E",
@@ -1316,7 +1318,7 @@ const ORGANS: PoiConfig[] = [
         say: ctx => (poiState(ctx, "organ-foundry") === "dark"
           ? "The Foundry. Someone unlit the heat. The Cable still drinks on what was already paid."
           : "The Foundry. Heat without a nation. The Cable drinks what you take."),
-        effects: [{ kind: "flag", key: F.FOUNDRY }, { kind: "notice", text: "The Foundry lights the Cable.", tone: "sky" }],
+        effects: ctx => [{ kind: "flag", key: F.FOUNDRY }, { kind: "notice", text: poiState(ctx, "organ-foundry") === "dark" ? "The Foundry is dark. The Cable drinks on what was already paid." : "The Foundry lights the Cable.", tone: "sky" }],
       },
       {
         key: "Q",
