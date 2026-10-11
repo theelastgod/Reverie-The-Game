@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   auraTier, bearingTo, dodgeLine, formatSerial, heardStep, identityLine, joinNews, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
   lockStep, noticeDiff, pad2, parseSerial, pct, questLabel, questRows, restraintBar, roman, seconds, stanceLine, statusLine,
-  glassRows, creditRows, chipVerbs,
+  glassRows, creditRows, chipVerbs, meterValues,
 } from "./format";
 import { TILE } from "../sim/map";
 import { AURA_PRESENT } from "../sim/constants";
@@ -312,5 +312,14 @@ describe("the player-defect sweep, round six", () => {
     expect(lockStep(you(true, 1), you(true, 2, GUEST_LOCK), "stall-1", false), "the same line at a stall").toBeNull();
     expect(lockStep(you(true, 1), you(true, 2, GUEST_LOCK), "going-under", true), "already up").toBeNull();
     expect(lockStep(you(true), you(false), null, true), "unlocked").toBe("hide");
+  });
+});
+
+describe("meterValues (the client review, 2026-10-11)", () => {
+  it("reads the whole figure the bar shows, steady while the value drifts under it", () => {
+    expect(meterValues(99.99943, 100)).toEqual({ now: "99", max: "100" });
+    expect(meterValues(57.3125, 100).now).toBe("57");
+    expect(meterValues(57.9, 100).now).toBe(meterValues(57.2, 100).now);
+    expect(meterValues(NaN, 100).now).toBe("0");
   });
 });

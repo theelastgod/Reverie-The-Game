@@ -314,6 +314,12 @@ export function setClass(el: Element | null, name: string, on: boolean): void {
   if (el && el.classList.contains(name) !== on) el.classList.toggle(name, on);
 }
 
+/** A bar's meter attributes for assistive technology: the whole figure the bar shows, not the drifting value under it, so a
+ *  screen reader hears what the eye reads and the attribute is not rewritten every frame (the client review, 2026-10-11). */
+export function meterValues(value: number, max: number): { now: string; max: string } {
+  return { now: num(value), max: String(max) };
+}
+
 export function setAttr(el: Element | null, name: string, value: string): void {
   if (el && el.getAttribute(name) !== value) el.setAttribute(name, value);
 }

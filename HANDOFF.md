@@ -2661,6 +2661,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   confirmed and fixed in twenty fixes across both parts (the stair clerks
   and the snagged enforcer share one), one judged otherwise.
 
+- The review of the HUD's accessibility and keyboard commits
+  (`ec2a29b..7fb4067`: the a11y markup, the map in text, the render
+  check's exchange, the keys module; task left open since 2026-10-04 and
+  done on 2026-10-11 after round eight). One finding, fixed: the bars'
+  meters gave assistive technology the raw value under the bar
+  (`aria-valuenow="99.99943"` while the bar read 99) and rewrote the
+  attribute every frame as aura drifted; they carry the whole figure the
+  bar shows (`format.ts` `meterValues`, a case in `hud.test.ts`).
+  Checked and sound: `hudControlFocused` and `browserOwns` (later rounds
+  added `escapeDoes` for a focused dialogue), the map label's wording and
+  its write only on change, the minimap's still ring under reduced
+  motion.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3779,6 +3792,10 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   session smoke, the Movement I smoke and the render check (desktop and
   phone at `RENDER_MIN_FPS=5`), so the watchdog does not close a healthy
   socket over a long session's frames.
+
+- The HUD review fix (2026-10-11): typecheck, 756 tests in 55 files, the
+  build, and the render check on a fresh local world (desktop and phone,
+  `RENDER_MIN_FPS=5`).
 
 ## Backlog
 

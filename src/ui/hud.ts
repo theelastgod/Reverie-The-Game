@@ -11,7 +11,7 @@ import { F } from "../sim/content/ids";
 import { CREDITS } from "../sim/content/lines";
 import {
   auraTier, chipVerbs, districtFourfold, districtName, dodgeLine, heardStep, identityLine, joinNews, kitLine, ledgerLine, lockStep, marqueeSeconds, noticeDiff, num, pct,
-  restraintBar, setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine, creditRows,
+  meterValues, restraintBar, setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine, creditRows,
 } from "./format";
 import { mountDialogue, type DialoguePanel } from "./dialogue";
 import { mountJournal, type JournalPanel } from "./journal";
@@ -533,8 +533,9 @@ export class Hud {
     if (bar.fill && bar.fill.style.width !== width) bar.fill.style.width = width;
     setText(bar.value, num(value));
     // The row is a meter for assistive tech: its value and ceiling follow the numbers shown.
-    setAttr(bar.row, "aria-valuenow", String(value));
-    setAttr(bar.row, "aria-valuemax", String(max));
+    const meter = meterValues(value, max);
+    setAttr(bar.row, "aria-valuenow", meter.now);
+    setAttr(bar.row, "aria-valuemax", meter.max);
   }
 
   private updateStance(snap: Snap): void {
