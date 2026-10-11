@@ -8,7 +8,7 @@ import type { Ctx, Effect, Quest, QuestStep } from "../types";
 import { READINESS_APPEARANCE_MIN, READINESS_PASSING_MIN } from "../constants";
 import { GUEST_SPAWN } from "../map";
 import { C, F, Q, W } from "./ids";
-import { NARA_LEAVES } from "./lines";
+import { NARA_LEAVES, NARA_WAITS } from "./lines";
 
 const has = (ctx: Ctx, key: string): boolean => (ctx.p.flags[key] ?? 0) > 0;
 const chose = (ctx: Ctx, key: string, value: string): boolean => ctx.p.choices[key] === value;
@@ -406,7 +406,7 @@ const M4_STEPS: QuestStep[] = [
     // where Nara stands for this body (npcs.ts personal): the garden she waits at until this body buries it, or gone (round six)
     detail: ctx => `The Clearing is south of the Wet Grid. ${has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)
       ? "Nara Vale has gone to the garden and will not speak until it is in the ground."
-      : ctx.p.party.nara === "gone" ? NARA_LEAVES : "Nara Vale is at the ring already; she reads the number."} With the party still willing, press F at the ring to prepare the ground. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}.`,
+      : ctx.p.party.nara === "gone" ? NARA_LEAVES : ctx.p.party.nara === "waiting" ? NARA_WAITS : "Nara Vale is at the ring already; she reads the number."} With the party still willing, press F at the ring to prepare the ground. Readiness ${Math.round(ctx.p.readiness)} of ${READINESS_PASSING_MIN}.`,
     target: "clearing-ring",
     plate: "clearing-ring.jpg",
     done: ctx => has(ctx, F.PREPARE),

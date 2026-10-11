@@ -52,6 +52,12 @@ const outcome = (ctx: Ctx): string => ctx.p.choices[C.PASSING] ?? "";
 
 // ================================================================ NARA VALE — sexton
 
+/** Nara as she stands for this body: with it (at the ring once the fourth hour has her there), gone, or waiting on her street. */
+function naraClause(ctx: Ctx, withIt: string, gone: string, waiting: string): string {
+  const n = ctx.p.party.nara;
+  return n === "gone" ? gone : n === "waiting" ? waiting : withIt;
+}
+
 function naraRoute(ctx: Ctx): string {
   const { p } = ctx;
   // A sexton who walked was not in the ring and does not say she was: gone before after.
@@ -77,7 +83,8 @@ function naraRoute(ctx: Ctx): string {
 const NARA_NODES: Record<string, DialogueNode> = {
   dark: {
     id: "dark",
-    text: "Nara Vale does not look up. A body with no presence on the funeral street is a shape the weather made. The shrine in the Care restores what the city looks at. Come back when it can see you.",
+    // the Care's shrine only to a body that can walk there; a first-hour body is told the aura comes back by itself (round fourteen)
+    text: (ctx) => `Nara Vale does not look up. A body with no presence on the funeral street is a shape the weather made. ${has(ctx, F.UNDER) ? "The shrine in the Care restores what the city looks at." : "It comes back by itself, slowly."} Come back when it can see you.`,
   },
   blind: {
     id: "blind",
@@ -332,7 +339,7 @@ const QUILL_NODES: Record<string, DialogueNode> = {
   },
   dark: {
     id: "dark",
-    text: "Quill looks through you at the stall behind. No aura, no customer. She sells surfaces and you are not on one. Restore it at the Care shrine; she will find you funny again.",
+    text: (ctx) => `Quill looks through you at the stall behind. No aura, no customer. She sells surfaces and you are not on one. ${has(ctx, F.UNDER) ? "Restore it at the Care shrine; she will find you funny again." : "Wait for it to come back; she will find you funny again."}`,
   },
   blind: {
     id: "blind",
@@ -569,7 +576,7 @@ const ordLedger = (ctx: Ctx): string | undefined => (ctx.p.choices[C.ORD_LEDGER]
 const ORD_NODES: Record<string, DialogueNode> = {
   dark: {
     id: "dark",
-    text: "Ord does not look up from the ledger. A body with no aura is not a line he can write honest. Restore it at the Care shrine and he will count you.",
+    text: (ctx) => `Ord does not look up from the ledger. A body with no aura is not a line he can write honest. ${has(ctx, F.UNDER) ? "Restore it at the Care shrine and he will count you." : "When it comes back he will count you."}`,
   },
   blind: {
     id: "blind",
@@ -606,7 +613,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   "ledger-yes": {
     id: "ledger-yes",
-    text: (ctx) => `He writes without looking up. "${ctx.p.guest ? "Unsealed" : ctx.p.name}. Came in. ${ctx.p.choices[C.FIRST_NODE] === "extract" ? "Extracted at the first node." : "Kept the first node."}" He reads it back once. "That is the whole line. It will get longer. They always do."`,
+    text: (ctx) => `He writes without looking up. "${ctx.p.guest ? "Unsealed" : ctx.p.name}. Came in. ${ctx.p.choices[C.FIRST_NODE] === "extract" ? "Extracted at the first node." : ctx.p.choices[C.FIRST_NODE] ? "Kept the first node." : "Has not touched a node yet."}" He reads it back once. "That is the whole line. It will get longer. They always do."`,
     effects: [
       { kind: "choice", key: C.ORD_LEDGER, value: "entered" },
       { kind: "news", text: "A new line in Ord's ledger. Honest." },
@@ -767,7 +774,8 @@ const ORD_NODES: Record<string, DialogueNode> = {
   },
   gate: {
     id: "gate",
-    text: "Ord is at the Care gate, not the ring. The ledger is open on his knee. Before you go in: who stands in it. The party will, if you say so; Nara is in there already and I will walk in behind you. Or you stand alone and we count from the gate. Both are written. Neither is wrong. One of them is yours.",
+    // Nara's clause as she stands for this body: a sexton gone or waiting on her street is not in the ring (round fourteen)
+    text: (ctx) => `Ord is at the Care gate, not the ring. The ledger is open on his knee. Before you go in: who stands in it. The party will, if you say so; ${naraClause(ctx, "Nara is in there already and I will walk in behind you.", "Nara walked, and the ring will not take the party short of her until she is back on her street; I will walk in behind you.", "Nara is on her street until the desk is paid; I will walk in behind you.")} Or you stand alone and we count from the gate. Both are written. Neither is wrong. One of them is yours.`,
     wink: "He is asking whether the hour is a party or a person. The ledger has a column for each and he has never filled the second.",
     choices: [
       { id: "with", label: "With me. All of you.", when: ctx => !ctx.p.choices[C.PARTY], next: "gate-with" },
@@ -801,8 +809,8 @@ const ORD_NODES: Record<string, DialogueNode> = {
   "gate-after": {
     id: "gate-after",
     text: (ctx) => (chose(ctx, C.PARTY, "alone")
-      ? "The gate. I count from here. Nara is at the ring; she reads the number. Prepare the ground when you are ready and I will write what it does."
-      : "We stand with you. Nara is at the ring already; she reads the number. Prepare the ground and I will be in behind you."),
+      ? `The gate. I count from here. ${naraClause(ctx, "Nara is at the ring; she reads the number.", "Nobody reads the number at the ring. I will read it from here.", "Nara is on her street; I will read the number from here.")} Prepare the ground when you are ready and I will write what it does.`
+      : `We stand with you. ${naraClause(ctx, "Nara is at the ring already; she reads the number.", "Nara is not with us. I read the number.", "Nara is on her street until the desk is paid. I read the number.")} Prepare the ground and I will be in behind you.`),
   },
   ring: {
     id: "ring",
@@ -934,7 +942,8 @@ const VESPER_NODES: Record<string, DialogueNode> = {
   },
   refused: {
     id: "refused",
-    text: "You refused. The desk is still here. The offer is not. I do not quote twice. Go and bury your garden.",
+    // the garden already in the ground is not sent back to it (round fourteen)
+    text: (ctx) => `You refused. The desk is still here. The offer is not. I do not quote twice.${has(ctx, F.GARDEN) ? "" : " Go and bury your garden."}`,
   },
   foundry: {
     id: "foundry",

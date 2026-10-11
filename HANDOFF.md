@@ -2828,6 +2828,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   another cookie; storage that keeps failing stops the tick until the
   platform retries the alarm, as before.
 
+- The player-defect sweep, round fourteen (2026-10-11; two lenses: a
+  scan of every person's opening against 6,000 coherent bodies, 116
+  openings across 62 entry nodes, and a body with nothing; cases in
+  `sweep14.test.ts`). Fixed: Ord at the Care gate told a body whose Nara
+  had walked or waited on her street that she was "in there already",
+  and after the party choice that she was "at the ring, she reads the
+  number"; his gate and its after read her state, and so does the
+  journal's prepare line (waiting now says so). Vesper told a third-hour
+  refuser whose garden was in the ground to go and bury it. Ord's
+  honest ledger wrote "Kept the first node." for a body that had touched
+  none ("Has not touched a node yet."). And Ord, Quill and Nara sent a
+  first-hour Angel with a dark aura to the Care's shrine, behind a gate
+  it cannot pass and at a price it may not have; before the going-under
+  they say the aura comes back by itself. The scarcity lens found no
+  soft-lock: every paid step has a free way, aura drifts back to its
+  seed, Nara gone comes back by a burial, and an Angel can always earn
+  at a node. Noted, as the script has them: Ord's door line to a body
+  that kept its first node, Nara's gone line after the garden.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
