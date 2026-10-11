@@ -13,6 +13,7 @@ import {
 import { cityFigure, weatherBand } from "../protocol";
 import { C, F, W, seasonPassingFlag } from "./ids";
 import { GUEST_LOCK, WEATHER_LABELS, WEATHER_NAMED } from "./lines";
+import { canSeeWink } from "../perceive";
 import { clearingPrice, listClearing, moveClearing } from "./market";
 import { SIDE_PLACES } from "./side";
 import { coldClaimed } from "./caul";
@@ -661,7 +662,8 @@ const CARE: PoiConfig[] = [
         when: ctx => ctx.p.guest || Math.round(ctx.p.aura) < AURA_MAX,
         guest: spectate,
         cost: { bestand: RESTORE_COST, sink: "restore" },
-        say: "You spent Bestand. Aura returns. The Wink can be held again.",
+        // the promise only to a body that can hold one now: four aura from none is not yet enough, nor is any to a spent restraint (round eleven)
+        say: ctx => canSeeWink(ctx.p, ctx.now, ctx.w.gestell) ? "You spent Bestand. Aura returns. The Wink can be held again." : "You spent Bestand. Aura returns. Not yet enough to hold a Wink.",
         effects: [{ kind: "aura", delta: RESTORE_AURA }],
       },
       {

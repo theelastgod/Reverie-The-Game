@@ -407,6 +407,7 @@ The paper panel, the gold mark:
 
 **THE SHRINE** — `restore` E, Restore aura (8) (shipped)
 > You spent Bestand. Aura returns. The Wink can be held again.
+> *(to a body still dark after it: four aura from none, or any to a spent restraint; new, round eleven)* You spent Bestand. Aura returns. Not yet enough to hold a Wink.
 [Bestand −8, sink restore; aura +4]
 
 ### II.2 Counted here
@@ -1119,7 +1120,7 @@ The paper panel, the gold mark:
 > "Before you go." He has a pen now. "I know what it looks like. From the reports. A change in the light with nothing behind it. A bell you did not hear, heard. The sense that the place was looking back, and had been for some time. Sixty to ninety seconds. Then the ordinary light, and a wish to be quiet for a while. I have written that down ten thousand times. I have never once been wrong." He has not looked up. "I have never felt anything. I sell what I was told it feels like. The city has not noticed the difference. Neither, I think, have you." Then, the first time: "What did it look like."
 ✦ *He means the waking hint. The first of your life, in the Care. The book had it before you had finished hearing it.*
 [F.CAUL_ASKED]
-- ▸ "Tell him." → `told`
+- ▸ "Tell him." → `told` [only to a body that heard the waking hint (round eleven)]
 - ▸ "Say nothing." → `untold`
 
 **CAUL** — `told` (shipped since Phase B, first beats)
@@ -1157,7 +1158,7 @@ The paper panel, the gold mark:
 > You're looking at something I'm not. I can sell you a print of it if you describe it well. Joke. Half a joke.
 
 **QUILL** — `forge-lesson` (shipped since Phase B, the forge: she hands you the one from the Grid, and the margin has your serial; the choices are the listing and the pull. Phase A, Movement III, shipped it first with "Now. Take it, or learn to spot it." and the choices "Take the print." and "Teach me to spot the copy."; the choice ids `sell` and `spot` are kept, so a body saved under the old labels reads the same)
-> Quill fans two hints. One was buried. One was printed. Look at the edge. A buried hint has dirt in the grain. A print has a margin. The printed one lists. The buried one opens. She hands you the printed one, still cool from the Grid. It came in this morning with the rest. Read the margin. #SERIAL. The hint on it is the one you woke to in the Care. Everything you heard, they have. I'm sorry. I'd have charged more. Now. List it, or pull it. I will not think less of you either way. I will think exactly the same amount.
+> Quill fans two hints. One was buried. One was printed. Look at the edge. A buried hint has dirt in the grain. A print has a margin. The printed one lists. The buried one opens. She hands you the printed one, still cool from the Grid. It came in this morning with the rest. Read the margin. #SERIAL. The hint on it is the one you woke to in the Care. Everything you heard, they have. *(a body that never heard it, new, round eleven: "The hint on it is the one that was waiting for you in the Care. You never heard it. They did.")* I'm sorry. I'd have charged more. Now. List it, or pull it. I will not think less of you either way. I will think exactly the same amount.
 ✦ *The hint can be forged. Exhibition Winke travel. Cult Winke stay in the hand that buried.*
 - ▸ "List it." → `forge-sell`
 - ▸ "Pull it." → `forge-spot`

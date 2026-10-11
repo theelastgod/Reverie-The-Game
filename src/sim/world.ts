@@ -181,29 +181,9 @@ export function say(p: Player, text: string, now: number): Player {
   return { ...p, heard: text, heardAt: now };
 }
 
-/** The aura the city addresses: the body's, plus what an Iridescent Glamour paints on for its minute. Guests are 0. */
-export function addressAura(p: Player, now: number): number {
-  if (p.guest) return 0;
-  const glamour = !!p.kit && p.kit.verb === "iridescent" && p.kit.until > now;
-  return p.aura + (glamour ? AURA_ADDRESS_GLAMOUR : 0);
-}
-
-/**
- * Whether a private line reaches this body now. Guests never; a dark aura or
- * spent restraint never; with the weather given: fat weather dims the late
- * Winke (Movement III on) for anyone the city does not look up at, and the
- * House of Divinities goes blind at meltdown. Perception, never a number.
- */
-export function canSeeWink(p: Player, now: number, gestell?: number): boolean {
-  if (p.guest) return false;
-  const aura = addressAura(p, now);
-  if (aura < AURA_DIM || p.restraint < RESTRAINT_WINK_MIN) return false;
-  if (gestell !== undefined) {
-    if (gestell >= GESTELL_MELTDOWN && p.house === "divinities") return false;
-    if (gestell >= GESTELL_FAT && p.movement >= 3 && aura < AURA_PRESENT) return false;
-  }
-  return true;
-}
+// addressAura and canSeeWink live in perceive.ts, a leaf the content can import without a cycle (round eleven)
+export { addressAura, canSeeWink } from "./perceive";
+import { addressAura, canSeeWink } from "./perceive";
 
 /** A private line. Guests never receive one; a dark aura or spent restraint cannot see one; fat weather dims the late ones. */
 export function wink(p: Player, text: string, now: number, gestell?: number): Player {

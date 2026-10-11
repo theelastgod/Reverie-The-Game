@@ -184,6 +184,13 @@ export class ReverieWorld {
   private sessions = new Map<Socket, Session>();
   private checkpointAt = 0;
   private intentAt = new Map<string, number>();
+  /**
+   * Bodies whose socket closed in the middle of a fight (a held flag, a live ruin duel), by body id, with their session's
+   * token: they stand in the city, idle, until the fight is over, and are written and taken out then (`releaseLingering`).
+   * Closing the tab is not a way out of a fight one is losing (the player-defect sweep, round eleven). The same token joining
+   * first takes its body back where it stands.
+   */
+  private lingering = new Map<string, string>();
   private ticking = false;
   private clock = new SimulationClock();
   private readonly sink = new LogSink();
@@ -406,7 +413,7 @@ export class ReverieWorld {
     const owner = this.serialOwners.get(serial) ?? (await this.ctx.storage.get<string>(serialKey(serial)));
     if (owner === undefined || owner === token) return null;
     this.serialOwners.set(serial, owner);
-    if ([...this.sessions.values()].some(s => s.token === owner)) return null;
+    if ([...this.sessions.values()].some(s => s.token === owner) || [...this.lingering.values()].includes(owner)) return null;
     if ([...this.w.players.values()].some(o => !o.guest && o.serial === serial)) return null;
     const record = await this.ctx.storage.get<unknown>(playerKey(owner));
     if (record === undefined) return null;
@@ -443,7 +450,11 @@ export class ReverieWorld {
       const record = await this.ctx.storage.get<unknown>(playerKey(token));
       const saved = record !== undefined ? migratePlayer(record, bodyId(), this.w.now) : undefined; // the shape migration, as on every read
       const active = [...this.sessions.entries()].find(([, session]) => session.token === token);
-      let player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(bodyId(), this.w.now);
+      // a body still standing in a fight its socket left is this token's, as it stands now (not as its record had it)
+      const stayed = [...this.lingering].find(([, t]) => t === token)?.[0];
+      const standing = stayed !== undefined ? this.w.players.get(stayed) : undefined;
+      if (stayed !== undefined) this.lingering.delete(stayed);
+      let player = (active && this.w.players.get(active[1].id)) ?? standing ?? saved ?? spawnGuest(bodyId(), this.w.now);
       let unsealed = false;
       // A saved Angel whose serial another body now holds (walking now, or the index's since a newer link) comes back unsealed.
       if (player === saved && !saved.guest && saved.serial !== null) {
@@ -568,7 +579,15 @@ export class ReverieWorld {
     if (![...this.sessions.values()].some(s => s.token === session.token)) this.wallets.delete(session.token);
     this.saved.delete(session.id);
     this.slow.forget(session.id);
-    this.withBody(session.id, null);
+    if (player && inFight(player, this.w.now)) {
+      // the body stays where the fight is, its keys let go; its record is written now too, and again when it is released
+      const intents = new Map(this.w.intents);
+      intents.set(session.id, { ...idle });
+      this.w = { ...this.w, intents };
+      this.lingering.set(session.id, session.token);
+    } else {
+      this.withBody(session.id, null);
+    }
     this.intentAt.delete(session.id);
     await this.checkpoint(leaving);
     if (claim !== null) this.serialOwners.set(claim, session.token);
@@ -604,7 +623,7 @@ export class ReverieWorld {
       await this.rememberSweep(now);
       return 0;
     }
-    const live = new Set([...this.sessions.values()].map(s => s.token));
+    const live = new Set([...[...this.sessions.values()].map(s => s.token), ...this.lingering.values()]);
     const tokens = [...page.keys()].map(key => key.slice(PLAYER_PREFIX.length));
     const seen = await this.ctx.storage.get<number>(tokens.map(seenKey));
     const stamps: Record<string, number> = {};
@@ -668,6 +687,22 @@ export class ReverieWorld {
     this.w = { ...this.w, players, intents };
   }
 
+  /** Bodies left standing in a fight whose fight is over (or that are gone) are written and leave the city. */
+  private async releaseLingering() {
+    if (this.lingering.size === 0) return;
+    const leaving: Record<string, unknown> = {};
+    for (const [id, token] of [...this.lingering]) {
+      const p = this.w.players.get(id);
+      if (p && inFight(p, this.w.now)) continue;
+      this.lingering.delete(id);
+      if (!p) continue;
+      leaving[playerKey(token)] = p;
+      leaving[seenKey(token)] = Date.now();
+      this.withBody(id, null);
+    }
+    if (Object.keys(leaving).length) await this.checkpoint(leaving);
+  }
+
   /** Advances by elapsed server time in fixed steps; returns how many it ran. */
   private advanceWorld(now: number): number {
     const expired = [...this.w.players.keys()].filter(id => now - (this.intentAt.get(id) ?? 0) > INTENT_TTL_MS && Object.values(this.w.intents.get(id) ?? {}).some(Boolean));
@@ -690,6 +725,7 @@ export class ReverieWorld {
     }
     const now = Date.now();
     const steps = this.advanceWorld(now);
+    await this.releaseLingering();
     this.load.alarmed(this.alarmDue ? now - this.alarmDue : 0, steps, this.clock.lastCapped, now);
     // Passive simulation checkpoints about once a simulation second; an action that rode this alarm is checkpointed first.
     const owed = this.pending;
@@ -755,6 +791,12 @@ export class ReverieWorld {
     }
     this.load.broadcasted(chars, viewers);
   }
+}
+
+/** A body in a fight it cannot step out of: its raised flag held by a landed blow, or a ruin duel accepted and running. */
+function inFight(p: Player, now: number): boolean {
+  if (p.dead) return false;
+  return (p.flagged && (p.flagHeldUntil ?? 0) > now) || (!!p.duel && p.duel.accepted && p.duel.until > now);
 }
 
 const parseDetail = (s: string): unknown => {

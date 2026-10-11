@@ -420,7 +420,7 @@ const QUILL_NODES: Record<string, DialogueNode> = {
   "forge-lesson": {
     id: "forge-lesson",
     // The reversal lands in her hand: the print from the Grid has the player's own serial in the margin, and the hint on it is the one they woke to.
-    text: (ctx) => `Quill fans two hints. One was buried. One was printed. Look at the edge. A buried hint has dirt in the grain. A print has a margin. The printed one lists. The buried one opens. She hands you the printed one, still cool from the Grid. It came in this morning with the rest. Read the margin. ${ctx.p.name}. The hint on it is the one you woke to in the Care. Everything you heard, they have. I'm sorry. I'd have charged more. Now. List it, or pull it. I will not think less of you either way. I will think exactly the same amount.`,
+    text: (ctx) => `Quill fans two hints. One was buried. One was printed. Look at the edge. A buried hint has dirt in the grain. A print has a margin. The printed one lists. The buried one opens. She hands you the printed one, still cool from the Grid. It came in this morning with the rest. Read the margin. ${ctx.p.name}. ${has(ctx, F.WAKING) ? "The hint on it is the one you woke to in the Care. Everything you heard, they have." : "The hint on it is the one that was waiting for you in the Care. You never heard it. They did."} I'm sorry. I'd have charged more. Now. List it, or pull it. I will not think less of you either way. I will think exactly the same amount.`,
     wink: "The hint can be forged. Exhibition Winke travel. Cult Winke stay in the hand that buried.",
     // The listing and the pull move the city (the Clearing's price, the hot street, the news): Angels only, whatever door opened the node.
     choices: [
@@ -1157,7 +1157,7 @@ const CAUL_NODES: Record<string, DialogueNode> = {
     wink: "He means the waking hint. The first of your life, in the Care. The book had it before you had finished hearing it.",
     effects: [{ kind: "flag", key: F.CAUL_ASKED }],
     choices: [
-      { id: "told", label: "Tell him.", next: "told" },
+      { id: "told", label: "Tell him.", when: ctx => has(ctx, F.WAKING), next: "told" }, // nothing to tell of a hint never heard (round eleven)
       { id: "untold", label: "Say nothing.", next: "untold" },
     ],
   },

@@ -2753,6 +2753,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the count is the owner's call). Not probed: a body whose Winke stay
   dark through all of Movement II never hears the waking hint.
 
+- The player-defect sweep, round eleven, first part (2026-10-11; three
+  lenses: a body leaving mid-act, a body whose Winke stay dark, a verb
+  pressed again on a later step; finders with probes, each finding
+  checked by hand; cases in `sweep11.test.ts` and `leave.test.ts`).
+  Fixed: a flagged Angel losing a fight closed its tab and was out of the
+  city at once, the winner's next blow finding no one, and came back
+  seconds later with its hp and unbanked Bestand whole (the flag's hold
+  exists so a body cannot step out of a fight it is losing); a body whose
+  socket closes with its flag held or a ruin duel running now stands in
+  the city, idle, until the fight is over, and its own token joining
+  first takes the standing body back. A body dark through all of
+  Movement II (Storm, restraint spent) never heard the waking hint, which
+  the spine holds for that very case; it waits past the movement now.
+  Quill's print at the forge and Caul's "Tell him." spoke of a hint the
+  body never heard; each reads `F.WAKING`. The Care's restore promised
+  "The Wink can be held again" to a body it left dark (four aura from
+  none, or a spent restraint); it says so only when true. The third lens
+  (pressed twice) reports in the second part.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.

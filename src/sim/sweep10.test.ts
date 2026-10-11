@@ -75,7 +75,7 @@ describe("where a body comes back: an Angel unsealed to a guest", () => {
 
 describe("crossing a movement with something open", () => {
   it("Nara's plate left for later can still be answered after the third hour closes", () => {
-    const flags = { [F.ANGEL]: 1, [F.UNDER]: 1, [F.OPERATOR]: 1, [F.GARDEN]: 1, [F.M3]: 1, [F.STRAIT]: 1, [F.FOUNDRY]: 1, [F.CABLE]: 1, [F.MAP]: 1, [F.BELL]: 1, [F.FAILED]: 1, [F.FORGE]: 1, [F.CAUL_MET]: 1, [F.CAUL_OFFER]: 1, [F.CAUL_ASKED]: 1, [F.BOARD]: 1, [F.TALKED_QUILL]: 1, [F.TALKED_NARA]: 1 };
+    const flags = { [F.ANGEL]: 1, [F.UNDER]: 1, [F.OPERATOR]: 1, [F.GARDEN]: 1, [F.M3]: 1, [F.STRAIT]: 1, [F.FOUNDRY]: 1, [F.CABLE]: 1, [F.MAP]: 1, [F.BELL]: 1, [F.FAILED]: 1, [F.FORGE]: 1, [F.CAUL_MET]: 1, [F.CAUL_OFFER]: 1, [F.CAUL_ASKED]: 1, [F.BOARD]: 1, [F.TALKED_QUILL]: 1, [F.TALKED_NARA]: 1, [F.WAKING]: 1 };
     let w = body(emptyWorld(), "a", { x: 0, y: 0 }, {
       movement: 3, flags, party: { nara: "with", quill: "with", ord: "with" },
       choices: { [C.OPERATOR]: "refuse", [C.GLASS]: "read", [C.FORGE]: "spot" },

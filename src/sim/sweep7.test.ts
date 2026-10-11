@@ -93,7 +93,7 @@ describe("the season boundary in the middle of an hour", () => {
 
 describe("dialogue against a moving world", () => {
   it("a press made against a window the server has moved past picks and closes nothing the player has not seen", () => {
-    const flags = { [F.ANGEL]: 1, [F.UNDER]: 1, [F.FAILED]: 1, [F.CAUL_MET]: 1, [F.CAUL_OFFER]: 1 };
+    const flags = { [F.ANGEL]: 1, [F.UNDER]: 1, [F.WAKING]: 1, [F.FAILED]: 1, [F.CAUL_MET]: 1, [F.CAUL_OFFER]: 1 };
     let w = body(emptyWorld(), "a", near("caul-glass"), { movement: 3, flags, quests: { [Q.M1]: 99, [Q.M2]: 99 } });
     w = applyAction(w, "a", { t: "talk", npcId: "caul" });
     expect(me(w).dialogue?.node).toBe("offer");
