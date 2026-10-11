@@ -278,7 +278,7 @@ let lastFrames: FrameCache | null = null; // the last step's cache: the encoding
 const NO_FAILED: FailedPassing[] = [];
 
 const nodeView = (n: YieldNode, now: number): NodeView => {
-  const { keepers: _keepers, ...shared } = n; // who kept it is the server's, not every viewer's
+  const { keepers: _keepers, keptBy: _keptBy, ...shared } = n; // who kept it is the server's, not every viewer's (keptBy too: round ten)
   return { ...shared, safe: n.announcedUntil > now };
 };
 
@@ -345,7 +345,7 @@ export function stepViews(w: WorldState): StepViews {
     frozen: keptFrozen,
     market,
     news: keptNews.get(w.news, news => news.map(n => n.text)),
-    clearing: keptClearing.get(w.clearing, c => ({ open: c.open, reserve: c.reserve, contest: c.contest, lastOutcome: c.lastOutcome, dwellers: c.heldBy.length })),
+    clearing: keptClearing.get(w.clearing, c => ({ open: c.open, reserve: c.reserve, contest: c.contest && { active: c.contest.active, keep: c.contest.keep, extract: c.contest.extract, endsAt: c.contest.endsAt }, lastOutcome: c.lastOutcome, dwellers: c.heldBy.length })),
     passing: keptPassing.get(w.passing, () => new Keep()).get(w.season.id, season => ({ ...w.passing, season })),
     historyFor,
     figure: () => (figure ??= cityFigure(w)),

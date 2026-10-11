@@ -770,7 +770,7 @@ The paper panel, the gold mark:
 ✦ *The twelve numbers in the sexton's coat are numbers because nobody chose. This one, somebody does.*
 - ▸ "Number it. Put it in the book." → `garden-numbered`
 - ▸ "No number. Earth is enough." → `garden-unnumbered`
-- ▸ "Let me look at it first."
+- ▸ "Let me look at it first." [the plate stays hers to ask, at the garden, past the third hour's close until the mortality act (round ten)]
 
 **NARA** — `garden-numbered` (shipped)
 > She scratches the node's number into the plate with the edge of the trowel. It is in the book now. Pim Ashe will read it at the next wake and somebody will hear it who never stood here. Nobody can say it was not a place.

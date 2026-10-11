@@ -59,7 +59,8 @@ function naraRoute(ctx: Ctx): string {
   if (p.movement >= 5 || has(ctx, F.PASSING)) return "after";
   if (has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)) return "garden-silent";
   if (p.party.nara === "waiting") return "waiting";
-  if (has(ctx, F.GARDEN) && !p.choices[C.GARDEN] && p.movement < 4) return "garden-plate";
+  // "Let me look at it first" keeps the plate open past the third hour's close: it is asked until the mortality act (round ten)
+  if (has(ctx, F.GARDEN) && !p.choices[C.GARDEN] && !has(ctx, F.MORTALITY)) return "garden-plate";
   if (has(ctx, F.MORTALITY) && !has(ctx, F.PREPARE) && p.movement >= 4) return "brink";
   if (has(ctx, F.GARDEN) && has(ctx, F.PREPARE)) return "ring";
   if (has(ctx, F.GARDEN) && p.movement >= 4 && !has(ctx, F.MORTALITY)) return "stand-offer";
@@ -1338,7 +1339,7 @@ export const NPCS: Record<string, NpcDef> = {
         return { ...station("nara-garden"), state: "garden" };
       }
       // From the mortality act on she is at the ring, before the ground is kept: the first person there reads the number.
-      if ((has(ctx, F.PREPARE) || (has(ctx, F.MORTALITY) && p.movement >= 4)) && p.party.nara !== "gone" && !has(ctx, F.PASSING)) return { ...station("nara-clearing"), state: "clearing" };
+      if ((has(ctx, F.PREPARE) || (has(ctx, F.MORTALITY) && p.movement >= 4)) && p.party.nara !== "gone" && p.party.nara !== "waiting" && !has(ctx, F.PASSING)) return { ...station("nara-clearing"), state: "clearing" }; // a waiting Nara stays on her street, as she says (round ten)
       if (has(ctx, F.UNDER) && !has(ctx, F.OPERATOR) && p.party.nara !== "waiting") return { ...station("nara-care"), state: "care" };
       return null;
     },

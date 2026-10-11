@@ -66,7 +66,7 @@ export type PublicPlayer = {
 /** What a viewer sees of an enemy: where it stands, how it is doing and whom it faces; never its participants, its home or its respawn. */
 export type EnemyView = Pick<Enemy, "id" | "kind" | "name" | "x" | "y" | "hp" | "maxHp" | "state" | "t" | "tint" | "targetId">;
 
-export type NodeView = YieldNode & { yieldHint?: number; chargesHint?: number; safe?: boolean };
+export type NodeView = Omit<YieldNode, "keepers" | "keptBy"> & { yieldHint?: number; chargesHint?: number; safe?: boolean };
 /** `passings` is the fallen Angel's Passing count, sent only while the viewer faces the wreckage (Ruin-angel kit). */
 export type WreckageView = Pick<Wreckage, "id" | "x" | "y" | "district" | "fromName" | "fromSerial" | "buried" | "looted" | "until"> & { yours: boolean; bestand?: number; passings?: number };
 /** `offers`: this person has a side hour to hand this viewer right now (a hub line whose gate passes and whose hour the viewer has not started). */
@@ -108,7 +108,8 @@ export type Snap = {
   history: HistoryMark[];
   failed: FailedPassing[];
   houses: { standing: HouseScores; tithe: number; war: HouseWar };
-  clearing: Pick<ClearingState, "open" | "reserve" | "contest" | "lastOutcome"> & { dwellers: number };
+  // the contest's tally, never who voted which way: a body's keep or extract is its own (the player-defect sweep, round ten)
+  clearing: Pick<ClearingState, "open" | "reserve" | "lastOutcome"> & { dwellers: number; contest: Omit<NonNullable<ClearingState["contest"]>, "votes"> | null };
   passing: PassingState & { season: number };
   market: Listing[];
   news: string[];

@@ -2725,6 +2725,34 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   the journal skips the spine steps a guest cannot take
   (`sweep9.test.ts`).
 
+- The player-defect sweep, round ten (2026-10-11; three lenses: what
+  one viewer learns of another over the wire, a body crossing from one
+  movement to the next with something open, where a body comes back;
+  three finders with probes, each finding checked by hand; cases in
+  `sweep10.test.ts` and `session.test.ts`). Fixed: the Clearing contest
+  rode every snapshot with its votes keyed by body id, so anyone near the
+  ring, a guest too, read which Angel kept and which extracted; the
+  contest goes out as its tally. A node view carried `keptBy`, the first
+  keeper's body id, though `nodeView` strips the keepers for that very
+  reason; it strips both. A saved Angel unsealed at the join kept its
+  Grid listings under its old serial's name while it walked as GUEST
+  (and a guest cannot cancel); its listings come back to its hands
+  (`withdrawListings`). An unsealed or locked body's journal still
+  pointed at side hours it cannot take (the Care's for a guest; any for a
+  locked body, its hours frozen by the lock); both journal loops skip
+  them. Nara's plate, left for later ("Let me look at it first"), was
+  never asked again once the third hour closed, and her later line
+  called the plate blank; it is asked until the mortality act. A Nara
+  waiting on her street was drawn at the ring in the fourth hour while
+  saying she was on the funeral street; she stays on her street. Judged
+  otherwise: a restored record whose respawn is in a wall, off the map or
+  (a guest's) in the Care (no live path writes one; `migrate.test.ts`
+  already holds that a bad respawn moves nobody), and the glass's city
+  figure, an average, telling a reader roughly the other Angel's
+  readiness when only two walk (the figure is the script's; a floor on
+  the count is the owner's call). Not probed: a body whose Winke stay
+  dark through all of Movement II never hears the waking hint.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.

@@ -1155,6 +1155,22 @@ describe("one body per Angel (the player-defect sweep, 2026-10-04)", () => {
     expect(last(ws2).you).toMatchObject({ guest: false, serial: TEST_SERIAL });
   });
 
+  it("the unsealed body's listings leave the Grid for its hands: no row names the serial beside a GUEST (round ten)", async () => {
+    const print = { id: "copy:wink", kind: "exhibition" as const, name: "Wink print", qty: 1, value: 10 };
+    const world0 = saved();
+    world0.market = [{ id: "listing:a:1:1", sellerId: "a", sellerName: "#7777", item: print, price: 20, postedAt: 0 } as never];
+    const h = await worldHarness(world0, [], [[playerKey(token), first()]]);
+    const ws2 = socket("b", otherToken);
+    await h.world.join(otherToken, ws2 as never);
+    await h.world.webSocketMessage(ws2 as never, JSON.stringify({ t: "link", serial: TEST_SERIAL, sig: "mock" }));
+    const ws1 = socket("a", token);
+    await h.world.join(token, ws1 as never);
+    const back = h.data.get(playerKey(token)) as Player;
+    expect(back).toMatchObject({ guest: true, serial: null });
+    expect(back.items.some(i => i.id === "copy:wink"), "the print is back in its hands").toBe(true);
+    expect(last(ws1).market ?? [], "no row names the serial it no longer holds").toEqual([]);
+  });
+
   it("with the other body away, the index still decides; and the body the index names comes back sealed", async () => {
     const { world, data, ws2 } = await relinkedElsewhere();
     await world.webSocketClose(ws2 as never);

@@ -252,6 +252,8 @@ export function sideObjectivesFor(ctx: Ctx, cap = 6): SideObjective[] {
   for (let i = started.length - 1; i >= 0 && out.length < cap; i--) {
     const q = questById(started[i]);
     if (!q || q.kind !== "side") continue;
+    // as the spine: a guest's journal holds no hour it cannot take, nor a locked body's an hour its lock froze (round ten)
+    if ((ctx.p.guest && !q.guestLegal) || ctx.p.locked) continue;
     const s = ctx.p.quests[q.id];
     if (s < q.steps.length) out.push({ ...objectiveOf(ctx, q, q.steps[s]), questTitle: q.title, district: q.district });
   }
@@ -287,6 +289,7 @@ export function objectiveFor(ctx: Ctx): Objective | null {
   for (let i = started.length - 1; i >= 0; i--) {
     const q = questById(started[i]);
     if (!q || q.kind !== "side") continue;
+    if ((p.guest && !q.guestLegal) || p.locked) continue;
     const s = p.quests[q.id];
     if (s < q.steps.length) return objectiveOf(ctx, q, q.steps[s]);
   }

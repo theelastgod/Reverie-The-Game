@@ -484,6 +484,26 @@ export function applyMarket(
 }
 
 /**
+ * A body unsealed back to a guest takes its listings off the Grid, as a cancel would (the item back in its hands, a fee kept
+ * back charged as far as the purse goes), and hears nothing more: the unseal's own line says why. A guest lists nothing, and
+ * a row naming the serial beside a GUEST shape would tie the two for any viewer (the player-defect sweep, round ten).
+ */
+export function withdrawListings(w: WorldState, id: string): WorldState {
+  const mine = w.market.filter(l => l.sellerId === id);
+  if (mine.length === 0) return w;
+  let next: WorldState = { ...w, market: w.market.filter(l => l.sellerId !== id) };
+  for (const listing of mine) {
+    const p = next.players.get(id);
+    if (!p) return next;
+    const owed = Math.min(listing.fee ?? 0, p.bestand);
+    next = (owed > 0 ? spend(next, id, owed, "listing") : null) ?? next;
+    const after = next.players.get(id) ?? p;
+    next = setPlayer(next, addItem(after, listing.item));
+  }
+  return next;
+}
+
+/**
  * The player's own thing posted on the Grid without passing through their hands
  * (Quill lists the print she made of their hint): the fee is spent now when the
  * purse has it, else kept back from the sale; the price is theirs only when a

@@ -11,6 +11,7 @@ import { emptyWorld, rebindBody, say, spawnGuest, tickWorld } from "../../src/si
 import { migratePlayer, migrateWorld, SHAPE } from "../../src/sim/migrate.ts";
 import { DT } from "../../src/sim/constants.ts";
 import { applyAction, applyLink, applyWallet, unsealBody } from "../../src/sim/actions.ts";
+import { withdrawListings } from "../../src/sim/economy.ts";
 import { LINES } from "../../src/sim/content/index.ts";
 import { CHALLENGE_TTL_MS, challengeMessage, isAddress, normalizeAddress, recoverAddress } from "./wallet.ts";
 import { serialFor, type HolderCache } from "./holders.ts";
@@ -443,13 +444,17 @@ export class ReverieWorld {
       const saved = record !== undefined ? migratePlayer(record, bodyId(), this.w.now) : undefined; // the shape migration, as on every read
       const active = [...this.sessions.entries()].find(([, session]) => session.token === token);
       let player = (active && this.w.players.get(active[1].id)) ?? saved ?? spawnGuest(bodyId(), this.w.now);
+      let unsealed = false;
       // A saved Angel whose serial another body now holds (walking now, or the index's since a newer link) comes back unsealed.
       if (player === saved && !saved.guest && saved.serial !== null) {
         const serial = saved.serial;
         const walking = [...this.w.players.values()].some(o => o.id !== saved.id && !o.guest && o.serial === serial);
         const owner = this.serialOwners.get(serial) ?? (await this.ctx.storage.get<string>(serialKey(serial)));
         if (owner !== undefined) this.serialOwners.set(serial, owner);
-        if (walking || (owner !== undefined && owner !== token)) player = unsealBody(saved, this.w.now);
+        if (walking || (owner !== undefined && owner !== token)) {
+          player = unsealBody(saved, this.w.now);
+          unsealed = true;
+        }
       }
       // A body back from its record is as its record has it: the join's checkpoint need not write it again.
       if (player === saved) this.saved.set(player.id, player);
@@ -462,6 +467,7 @@ export class ReverieWorld {
       this.ctx.acceptWebSocket(server as WebSocket);
       const id = player.id;
       this.withBody(id, player);
+      if (unsealed) this.w = withdrawListings(this.w, id); // its rows named the serial it no longer holds (round ten)
       const session: Session = { id, token };
       this.sessions.set(server, session);
       server.serializeAttachment(session);
