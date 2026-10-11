@@ -26,7 +26,8 @@ const SITE_NAMES: Record<string, string> = { "clearing-ring": "the Clearing", "h
 
 // Copy owned by this module.
 const TITHE_WRONG_HALL = "This hall keeps another House standing. Yours is elsewhere.";
-const TITHE_PAID = (cost: number) => `Tithe. ${cost} Bestand. Upkeep, not a stick. The lamp holds.`;
+// "The lamp holds" only under a lit lamp: an unread hall is dark, as its own bounty says (round fifteen)
+const TITHE_PAID = (cost: number, lit: boolean) => `Tithe. ${cost} Bestand. Upkeep, not a stick.${lit ? " The lamp holds." : ""}`;
 const BOUNTY_DARK = "The hall is dark. Read the plaque before you ask the pool for anything.";
 // The bounty's gate is standing, the pool and a purse a war's span (CONTRACTS applyBounty), not the omen: the refusals say so.
 const BOUNTY_NONE = "Your House has no standing here yet. Tithe, or hold a site.";
@@ -213,7 +214,7 @@ export function applyTithe(w: WorldState, id: string): WorldState {
   const standing = { ...paid.houses.standing, [house]: paid.houses.standing[house] + 1 };
   const next: WorldState = { ...paid, houses: { ...paid.houses, standing, tithe: paid.houses.tithe + cost } };
   const me = next.players.get(id) ?? p;
-  return speak(next, me, TITHE_PAID(cost));
+  return speak(next, me, TITHE_PAID(cost, next.pois[hallFor(house)]?.state === "lit"));
 }
 
 export function applyBounty(w: WorldState, id: string): WorldState {

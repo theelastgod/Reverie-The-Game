@@ -2847,6 +2847,28 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   at a node. Noted, as the script has them: Ord's door line to a body
   that kept its first node, Nara's gone line after the garden.
 
+- The player-defect sweep, round fifteen (2026-10-11; two scans: every
+  journal step, 45 spine and 79 side, against bodies parked at it, and
+  every place's verbs and lines, 291,006 presses by 6,000 coherent
+  bodies in coherent worlds; cases in `sweep15.test.ts` and
+  `sweep15-places.test.ts`). The journal: Form 9 said "Q refuses" at a
+  window whose Q was still the spine's tithe (pressing it let the tithe
+  ride); it now says to decide the tithe first. The vault's hour sent a
+  body with no copy to a vault that offered it no E; it sends it to the
+  tray first. The mortality step said "Nara offers a burial" to a body
+  she had left or waited on; it reads her state. And under the bell the
+  bought hour's E sat behind the other hour's three waits, so the press
+  the journal named struck the bell instead; the bought hour's wait
+  comes first. The places: the vault read "open" to a body it told was
+  sealed; prepare told a body that chose to stand alone that the party
+  stood in the hole; a tithe at an unread, dark hall said "The lamp
+  holds"; the plaque's reread said stability under a struck word; the
+  ring after the rite said "asphalt again" over a hole another body had
+  opened; shrine upkeep promised aura to a full aura. Each now reads
+  what is so. Noted, verbatim script: the Cable's "the Strait is already
+  paying" after a refusal, the funeral desk's "Nara Vale's street" with
+  her gone, the struck bell's "does not strike" line under its name.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.

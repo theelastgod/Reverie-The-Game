@@ -1358,7 +1358,7 @@ The paper panel, the gold mark:
 *Steps `prepare` and `stance` (shipped). The ring and the four seed grounds. Other Angels are in it on both sides; the contest is the only fight that is also the plot. Plate `clearing-ring.jpg`; `props/clearing-seed`; `audio/bed-clearing`. Angels only.*
 
 **THE RING** — prepare, F (shipped, pois.ts)
-> You keep the hole. The party still willing stands in it. The Passing is not yet the weather.
+> You keep the hole. The party still willing stands in it. *(a body that stands alone, new, round fifteen: "You keep the hole. You stand in it alone; Ord counts from the gate.")* The Passing is not yet the weather.
 [F.PREPARE; the hole opens for everyone; news: "A Clearing was prepared."]
 
 **THE RING** — the hole opening (shipped, clearing.ts; not said: the prepare verb's line replaces it in the same press, and since round seven it posts no news of its own, so an opened hole is the one line above)

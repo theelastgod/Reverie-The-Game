@@ -750,7 +750,10 @@ const ANNEX: Quest[] = [
       step({
         id: "file",
         title: "File Form 9, or refuse it",
-        detail: "The tax window takes Form 9. Press E to pay the freeze fee and file it. Press Q to refuse and let the freeze lapse on paper.",
+        // the window's E and Q are the spine's tithe until it is decided: the journal says so, not "Q refuses" (round fifteen)
+        detail: ({ p }) => ((p.flags[F.TITHE] ?? 0) > 0
+          ? "The tax window takes Form 9. Press E to pay the freeze fee and file it. Press Q to refuse and let the freeze lapse on paper."
+          : "The tax window takes Form 9, once this hour's tithe is decided there. Decide the tithe first; then press E to file Form 9, or Q to refuse it."),
         target: "tax-window",
         plate: "safety-annex.jpg",
         done: ({ p }) => has(p, SF.FORM9_FILED) || p.choices[SC.FORM9] === "refused",
@@ -1147,8 +1150,11 @@ const RING: Quest[] = [
       step({
         id: "leave",
         title: "Bring a copy to the vault",
-        detail: "A forged hint from Quill's tray. Press E at the cult vault to leave it there. It will not come back.",
-        target: "cult-vault",
+        // a body with no copy in hand is sent to the tray for one first (round fifteen)
+        detail: ({ p }) => (hasCopy(p)
+          ? "A forged hint from Quill's tray. Press E at the cult vault to leave it there. It will not come back."
+          : "A forged hint from Quill's tray: you hold none. Press E at the forge tray to craft a copy, then E at the cult vault to leave it there."),
+        target: ({ p }) => (hasCopy(p) ? "cult-vault" : "forge-tray"),
         plate: "wet-grid-cult.jpg",
         done: ({ p }) => has(p, SF.VAULT_LEFT),
         onComplete: [notice("The copy went into the vault. It is the only thing in there that lists. It never will again.")],

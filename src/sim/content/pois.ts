@@ -27,6 +27,9 @@ const chose = (ctx: Ctx, key: string, value: string): boolean => ctx.p.choices[k
 const poiState = (ctx: Ctx, id: string): string => ctx.w.pois[id]?.state ?? "";
 const gestellTax = (g: number): number => Math.floor(Math.max(0, Math.min(100, g)) / 4);
 const partyWilling = (ctx: Ctx): boolean => ctx.p.party.nara !== "gone" && ctx.p.party.ord !== "gone";
+/** The safety plaque as the city has it: struck through once a body named the weather the process (round fifteen). */
+const struckPlaque = (ctx: Ctx): boolean => ctx.w.pois["safety-plaque"]?.state === "named";
+const plaqueWord = (ctx: Ctx): string => (struckPlaque(ctx) ? "Stability, struck through." : "Stability, it says.");
 const hasCult = (ctx: Ctx): boolean => ctx.p.items.some(i => i.kind === "cult");
 const hallOf = (house: string): string => (house ? `hall-${house}` : "");
 /** The aura the city addresses: the body's, plus what a Glamour paints on. Guests are 0. */
@@ -158,10 +161,10 @@ const NAVE: PoiConfig[] = [
         when: ctx => has(ctx, F.WEATHER_SAFETY) && !(has(ctx, F.WEATHER_ORD) && has(ctx, F.WEATHER_NARA) && !has(ctx, F.WEATHER_NAMED)),
         guest: "allow",
         say: ctx => (has(ctx, F.WEATHER_NAMED)
-          ? `Office of Safety. You called it ${ctx.p.choices[C.WEATHER] === "end" ? "the end of world as world" : ctx.p.choices[C.WEATHER] === "process" ? "the process" : "stability"}. The plaque still says stability. Plaques do.`
-          : has(ctx, F.WEATHER_ORD) ? "Office of Safety. Stability, it says. You have two names. Nara has the third. Do not name it from a plaque."
-          : has(ctx, F.WEATHER_NARA) ? "Office of Safety. Stability, it says. You have two names. Ord has the third. Do not name it from a plaque."
-          : "Office of Safety. Stability, it says. You have one name. Ord and Nara have the other two. Do not name it from a plaque.")
+          ? `Office of Safety. You called it ${ctx.p.choices[C.WEATHER] === "end" ? "the end of world as world" : ctx.p.choices[C.WEATHER] === "process" ? "the process" : "stability"}. ${struckPlaque(ctx) ? "The plaque says stability, struck through." : "The plaque still says stability. Plaques do."}`
+          : has(ctx, F.WEATHER_ORD) ? `Office of Safety. ${plaqueWord(ctx)} You have two names. Nara has the third. Do not name it from a plaque.`
+          : has(ctx, F.WEATHER_NARA) ? `Office of Safety. ${plaqueWord(ctx)} You have two names. Ord has the third. Do not name it from a plaque.`
+          : `Office of Safety. ${plaqueWord(ctx)} You have one name. Ord and Nara have the other two. Do not name it from a plaque.`)
           + pinnedLine(ctx) + bulletinLine(ctx),
       },
     ],
@@ -1147,7 +1150,8 @@ const shrine = (id: string, name: string, line: string): PoiConfig => ({
       when: sacredOpen,
       guest: spectate,
       cost: { bestand: UPKEEP_COST, sink: "upkeep" },
-      say: `${line} Five Bestand into the ground. A Wink. Aura thickens a little.`,
+      // nothing thickens a full aura (round fifteen; the restore's rule since round two)
+      say: ctx => `${line} Five Bestand into the ground. A Wink. ${Math.round(ctx.p.aura) < AURA_MAX ? "Aura thickens a little." : "Aura is as full as it goes."}`,
       effects: [
         { kind: "poi", id, state: "kept" },
         { kind: "winke", delta: 1 },
@@ -1231,7 +1235,8 @@ const RING: PoiConfig[] = [
   },
   {
     id: "cult-vault",
-    label: ctx => (poiState(ctx, "cult-vault") === "open" ? "Cult vault — open" : "Cult vault"),
+    // open to a body with a cult object in hand, as the door says; sealed to the rest (round fifteen)
+    label: ctx => (poiState(ctx, "cult-vault") === "open" && hasCult(ctx) ? "Cult vault — open" : "Cult vault"),
     plate: "wet-grid-cult.jpg",
     verbs: [
       {
@@ -1424,7 +1429,10 @@ const CLEARING: PoiConfig[] = [
         // else in the city opens one): before the rite F stays the rite's (the player-defect sweep, round four).
         when: ctx => has(ctx, F.MORTALITY) && !!ctx.p.choices[C.PARTY] && partyWilling(ctx) && (!has(ctx, F.PREPARE) || stancePending(ctx) || passedThisSeason(ctx)) && ringGround(ctx) === "ok",
         guest: spectate,
-        say: "You keep the hole. The party still willing stands in it. The Passing is not yet the weather.",
+        // a body that chose to stand alone stands in it alone; the party waits at the gate (round fifteen)
+        say: ctx => (chose(ctx, C.PARTY, "alone")
+          ? "You keep the hole. You stand in it alone; Ord counts from the gate. The Passing is not yet the weather."
+          : "You keep the hole. The party still willing stands in it. The Passing is not yet the weather."),
         // The news is this verb's, not the journal step's: one opened hole is one line, and a body that joins it posts none.
         effects: ctx => [
           { kind: "flag", key: F.PREPARE },
@@ -1496,11 +1504,12 @@ const CLEARING: PoiConfig[] = [
         guest: spectate,
         say: ctx => {
           switch (ctx.p.choices[C.PASSING]) {
-            case "appearance": return "A trace. The city was world for a minute. It is a ring in the asphalt again. That is not a loss. That is what a trace is.";
+            // a hole another body opened since is not asphalt (round fifteen)
+            case "appearance": return ringGround(ctx) === "open" ? "A trace. The city was world for a minute. Someone has opened the ground again. That is not a loss. That is what a trace is." : "A trace. The city was world for a minute. It is a ring in the asphalt again. That is not a loss. That is what a trace is.";
             // she stays until she does not: a body she has left hears the ring without her (round eight)
             case "absence": return ctx.p.party.nara === "gone" ? "The hour went by. Absence is honest. The ring is a ring." : "The hour went by. Absence is honest. The ring is a ring. Nara Vale stays.";
             case "hijack": return "The hour was claimed. You are marked. The world continues. So do you.";
-            case "failed": return "No hole. Gestell kept the weather. No stipend. Next season there is asphalt again and people to stand on it.";
+            case "failed": return ringGround(ctx) === "open" ? "Your hole did not hold. Gestell kept the weather. No stipend. Someone has opened the ground again; it is theirs." : "No hole. Gestell kept the weather. No stipend. Next season there is asphalt again and people to stand on it.";
             default: return "A ring in the asphalt.";
           }
         },

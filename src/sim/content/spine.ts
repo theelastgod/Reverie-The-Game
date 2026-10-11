@@ -385,7 +385,8 @@ const M4_STEPS: QuestStep[] = [
   {
     id: "mortality",
     title: "The act",
-    detail: "A mortality act before the ring takes anyone. Q at the buried garden keeps watch. Nara offers a burial. Ione Kade in the Care has a last word; she will not return. F speaks.",
+    // Nara offers the burial only while she is with the body (round fifteen)
+    detail: ctx => `A mortality act before the ring takes anyone. Q at the buried garden keeps watch. ${ctx.p.party.nara === "gone" ? NARA_LEAVES : ctx.p.party.nara === "waiting" ? NARA_WAITS : "Nara offers a burial."} Ione Kade in the Care has a last word; she will not return. F speaks.`,
     target: ctx => (chose(ctx, C.MORTALITY, "lastword") || (ctx.w.flags[W.IONE_GONE] ?? 0) > 0 ? "wreckage-garden" : "home:ione"),
     plate: "plate-ione.jpg",
     done: ctx => has(ctx, F.MORTALITY),

@@ -245,6 +245,14 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
   ],
   "hour-bell": exclusive([
     {
+      // first under the bell: a body holding both of Halla's hours waits for the hour it bought before it starts its three (round fifteen)
+      key: "E", label: "Wait for the bought hour", choice: "side:hours:wait",
+      when: atStep(SQ.HOURS, 1), guest: "allow", once: SF.HOURS_WAITED,
+      // The time comes and goes, and every oval on the Kerb speaks (II.9). A voice is not a Wink: a guest, who may buy the hour, hears it too.
+      effects: [{ kind: "dialogue", npc: "caul", node: "oval-hour" }],
+      say: "The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.",
+    },
+    {
       key: "E", label: "Wait under the bell", choice: "side:hour:wait",
       when: atStep(SQ.HOUR, 0), guest: "allow",
       effects: [{ kind: "count", key: SF.HOUR_WAITED, delta: 1 }],
@@ -254,13 +262,6 @@ export const SIDE_POI_VERBS: Record<string, PoiVerb[]> = {
         if (n === 2) return "You wait. Someone on the terrace stops talking to watch you. The bell does not strike.";
         return "You wait. The bell strikes. Once. Nobody signed for it. The terrace has gone quiet.";
       },
-    },
-    {
-      key: "E", label: "Wait for the bought hour", choice: "side:hours:wait",
-      when: atStep(SQ.HOURS, 1), guest: "allow", once: SF.HOURS_WAITED,
-      // The time comes and goes, and every oval on the Kerb speaks (II.9). A voice is not a Wink: a guest, who may buy the hour, hears it too.
-      effects: [{ kind: "dialogue", npc: "caul", node: "oval-hour" }],
-      say: "The time on the slip comes and goes. The bell is on a schedule. The schedule is the Concern's. So, it turns out, is the slip. Safety only carries them.",
     },
   ]),
   "forecast-glass": exclusive([
