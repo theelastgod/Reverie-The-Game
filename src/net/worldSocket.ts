@@ -14,6 +14,9 @@ export const INTENT_THROTTLE_MS = 250;
 export const RECONNECT_MIN_MS = 1000;
 export const RECONNECT_MAX_MS = 10000;
 export const MOCK_LINK_SIG = "mock";
+/** The city sends a frame every 50 ms step: this long with none is a socket gone quiet under an ONLINE chip (a faded
+ *  phone signal, a dropped NAT entry), closed here and reconnected rather than left to the OS's TCP timeout. */
+export const FRAME_SILENCE_MS = 5000;
 
 const IDLE: Intent = { up: false, down: false, left: false, right: false };
 
@@ -38,6 +41,8 @@ export class WorldSocket {
   /** The slow sections last received (protocol v3); a fast frame merges over them into `snap`. */
   private slow: SlowState = {};
   private lastFast: FastFrame | null = null;
+  private lastFrameAt = 0;
+  private watchdog: ReturnType<typeof setInterval> | null = null;
 
   /** Monotonic counter bumped on every snapshot, so the scene can tell a new one apart. */
   get seq(): number {
@@ -64,6 +69,7 @@ export class WorldSocket {
       this.lastFast = null;
       ws.onmessage = (ev: MessageEvent) => {
         if (this.ws !== ws) return;
+        this.lastFrameAt = Date.now();
         let data: ServerMsg | null = null;
         try {
           data = JSON.parse(String(ev.data)) as ServerMsg;
@@ -76,12 +82,13 @@ export class WorldSocket {
           this.you = data.you;
           this.attempts = 0;
           this.setStatus("online");
+          this.watch(ws);
           this.onHello?.(data);
         } else if (data.t === "snap") {
           this.slow = applySlow({}, { ...data, t: "slow" });
           this.publish(data);
         } else if (data.t === "slow") {
-          this.slow = applySlow(this.slow, data);
+          this.slow = applySlow(this.slow, data, this.lastFast ? new Set(this.lastFast.players.map(m => m.id)) : undefined);
           // A slow frame alone still moves the HUD (news, notices, the objective) when a fast frame has been seen.
           if (this.lastFast) this.publish(mergeFrames(this.slow, this.lastFast));
         } else if (data.t === "fast") {
@@ -108,6 +115,26 @@ export class WorldSocket {
     }
   }
 
+  /** Closes and reconnects a socket the city has stopped hearing from; one interval per socket, cleared with it. */
+  private watch(ws: WebSocket): void {
+    if (this.watchdog) clearInterval(this.watchdog);
+    this.watchdog = setInterval(() => {
+      if (this.ws !== ws) {
+        if (this.watchdog) clearInterval(this.watchdog);
+        this.watchdog = null;
+        return;
+      }
+      if (Date.now() - this.lastFrameAt < FRAME_SILENCE_MS) return;
+      // detached first: a half-open socket's close can take as long as the silence did
+      this.ws = null;
+      this.lastIntentKey = "";
+      if (this.watchdog) clearInterval(this.watchdog);
+      this.watchdog = null;
+      ws.close();
+      if (!this.stopped) this.scheduleReconnect();
+    }, 1000);
+  }
+
   private publish(snap: Snap): void {
     this.snap = snap;
     this.you = snap.you;
@@ -128,6 +155,8 @@ export class WorldSocket {
 
   disconnect(): void {
     this.stopped = true;
+    if (this.watchdog) clearInterval(this.watchdog);
+    this.watchdog = null;
     if (this.retry) clearTimeout(this.retry);
     this.retry = null;
     const ws = this.ws;

@@ -13,7 +13,7 @@
 import type { DialogueView } from "../sim/types";
 import { assetUrl, setText, show } from "./format";
 import { focusKeeper } from "./focus";
-import { gen, pickGen } from "../assets/gen";
+import { gen, genFailed, pickGen, setImageSrc } from "../assets/gen";
 import { portraitFor } from "../assets/slots";
 
 /** The choices a dialogue shows, one per number key 1 to 9 (CityScene binds the same nine). */
@@ -100,10 +100,16 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
       signature = sig;
       drawn = view.node;
       // A generated portrait for the secondary people when the manifest has it; else the content's plate.
-      const src = pickGen(gen.current, portraitFor(view.npc), assetUrl(view.portrait || "guest.jpg"));
+      const plateSrc = assetUrl(view.portrait || "guest.jpg");
+      const picked = pickGen(gen.current, portraitFor(view.npc), plateSrc);
+      const src = genFailed(picked) ? plateSrc : picked;
       if (portrait && currentPortrait !== src) {
         currentPortrait = src;
-        portrait.src = src;
+        setImageSrc(portrait, src, () => {
+          if (src === plateSrc) return;
+          currentPortrait = plateSrc;
+          portrait.src = plateSrc;
+        });
       }
       setText(speaker, view.speaker || "The city");
       setText(text, view.text);

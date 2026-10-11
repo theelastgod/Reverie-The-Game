@@ -6,7 +6,7 @@
 import type { Objective, SideObjective } from "../sim/types";
 import type { GlassView, YouView } from "../sim/protocol";
 import { assetUrl, bearingTo, glassRows, roman, setClass, setText, show } from "./format";
-import { gen, pickGen } from "../assets/gen";
+import { gen, genFailed, pickGen, setImageSrc } from "../assets/gen";
 import { ambientFor, plateFor } from "../assets/slots";
 import { LoopSlot } from "./loops";
 
@@ -40,8 +40,9 @@ export function mountJournal(root: HTMLElement): JournalPanel {
 
   const toggle = () => {
     if (!panel) return;
-    if (window.innerWidth <= COLLAPSE_WIDTH) panel.classList.toggle("open");
-    else panel.classList.toggle("closed");
+    const next = journalToggled(panel.classList.contains("open"), panel.classList.contains("closed"), window.innerWidth <= COLLAPSE_WIDTH);
+    panel.classList.toggle("open", next.open);
+    panel.classList.toggle("closed", next.closed);
   };
   tab?.addEventListener("click", toggle);
 
@@ -57,10 +58,16 @@ export function mountJournal(root: HTMLElement): JournalPanel {
       }
       // The plate: a generated one for this district when the manifest has it, else the objective's own.
       if (objective && plate) {
-        const wanted = pickGen(gen.current, plateFor(you.district, hot), assetUrl(objective.plate || "plate-arena.jpg"));
+        const own = assetUrl(objective.plate || "plate-arena.jpg");
+        const picked = pickGen(gen.current, plateFor(you.district, hot), own);
+        const wanted = genFailed(picked) ? own : picked;
         if (plateFile !== wanted) {
           plateFile = wanted;
-          plate.src = wanted;
+          setImageSrc(plate, wanted, () => {
+            if (wanted === own) return;
+            plateFile = own;
+            plate.src = own;
+          });
         }
       }
       loop.set(ambientFor(you.district));
@@ -115,4 +122,14 @@ export function mountJournal(root: HTMLElement): JournalPanel {
       tab?.removeEventListener("click", toggle);
     },
   };
+}
+
+/**
+ * The journal's toggle, whatever width it was last pressed at: wide, `.closed` hides the body; narrow (<= COLLAPSE_WIDTH),
+ * anything not `.open` does. Both classes are set to the opposite of what shows now, so a close made wide and a rotation to
+ * narrow cannot leave a `.closed` that beats every press (the player-defect sweep, round eight).
+ */
+export function journalToggled(open: boolean, closed: boolean, narrow: boolean): { open: boolean; closed: boolean } {
+  const shown = narrow ? open : !closed;
+  return { open: !shown, closed: shown };
 }

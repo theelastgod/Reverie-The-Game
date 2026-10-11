@@ -137,7 +137,19 @@ stands still and the focused dialog scrolls it, the hint pinned clear of the las
 `WorldSocket`: `POST /session` then `ws(s)://host/ws`; `hello` sets `id`,
 `you`; `snap` replaces `snap`; reconnect with backoff (1 s → 10 s); code 4001 =
 "elsewhere" (another tab); `sendIntent` throttled to 250 ms unless changed;
-typed senders for every `ClientMsg`. Status exposed for the HUD.
+typed senders for every `ClientMsg`. Status exposed for the HUD. Since the
+player-defect sweep, round eight: a socket that has heard no frame for
+`FRAME_SILENCE_MS` (5 s; the city sends one every 50 ms step) is closed and
+reconnected, not left ONLINE; a press the socket could not send (any verb,
+a choice, Continue, the market) flashes "Not connected. The city did not
+hear that." at most once in 2 s (`keys.ts` `tellUnheard`), and is never
+replayed; a slow frame's roster drops the entries of bodies the last fast
+frame no longer shows (the server re-sends them on return). The manifest
+request is waited on for `MANIFEST_WAIT_MS` (3 s), then the boot goes on
+with an empty one; a generated portrait, plate, seal or badge that fails to
+load falls back as an absent one does (`gen.ts` `setImageSrc`). The
+journal's J and tab flip what shows at the current width (`journalToggled`),
+whatever width the last press was made at.
 
 ## Assistive technology (the HUD's markup)
 The HUD is DOM, so it can say what it is. The title, the dialogue, the lock

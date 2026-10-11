@@ -161,6 +161,18 @@ describe("the snapshot diet", () => {
     expect(renamed.roster!.map(r => [r.id, r.name])).toEqual([[one.id, one.name], [two.id, "#0042"], ["new", one.name]]);
   });
 
+  it("drops the roster entries of bodies the last fast frame no longer shows, so a long session does not keep every body it has seen", () => {
+    const { slow } = splitSnap(crowd(4).snap);
+    const state = applySlow({}, slow);
+    const [one, two, three] = state.roster!;
+    // the last fast frame showed one and three; two walked off and the server forgot it; four arrives
+    const next = applySlow(state, { t: "slow", v: PROTOCOL_VERSION, roster: [{ ...one, id: "four" }] }, new Set([one.id, three.id]));
+    expect(next.roster!.map(r => r.id)).toEqual([one.id, three.id, "four"]);
+    // two comes back: the server owes its entry again, and it is drawn
+    const back = applySlow(next, { t: "slow", v: PROTOCOL_VERSION, roster: [two] }, new Set([one.id, three.id, "four"]));
+    expect(back.roster!.map(r => r.id)).toContain(two.id);
+  });
+
   it("encodes the fast frame byte for byte as JSON.stringify would, from fragments kept per body in the step's cache", () => {
     const { w, snap } = crowd(6);
     const step = stepViews(w);

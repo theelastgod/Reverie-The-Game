@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { INTENT_THROTTLE_MS, WorldSocket } from "./worldSocket";
+import { FRAME_SILENCE_MS, INTENT_THROTTLE_MS, WorldSocket } from "./worldSocket";
 import { CLIENT_MSG_TYPES, PROTOCOL_VERSION, isClientMsg, type ClientMsg } from "../sim/protocol";
 
 class FakeSocket {
@@ -324,6 +324,33 @@ describe("senders emit exact ClientMsg shapes", () => {
     FakeSocket.instances[0].open();
     expect(net.heavy()).toBe(false);
     expect(FakeSocket.instances[0].send).not.toHaveBeenCalled();
+    net.disconnect();
+  });
+});
+
+describe("a socket gone quiet (the player-defect sweep, round eight)", () => {
+  it("closes and reconnects after FRAME_SILENCE_MS with no frame, rather than standing ONLINE with presses going nowhere", async () => {
+    const { net, ws } = await online();
+    vi.advanceTimersByTime(FRAME_SILENCE_MS - 1000);
+    expect(net.status).toBe("online");
+    vi.advanceTimersByTime(2000);
+    expect(net.status).toBe("reconnecting");
+    expect(net.connected).toBe(false);
+    expect(net.choose("x")).toBe(false);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(FakeSocket.instances.length).toBe(2);
+    expect(FakeSocket.instances[0]).toBe(ws);
+    net.disconnect();
+  });
+
+  it("a socket that keeps hearing frames stays up", async () => {
+    const { net, ws } = await online();
+    for (let i = 0; i < 40; i++) {
+      vi.advanceTimersByTime(500);
+      ws.message({ t: "fast", tick: i, now: i, you: {}, players: [], enemies: [] });
+    }
+    expect(net.status).toBe("online");
+    expect(FakeSocket.instances.length).toBe(1);
     net.disconnect();
   });
 });

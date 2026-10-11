@@ -22,7 +22,7 @@ import type { WalletOutcome } from "../net/wallet";
 import { audio } from "../audio/bus";
 import { eventRows, mountEvents, type EventsPanel } from "./events";
 import { ledgerModel, mountLedger, type LedgerPanel } from "./ledger";
-import { gen } from "../assets/gen";
+import { gen, genFailed, setImageSrc } from "../assets/gen";
 import { badgeFor, sealFor } from "../assets/slots";
 import { paperToUse, pointerReleasesFocus } from "./keys";
 
@@ -452,9 +452,10 @@ export class Hud {
     setClass(this.identity, "guest", you.guest);
     setClass(this.identity, "angel", !you.guest);
     const seal = you.guest ? null : sealFor(you.house);
-    const sealUrl = seal && gen.has(seal) ? gen.url(seal, "") : "";
-    if (sealUrl && this.identitySeal.getAttribute("src") !== sealUrl) this.identitySeal.src = sealUrl;
-    show(this.identitySeal, !!sealUrl);
+    const sealUrl = seal && gen.has(seal) && !genFailed(gen.url(seal, "")) ? gen.url(seal, "") : "";
+    const sealEl = this.identitySeal;
+    if (sealUrl && sealEl.getAttribute("src") !== sealUrl) setImageSrc(sealEl, sealUrl, () => show(sealEl, false));
+    show(sealEl, !!sealUrl);
     if (this.identityTags) {
       this.identityTags.replaceChildren();
       if (you.locked) this.identityTags.append(tag("LOCKED", "ink"));
@@ -557,9 +558,10 @@ export class Hud {
     this.kitSig = sig;
     setText(this.kitText, kitLine(you.messenger, cd, active));
     const badge = you.guest ? null : badgeFor(you.messenger);
-    const badgeUrl = badge && gen.has(badge) ? gen.url(badge, "") : "";
-    if (badgeUrl && this.kitBadge.getAttribute("src") !== badgeUrl) this.kitBadge.src = badgeUrl;
-    show(this.kitBadge, !!badgeUrl);
+    const badgeUrl = badge && gen.has(badge) && !genFailed(gen.url(badge, "")) ? gen.url(badge, "") : "";
+    const badgeEl = this.kitBadge;
+    if (badgeUrl && badgeEl.getAttribute("src") !== badgeUrl) setImageSrc(badgeEl, badgeUrl, () => show(badgeEl, false));
+    show(badgeEl, !!badgeUrl);
     setClass(this.kit, "cooling", cd > 0 && !active);
     setClass(this.kit, "active", active);
     if (this.kit) this.kit.disabled = you.guest || !you.messenger;

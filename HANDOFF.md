@@ -2586,7 +2586,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   values, the idle body, the client under degraded conditions, text
   proofed over real state; the finders ran as agents, and with the
   skeptic agents stopped by the usage limit each finding was reproduced
-  and judged by hand before its fix). Thirteen confirmed and fixed:
+  and judged by hand before its fix). Fifteen confirmed, in fourteen fixes
+  (the first part's commit message says thirteen; it miscounted):
   - Enemies: a chase that a corner or a pillar holds in place (the three
     stair clerks on an idle body at the Kerb's wall stub, an enforcer
     wedged on the shop block with its body gone north) stayed in aggro
@@ -2633,13 +2634,32 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   ledger's two hold the fixes; each fails on 249b0c9. Judged otherwise:
   a second press's refusal overwriting the first press's line in one step
   (both presses must ride one frame to be seen, and keeping the first
-  line would hide a real refusal). Still to judge in this round's second
-  part: a silent socket kept ONLINE with no frame-silence check, the
-  journal that cannot be reopened after a close at wide width and a
-  narrowing, a stalled manifest request holding the boot, a press made
-  while reconnecting dropped with no line, a generated image that fails
-  to load leaving a blank frame, and the client's roster keeping every
-  body it has seen.
+  line would hide a real refusal).
+- The player-defect sweep, round eight, second part (2026-10-11; the
+  client under degraded conditions and the idle tab). Six confirmed and
+  fixed: a socket gone silent (a faded phone signal, a dropped NAT entry)
+  stood ONLINE with every press going nowhere until the OS's TCP timeout;
+  five seconds without a frame now closes and reconnects it. A press made
+  while reconnecting (a verb, a choice, Continue, the market) vanished
+  with no line; it flashes "Not connected. The city did not hear that."
+  at most every two seconds and is not replayed. The journal closed at
+  wide width and then narrowed (a tablet turned to portrait) could not be
+  reopened by J or its tab; the toggle flips what shows at the width it
+  is pressed at. A manifest request that never answered held the boot
+  (no scene, no socket) until the browser gave up; it is waited on for
+  three seconds. A generated portrait, plate, seal or badge listed in the
+  manifest that failed to load left an empty frame; it falls back as an
+  absent one does and is not asked for again. A tab left open (the guest
+  spawn sees every guest) kept a roster entry for every body it had ever
+  seen and rebuilt them all twenty times a second; a slow frame's roster
+  drops the bodies the last fast frame no longer shows, which the server
+  forgets and re-sends on their return. Tests: the socket's silence
+  watchdog (two cases), `keys.test.ts`'s throttle, `journal.test.ts`, the
+  manifest's wait and the image fallback in `gen.test.ts`, the roster's
+  pruning in `frames.test.ts`. Docs: CLIENT.md's network section,
+  CONTRACTS' applySlow. The round's twenty-two findings: twenty-one
+  confirmed and fixed in twenty fixes across both parts (the stair clerks
+  and the snagged enforcer share one), one judged otherwise.
 
 ## Verified (2026-09-25, integration)
 
@@ -3754,6 +3774,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   check (desktop and phone, `RENDER_MIN_FPS=5` on the container's
   software WebGL; the local D1 migrated first, or the landing log
   answers 503).
+- The player-defect sweep, round eight, second part (2026-10-11):
+  typecheck, 755 tests in 55 files, the build; on a fresh local world the
+  session smoke, the Movement I smoke and the render check (desktop and
+  phone at `RENDER_MIN_FPS=5`), so the watchdog does not close a healthy
+  socket over a long session's frames.
 
 ## Backlog
 

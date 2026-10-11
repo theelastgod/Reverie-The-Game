@@ -146,18 +146,23 @@ export function mergeFrames(slow: SlowState, fast: FastFrame): Snap {
 }
 
 /** Roster entries by id: a frame's entries replace or add, everything else is kept (a body out of view keeps its entry until it returns changed). */
-export function mergeRoster(kept: PlayerRoster[] | undefined, incoming: PlayerRoster[]): PlayerRoster[] {
+export function mergeRoster(kept: PlayerRoster[] | undefined, incoming: PlayerRoster[], live?: ReadonlySet<string>): PlayerRoster[] {
   if (!kept || !kept.length) return incoming;
-  const byId = new Map(kept.map(r => [r.id, r]));
+  const byId = new Map<string, PlayerRoster>();
+  // A body the last fast frame no longer shows has been forgotten by the server (SlowTracker), which sends it again,
+  // current, when it returns: the client drops it too, or a tab left open at the guest spawn keeps every guest who ever
+  // joined and rebuilds them all on every fast frame (the player-defect sweep, round eight).
+  for (const r of kept) if (!live || live.has(r.id)) byId.set(r.id, r);
   for (const r of incoming) byId.set(r.id, r);
   return [...byId.values()];
 }
 
-/** Folds a slow frame into the kept slow state: only the sections it carries change; the roster merges by id. */
-export function applySlow(slow: SlowState, frame: SlowFrame): SlowState {
+/** Folds a slow frame into the kept slow state: only the sections it carries change; the roster merges by id, keeping only
+ *  the bodies in `live` (the last fast frame's) when it is given. */
+export function applySlow(slow: SlowState, frame: SlowFrame, live?: ReadonlySet<string>): SlowState {
   const next = { ...slow };
   for (const k of SLOW_KEYS) if (k in frame) (next as Record<string, unknown>)[k] = frame[k];
-  if (frame.roster) next.roster = mergeRoster(slow.roster, frame.roster);
+  if (frame.roster) next.roster = mergeRoster(slow.roster, frame.roster, live);
   if (frame.youSlow) next.youSlow = frame.youSlow;
   return next;
 }

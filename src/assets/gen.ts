@@ -18,8 +18,21 @@ export const EMPTY_MANIFEST: GenManifest = Object.freeze({ v: 0, targets: Object
 
 type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
 
-/** Reads the manifest through `fetcher`; any failure or malformed body is an empty manifest, never a throw. */
-export async function loadGenManifest(fetcher: Fetcher, url: string = genUrl("manifest.json")): Promise<GenManifest> {
+/** The boot waits on the manifest: past this a request that never answers is an empty manifest, not a game that never starts. */
+export const MANIFEST_WAIT_MS = 3000;
+
+/** Reads the manifest through `fetcher`; any failure, malformed body or no answer in `waitMs` is an empty manifest, never a throw. */
+export async function loadGenManifest(fetcher: Fetcher, url: string = genUrl("manifest.json"), waitMs: number = MANIFEST_WAIT_MS): Promise<GenManifest> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<GenManifest>(resolve => { timer = setTimeout(() => resolve(EMPTY_MANIFEST), waitMs); });
+  try {
+    return await Promise.race([read(fetcher, url), late]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function read(fetcher: Fetcher, url: string): Promise<GenManifest> {
   try {
     const res = await fetcher(url, { cache: "no-cache" });
     if (!res.ok) return EMPTY_MANIFEST;
@@ -88,3 +101,20 @@ class GenRegistry {
 }
 
 export const gen = new GenRegistry();
+
+/** Generated files the browser could not load this session: the manifest listed them, the file failed. A missing file
+ *  changes nothing (slots.ts), so a failed one falls back the way an absent one does (the player-defect sweep, round eight). */
+const failedGen = new Set<string>();
+export const genFailed = (url: string): boolean => failedGen.has(url);
+
+type Img = { src: string; onerror: unknown; getAttribute(name: string): string | null };
+/** Sets an image's src; if that src fails to load, it is remembered as failed and `fallback` runs (once, for that src). */
+export function setImageSrc(img: Img, src: string, fallback: () => void): void {
+  img.onerror = () => {
+    if (img.getAttribute("src") !== src) return;
+    img.onerror = null;
+    failedGen.add(src);
+    fallback();
+  };
+  img.src = src;
+}

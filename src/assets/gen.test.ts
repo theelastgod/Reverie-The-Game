@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
-import { EMPTY_MANIFEST, hasGen, loadGenManifest, parseManifest, pickGen, genUrl, gen } from "./gen";
+import { EMPTY_MANIFEST, genFailed, hasGen, loadGenManifest, parseManifest, pickGen, genUrl, gen, setImageSrc } from "./gen";
 
 const json = (status: number, body: unknown): Response => ({ ok: status >= 200 && status < 300, status, json: async () => body } as unknown as Response);
 
@@ -66,5 +66,54 @@ describe("the generated-asset manifest", () => {
     expect(gen.url("badges/herald.png", "/assets/hud/wing.png")).toBe("/assets/hud/wing.png");
     gen.set(EMPTY_MANIFEST);
     expect(gen.has("badges/ruin.png")).toBe(false);
+  });
+});
+
+describe("a manifest request that never answers (the player-defect sweep, round eight)", () => {
+  it("is an empty manifest after the wait, so the boot goes on", async () => {
+    vi.useFakeTimers();
+    try {
+      const never = () => new Promise<Response>(() => {});
+      const got = loadGenManifest(never, "/gen/manifest.json", 3000);
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(await got).toBe(EMPTY_MANIFEST);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("a generated image that fails to load (the player-defect sweep, round eight)", () => {
+  class FakeImg {
+    onerror: unknown = null;
+    private attr = "";
+    get src() { return this.attr; }
+    set src(v: string) { this.attr = v; }
+    getAttribute(name: string) { return name === "src" ? this.attr : null; }
+    fail() { (this.onerror as (() => void) | null)?.(); }
+  }
+
+  it("falls back once, and is remembered as failed so the next draw goes straight to the fallback", () => {
+    const img = new FakeImg();
+    let fell = 0;
+    setImageSrc(img, "/gen/portraits/keeper.jpg", () => { fell++; img.src = "/assets/keeper.jpg"; });
+    expect(genFailed("/gen/portraits/keeper.jpg")).toBe(false);
+    img.fail();
+    expect(fell).toBe(1);
+    expect(img.src).toBe("/assets/keeper.jpg");
+    expect(genFailed("/gen/portraits/keeper.jpg")).toBe(true);
+    img.fail();
+    expect(fell, "the fallback's own failure does not loop").toBe(1);
+  });
+
+  it("an error for a src the image has moved on from changes nothing", () => {
+    const img = new FakeImg();
+    let fell = 0;
+    setImageSrc(img, "/gen/seals/sky.png", () => fell++);
+    const stale = img.onerror as () => void;
+    img.src = "/gen/seals/earth.png";
+    stale();
+    expect(fell).toBe(0);
+    expect(genFailed("/gen/seals/sky.png")).toBe(false);
   });
 });

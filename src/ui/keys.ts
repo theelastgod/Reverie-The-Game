@@ -70,3 +70,10 @@ export function paperToUse(you: { items: readonly { id: string; kind: string; qt
   if (useful) return useful.id;
   return papers.find(i => i.id !== PAPER_REPAIR)?.id ?? null;
 }
+
+/** A press the socket could not send (reconnecting): said once, not per key held or per tap (the player-defect sweep, round eight). */
+export const UNHEARD_LINE = "Not connected. The city did not hear that.";
+export const UNHEARD_GAP_MS = 2000;
+export function tellUnheard(sent: boolean, now: number, lastToldAt: number): boolean {
+  return !sent && now - lastToldAt >= UNHEARD_GAP_MS;
+}

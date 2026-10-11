@@ -17,7 +17,7 @@ import { VOLUME_STEP } from "../audio/settings";
 import { riteHeard } from "../audio/cues";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
-import { browserOwns, escapeDoes, hudControlFocused, paperToUse } from "../ui/keys";
+import { UNHEARD_LINE, browserOwns, escapeDoes, hudControlFocused, paperToUse, tellUnheard } from "../ui/keys";
 import { MAX_HP } from "../sim/constants";
 import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, secondFinger, stickIntent } from "../ui/stick";
 
@@ -145,21 +145,31 @@ export class CityScene extends Phaser.Scene {
 
   // ------------------------------------------------------------ hud seam
 
+  private unheardAt = -Infinity;
+
+  /** A press made while the socket is down is not replayed; the player is told it was not heard, once in a while. */
+  private orUnheard(sent: boolean): void {
+    const now = Date.now();
+    if (!tellUnheard(sent, now, this.unheardAt)) return;
+    this.unheardAt = now;
+    bus.hud?.flash(UNHEARD_LINE, "ink");
+  }
+
   private actions(): SceneActions {
     return {
-      choose: (id, node) => this.net.choose(id, node),
-      close: (node) => this.net.close(node),
+      choose: (id, node) => this.orUnheard(this.net.choose(id, node)),
+      close: (node) => this.orUnheard(this.net.close(node)),
       link: (serial) => {
         if (!this.net.link(serial)) bus.pendingSerial = serial;
       },
-      interact: (targetId, choice) => this.net.interact(targetId, choice),
-      stance: () => this.net.stance(),
-      kit: () => this.net.kit(),
-      flag: () => this.net.flag(),
-      truce: () => this.net.truce(),
+      interact: (targetId, choice) => this.orUnheard(this.net.interact(targetId, choice)),
+      stance: () => this.orUnheard(this.net.stance()),
+      kit: () => this.orUnheard(this.net.kit()),
+      flag: () => this.orUnheard(this.net.flag()),
+      truce: () => this.orUnheard(this.net.truce()),
       use: () => this.useFirstPaper(),
       dodge: () => this.dodgeButton(),
-      market: (op, args) => this.net.market(op, args),
+      market: (op, args) => this.orUnheard(this.net.market(op, args)),
     };
   }
 
@@ -169,7 +179,7 @@ export class CityScene extends Phaser.Scene {
     if (!you) return;
     const id = paperToUse(you, MAX_HP);
     if (id) {
-      this.net.use(id);
+      this.orUnheard(this.net.use(id));
       return;
     }
     bus.hud?.flash(you.items.some(i => i.kind === "paper" && i.qty > 0) ? "Nothing to mend. The paper keeps." : "No paper to use.", "ink");
@@ -180,12 +190,12 @@ export class CityScene extends Phaser.Scene {
     const prompt = this.net.snap?.prompt;
     if (!prompt) return;
     if (key === "F" && prompt.targetKind === "npc") {
-      this.net.talk(prompt.targetId);
+      this.orUnheard(this.net.talk(prompt.targetId));
       return;
     }
     for (const v of prompt.verbs) {
       if (v.key === key) {
-        this.net.interact(prompt.targetId, v.choice);
+        this.orUnheard(this.net.interact(prompt.targetId, v.choice));
         return;
       }
     }

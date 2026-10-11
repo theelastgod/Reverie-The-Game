@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PAPER_INSURANCE, PAPER_REPAIR, browserOwns, escapeDoes, focusAfterClose, hudControlFocused, paperToUse, pointerReleasesFocus } from "./keys";
+import { PAPER_INSURANCE, PAPER_REPAIR, UNHEARD_GAP_MS, browserOwns, escapeDoes, focusAfterClose, hudControlFocused, paperToUse, pointerReleasesFocus, tellUnheard } from "./keys";
 import { ITEM_INSURANCE, ITEM_REPAIR } from "../sim/economy";
 
 /** A fake element: what it matches, whom it contains, and whether it is still in the document. */
@@ -118,5 +118,14 @@ describe("pointerReleasesFocus", () => {
     expect(pointerReleasesFocus(1)).toBe(true); // a click
     expect(pointerReleasesFocus(2)).toBe(true); // a double click
     expect(pointerReleasesFocus(0)).toBe(false); // Space or Enter on a focused button
+  });
+});
+
+describe("a press the socket could not send (the player-defect sweep, round eight)", () => {
+  it("is told once, then not again until the gap has passed; a sent press says nothing", () => {
+    expect(tellUnheard(true, 10_000, -Infinity)).toBe(false);
+    expect(tellUnheard(false, 10_000, -Infinity)).toBe(true);
+    expect(tellUnheard(false, 10_000 + UNHEARD_GAP_MS - 1, 10_000)).toBe(false);
+    expect(tellUnheard(false, 10_000 + UNHEARD_GAP_MS, 10_000)).toBe(true);
   });
 });
