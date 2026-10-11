@@ -144,7 +144,11 @@ reconnected, not left ONLINE; a press the socket could not send (any verb,
 a choice, Continue, the market) flashes "Not connected. The city did not
 hear that." at most once in 2 s (`keys.ts` `tellUnheard`), and is never
 replayed; a slow frame's roster drops the entries of bodies the last fast
-frame no longer shows (the server re-sends them on return). The manifest
+frame no longer shows (the server re-sends them on return). Since round
+nine a slow frame publishes nothing by itself: the city sends every slow
+frame just before its step's fast frame, and the fast frame publishes the
+two together, so no view pairs one step's record with another step's
+identity (a wallet restore arrives whole). The manifest
 request is waited on for `MANIFEST_WAIT_MS` (3 s), then the boot goes on
 with an empty one; a generated portrait, plate, seal or badge that fails to
 load falls back as an absent one does (`gen.ts` `setImageSrc`). The

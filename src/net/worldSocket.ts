@@ -88,9 +88,10 @@ export class WorldSocket {
           this.slow = applySlow({}, { ...data, t: "slow" });
           this.publish(data);
         } else if (data.t === "slow") {
+          // Held until the fast frame the city sends after it in the same step: published alone, it would merge this step's
+          // slow half with the last step's fast half, a body that is neither (a wallet restore's Angel record beside the
+          // guest's serial and flag, whose past would play as news; the player-defect sweep, round nine).
           this.slow = applySlow(this.slow, data, this.lastFast ? new Set(this.lastFast.players.map(m => m.id)) : undefined);
-          // A slow frame alone still moves the HUD (news, notices, the objective) when a fast frame has been seen.
-          if (this.lastFast) this.publish(mergeFrames(this.slow, this.lastFast));
         } else if (data.t === "fast") {
           this.lastFast = data;
           this.publish(mergeFrames(this.slow, data));

@@ -2697,10 +2697,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   serial, the guest flag or the bound address) plays nothing across such
   a pair, in the sounds and in the scene's effects. And a Wink watched a
   second time (the same text) showed and flashed but stayed silent; the
-  sound is keyed on its stamp, as the HUD and the flash are. Left: a
-  guest that already bound the same address with no Angel would still
-  let the restore's slow half through (closing the restored socket with
-  a fresh hello would make it airtight). Cases in `cues.test.ts`.
+  sound is keyed on its stamp, as the HUD and the flash are. Cases in
+  `cues.test.ts`. The one left then (a guest that had already bound the
+  same address with no Angel let the restore's slow half through) is
+  closed at its root: the client published a slow frame alone, merged
+  with the last step's fast frame, a view that was neither body (the
+  Angel's flags under the guest's serial). The city sends every slow
+  frame just before its step's fast one, so the socket now holds a slow
+  frame for the fast frame that follows (`worldSocket.test.ts`).
   From the systems lens, one fixed: the launch's voice through the ovals
   told a third-hour body in the room behind the glass "I will be at the
   Grid's gate" while it saw him at his desk; such a body hears the line
