@@ -10,7 +10,7 @@ type Over = { district?: Snap["district"]; you?: Partial<Snap["you"]>; enemies?:
 /** The slice of a snapshot the cues read. */
 function snap(over: Over = {}): Snap {
   const you = {
-    x: 1000, y: 1000, hp: 100, dead: false, deaths: 0, kept: 0, extracted: 0, wink: "", flags: {}, choices: {}, history: { buried: 0 },
+    x: 1000, y: 1000, hp: 100, dead: false, deaths: 0, kept: 0, extracted: 0, wink: "", winkAt: 0, guest: false, serial: 42, wallet: "", flags: {}, choices: {}, history: { buried: 0 },
     ...over.you,
   };
   const enemies = (over.enemies ?? []).map((e, i) => ({ id: `e${i}`, state: "idle", x: 0, y: 0, ...e }));
@@ -107,8 +107,11 @@ describe("sfxFor", () => {
     expect(sfxFor(snap({ you: { hp: 5 } }), snap({ you: { hp: 100, deaths: 1 } }))).toEqual(["death"]);
     expect(sfxFor(a, snap({ you: { kept: 1 } }))).toEqual(["keep"]);
     expect(sfxFor(a, snap({ you: { extracted: 1 } }))).toEqual(["extract"]);
-    expect(sfxFor(a, snap({ you: { wink: "A hint." } }))).toEqual(["wink"]);
-    expect(sfxFor(snap({ you: { wink: "A hint." } }), snap({ you: { wink: "" } }))).toEqual([]);
+    expect(sfxFor(a, snap({ you: { wink: "A hint.", winkAt: 5 } }))).toEqual(["wink"]);
+    expect(sfxFor(snap({ you: { wink: "A hint.", winkAt: 5 } }), snap({ you: { wink: "", winkAt: 5 } }))).toEqual([]);
+    // the same line watched again is a new stamp, heard again; the same stamp is not (round nine)
+    expect(sfxFor(snap({ you: { wink: "A hint.", winkAt: 5 } }), snap({ you: { wink: "A hint.", winkAt: 9 } }))).toEqual(["wink"]);
+    expect(sfxFor(snap({ you: { wink: "A hint.", winkAt: 5 } }), snap({ you: { wink: "A hint.", winkAt: 5 } }))).toEqual([]);
     expect(sfxFor(a, snap({ you: { flags: { [F.UNDER]: 1 } } }))).toEqual(["under"]);
     expect(sfxFor(a, snap({ you: { history: { buried: 1 } as never } }))).toEqual(["bury"]);
     expect(sfxFor(a, snap({ you: { flags: { [F.FREEZE]: 1 } } }))).toEqual(["freeze"]);
@@ -133,5 +136,22 @@ describe("sfxFor", () => {
 
   it("orders several diffs the way they happened to the body", () => {
     expect(sfxFor(snap(), snap({ you: { hp: 60, kept: 1, extracted: 1 } }))).toEqual(["hit", "keep", "extract"]);
+  });
+});
+
+describe("a wallet restore is another record, not this body's events (the player-defect sweep, round nine)", () => {
+  it("plays nothing for the restored Angel's past: its falls, keeps, burials, going-under and rite", () => {
+    const guest = snap({ you: { guest: true, serial: null, hp: 100 } });
+    const restored = snap({ you: {
+      guest: false, serial: 7, wallet: "0xabc", hp: 60, deaths: 3, kept: 2, extracted: 1, wink: "Old.", winkAt: 4,
+      flags: { [F.UNDER]: 1 }, history: { buried: 2, passings: 1 } as never, choices: { [C.PASSING]: "appearance" },
+    } });
+    expect(sfxFor(guest, restored)).toEqual([]);
+    // the slow half of a restore arrives first, over the guest's fast fields: the address alone tells it apart
+    const half = snap({ you: { guest: true, serial: null, wallet: "0xabc", deaths: 3, flags: { [F.UNDER]: 1 } } });
+    expect(sfxFor(guest, half)).toEqual([]);
+    // a plain link to an Angel moves no count, and the body's next real event is heard
+    const linked = snap({ you: { guest: false, serial: 7, wallet: "0xabc", hp: 60, deaths: 3 } });
+    expect(sfxFor(linked, snap({ you: { guest: false, serial: 7, wallet: "0xabc", hp: 40, deaths: 3 } }))).toEqual(["hit"]);
   });
 });

@@ -94,18 +94,29 @@ export function riteHeard(prev: { history: { passings?: number } }, next: { hist
   return (next.history.passings ?? 0) > (prev.history.passings ?? 0) ? next.choices[C.PASSING] ?? "" : "";
 }
 
+/**
+ * Whether two frames are of different records, not one body over time: a wallet restore swaps the guest's record for the
+ * Angel's saved one (another serial, the guest flag, the bound address). Its counts, its going-under and its rites are its
+ * past, not events: nothing is played for them (the player-defect sweep, round nine).
+ */
+export function rebased(a: { guest: boolean; serial: number | null; wallet?: string }, b: { guest: boolean; serial: number | null; wallet?: string }): boolean {
+  return a.guest !== b.guest || a.serial !== b.serial || (a.wallet ?? "") !== (b.wallet ?? "");
+}
+
 /** The effects the difference between two snapshots calls for. Input cues (strike, heavy, dodge, page) are played by the scene and the HUD. */
 export function sfxFor(prev: Snap | null, next: Snap): SfxName[] {
   if (!prev) return [];
   const a = prev.you;
   const b = next.you;
+  if (rebased(a, b)) return [];
   const out: SfxName[] = [];
   // a fall is the fall count rising: the body wakes in the step it fell, so no frame ever reads it dead (round seven)
   if (b.deaths > a.deaths) out.push("death");
   else if (b.hp < a.hp) out.push("hit");
   if (b.kept > a.kept) out.push("keep");
   if (b.extracted > a.extracted) out.push("extract");
-  if (b.wink && b.wink !== a.wink) out.push("wink");
+  // keyed on the stamp, as the HUD and the flash are: the same line watched twice is heard twice (round nine)
+  if (b.wink && !b.guest && b.winkAt !== a.winkAt) out.push("wink");
   if ((b.flags[F.UNDER] ?? 0) > 0 && !(a.flags[F.UNDER] ?? 0)) out.push("under");
   if (b.history.buried > a.history.buried) out.push("bury");
   if ((b.flags[F.FREEZE] ?? 0) > 0 && !(a.flags[F.FREEZE] ?? 0)) out.push("freeze");

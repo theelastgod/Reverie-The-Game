@@ -2686,6 +2686,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   join verb's own gates, the image fallback's guard against a src the
   image has moved on from.
 
+- The player-defect sweep, round nine, first part (2026-10-11; three
+  lenses: the cues against what happened, systems colliding in one step,
+  a guest becoming an Angel; three finders, each finding checked by
+  hand). Two from the cues lens, fixed: a wallet restore (a returning
+  holder on a new device) swapped the guest's record for the Angel's
+  saved one, and the client played that record's whole past as if it had
+  just happened (death, keep, extract, the going-under with its video,
+  burials, the rite with its overlay); `cues.ts` `rebased` (another
+  serial, the guest flag or the bound address) plays nothing across such
+  a pair, in the sounds and in the scene's effects. And a Wink watched a
+  second time (the same text) showed and flashed but stayed silent; the
+  sound is keyed on its stamp, as the HUD and the flash are. Left: a
+  guest that already bound the same address with no Angel would still
+  let the restore's slow half through (closing the restored socket with
+  a fresh hello would make it airtight). Cases in `cues.test.ts`.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.

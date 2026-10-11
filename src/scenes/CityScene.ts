@@ -14,7 +14,7 @@ import { Fx } from "../render/fx";
 import { flickerStep, reducedMotion } from "../render/motion";
 import { audio } from "../audio/bus";
 import { VOLUME_STEP } from "../audio/settings";
-import { riteHeard } from "../audio/cues";
+import { rebased, riteHeard } from "../audio/cues";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
 import { UNHEARD_LINE, browserOwns, escapeDoes, hudControlFocused, paperToUse, tellUnheard } from "../ui/keys";
@@ -34,6 +34,9 @@ const DIR: Record<keyof Intent, { dx: number; dy: number }> = {
 
 /** The fields of `you` whose changes drive fx. */
 type YouDiff = {
+  guest: boolean;
+  serial: number | null;
+  wallet: string;
   init: boolean;
   dodgeT: number;
   hitStop: number;
@@ -75,7 +78,7 @@ export class CityScene extends Phaser.Scene {
   private lastGates = "";
   private following = false;
   private heard: Snap | null = null; // the last snapshot the audio bus was given
-  private readonly prev: YouDiff = { init: false, dodgeT: 0, hitStop: 0, heavyWindup: 0, winkAt: 0, deaths: 0, under: 0, passings: 0, wink: "" };
+  private readonly prev: YouDiff = { init: false, dodgeT: 0, hitStop: 0, heavyWindup: 0, winkAt: 0, deaths: 0, under: 0, passings: 0, wink: "", guest: true, serial: null, wallet: "" };
   private readonly at = { x: 0, y: 0 };
 
   private onKeyDown = (e: KeyboardEvent) => this.keyDown(e);
@@ -500,7 +503,8 @@ export class CityScene extends Phaser.Scene {
     const prev = this.prev;
     const under = you.flags.under ?? 0;
     const passings = you.history.passings ?? 0;
-    if (prev.init) {
+    // a wallet restore is another record, not this body's events: its past plays nothing (cues.ts rebased)
+    if (prev.init && !rebased(prev, you)) {
       const at = this.entities.youAt(this.at);
       if (you.dodgeT > 0 && prev.dodgeT <= 0) {
         // Server-confirmed dash (covers dodges sent from a touch HUD).
@@ -534,5 +538,8 @@ export class CityScene extends Phaser.Scene {
     prev.deaths = you.deaths;
     prev.under = under;
     prev.passings = passings;
+    prev.guest = you.guest;
+    prev.serial = you.serial;
+    prev.wallet = you.wallet ?? "";
   }
 }
