@@ -73,7 +73,10 @@ function interactPoi(w: WorldState, p: Player, cfg: PoiConfig, choice: string): 
   const pos = POSITIONS[cfg.id];
   if (!pos || !nearPoint(p.x, p.y, pos.x, pos.y, cfg.reach ?? POI_REACH)) return w;
   const ctx: Ctx = { w, p, now: w.now };
-  const verb = cfg.verbs.find(v => v.choice === choice && (!v.when || v.when(ctx)));
+  const find = (c: string) => cfg.verbs.find(v => v.choice === c && (!v.when || v.when(ctx)));
+  // Two bodies pressing F at a set ring in one step: the first opens it, and the second's "prepare" stands it in the open
+  // hole its own next frame would have offered, rather than being dropped (the player-defect sweep, round eight).
+  const verb = find(choice) ?? (cfg.id === "clearing-ring" && choice === "prepare" ? find("join") : undefined);
   if (!verb) return w;
 
   if (p.guest) {

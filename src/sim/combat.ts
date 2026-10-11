@@ -28,6 +28,7 @@ const SUBSTEP = BODY_R / 2;
 const HOME_EPSILON = 4;
 /** Enemies do not path: a walk home that stops against a wall, or runs this long, ends with the enemy set down at its post. */
 const RETURN_SET_DOWN = 30;
+const AGGRO_STALL = 1.5; // s of a chase that barely moves before the enemy gives the body up
 const EPS = 1e-6; // timers this close to zero are zero; float drift never steals a tick
 
 // Copy owned by this module: the ruin duel. Short, cold, the grave is the ring.
@@ -181,8 +182,14 @@ function tickEnemy(w: WorldState, e0: Enemy, dt: number): { e: Enemy; w: WorldSt
 
   if (e.state === "aggro") {
     if (within(e, target, stats.reach)) return { e: { ...e, state: "telegraph", t: stats.telegraph }, w };
+    // Enemies do not path. A corner or pillar that holds the chase in place (AGGRO_STALL seconds of next to no progress)
+    // would keep it in aggro for good on a body it cannot reach, blind to everyone and free to fell: it lets go and walks
+    // back, and whoever strikes it is answered first from there.
     const pos = walkToward(e, target, stats.speed * dt, ENEMY_STANDOFF);
-    e = { ...e, x: pos.x, y: pos.y };
+    const stalled = Math.hypot(pos.x - e.x, pos.y - e.y) < stats.speed * dt * 0.25;
+    const t = stalled ? e.t + dt : 0;
+    if (t >= AGGRO_STALL) return { e: { ...e, x: pos.x, y: pos.y, state: "return", t: 0, targetId: "" }, w };
+    e = { ...e, x: pos.x, y: pos.y, t };
     if (within(e, target, stats.reach)) e = { ...e, state: "telegraph", t: stats.telegraph };
     return { e, w };
   }
@@ -400,8 +407,10 @@ function hitPlayer(w: WorldState, attackerId: string, targetId: string, base: nu
   // another that can never hit back (DESIGN §2 rule 7, PvP needs both flags; the player-defect sweep, round six).
   const held = w.now + FLAG_HOLD;
   const a1 = cur.players.get(attackerId)!;
-  cur = setPlayer(cur, { ...a1, flagHeldUntil: held });
-  cur = setPlayer(cur, { ...b, hp, flagHeldUntil: held });
+  // the hold keeps a raised flag up through a fight; a body whose flag was down at the blow (the meltdown street's) raises its
+  // own afterwards free to lower it
+  cur = setPlayer(cur, { ...a1, ...(a1.flagged ? { flagHeldUntil: held } : {}) });
+  cur = setPlayer(cur, { ...b, hp, ...(b.flagged ? { flagHeldUntil: held } : {}) });
   if (hp <= 0) cur = pvpKill(cur, attackerId, targetId);
   return { w: cur, hit: true };
 }

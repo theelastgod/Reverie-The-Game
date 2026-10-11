@@ -278,6 +278,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 
 **THE PLOT** — `nara-plot` stand (shipped)
 > Closed earth. A name on a slat. The recorder can be heard from here if the wind is right.
+> *(the copper taken; new, round eight)* Closed earth. A name on a slat. Nothing carries from the recorder now, whatever the wind. The copper is under the slat.
 
 ### I.9 The altar
 *New beat, Phase B: verbs on `crt-altar-2`, the lit altar at the south end of the aisle; no step of its own, reachable from I.4 on, so a saved index does not move. No journal plate; the screen plays `video/ambient-hall`. Guest-legal. Since Phase D `side-nave-third-altar` has a dark twin of its own, `crt-altar-3`, across the aisle from the first altar, so its light never touches this screen.*
@@ -327,7 +328,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 **THE PLAQUE** — F, name it: stability (shipped, lines.ts WEATHER_NAMED and pois.ts)
 > You called it stability. Safety will thank you in writing. The plaque stays as it was.
 > *(the slip:)* You fold the slip away. The word stays on the plaque; the number, {number}, stays in your coat.
-[C.WEATHER stability; F.WEATHER_NAMED; poi safety-plaque named; readiness +0; W.WEATHER_NAMES +1; news "An arrival named the weather in the Nave."]
+[C.WEATHER stability; F.WEATHER_NAMED; the plaque left unstruck (round eight); readiness +0; W.WEATHER_NAMES +1; news "An arrival named the weather in the Nave."]
 
 **THE PLAQUE** — E, name it: the process (shipped)
 > You called it the process. Ord will not pretty it and neither did you. The plaque is struck.
@@ -337,7 +338,7 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 **THE PLAQUE** — Q, name it: the end of world as world (shipped)
 > You called it the end of world as world. Nara heard. The plaque is a lie the city paid for.
 > *(the slip:)* You pin the slip under the word. It says {number}. Both stay up; anyone who reads the plaque now reads the number too.
-[as E; C.WEATHER end]
+[as E, but the plaque left unstruck (round eight); C.WEATHER end]
 
 **THE PLAQUE** — reread (shipped)
 > *(one name heard:)* Office of Safety. Stability, it says. You have one name. Ord and Nara have the other two. Do not name it from a plaque.
@@ -762,7 +763,7 @@ The paper panel, the gold mark:
 
 **THE GARDEN** — `look` F, Look at the garden (shipped)
 > *(before)* A hole with a fence around it. Wreckage in the shape of a node. Someone will have to answer for it before it can be earth.
-> *(after)* Buried ground. A garden in the sense that things are under it. Nara Vale comes here when nobody is dying.
+> *(after, or another Angel buried it first; round eight)* Buried ground. A garden in the sense that things are under it. Nara Vale comes here when nobody is dying.
 
 **NARA** — `garden-plate` (shipped; she kneels as the earth closes; the plate is hers, the confession is not yet)
 > It is in the earth. Nara Vale kneels and puts her hand flat on it. There is a plate. It has the node's number on it, or it does not. The Care keeps the numbered ones in the book. The unnumbered ones it keeps anyway. Which is this one?
@@ -1559,6 +1560,7 @@ The paper panel, the gold mark:
 
 **THE RING** — stand in what is left, absence (shipped, pois.ts)
 > The hour went by. Absence is honest. The ring is a ring. Nara Vale stays.
+> *(Nara gone from you; new, round eight)* The hour went by. Absence is honest. The ring is a ring.
 
 #### Hijack
 

@@ -187,12 +187,20 @@ export function promptFor(ctx: Ctx, npcs: readonly NpcPlace[] = npcStatesFor(ctx
     const verbs = c.verbs();
     if (verbs.some(v => v.choice === "duel")) return { targetId: c.targetId, targetKind: c.targetKind, name: typeof c.name === "function" ? c.name(ctx) : c.name, verbs };
   }
+  // V and T carry no target: a body that offers only those would hide the F, E and Q of the place behind it and add nothing
+  // the keys do not already do, so it stands only when nothing else in reach answers.
+  let fallback: Prompt | null = null;
   for (const c of found) {
     const verbs = c.verbs();
     if (verbs.length === 0) continue;
-    return { targetId: c.targetId, targetKind: c.targetKind, name: typeof c.name === "function" ? c.name(ctx) : c.name, verbs };
+    const prompt = { targetId: c.targetId, targetKind: c.targetKind, name: typeof c.name === "function" ? c.name(ctx) : c.name, verbs };
+    if (c.targetKind === "player" && !verbs.some(v => v.key === "F" || v.key === "E" || v.key === "Q")) {
+      fallback ??= prompt;
+      continue;
+    }
+    return prompt;
   }
-  return null;
+  return fallback;
 }
 
 /** What the Face reads off an Angel's own log: the marks they can see, then the counts, then the last outcome. */

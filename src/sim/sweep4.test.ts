@@ -200,6 +200,7 @@ describe("found by the round's skeptics", () => {
     expect(me(w, "a").choices[C.GLASS]).toBe("read");
     // the question was his already: the reader's post closes the window rather than asking it a second time at the glass
     expect(me(w, "a").dialogue?.node).not.toBe("looked");
+    w = applyAction(w, "a", { t: "close" });
     w = applyAction(w, "a", { t: "talk", npcId: "caul" });
     expect(me(w, "a").dialogue?.node, "decided: the after line").toBe("after");
   });

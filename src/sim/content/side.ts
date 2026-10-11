@@ -281,9 +281,10 @@ const NAVE: Quest[] = [
         plate: "wing-star.png",
         done: ({ p, w }) => has(p, SF.ALTAR_LIT) || poiIs(w, "crt-altar-3", "lit"),
         // Skipped when another hand lit it (SCRIPT, the appendix): the step closes and the Wink lands; the light and its news are
-        // the lighter's (SF.ALTAR_LIT, the verb's once), so they fire once and never for a body that did not light it.
-        onComplete: ({ p }) => [
-          ...(has(p, SF.ALTAR_LIT) ? [poi("crt-altar-3", "lit"), worldFlag(SW.ALTAR_LIT), news("Someone lit the altar Safety did not count.")] : []),
+        // the lighter's (SF.ALTAR_LIT, the verb's once), so they fire once and never for a body that did not light it. Two hands
+        // in one step both hold the verb's once: the first to close posts the news, the second finds the altar lit (round eight).
+        onComplete: ({ p, w }) => [
+          ...(has(p, SF.ALTAR_LIT) && !poiIs(w, "crt-altar-3", "lit") ? [poi("crt-altar-3", "lit"), worldFlag(SW.ALTAR_LIT), news("Someone lit the altar Safety did not count.")] : []),
           wink("Three screens. Two on the ledger. The one that is not counted is the one that is still a place."),
         ],
       }),
@@ -317,8 +318,8 @@ const NAVE: Quest[] = [
         target: "crt-altar-1",
         plate: "wing-star.png",
         done: ({ p, w }) => has(p, SF.UNSPENT_TOUCHED) || poiIs(w, "crt-altar-1", "lit"),
-        onComplete: ({ p }) => [
-          ...(has(p, SF.UNSPENT_TOUCHED) ? [poi("crt-altar-1", "lit"), news("An altar in the Nave lit for two nodes nobody drained.")] : []),
+        onComplete: ({ p, w }) => [
+          ...(has(p, SF.UNSPENT_TOUCHED) && !poiIs(w, "crt-altar-1", "lit") ? [poi("crt-altar-1", "lit"), news("An altar in the Nave lit for two nodes nobody drained.")] : []),
           wink("A kept node is a place. An extracted node was one. The glass knows the difference."),
         ],
       }),
@@ -426,7 +427,7 @@ const WET: Quest[] = [
         plate: "stall-surface.jpg",
         done: ({ p, w }) => has(p, SF.VAN_WAVED) || poiIs(w, "hot-street", "hot"),
         // The one who waved it through parks it; a street already hot (another van, or a print pulled off the Grid) closes the step with no van and no news.
-        onComplete: ({ p }) => (has(p, SF.VAN_WAVED)
+        onComplete: ({ p, w }) => (has(p, SF.VAN_WAVED) && !poiIs(w, "hot-street", "hot")
           ? [
             poi("hot-street", "hot"),
             worldFlag(SW.VAN_PARKED),
@@ -707,7 +708,7 @@ const CARE: Quest[] = [
         done: ({ p, w }) => has(p, SF.LAMP_LIT) || poiIs(w, "hall-mortals", "lit"),
         // Skipped when the hall is lit already (a Mortals Angel's plaque read): the step closes on its own, and the light and
         // its news are the lighter's alone, as the third altar's are (the player-defect sweep, round two).
-        onComplete: ({ p }) => (has(p, SF.LAMP_LIT)
+        onComplete: ({ p, w }) => (has(p, SF.LAMP_LIT) && !poiIs(w, "hall-mortals", "lit")
           ? [poi("hall-mortals", "lit"), worldFlag(SW.LAMP_LIT), news("Someone lit the Mortals lamp for the buried. Not their House. Their dead.")]
           : []),
       }),
@@ -1087,8 +1088,8 @@ const RING: Quest[] = [
         plate: "shrine-upkeep.jpg",
         done: ({ p, w }) => has(p, SF.MUTE_HUNG) || poiIs(w, "mute-bell", "rung"),
         // Skipped when the bell is rung already: the ring and its news are the hanger's alone; the Wink lands either way.
-        onComplete: ({ p }) => [
-          ...(has(p, SF.MUTE_HUNG) ? [poi("mute-bell", "rung"), worldFlag(SW.BELL_RANG), news("The mute bell rang once. Then it was mute again.")] : []),
+        onComplete: ({ p, w }) => [
+          ...(has(p, SF.MUTE_HUNG) && !poiIs(w, "mute-bell", "rung") ? [poi("mute-bell", "rung"), worldFlag(SW.BELL_RANG), news("The mute bell rang once. Then it was mute again.")] : []),
           wink("An omen is a bell that rings before the hour and is not wrong. This one rang once and was right about nothing. It was still a bell."),
         ],
       }),
@@ -1382,8 +1383,8 @@ const CLEARING: Quest[] = [
         plate: "clearing-ring.jpg",
         done: ({ p, w }) => has(p, SF.SEED_TURNED) || poiIs(w, "seed-1", "seeded"),
         // Skipped when the ground is seeded already (a Dweller's seed): the turning and its news are the turner's alone.
-        onComplete: ({ p }) => [
-          ...(has(p, SF.SEED_TURNED) ? [poi("seed-1", "seeded"), worldFlag(SW.SEEDED), news("Someone turned garden earth into the seed ground. A promise nobody can cash.")] : []),
+        onComplete: ({ p, w }) => [
+          ...(has(p, SF.SEED_TURNED) && !poiIs(w, "seed-1", "seeded") ? [poi("seed-1", "seeded"), worldFlag(SW.SEEDED), news("Someone turned garden earth into the seed ground. A promise nobody can cash.")] : []),
           wink("A seed is a promise you cannot cash. You planted one with what a hole became."),
         ],
       }),

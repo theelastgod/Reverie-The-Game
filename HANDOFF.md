@@ -2581,6 +2581,66 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   would close combat logging everywhere); the ring's and the aura
   figure's wording if you want them exact.
 
+- The player-defect sweep, round eight, first part (2026-10-11; six
+  lenses: many messages in one step, where bodies can stand, boundary
+  values, the idle body, the client under degraded conditions, text
+  proofed over real state; the finders ran as agents, and with the
+  skeptic agents stopped by the usage limit each finding was reproduced
+  and judged by hand before its fix). Thirteen confirmed and fixed:
+  - Enemies: a chase that a corner or a pillar holds in place (the three
+    stair clerks on an idle body at the Kerb's wall stub, an enforcer
+    wedged on the shop block with its body gone north) stayed in aggro
+    for good, blind to everyone, free to fell and outlasting the
+    descent's hour; a chase that moves under a quarter of its step for
+    1.5 s now lets go and walks back, and whoever strikes it is answered
+    first from there.
+  - One step, many messages: a second F on a person before the first
+    window reached the screen reran the entry and skipped what it opened
+    (Ord's figure, Caul's word at the lip, Pim's wake) and counted the
+    visit twice; talk opens nothing while that person's window is open.
+    Two hands lighting the third altar, touching the unspent screen,
+    waving the van, lighting the Mortals lamp, hanging the mute bell or
+    turning the seed ground in one step each posted the city's line twice
+    and stamped the place twice; the second finds the place done. Two
+    bodies pressing F at the set ring in one step dropped the second
+    press without a line; it stands that body in the hole.
+  - Where bodies stand: another Angel nearer than a place took the whole
+    prompt with only V (a key that carries no target), hiding the ring's,
+    the claims desk's, the stalls' and the board's F, E and Q; such a
+    body stands only when nothing else in reach answers.
+  - Boundary values: the Care shrine sold an 8 Bestand restore to an aura
+    the HUD read as 100 (drift took it a hair under); the gate reads the
+    figure the HUD shows. A meltdown-street blow on an unflagged body
+    held a flag it raised afterwards ("The fight is warm") for 10 s; the
+    hold is set only on a flag up at the blow. The ledger said "listing
+    fee 2" while the Glamour waived it; it says 0 while the kit is up. A
+    blank or zero price listed at 1 Bestand, and a decimal was refused
+    with a line naming the wrong limit; the field is sent as typed in
+    whole Bestand and the server's refusal names the limit.
+  - The client: a clicked or tapped dialogue choice or Continue dropped
+    the window it was pressed on (`main.ts`), so round seven's guard
+    against a stale double press held only for the keys; a click carries
+    it now.
+  - Text against state: naming the weather stability (or the end) marked
+    the plaque "struck" for the city; only the process strikes it
+    (SCRIPT I.10's brackets corrected). The garden's look called ground
+    another Angel had buried "a hole with a fence" under a prompt that
+    read "buried". The plot promised the recorder's voice to a body that
+    took its copper. The ring after an Absence said "Nara Vale stays."
+    to a body she had left. New lines in SCRIPT I.10 and the ring's
+    absence remainder.
+  `src/sim/sweep8.test.ts` (eleven cases), a side-hour case and the
+  ledger's two hold the fixes; each fails on 249b0c9. Judged otherwise:
+  a second press's refusal overwriting the first press's line in one step
+  (both presses must ride one frame to be seen, and keeping the first
+  line would hide a real refusal). Still to judge in this round's second
+  part: a silent socket kept ONLINE with no frame-silence check, the
+  journal that cannot be reopened after a close at wide width and a
+  narrowing, a stalled manifest request holding the boot, a press made
+  while reconnecting dropped with no line, a generated image that fails
+  to load leaving a blank frame, and the client's roster keeping every
+  body it has seen.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.
@@ -3685,6 +3745,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   from a worktree: the session smoke, `test:campaign:4` (Movement I 17.6
   min, II 13.2, III 19.0, IV 9.6; the rite `failed` at readiness 52 as
   before) and the render check (desktop and phone).
+
+- The player-defect sweep, round eight, first part (2026-10-11):
+  typecheck, 746 tests in 54 files, the build. Every new case was run
+  against 249b0c9 with its fix taken out and fails there. On a fresh
+  local world: the session smoke, `test:campaign:4` (Movement II 13.2
+  min, III 18.9, IV 10.0; the rite `failed` as before) and the render
+  check (desktop and phone, `RENDER_MIN_FPS=5` on the container's
+  software WebGL; the local D1 migrated first, or the landing log
+  answers 503).
 
 ## Backlog
 

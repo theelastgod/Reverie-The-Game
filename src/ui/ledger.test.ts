@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CLAIM_CAP } from "../sim/constants";
-import { claimRow, holdClock, ledgerKey, ledgerModel } from "./ledger";
+import { claimRow, holdClock, ledgerKey, ledgerModel, listPrice } from "./ledger";
 
 const you = (over: Record<string, unknown> = {}) => ({
   id: "me", guest: false, bestand: 20, banked: 5, claimsFiled: 1,
@@ -75,5 +75,24 @@ describe("ledgerKey", () => {
     const at48 = ledgerKey(ledgerModel({ now: 0, you: you() as never, market: [city(48)] }));
     expect(at48).not.toBe(at40);
     expect(ledgerKey(ledgerModel({ now: 9, you: you() as never, market: [city(40)] })), "the clock alone does not rebuild").toBe(at40);
+  });
+});
+
+describe("the stall's numbers (the player-defect sweep, round eight)", () => {
+  it("says fee 0 while the Glamour is up, and rebuilds when it falls", () => {
+    const glamour = ledgerModel({ now: 10, you: you({ kit: { verb: "iridescent", until: 20 } }) as never, market: [] });
+    expect(glamour.marketLine).toMatch(/^listing fee 0 /);
+    const after = ledgerModel({ now: 30, you: you({ kit: { verb: "iridescent", until: 20 } }) as never, market: [] });
+    expect(after.marketLine).toMatch(/^listing fee 2 /);
+    expect(ledgerKey(glamour)).not.toBe(ledgerKey(after));
+  });
+
+  it("sends the price as typed in whole Bestand: a blank or zero is the server's to refuse, not a listing at 1", () => {
+    expect(listPrice("9.5")).toBe(10);
+    expect(listPrice("12")).toBe(12);
+    expect(listPrice("")).toBe(0);
+    expect(listPrice("0")).toBe(0);
+    expect(listPrice("abc")).toBe(0);
+    expect(listPrice("5000")).toBe(5000);
   });
 });

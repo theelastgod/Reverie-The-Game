@@ -104,6 +104,8 @@ function nodeOf(p: Player): { def: NpcDef; node: DialogueNode } | null {
 export function applyTalk(w: WorldState, id: string, npcId: string): WorldState {
   const p = w.players.get(id);
   if (!p || p.dead) return w;
+  // A second press sent before the first window reached the screen would run the entry again and skip what it opened.
+  if (p.dialogue?.npc === npcId) return w;
   const def = NPCS[npcId];
   const shared = w.npcs[npcId];
   if (!def || !shared) return w;

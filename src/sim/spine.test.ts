@@ -403,7 +403,7 @@ function movementOne(w0: WorldState, o: Opening): WorldState {
   expectStep(w, Q.M1, 14);
   expect(me(w).choices[C.WEATHER]).toBe(o.weather);
   expect(me(w).flags[F.WEATHER_NAMED]).toBe(1);
-  expect(w.pois["safety-plaque"].state).toBe("named");
+  expect(w.pois["safety-plaque"].state, "only the process strikes the plaque").toBe(o.weather === "process" ? "named" : "unnamed");
   expect(w.flags[W.WEATHER_NAMES]).toBe(1);
   if (o.bulletin && o.weather !== "stability") {
     expect(w.flags[W.BULLETIN_POSTED]).toBe(1);
@@ -1173,6 +1173,7 @@ describe("the private yield is decided once", () => {
     expect(me(taken).choices[C.OPERATOR]).toBe("refuse");
     expect(me(taken).current).toBe("");
     // and Vesper, spoken to afterwards, does not quote twice
+    w = act(w, ME, { t: "close" });
     w = talkTo(w, ME, "vesper");
     expect(me(w).dialogue?.node).toBe("refused");
   });

@@ -113,7 +113,8 @@ const weatherNameVerb = (key: PoiVerb["key"], choice: "stability" | "process" | 
   effects: ctx => [
     { kind: "choice", key: C.WEATHER, value: choice },
     { kind: "flag", key: F.WEATHER_NAMED },
-    { kind: "poi", id: "safety-plaque", state: "named" },
+    // only "the process" strikes the plaque (SCRIPT I.10): stability leaves it as it was, and the end calls it a lie
+    ...(choice === "process" ? [{ kind: "poi", id: "safety-plaque", state: "named" } as const] : []),
     { kind: "worldCount", key: W.WEATHER_NAMES, delta: 1 },
     { kind: "notice", text: "You named the weather. The city can address you now.", tone: "gold" },
     ...(has(ctx, F.BULLETIN) && choice !== "stability"
@@ -249,7 +250,10 @@ const NAVE: PoiConfig[] = [
         choice: "stand",
         when: ctx => has(ctx, F.BURIED_NARA),
         guest: "allow",
-        say: "Closed earth. A name on a slat. The recorder can be heard from here if the wind is right.",
+        // a body that took the copper out of the recorder stopped the voice: no wind carries it (round eight)
+        say: ctx => (chose(ctx, C.MEMORIAL, "copper")
+          ? "Closed earth. A name on a slat. Nothing carries from the recorder now, whatever the wind. The copper is under the slat."
+          : "Closed earth. A name on a slat. The recorder can be heard from here if the wind is right."),
       },
     ],
   },
@@ -651,7 +655,8 @@ const CARE: PoiConfig[] = [
         label: `Restore aura (${RESTORE_COST})`,
         choice: "restore",
         // Sold only to an aura with room for it (the player-defect sweep, round two: a full one paid for nothing); a guest still hears it is not theirs.
-        when: ctx => ctx.p.guest || ctx.p.aura < AURA_MAX,
+        // the figure the HUD shows: a restore that would buy a hundredth of a point the bar already reads full is not offered
+        when: ctx => ctx.p.guest || Math.round(ctx.p.aura) < AURA_MAX,
         guest: spectate,
         cost: { bestand: RESTORE_COST, sink: "restore" },
         say: "You spent Bestand. Aura returns. The Wink can be held again.",
@@ -791,7 +796,8 @@ const CARE: PoiConfig[] = [
         choice: "look",
         when: ctx => !(has(ctx, F.OPERATOR) && !has(ctx, F.GARDEN)),
         guest: spectate,
-        say: ctx => (has(ctx, F.GARDEN)
+        // the city's ground: buried by any Angel's hand is buried for everyone, as the prompt's name already says (round eight)
+        say: ctx => (has(ctx, F.GARDEN) || poiState(ctx, "wreckage-garden") === "buried"
           ? "Buried ground. A garden in the sense that things are under it. Nara Vale comes here when nobody is dying."
           : "A hole with a fence around it. Wreckage in the shape of a node. Someone will have to answer for it before it can be earth."),
       },
@@ -1486,7 +1492,8 @@ const CLEARING: PoiConfig[] = [
         say: ctx => {
           switch (ctx.p.choices[C.PASSING]) {
             case "appearance": return "A trace. The city was world for a minute. It is a ring in the asphalt again. That is not a loss. That is what a trace is.";
-            case "absence": return "The hour went by. Absence is honest. The ring is a ring. Nara Vale stays.";
+            // she stays until she does not: a body she has left hears the ring without her (round eight)
+            case "absence": return ctx.p.party.nara === "gone" ? "The hour went by. Absence is honest. The ring is a ring." : "The hour went by. Absence is honest. The ring is a ring. Nara Vale stays.";
             case "hijack": return "The hour was claimed. You are marked. The world continues. So do you.";
             case "failed": return "No hole. Gestell kept the weather. No stipend. Next season there is asphalt again and people to stand on it.";
             default: return "A ring in the asphalt.";

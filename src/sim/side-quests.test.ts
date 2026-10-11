@@ -591,6 +591,22 @@ describe("Phase D: the side hours as the script revised them", () => {
     expect(verbsFor({ w, p: me(w), now: w.now }, "crt-altar-3").map(v => v.choice), "a dark screen with no verb of its own once the hour is done").toEqual([]);
   });
 
+  it("two hands lighting the third altar in one step: one news line, one stamp, both hours closed (round eight)", () => {
+    let w = opened(SQ.THIRD_ALTAR);
+    w = tick(perform(w, poi("crt-altar-1", "side:altar:count")), 2);
+    w = goTo(w, ME, "crt-altar-3");
+    const players = new Map(w.players);
+    players.set("b", { ...me(w), id: "b", serial: 77, name: "#0077" });
+    w = { ...w, players };
+    w = act(w, ME, { t: "interact", targetId: "crt-altar-3", choice: "side:altar:light" });
+    w = act(w, "b", { t: "interact", targetId: "crt-altar-3", choice: "side:altar:light" });
+    w = tick(w, 2);
+    expect(w.news.filter(n => n.text === "Someone lit the altar Safety did not count.")).toHaveLength(1);
+    expect(w.pois["crt-altar-3"].count).toBe(1);
+    expect(questProgress(me(w), SQ.THIRD_ALTAR).done).toBe(true);
+    expect(questProgress(w.players.get("b")!, SQ.THIRD_ALTAR).done).toBe(true);
+  });
+
   it("closes the desk's hour on the close alone: a desk the sale already shut still waits for the ledger, with its line", () => {
     let w = opened(SQ.DESK, x => ({ ...x, pois: { ...x.pois, "operator-desk": { state: "closed", by: "", at: 1, count: 1 } } }));
     w = tick(perform(w, poi("operator-desk", "side:desk:read")), 2);

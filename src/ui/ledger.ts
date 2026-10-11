@@ -80,7 +80,9 @@ export function ledgerModel(snap: Pick<Snap, "now" | "you" | "market">): LedgerM
       away,
     };
   });
-  const marketLine = guest ? "A stall of lights. You cannot afford a sky you cannot see." : `listing fee ${LISTING_FEE} · exhibition only · cult never lists`;
+  // the Glamour waives the fee while it is up (economy.ts): the line says what the stall will charge
+  const glamour = you.kit?.verb === "iridescent" && you.kit.until > snap.now;
+  const marketLine = guest ? "A stall of lights. You cannot afford a sky you cannot see." : `listing fee ${glamour ? 0 : LISTING_FEE} · exhibition only · cult never lists`;
   return { guest, purse: you.bestand, banked: you.banked, spectator: guest ? GUEST_LINE : "", cult, exhibition, paper, claims, claimsLine, deskLine, listings, marketLine };
 }
 
@@ -102,6 +104,12 @@ function el(tag: string, cls: string, text = ""): HTMLElement {
  * What the panel's rows are built from: a rebuild when it changes, only the claim clocks otherwise. The price is in it: a
  * city listing's moves with the city ("it moves when the city does", the board's read), and the row must say so.
  */
+/** The price field as sent: whole Bestand as typed. A blank, zero or out-of-range field is the server's to refuse with its
+ *  line, never listed quietly at 1 (the player-defect sweep, round eight). */
+export function listPrice(raw: string): number {
+  return Math.round(Number(raw)) || 0;
+}
+
 export function ledgerKey(m: LedgerModel): string {
   return [
     m.guest ? "g" : "a",
@@ -110,6 +118,7 @@ export function ledgerKey(m: LedgerModel): string {
     m.paper.map((r) => r.id + r.qty).join(","),
     m.claims.map((r) => r.id + r.status).join(","),
     m.listings.map((r) => r.id + r.canBuy + ":" + r.price + (r.away ? ":away" : "")).join(","),
+    m.marketLine,
   ].join("|");
 }
 
@@ -145,7 +154,7 @@ export function mountLedger(root: HTMLElement | null, cb: LedgerCallbacks): Ledg
         price.dataset.item = r.id;
         const btn = el("button", "ledger-btn", "LIST") as HTMLButtonElement;
         btn.type = "button";
-        btn.addEventListener("click", () => cb.market("list", { itemId: r.id, price: Math.max(1, Math.min(999, Number(price.value) || 1)) }));
+        btn.addEventListener("click", () => cb.market("list", { itemId: r.id, price: listPrice(price.value) }));
         row.append(price, btn);
       }
       ul.append(row);

@@ -22,8 +22,9 @@ const manifest = gen.load().then(() => {
 });
 
 const callbacks: HudCallbacks = {
-  choose: (choiceId) => bus.actions?.choose(choiceId),
-  close: () => bus.actions?.close(),
+  // A click or tap carries the window it was made on, as the digit keys do: the server refuses a press on a window gone by.
+  choose: (choiceId, node) => bus.actions?.choose(choiceId, node),
+  close: node => bus.actions?.close(node),
   link: (serial) => {
     if (bus.actions) bus.actions.link(serial);
     else bus.pendingSerial = serial;
