@@ -2701,6 +2701,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   guest that already bound the same address with no Angel would still
   let the restore's slow half through (closing the restored socket with
   a fresh hello would make it airtight). Cases in `cues.test.ts`.
+  From the systems lens, one fixed: the launch's voice through the ovals
+  told a third-hour body in the room behind the glass "I will be at the
+  Grid's gate" while it saw him at his desk; such a body hears the line
+  without it, his mouth not moving with the ovals (SCRIPT IV.5, new;
+  `sweep9.test.ts`). Judged otherwise: the roll resetting who stands in
+  the ring in the step before a rite (the finder's rite failed at
+  meltdown on any step, roll or not: the rule needs an open, held
+  Clearing, not two bodies standing in a set one).
 
 ## Verified (2026-09-25, integration)
 

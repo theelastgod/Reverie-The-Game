@@ -1194,7 +1194,10 @@ const CAUL_NODES: Record<string, DialogueNode> = {
   // ---- the launch (IV.5): the tick opens these for every body on the Kerb when the window opens; the altars open his reel
   "oval-launch": {
     id: "oval-launch",
-    text: "Every oval on the Kerb goes champagne at once, and the same voice is on all of them. \"The hour. I am told this is the part where people look up. Please do. I will be at the Grid's gate, which is as far as I go.\"",
+    // a third-hour body sees him at the desk in the room behind the glass: the ovals carry his voice, he does not go anywhere (round nine)
+    text: (ctx) => caulInRoom(ctx)
+      ? "Every oval on the Kerb goes champagne at once, and the same voice is on all of them. Across the desk his mouth does not move with it. \"The hour. I am told this is the part where people look up. Please do.\""
+      : "Every oval on the Kerb goes champagne at once, and the same voice is on all of them. \"The hour. I am told this is the part where people look up. Please do. I will be at the Grid's gate, which is as far as I go.\"",
   },
   "oval-launch-dark": {
     id: "oval-launch-dark",

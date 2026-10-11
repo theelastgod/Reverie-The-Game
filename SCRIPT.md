@@ -1409,6 +1409,7 @@ The paper panel, the gold mark:
 
 **CAUL** — through the ovals, at the hour (shipped since Phase C, the launch; `oval-launch`, opened by the tick at the opening for every body on the Kerb with no window already open; the apertures going champagne is narration, the ovals drawn as they are)
 > The hour. I am told this is the part where people look up. Please do. I will be at the Grid's gate, which is as far as I go.
+> *(a body in the room behind the glass, who sees him at the desk; new, round nine)* Across the desk his mouth does not move with it. "The hour. I am told this is the part where people look up. Please do."
 
 **THE GLASS** — `forecast-glass` read, during the window (shipped since Phase C, the launch; pois.ts)
 > Forecast glass. {band}. Under the band, in the same face as every meter in the city, the Concern's line with a time on it: now. The number under it and the number on every meter are the same number.
