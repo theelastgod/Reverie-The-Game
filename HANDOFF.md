@@ -2781,6 +2781,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   aura seed, a free restore the shrine sells for Bestand; the seed is a
   first link's only (a body that was an Angel before keeps its aura).
 
+- The player-defect sweep, round twelve (2026-10-11; a review of round
+  eleven's standing bodies and a crowd lens, three bodies on one shared
+  place; cases in `leave.test.ts` and `sweep12.test.ts`). The review: a
+  body standing in a fight after its socket closed was written only at
+  the close and at its release, so a fall it took was on disk for the
+  killer (the spoils) and not for it (the loss), and an eviction in
+  between duplicated the purse or lost every blow; a release whose write
+  threw had already taken the body out. Every checkpoint now writes a
+  standing body that changed, and a release takes it out only after its
+  write lands. The crowd: Ord told every Angel "You refused the water"
+  once anyone had (now "Someone refused the water."); watching ground
+  another Angel buried finished the third hour's garden step though the
+  body never buried and Nara waited on it (the step is the body's own
+  burial now); the watch, the fourth hour's mortality act, was open to
+  any Angel from the first hour once anyone had buried (a fourth-hour
+  body's now); and the desk's closing was city news once per closer
+  (once now, each closer keeping its Wink). Noted, not changed: the
+  vault reads "open" to everyone after one body's hour; the storm front's
+  and Form 9's news repeat per body, each its own act.
+
 ## Verified (2026-09-25, integration)
 
 - `npm run typecheck` — client and Worker clean.

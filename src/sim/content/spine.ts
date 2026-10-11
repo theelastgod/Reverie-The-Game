@@ -337,7 +337,8 @@ const M3_STEPS: QuestStep[] = [
     detail: "The node you turned on in the first hour is the wreckage garden in the Care. F buries it. Nara will not speak until it is in the ground.",
     target: "wreckage-garden",
     plate: "wreckage-garden.jpg",
-    done: ctx => has(ctx, F.GARDEN) || chose(ctx, C.MORTALITY, "watch"),
+    // the body's own burial: watching ground another body buried is the fourth hour's mortality act, not this step (round twelve)
+    done: ctx => has(ctx, F.GARDEN),
     onComplete: [notice("It is in the earth. She will not forgive the factory.", "gold")],
   },
   {

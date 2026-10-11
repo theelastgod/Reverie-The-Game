@@ -784,7 +784,8 @@ const CARE: PoiConfig[] = [
         key: "Q",
         label: "Keep watch",
         choice: "watch",
-        when: ctx => (ctx.w.flags[W.GARDEN_BURIED] ?? 0) > 0 && !has(ctx, F.MORTALITY),
+        // the fourth hour's act (SCRIPT IV): any Angel's burial opens the ground, but not to a body before its own fourth hour (round twelve)
+        when: ctx => (ctx.w.flags[W.GARDEN_BURIED] ?? 0) > 0 && !has(ctx, F.MORTALITY) && ctx.p.movement >= 4,
         guest: spectate,
         say: "You keep watch over buried ground. Nothing happens. That is the act. Readiness is slower than salvage.",
         effects: [

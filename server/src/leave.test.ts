@@ -85,6 +85,40 @@ describe("a body that leaves a flagged fight it is losing", () => {
     expect([...peek(world).players.keys()].filter(id => id === "b")).toHaveLength(1);
   });
 
+  it("a fall it takes while standing is written with the blow that felled it: the victim's loss lands with the killer's spoils", async () => {
+    const { world, wsA, wsB, data } = await setup();
+    await world.webSocketClose(wsB as never);
+    for (let t = 200; t <= 1500; t += 100) { vi.setSystemTime(t); await world.alarm(); }
+    vi.setSystemTime(1550);
+    await world.webSocketMessage(wsA as never, JSON.stringify({ t: "strike" }));
+    expect(peek(world).players.get("b")!.deaths).toBe(1);
+    const a = data.get(`player:v2:${tokA}`) as Player;
+    const b = data.get(`player:v2:${tokB}`) as Player;
+    expect(a.bestand).toBeGreaterThan(0);
+    expect(b).toMatchObject({ deaths: 1 });
+    expect(b.bestand).toBeLessThan(80);
+  });
+
+  it("a release whose write throws leaves the body standing, owed to the next alarm, with what it took after the close", async () => {
+    const { world, wsA, wsB, data } = await setup();
+    await world.webSocketClose(wsB as never);
+    for (let t = 200; t <= 1000; t += 100) { vi.setSystemTime(t); await world.alarm(); }
+    const storage = (world as unknown as { ctx: { storage: { put: ReturnType<typeof vi.fn> } } }).ctx.storage;
+    let t = 1000;
+    let failed = false;
+    while (peek(world).players.has("b") && t < 20_000) {
+      t += 100; vi.setSystemTime(t);
+      const held = peek(world).players.get("b")!;
+      const due = !failed && !((held.flagHeldUntil ?? 0) > peek(world).now + 0.15);
+      if (due) { storage.put.mockImplementationOnce(async () => { throw new Error("storage down"); }); failed = true; }
+      try { await world.alarm(); } catch { /* the alarm retries */ }
+      if (due) expect(peek(world).players.has("b"), "a failed write takes nobody out").toBe(true);
+    }
+    expect(peek(world).players.has("b")).toBe(false);
+    expect((data.get(`player:v2:${tokB}`) as Player).hp).toBe(18);
+    void wsA;
+  });
+
   it("a body in no fight leaves at once, as before", async () => {
     const w = emptyWorld();
     w.players.set("c", angel("c", 43, 0, { flagged: false }));

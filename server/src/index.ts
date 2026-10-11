@@ -273,6 +273,15 @@ export class ReverieWorld {
         stamping.push(session.token);
       }
     }
+    // A body standing in a fight its socket left is written like a live one: what it takes after the close (a blow, a fall
+    // and its spoils) lands with the write that carries the other side of it, not only at its release (round twelve).
+    for (const [id, token] of this.lingering) {
+      const player = this.w.players.get(id);
+      if (player && this.saved.get(id) !== player) {
+        records[playerKey(token)] = player;
+        written.push([id, player]);
+      }
+    }
     const began = Date.now();
     await this.ctx.storage.put(records);
     // Only a write that landed counts: a put that threw leaves every body owed to the next checkpoint.
@@ -691,16 +700,23 @@ export class ReverieWorld {
   private async releaseLingering() {
     if (this.lingering.size === 0) return;
     const leaving: Record<string, unknown> = {};
-    for (const [id, token] of [...this.lingering]) {
+    const released: string[] = [];
+    for (const [id, token] of this.lingering) {
       const p = this.w.players.get(id);
       if (p && inFight(p, this.w.now)) continue;
-      this.lingering.delete(id);
+      released.push(id);
       if (!p) continue;
       leaving[playerKey(token)] = p;
       leaving[seenKey(token)] = Date.now();
-      this.withBody(id, null);
     }
+    if (released.length === 0) return;
+    // written first, taken out after: a write that throws leaves every body standing, owed to the next alarm (round twelve)
     if (Object.keys(leaving).length) await this.checkpoint(leaving);
+    for (const id of released) {
+      this.lingering.delete(id);
+      this.saved.delete(id);
+      if (this.w.players.has(id)) this.withBody(id, null);
+    }
   }
 
   /** Advances by elapsed server time in fixed steps; returns how many it ran. */

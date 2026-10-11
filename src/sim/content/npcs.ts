@@ -727,7 +727,7 @@ const ORD_NODES: Record<string, DialogueNode> = {
       const cut = ctx.p.choices[C.MAP];
       const said = cut === "strait" ? "You said the water. " : cut === "foundry" ? "You said the heat. " : cut === "cable" ? "You said the light. " : cut === "whole" ? "You said nowhere. " : "";
       if (ctx.w.pois["organ-foundry"]?.state === "dark") return `${said}The Foundry is dark. The Cable still drinks on what the Strait already paid. Nobody unlights a debt. The number is quieter. I will not pretty it.`;
-      if (ctx.w.pois["organ-strait"]?.state === "refused") return `${said}You refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.`;
+      if (ctx.w.pois["organ-strait"]?.state === "refused") return `${said}Someone refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.`;
       return `${said}The map is drawn. The Kerb first. Face the glass; I will be behind it. I have a line to read you there. Then Quill, on the Grid, about hints and what they cost to copy.`;
     },
     choices: [

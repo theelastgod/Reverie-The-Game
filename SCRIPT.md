@@ -957,7 +957,7 @@ The paper panel, the gold mark:
 **ORD** — `after-map` (shipped since the movements audit: the Kerb, not the Clearing, is next; he stays at the Strait until the glass is faced, so this plays here)
 > You said the water. *· or* You said the heat. *· or* You said the light. *· or* You said nowhere. The map is drawn. The Kerb first. Face the glass; I will be behind it. I have a line to read you there. Then Quill, on the Grid, about hints and what they cost to copy.
 > *If the Foundry is dark:* …The Foundry is dark. The Cable still drinks on what the Strait already paid. Nobody unlights a debt. The number is quieter. I will not pretty it.
-> *If the water is refused:* …You refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.
+> *If the water is refused (by whoever refused it; round twelve):* …Someone refused the water. I will stand at the Strait. The number is quieter. I will not pretty it.
 - ▸ "Give me the number." → `number`
 - ▸ "Enough."
 
@@ -1236,7 +1236,7 @@ The paper panel, the gold mark:
 **THE GARDEN** — `wreckage-garden` look (shipped, pois.ts)
 > Buried ground. A garden in the sense that things are under it. Nara Vale comes here when nobody is dying.
 
-**THE GARDEN** — `wreckage-garden` keep watch, Q (shipped, pois.ts; any Angel's burial opens it)
+**THE GARDEN** — `wreckage-garden` keep watch, Q (shipped, pois.ts; any Angel's burial opens it, to a body in its fourth hour; it is the mortality act, not the third hour's burial: round twelve)
 > You keep watch over buried ground. Nothing happens. That is the act. Readiness is slower than salvage.
 [C.MORTALITY watch; F.MORTALITY; readiness +6]
 

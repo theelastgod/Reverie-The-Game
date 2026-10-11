@@ -567,10 +567,10 @@ const WET: Quest[] = [
         target: "operator-desk",
         plate: "plate-operator.jpg",
         done: ({ p }) => has(p, SF.DESK_CLOSED), // the close is the ledger's, not the desk's: a sale that walked her already closed the desk (Phase D)
-        onComplete: [
+        // the city's news once, whoever closes the ledger after; each closer keeps its own Wink (round twelve)
+        onComplete: ({ w }) => [
           poi("operator-desk", "closed"),
-          worldFlag(SW.DESK_CLOSED),
-          news("Someone closed the Concentrator's desk. Yield still wants a body. It will have to ask elsewhere."),
+          ...((w.flags[SW.DESK_CLOSED] ?? 0) > 0 ? [] : [worldFlag(SW.DESK_CLOSED), news("Someone closed the Concentrator's desk. Yield still wants a body. It will have to ask elsewhere.")]),
           wink("A desk is a mouth. You shut it. The number it quoted was honest. The door it bought was not."),
         ],
       }),
