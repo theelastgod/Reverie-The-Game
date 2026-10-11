@@ -223,7 +223,7 @@ export class CityScene extends Phaser.Scene {
     switch (e.code) {
       case "Tab":
         e.preventDefault();
-        if (!dialogue) this.net.stance();
+        if (!dialogue) this.orUnheard(this.net.stance());
         return;
       case "Escape": {
         // An opened dialogue holds focus itself (its choices too); Escape there closes it, and the close returns focus.
@@ -231,7 +231,7 @@ export class CityScene extends Phaser.Scene {
         const inside = !!panel && panel.contains(document.activeElement);
         const does = escapeDoes(focused, inside, dialogue);
         if (does === "blur") (document.activeElement as HTMLElement | null)?.blur();
-        else if (does === "close") this.net.close(you?.dialogue?.node);
+        else if (does === "close") this.orUnheard(this.net.close(you?.dialogue?.node));
         return;
       }
       case "Digit1": case "Digit2": case "Digit3": case "Digit4": case "Digit5": case "Digit6": case "Digit7": case "Digit8": case "Digit9":
@@ -239,7 +239,7 @@ export class CityScene extends Phaser.Scene {
         if (!dialogue || !you) return;
         const i = Number(e.code.slice(-1)) - 1;
         const choice = you.dialogue!.choices[i];
-        if (choice) this.net.choose(choice.id, you.dialogue!.node);
+        if (choice) this.orUnheard(this.net.choose(choice.id, you.dialogue!.node));
         return;
       }
       case "ShiftLeft": case "ShiftRight":
@@ -265,7 +265,7 @@ export class CityScene extends Phaser.Scene {
         this.strike(true);
         break;
       case "KeyK":
-        this.net.kit();
+        this.orUnheard(this.net.kit());
         break;
       case "KeyF":
         this.promptVerb("F");
@@ -277,10 +277,10 @@ export class CityScene extends Phaser.Scene {
         this.promptVerb("Q");
         break;
       case "KeyV":
-        this.net.flag();
+        this.orUnheard(this.net.flag());
         break;
       case "KeyT":
-        this.net.truce();
+        this.orUnheard(this.net.truce());
         break;
       case "KeyI":
         this.useFirstPaper();

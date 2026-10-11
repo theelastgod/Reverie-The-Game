@@ -2673,6 +2673,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   added `escapeDoes` for a focused dialogue), the map label's wording and
   its write only on change, the minimap's still ring under reduced
   motion.
+- The review of round eight's own commits (`249b0c9..31443e4`, by hand,
+  2026-10-11). One finding, fixed: the "Not connected. The city did not
+  hear that." line reached the tapped and clicked presses but not the
+  keyboard's own (Tab's stance, Escape's close, the digit choices, K, V
+  and T); every press now passes through the scene's `orUnheard`.
+  Checked and sound: the watchdog's start at the hello and its clearing
+  with its socket (a page frozen in the background may reconnect once on
+  waking, which is harmless), the roster's pruning against the last fast
+  frame, the stall clock's reset on any progress and its leaving
+  telegraph and recovery alone, the ring's join fallback running the
+  join verb's own gates, the image fallback's guard against a src the
+  image has moved on from.
 
 ## Verified (2026-09-25, integration)
 
@@ -3796,6 +3808,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 - The HUD review fix (2026-10-11): typecheck, 756 tests in 55 files, the
   build, and the render check on a fresh local world (desktop and phone,
   `RENDER_MIN_FPS=5`).
+- The round eight review fix (2026-10-11): typecheck, 756 tests, the
+  build, the session smoke and the render check on a fresh local world.
 
 ## Backlog
 
