@@ -858,7 +858,8 @@ const ORD_NODES: Record<string, DialogueNode> = {
 function vesperRoute(ctx: Ctx): string {
   // Angels only (SCRIPT.md II.10): a guest has no House and no hour to sell; it sees what the desk shows a spectator.
   if (ctx.p.guest) return "guest";
-  if (!has(ctx, F.HALL)) return "cold";
+  // the hall read counts from the second hour (pois.ts): a first-hour body that read it is not sent back to it (round eighteen)
+  if (!has(ctx, F.HALL)) return ctx.p.movement < 2 ? "early" : "cold";
   if (has(ctx, F.OPERATOR)) {
     if (ctx.p.movement >= 5 || has(ctx, F.PASSING)) return "after";
     if (chose(ctx, C.OPERATOR, "take")) return ctx.w.pois["organ-foundry"]?.state === "dark" ? "foundry" : "taken";
@@ -878,6 +879,10 @@ const VESPER_NODES: Record<string, DialogueNode> = {
     text: `${PARTY_BLIND} I do not price what I cannot see. Sit down when you are back.`,
     effects: blindEffects("vesper"),
     next: vesperRoute,
+  },
+  early: {
+    id: "early",
+    text: "Vesper Hale does not quote to the first hour. Go under. Then read your hall, come back, and I will tell you what your hour is worth.",
   },
   cold: {
     id: "cold",

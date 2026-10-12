@@ -2917,6 +2917,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Found sound: flag holds across a fall, duel offers' refusals and
   expiries, spoils paid once, aura and restraint floors and caps, Caul
   never struck, respawns only where a body may stand.
+- The player-defect sweep, round eighteen, second part (2026-10-12; the
+  bearings scan: 71,000 generated bodies, about 130,000 journal and side
+  bearings checked to resolve, to be on foot through the body's gates, to
+  find the person where it points, and to offer the keys the detail
+  names; cases in `sweep18.test.ts`). Fixed: a first-hour Angel could
+  read its own hall on the Kerb, which set the second hour's HALL, then
+  decide Vesper's offer at the operator's desk: Nara went to the Care's
+  garden for it, a place it could not enter, and the first hour could
+  never finish. The hall read now lights the hall and moves the wake in
+  the first hour but counts only from the second; the desk, the freeze
+  and Vesper say the offer is for a body that has gone under (new lines,
+  beside the shipped ones). That also closes the Officer's grief hour
+  being handed out in the first. Form 9's "press E to file" while the
+  tax hour held the window's E now says to finish the tax hour first;
+  the clerks' names at the plaque say they wait for the weather's.
+  Found sound: every bearing resolves, no guest is sent into the Care,
+  the Clearing or the Organs, no person missing behind a home target,
+  no station target whose person stands elsewhere.
 
 ## Verified (2026-09-25, integration)
 

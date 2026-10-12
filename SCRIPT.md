@@ -535,6 +535,7 @@ The paper panel, the gold mark:
 
 **THE DESK** — `read` F, Read the desk (shipped)
 > *(before the hall)* Safety Annex. Fifteen Bestand. Sign here. The district holds. The hour does not. The Annex will not take a name that has not read the hall.
+> *(new, round eighteen: in the first hour)* Safety Annex. Fifteen Bestand. Sign here. The district holds. The hour does not. The Annex takes no name from the first hour; come back from under.
 > *(signed)* Your signature, in the ledger, over the form's own small line: funded by A. Caul. The Nave held for half an hour on it. The Passing went hungry for the same half hour.
 > *(refused)* Your refusal, in the ledger. They keep those too. Safety keeps everything. It is what keeping means to them. The ledger's paper is the Concern's; the keeping is Safety's.
 
@@ -699,6 +700,9 @@ The paper panel, the gold mark:
 
 **THE DESK** — `look` F, Look at the desk (shipped, pois.ts operator-desk)
 > *(before the hall)* A woman at a desk with one number on it. She does not look up. Vesper Hale will not quote a private node to someone who has not read who owns the public ones.
+> *(new, round eighteen: in the first hour)* A woman at a desk with one number on it. She does not look up. Vesper Hale quotes to bodies that have gone under, not before.
+>
+> *(new, round eighteen: Vesper in the first hour)* Vesper Hale does not quote to the first hour. Go under. Then read your hall, come back, and I will tell you what your hour is worth.
 > *(taken)* The desk is closed. The yield is in your hand. Private yield still wants a body and it has yours.
 > *(refused)* The desk is here. The offer is not. She does not quote twice.
 

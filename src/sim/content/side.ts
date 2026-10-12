@@ -387,7 +387,10 @@ const NAVE: Quest[] = [
       step({
         id: "names",
         title: "Strike their names in",
-        detail: "The Office of Safety plaque lists civic duties. Press E to write the clerks under it.",
+        // the plaque takes the names once the weather is named there (side-pois.ts): the journal says so (round eighteen)
+        detail: ({ p }) => (has(p, F.WEATHER_NAMED)
+          ? "The Office of Safety plaque lists civic duties. Press E to write the clerks under it."
+          : "The Office of Safety plaque lists civic duties. It takes nothing cut into it until the weather has a name there. Name it; then press E to write the clerks under it."),
         target: "safety-plaque",
         plate: "plate-burial.jpg",
         done: ({ p }) => has(p, SF.JOB_NAMES),
@@ -752,8 +755,11 @@ const ANNEX: Quest[] = [
         id: "file",
         title: "File Form 9, or refuse it",
         // the window's E and Q are the spine's tithe until it is decided: the journal says so, not "Q refuses" (round fifteen)
+        // and while the tax hour runs its E is that hour's read and pay: filing waits for it (round eighteen)
         detail: ({ p }) => ((p.flags[F.TITHE] ?? 0) > 0
-          ? "The tax window takes Form 9. Press E to pay the freeze fee and file it. Press Q to refuse and let the freeze lapse on paper."
+          ? ((stepOf(p, SQ.TAX) ?? 2) < 2
+            ? "The tax window takes Form 9, once your tax hour there is done: its E reads who pays and pays your House's share first. Then press E to file Form 9. Press Q to refuse it now."
+            : "The tax window takes Form 9. Press E to pay the freeze fee and file it. Press Q to refuse and let the freeze lapse on paper.")
           : "The tax window takes Form 9, once this hour's tithe is decided there. Decide the tithe first; then press E to file Form 9, or Q to refuse it."),
         target: "tax-window",
         plate: "safety-annex.jpg",

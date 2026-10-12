@@ -556,6 +556,7 @@ const WET: PoiConfig[] = [
         when: ctx => !has(ctx, F.HALL) || has(ctx, F.OPERATOR),
         guest: spectate,
         say: ctx => {
+          if (!has(ctx, F.HALL) && ctx.p.movement < 2) return "A woman at a desk with one number on it. She does not look up. Vesper Hale quotes to bodies that have gone under, not before.";
           if (!has(ctx, F.HALL)) return "A woman at a desk with one number on it. She does not look up. Vesper Hale will not quote a private node to someone who has not read who owns the public ones.";
           if (chose(ctx, C.OPERATOR, "take")) return "The desk is closed. The yield is in your hand. Private yield still wants a body and it has yours.";
           return "The desk is here. The offer is not. She does not quote twice.";
@@ -834,8 +835,10 @@ const hall = (house: "mortals" | "sky" | "divinities" | "earth", plaque: string,
         say: ctx => `${plaque} Tithe ${gestellTax(ctx.w.gestell)} percent. The nodes are the House's on paper; the paper is the Concern's, and the House rents back what it owns. The tax is climate. It will never make you hit harder.`,
         // The body wakes at the last Care shrine or House hall it touched (PROMPT §8.2, DESIGN §2 rule 5): reading its own
         // hall puts it back here, as the shrine's Rest puts it back there (the player-defect sweep, round five).
-        effects: [
-          { kind: "flag", key: F.HALL },
+        // The hall read is Movement II's step: read in the first hour it lights the hall and moves the wake, but sets no HALL,
+        // which would open the operator's desk and the freeze to a body that has not gone under (round eighteen).
+        effects: ctx => [
+          ...(ctx.p.movement >= 2 ? [{ kind: "flag", key: F.HALL } as const] : []),
           { kind: "poi", id, state: "lit" },
           { kind: "respawnAt", poi: id },
           { kind: "wink", text: "Who owns the nodes: the Houses on paper, the Concern on the paper's back, and the weather in fact." },
@@ -905,6 +908,7 @@ const ANNEX: PoiConfig[] = [
         when: ctx => !has(ctx, F.HALL) || has(ctx, F.FREEZE),
         guest: spectate,
         say: ctx => {
+          if (!has(ctx, F.HALL) && ctx.p.movement < 2) return "Safety Annex. Fifteen Bestand. Sign here. The district holds. The hour does not. The Annex takes no name from the first hour; come back from under.";
           if (!has(ctx, F.HALL)) return "Safety Annex. Fifteen Bestand. Sign here. The district holds. The hour does not. The Annex will not take a name that has not read the hall.";
           return chose(ctx, C.FREEZE, "signed")
             ? "Your signature, in the ledger, over the form's own small line: funded by A. Caul. The Nave held for half an hour on it. The Passing went hungry for the same half hour."
