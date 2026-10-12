@@ -726,9 +726,12 @@ export class Entities {
           : "";
         this.label(`node:${n.id}`, `Yield node${hint}`, n.x, n.y - 44, n.kept ? "#7eb6ff" : "#c9a56a");
       }
+      // the place the prompt names reads its state name ("Hot street — hot"), as the prompt does; the rest keep the map's
+      // names, the per-viewer labels being the server's to build only for the prompt's target (round twenty)
+      const named = snap.prompt?.targetKind === "poi" ? snap.prompt : null;
       for (const p of POI_LIST) {
         if (!near(p.x, p.y)) continue;
-        this.label(`poi:${p.id}`, p.name, p.x, p.y - 30, "#c9a56a");
+        this.label(`poi:${p.id}`, named?.targetId === p.id ? named.name : p.name, p.x, p.y - 30, "#c9a56a");
       }
       for (const w of snap.wreckage) {
         if (w.buried || !near(w.x, w.y)) continue;
