@@ -23,7 +23,8 @@
     "bench": "vitest bench --run --reporter=verbose src/sim/broadcast.bench.ts",
     "d1:migrate": "wrangler d1 migrations apply reverie-log --local",
     "d1:migrate:remote": "wrangler d1 migrations apply reverie-log --remote",
-    "test:fuzz": "FUZZ_RUNS=${FUZZ_RUNS:-250} FUZZ_STRICT=${FUZZ_STRICT:-1} vitest run src/sim/fuzz.test.ts"
+    "test:fuzz": "FUZZ_RUNS=${FUZZ_RUNS:-250} FUZZ_STRICT=${FUZZ_STRICT:-1} vitest run src/sim/fuzz.test.ts",
+    "test:fuzz:server": "R22_RUNS=${R22_RUNS:-120} vitest run server/src/sessionFuzz.test.ts"
   },
   "dependencies": {
     "@noble/curves": "^2.4.0",

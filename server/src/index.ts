@@ -595,7 +595,8 @@ export class ReverieWorld {
       intents.set(session.id, { ...idle });
       this.w = { ...this.w, intents };
       this.lingering.set(session.id, session.token);
-    } else {
+    } else if (![...this.sessions.values()].some(s => s.id === session.id)) {
+      // a body another live socket still holds (a restore that handed a stale socket the same token) stays with it (round twenty-two)
       this.withBody(session.id, null);
     }
     this.intentAt.delete(session.id);
@@ -648,7 +649,8 @@ export class ReverieWorld {
       }
       const player = page.get(playerKey(token));
       if (!player?.guest || player.wallet || now - at < SAVED_TTL_MS) continue;
-      gone.push(playerKey(token), seenKey(token));
+      // and its wallet challenge, if it ever asked for one: a swept token never answers it (round twenty-two)
+      gone.push(playerKey(token), seenKey(token), `${CHALLENGE_PREFIX}${token}`);
       bodies++;
     }
     if (Object.keys(stamps).length) await this.ctx.storage.put(stamps);

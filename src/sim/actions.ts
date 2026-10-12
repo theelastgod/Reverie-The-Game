@@ -154,7 +154,9 @@ export function applyLink(w: WorldState, id: string, serial: number, proof: Link
     linkedAt: w.now,
     history: { ...p.history, houses },
     quests: reopenThreshold(p),
+    claims: [...p.claims, ...(p.parkedClaims ?? [])], // what an unseal held off the body comes back with the seal
   };
+  delete me.parkedClaims;
   let cur = setPlayer(w, say(me, LINES.LINK_COPY(serial, house, messenger), w.now));
   // The serial's prior hour: the authored one for the test serial, else what this body's own log has written back. A first
   // link has written nothing back: the guest's own first hour is this hour, not a prior one (SCRIPT.md II.7; round twenty-one).
@@ -183,6 +185,9 @@ export function unsealBody(p: Player, now: number): Player {
     flags,
     locked: true,
     flagged: false,
+    // a guest holds no claims (AGENTS.md): they wait off the body, unseen, until a link seals it again (round twenty-two)
+    claims: [],
+    ...(p.claims.length > 0 || p.parkedClaims?.length ? { parkedClaims: [...(p.parkedClaims ?? []), ...p.claims] } : {}),
     dialogue: null,
     x: at.x,
     y: at.y,

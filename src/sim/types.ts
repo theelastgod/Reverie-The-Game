@@ -139,6 +139,7 @@ export type Player = {
   items: Item[];
   claims: Claim[];
   claimsFiled: number;
+  parkedClaims?: Claim[]; // an unsealed body's claims, held off it while it is a guest and given back on its next link (round twenty-two)
   insured: boolean;
   respawn: Vec & { district: DistrictId };
 

@@ -2998,6 +2998,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round twenty-two (2026-10-12; two fuzzers:
+  the random-play one on a fresh seed range, 1,200 runs and 2,432
+  bodies with 787 at the credits, clean; and a session fuzzer over the
+  Durable Object, kept as `server/src/sessionFuzz.test.ts` behind
+  `npm run test:fuzz:server`, about 120,000 steps of joins, second tabs,
+  malformed messages, closes mid-fight, links, alarms, sweeps and
+  restores over the same storage; cases in `server/src/sweep22.test.ts`).
+  Fixed: an Angel unsealed at its join came back a guest still holding
+  its claims (sent to its HUD, refused at the desk, saved so): its
+  claims now wait off the body in `parkedClaims` (never on the wire) and
+  come back with its next link. The sweep left a swept guest's wallet
+  challenge behind for good; it now goes with the body. And a
+  hibernation restore that ever handed two sockets the same token
+  (unconfirmed for the runtime) would have let the stale one's close
+  take the body from under the live one; a close now leaves a body that
+  another live socket still holds. Held: one body per live socket and
+  per token, no serial held twice, records restoring to the same
+  bodies, closes written or lingering only while in a fight, frames
+  matching the body, the budget never dropping an in-budget message.
 
 ## Verified (2026-09-25, integration)
 

@@ -23,7 +23,7 @@ export const YOU_SLOW_KEYS = ["quests", "flags", "choices", "party", "items", "c
 export type YouSlowKey = (typeof YOU_SLOW_KEYS)[number];
 export type YouSlow = Partial<Pick<YouView, YouSlowKey>>;
 /** The record's fields the wire's `you` never carries: the snapshot has a section of its own for them (`Snap.notices`). */
-export const YOU_OFF_WIRE = ["notices"] as const;
+export const YOU_OFF_WIRE = ["notices", "parkedClaims"] as const;
 /** The record fields `youDue` watches: every slow key that is the viewer's own record (the kit's readout is built per frame). */
 const YOU_RECORD_KEYS = YOU_SLOW_KEYS.filter(k => k !== "kitReadout");
 
