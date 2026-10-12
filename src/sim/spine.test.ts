@@ -598,7 +598,8 @@ function movementTwo(w0: WorldState, o: Feudal): WorldState {
 
   const history = snapshotFor(w, ME).objective!;
   expect(history.step).toBe("history");
-  expect(history.target).toEqual(POSITIONS["history:7777"]);
+  // the bearing ends at the shrine whose Q faces the mark; the mark itself stands where it is drawn (round twenty-one)
+  expect(history.target).toEqual(POSITIONS["care-shrine"]);
   w = tick(use(w, "care-shrine", "history"));
   expectStep(w, Q.M2, 7);
   expect(me(w).flags[F.HISTORY]).toBe(1);

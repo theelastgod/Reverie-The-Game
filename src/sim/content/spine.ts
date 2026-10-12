@@ -255,7 +255,8 @@ const M2_STEPS: QuestStep[] = [
     detail: ctx => (hasHistoryMark(ctx)
       ? "Wreckage only you can see stands in the Care. Q at the Care shrine faces it."
       : "The serial has no prior hour written yet. The Care shrine keeps the place for one. Walk on."),
-    target: ctx => (hasHistoryMark(ctx) ? "history:mark" : "care-shrine"),
+    // the bearing ends where Q is pressed: the shrine faces the mark, which the client draws where it stands (round twenty-one)
+    target: "care-shrine",
     plate: "serial-wreckage.jpg",
     // A serial whose log has nothing written back has no wreckage to face; the beat is theirs the next time they link.
     done: ctx => has(ctx, F.HISTORY) || !hasHistoryMark(ctx),

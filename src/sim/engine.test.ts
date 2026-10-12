@@ -590,14 +590,17 @@ describe("actions", () => {
     expect(me(w, "b").heard).toBe(FIX.LINES.LINK_ELSEWHERE);
   });
 
-  it("a serial whose body has a log written back links with a prior hour in the Care; an empty log has none", () => {
+  it("a body that was an Angel before links with its log's prior hour in the Care; a first link, and an empty log, have none", () => {
     const clean = applyLink(add(emptyWorld(), guest("g")), "g", 42, MOCK_SIG);
     expect(clean.history).toEqual([]);
-    let w = add(emptyWorld(), { ...guest("g"), history: { passings: 0, buried: 1, looted: 0, houses: [], outcomes: [] } });
+    // a first link: the guest's own first hour is this hour, not a prior one (SCRIPT.md II.7; the player-defect sweep, round twenty-one)
+    const first = applyLink(add(emptyWorld(), { ...guest("g"), deaths: 1, history: { passings: 0, buried: 1, looted: 0, houses: [], outcomes: [] } }), "g", 42, MOCK_SIG);
+    expect(first.history).toEqual([]);
+    let w = add(emptyWorld(), { ...guest("g"), history: { passings: 0, buried: 1, looted: 0, houses: ["sky"], outcomes: [] } });
     w = applyLink(w, "g", 42, MOCK_SIG);
     expect(w.history).toHaveLength(1);
     expect(w.history[0]).toMatchObject({ id: "history:42", serial: 42, district: "care", x: POSITIONS["history:mark"].x, y: POSITIONS["history:mark"].y });
-    const fell = applyLink(add(emptyWorld(), { ...guest("f"), deaths: 2 }), "f", 43, MOCK_SIG);
+    const fell = applyLink(add(emptyWorld(), { ...guest("f"), deaths: 2, history: { passings: 0, buried: 0, looted: 0, houses: ["earth"], outcomes: [] } }), "f", 43, MOCK_SIG);
     expect(fell.history[0]).toMatchObject({ id: "history:43", serial: 43 });
   });
 

@@ -2980,6 +2980,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   live city carries one). Found sound: the heavy skip, the threshold's
   F verbs always offering one of the two, the corridor reachable by
   every Angel, the funeral at Nara's plot.
+- The player-defect sweep, round twenty-one (2026-10-12; a seeded
+  random-play fuzzer through the real reducers, kept as
+  `src/sim/fuzz.test.ts` behind `npm run test:fuzz`, off in `npm test`;
+  about 5,200 seeds, 1–3 bodies each, guests and Angels linked
+  mid-run, reaching the credits on a third of the bodies; cases in
+  `sweep21.test.ts`). Fixed: a guest's own first hour became its
+  serial's "prior hour": the burial every Movement I asks for (or one
+  fall to the Intake Clerk) wrote a wreckage mark into the Care on the
+  link, and Movement II then retold minutes-old play as a past life.
+  A first link now writes no mark (SCRIPT.md II.7: the beat is a
+  serial's next link); a body that was an Angel before still brings its
+  log. And the history step's bearing ended on the mark, five tiles
+  from the shrine whose Q faces it, with nothing to press there; it
+  ends at the shrine now. Held across every run: no exception, no
+  negative or NaN number and every cap kept, movement and quest steps
+  never back, no guest under, in a gated district, with a claim, a flag,
+  a Wink or a listing, every bearing resolved and walkable, every
+  offered verb doing something or saying why, every earner with a sink.
 
 ## Verified (2026-09-25, integration)
 

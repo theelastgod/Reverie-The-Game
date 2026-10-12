@@ -22,7 +22,8 @@
     "test:render": "node scripts/render-check.mjs",
     "bench": "vitest bench --run --reporter=verbose src/sim/broadcast.bench.ts",
     "d1:migrate": "wrangler d1 migrations apply reverie-log --local",
-    "d1:migrate:remote": "wrangler d1 migrations apply reverie-log --remote"
+    "d1:migrate:remote": "wrangler d1 migrations apply reverie-log --remote",
+    "test:fuzz": "FUZZ_RUNS=${FUZZ_RUNS:-250} FUZZ_STRICT=${FUZZ_STRICT:-1} vitest run src/sim/fuzz.test.ts"
   },
   "dependencies": {
     "@noble/curves": "^2.4.0",

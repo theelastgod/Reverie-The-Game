@@ -156,8 +156,9 @@ export function applyLink(w: WorldState, id: string, serial: number, proof: Link
     quests: reopenThreshold(p),
   };
   let cur = setPlayer(w, say(me, LINES.LINK_COPY(serial, house, messenger), w.now));
-  // The serial's prior hour: the authored one for the test serial, else what this body's own log has written back.
-  const mark = serialHistoryMark(serial) ?? historyMarkFor(serial, p.history, p.deaths);
+  // The serial's prior hour: the authored one for the test serial, else what this body's own log has written back. A first
+  // link has written nothing back: the guest's own first hour is this hour, not a prior one (SCRIPT.md II.7; round twenty-one).
+  const mark = serialHistoryMark(serial) ?? (p.history.houses.length > 0 ? historyMarkFor(serial, p.history, p.deaths) : null);
   if (mark && !cur.history.some(m => m.id === mark.id)) cur = { ...cur, history: [...cur.history, mark] };
   return cur;
 }
