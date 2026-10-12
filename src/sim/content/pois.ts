@@ -11,7 +11,8 @@ import {
   WAR_PERIOD,
 } from "../constants";
 import { cityFigure, weatherBand } from "../protocol";
-import { C, F, W, seasonPassingFlag } from "./ids";
+import { C, F, Q, W, seasonPassingFlag } from "./ids";
+import { SPINE } from "./spine";
 import { GUEST_LOCK, WEATHER_LABELS, WEATHER_NAMED } from "./lines";
 import { canSeeWink, inWarmFight } from "../perceive";
 import { clearingPrice, listClearing, moveClearing } from "./market";
@@ -21,6 +22,14 @@ import { countdown, darkLights, glassDark, launchDark, launchDate, launchOpen, n
 import { descentFrom } from "../descent";
 
 // ---------------------------------------------------------------- helpers
+
+
+/** Whether the first hour's journal stands at its last step, the going-under: the threshold opens there and not before (round nineteen). */
+function atThreshold(ctx: Ctx): boolean {
+  const steps = SPINE.find(q => q.id === Q.M1)?.steps ?? [];
+  const at = steps.findIndex(st => st.id === "going-under");
+  return at >= 0 && (ctx.p.quests[Q.M1] ?? 0) >= at;
+}
 
 const has = (ctx: Ctx, key: string): boolean => (ctx.p.flags[key] ?? 0) > 0;
 const chose = (ctx: Ctx, key: string, value: string): boolean => ctx.p.choices[key] === value;
@@ -242,6 +251,7 @@ const NAVE: PoiConfig[] = [
         effects: [
           { kind: "flag", key: F.BURIED_NARA },
           { kind: "poi", id: "nara-plot", state: "closed" },
+          { kind: "funeral" }, // her plot is a burial: her four start again from here (SCRIPT.md II; round nineteen)
           { kind: "readiness", delta: READINESS_BURY },
           { kind: "restraint", delta: RESTRAINT_BURY_GAIN },
           { kind: "history", buried: 1 },
@@ -271,7 +281,7 @@ const NAVE: PoiConfig[] = [
         label: "Go under",
         choice: "under",
         // not out of a warm fight: the threshold is no door out of a blow still owed (round eighteen)
-        when: ctx => has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA) && !has(ctx, F.UNDER) && !inWarmFight(ctx.p, ctx.now),
+        when: ctx => has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA) && atThreshold(ctx) && !has(ctx, F.UNDER) && !inWarmFight(ctx.p, ctx.now),
         guest: "allow",
         effects: [{ kind: "poi", id: "going-under", state: "open" }, { kind: "under" }],
       },
@@ -279,12 +289,13 @@ const NAVE: PoiConfig[] = [
         key: "F",
         label: "Look down",
         choice: "look",
-        when: ctx => !(has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA)) || has(ctx, F.UNDER) || inWarmFight(ctx.p, ctx.now),
+        when: ctx => !(has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA)) || !atThreshold(ctx) || has(ctx, F.UNDER) || inWarmFight(ctx.p, ctx.now),
         guest: "allow",
         say: ctx => {
           // an Angel unsealed back to a guest (its serial walks in another body) is locked here like any guest: the lock line
           // brings its panel back (round nine)
           if (has(ctx, F.UNDER)) return ctx.p.guest ? GUEST_LOCK : "The threshold. You have been under it. The Care is south, through the gate.";
+          if (has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA) && !atThreshold(ctx)) return "A lip of concrete. The first hour is not done with you; it has more for you up in the Nave. Your journal says what.";
           if (has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA) && inWarmFight(ctx.p, ctx.now)) return "A lip of concrete, and a fight still warm at your back. Nobody goes under with a blow owed. Finish it, or call a truce.";
           if (!has(ctx, F.BURIED_NARA)) return "A lip of concrete and under it, a dark that is a floor. Nara holds a grave open. Close it first.";
           return "A lip of concrete. The weather has no name yet. Give it one at the plaque before you go under it.";
@@ -872,7 +883,7 @@ const ANNEX: PoiConfig[] = [
         key: "F",
         label: `Sign the freeze (${FREEZE_FEE})`,
         choice: "sign",
-        when: ctx => has(ctx, F.HALL) && !has(ctx, F.FREEZE),
+        when: ctx => has(ctx, F.HALL) && has(ctx, F.TALKED_OFFICER) && !has(ctx, F.FREEZE), // the corridor first (round nineteen)
         guest: spectate,
         cost: { bestand: FREEZE_FEE, sink: "freeze" },
         once: F.FREEZE,
@@ -890,7 +901,7 @@ const ANNEX: PoiConfig[] = [
         key: "Q",
         label: "Refuse to sign",
         choice: "refuse",
-        when: ctx => has(ctx, F.HALL) && !has(ctx, F.FREEZE),
+        when: ctx => has(ctx, F.HALL) && has(ctx, F.TALKED_OFFICER) && !has(ctx, F.FREEZE), // the corridor first (round nineteen)
         guest: spectate,
         once: F.FREEZE,
         say: ctx => "You refused. The Nave stays a mouth. The Passing stays possible. The clerk stamps a form that says you were here and did nothing, which is the form for that."
@@ -905,10 +916,11 @@ const ANNEX: PoiConfig[] = [
         key: "F",
         label: "Read the desk",
         choice: "read",
-        when: ctx => !has(ctx, F.HALL) || has(ctx, F.FREEZE),
+        when: ctx => !has(ctx, F.HALL) || !has(ctx, F.TALKED_OFFICER) || has(ctx, F.FREEZE),
         guest: spectate,
         say: ctx => {
           if (!has(ctx, F.HALL) && ctx.p.movement < 2) return "Safety Annex. Fifteen Bestand. Sign here. The district holds. The hour does not. The Annex takes no name from the first hour; come back from under.";
+          if (has(ctx, F.HALL) && !has(ctx, F.TALKED_OFFICER) && !has(ctx, F.FREEZE)) return "Safety Annex. Fifteen Bestand. The clerk looks past you, down the corridor. The Officer of Safety stops everyone there before the desk. Go and be stopped.";
           if (!has(ctx, F.HALL)) return "Safety Annex. Fifteen Bestand. Sign here. The district holds. The hour does not. The Annex will not take a name that has not read the hall.";
           return chose(ctx, C.FREEZE, "signed")
             ? "Your signature, in the ledger, over the form's own small line: funded by A. Caul. The Nave held for half an hour on it. The Passing went hungry for the same half hour."

@@ -90,8 +90,9 @@ export function mountJournal(root: HTMLElement): JournalPanel {
       setText(bearing, b);
       setClass(bearing, "here", b === "HERE");
 
-      // Side hours: the quest, its current step, and a live bearing to the step's target.
-      const qsig = side.map(r => r.quest + ":" + r.step).join("|");
+      // Side hours: the quest, its current step, what to do there, and a live bearing to the step's target. The detail is
+      // where a side hour's keys are said, so it rides with the row (the player-defect sweep, round nineteen).
+      const qsig = side.map(r => r.quest + ":" + r.step + ":" + (r.detail ?? "")).join("|");
       if (qsig !== questSig && quests) {
         questSig = qsig;
         quests.replaceChildren();
@@ -105,9 +106,12 @@ export function mountJournal(root: HTMLElement): JournalPanel {
           const step = document.createElement("span");
           step.className = "step";
           step.textContent = r.title;
+          const what = document.createElement("span");
+          what.className = "detail";
+          what.textContent = r.detail ?? "";
           const where = document.createElement("span");
           where.className = "where";
-          li.append(name, step, where);
+          li.append(name, step, what, where);
           quests.append(li);
           bearingEls.set(r.quest, where);
         }

@@ -81,12 +81,13 @@ const officer: NpcDef = {
   sprite: "clerk",
   party: false,
   personal: (ctx, shared) => {
-    if (finished(ctx.p, SQ.HONEST)) return { ...place("officer-clearing"), state: "clearing" };
-    if (finished(ctx.p, SQ.CENSUS)) return { ...place("officer-ring"), state: "ring" };
     const home = NPC_HOMES.officer;
     const atHome = { x: home.x, y: home.y, district: home.district, present: true, state: "home" };
-    // Movement II stops this body in the Annex corridor (the spine's `officer`), wherever another body's hour has walked him
-    if (angel(ctx.p) && has(ctx.p, F.HALL) && !has(ctx.p, F.TALKED_OFFICER) && shared.state !== "home") return atHome;
+    // Movement II stops this body in the Annex corridor (the spine's `officer`), wherever another body's hour, or its own
+    // first-hour census, has walked him (round nineteen: the corridor comes before this body's own placements)
+    if (angel(ctx.p) && has(ctx.p, F.HALL) && !has(ctx.p, F.TALKED_OFFICER)) return shared.state !== "home" || finished(ctx.p, SQ.HONEST) || finished(ctx.p, SQ.CENSUS) ? atHome : null;
+    if (finished(ctx.p, SQ.HONEST)) return { ...place("officer-clearing"), state: "clearing" };
+    if (finished(ctx.p, SQ.CENSUS)) return { ...place("officer-ring"), state: "ring" };
     if (ctx.p.guest && shared.state === "clearing") return atHome;
     return null;
   },

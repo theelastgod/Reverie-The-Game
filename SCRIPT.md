@@ -367,6 +367,10 @@ Second person, short, cold, concrete noun first. Nobody lectures. Nobody is quot
 **THE THRESHOLD** — `going-under` look down (shipped, pois.ts)
 > *(the grave still open:)* A lip of concrete and under it, a dark that is a floor. Nara holds a grave open. Close it first.
 > *(the weather unnamed:)* A lip of concrete. The weather has no name yet. Give it one at the plaque before you go under it.
+>
+> *(new, round eighteen: a fight still warm)* A lip of concrete, and a fight still warm at your back. Nobody goes under with a blow owed. Finish it, or call a truce.
+>
+> *(new, round nineteen: the first hour's earlier steps still open)* A lip of concrete. The first hour is not done with you; it has more for you up in the Nave. Your journal says what.
 > *(an Angel, after:)* The threshold. You have been under it. The Care is south, through the gate.
 
 **THE THRESHOLD** — go under, a guest (lines.ts GUEST_LOCK shipped; then the lock panel, index.html, shipped since the movements audit: the middle line cut)
@@ -535,6 +539,7 @@ The paper panel, the gold mark:
 
 **THE DESK** — `read` F, Read the desk (shipped)
 > *(before the hall)* Safety Annex. Fifteen Bestand. Sign here. The district holds. The hour does not. The Annex will not take a name that has not read the hall.
+> *(new, round nineteen: the hall read, the corridor not yet)* Safety Annex. Fifteen Bestand. The clerk looks past you, down the corridor. The Officer of Safety stops everyone there before the desk. Go and be stopped.
 > *(new, round eighteen: in the first hour)* Safety Annex. Fifteen Bestand. Sign here. The district holds. The hour does not. The Annex takes no name from the first hour; come back from under.
 > *(signed)* Your signature, in the ledger, over the form's own small line: funded by A. Caul. The Nave held for half an hour on it. The Passing went hungry for the same half hour.
 > *(refused)* Your refusal, in the ledger. They keep those too. Safety keeps everything. It is what keeping means to them. The ledger's paper is the Concern's; the keeping is Safety's.

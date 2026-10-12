@@ -2935,6 +2935,34 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   Found sound: every bearing resolves, no guest is sent into the Care,
   the Clearing or the Organs, no person missing behind a home target,
   no station target whose person stands elsewhere.
+- The player-defect sweep, round nineteen (2026-10-12; two lenses:
+  out-of-order progression, every verb and choice that moves the story
+  pressed before its hour; and the screen against the server after the
+  recent rounds; cases in `src/sim/sweep19-*.test.ts` and
+  `src/ui/sweep19-*.test.ts`). Fixed in the story: the threshold opened
+  on a named weather and a closed plot alone, so a body could go under
+  with its Intake still open (an Angel's movement went to 2 and the
+  second hour's desks opened under a first-hour journal; a guest locked
+  with a Movement I that could never close); it opens now only at the
+  journal's last first-hour step, and says the first hour is not done.
+  The freeze desk took a signature before the Officer's corridor stop;
+  it now sends the body to be stopped first. The Officer's corridor
+  stop came after this body's own first-hour census had walked him to
+  the Gold Ring; the corridor now comes first. Nara's plot closed now
+  starts her four extractions again, as every burial does. Fixed on the
+  screen: a side hour's detail (where its keys are said) never reached
+  the journal; LOWER FLAG and the prompt's V were offered through the
+  ten seconds the server refuses them; RUIN DUEL ASKED stayed up after
+  the asked body stood down (the offer is now withdrawn); a second line
+  in one step never showed; USE PAPER showed for a paper that does
+  nothing; and gold in the HUD (notice and event tones, the third aura
+  tier, the minimap's people) is lavender now. Judged otherwise: Quill's
+  forge lesson taken before the glass sends Ord back to the gate, a
+  tested fork with its own line. Noted: the canvas's place labels use
+  the map's fixed names, not the prompt's state names. Found sound: the
+  fast and slow frames merged against the whole snapshot on every slow
+  step, the contest as a tally, node views without keepers, guests'
+  Winke blanked, every movement-gated verb and Caul's room.
 
 ## Verified (2026-09-25, integration)
 

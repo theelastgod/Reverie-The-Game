@@ -136,7 +136,7 @@ describe("guests everywhere", () => {
     }
     // the threshold still refuses
     const t = POSITIONS["going-under"];
-    const w = guest(emptyWorld(), "g", t, { locked: true, flags: { [F.WEATHER_NAMED]: 1, [F.BURIED_NARA]: 1 } });
+    const w = guest(emptyWorld(), "g", t, { locked: true, flags: { [F.WEATHER_NAMED]: 1, [F.BURIED_NARA]: 1 }, quests: { [Q.M1]: questById(Q.M1)!.steps.findIndex(s => s.id === "going-under") } });
     expect(me(applyAction(w, "g", { t: "interact", targetId: "going-under", choice: "under" }), "g").heard).toBe(LINES.GUEST_LOCK);
   });
 

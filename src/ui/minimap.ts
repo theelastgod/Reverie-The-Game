@@ -19,7 +19,7 @@ const H = 160;
 const MIN_INTERVAL = 100; // ms → 10 Hz
 
 const PAPER = "#ffffff";
-const GOLD = "#c9a56a";
+const PEOPLE = "#b9b0d8"; // lavender: no gold in the HUD (AGENTS.md; round nineteen)
 const WINE = "#7a1028";
 const SKY = "#7eb6ff";
 const LAVENDER = "#b9b0d8";
@@ -98,7 +98,7 @@ export function mountMinimap(root: HTMLElement): MinimapPanel {
     }
 
     // npcs
-    ctx.fillStyle = GOLD;
+    ctx.fillStyle = PEOPLE;
     ctx.strokeStyle = PAPER;
     ctx.lineWidth = 1;
     for (const n of snap.npcs) {

@@ -261,7 +261,7 @@ export function statusLine(status: "connecting" | "online" | "reconnecting" | "e
  * address) would fade unread; its fade waits until the window closes. One step
  * per frame: `show` is a new line to put up, `arm` says to start the fade now.
  */
-export type HeardState = { at: number; held: boolean };
+export type HeardState = { at: number; held: boolean; text?: string };
 
 export function heardStep(
   state: HeardState,
@@ -270,12 +270,13 @@ export function heardStep(
   ttl: number,
 ): { state: HeardState; show: string | null; arm: boolean } {
   const open = !!you.dialogue;
-  if (you.heardAt !== state.at) {
+  // keyed on the line as well as its stamp: two presses in one step get two lines with one world clock (round nineteen)
+  if (you.heardAt !== state.at || you.heard !== state.text) {
     const fresh = !!you.heard && now - you.heardAt <= ttl;
-    if (!fresh) return { state: { at: you.heardAt, held: false }, show: null, arm: false };
-    return { state: { at: you.heardAt, held: open }, show: you.heard, arm: !open };
+    if (!fresh) return { state: { at: you.heardAt, held: false, text: you.heard }, show: null, arm: false };
+    return { state: { at: you.heardAt, held: open, text: you.heard }, show: you.heard, arm: !open };
   }
-  if (state.held && !open) return { state: { at: state.at, held: false }, show: null, arm: true };
+  if (state.held && !open) return { state: { at: state.at, held: false, text: state.text }, show: null, arm: true };
   return { state, show: null, arm: false };
 }
 
@@ -373,12 +374,13 @@ export function noticeDiff(shown: readonly string[], next: readonly string[]): {
  * Without these a phone could buy a paper and never use it, and flag only while another Angel was the prompt's target
  * (the player-defect sweep, round four). Null for a chip that has nothing to do.
  */
-export function chipVerbs(you: { guest: boolean; locked: boolean; dead: boolean; flagged: boolean; truceUntil: number; district: DistrictId }, paper: string | null, now: number): { use: boolean; flag: "RAISE FLAG" | "LOWER FLAG" | null } {
+export function chipVerbs(you: { guest: boolean; locked: boolean; dead: boolean; flagged: boolean; truceUntil: number; flagHeldUntil?: number; district: DistrictId }, paper: string | null, now: number): { use: boolean; flag: "RAISE FLAG" | "LOWER FLAG" | null } {
   const angel = !you.guest && !you.locked && !you.dead;
   const flagLegal = !!DISTRICT_BY_ID[you.district]?.flagLegal;
   return {
     // any living body that holds a paper worth using: the server lets a guest use what the stall sold it
     use: !you.dead && paper !== null,
-    flag: angel && (you.flagged || flagLegal) && !(you.truceUntil > now) ? (you.flagged ? "LOWER FLAG" : "RAISE FLAG") : null,
+    // a flag held past a blow cannot be lowered for its ten seconds: the chip waits with the server (round nineteen)
+    flag: angel && (you.flagged || flagLegal) && !(you.truceUntil > now) && !(you.flagged && (you.flagHeldUntil ?? 0) > now) ? (you.flagged ? "LOWER FLAG" : "RAISE FLAG") : null,
   };
 }

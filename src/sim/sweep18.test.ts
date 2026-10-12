@@ -80,7 +80,7 @@ describe("the going-under in a warm fight", () => {
   it("an Angel whose flag is held past a blow cannot step under it to full health; the threshold says why", () => {
     const under = POSITIONS["going-under"];
     let w: WorldState = { ...emptyWorld(), enemies: [] };
-    w = body(w, "v", under, { flagged: true, hp: 30, facing: { dx: -1, dy: 0 }, flags: { [F.ANGEL]: 1, [F.WEATHER_NAMED]: 1, [F.BURIED_NARA]: 1 } });
+    w = body(w, "v", under, { flagged: true, hp: 30, facing: { dx: -1, dy: 0 }, flags: { [F.ANGEL]: 1, [F.WEATHER_NAMED]: 1, [F.BURIED_NARA]: 1 }, quests: { [Q.M1]: questById(Q.M1)!.steps.findIndex(s => s.id === "going-under") } });
     w = body(w, "k", { x: under.x + 30, y: under.y }, { flagged: true, facing: { dx: -1, dy: 0 } });
     w = applyAction(w, "k", { t: "strike" });
     expect(me(w, "v").flagHeldUntil ?? 0).toBeGreaterThan(w.now);

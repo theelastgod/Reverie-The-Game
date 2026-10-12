@@ -65,10 +65,14 @@ export const PAPER_REPAIR = "paper:repair";
  * full health would be spent for nothing, so it stays in the purse.
  */
 export function paperToUse(you: { items: readonly { id: string; kind: string; qty: number }[]; insured: boolean; hp: number }, maxHp: number): string | null {
-  const papers = you.items.filter(i => i.kind === "paper" && i.qty > 0);
-  const useful = papers.find(i => (i.id === PAPER_INSURANCE && !you.insured) || (i.id === PAPER_REPAIR && you.hp < maxHp));
-  if (useful) return useful.id;
-  return papers.find(i => i.id !== PAPER_REPAIR)?.id ?? null;
+  const useful = paperWorthUsing(you, maxHp);
+  if (useful) return useful;
+  return you.items.find(i => i.kind === "paper" && i.qty > 0 && i.id !== PAPER_REPAIR)?.id ?? null;
+}
+
+/** The paper a press would do something with now, or null: what the USE PAPER chip shows for (round nineteen). */
+export function paperWorthUsing(you: { items: readonly { id: string; kind: string; qty: number }[]; insured: boolean; hp: number }, maxHp: number): string | null {
+  return you.items.find(i => i.kind === "paper" && i.qty > 0 && ((i.id === PAPER_INSURANCE && !you.insured) || (i.id === PAPER_REPAIR && you.hp < maxHp)))?.id ?? null;
 }
 
 /** A press the socket could not send (reconnecting): said once, not per key held or per tap (the player-defect sweep, round eight). */

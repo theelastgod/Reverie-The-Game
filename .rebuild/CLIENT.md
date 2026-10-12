@@ -58,7 +58,7 @@ and knob, planted where a finger lands), `hud-prompt` (nearest interaction with 
 `hud-heard` (spoken line; hidden under an open dialogue window, its fade held until the window closes, `format.ts` `heardStep`), `hud-wink` (private line, void/gold),
 `hud-notices`, `hud-marquee` (news ticker), `hud-dialogue` (portrait, speaker,
 text, wink, choices), `hud-journal` (field notes: plate, movement, title,
-detail, bearing, the glass for a reader (`.journal-glass`, hidden for anyone else: Snap.glass through `format.ts` `glassRows`, its count run down against `snap.now`), quests list), `hud-minimap` (canvas), `hud-lock` (guest lock
+detail, bearing, the glass for a reader (`.journal-glass`, hidden for anyone else: Snap.glass through `format.ts` `glassRows`, its count run down against `snap.now`), quests list: each side hour's name, step, its detail (where the side hour says its keys; round nineteen) and a live bearing), `hud-minimap` (canvas), `hud-lock` (guest lock
 panel: mark, "A GUEST CANNOT PREPARE THE GROUND", link test Angel button and a
 serial input 1–7777; shown when the body is first seen locked or becomes locked, and, after REMAIN IN THE NAVE, again
 when the locked body presses the threshold and hears the lock line there: `format.ts` `lockStep`, round six), `hud-connection`, `hud-credits` (shown when `you.flags.credits`
@@ -210,3 +210,10 @@ Escape cannot pick or close a window the player has not seen (round
 seven). The title's
 Enter button has focus at boot. Not done: the news marquee, which stays
 silent by design.
+
+Round nineteen (2026-10-12): the chips follow the server's refusals. LOWER FLAG and the prompt's V hide while a raised flag is
+held past a blow (`flagHeldUntil`), USE PAPER shows only for a paper a press would do something with (`paperWorthUsing`; the I
+key still falls back to a spare paper so the server says why), and a ruin duel asked of a body is withdrawn when that body lowers
+its flag. The heard line and the Wink are keyed on the line as well as its stamp, so two lines in one step both reach the
+screen. No gold in the HUD (AGENTS.md): the notice and event "gold" tones, the third aura tier and the minimap's people read
+lavender; the Wink panel and the title stay the only champagne.

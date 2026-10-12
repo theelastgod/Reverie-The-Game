@@ -24,7 +24,7 @@ import { eventRows, mountEvents, type EventsPanel } from "./events";
 import { ledgerModel, mountLedger, type LedgerPanel } from "./ledger";
 import { gen, genFailed, setImageSrc } from "../assets/gen";
 import { badgeFor, sealFor } from "../assets/slots";
-import { paperToUse, pointerReleasesFocus } from "./keys";
+import { paperWorthUsing, pointerReleasesFocus } from "./keys";
 
 export type HudCallbacks = {
   choose: (choiceId: string, node?: string) => void; // dialogue choice clicked, against the window it was drawn for
@@ -132,6 +132,7 @@ export class Hud {
   private heardAt = -1;
   private heardHeld = false;
   private winkAt = -1;
+  private winkSaid = "";
   private noticeSig = "";
   private marqueeText = "";
   private status: HudStatus | "" = "";
@@ -571,7 +572,7 @@ export class Hud {
   /** The I and V chips: shown while they have something to do (format.ts chipVerbs), so a finger reaches every verb a key does. */
   private updateChipVerbs(snap: Snap): void {
     const you = snap.you;
-    const verbs = chipVerbs(you, paperToUse(you, MAX_HP), snap.now);
+    const verbs = chipVerbs(you, paperWorthUsing(you, MAX_HP), snap.now);
     show(this.useChip, verbs.use);
     show(this.flagChip, verbs.flag !== null);
     if (verbs.flag && this.flagChip) setText(q(this.flagChip, ".chip-text"), verbs.flag);
@@ -638,8 +639,9 @@ export class Hud {
 
   private updateWink(snap: Snap): void {
     const you = snap.you;
-    if (you.winkAt === this.winkAt) return;
+    if (you.winkAt === this.winkAt && you.wink === this.winkSaid) return;
     this.winkAt = you.winkAt;
+    this.winkSaid = you.wink;
     if (you.guest || !you.wink || snap.now - you.winkAt > WINK_MS / 1000) return;
     window.clearTimeout(this.winkTimer);
     window.clearTimeout(this.winkFade);

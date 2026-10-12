@@ -683,7 +683,7 @@ export function applyFlag(w: WorldState, id: string): WorldState {
   if (p.flagged && (p.flagHeldUntil ?? 0) > now) return setPlayer(w, say(p, LINES.FLAG_HELD, now));
   const flagged = !p.flagged;
   // a lowered flag gives up the duel: a ring left standing with no flags in it shuts every blow out (round eighteen)
-  let cur = flagged ? w : dropDuel(w, p);
+  let cur = flagged ? w : dropOffersTo(dropDuel(w, p), p.id);
   cur = setPlayer(cur, say({ ...(cur.players.get(id) ?? p), flagged }, flagged ? LINES.FLAG_ON : LINES.FLAG_OFF, now));
   // The street says who raised a flag, not every press of V: once a body per FLAG_NEWS_GAP, so one body cannot fill the marquee.
   const lastNews = p.flags[F.FLAG_NEWS] ?? -Infinity;
@@ -704,6 +704,17 @@ function dropDuel(w: WorldState, p: Player): WorldState {
   if (partner?.duel?.with === p.id) {
     const { duel: _theirs, ...rest } = partner;
     cur = setPlayer(cur, p.duel.accepted ? notice(rest, `${p.name} stood down. The duel is over.`, w.now) : rest);
+  }
+  return cur;
+}
+
+/** A body that lowers its flag cannot be fought: a ruin duel still asked of it is withdrawn (round nineteen). */
+function dropOffersTo(w: WorldState, id: string): WorldState {
+  let cur = w;
+  for (const q of w.players.values()) {
+    if (q.id === id || !q.duel || q.duel.accepted || q.duel.with !== id) continue;
+    const { duel: _gone, ...rest } = q;
+    cur = setPlayer(cur, rest);
   }
   return cur;
 }
