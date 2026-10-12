@@ -2963,6 +2963,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   fast and slow frames merged against the whole snapshot on every slow
   step, the contest as a tally, node views without keepers, guests'
   Winke blanked, every movement-gated verb and Caul's room.
+- The player-defect sweep, round twenty (2026-10-12; a review of rounds
+  eighteen and nineteen; cases in `src/ui/sweep20-heard.test.ts` and
+  `src/sim/sweep20.test.ts`). Fixed a regression of round nineteen: the
+  HUD carried only the heard line's stamp and hold between frames, so
+  with the line now part of the key every frame read as a new line: a
+  line stayed up twice as long, and one heard under a window (the
+  bell's, under Caul) never faded once the window closed. The state now
+  lives whole in `format.ts` `heardTracker`, which the HUD uses and the
+  test drives. A truce between duelists wrote a stale partner record
+  over the "stood down" notice; each drop now reads the record the last
+  one left, and a truce also withdraws ruin duels offered to either
+  body. And the canvas label of the place the prompt names now reads
+  the prompt's state name ("Hot street — hot"). Noted: a save from
+  before round eighteen that set HALL in the first hour keeps it (no
+  live city carries one). Found sound: the heavy skip, the threshold's
+  F verbs always offering one of the two, the corridor reachable by
+  every Angel, the funeral at Nara's plot.
 
 ## Verified (2026-09-25, integration)
 

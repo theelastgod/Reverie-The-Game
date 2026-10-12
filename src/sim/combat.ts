@@ -742,7 +742,10 @@ export function applyTruce(w: WorldState, id: string): WorldState {
   if (!other) return w;
   const until = now + TRUCE_SECONDS;
   // a truce between duelists ends their duel (round eighteen)
-  let cur = dropDuel(dropDuel(w, p), other);
+  // each drop reads the record as the last one left it, so the partner keeps its "stood down" notice (round twenty)
+  let cur = dropDuel(w, p);
+  cur = dropOffersTo(dropDuel(cur, cur.players.get(other.id)!), p.id);
+  cur = dropOffersTo(cur, other.id);
   cur = setPlayer(cur, say({ ...cur.players.get(p.id)!, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));
   cur = setPlayer(cur, say({ ...cur.players.get(other.id)!, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));
   return cur;

@@ -10,7 +10,7 @@ import { AURA_MAX, GESTELL_MELTDOWN, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_
 import { F } from "../sim/content/ids";
 import { CREDITS } from "../sim/content/lines";
 import {
-  auraTier, chipVerbs, districtFourfold, districtName, dodgeLine, heardStep, identityLine, joinNews, kitLine, ledgerLine, lockStep, marqueeSeconds, noticeDiff, num, pct,
+  auraTier, chipVerbs, districtFourfold, districtName, dodgeLine, heardTracker, identityLine, joinNews, kitLine, ledgerLine, lockStep, marqueeSeconds, noticeDiff, num, pct,
   meterValues, restraintBar, setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine, creditRows,
 } from "./format";
 import { mountDialogue, type DialoguePanel } from "./dialogue";
@@ -129,8 +129,7 @@ export class Hud {
   private dodgeSig = "";
   private promptSig = "";
   private promptTarget = "";
-  private heardAt = -1;
-  private heardHeld = false;
+  private heardNext = heardTracker();
   private winkAt = -1;
   private winkSaid = "";
   private noticeSig = "";
@@ -617,9 +616,7 @@ export class Hud {
 
   /** A new line goes up at once; its fade waits while a dialogue window hides it (the bell's line under Caul's address) and starts when the window closes. */
   private updateHeard(snap: Snap): void {
-    const step = heardStep({ at: this.heardAt, held: this.heardHeld }, snap.you, snap.now, NOTICE_TTL);
-    this.heardAt = step.state.at;
-    this.heardHeld = step.state.held;
+    const step = this.heardNext(snap.you, snap.now, NOTICE_TTL);
     if (step.show !== null) {
       window.clearTimeout(this.heardTimer);
       window.clearTimeout(this.heardFade);

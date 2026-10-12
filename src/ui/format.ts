@@ -280,6 +280,17 @@ export function heardStep(
   return { state, show: null, arm: false };
 }
 
+/** The heard line across frames: the whole state carried from one frame to the next, its line included (round twenty: the HUD
+ * once kept only `at` and `held`, so every frame read as a new line and nothing faded on time). */
+export function heardTracker(): (you: { heard: string; heardAt: number; dialogue: unknown }, now: number, ttl: number) => { show: string | null; arm: boolean } {
+  let state: HeardState = { at: -1, held: false };
+  return (you, now, ttl) => {
+    const step = heardStep(state, you, now, ttl);
+    state = step.state;
+    return { show: step.show, arm: step.arm };
+  };
+}
+
 // ---------------------------------------------------------------- the lock panel
 /**
  * The lock panel (the wallet's way in) shows when a body is first seen locked or becomes locked, and hides when it is
