@@ -29,3 +29,8 @@ export function canSeeWink(p: Player, now: number, gestell?: number): boolean {
   return true;
 }
 
+
+/** A fight the body cannot step out of: its flag held past a blow, or a ruin duel it has answered and that has not run out. */
+export function inWarmFight(p: Player, now: number): boolean {
+  return (p.flagged && (p.flagHeldUntil ?? 0) > now) || (!!p.duel && p.duel.accepted && p.duel.until > now);
+}

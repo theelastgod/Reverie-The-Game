@@ -682,13 +682,28 @@ export function applyFlag(w: WorldState, id: string): WorldState {
   if (p.truceUntil > now) return setPlayer(w, say(p, LINES.TRUCE_ACTIVE, now));
   if (p.flagged && (p.flagHeldUntil ?? 0) > now) return setPlayer(w, say(p, LINES.FLAG_HELD, now));
   const flagged = !p.flagged;
-  let cur = setPlayer(w, say({ ...p, flagged }, flagged ? LINES.FLAG_ON : LINES.FLAG_OFF, now));
+  // a lowered flag gives up the duel: a ring left standing with no flags in it shuts every blow out (round eighteen)
+  let cur = flagged ? w : dropDuel(w, p);
+  cur = setPlayer(cur, say({ ...(cur.players.get(id) ?? p), flagged }, flagged ? LINES.FLAG_ON : LINES.FLAG_OFF, now));
   // The street says who raised a flag, not every press of V: once a body per FLAG_NEWS_GAP, so one body cannot fill the marquee.
   const lastNews = p.flags[F.FLAG_NEWS] ?? -Infinity;
   if (flagged && p.district === "wet" && now - lastNews >= FLAG_NEWS_GAP) {
     const me = cur.players.get(id)!;
     cur = setPlayer(cur, { ...me, flags: { ...me.flags, [F.FLAG_NEWS]: now } });
     cur = pushNews(cur, `${p.name} raised a flag on the hot street.`);
+  }
+  return cur;
+}
+
+/** Ends a body's duel, offered or answered, for it and for the partner holding it with it. */
+function dropDuel(w: WorldState, p: Player): WorldState {
+  if (!p.duel) return w;
+  const { duel: _mine, ...me } = p;
+  let cur = setPlayer(w, me);
+  const partner = cur.players.get(p.duel.with);
+  if (partner?.duel?.with === p.id) {
+    const { duel: _theirs, ...rest } = partner;
+    cur = setPlayer(cur, p.duel.accepted ? notice(rest, `${p.name} stood down. The duel is over.`, w.now) : rest);
   }
   return cur;
 }
@@ -715,7 +730,9 @@ export function applyTruce(w: WorldState, id: string): WorldState {
   const other = truceTarget(w, p);
   if (!other) return w;
   const until = now + TRUCE_SECONDS;
-  let cur = setPlayer(w, say({ ...p, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));
-  cur = setPlayer(cur, say({ ...other, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));
+  // a truce between duelists ends their duel (round eighteen)
+  let cur = dropDuel(dropDuel(w, p), other);
+  cur = setPlayer(cur, say({ ...cur.players.get(p.id)!, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));
+  cur = setPlayer(cur, say({ ...cur.players.get(other.id)!, flagged: false, truceUntil: until }, LINES.TRUCE_COPY, now));
   return cur;
 }

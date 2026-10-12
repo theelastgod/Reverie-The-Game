@@ -13,7 +13,7 @@ import {
 import { cityFigure, weatherBand } from "../protocol";
 import { C, F, W, seasonPassingFlag } from "./ids";
 import { GUEST_LOCK, WEATHER_LABELS, WEATHER_NAMED } from "./lines";
-import { canSeeWink } from "../perceive";
+import { canSeeWink, inWarmFight } from "../perceive";
 import { clearingPrice, listClearing, moveClearing } from "./market";
 import { SIDE_PLACES } from "./side";
 import { coldClaimed } from "./caul";
@@ -270,7 +270,8 @@ const NAVE: PoiConfig[] = [
         key: "F",
         label: "Go under",
         choice: "under",
-        when: ctx => has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA) && !has(ctx, F.UNDER),
+        // not out of a warm fight: the threshold is no door out of a blow still owed (round eighteen)
+        when: ctx => has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA) && !has(ctx, F.UNDER) && !inWarmFight(ctx.p, ctx.now),
         guest: "allow",
         effects: [{ kind: "poi", id: "going-under", state: "open" }, { kind: "under" }],
       },
@@ -278,12 +279,13 @@ const NAVE: PoiConfig[] = [
         key: "F",
         label: "Look down",
         choice: "look",
-        when: ctx => !(has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA)) || has(ctx, F.UNDER),
+        when: ctx => !(has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA)) || has(ctx, F.UNDER) || inWarmFight(ctx.p, ctx.now),
         guest: "allow",
         say: ctx => {
           // an Angel unsealed back to a guest (its serial walks in another body) is locked here like any guest: the lock line
           // brings its panel back (round nine)
           if (has(ctx, F.UNDER)) return ctx.p.guest ? GUEST_LOCK : "The threshold. You have been under it. The Care is south, through the gate.";
+          if (has(ctx, F.WEATHER_NAMED) && has(ctx, F.BURIED_NARA) && inWarmFight(ctx.p, ctx.now)) return "A lip of concrete, and a fight still warm at your back. Nobody goes under with a blow owed. Finish it, or call a truce.";
           if (!has(ctx, F.BURIED_NARA)) return "A lip of concrete and under it, a dark that is a floor. Nara holds a grave open. Close it first.";
           return "A lip of concrete. The weather has no name yet. Give it one at the plaque before you go under it.";
         },

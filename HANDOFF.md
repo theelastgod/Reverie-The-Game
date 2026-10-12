@@ -2901,6 +2901,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   leave, no refused effect taken silently, no reward paid twice on a
   reopen, and every text read after a choice against the state the
   choice left.
+- The player-defect sweep, round eighteen, first part (2026-10-12; the
+  fights-and-duels lens; cases in `sweep18.test.ts`). Fixed: a body
+  felled by a heavy in the tick its own heavy landed still swung it, from
+  where it woke, onto whoever stood there; a heavy now dies with its body.
+  Lowering a flag or calling a truce left an answered duel standing for
+  its minute, a ring that shut every blow out (on the meltdown street too,
+  where the weather flags any Angel): either now ends the duel for both,
+  and the partner hears "stood down". And the going-under took a losing
+  Angel out of a warm fight at full health: with its flag held past a
+  blow or a duel answered, the threshold says "Nobody goes under with a
+  blow owed" and waits. Noted: an equal heavy trade in one tick goes to
+  the heavy resolved first (message order, as the light strike already
+  is); a duel kept across an unseal has no live path (a load drops it).
+  Found sound: flag holds across a fall, duel offers' refusals and
+  expiries, spoils paid once, aura and restraint floors and caps, Caul
+  never struck, respawns only where a body may stand.
 
 ## Verified (2026-09-25, integration)
 

@@ -336,7 +336,14 @@ export function tickWorld(w: WorldState, dt: number): WorldState {
   }
 
   let cur: WorldState = { ...w, now, tick: w.tick + 1, players, intents };
-  for (const id of heavyFired) cur = resolveHeavy(cur, id);
+  // A body felled by an earlier heavy this tick has woken at its respawn: its own swing died with it, and never lands from
+  // where it woke (the player-defect sweep, round eighteen).
+  for (const id of heavyFired) {
+    const was = players.get(id);
+    const after = cur.players.get(id);
+    if (was && after && after.deaths !== was.deaths) continue;
+    cur = resolveHeavy(cur, id);
+  }
   cur = tickEnemies(cur, dt);
   cur = tickNodes(cur, dt);
   cur = tickMarket(cur, dt);
