@@ -2998,6 +2998,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round twenty-six (2026-10-16; a long session's
+  client). One browser held the Nave at 1280x720 while eight waves of 24
+  bots joined around it and left (scripts/load-check.mjs, 15 s each),
+  sampled after each wave with a forced collection over CDP: the heap
+  rose from 6.0 MB to 8.5 MB with the first wave and stayed between 8.0
+  and 9.2 MB through the eighth; DOM nodes 500 to 501, listeners 200,
+  the HUD's DOM 170 elements throughout. The object after: 0 sessions,
+  0 bodies, no stalls, nothing dropped or refused, checkpoint 0.27 ms.
+  Nothing leaks as bodies come and go; nothing to fix.
 - The player-defect sweep, round twenty-five (2026-10-16; both fuzzers on
   fresh seeds). The session fuzzer takes R22_SEED0 now (it always began
   at seed 1, so a rerun only replayed round twenty-two): seeds 2501–2650
