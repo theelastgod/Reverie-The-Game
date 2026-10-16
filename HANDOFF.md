@@ -2998,6 +2998,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The Deploy workflow's check mode on GitHub's runner after the lockfile
+  moved (2026-10-16, round thirty): dispatched on this branch at dfcade5
+  (run 38959405384), completed success: npm ci from the new lockfile, the
+  gates, the client build and stage, and the wrangler dry-run bundle,
+  with no secrets. The deploy mode is unchanged and still the owner's to
+  run.
 - Dependency hygiene, round twenty-nine (2026-10-16). npm audit found a new
   dev-only high advisory: wrangler 4.147 brought miniflare's sharp with a
   vulnerable librsvg (CVE-2026-96889, GHSA-wq5f-xc86-pv6w). npm audit fix
