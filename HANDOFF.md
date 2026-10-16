@@ -2998,6 +2998,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round twenty-five (2026-10-16; both fuzzers on
+  fresh seeds). The session fuzzer takes R22_SEED0 now (it always began
+  at seed 1, so a rerun only replayed round twenty-two): seeds 2501–2650
+  fight-biased and 5001–5150 plain, 120 steps each, 36,000 steps over the
+  object, no violation of any invariant. The sim fuzzer from base 7001,
+  200 runs: clean. Nothing to fix this round.
 - The player-defect sweep, round twenty-four (2026-10-16; the HUD crowded:
   every visible panel and chip filled with the longest text the city
   sends at once, its boxes compared pairwise at 1920x1080, 1366x768,

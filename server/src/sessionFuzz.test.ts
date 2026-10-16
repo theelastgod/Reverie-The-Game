@@ -18,6 +18,7 @@ import type { Player } from "../../src/sim/types";
 const RUNS = Number(process.env.R22_RUNS ?? 120);
 const STEPS = Number(process.env.R22_STEPS ?? 60);
 const FIGHT = process.env.R22_FIGHT === "1";
+const SEED0 = Number(process.env.R22_SEED0 ?? 1); // the first seed: a later round runs fresh seeds without replaying round twenty-two's
 const WORLD_KEY = "world:v2";
 const pk = (t: string) => `player:v2:${t}`;
 const sk = (t: string) => `seen:v2:${t}`;
@@ -412,12 +413,12 @@ export async function runSeed(seed: number, steps: number): Promise<{ violations
 beforeEach(() => { vi.useFakeTimers({ toFake: ["Date"] }); });
 afterEach(() => { vi.useRealTimers(); });
 
-// Opt-in: `npm run test:fuzz:server` (R22_RUNS, R22_STEPS, R22_FIGHT=1 for a fight-biased run). Off in `npm test`.
+// Opt-in: `npm run test:fuzz:server` (R22_RUNS, R22_STEPS, R22_SEED0 for the first seed, R22_FIGHT=1 for a fight-biased run). Off in `npm test`.
 describe.skipIf(!process.env.R22_RUNS)("round twenty-two: the session fuzzer", () => {
   it(`runs ${RUNS} seeds of ${STEPS} steps and holds every invariant`, async () => {
     const all: Violation[] = [];
     let ops = 0;
-    for (let seed = 1; seed <= RUNS; seed++) {
+    for (let seed = SEED0; seed < SEED0 + RUNS; seed++) {
       const res = await runSeed(seed, STEPS);
       ops += res.ops;
       all.push(...res.violations);
