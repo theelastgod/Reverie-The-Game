@@ -2998,6 +2998,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round twenty-three (2026-10-16; a keyboard-only
+  guest through Movement I in the real browser, two runs, the journal's
+  bearing as the only guide, to the guest lock). The second run reached
+  the lock; the first lost the intake fight on the script's own timing
+  (the second won it at 72 hp, so that is the script's steering, not the
+  game's), and a missed plaque prompt was the script's walk too. Two
+  screen defects, both fixed in src/ui/hud.css: the heard chip ("A guest
+  cannot prepare the ground.") sat half under the lock panel saying the
+  panel's own title, so it hides while the panel is up as it does under
+  an open dialogue (the chip comes before the panel in index.html, so the
+  rule is the root's :has); and at a 720-tall window the "Name the
+  weather" step's long detail pushed the journal's bearing below the
+  panel's fold with nothing to say it was there, so the bearing is sticky
+  at the panel's foot while the detail scrolls under it. Tests: two in
+  src/ui/a11y.test.ts (both fail on the old CSS); the render check sets
+  the lock up over a heard line and reads the chip's computed visibility,
+  and fills the journal with a long detail and checks the bearing stays
+  inside the panel's box, both in Chromium.
 - The player-defect sweep, round twenty-two (2026-10-12; two fuzzers:
   the random-play one on a fresh seed range, 1,200 runs and 2,432
   bodies with 787 at the credits, clean; and a session fuzzer over the

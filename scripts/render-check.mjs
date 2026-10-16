@@ -75,6 +75,36 @@ try {
   }, null, { timeout: 20000 }).catch(() => failures.push('connection chip never reported online'));
   await page.waitForTimeout(500);
 
+  // The guest lock and the heard chip (round twenty-three): with the panel up the chip is hidden, not half under it.
+  const lockHides = await page.evaluate(() => {
+    const lock = document.getElementById('hud-lock');
+    const heard = document.getElementById('hud-heard');
+    if (!lock || !heard) return 'no lock or heard element';
+    const was = [lock.hidden, heard.hidden, heard.textContent];
+    lock.hidden = false; heard.hidden = false; heard.textContent = 'A guest cannot prepare the ground.';
+    const v = getComputedStyle(heard).visibility;
+    [lock.hidden, heard.hidden, heard.textContent] = was;
+    return v === 'hidden' ? '' : `heard chip ${v} under the lock panel`;
+  });
+  if (lockHides) failures.push(lockHides);
+  console.log(`lock panel over the heard chip: ${lockHides || 'chip hidden'}`);
+  // The journal's bearing under a long detail (round twenty-three): it stays inside the panel's box, not below its fold.
+  const bearingHeld = await page.evaluate(() => {
+    const journal = document.getElementById('hud-journal');
+    const detail = journal?.querySelector('.journal-detail');
+    const bearing = journal?.querySelector('.journal-bearing');
+    if (!journal || !detail || !bearing) return 'no journal, detail or bearing';
+    if (journal.classList.contains('closed') || getComputedStyle(journal.querySelector('.journal-body')).display === 'none') return '';
+    const was = detail.textContent;
+    detail.textContent = 'A long step. '.repeat(120);
+    const j = journal.getBoundingClientRect();
+    const b = bearing.getBoundingClientRect();
+    detail.textContent = was;
+    return b.top >= j.top - 1 && b.bottom <= j.bottom + 1 ? '' : `bearing at ${Math.round(b.top)}-${Math.round(b.bottom)} outside the journal ${Math.round(j.top)}-${Math.round(j.bottom)}`;
+  });
+  if (bearingHeld) failures.push(bearingHeld);
+  console.log(`journal bearing under a long detail: ${bearingHeld || 'held in the panel'}`);
+
   // Two exchanges through the server and back, walked by time (170 px/s over 48 px tiles, src/sim/constants.ts),
   // each leg nudged by half tiles until the verb shows. First Nara Vale at her home (8,49): seven tiles south and
   // three east of the guest spawn (5,42) with nothing in the way (the pillar columns start at x 9, the Intake

@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const html = readFileSync(resolve(__dirname, "../../index.html"), "utf8");
+const css = readFileSync(resolve(__dirname, "./hud.css"), "utf8");
 
 /** The opening tag of the element with this id, attributes and all. */
 function tag(id: string): string {
@@ -84,5 +85,22 @@ describe("the HUD's markup speaks only the script's lines", () => {
   it("cuts the lock panel's going-under line (I.11): the title and the small copy as the script has them", () => {
     expect(html).not.toContain("The going-under is not failure.");
     expect(html).toContain("You may remain in the Nave and watch. A wallet signs one line to link an Angel; the signature costs nothing and moves nothing. No mint, no chain, no settlement.");
+  });
+});
+
+describe("the HUD's stacking", () => {
+  // The heard chip sat half under the lock panel saying the panel's own title (a keyboard playthrough, round twenty-three).
+  // index.html puts the chip before the panel, so no sibling selector reaches it; the root's :has does. The render check
+  // reads the computed visibility in Chromium with the panel shown.
+  it("hides the heard chip while the guest lock is up, as it does under an open dialogue", () => {
+    expect(css).toMatch(/#hud\.dialogue-open #hud-heard\s*\{\s*visibility:\s*hidden;/);
+    expect(css).toMatch(/#hud:has\(#hud-lock:not\(\[hidden\]\)\) #hud-heard\s*\{\s*visibility:\s*hidden;/);
+  });
+  it("holds the journal's bearing to the panel's foot while a long detail scrolls (round twenty-three)", () => {
+    const rule = css.match(/\.journal-bearing\s*\{([^}]*)\}/);
+    expect(rule, "the bearing's rule").not.toBeNull();
+    expect(rule![1]).toMatch(/position:\s*sticky;/);
+    expect(rule![1]).toMatch(/bottom:\s*0;/);
+    expect(rule![1]).toMatch(/background:\s*var\(--paper\);/);
   });
 });

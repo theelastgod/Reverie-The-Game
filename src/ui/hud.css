@@ -559,6 +559,12 @@ canvas { display: block; }
   font-weight: 700;
   letter-spacing: 0.12em;
   font-variant-numeric: tabular-nums;
+  /* The bearing holds to the panel's foot while a long step's detail scrolls under it: at a 720-tall window the
+     "Name the weather" step pushed it below the fold with nothing to say it was there (round twenty-three). */
+  position: sticky;
+  bottom: 0;
+  background: var(--paper);
+  z-index: 1;
 }
 .journal-glass {
   padding: 8px 12px;
@@ -875,6 +881,8 @@ canvas { display: block; }
 #hud.dialogue-open #hud-verbs,
 #hud.dialogue-open #hud-prompt,
 #hud.dialogue-open #hud-heard { visibility: hidden; }
+/* The lock panel says its own line (its title is the refusal the heard chip would repeat), and the chip sat half under it (round twenty-three). */
+#hud:has(#hud-lock:not([hidden])) #hud-heard { visibility: hidden; }
 
 /* lock panel */
 .lock {
