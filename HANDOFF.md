@@ -2998,6 +2998,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- Dependency hygiene, round twenty-nine (2026-10-16). npm audit found a new
+  dev-only high advisory: wrangler 4.147 brought miniflare's sharp with a
+  vulnerable librsvg (CVE-2026-96889, GHSA-wq5f-xc86-pv6w). npm audit fix
+  moved wrangler to 4.151.1 within the declared range (the lockfile
+  only); npm audit now 0 in production and dev. Verified after: the
+  gates (typecheck, 844 tests, build), wrangler deploy --dry-run (683 KB,
+  183 KB gzipped), the session smoke and the render check on a fresh
+  local world under the new wrangler.
 - The player-defect sweep, round twenty-eight (2026-10-16; the spine over
   the wire after the week's changes). On a fresh world and local
   Wrangler: npm run test:smoke passed (health, hello v3, both frames,
