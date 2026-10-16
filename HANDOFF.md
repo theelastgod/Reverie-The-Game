@@ -2998,6 +2998,29 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round thirty-three (2026-10-16; short screens).
+  A phone on its side (844x390, 932x430) and a laptop at 200% zoom
+  (640x360, 740x360) had no layout of their own: the HUD's rules go by
+  width and assume some 600px of height, so the crowded HUD put the wink
+  under the bars, the minimap and the journal's tab under the prompt and
+  the heard line, and the last two verb chips off the right edge. Fixed in
+  `src/ui/hud.css` with a block by height (max-height 500px, wider than a
+  phone held upright): the marquee goes, the chips shrink, the wink, the
+  notices and the bars keep to one 240px column at the left (the bars fold
+  to two columns), the minimap and the journal's tab sit small at the
+  right under the top chips, and the reach and the event banners take the
+  width between; the banners stand down while a heard line shows, since
+  there is not the height for both. Narrow, the journal is a tab at the
+  minimap's width and the connection chip moves under it; wide (a laptop
+  window under 500px tall) the journal stays open and the reach clears its
+  214px. Verified: `src/ui/a11y.test.ts` reads the blocks (and fails on the
+  old CSS); the render check's crowded step now runs at 844x390 and
+  740x360 as well, adds the reach against the minimap, the wink and the
+  bars and every verb chip on the screen, and fails on the old build with
+  five findings and passes on the new one; a pairwise overlap probe at
+  nine sizes, the tall ones unchanged from round twenty-four. Left: at the
+  640x360 extreme, a three-row prompt lifts the heard line 5px into the
+  top chips (Backlog 11).
 - The player-defect sweep, round thirty-two (2026-10-16; the landing page).
   The site served statically and loaded in Chromium at 360x740, 390x844,
   768x1024 and 1280x800: no horizontal overflow, no element past the
@@ -4556,7 +4579,10 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    verb chip also meets the connection chip, which shows only while
    reconnecting). Each needs two or three long things at once; the fix
    wants a real phone's eye on the layout, not a guess. (The events strip
-   over the journal at 1024–1100 is fixed: round twenty-seven.)
+   over the journal at 1024–1100 is fixed: round twenty-seven.) A phone
+   on its side has its own layout since round thirty-three; the real
+   phone should look at that too. Left there: at 640x360 (a laptop at
+   200%), a three-row prompt lifts the heard line 5px into the top chips.
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

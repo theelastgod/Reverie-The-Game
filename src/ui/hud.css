@@ -1039,6 +1039,53 @@ canvas { display: block; }
   .dialogue { bottom: calc(var(--marquee-h) + 16px + 8px); }
 }
 
+/* A short screen: a phone on its side, or a laptop at 200% zoom (round thirty-three). The width rules above assume some
+   600px of height; at 360-480 the wink ran under the bars, the minimap and the journal under the prompt and the last verb
+   chips off the edge. Here the chips shrink, the marquee goes, the minimap and the journal's tab sit small at the right
+   under the top chips, the bars fold to two columns, and the wink, the notices and the bars keep to one 240px column at the left while
+   the reach and the event banners take the width between it and the minimap. */
+@media (max-height: 500px) and (min-width: 601px) {
+  .marquee { display: none; }
+  :root { --marquee-h: 0px; }
+  .hud-top { gap: 6px; }
+  .hud-top .chip { min-height: 28px; padding: 0 8px; font-size: 10px; gap: 6px; }
+  .hud-left { top: var(--below-top); width: 240px; max-height: calc(100vh - var(--below-top) - 140px); } /* 56px of verbs and gutter, 76px of bars, a gap */
+  .wink { padding: 8px 10px; font-size: 12px; line-height: 1.35; }
+  .notice { padding: 6px 10px; font-size: 11px; }
+  .minimap { top: var(--below-top); }
+  .minimap canvas { width: 130px; height: 100px; }
+  .journal { top: calc(var(--below-top) + 108px); right: var(--gutter); max-height: calc(100vh - var(--below-top) - 108px - 64px); }
+  .events { top: var(--below-top); left: calc(var(--gutter) + 240px + 8px); right: calc(var(--gutter) + 130px + 8px); transform: none; }
+  .event { min-width: 0; width: 100%; }
+  /* The banners and the heard line share the middle column here and there is not the height for both: the line is
+     brief, so the banners stand down while it shows and come back when it fades. */
+  #hud:has(#hud-heard:not([hidden])) #hud-events { visibility: hidden; }
+  .ledger-panel { top: var(--below-top); max-height: calc(100vh - var(--below-top) - 16px); }
+  .bars { width: 240px; padding: 6px 10px 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; bottom: 56px; }
+  .hud-verbs { bottom: 16px; gap: 6px; }
+  .hud-verbs .chip { min-height: 32px; padding: 0 8px; font-size: 10px; }
+  #hud-stance .chip-hint, .chip-dodge { display: none; }
+  .reach { left: calc(var(--gutter) + 240px + 8px); right: calc(var(--gutter) + 130px + 8px); width: auto; bottom: 56px; }
+  .heard { right: 0; max-width: none; padding: 8px 12px; font-size: 12px; }
+  .dialogue { bottom: 16px; }
+  .dlg-portrait { min-height: 0; width: 88px; }
+}
+
+/* Short and narrow (a phone on its side): the journal is a tab here (journal.ts, COLLAPSE_WIDTH), so it takes the
+   minimap's width, and the connection chip moves under it, clear of the verb chips that reach across the foot. */
+@media (max-height: 500px) and (min-width: 601px) and (max-width: 1100px) {
+  .journal { width: 130px; max-height: calc(100vh - var(--below-top) - 108px - 16px); }
+  .journal-tab { font-size: 10px; padding: 6px 8px; }
+  .journal.open { width: 260px; }
+  .chip-connection { bottom: auto; top: calc(var(--below-top) + 108px + 40px); }
+}
+
+/* Short and wide (a laptop window under 500px tall): the journal stays open at its full 214px, so the reach and the
+   banners keep clear of that instead of the minimap's 130. */
+@media (max-height: 500px) and (min-width: 1101px) {
+  .reach, .events { right: calc(var(--gutter) + 214px + 8px); }
+}
+
 /* A finger has no Shift: the dodge chip is a button on coarse pointers, at every width (after the block above, so it wins there). */
 @media (pointer: coarse) {
   .chip-dodge { display: inline-flex; }

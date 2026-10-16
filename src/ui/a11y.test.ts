@@ -116,4 +116,20 @@ describe("the HUD's stacking", () => {
     expect(css).toMatch(/\.notices \{[^}]*justify-content:\s*flex-end;[^}]*overflow:\s*hidden;/);
     expect(rule(".hud-left")).toMatch(/max-height:/);
   });
+  it("keeps a short screen in its room: a phone on its side, a laptop at 200% (round thirty-three)", () => {
+    // The width rules assume some 600px of height; a block by height takes over below 500 (Chromium measures it in the render check).
+    const short = css.match(/@media \(max-height: 500px\) and \(min-width: 601px\) \{([\s\S]*?)\n\}/);
+    expect(short, "the short block").not.toBeNull();
+    const body = short![1];
+    expect(body).toMatch(/\.marquee \{ display: none; \}/);
+    expect(body).toMatch(/\.hud-left \{[^}]*top: var\(--below-top\);[^}]*width: 240px;/);
+    expect(body).toMatch(/\.bars \{[^}]*grid-template-columns: 1fr 1fr;/);
+    expect(body).toMatch(/\.reach \{[^}]*left: calc\(var\(--gutter\) \+ 240px \+ 8px\);[^}]*right: calc\(var\(--gutter\) \+ 130px \+ 8px\);/);
+    expect(body).toMatch(/#hud:has\(#hud-heard:not\(\[hidden\]\)\) #hud-events \{ visibility: hidden; \}/);
+    // Narrow, the journal is a tab at the minimap's width; wide, it stays open and the reach keeps clear of its 214px.
+    expect(css).toMatch(/@media \(max-height: 500px\) and \(min-width: 601px\) and \(max-width: 1100px\) \{[^@]*\.journal \{ width: 130px;/);
+    expect(css).toMatch(/@media \(max-height: 500px\) and \(min-width: 1101px\) \{\s*\.reach, \.events \{ right: calc\(var\(--gutter\) \+ 214px \+ 8px\); \}/);
+    // The short blocks come before the coarse-pointer rule, so a finger still gets the dodge chip.
+    expect(css.indexOf("(max-height: 500px)")).toBeLessThan(css.indexOf("@media (pointer: coarse)"));
+  });
 });
