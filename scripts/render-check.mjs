@@ -106,16 +106,21 @@ try {
   console.log(`journal bearing under a long detail: ${bearingHeld || 'held in the panel'}`);
   // A small window with everything long at once (round twenty-four): the heard line stands clear of a prompt wrapped to two
   // rows, the newest notice stays above the bars, and the prompt's third verb stays inside the prompt.
+  // At 1024x768 too (round twenty-seven): two world events at once keep off the journal's tab and the left column.
   const before = page.viewportSize();
-  await page.setViewportSize({ width: 900, height: 600 });
+  const crowd = [];
+  for (const [w, h] of [[900, 600], [1024, 768]]) {
+  await page.setViewportSize({ width: w, height: h });
   await page.waitForTimeout(200);
-  const crowd = await page.evaluate(() => {
+  const found = await page.evaluate(() => {
     const $ = s => document.querySelector(s);
-    const heard = $('#hud-heard'), prompt = $('#hud-prompt'), notices = $('#hud-notices'), bars = $('#hud-bars');
-    if (!heard || !prompt || !notices || !bars) return ['a HUD element is missing'];
+    const heard = $('#hud-heard'), prompt = $('#hud-prompt'), notices = $('#hud-notices'), bars = $('#hud-bars'), events = $('#hud-events'), journal = $('#hud-journal'), wink = $('#hud-wink');
+    if (!heard || !prompt || !notices || !bars || !events || !journal || !wink) return ['a HUD element is missing'];
     // Fill the HUD's own children (it holds them by reference) and put their content back after.
     const pname = prompt.querySelector('.prompt-name'), pverbs = prompt.querySelector('.prompt-verbs');
-    const was = { heard: [heard.hidden, heard.textContent], prompt: [prompt.hidden, pname.textContent, [...pverbs.childNodes]], notices: [...notices.childNodes] };
+    const was = { heard: [heard.hidden, heard.textContent], prompt: [prompt.hidden, pname.textContent, [...pverbs.childNodes]], notices: [...notices.childNodes], events: [events.hidden, [...events.childNodes]], wink: wink.hidden };
+    events.hidden = false; wink.hidden = false;
+    events.innerHTML = ['HOUSE WAR|the Clearing · nobody holds · 0:07', 'THE LAUNCH|the vans at the lip · window open · 4:12'].map(t => t.split('|')).map(([l, d]) => `<div class="event"><div class="event-label">${l}</div><div class="event-detail"><span>${d}</span></div></div>`).join('');
     heard.hidden = false; heard.textContent = 'You leave the recorder running. Nara tears her coat into binding cloth. The voice has another night, and the street hears it.';
     prompt.hidden = false;
     pname.textContent = 'MEMORIAL RECORDER';
@@ -127,14 +132,22 @@ try {
     const newest = notices.lastElementChild;
     if (r(newest).bottom > r(bars).top + 1) bad.push(`the newest notice (to ${Math.round(r(newest).bottom)}) runs under the bars (from ${Math.round(r(bars).top)})`);
     for (const v of prompt.querySelectorAll('.verb')) if (r(v).right > r(prompt).right + 1) bad.push(`a verb runs past the prompt's edge`);
+    const meets = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2;
+    for (const ev of events.children) {
+      if (meets(r(ev), r(journal))) bad.push(`an event banner lies over the journal`);
+      if (meets(r(ev), r(wink))) bad.push(`an event banner lies over the left column`);
+    }
+    events.hidden = was.events[0]; events.replaceChildren(...was.events[1]); wink.hidden = was.wink;
     heard.hidden = was.heard[0]; heard.textContent = was.heard[1];
     prompt.hidden = was.prompt[0]; pname.textContent = was.prompt[1]; pverbs.replaceChildren(...was.prompt[2]);
     notices.replaceChildren(...was.notices);
     return bad;
   });
+  crowd.push(...found.map(f => `${w}x${h}: ${f}`));
+  }
   if (before) await page.setViewportSize(before);
   failures.push(...crowd);
-  console.log(`a crowded HUD at 900x600: ${crowd.length ? crowd.join('; ') : 'heard over the prompt, the newest notice above the bars, every verb inside'}`);
+  console.log(`a crowded HUD at 900x600 and 1024x768: ${crowd.length ? crowd.join('; ') : 'heard over the prompt, the newest notice above the bars, every verb inside, the events clear of the journal and the left column'}`);
 
   // Two exchanges through the server and back, walked by time (170 px/s over 48 px tiles, src/sim/constants.ts),
   // each leg nudged by half tiles until the verb shows. First Nara Vale at her home (8,49): seven tiles south and

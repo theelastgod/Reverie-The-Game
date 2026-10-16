@@ -2998,6 +2998,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round twenty-seven (2026-10-16; the events strip
+  at narrow widths, round twenty-four's left-over). At 1100 wide and under
+  the journal sits beside the minimap at the top, and the events strip,
+  centred at the top, put a second banner (a house war and the launch at
+  once) over the journal's tab at 1024x768, and over the left column's
+  Wink at 900x600. The strip now keeps to the gap between the left column
+  and the journal (or the minimap at 900 and under), its banners as wide
+  as the gap; on a phone it spans the width above the heard line as
+  before. The render check's crowded step adds the two banners and runs
+  at 1024x768 as well as 900x600, checking each banner against the
+  journal and the Wink (shown failing on the old CSS: the 1024 banner on
+  the journal, both 900 banners on the Wink).
 - The player-defect sweep, round twenty-six (2026-10-16; a long session's
   client). One browser held the Nave at 1280x720 while eight waves of 24
   bots joined around it and left (scripts/load-check.mjs, 15 s each),
@@ -4502,10 +4514,11 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    Found by round twenty-four's crowding probe and left for that pass: on
    a phone, a three-line heard line over a prompt wrapped to three rows
    meets the bottom of the notices column, and an Angel with both Use and
-   Flag in the verb row wraps it up into the bars; at 1024–1100 wide two
-   world events at once (a house war and the launch) put the second
-   banner over the journal's tab. Each needs two or three long things at
-   once; the fix wants a real phone's eye on the layout, not a guess.
+   Flag in the verb row wraps it up into the bars (at 900 wide the fifth
+   verb chip also meets the connection chip, which shows only while
+   reconnecting). Each needs two or three long things at once; the fix
+   wants a real phone's eye on the layout, not a guess. (The events strip
+   over the journal at 1024–1100 is fixed: round twenty-seven.)
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

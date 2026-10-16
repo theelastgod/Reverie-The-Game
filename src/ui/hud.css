@@ -998,12 +998,17 @@ canvas { display: block; }
   .reach { width: calc(100vw - 272px - 32px); }
   .dialogue { width: min(600px, calc(100vw - 32px)); }
   .lock-title { font-size: 26px; }
+  /* The events strip keeps to the gap between the left column and the journal, which sits beside the minimap here: two
+     events at once (a house war and the launch) stacked the second banner over the journal's tab (round twenty-seven). */
+  .events { left: calc(var(--gutter) + 320px + 8px); right: calc(var(--gutter) + 214px + 8px + 214px + 8px); transform: none; }
+  .event { min-width: 0; width: 100%; }
 }
 
 @media (max-width: 900px) {
   .marquee { display: none; }
   :root { --marquee-h: 0px; }
   .journal { right: var(--gutter); top: 296px; }
+  .events { right: calc(var(--gutter) + 214px + 8px); } /* the journal has gone under the minimap; the strip keeps clear of the minimap */
   .reach { width: calc(100vw - 272px - 32px); }
 }
 
@@ -1022,7 +1027,7 @@ canvas { display: block; }
   .journal { top: calc(var(--below-top) + 112px); width: 130px; max-height: calc(100vh - var(--below-top) - 112px - var(--marquee-h) - 220px); }
   .journal-tab { font-size: 10px; padding: 6px 8px; }
   .journal.open { top: var(--below-top); left: var(--gutter); right: var(--gutter); width: auto; max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 220px); }
-  .events { top: auto; bottom: calc(var(--marquee-h) + 16px + 44px + 136px + 56px + 56px); }
+  .events { top: auto; left: var(--gutter); right: var(--gutter); bottom: calc(var(--marquee-h) + 16px + 44px + 136px + 56px + 56px); }
   .event { min-width: 0; max-width: calc(100vw - 32px); }
   .ledger-panel { top: var(--below-top); width: calc(100vw - 32px); max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 220px); }
   .bars { width: 200px; padding: 6px 10px 8px; gap: 4px; bottom: calc(var(--marquee-h) + 16px + 44px); }
