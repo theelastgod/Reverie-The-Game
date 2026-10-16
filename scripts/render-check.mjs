@@ -104,6 +104,37 @@ try {
   });
   if (bearingHeld) failures.push(bearingHeld);
   console.log(`journal bearing under a long detail: ${bearingHeld || 'held in the panel'}`);
+  // A small window with everything long at once (round twenty-four): the heard line stands clear of a prompt wrapped to two
+  // rows, the newest notice stays above the bars, and the prompt's third verb stays inside the prompt.
+  const before = page.viewportSize();
+  await page.setViewportSize({ width: 900, height: 600 });
+  await page.waitForTimeout(200);
+  const crowd = await page.evaluate(() => {
+    const $ = s => document.querySelector(s);
+    const heard = $('#hud-heard'), prompt = $('#hud-prompt'), notices = $('#hud-notices'), bars = $('#hud-bars');
+    if (!heard || !prompt || !notices || !bars) return ['a HUD element is missing'];
+    // Fill the HUD's own children (it holds them by reference) and put their content back after.
+    const pname = prompt.querySelector('.prompt-name'), pverbs = prompt.querySelector('.prompt-verbs');
+    const was = { heard: [heard.hidden, heard.textContent], prompt: [prompt.hidden, pname.textContent, [...pverbs.childNodes]], notices: [...notices.childNodes] };
+    heard.hidden = false; heard.textContent = 'You leave the recorder running. Nara tears her coat into binding cloth. The voice has another night, and the street hears it.';
+    prompt.hidden = false;
+    pname.textContent = 'MEMORIAL RECORDER';
+    pverbs.innerHTML = [['F', 'LISTEN'], ['E', 'DISMANTLE THE COPPER'], ['Q', 'PRESERVE THE VOICE']].map(([k, l]) => `<button class="verb"><kbd class="cap">${k}</kbd>${l}</button>`).join('');
+    notices.innerHTML = ['Buried. Readiness. Nothing was paid.', 'Buried. Readiness. The city stops counting that body.', 'The recorder plays on. Cloth for the coffin.', 'Safety calls it stability. One more name to hear.', 'Entered.', 'The sexton. She puts things in the ground.', 'A new line in Ord\'s ledger. Honest.', 'The last line, the newest.'].map(t => `<div class="notice">${t}</div>`).join('');
+    const r = e => e.getBoundingClientRect();
+    const bad = [];
+    if (r(heard).bottom > r(prompt).top + 1) bad.push(`the heard line (to ${Math.round(r(heard).bottom)}) runs under the prompt (from ${Math.round(r(prompt).top)})`);
+    const newest = notices.lastElementChild;
+    if (r(newest).bottom > r(bars).top + 1) bad.push(`the newest notice (to ${Math.round(r(newest).bottom)}) runs under the bars (from ${Math.round(r(bars).top)})`);
+    for (const v of prompt.querySelectorAll('.verb')) if (r(v).right > r(prompt).right + 1) bad.push(`a verb runs past the prompt's edge`);
+    heard.hidden = was.heard[0]; heard.textContent = was.heard[1];
+    prompt.hidden = was.prompt[0]; pname.textContent = was.prompt[1]; pverbs.replaceChildren(...was.prompt[2]);
+    notices.replaceChildren(...was.notices);
+    return bad;
+  });
+  if (before) await page.setViewportSize(before);
+  failures.push(...crowd);
+  console.log(`a crowded HUD at 900x600: ${crowd.length ? crowd.join('; ') : 'heard over the prompt, the newest notice above the bars, every verb inside'}`);
 
   // Two exchanges through the server and back, walked by time (170 px/s over 48 px tiles, src/sim/constants.ts),
   // each leg nudged by half tiles until the verb shows. First Nara Vale at her home (8,49): seven tiles south and

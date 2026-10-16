@@ -2998,6 +2998,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round twenty-four (2026-10-16; the HUD crowded:
+  every visible panel and chip filled with the longest text the city
+  sends at once, its boxes compared pairwise at 1920x1080, 1366x768,
+  1280x720, 1100x700, 1024x768, 900x600 and 390x844). Clean down to
+  1280x720. Fixed: a prompt that wraps to two rows (900 wide: the name
+  above the verbs) grew up over the heard line's second line, since the
+  heard line sat at a fixed height for a one-row prompt; the two now
+  share #hud-reach, the prompt in its flow and the heard line standing
+  on its top, so the line rises with the prompt and does not jump when
+  the prompt comes and goes. A run of notices ran down under the bars
+  (900x600); the left column now stops above the bars and clips its
+  oldest notices off the top, the Wink never shrinking. On a phone a
+  third verb ran off the prompt's edge ("PRESE"); the verbs wrap. Tests:
+  src/ui/a11y.test.ts (the reach's markup and the rules; fails on the old
+  files); the render check fills the heard line, a three-verb prompt and
+  eight notices at 900x600 and checks the line clears the prompt, the
+  newest notice clears the bars and every verb stays inside (shown failing
+  on the old build: the line ran 18 px under the prompt). Three rarer
+  crowdings left in Backlog 11.
 - The player-defect sweep, round twenty-three (2026-10-16; a keyboard-only
   guest through Movement I in the real browser, two runs, the journal's
   bearing as the only guide, to the guest lock). The second run reached
@@ -4465,6 +4484,13 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    events and reads what they send. Left: a pass on a real phone, which
    this container cannot do (Chromium's touch emulation is what the check
    has; the heavy's hold length in particular wants a thumb's judgement).
+   Found by round twenty-four's crowding probe and left for that pass: on
+   a phone, a three-line heard line over a prompt wrapped to three rows
+   meets the bottom of the notices column, and an Angel with both Use and
+   Flag in the verb row wraps it up into the bars; at 1024–1100 wide two
+   world events at once (a house war and the launch) put the second
+   banner over the journal's tab. Each needs two or three long things at
+   once; the fix wants a real phone's eye on the layout, not a guess.
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 

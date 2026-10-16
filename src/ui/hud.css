@@ -367,6 +367,9 @@ canvas { display: block; }
   left: var(--gutter);
   width: 380px;
   max-width: calc(100vw - 32px);
+  /* The column stops above the bars (64px of verbs and gutter, 156px of bars and their gap): a run of notices clips its
+     oldest off the top instead of running under the bars (round twenty-four). */
+  max-height: calc(100vh - 72px - var(--marquee-h) - 64px - 156px);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -381,6 +384,7 @@ canvas { display: block; }
   line-height: 1.45;
   font-weight: 500;
   transition: opacity 900ms ease;
+  flex-shrink: 0;
 }
 .wink.fading { opacity: 0; }
 .wink-tag {
@@ -396,7 +400,7 @@ canvas { display: block; }
 }
 .wink-text { display: block; }
 
-.notices { display: flex; flex-direction: column; gap: 8px; }
+.notices { display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; min-height: 0; overflow: hidden; }
 .notice {
   box-sizing: border-box;
   padding: 8px 12px;
@@ -678,11 +682,22 @@ canvas { display: block; }
 .stick-knob { position: absolute; left: -20px; top: -20px; width: 40px; height: 40px; border-radius: 50%; background: var(--paper); opacity: 0.85; transform: translate(var(--kx, 0px), var(--ky, 0px)); }
 
 /* heard line and prompt (bottom centre) */
-.heard {
+/* The heard line and the prompt share one foot (#hud-reach): the prompt stands on it and the heard line on the
+   prompt's top, so a prompt that wraps to two rows lifts the line instead of covering it (round twenty-four). The
+   reach is as tall as a one-row prompt even when the prompt is hidden, so the line does not jump as targets come and go. */
+.reach {
   position: absolute;
   left: 272px;
-  bottom: calc(var(--marquee-h) + 16px + 48px + 48px);
-  max-width: min(42rem, calc(100vw - 528px));
+  bottom: calc(var(--marquee-h) + 16px + 48px);
+  width: calc(100vw - 528px);
+  min-height: 40px;
+  pointer-events: none;
+}
+.heard {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  max-width: min(42rem, 100%);
   padding: 10px 14px;
   white-space: normal;
   text-transform: none;
@@ -696,16 +711,16 @@ canvas { display: block; }
 .heard.fading { opacity: 0; }
 
 .prompt {
-  position: absolute;
-  left: 272px;
-  bottom: calc(var(--marquee-h) + 16px + 48px);
+  position: relative; /* in the reach's flow, so a wrapped prompt makes the reach taller and lifts the heard line */
+  width: fit-content;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
   min-height: 40px;
   padding: 4px 12px;
-  max-width: calc(100vw - 528px);
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .prompt-name {
   font-size: 12px;
@@ -714,7 +729,7 @@ canvas { display: block; }
   text-transform: uppercase;
   white-space: nowrap;
 }
-.prompt-verbs { display: flex; gap: 6px; }
+.prompt-verbs { display: flex; flex-wrap: wrap; gap: 6px; } /* a phone wraps a third verb instead of losing it off the edge (round twenty-four) */
 .verb {
   display: inline-flex;
   align-items: center;
@@ -971,6 +986,7 @@ canvas { display: block; }
 
 @media (max-width: 1200px) {
   .hud-left, .minimap { top: 120px; }
+  .hud-left { max-height: calc(100vh - 120px - var(--marquee-h) - 64px - 156px); }
   .journal { top: 304px; max-height: calc(100vh - 304px - var(--marquee-h) - 72px); }
 }
 
@@ -979,7 +995,7 @@ canvas { display: block; }
   .journal:not(.open) .journal-body { display: none; }
   .journal:not(.open) .journal-tab { border-bottom: 0; }
   .hud-left { width: 320px; }
-  .heard, .prompt { max-width: calc(100vw - 272px - 32px); }
+  .reach { width: calc(100vw - 272px - 32px); }
   .dialogue { width: min(600px, calc(100vw - 32px)); }
   .lock-title { font-size: 26px; }
 }
@@ -988,7 +1004,7 @@ canvas { display: block; }
   .marquee { display: none; }
   :root { --marquee-h: 0px; }
   .journal { right: var(--gutter); top: 296px; }
-  .heard, .prompt { max-width: calc(100vw - 272px - 32px); }
+  .reach { width: calc(100vw - 272px - 32px); }
 }
 
 /* A phone. Touch controls are not v1; this keeps the city readable in a hand: the chips shrink and wrap, the minimap and
@@ -1000,7 +1016,7 @@ canvas { display: block; }
   #hud { --below-top: 150px; }
   .hud-top { gap: 6px; }
   .hud-top .chip { min-height: 32px; padding: 0 8px; font-size: 10px; gap: 6px; }
-  .hud-left { top: var(--below-top); width: calc(100vw - 32px - 146px); }
+  .hud-left { top: var(--below-top); width: calc(100vw - 32px - 146px); max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 314px); }
   .minimap { top: var(--below-top); }
   .minimap canvas { width: 130px; height: 100px; }
   .journal { top: calc(var(--below-top) + 112px); width: 130px; max-height: calc(100vh - var(--below-top) - 112px - var(--marquee-h) - 220px); }
@@ -1013,9 +1029,8 @@ canvas { display: block; }
   .hud-verbs { right: var(--gutter); flex-wrap: wrap; gap: 6px; }
   .hud-verbs .chip { min-height: 36px; padding: 0 8px; font-size: 10px; }
   #hud-stance .chip-hint, .chip-dodge { display: none; }
-  .heard, .prompt { left: var(--gutter); right: var(--gutter); max-width: none; }
-  .prompt { bottom: calc(var(--marquee-h) + 16px + 44px + 136px); }
-  .heard { bottom: calc(var(--marquee-h) + 16px + 44px + 136px + 56px); }
+  .reach { left: var(--gutter); right: var(--gutter); width: auto; bottom: calc(var(--marquee-h) + 16px + 44px + 136px); }
+  .heard { right: 0; max-width: none; }
   .dialogue { bottom: calc(var(--marquee-h) + 16px + 8px); }
 }
 

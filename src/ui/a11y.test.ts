@@ -103,4 +103,17 @@ describe("the HUD's stacking", () => {
     expect(rule![1]).toMatch(/bottom:\s*0;/);
     expect(rule![1]).toMatch(/background:\s*var\(--paper\);/);
   });
+  it("stands the heard line on the prompt, and keeps a run of notices and a long prompt in their room (round twenty-four)", () => {
+    // Both inside #hud-reach: the prompt in its flow, so two rows of prompt lift the line instead of covering it.
+    const reach = html.match(/<div id="hud-reach"[^>]*>([\s\S]*?)<div id="hud-loading"/);
+    expect(reach, "the reach").not.toBeNull();
+    expect(reach![1]).toContain('id="hud-heard"');
+    expect(reach![1]).toContain('id="hud-prompt"');
+    const rule = (sel: string) => css.match(new RegExp(`(?:^|\\n)\\${sel}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+    expect(rule(".prompt")).toMatch(/position:\s*relative;/);
+    expect(rule(".heard")).toMatch(/bottom:\s*calc\(100% \+ 8px\);/);
+    expect(css).toMatch(/\.prompt-verbs \{[^}]*flex-wrap:\s*wrap;/);
+    expect(css).toMatch(/\.notices \{[^}]*justify-content:\s*flex-end;[^}]*overflow:\s*hidden;/);
+    expect(rule(".hud-left")).toMatch(/max-height:/);
+  });
 });

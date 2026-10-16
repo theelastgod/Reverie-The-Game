@@ -120,11 +120,14 @@
         <button id="hud-flag" class="chip chip-btn interactive" type="button" hidden><kbd class="cap">V</kbd><span class="chip-text">RAISE FLAG</span></button>
       </div>
 
-      <div id="hud-heard" class="chip heard" aria-live="polite" hidden></div>
+      <!-- The heard line stands on the prompt, whatever rows the prompt wraps to (round twenty-four). -->
+      <div id="hud-reach" class="reach">
+        <div id="hud-heard" class="chip heard" aria-live="polite" hidden></div>
 
-      <div id="hud-prompt" class="panel prompt interactive" role="group" aria-label="In reach" hidden>
-        <span class="prompt-name"></span>
-        <div class="prompt-verbs"></div>
+        <div id="hud-prompt" class="panel prompt interactive" role="group" aria-label="In reach" hidden>
+          <span class="prompt-name"></span>
+          <div class="prompt-verbs"></div>
+        </div>
       </div>
 
       <div id="hud-loading" class="chip chip-loading" hidden><span class="chip-text">LOADING</span><span class="loading-pct"></span></div>
