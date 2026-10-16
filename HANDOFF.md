@@ -2998,6 +2998,13 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round thirty-two (2026-10-16; the landing page).
+  The site served statically and loaded in Chromium at 360x740, 390x844,
+  768x1024 and 1280x800: no horizontal overflow, no element past the
+  viewport, every internal link and asset resolves, no page error. The
+  only failed request is /log/recent, which the static server lacks; the
+  page keeps the city's log band hidden when that feed fails, as meant.
+  A full-page shot at 360 reads cleanly. Nothing to fix.
 - The player-defect sweep, round thirty-one (2026-10-16; long sessions).
   The session fuzzer at 400 steps a seed, four times round twenty-five's
   length, so bodies live long enough to reach later movements, die and
