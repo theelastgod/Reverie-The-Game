@@ -2998,6 +2998,14 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round twenty-eight (2026-10-16; the spine over
+  the wire after the week's changes). On a fresh world and local
+  Wrangler: npm run test:smoke passed (health, hello v3, both frames,
+  ticks, movement, the timed dodge, junk ignored, a saved reconnect,
+  guest identity, single-tab ownership); npm run test:campaign:4 passed
+  all four movements in one body, from the intake to the credits and
+  "the rest is the city", after round twenty-two's claims parked off an
+  unsealed body and the HUD rounds. Nothing to fix.
 - The player-defect sweep, round twenty-seven (2026-10-16; the events strip
   at narrow widths, round twenty-four's left-over). At 1100 wide and under
   the journal sits beside the minimap at the top, and the events strip,
