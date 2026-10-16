@@ -2998,6 +2998,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round thirty-one (2026-10-16; long sessions).
+  The session fuzzer at 400 steps a seed, four times round twenty-five's
+  length, so bodies live long enough to reach later movements, die and
+  return, and churn sockets many times: seeds 9001–9060 fight-biased and
+  12001–12060 plain, 48,000 steps, no violation of any invariant. Nothing
+  to fix. Note for the owner: rounds 25, 26, 28 and 31 found nothing; the
+  sweeps are at diminishing returns while the Backlog's top items wait on
+  the owner, a real device or the network (the results host and the
+  Cloudflare API, both still unreachable from this container).
 - The Deploy workflow's check mode on GitHub's runner after the lockfile
   moved (2026-10-16, round thirty): dispatched on this branch at dfcade5
   (run 38959405384), completed success: npm ci from the new lockfile, the
