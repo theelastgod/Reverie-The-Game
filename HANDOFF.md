@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty-five on 2026-10-17 (see Done). Since round forty-four a test holds
+  fifty-six on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round fifty-six (2026-10-17; every key against
+  a pointer). Each binding in CityScene.keyDown was matched to what a
+  finger can press: movement (the stick), strike and heavy (tap, second
+  finger), dodge, stance, kit, flag, use, journal and the ledger (chips;
+  the ledger since round fifty-five), truce and the node verbs (the
+  prompt's buttons), mute (the audio chip), the numbered choices (their
+  buttons). M only hides the map, which a finger never needs; [ and ]
+  step the volume, which a phone keeps in its own keys. One gap: Escape
+  leaves a dialogue without choosing, walking away does not close it, and
+  a node with choices offered no button for that, so on a touch screen a
+  decision could only be left by making it. Now a LEAVE button (ESC)
+  stands under the choices and sends the same close Escape does (a node
+  with no choices keeps its CONTINUE). Proven: the render check's
+  dialogue step now asks for a button that leaves; at Nara's first node
+  it fails on the old build ("3 choice(s) and no button that leaves it")
+  and passes on the fix; the HUD's focus, target and contrast audits
+  hold. 864 tests.
 - The player-defect sweep, round fifty-five (2026-10-17; name, role,
   value, WCAG 4.1.2). Two defects. (1) The ledger opened only with the L
   key: the purse chip that shows it was a div the canvas took clicks

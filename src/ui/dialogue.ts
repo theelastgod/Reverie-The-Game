@@ -77,6 +77,17 @@ export function mountDialogue(root: HTMLElement, callbacks: { choose: (choiceId:
       btn.append(cap, document.createTextNode(c.label));
       choices.append(btn);
     });
+    // Escape leaves a dialogue without choosing; a finger had no way to (round fifty-six: walking away does not close
+    // it), so the leaving is a button too, last, under the choices.
+    const leave = document.createElement("button");
+    leave.type = "button";
+    leave.className = "choice continue leave";
+    leave.dataset.choice = "";
+    const esc = document.createElement("kbd");
+    esc.className = "cap";
+    esc.textContent = "ESC";
+    leave.append(esc, document.createTextNode("Leave"));
+    choices.append(leave);
   };
 
   return {

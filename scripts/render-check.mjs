@@ -527,6 +527,14 @@ try {
       // The opened dialogue takes focus itself (the verb was pressed from the canvas, so nothing else had it):
       // Tab reaches its first choice, Escape closes it through the server (a Continue node's close advances to
       // the next line first, so Escape repeats until the panel is gone), and focus goes back to the game.
+      // A way out that a finger can press (round fifty-six): Escape leaves a dialogue without choosing, and walking away
+      // does not close it, so the panel must offer the leaving as a button too, beside whatever choices it holds.
+      const way = await page.evaluate(() => {
+        const btns = [...document.querySelectorAll('#hud-dialogue .dlg-choices button')];
+        const out = btns.find(b => b.dataset.choice === '');
+        return { choices: btns.filter(b => b.dataset.choice !== '').length, out: out ? out.textContent.replace(/\s+/g, ' ').trim() : '' };
+      });
+      if (!way.out) failures.push(`the dialogue offers ${way.choices} choice(s) and no button that leaves it`);
       const onPanel = await page.evaluate(() => document.activeElement?.id === 'hud-dialogue');
       await page.keyboard.press('Tab');
       const onChoice = await page.evaluate(() => !!document.activeElement?.matches('#hud-dialogue .dlg-choices button'));
@@ -540,7 +548,7 @@ try {
       if (!onChoice) failures.push('Tab from the dialogue did not reach its first choice');
       if (!closed) failures.push('Escape inside the dialogue did not close it');
       else if (back !== 'the game') failures.push(`focus stayed on ${back} after the dialogue closed`);
-      focusStep = `${onPanel ? 'the dialogue took focus' : 'focus not taken'}, Tab → ${onChoice ? 'its first choice' : 'elsewhere'}, Escape → ${closed ? 'closed' : 'still open'}, focus → ${back}`;
+      focusStep = `${onPanel ? 'the dialogue took focus' : 'focus not taken'}, Tab → ${onChoice ? 'its first choice' : 'elsewhere'}, Escape → ${closed ? 'closed' : 'still open'}, focus → ${back}; ${way.choices} choice(s) and ${way.out ? `"${way.out}" to leave` : 'no way out by pointer'}`;
     }
   } else {
     failures.push(`no one offered Speak at Nara's home (prompt: ${JSON.stringify(promptText.trim())})`);
