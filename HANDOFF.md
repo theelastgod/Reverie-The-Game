@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty-six on 2026-10-17 (see Done). Since round forty-four a test holds
+  fifty-seven on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round fifty-seven (2026-10-17; the ledger in a
+  hand). Round fifty-five made the purse chip open the ledger; this round
+  read the ledger on touch screens, as a guest and as a linked Angel, at
+  390x844, 320x568 and 844x390. It opens inside the screen and scrolls,
+  the chip stays on top of it to close it, and a second tap closes it.
+  The render check's phone pass now taps it so (fails on round
+  fifty-four's HUD, "the purse chip takes no tap"; passes now). One
+  thing noted, not changed (Backlog 11): an Angel at 320x568 has five
+  rows of top chips (the identity chip reads "#7777 · HOUSE OF MORTALS ·
+  HERALD"), so the open ledger is a 98px window that scrolls; letting it
+  run over the bars would cover the prompt's verbs at the board, which
+  is a layout call, not a fix. 864 tests.
 - The player-defect sweep, round fifty-six (2026-10-17; every key against
   a pointer). Each binding in CityScene.keyDown was matched to what a
   finger can press: movement (the stick), strike and heavy (tap, second
@@ -4939,6 +4951,9 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    Since round forty-eight 320x568 holds; at 320x480 upright (a phone
    from 2010) the journal's tab still sits 16px into the empty reach,
    and a prompt there would cover the tab's foot. Left as is.
+   An Angel at 320x568 has five rows of top chips, and the open ledger
+   is then a 98px window that scrolls (round fifty-seven); a two-line
+   identity chip or a ledger over the bars would give it room.
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 13. **The landing page's hot pink at AA (the owner's call).** Found by round

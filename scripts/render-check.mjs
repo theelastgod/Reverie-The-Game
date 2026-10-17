@@ -855,6 +855,30 @@ try {
     if (tapSent.join() !== 'strike') failures.push(`a tap on the canvas sent [${tapSent}], not one strike`);
     if (!dodgeVisible) failures.push(`the dodge chip is not a visible button on a coarse pointer (${dodgeState})`);
     else if (!/STEP/.test(dodgeText)) failures.push(`the dodge button did not start a cooldown ("${dodgeText.trim()}")`);
+    // The ledger by touch (rounds fifty-five and fifty-seven): a finger has no L, so the purse chip opens it; a tap opens
+    // the panel inside the screen, the chip stays on top to close it, and a second tap closes it.
+    {
+      const tapped = await phone.locator('#hud-ledger').tap({ timeout: 3000 }).then(() => true, () => false);
+      await phone.waitForTimeout(300);
+      const open = await phone.evaluate(() => {
+        const p = document.getElementById('hud-ledger-panel'), r = p.getBoundingClientRect(), c = document.getElementById('hud-ledger').getBoundingClientRect();
+        const top = document.elementFromPoint(c.left + c.width / 2, c.top + c.height / 2);
+        return { shown: !p.hidden, inside: r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1, chipOnTop: !!top?.closest('#hud-ledger'), expanded: document.getElementById('hud-ledger').getAttribute('aria-expanded') };
+      });
+      if (tapped) await phone.locator('#hud-ledger').tap({ timeout: 3000 }).catch(() => {});
+      await phone.waitForTimeout(300);
+      const closed = await phone.evaluate(() => document.getElementById('hud-ledger-panel').hidden);
+      const wrong = [];
+      if (!tapped) wrong.push('the purse chip takes no tap');
+      else {
+        if (!open.shown || open.expanded !== 'true') wrong.push('a tap did not open the ledger');
+        if (!open.inside) wrong.push('the open ledger runs off the screen');
+        if (!open.chipOnTop) wrong.push('the open ledger covers the chip that closes it');
+        if (!closed) wrong.push('a second tap did not close the ledger');
+      }
+      failures.push(...wrong.map(w => `phone ledger: ${w}`));
+      console.log(`phone ledger: ${wrong.length ? wrong.join('; ') : 'a tap opens it on the screen, the chip stays on top, a second tap closes it'}`);
+    }
     if (fit.off.length) failures.push(`phone: off the screen: ${fit.off.join('; ')}`);
     if (fit.stacked.length) failures.push(`phone: ${fit.stacked.join('; ')}`);
     if (fit.scrollW > fit.w) failures.push(`phone: the page scrolls sideways (${fit.scrollW} > ${fit.w})`);
