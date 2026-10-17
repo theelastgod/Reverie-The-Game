@@ -10,6 +10,7 @@
   --paper: #ffffff;
   --ink: #0a0a0a;
   --muted: #5a5a5a;
+  --muted-on-void: #8a8a8a; /* the muted grey on the void (title, credits): #5a5a5a read 2.87:1 there, this 5.7:1 (round thirty-nine) */
   --acid: #d4ff00;
   --hot: #ff2d6b;
   --wine: #7a1028;
@@ -183,7 +184,7 @@ canvas { display: block; }
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: var(--muted);
+  color: var(--muted-on-void);
 }
 
 /* ------------------------------------------------------------ title */
@@ -283,7 +284,7 @@ canvas { display: block; }
   font-size: 11px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--muted-on-void);
 }
 .title-actions {
   display: flex;
@@ -305,7 +306,7 @@ canvas { display: block; }
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--muted-on-void);
 }
 .title-foot {
   position: absolute;
@@ -314,7 +315,7 @@ canvas { display: block; }
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.16em;
-  color: var(--muted);
+  color: var(--muted-on-void);
 }
 
 /* ------------------------------------------------------------ hud root */
@@ -977,7 +978,7 @@ canvas { display: block; }
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.16em;
-  color: var(--muted);
+  color: var(--muted-on-void);
 }
 @keyframes credits-roll {
   from { transform: translateY(0); }

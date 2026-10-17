@@ -39,6 +39,39 @@ const failures = [];
 // [hidden] rule unless the stylesheet re-asserts it, which is how a deployed title kept its local test row (round
 // thirty-six). Each element is hidden for the measure and put back; the Phaser canvas sets its own display and is
 // never hidden by the game.
+// Text contrast against WCAG AA (round thirty-nine): 4.5:1, or 3:1 for large text (24px, or 18.66px bold). The
+// background is the first opaque one up the tree, translucent layers blended over it; text with nothing opaque behind it
+// stands over the world (the canvas) and is not judged here. Returns the failures, one per class and colour.
+const lowContrast = () => {
+  const parse = c => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+  const lum = ({ r, g, b }) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+  const blend = (fg, bg) => ({ r: fg.r * fg.a + bg.r * (1 - fg.a), g: fg.g * fg.a + bg.g * (1 - fg.a), b: fg.b * fg.a + bg.b * (1 - fg.a), a: 1 });
+  const bgOf = e => {
+    const layers = [];
+    for (let x = e; x; x = x.parentElement) {
+      const c = parse(getComputedStyle(x).backgroundColor);
+      if (c && c.a > 0) { layers.push(c); if (c.a >= 1) break; }
+      if ((x.tagName === 'BODY' || x.id === 'hud') && (!layers.length || layers[layers.length - 1].a < 1)) return null;
+    }
+    let bg = { r: 255, g: 255, b: 255, a: 1 };
+    for (const l of layers.reverse()) bg = blend(l, bg);
+    return bg;
+  };
+  const out = new Set();
+  for (const e of document.querySelectorAll('body *')) {
+    if (!e.getClientRects().length) continue;
+    const cs = getComputedStyle(e);
+    if (cs.visibility === 'hidden' || +cs.opacity === 0) continue;
+    if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+    const bg = bgOf(e);
+    if (!bg) continue;
+    const fg = blend(parse(cs.color), bg), size = parseFloat(cs.fontSize);
+    const ratio = (Math.max(lum(fg), lum(bg)) + 0.05) / (Math.min(lum(fg), lum(bg)) + 0.05);
+    const need = size >= 24 || (+cs.fontWeight >= 700 && size >= 18.66) ? 3 : 4.5;
+    if (ratio < need) out.add(`${e.id ? '#' + e.id : e.tagName.toLowerCase()}${typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/)[0] : ''} ${ratio.toFixed(2)}:1`);
+  }
+  return [...out];
+};
 const ignoresHidden = () => {
   const out = [];
   for (const e of document.querySelectorAll('body *')) {
@@ -117,6 +150,11 @@ try {
     failures.push(...loose.map(e => `title: ${e} shows with hidden set`));
     console.log(`hidden on the title: ${loose.length ? loose.join(', ') + ' ignore it' : 'every element honours it'}`);
   }
+  {
+    const dim = await page.evaluate(lowContrast);
+    failures.push(...dim.map(e => `title contrast: ${e}`));
+    console.log(`contrast on the title: ${dim.length ? dim.join(', ') + ' below AA' : 'every line at AA or better'}`);
+  }
 
   // Enter the city: the title's primary button, else any key.
   const enter = page.locator('#title button', { hasText: /enter/i }).first();
@@ -167,6 +205,18 @@ try {
     const loose = await page.evaluate(ignoresHidden);
     failures.push(...loose.map(e => `hud: ${e} shows with hidden set`));
     console.log(`hidden in the HUD: ${loose.length ? loose.join(', ') + ' ignore it' : 'every element honours it'}`);
+  }
+  {
+    const dim = await page.evaluate(lowContrast);
+    const credits = await page.evaluate((src) => {
+      const c = document.querySelector('#hud-credits'); if (!c) return ['#hud-credits is missing'];
+      const was = c.hidden; c.hidden = false;
+      const out = eval(src)();
+      c.hidden = was;
+      return out;
+    }, '(' + lowContrast.toString() + ')');
+    failures.push(...dim.map(e => `hud contrast: ${e}`), ...credits.map(e => `credits contrast: ${e}`));
+    console.log(`contrast in the HUD and the credits: ${dim.length + credits.length ? [...dim, ...credits].join(', ') + ' below AA' : 'every line at AA or better'}`);
   }
   const before = page.viewportSize();
   const crowd = [];

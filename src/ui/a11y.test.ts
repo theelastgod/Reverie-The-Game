@@ -143,6 +143,15 @@ describe("the HUD's stacking", () => {
     expect(narrow![1]).toMatch(/\.journal\.open \.journal-plate, \.journal\.open \.journal-loop \{ display: none; \}/);
     expect(narrow![1]).toMatch(/#hud:has\(#hud-journal\.open\) #hud-events \{ right: calc\(var\(--gutter\) \+ 260px \+ 8px\); \}/);
   });
+  it("sets the small grey text on the void at AA contrast (round thirty-nine)", () => {
+    // #5a5a5a on #0a0a0a read 2.87:1 for the title's guest line and the credits' way back; the void's grey is lighter.
+    expect(css).toMatch(/--muted-on-void: #8a8a8a;/);
+    for (const sel of [".title-serial-label", ".title-temp", ".title-fine", ".title-foot", ".credits-hint"]) {
+      const rule = css.match(new RegExp(`\\n\\${sel} \\{([^}]*)\\}`));
+      expect(rule, sel).not.toBeNull();
+      expect(rule![1], sel).toMatch(/color: var\(--muted-on-void\);/);
+    }
+  });
   it("hides the title's test row when a deployed city says so (round thirty-six)", () => {
     // `.title-link { display: flex }` beat the attribute: title.ts set hidden and the row stayed on a deployed title.
     expect(css).toMatch(/\.title-link \{[^}]*display: flex;/);
