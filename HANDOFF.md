@@ -2998,6 +2998,32 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round forty-three (2026-10-17; the HTTP routes
+  under malformed input). Fifty requests at every route on a fresh local
+  Worker: odd and hostile query strings on /log/recent, oversized URLs,
+  foreign origins and junk cookies on /session, every method on /world
+  and /ws, bad JSON, bad addresses, wrong types and a 200 KB body on both
+  wallet routes, path traversal at the assets. No route answered 500 of
+  its own, none leaked a stack or a file, /health stayed up. What it found:
+  the object reads and parses a session holder's wallet body in its one
+  thread whatever its size, so one player could post megabytes and hold
+  the city up (and Wrangler's dev proxy 500'd the request after an unread
+  large body; a live socket held through it, so the object itself was
+  never reset). Fixed in `server/src/index.ts`: `capBody` bounds a wallet
+  POST at `WALLET_BODY_MAX` (4096 bytes, `server/src/limits.ts`) before it
+  reaches the object: a declared length decides at once, a body with none
+  (chunked, or HTTP/2 without the header) is read up to the bound and
+  passed on as bytes, past it 413 `too-large`. Found on the way, and kept
+  as a rule: a Worker's entry module may export only handlers, classes and
+  functions; a constant exported from index.ts stopped workerd from
+  starting at all (the unit tests and typecheck passed; only the Wrangler
+  run caught it), so bounds live in `limits.ts`. Verified: a session test
+  (small bodies pass, empty passes, over the bound 413 on both routes, a
+  streamed body read and passed byte for byte or refused, other methods
+  pass through) that fails on the old code; gates green (852 tests); the
+  dry-run bundle; on a fresh Wrangler the session smoke, Movement I, the
+  render check, the route probe (the large POSTs now 413, no proxy 500s)
+  and a live socket held open through them.
 - Review of rounds thirty-seven to forty-one (2026-10-17, round
   forty-two; code review at medium over df181e5^..d5717b4). Ten findings,
   each checked against the code; fixed:

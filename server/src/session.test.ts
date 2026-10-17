@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { WALLET_BODY_MAX } from "./limits";
 import worker, { ReverieWorld, joinKey, restoreWorld, sameOrigin, serializeWorld, sessionToken } from "./index";
 import { secp256k1 } from "@noble/curves/secp256k1.js";
 import { addressOfPublicKey, personalMessageHash, recoverAddress } from "./wallet";
@@ -394,6 +395,38 @@ describe("browser session boundary", () => {
     expect(await (await worker.fetch(new Request("https://game.example/ws"), env as never)).text()).toBe("world");
     expect(names).toEqual(["city-v2"]);
     expect(await (await worker.fetch(new Request("https://game.example/play/"), env as never)).text()).toBe("asset");
+  });
+  it("turns away a wallet POST without a declared length or past WALLET_BODY_MAX before it reaches the object (round forty-three)", async () => {
+    let reached = 0;
+    const env = { WORLD: { idFromName: (n: string) => n, get: () => ({ fetch: async () => { reached++; return new Response("world"); } }) } };
+    const post = (path: string, body: string | ReadableStream | null, length?: string) => {
+      const headers = new Headers({ "Content-Type": "application/json" });
+      if (length !== undefined) headers.set("Content-Length", length);
+      return worker.fetch(new Request(`https://game.example${path}`, { method: "POST", body, headers, ...(body instanceof ReadableStream ? { duplex: "half" } : {}) } as RequestInit), env as never);
+    };
+    const small = JSON.stringify({ address: "0x" + "a".repeat(40) });
+    expect((await post("/wallet/challenge", small, String(small.length))).status).toBe(200);
+    expect((await post("/wallet/link", small, String(small.length))).status).toBe(200);
+    expect((await post("/wallet/challenge", null, "0")).status).toBe(200); // an empty POST is the object's to refuse (bad-json)
+    expect(reached).toBe(3);
+    const big = "x".repeat(WALLET_BODY_MAX + 1);
+    for (const path of ["/wallet/challenge", "/wallet/link"]) {
+      const res = await post(path, big, String(big.length));
+      expect(res.status).toBe(413);
+      expect(await res.json()).toEqual({ ok: false, reason: "too-large" });
+    }
+    // A body with no declared length (chunked, or HTTP/2 without the header) is read up to the bound and passed on, or
+    // turned away past it.
+    const stream = (text: string) => new ReadableStream({ start(c) { c.enqueue(new TextEncoder().encode(text)); c.close(); } });
+    let seen = "";
+    const echo = { WORLD: { idFromName: (n: string) => n, get: () => ({ fetch: async (r: Request) => { reached++; seen = await r.text(); return new Response("world"); } }) } };
+    const streamed = (text: string) => worker.fetch(new Request("https://game.example/wallet/link", { method: "POST", body: stream(text), duplex: "half" } as RequestInit), echo as never);
+    expect((await streamed(small)).status).toBe(200);
+    expect(seen).toBe(small);
+    expect((await streamed(big)).status).toBe(413);
+    expect(reached).toBe(4);
+    // Other methods pass through to the object, which answers them (405).
+    expect(await (await worker.fetch(new Request("https://game.example/wallet/challenge"), env as never)).text()).toBe("world");
   });
   it("names the staged release on /health, read once through the assets binding, and stays silent without one", async () => {
     const health = (env: unknown) => worker.fetch(new Request("https://game.example/health"), env as never).then(r => r.json());

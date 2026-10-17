@@ -18,6 +18,7 @@ import { serialFor, type HolderCache } from "./holders.ts";
 import { logEventsFor, PUBLIC_LOG_KINDS } from "./log.ts";
 import { LogSink } from "./logSink.ts";
 import { LoadMeter } from "./load.ts";
+import { WALLET_BODY_MAX } from "./limits.ts";
 import { framesFor, snapshotFor, stepViews } from "../../src/sim/snapshot.ts";
 import { encodeFast, SlowTracker } from "../../src/sim/frames.ts";
 import { isClientMsg, PROTOCOL_VERSION, SLOW_EVERY_TICKS } from "../../src/sim/protocol.ts";
@@ -90,6 +91,37 @@ export function joinKey(address: string): string {
  */
 const WALLET_BURST = 6;
 const WALLET_PER_SECOND = 0.5;
+
+/**
+ * The request with its body bounded by `max` bytes, or null past it. A declared length decides at once; a body with none
+ * (chunked, or an HTTP/2 client that leaves it out) is read here up to the bound and passed on as bytes, so what reaches
+ * the object is never larger than `max`.
+ */
+export async function capBody(req: Request, max: number): Promise<Request | null> {
+  const declared = req.headers.get("Content-Length");
+  if (declared !== null) return Number(declared) <= max ? req : null;
+  if (!req.body) return req;
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const body = new Uint8Array(size);
+  let at = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, at);
+    at += chunk.byteLength;
+  }
+  return new Request(req.url, { method: req.method, headers: req.headers, body });
+}
 const JOINS_PER_SECOND = 10;
 const JOIN_BURST = 30;
 const CITY_JOINS_PER_SECOND = 30;
@@ -901,6 +933,11 @@ export default {
         "Cache-Control": "no-store",
         "Set-Cookie": `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000${url.protocol === "https:" ? "; Secure" : ""}`,
       } });
+    }
+    if ((url.pathname === "/wallet/challenge" || url.pathname === "/wallet/link") && req.method === "POST") {
+      const capped = await capBody(req, WALLET_BODY_MAX);
+      if (!capped) return Response.json({ ok: false, reason: "too-large" }, { status: 413, headers: { "Cache-Control": "no-store" } });
+      req = capped;
     }
     if (url.pathname === "/ws" || url.pathname === "/world" || url.pathname === "/wallet/challenge" || url.pathname === "/wallet/link") {
       const id = env.WORLD.idFromName(WORLD_NAME);
