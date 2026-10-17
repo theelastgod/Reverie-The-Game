@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 859 tests (2026-10-17), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 860 tests (2026-10-17), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty on 2026-10-17 (see Done). Since round forty-four a test holds
+  fifty-one on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round fifty-one (2026-10-17; labels that
+  promise, and page titles). Round fifty's leftover: the lock panel's
+  test-link button read "LINK TEST ANGEL #7777" over a refused field (it
+  fell back to the default serial), promising a link the press then
+  refused. Now `lockLinkLabel` (format.ts) names no serial while the
+  field holds none. And WCAG 2.4.2: the landing page and the game
+  carried the same title, so tabs, history and a screen reader's page
+  list could not tell them apart; the game is now "The city · Reverie:
+  The Game" (both pages already declare `lang="en"`). Verified: a probe
+  of the lock (9999 → "LINK TEST ANGEL", marked invalid, the range line;
+  42 → "#0042", clean), the served page's title, the render check, and
+  a11y.test.ts (the label both ways, the two titles apart). 860 tests.
 - The player-defect sweep, round fifty (2026-10-17; input errors,
   WCAG 3.3.1). The two serial fields (the title's test row and the lock
   panel's) refused a serial outside 1-7,777 by turning the field's

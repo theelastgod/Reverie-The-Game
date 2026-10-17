@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SERIAL_RANGE_LINE } from "./format";
+import { lockLinkLabel, SERIAL_RANGE_LINE } from "./format";
 
 const html = readFileSync(resolve(__dirname, "../../index.html"), "utf8");
 const css = readFileSync(resolve(__dirname, "./hud.css"), "utf8");
@@ -216,5 +216,15 @@ describe("the HUD's stacking", () => {
     expect(html).toMatch(/<p id="title-serial-error" class="serial-error" role="alert" hidden><\/p>/);
     expect(html).toMatch(/<input id="lock-serial"[^>]*aria-describedby="lock-note"/);
     expect(html).toMatch(/<p id="lock-note" class="lock-note" aria-live="polite" hidden><\/p>/);
+  });
+
+  it("names the lock's link by the field and titles each page apart (round fifty-one)", () => {
+    expect(lockLinkLabel(42)).toBe("LINK TEST ANGEL #0042");
+    expect(lockLinkLabel(null)).toBe("LINK TEST ANGEL");
+    expect(html).toMatch(/<html lang="en">/);
+    expect(html).toMatch(/<title>The city · Reverie: The Game<\/title>/);
+    const site = readFileSync(resolve(__dirname, "../../site/index.html"), "utf8");
+    expect(site).toMatch(/<html lang="en">/);
+    expect(site.match(/<title>([^<]*)<\/title>/)?.[1]).not.toBe(html.match(/<title>([^<]*)<\/title>/)?.[1]);
   });
 });

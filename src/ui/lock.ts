@@ -6,7 +6,7 @@
  * The panel takes focus when it appears (a dialog named by its heading; Tab
  * reaches the wallet button) and gives it back when it goes, see ./focus.ts.
  */
-import { formatSerial, parseSerial, SERIAL_RANGE_LINE, TEST_SERIAL } from "./format";
+import { lockLinkLabel, parseSerial, SERIAL_RANGE_LINE } from "./format";
 import { focusKeeper } from "./focus";
 import { walletLine, type WalletOutcome } from "../net/wallet";
 import { loopFor } from "../assets/slots";
@@ -48,7 +48,7 @@ export function mountLock(root: HTMLElement, onLink: (serial: number) => void, o
     input?.classList.toggle("invalid", bad);
     if (bad) input?.setAttribute("aria-invalid", "true"); else input?.removeAttribute("aria-invalid");
     if (!bad && note?.textContent === SERIAL_RANGE_LINE) say("");
-    linkBtn.textContent = `LINK TEST ANGEL ${formatSerial(n ?? TEST_SERIAL)}`;
+    linkBtn.textContent = lockLinkLabel(n);
   };
 
   const link = () => {
