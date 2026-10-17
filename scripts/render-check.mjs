@@ -190,6 +190,37 @@ try {
   failures.push(...crowd);
   console.log(`a crowded HUD at ${sizes.map(s => s.join('x')).join(', ')}: ${crowd.length ? crowd.join('; ') : 'heard over the prompt, the newest notice above the bars, every verb inside and on the screen, the reach clear of the minimap, the wink and the bars, the events clear of the journal and the left column'}`);
 
+  // The journal opened on a short screen (round thirty-five): it takes the height under the top chips, its title and
+  // objective on the screen and inside the panel, and the event banners keep clear of it.
+  {
+    const before = page.viewportSize();
+    await page.setViewportSize({ width: 740, height: 360 });
+    await page.waitForTimeout(200);
+    const tab = page.locator('#hud-journal .journal-tab');
+    await tab.click();
+    await page.waitForTimeout(200);
+    const found = await page.evaluate(() => {
+      const $ = s => document.querySelector(s), r = e => e.getBoundingClientRect();
+      const j = $('#hud-journal'), title = $('#hud-journal .journal-title'), events = $('#hud-events');
+      if (!j || !title || !events) return ['a journal element is missing'];
+      const bad = [];
+      if (!j.classList.contains('open')) bad.push('the tab did not open the journal');
+      const t = r(title), jb = r(j);
+      if (!title.getClientRects().length || t.top < jb.top || t.bottom > jb.bottom + 1 || t.bottom > innerHeight) bad.push(`the title (${Math.round(t.top)}-${Math.round(t.bottom)}) is not in the open journal (${Math.round(jb.top)}-${Math.round(jb.bottom)})`);
+      const was = [events.hidden, [...events.childNodes]];
+      events.hidden = false;
+      events.innerHTML = '<div class="event"><div class="event-label">NEXT WAR</div><div class="event-detail"><span>the Clearing · 4:12</span></div></div>';
+      for (const ev of events.children) { const e = r(ev); if (Math.min(e.right, jb.right) - Math.max(e.left, jb.left) > 2 && Math.min(e.bottom, jb.bottom) - Math.max(e.top, jb.top) > 2) bad.push('an event banner lies under the open journal'); }
+      events.hidden = was[0]; events.replaceChildren(...was[1]);
+      return bad;
+    });
+    await tab.click();
+    if (before) await page.setViewportSize(before);
+    await page.waitForTimeout(150);
+    failures.push(...found.map(f => `short journal: ${f}`));
+    console.log(`journal open at 740x360: ${found.length ? found.join('; ') : 'its title in the panel and on the screen, the banners clear of it'}`);
+  }
+
   // Two exchanges through the server and back, walked by time (170 px/s over 48 px tiles, src/sim/constants.ts),
   // each leg nudged by half tiles until the verb shows. First Nara Vale at her home (8,49): seven tiles south and
   // three east of the guest spawn (5,42) with nothing in the way (the pillar columns start at x 9, the Intake

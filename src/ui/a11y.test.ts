@@ -132,6 +132,13 @@ describe("the HUD's stacking", () => {
     // The short blocks come before the coarse-pointer rule, so a finger still gets the dodge chip.
     expect(css.indexOf("(max-height: 500px)")).toBeLessThan(css.indexOf("@media (pointer: coarse)"));
   });
+  it("opens the journal to the height under the chips on a short narrow screen (round thirty-five)", () => {
+    const narrow = css.match(/@media \(max-height: 500px\) and \(min-width: 601px\) and \(max-width: 1100px\) \{([\s\S]*?)\n\}/);
+    expect(narrow, "the short narrow block").not.toBeNull();
+    expect(narrow![1]).toMatch(/\.journal\.open \{ top: var\(--below-top\); width: 260px; max-height: calc\(100vh - var\(--below-top\) - 16px\); \}/);
+    expect(narrow![1]).toMatch(/\.journal\.open \.journal-plate, \.journal\.open \.journal-loop \{ display: none; \}/);
+    expect(narrow![1]).toMatch(/#hud:has\(#hud-journal\.open\) #hud-events \{ right: calc\(var\(--gutter\) \+ 260px \+ 8px\); \}/);
+  });
   it("keeps the title's guest line on a short screen (round thirty-four)", () => {
     // The title stays centred and scrolls when it cannot fit; under 560px tall the mark and the word give up height.
     expect(css).toMatch(/#title \{ overflow-y: auto; justify-content: safe center; \}/);

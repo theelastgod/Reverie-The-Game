@@ -2998,6 +2998,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round thirty-five (2026-10-17; the panels a
+  player opens, on short screens). The open journal, the ledger (L) and
+  the credits at 844x390, 740x360, 640x360, 932x430 and 1280x480. The
+  ledger scrolls inside the screen and the credits' return hint stays in
+  view. The journal did not read: opened under the minimap it had some
+  140px, the district's plate took most of it, and the movement, title
+  and objective sat below the panel's foot. Fixed in `src/ui/hud.css`
+  (the short, narrow block): open, the journal takes the height under the
+  top chips over the minimap, as a phone held upright has it, drops the
+  plate, and the event banners keep clear of its 260px. Verified:
+  `src/ui/a11y.test.ts` reads the rules and fails on the old CSS; the
+  render check opens the journal by its tab at 740x360 and measures the
+  title inside the panel and on the screen and a banner clear of it,
+  failing on the old build (the title at 330-350, the panel ending at
+  344) and passing on the new; gates green (847 tests).
 - The player-defect sweep, round thirty-four (2026-10-17; the overlays on
   short screens). Round thirty-three laid out the HUD under 500px tall;
   this round took the title, the dialogue and the lock panel to the same

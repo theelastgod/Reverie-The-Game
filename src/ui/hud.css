@@ -1076,7 +1076,12 @@ canvas { display: block; }
 @media (max-height: 500px) and (min-width: 601px) and (max-width: 1100px) {
   .journal { width: 130px; max-height: calc(100vh - var(--below-top) - 108px - 16px); }
   .journal-tab { font-size: 10px; padding: 6px 8px; }
-  .journal.open { width: 260px; }
+  /* Open, it takes the height under the top chips over the minimap, as a phone held upright has it, and drops the
+     district's plate, which took most of the 140px left below the minimap and pushed the objective out of sight
+     (round thirty-five). */
+  .journal.open { top: var(--below-top); width: 260px; max-height: calc(100vh - var(--below-top) - 16px); }
+  .journal.open .journal-plate, .journal.open .journal-loop { display: none; }
+  #hud:has(#hud-journal.open) #hud-events { right: calc(var(--gutter) + 260px + 8px); }
   .chip-connection { bottom: auto; top: calc(var(--below-top) + 108px + 40px); }
 }
 
