@@ -35,76 +35,78 @@ const executablePath = process.env.RENDER_CHROMIUM || findChromium();
 console.log(`chromium: ${executablePath ?? '(playwright default)'}`);
 const browser = await chromium.launch({ executablePath, headless: true, args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
 const failures = [];
-// Every element on the page honours the hidden attribute (round thirty-seven): a class that sets display beats the UA's
-// [hidden] rule unless the stylesheet re-asserts it, which is how a deployed title kept its local test row (round
-// thirty-six). Each element is hidden for the measure and put back; the Phaser canvas sets its own display and is
-// never hidden by the game.
-// Text contrast against WCAG AA (round thirty-nine): 4.5:1, or 3:1 for large text (24px, or 18.66px bold). The
-// background is the first opaque one up the tree, translucent layers blended over it; text with nothing opaque behind it
-// stands over the world (the canvas) and is not judged here. Returns the failures, one per class and colour.
-const lowContrast = () => {
-  const parse = c => { const m = c.match(/rgba?\(([^)]+)\)/); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
-  const lum = ({ r, g, b }) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
-  const blend = (fg, bg) => ({ r: fg.r * fg.a + bg.r * (1 - fg.a), g: fg.g * fg.a + bg.g * (1 - fg.a), b: fg.b * fg.a + bg.b * (1 - fg.a), a: 1 });
-  const bgOf = e => {
-    const layers = [];
-    for (let x = e; x; x = x.parentElement) {
-      const c = parse(getComputedStyle(x).backgroundColor);
-      if (c && c.a > 0) { layers.push(c); if (c.a >= 1) break; }
-      if ((x.tagName === 'BODY' || x.id === 'hud') && (!layers.length || layers[layers.length - 1].a < 1)) return null;
-    }
-    let bg = { r: 255, g: 255, b: 255, a: 1 };
-    for (const l of layers.reverse()) bg = blend(l, bg);
-    return bg;
-  };
+// The page audits, one function run in the browser so the four share their helpers (page.evaluate sends a function's own
+// source and nothing it closes over). `kind` picks the audit, `scope` limits it to a subtree, `reveal` names panels to
+// show for the measure (each put back after). The audits:
+//  hidden (round thirty-seven): every element honours the hidden attribute. A class that sets display beats the UA's
+//    [hidden] rule unless the stylesheet re-asserts it, which is how a deployed title kept its local test row (round
+//    thirty-six). The Phaser canvas sets its own display and the game never hides it.
+//  contrast (round thirty-nine): text against WCAG AA, 4.5:1 or 3:1 for large text (24px, or 18.66px bold), against the
+//    first opaque background up the tree with translucent layers blended over it. Text over the world (nothing opaque
+//    behind it) or over a background image is not judged; the element's and its ancestors' opacity scale its colour.
+//  rings (round forty): every control, focused after a key press so :focus-visible applies, shows an outline of 2px+.
+//  targets (round forty-one): every control is 24px or more each way (WCAG 2.5.8).
+const audit = ({ kind, scope = 'body', reveal = [] }) => {
+  const CONTROLS = ':is(button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"]))';
+  const label = e => (e.id ? '#' + e.id : e.tagName.toLowerCase()) + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/)[0] : '');
+  const shown = e => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
+  const opened = reveal.map(s => document.querySelector(s)).filter(Boolean).map(e => [e, e.hidden]);
+  for (const [e] of opened) e.hidden = false;
   const out = new Set();
-  for (const e of document.querySelectorAll('body *')) {
-    if (!e.getClientRects().length) continue;
-    const cs = getComputedStyle(e);
-    if (cs.visibility === 'hidden' || +cs.opacity === 0) continue;
-    if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
-    const bg = bgOf(e);
-    if (!bg) continue;
-    const fg = blend(parse(cs.color), bg), size = parseFloat(cs.fontSize);
-    const ratio = (Math.max(lum(fg), lum(bg)) + 0.05) / (Math.min(lum(fg), lum(bg)) + 0.05);
-    const need = size >= 24 || (+cs.fontWeight >= 700 && size >= 18.66) ? 3 : 4.5;
-    if (ratio < need) out.add(`${e.id ? '#' + e.id : e.tagName.toLowerCase()}${typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/)[0] : ''} ${ratio.toFixed(2)}:1`);
+  try {
+    if (kind === 'hidden') {
+      for (const e of document.querySelectorAll(`${scope} *`)) {
+        if (!(e instanceof HTMLElement) || ['SCRIPT', 'STYLE', 'TEMPLATE', 'CANVAS'].includes(e.tagName)) continue;
+        const was = e.hidden;
+        e.hidden = true;
+        if (getComputedStyle(e).display !== 'none') out.add(label(e));
+        e.hidden = was;
+      }
+    } else if (kind === 'contrast') {
+      const parse = c => { const m = c.match(/^rgba?\(([^)]+)\)$/); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
+      const lum = ({ r, g, b }) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+      const blend = (fg, bg) => ({ r: fg.r * fg.a + bg.r * (1 - fg.a), g: fg.g * fg.a + bg.g * (1 - fg.a), b: fg.b * fg.a + bg.b * (1 - fg.a), a: 1 });
+      const bgOf = e => {
+        const layers = [];
+        for (let x = e; x; x = x.parentElement) {
+          const cs = getComputedStyle(x);
+          if (cs.backgroundImage !== 'none') return null;
+          const c = parse(cs.backgroundColor);
+          if (c && c.a > 0) { layers.push(c); if (c.a >= 1) break; }
+          if ((x.tagName === 'BODY' || x.id === 'hud') && (!layers.length || layers[layers.length - 1].a < 1)) return null;
+        }
+        let bg = { r: 255, g: 255, b: 255, a: 1 };
+        for (const l of layers.reverse()) bg = blend(l, bg);
+        return bg;
+      };
+      const opacityOf = e => { let o = 1; for (let x = e; x; x = x.parentElement) o *= +getComputedStyle(x).opacity; return o; };
+      for (const e of document.querySelectorAll(`${scope} *`)) {
+        if (!shown(e) || ![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+        const cs = getComputedStyle(e), op = opacityOf(e), fg = parse(cs.color), bg = bgOf(e);
+        if (op === 0 || !fg || !bg) continue;
+        const ink = blend({ ...fg, a: fg.a * op }, bg), size = parseFloat(cs.fontSize);
+        const ratio = (Math.max(lum(ink), lum(bg)) + 0.05) / (Math.min(lum(ink), lum(bg)) + 0.05);
+        const need = size >= 24 || (+cs.fontWeight >= 700 && size >= 18.66) ? 3 : 4.5;
+        if (ratio < need) out.add(`${label(e)} ${ratio.toFixed(2)}:1`);
+      }
+    } else if (kind === 'rings' || kind === 'targets') {
+      for (const e of document.querySelectorAll(`${scope} ${CONTROLS}`)) {
+        if (!shown(e) || e.disabled) continue;
+        if (kind === 'targets') {
+          const r = e.getBoundingClientRect();
+          if (r.width < 24 || r.height < 24) out.add(`${label(e)} "${(e.getAttribute('aria-label') || e.textContent || '').trim().slice(0, 16)}" ${Math.round(r.width)}x${Math.round(r.height)}`);
+          continue;
+        }
+        e.focus({ preventScroll: true });
+        const cs = getComputedStyle(e);
+        if (document.activeElement === e && !(e.matches(':focus-visible') && cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2)) out.add(label(e));
+        e.blur();
+      }
+    }
+  } finally {
+    for (const [e, was] of opened) e.hidden = was;
   }
   return [...out];
-};
-// Every control shows a focus ring when the keyboard reaches it (round forty): each shown control is focused after a
-// key press (so Chromium's :focus-visible applies) and needs an outline of at least 2px. Names the ones without.
-const ringless = (scope) => {
-  const out = [];
-  for (const e of document.querySelectorAll(`${scope} :is(button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"]))`)) {
-    if (!e.getClientRects().length || e.disabled || getComputedStyle(e).visibility === 'hidden') continue;
-    e.focus({ preventScroll: true });
-    const cs = getComputedStyle(e);
-    if (document.activeElement === e && !(e.matches(':focus-visible') && cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2)) out.push(e.id ? '#' + e.id : e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/)[0] : ''));
-    e.blur();
-  }
-  return [...new Set(out)];
-};
-// Every control is at least 24px on each side (WCAG 2.5.8's target size; round forty-one): names the smaller ones.
-const smallTargets = (scope) => {
-  const out = [];
-  for (const e of document.querySelectorAll(`${scope} :is(button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"]))`)) {
-    if (!e.getClientRects().length || e.disabled || getComputedStyle(e).visibility === 'hidden') continue;
-    const r = e.getBoundingClientRect();
-    if (r.width < 24 || r.height < 24) out.push(`${e.id ? '#' + e.id : e.tagName.toLowerCase()} "${(e.getAttribute('aria-label') || e.textContent || '').trim().slice(0, 16)}" ${Math.round(r.width)}x${Math.round(r.height)}`);
-  }
-  return out;
-};
-const ignoresHidden = () => {
-  const out = [];
-  for (const e of document.querySelectorAll('body *')) {
-    if (['SCRIPT', 'STYLE', 'TEMPLATE', 'CANVAS'].includes(e.tagName)) continue;
-    const was = e.hidden;
-    e.hidden = true;
-    if (getComputedStyle(e).display !== 'none') out.push((e.id ? '#' + e.id : e.tagName.toLowerCase()) + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/).join('.') : ''));
-    e.hidden = was;
-  }
-  return [...new Set(out)];
 };
 try {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
@@ -126,7 +128,7 @@ try {
     if (route?.ok && !Array.isArray(route.events)) failures.push('the log route answered without an events array');
     await page.screenshot({ path: join(shots, '00-landing.png'), fullPage: true });
     console.log(`landing: ${shown} log line(s) shown; the route has ${route ? written : 'no answer'}`);
-    const tiny = await page.evaluate(smallTargets, 'body');
+    const tiny = await page.evaluate(audit, { kind: 'targets' });
     failures.push(...tiny.map(e => `landing: ${e} is under 24px`));
     console.log(`targets on the landing page: ${tiny.length ? tiny.join(', ') + ' under 24px' : 'every link 24px or more'}`);
     if (written > 0 && shown === 0) failures.push('the city log has lines but the landing page shows none');
@@ -172,23 +174,23 @@ try {
   }
 
   {
-    const loose = await page.evaluate(ignoresHidden);
+    const loose = await page.evaluate(audit, { kind: 'hidden' });
     failures.push(...loose.map(e => `title: ${e} shows with hidden set`));
     console.log(`hidden on the title: ${loose.length ? loose.join(', ') + ' ignore it' : 'every element honours it'}`);
   }
   {
-    const dim = await page.evaluate(lowContrast);
+    const dim = await page.evaluate(audit, { kind: 'contrast' });
     failures.push(...dim.map(e => `title contrast: ${e}`));
     console.log(`contrast on the title: ${dim.length ? dim.join(', ') + ' below AA' : 'every line at AA or better'}`);
   }
   {
     await page.keyboard.press('Shift');
-    const bare = await page.evaluate(ringless, '#title');
+    const bare = await page.evaluate(audit, { kind: 'rings', scope: '#title' });
     failures.push(...bare.map(e => `title: ${e} has no focus ring`));
     console.log(`focus rings on the title: ${bare.length ? bare.join(', ') + ' without one' : 'every control has one'}`);
   }
   {
-    const tiny = await page.evaluate(smallTargets, '#title');
+    const tiny = await page.evaluate(audit, { kind: 'targets', scope: '#title' });
     failures.push(...tiny.map(e => `title: ${e} is under 24px`));
     console.log(`targets on the title: ${tiny.length ? tiny.join(', ') + ' under 24px' : 'every control 24px or more'}`);
   }
@@ -239,30 +241,28 @@ try {
   // And short (round thirty-three: a phone on its side, a laptop at 200%): the reach keeps off the minimap, the wink and
   // the bars, and every verb chip stays on the screen.
   {
-    const loose = await page.evaluate(ignoresHidden);
+    const loose = await page.evaluate(audit, { kind: 'hidden' });
     failures.push(...loose.map(e => `hud: ${e} shows with hidden set`));
     console.log(`hidden in the HUD: ${loose.length ? loose.join(', ') + ' ignore it' : 'every element honours it'}`);
   }
   {
-    const dim = await page.evaluate(lowContrast);
-    const credits = await page.evaluate((src) => {
-      const c = document.querySelector('#hud-credits'); if (!c) return ['#hud-credits is missing'];
-      const was = c.hidden; c.hidden = false;
-      const out = eval(src)();
-      c.hidden = was;
-      return out;
-    }, '(' + lowContrast.toString() + ')');
-    failures.push(...dim.map(e => `hud contrast: ${e}`), ...credits.map(e => `credits contrast: ${e}`));
-    console.log(`contrast in the HUD and the credits: ${dim.length + credits.length ? [...dim, ...credits].join(', ') + ' below AA' : 'every line at AA or better'}`);
+    // The HUD as it stands, then each panel the game can raise over it, shown one at a time for the measure: the lock
+    // with its local test row (round forty-two: its SERIAL label shares the title's class on a paper ground), the
+    // dialogue, the ledger and the credits.
+    const passes = [['the HUD', []], ['the lock', ['#hud-lock', '#hud-lock .lock-test']], ['the dialogue', ['#hud-dialogue']], ['the ledger', ['#hud-ledger-panel']], ['the credits', ['#hud-credits']]];
+    const dim = [];
+    for (const [name, reveal] of passes) dim.push(...(await page.evaluate(audit, { kind: 'contrast', reveal })).map(e => `${name}: ${e}`));
+    failures.push(...dim.map(e => `contrast: ${e}`));
+    console.log(`contrast in the HUD and its panels: ${dim.length ? dim.join(', ') + ' below AA' : 'every line at AA or better'}`);
   }
   {
     await page.keyboard.press('Shift');
-    const bare = await page.evaluate(ringless, '#hud');
+    const bare = await page.evaluate(audit, { kind: 'rings', scope: '#hud' });
     failures.push(...bare.map(e => `hud: ${e} has no focus ring`));
     console.log(`focus rings in the HUD: ${bare.length ? bare.join(', ') + ' without one' : 'every control has one'}`);
   }
   {
-    const tiny = await page.evaluate(smallTargets, '#hud');
+    const tiny = await page.evaluate(audit, { kind: 'targets', scope: '#hud' });
     failures.push(...tiny.map(e => `hud: ${e} is under 24px`));
     console.log(`targets in the HUD: ${tiny.length ? tiny.join(', ') + ' under 24px' : 'every control 24px or more'}`);
   }

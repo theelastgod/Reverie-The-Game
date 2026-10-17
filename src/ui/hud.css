@@ -184,8 +184,9 @@ canvas { display: block; }
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: var(--muted-on-void);
+  color: var(--muted);
 }
+#title .title-serial-label { color: var(--muted-on-void); } /* the title's on the void; the lock's (same class) stays on paper at #5a5a5a (round forty-two) */
 
 /* ------------------------------------------------------------ title */
 

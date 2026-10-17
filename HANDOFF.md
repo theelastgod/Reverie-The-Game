@@ -2998,6 +2998,29 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- Review of rounds thirty-seven to forty-one (2026-10-17, round
+  forty-two; code review at medium over df181e5^..d5717b4). Ten findings,
+  each checked against the code; fixed:
+  (1) a regression from round thirty-nine: `.title-serial-label` is also
+  the lock panel's SERIAL label, which sits on paper, so the void's
+  lighter grey left it at 3.45:1. The void grey is now scoped to
+  `#title .title-serial-label`; the lock's keeps `#5a5a5a`;
+  (2) the contrast audit only saw what was on the screen and missed it:
+  it now measures the HUD and then each panel the game can raise (the
+  lock with its test row, the dialogue, the ledger, the credits), shown
+  one at a time, and names the lock label at 3.45:1 on the old CSS;
+  (3) the unit test asserted the shared class took the void grey, which
+  protected the regression; it now asserts the scoped rule and the base;
+  (4) contrast now scales the text's colour by its own and its ancestors'
+  opacity and skips text under an invisible parent; (5) a computed colour
+  that is not rgb() is skipped instead of throwing; (6) text over a
+  background image is not judged; (7) the hidden audit skips SVG and
+  MathML elements, where `hidden` is not a property; (8)-(10) the four
+  audits are one `audit({ kind, scope, reveal })` run in the browser with
+  shared helpers (one label, one control selector), the credits pass no
+  longer goes through `eval`, and each audit's note sits on it. Verified:
+  gates green (851 tests); the render check passes on the fix and fails
+  on the committed CSS with the lock label named.
 - The player-defect sweep, round forty-one (2026-10-17; target size and
   page metadata). Every control on the landing page, the title, the HUD,
   the lock and a dialogue measured against WCAG 2.5.8's 24px target, at

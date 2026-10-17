@@ -147,7 +147,11 @@ describe("the HUD's stacking", () => {
   it("sets the small grey text on the void at AA contrast (round thirty-nine)", () => {
     // #5a5a5a on #0a0a0a read 2.87:1 for the title's guest line and the credits' way back; the void's grey is lighter.
     expect(css).toMatch(/--muted-on-void: #8a8a8a;/);
-    for (const sel of [".title-serial-label", ".title-temp", ".title-fine", ".title-foot", ".credits-hint"]) {
+    // The serial label's class is shared with the lock panel, which is paper: only the title's copy takes the void grey
+    // (round forty-two; the render check measures both).
+    expect(css).toMatch(/\n#title \.title-serial-label \{ color: var\(--muted-on-void\); \}/);
+    expect(css.match(/\n\.title-serial-label \{([^}]*)\}/)![1]).toMatch(/color: var\(--muted\);/);
+    for (const sel of [".title-temp", ".title-fine", ".title-foot", ".credits-hint"]) {
       const rule = css.match(new RegExp(`\\n\\${sel} \\{([^}]*)\\}`));
       expect(rule, sel).not.toBeNull();
       expect(rule![1], sel).toMatch(/color: var\(--muted-on-void\);/);
