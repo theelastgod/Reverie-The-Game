@@ -16,6 +16,9 @@ export function formatSerial(serial: number | null | undefined): string {
   return "#" + String(Math.floor(serial)).padStart(4, "0");
 }
 
+/** What a refused serial is told, in words (round fifty): the field's colour alone said nothing to a screen reader. */
+export const SERIAL_RANGE_LINE = `A serial is a whole number from 1 to ${ANGEL_SUPPLY.toLocaleString("en-US")}.`;
+
 /** Parses a serial typed into an input; null when it is not 1..ANGEL_SUPPLY. */
 export function parseSerial(raw: string | number | null | undefined): number | null {
   if (raw === null || raw === undefined) return null;

@@ -3,7 +3,7 @@
  * Click or any key enters the city. "LINK A TEST ANGEL" pre-selects a serial
  * that the client sends once it is connected.
  */
-import { parseSerial, TEST_SERIAL } from "./format";
+import { parseSerial, SERIAL_RANGE_LINE, TEST_SERIAL } from "./format";
 
 let preselected: number | null = null;
 let mounted = false;
@@ -38,6 +38,13 @@ export function mountTitle(onEnter: () => void): void {
   const testLink = title.querySelector<HTMLElement>(".title-link");
   if (testLink && !isLocalCity()) testLink.hidden = true;
   const serialInput = title.querySelector<HTMLInputElement>("#title-serial");
+  const serialError = title.querySelector<HTMLElement>("#title-serial-error");
+  // A refused serial is said in words and marked invalid, not only drawn in a colour (round fifty).
+  const markSerial = (bad: boolean) => {
+    serialInput?.classList.toggle("invalid", bad);
+    if (bad) serialInput?.setAttribute("aria-invalid", "true"); else serialInput?.removeAttribute("aria-invalid");
+    if (serialError) { serialError.textContent = bad ? SERIAL_RANGE_LINE : ""; serialError.hidden = !bad; }
+  };
 
   let entered = false;
   const enter = (serial: number | null) => {
@@ -53,7 +60,7 @@ export function mountTitle(onEnter: () => void): void {
   const readSerial = (): number | null => {
     const n = parseSerial(serialInput?.value ?? "");
     if (n === null) {
-      serialInput?.classList.add("invalid");
+      markSerial(true);
       serialInput?.focus();
       return null;
     }
@@ -66,7 +73,7 @@ export function mountTitle(onEnter: () => void): void {
     enter(n);
   };
 
-  serialInput?.addEventListener("input", () => serialInput.classList.remove("invalid"));
+  serialInput?.addEventListener("input", () => markSerial(false));
   if (serialInput && !serialInput.value) serialInput.value = String(TEST_SERIAL);
   // The way in has focus from the start: a screen reader lands on the title's dialog and its button, and one
   // Enter enters (any key would, but the button is what the page says).

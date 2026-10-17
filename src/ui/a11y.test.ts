@@ -4,6 +4,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { SERIAL_RANGE_LINE } from "./format";
 
 const html = readFileSync(resolve(__dirname, "../../index.html"), "utf8");
 const css = readFileSync(resolve(__dirname, "./hud.css"), "utf8");
@@ -207,5 +208,13 @@ describe("the HUD's stacking", () => {
     const forced = css.match(/@media \(forced-colors: active\) \{([\s\S]*?)\n\}/);
     expect(forced).not.toBeNull();
     expect(forced![1]).toMatch(/\.bar-fill \{ forced-color-adjust: none; background: CanvasText !important; \}/);
+  });
+
+  it("says a refused serial in words on the title and the lock (round fifty)", () => {
+    expect(SERIAL_RANGE_LINE).toBe("A serial is a whole number from 1 to 7,777.");
+    expect(html).toMatch(/<input id="title-serial"[^>]*aria-describedby="title-serial-error"/);
+    expect(html).toMatch(/<p id="title-serial-error" class="serial-error" role="alert" hidden><\/p>/);
+    expect(html).toMatch(/<input id="lock-serial"[^>]*aria-describedby="lock-note"/);
+    expect(html).toMatch(/<p id="lock-note" class="lock-note" aria-live="polite" hidden><\/p>/);
   });
 });

@@ -302,6 +302,7 @@ canvas { display: block; }
   gap: 8px;
 }
 .title-link .serial-input { box-shadow: 4px 4px 0 var(--champagne); }
+.serial-error { margin: 0; font-size: 12px; letter-spacing: 0.04em; color: var(--paper); } /* a refused serial, in words */
 .title-fine {
   margin: 24px 0 0;
   font-size: 10px;

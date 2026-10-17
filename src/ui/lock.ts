@@ -6,7 +6,7 @@
  * The panel takes focus when it appears (a dialog named by its heading; Tab
  * reaches the wallet button) and gives it back when it goes, see ./focus.ts.
  */
-import { formatSerial, parseSerial, TEST_SERIAL } from "./format";
+import { formatSerial, parseSerial, SERIAL_RANGE_LINE, TEST_SERIAL } from "./format";
 import { focusKeeper } from "./focus";
 import { walletLine, type WalletOutcome } from "../net/wallet";
 import { loopFor } from "../assets/slots";
@@ -44,14 +44,20 @@ export function mountLock(root: HTMLElement, onLink: (serial: number) => void, o
   const syncLabel = () => {
     if (!linkBtn) return;
     const n = parseSerial(input?.value ?? "");
-    input?.classList.toggle("invalid", n === null && (input?.value ?? "") !== "");
+    const bad = n === null && (input?.value ?? "") !== "";
+    input?.classList.toggle("invalid", bad);
+    if (bad) input?.setAttribute("aria-invalid", "true"); else input?.removeAttribute("aria-invalid");
+    if (!bad && note?.textContent === SERIAL_RANGE_LINE) say("");
     linkBtn.textContent = `LINK TEST ANGEL ${formatSerial(n ?? TEST_SERIAL)}`;
   };
 
   const link = () => {
     const n = parseSerial(input?.value ?? "");
     if (n === null) {
+      // In words as well as the field's colour (round fifty), on the panel's live note.
       input?.classList.add("invalid");
+      input?.setAttribute("aria-invalid", "true");
+      say(SERIAL_RANGE_LINE);
       input?.focus();
       return;
     }

@@ -201,6 +201,26 @@ try {
     console.log(`targets on the title: ${tiny.length ? tiny.join(', ') + ' under 24px' : 'every control 24px or more'}`);
   }
 
+  // A refused serial is said in words (round fifty): the field is marked invalid, described by a line that names the
+  // range, and the line goes once the field is edited. Skipped where the test row is hidden (a deployed city).
+  if (await page.locator('#title-serial').isVisible()) {
+    await page.fill('#title-serial', '0');
+    await page.click('#title-link');
+    const refused = await page.evaluate(() => {
+      const f = document.getElementById('title-serial'), e = document.getElementById('title-serial-error');
+      return { invalid: f?.getAttribute('aria-invalid'), described: f?.getAttribute('aria-describedby'), line: e && !e.hidden ? e.textContent : '', role: e?.getAttribute('role'), stillTitle: !document.getElementById('title')?.hidden };
+    });
+    await page.fill('#title-serial', '7777');
+    const cleared = await page.evaluate(() => ({ invalid: document.getElementById('title-serial')?.getAttribute('aria-invalid'), hidden: document.getElementById('title-serial-error')?.hidden }));
+    const wrong = [];
+    if (!refused.stillTitle) wrong.push('a refused serial entered the city');
+    if (refused.invalid !== 'true') wrong.push('the field is not marked aria-invalid');
+    if (refused.described !== 'title-serial-error' || refused.role !== 'alert' || !/1 to 7,777/.test(refused.line ?? '')) wrong.push(`no line names the range ("${refused.line}")`);
+    if (cleared.invalid !== null || !cleared.hidden) wrong.push('the refusal stays after the field is edited');
+    failures.push(...wrong.map(w => `title serial: ${w}`));
+    console.log(`a refused serial on the title: ${wrong.length ? wrong.join('; ') : `said in words ("${refused.line}"), marked invalid, cleared on edit`}`);
+  }
+
   // Enter the city: the title's primary button, else any key.
   const enter = page.locator('#title button', { hasText: /enter/i }).first();
   if (await enter.count()) await enter.click(); else await page.keyboard.press('Enter');

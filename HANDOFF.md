@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 858 tests (2026-10-17), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 859 tests (2026-10-17), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  forty-nine on 2026-10-17 (see Done). Since round forty-four a test holds
+  fifty on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,20 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round fifty (2026-10-17; input errors,
+  WCAG 3.3.1). The two serial fields (the title's test row and the lock
+  panel's) refused a serial outside 1-7,777 by turning the field's
+  border hot pink and nothing else: no words, no `aria-invalid`, so a
+  screen reader heard nothing and the colour carried the whole meaning.
+  Fixed: one line, `SERIAL_RANGE_LINE` ("A serial is a whole number
+  from 1 to 7,777.", format.ts), said on the title in an alert under
+  the field and on the lock panel's live note; both fields are marked
+  `aria-invalid` and described by that line, and the mark and the line
+  go when the field holds a serial again. Proven: the render check's new
+  title step fails on the old build (not marked invalid, no line) and
+  passes on the fix; a probe of the lock panel (9999, then 42) reads the
+  mark, the note and the focus, then the clean field. a11y.test.ts
+  holds the line and the markup. 859 tests.
 - The player-defect sweep, round forty-nine (2026-10-17; forced
   colours, Windows High Contrast). The landing page, the title and the
   HUD under `forced-colors: active` in a dark and a light theme. Text,
