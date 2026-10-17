@@ -72,6 +72,19 @@ const lowContrast = () => {
   }
   return [...out];
 };
+// Every control shows a focus ring when the keyboard reaches it (round forty): each shown control is focused after a
+// key press (so Chromium's :focus-visible applies) and needs an outline of at least 2px. Names the ones without.
+const ringless = (scope) => {
+  const out = [];
+  for (const e of document.querySelectorAll(`${scope} :is(button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"]))`)) {
+    if (!e.getClientRects().length || e.disabled || getComputedStyle(e).visibility === 'hidden') continue;
+    e.focus({ preventScroll: true });
+    const cs = getComputedStyle(e);
+    if (document.activeElement === e && !(e.matches(':focus-visible') && cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2)) out.push(e.id ? '#' + e.id : e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/)[0] : ''));
+    e.blur();
+  }
+  return [...new Set(out)];
+};
 const ignoresHidden = () => {
   const out = [];
   for (const e of document.querySelectorAll('body *')) {
@@ -155,6 +168,12 @@ try {
     failures.push(...dim.map(e => `title contrast: ${e}`));
     console.log(`contrast on the title: ${dim.length ? dim.join(', ') + ' below AA' : 'every line at AA or better'}`);
   }
+  {
+    await page.keyboard.press('Shift');
+    const bare = await page.evaluate(ringless, '#title');
+    failures.push(...bare.map(e => `title: ${e} has no focus ring`));
+    console.log(`focus rings on the title: ${bare.length ? bare.join(', ') + ' without one' : 'every control has one'}`);
+  }
 
   // Enter the city: the title's primary button, else any key.
   const enter = page.locator('#title button', { hasText: /enter/i }).first();
@@ -217,6 +236,12 @@ try {
     }, '(' + lowContrast.toString() + ')');
     failures.push(...dim.map(e => `hud contrast: ${e}`), ...credits.map(e => `credits contrast: ${e}`));
     console.log(`contrast in the HUD and the credits: ${dim.length + credits.length ? [...dim, ...credits].join(', ') + ' below AA' : 'every line at AA or better'}`);
+  }
+  {
+    await page.keyboard.press('Shift');
+    const bare = await page.evaluate(ringless, '#hud');
+    failures.push(...bare.map(e => `hud: ${e} has no focus ring`));
+    console.log(`focus rings in the HUD: ${bare.length ? bare.join(', ') + ' without one' : 'every control has one'}`);
   }
   const before = page.viewportSize();
   const crowd = [];

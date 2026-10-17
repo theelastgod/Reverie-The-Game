@@ -2998,6 +2998,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round forty (2026-10-17; names and focus
+  rings). Every control on the landing page, the title, the HUD, the
+  lock, a dialogue and the credits read from Chromium's accessibility tree
+  for a name, and focused after a key press for a visible ring. Every
+  control is named; every game control shows its 3px acid ring under
+  :focus-visible; the landing page's links keep the browser's own ring
+  (visible, so not a defect). Nothing to fix. Kept as a guard: the render
+  check focuses every control on the title and in the HUD and fails on
+  any without an outline of 2px or more, naming the title's two buttons
+  and the HUD's stance and dodge chips when the `.btn` and `.chip-btn`
+  focus rules are dropped, and passing with them back; gates green.
 - The player-defect sweep, round thirty-nine (2026-10-17; text contrast).
   Every line of text on the landing page, the title and the HUD (crowded,
   with the ledger, the lock and a dialogue open, and the credits shown)
