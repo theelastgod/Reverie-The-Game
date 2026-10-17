@@ -2998,6 +2998,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The Deploy workflow's check mode on GitHub's runner again (2026-10-17,
+  round thirty-eight): eight commits of HUD CSS, tests and render-check
+  steps since round thirty's run, so the secretless check (npm ci, the
+  gates, the client build and stage, the wrangler dry-run bundle) was
+  dispatched on the branch head: run 39001077951 at df181e5, success.
 - The player-defect sweep, round thirty-seven (2026-10-17; the hidden
   attribute everywhere). Round thirty-six's title bug was one case of a
   class: a rule that sets `display` beats the browser's `[hidden]` unless
