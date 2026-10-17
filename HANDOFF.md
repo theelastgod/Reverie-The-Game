@@ -4,20 +4,20 @@ State of the rebuild. Read `DESIGN.md` first, then `.rebuild/CONTRACTS.md`
 (shared-sim signatures) and `.rebuild/CLIENT.md` (client contract). The master
 brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
-## Where things stand (2026-10-04)
+## Where things stand (2026-10-17)
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 732 tests (2026-10-05), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 855 tests (2026-10-17), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
-  (`wrangler deploy --dry-run`: 558 KB, 147 KB gzipped, 94 site files, the
+  (`wrangler deploy --dry-run`: 684 KB, 183 KB gzipped, the
   bindings WORLD, LOG, ASSETS and the `ANGEL_*` variables empty). The server
   since the 26th: a message and join budget, an hourly sweep of stale guest
   bodies, a world record without bodies and body records written only when
   they change, each reviewed and security-reviewed (see Done). The dev
-  tools are current (vite 8.3, vitest 5, wrangler 4.147, TypeScript 7 and
+  tools are current (vite 8.3, vitest 5, wrangler 4.151, TypeScript 7 and
   Phaser 4.2 since 2026-10-02; `npm audit` reads 0 for production and dev
   dependencies alike and `npm outdated` lists nothing). Since 2026-10-01 every
   push runs the typecheck, the tests, the client build and a dry-run
@@ -36,7 +36,11 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   a third, run by hand, two, a fourth twenty-two, among them the
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
-  fourteen (see Done).
+  fourteen; the sweeps have run every round since, through round
+  forty-six on 2026-10-17 (see Done). Since round forty-four a test holds
+  the Worker's entry module to what workerd loads (functions and classes
+  only), and since round forty-six the render check's contrast audit
+  judges settled frames.
 - **A rule for after the first deploy** (from round five): a body's
   record keeps its place on the spine as a step index, so once this
   branch is deployed and real bodies are saved, never insert a step
@@ -2998,6 +3002,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The render check judges settled frames (2026-10-17, round forty-six).
+  The gates run on GitHub for 90a2744 failed in the live job with
+  `contrast: the dialogue: div.notice 3.28:1`: a notice that had just
+  arrived was measured part way through its fade-in, a frame no reader
+  dwells on. The contrast audit now finishes every finite animation
+  before it measures (infinite ones, the pulses, are left as they are),
+  and the check adds a fresh notice before the contrast passes with its
+  fade held at 40 ms, so every run meets the case the runner met. Proven:
+  the audit without the finish reports that notice at 2.54:1 in all five
+  passes; with it, every line at AA or better and the whole check passes.
+  The routine now reads the push-triggered gates run of each round's
+  commit, not only the dispatched check.
 - After the server change, on GitHub's runner and under the fuzzer
   (2026-10-17, round forty-five). The Deploy workflow's check mode at
   d397ff5 (the wallet body bound and the entry-module test): run

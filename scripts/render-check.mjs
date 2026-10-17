@@ -63,6 +63,12 @@ const audit = ({ kind, scope = 'body', reveal = [] }) => {
         e.hidden = was;
       }
     } else if (kind === 'contrast') {
+      // Judge what the screen settles on: a notice fading in (160 ms) or a line fading out measured mid-way read as low
+      // contrast by chance and failed a run on GitHub's runner (round forty-six). Finite animations and transitions are
+      // finished first; endless ones (the marquee) run on, and none of them change a colour.
+      for (const a of document.getAnimations()) {
+        try { if (a.effect?.getComputedTiming().iterations !== Infinity) a.finish(); } catch { /* one that cannot finish runs on */ }
+      }
       const parse = c => { const m = c.match(/^rgba?\(([^)]+)\)$/); if (!m) return null; const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; };
       const lum = ({ r, g, b }) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
       const blend = (fg, bg) => ({ r: fg.r * fg.a + bg.r * (1 - fg.a), g: fg.g * fg.a + bg.g * (1 - fg.a), b: fg.b * fg.a + bg.b * (1 - fg.a), a: 1 });
@@ -250,8 +256,19 @@ try {
     // with its local test row (round forty-two: its SERIAL label shares the title's class on a paper ground), the
     // dialogue, the ledger and the credits.
     const passes = [['the HUD', []], ['the lock', ['#hud-lock', '#hud-lock .lock-test']], ['the dialogue', ['#hud-dialogue']], ['the ledger', ['#hud-ledger-panel']], ['the credits', ['#hud-credits']]];
+    // A notice arrives just before the measure, as one did on the runner, its fade-in held part way (where the runner
+    // caught one at 3.28:1), so the audit meets a fade in flight on every run and must judge it as it will settle.
+    await page.evaluate(() => {
+      const n = document.createElement('div');
+      n.className = 'notice ink';
+      n.id = 'render-check-notice';
+      n.textContent = 'A line that has only just arrived.';
+      document.querySelector('#hud-notices')?.append(n);
+      for (const a of n.getAnimations()) { a.pause(); a.currentTime = 40; }
+    });
     const dim = [];
     for (const [name, reveal] of passes) dim.push(...(await page.evaluate(audit, { kind: 'contrast', reveal })).map(e => `${name}: ${e}`));
+    await page.evaluate(() => document.querySelector('#render-check-notice')?.remove());
     failures.push(...dim.map(e => `contrast: ${e}`));
     console.log(`contrast in the HUD and its panels: ${dim.length ? dim.join(', ') + ' below AA' : 'every line at AA or better'}`);
   }
