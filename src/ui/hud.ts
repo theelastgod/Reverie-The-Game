@@ -114,6 +114,7 @@ export class Hud {
   private readonly credits: HTMLElement | null;
   private readonly creditsFocus: FocusKeeper;
   private readonly audioChip: HTMLButtonElement | null;
+  private readonly newsHold: HTMLButtonElement | null;
   private readonly loading: HTMLElement | null;
   private readonly loadingText: HTMLElement | null;
   private readonly loadingPct: HTMLElement | null;
@@ -241,6 +242,7 @@ export class Hud {
     }
     this.creditsFocus = focusKeeper(this.credits, root);
     this.audioChip = q(root, "#hud-audio");
+    this.newsHold = q(root, "#hud-news-hold");
     this.loading = q(root, "#hud-loading");
     this.loadingText = this.loading ? q(this.loading, ".chip-text") : null;
     this.loadingPct = this.loading ? q(this.loading, ".loading-pct") : null;
@@ -261,6 +263,7 @@ export class Hud {
     this.credits?.addEventListener("click", this.onCredits);
     this.credits?.addEventListener("keydown", this.onCreditsKey);
     this.audioChip?.addEventListener("click", this.onAudio);
+    this.newsHold?.addEventListener("click", this.onNewsHold);
     audio.onChange = () => this.syncAudio();
     this.syncAudio();
 
@@ -372,6 +375,7 @@ export class Hud {
     this.credits?.removeEventListener("click", this.onCredits);
     this.credits?.removeEventListener("keydown", this.onCreditsKey);
     this.audioChip?.removeEventListener("click", this.onAudio);
+    this.newsHold?.removeEventListener("click", this.onNewsHold);
     if (audio.onChange) audio.onChange = null;
     this.dialogue.destroy();
     this.journal.destroy();
@@ -428,6 +432,15 @@ export class Hud {
     this.onCredits();
   };
   private readonly onAudio = () => { audio.toggleMuted(); };
+  // The news runs without end; its tag holds it still and lets it run again (WCAG 2.2.2; round fifty-two). The hold
+  // stays across new lines, which replace the text but keep the class on the bar.
+  private readonly onNewsHold = () => {
+    if (!this.marquee || !this.newsHold) return;
+    const held = this.marquee.classList.toggle("held");
+    this.newsHold.setAttribute("aria-pressed", held ? "true" : "false");
+    this.newsHold.setAttribute("aria-label", held ? "Run the news" : "Hold the news");
+    setText(q(this.newsHold, ".marquee-hold"), held ? "▶" : "❚❚");
+  };
 
   /** The chip reads the bus: AUDIO ON 80, or AUDIO OFF. */
   private syncAudio(): void {

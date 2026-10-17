@@ -227,4 +227,10 @@ describe("the HUD's stacking", () => {
     expect(site).toMatch(/<html lang="en">/);
     expect(site.match(/<title>([^<]*)<\/title>/)?.[1]).not.toBe(html.match(/<title>([^<]*)<\/title>/)?.[1]);
   });
+
+  it("lets the news ticker be held (round fifty-two)", () => {
+    expect(html).toMatch(/<button id="hud-news-hold" class="marquee-tag interactive" type="button" aria-pressed="false" aria-label="Hold the news">/);
+    expect(css).toMatch(/\.marquee\.held \.marquee-text \{ animation-play-state: paused; \}/);
+    expect(css).toMatch(/\.marquee-tag:focus-visible \{ outline: 3px solid var\(--acid\);/);
+  });
 });

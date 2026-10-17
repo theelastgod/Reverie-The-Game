@@ -793,6 +793,10 @@ canvas { display: block; }
   letter-spacing: 0.18em;
   flex: none;
 }
+button.marquee-tag { gap: 8px; border-top: 0; border-bottom: 0; border-left: 0; font-family: inherit; cursor: pointer; }
+.marquee-tag:focus-visible { outline: 3px solid var(--acid); outline-offset: -6px; }
+.marquee-hold { font-size: 9px; letter-spacing: 0; }
+.marquee.held .marquee-text { animation-play-state: paused; }
 .marquee-track {
   position: relative;
   flex: 1;

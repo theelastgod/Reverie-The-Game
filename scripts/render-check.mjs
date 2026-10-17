@@ -309,6 +309,31 @@ try {
     console.log(`bars under forced colours: ${blank.length ? blank.join(', ') + ' read empty' : 'every filled bar shows its fill'}`);
   }
   {
+    // The news ticker runs without end; its tag holds it and runs it again (WCAG 2.2.2; round fifty-two). Shown for the
+    // measure if no news has come yet, and put back as it was.
+    const wasHidden = await page.evaluate(() => { const m = document.getElementById('hud-marquee'); const w = m.hidden; m.hidden = false; return w; });
+    const read = () => page.evaluate(() => ({
+      state: getComputedStyle(document.querySelector('#hud-marquee .marquee-text')).animationPlayState,
+      pressed: document.getElementById('hud-news-hold')?.getAttribute('aria-pressed'),
+      name: document.getElementById('hud-news-hold')?.getAttribute('aria-label'),
+    }));
+    const wrong = [];
+    if (!(await page.locator('#hud-news-hold').count())) wrong.push('the news has no hold control');
+    else {
+      const before = await read();
+      await page.click('#hud-news-hold');
+      const held = await read();
+      await page.click('#hud-news-hold');
+      const after = await read();
+      if (before.state !== 'running') wrong.push(`the news is ${before.state} before the hold`);
+      if (held.state !== 'paused' || held.pressed !== 'true') wrong.push(`the hold left the news ${held.state}, pressed ${held.pressed}`);
+      if (after.state !== 'running' || after.pressed !== 'false') wrong.push(`a second press left the news ${after.state}, pressed ${after.pressed}`);
+    }
+    await page.evaluate(w => { document.getElementById('hud-marquee').hidden = w; }, wasHidden);
+    failures.push(...wrong.map(w => `news hold: ${w}`));
+    console.log(`the news ticker: ${wrong.length ? wrong.join('; ') : 'held by its tag and run again'}`);
+  }
+  {
     await page.keyboard.press('Shift');
     const bare = await page.evaluate(audit, { kind: 'rings', scope: '#hud' });
     failures.push(...bare.map(e => `hud: ${e} has no focus ring`));

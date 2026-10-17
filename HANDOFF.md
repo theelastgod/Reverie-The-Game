@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 860 tests (2026-10-17), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 861 tests (2026-10-17), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty-one on 2026-10-17 (see Done). Since round forty-four a test holds
+  fifty-two on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round fifty-two (2026-10-17; moving content,
+  WCAG 2.2.2). The news ticker at the foot scrolls without end and only
+  the system's reduced-motion setting stopped it; a reader without that
+  setting had no way to hold a line still to read it. Fixed: the NEWS
+  tag is a button (`#hud-news-hold`, aria-pressed, "Hold the news" /
+  "Run the news", ❚❚ / ▶) that pauses the scroll in place and runs it
+  again; the hold outlasts new lines. It sits in the HUD's keyboard
+  reach like the other chips. Proven: the render check's new step fails
+  on the old build ("the news has no hold control") and passes on the
+  fix (running → paused, pressed → running); the HUD's focus-ring,
+  target and contrast audits pass with the new control. a11y.test.ts
+  holds the markup and the rules. Noted, not changed: each new news line
+  restarts the scroll from the right edge. 861 tests.
 - The player-defect sweep, round fifty-one (2026-10-17; labels that
   promise, and page titles). Round fifty's leftover: the lock panel's
   test-link button read "LINK TEST ANGEL #7777" over a refused field (it
