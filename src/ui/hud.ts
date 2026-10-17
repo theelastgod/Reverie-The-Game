@@ -160,6 +160,15 @@ export class Hud {
       };
       new ResizeObserver(below).observe(top);
     }
+    // And the bars' height (--bars-h): a phone stacks the prompt and the event banners on them, and the bars grow when a
+    // reader widens the text's spacing (round forty-seven), so they are measured, not assumed.
+    const bars = q(root, "#hud-bars");
+    if (bars && typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(() => {
+        const h = bars.getBoundingClientRect().height;
+        if (h > 0) root.style.setProperty("--bars-h", `${Math.ceil(h)}px`);
+      }).observe(bars);
+    }
 
     this.identity = q(root, "#hud-identity");
     this.identityText = this.identity ? q(this.identity, ".chip-text") : null;

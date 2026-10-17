@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 855 tests (2026-10-17), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 856 tests (2026-10-17), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  forty-six on 2026-10-17 (see Done). Since round forty-four a test holds
+  forty-seven on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round forty-seven (2026-10-17; a reader's
+  own text spacing, WCAG 1.4.12). Line height 1.5, letters 0.12em,
+  words 0.16em and paragraphs 2em were forced on the title and on the
+  HUD with each panel raised (the lock, the dialogue, the ledger, the
+  credits), at 1366x768, 1024x768, 844x390 and 390x844. Nothing clips
+  (the baseline's small overhangs are glyphs on headings whose overflow
+  stays visible, and the credits are a roll that scrolls). One defect: on
+  a phone held upright the prompt's foot (the reach) and the event
+  banners were stacked 136px above the bars' foot, a guess at the bars'
+  height; under the spacing the bars grow to about 154px and the reach
+  sat 18px over them. Fixed: the HUD measures the bars (a
+  ResizeObserver, as it measures the top chips for --below-top) into
+  `--bars-h`, default 136px, and the phone layout stacks on it. Proven:
+  the render check's new step (the phone under text spacing) fails on
+  the old layout ("the reach ends at 648, under the bars' top at 630")
+  and passes on the fix; a11y.test.ts holds the phone block to the
+  variable. 856 tests.
 - The render check judges settled frames (2026-10-17, round forty-six).
   The gates run on GitHub for 90a2744 failed in the live job with
   `contrast: the dialogue: div.notice 3.28:1`: a notice that had just

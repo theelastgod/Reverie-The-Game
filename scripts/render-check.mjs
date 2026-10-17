@@ -649,6 +649,24 @@ try {
     });
     await phone.screenshot({ path: join(shots, '06-phone-nave.png') });
     console.log(`phone: ${fit.off.length} element(s) off the screen, ${fit.stacked.length} stacked${fit.off.length ? `: ${fit.off.join('; ')}` : ''}${fit.stacked.length ? `: ${fit.stacked.join('; ')}` : ''}`);
+    // A reader's own text spacing (WCAG 1.4.12; round forty-seven): line height 1.5, letters 0.12em, words 0.16em. The
+    // bars grow under it, and the prompt and the event banners stacked on them must move up with them, not onto them.
+    {
+      const sheet = await phone.addStyleTag({ content: '* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }' });
+      await phone.waitForTimeout(200);
+      const crossed = await phone.evaluate(() => {
+        const box = s => document.querySelector(s)?.getBoundingClientRect();
+        const bars = box('#hud-bars'), reach = box('#hud-reach'), events = box('#hud-events');
+        const out = [];
+        if (bars && reach && reach.bottom > bars.top + 1) out.push(`the reach ends at ${Math.round(reach.bottom)}, under the bars' top at ${Math.round(bars.top)}`);
+        if (events && reach && events.height > 0 && events.bottom > reach.top + 1) out.push(`the events end at ${Math.round(events.bottom)}, under the reach's top at ${Math.round(reach.top)}`);
+        return out;
+      });
+      await sheet.evaluate(s => s.remove());
+      await phone.waitForTimeout(200);
+      failures.push(...crossed.map(c => `phone under text spacing: ${c}`));
+      console.log(`phone under text spacing: ${crossed.length ? crossed.join('; ') : 'the reach and the events stand above the bars'}`);
+    }
     // Under reduced motion: the page sees the query, the marquee's animation is off, and a strike and a dodge (the
     // canvas's fade-in-place branches) run without a script error, which the phone-only error check below catches.
     await phone.keyboard.press('Space');

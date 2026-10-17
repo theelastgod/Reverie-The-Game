@@ -333,7 +333,7 @@ canvas { display: block; }
 #hud[hidden] { display: none; }
 #hud .interactive { pointer-events: auto; }
 #hud [hidden] { display: none; }
-#hud { --below-top: 150px; } /* until hud.ts measures the top chips; the short and phone layouts read it */
+#hud { --below-top: 150px; --bars-h: 136px; } /* until hud.ts measures the top chips; the short and phone layouts read it */
 
 /* top chips */
 .hud-top {
@@ -1030,14 +1030,14 @@ canvas { display: block; }
   .journal { top: calc(var(--below-top) + 112px); width: 130px; max-height: calc(100vh - var(--below-top) - 112px - var(--marquee-h) - 220px); }
   .journal-tab { font-size: 10px; padding: 6px 8px; }
   .journal.open { top: var(--below-top); left: var(--gutter); right: var(--gutter); width: auto; max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 220px); }
-  .events { top: auto; left: var(--gutter); right: var(--gutter); bottom: calc(var(--marquee-h) + 16px + 44px + 136px + 56px + 56px); }
+  .events { top: auto; left: var(--gutter); right: var(--gutter); bottom: calc(var(--marquee-h) + 16px + 44px + var(--bars-h) + 56px + 56px); }
   .event { min-width: 0; max-width: calc(100vw - 32px); }
   .ledger-panel { top: var(--below-top); width: calc(100vw - 32px); max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 220px); }
   .bars { width: 200px; padding: 6px 10px 8px; gap: 4px; bottom: calc(var(--marquee-h) + 16px + 44px); }
   .hud-verbs { right: var(--gutter); flex-wrap: wrap; gap: 6px; }
   .hud-verbs .chip { min-height: 36px; padding: 0 8px; font-size: 10px; }
   #hud-stance .chip-hint, .chip-dodge { display: none; }
-  .reach { left: var(--gutter); right: var(--gutter); width: auto; bottom: calc(var(--marquee-h) + 16px + 44px + 136px); }
+  .reach { left: var(--gutter); right: var(--gutter); width: auto; bottom: calc(var(--marquee-h) + 16px + 44px + var(--bars-h)); }
   .heard { right: 0; max-width: none; }
   .dialogue { bottom: calc(var(--marquee-h) + 16px + 8px); }
 }
