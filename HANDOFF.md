@@ -2998,6 +2998,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round thirty-nine (2026-10-17; text contrast).
+  Every line of text on the landing page, the title and the HUD (crowded,
+  with the ledger, the lock and a dialogue open, and the credits shown)
+  measured against the background it sits on, by WCAG AA (4.5:1, 3:1 for
+  large text). The HUD and its panels pass throughout. The title did not:
+  the muted grey `#5a5a5a` that reads on the HUD's paper sat on the void at
+  2.87:1, for the guest line ("Guests play Movement I..."), the serial
+  label, the temperature line and the foot; and the credits' way back
+  ("CLICK OR PRESS ENTER TO RETURN TO THE CITY") the same. Fixed in
+  `src/ui/hud.css` with `--muted-on-void: #8a8a8a` (5.7:1) for those five.
+  Verified: `src/ui/a11y.test.ts` reads the rules; the render check now
+  measures the contrast of every line on the title, in the HUD and in the
+  credits and fails under AA, naming all five on the old build and passing
+  on the new; gates green (850 tests). The landing page's hot pink reads
+  3.6:1 and is left to the owner (Backlog 13).
 - The Deploy workflow's check mode on GitHub's runner again (2026-10-17,
   round thirty-eight): eight commits of HUD CSS, tests and render-check
   steps since round thirty's run, so the secretless check (npm ci, the
@@ -4668,6 +4683,14 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    (stance, kit, dodge, use, flag) would pass the edge; 667 fits.
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
+13. **The landing page's hot pink at AA (the owner's call).** Found by round
+   thirty-nine's contrast audit: white on `#ff2d6b` (the Play buttons) and
+   `#ff2d6b` on white (the section labels, the footer's Play) read 3.6:1,
+   under AA's 4.5:1 for text that size. It is the brand's colour, so the
+   routine has not changed it. Options: ink text on the pink fills (5.5:1),
+   a deeper pink such as `#d6004a` for both fills and text (5.3:1), or the
+   button text at 19px bold, where 3:1 is enough. The game itself (title,
+   HUD, panels, credits) is at AA and the render check keeps it there.
 
 ## Rules
 
