@@ -2998,6 +2998,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round thirty-four (2026-10-17; the overlays on
+  short screens). Round thirty-three laid out the HUD under 500px tall;
+  this round took the title, the dialogue and the lock panel to the same
+  sizes. The dialogue (its body scrolls) and the lock panel fit. The title
+  did not: some 500px of mark, word and actions, centred in a fixed box
+  that could not scroll, cut the mark at the top and the guest line
+  ("Guests play Movement I. A wallet links an Angel at the threshold. No
+  mint. No chain.") off the foot at 844x390, 740x360 and 640x360, so a
+  new player on a phone held sideways never read the guest rule before
+  entering. Fixed in `src/ui/hud.css`: the title scrolls, still centred
+  when it fits (`safe center`), and under 560px tall the mark goes to
+  72px, the word sizes by the height, the gaps close and the foot label
+  goes. Verified: `src/ui/a11y.test.ts` reads the rules and fails on the
+  old CSS; the render check measures the mark, the word, the way in, the
+  local test row and the guest line at the three sizes with the test row
+  shown and hidden (as a deployed city has it), failing on the old build
+  and passing on the new; the title at 1280x800 and 1920x1080 unchanged
+  by eye; gates green (846 tests).
 - The player-defect sweep, round thirty-three (2026-10-16; short screens).
   A phone on its side (844x390, 932x430) and a laptop at 200% zoom
   (640x360, 740x360) had no layout of their own: the HUD's rules go by

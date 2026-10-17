@@ -132,4 +132,13 @@ describe("the HUD's stacking", () => {
     // The short blocks come before the coarse-pointer rule, so a finger still gets the dodge chip.
     expect(css.indexOf("(max-height: 500px)")).toBeLessThan(css.indexOf("@media (pointer: coarse)"));
   });
+  it("keeps the title's guest line on a short screen (round thirty-four)", () => {
+    // The title stays centred and scrolls when it cannot fit; under 560px tall the mark and the word give up height.
+    expect(css).toMatch(/#title \{ overflow-y: auto; justify-content: safe center; \}/);
+    const short = css.match(/@media \(max-height: 560px\) \{([\s\S]*?)\n\}/);
+    expect(short, "the short title block").not.toBeNull();
+    expect(short![1]).toMatch(/\.title-mark \{ width: 72px; height: 72px;/);
+    expect(short![1]).toMatch(/\.title-word \{ font-size: clamp\(2\.5rem, 12vh, 6\.5rem\); \}/);
+    expect(html).toMatch(/<p class="title-fine">Guests play Movement I\./);
+  });
 });

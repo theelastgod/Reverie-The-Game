@@ -64,6 +64,37 @@ try {
   await page.waitForTimeout(800);
   await page.screenshot({ path: join(shots, '01-title.png') });
 
+  // The title on short screens (round thirty-four): the mark, the word, the way in and the guest line all on the screen at
+  // a phone on its side and a laptop at 200%, with the local test row both shown and hidden (a deployed city hides it).
+  {
+    const before = page.viewportSize();
+    const cut = [];
+    for (const [w, h] of [[844, 390], [740, 360], [640, 360]]) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.waitForTimeout(150);
+      for (const deployed of [false, true]) {
+        const off = await page.evaluate((deployed) => {
+          const row = document.querySelector('.title-link'); const was = row?.hidden;
+          if (row && deployed) row.hidden = true;
+          const out = [];
+          for (const s of ['.title-mark', '.title-word', '#title-enter', '#title-link', '.title-fine']) {
+            const e = document.querySelector(s);
+            if (!e || !e.getClientRects().length) continue;
+            const b = e.getBoundingClientRect();
+            if (b.top < -1 || b.bottom > innerHeight + 1) out.push(s);
+          }
+          if (row) row.hidden = was;
+          return out;
+        }, deployed);
+        if (off.length) cut.push(`${w}x${h}${deployed ? ' deployed' : ''}: ${off.join(', ')} off the screen`);
+      }
+    }
+    if (before) await page.setViewportSize(before);
+    await page.waitForTimeout(150);
+    failures.push(...cut.map(c => `title: ${c}`));
+    console.log(`title on short screens: ${cut.length ? cut.join('; ') : 'the mark, the word, the way in and the guest line on the screen at 844x390, 740x360 and 640x360'}`);
+  }
+
   // Enter the city: the title's primary button, else any key.
   const enter = page.locator('#title button', { hasText: /enter/i }).first();
   if (await enter.count()) await enter.click(); else await page.keyboard.press('Enter');

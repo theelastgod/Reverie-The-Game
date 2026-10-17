@@ -1096,6 +1096,21 @@ canvas { display: block; }
   .journal-title { font-size: 20px; }
 }
 
+/* The title on a short screen (round thirty-four): some 500px of mark, word and actions centred in a box that could not
+   scroll cut the mark at the top and the guest line ("Guests play Movement I…") off the foot at 360-430. The mark and the
+   word take the height they can spare and the gaps close; the title scrolls, still centred when it fits, as the backstop. */
+#title { overflow-y: auto; justify-content: safe center; }
+@media (max-height: 560px) {
+  .title-inner { padding: 12px 24px; }
+  .title-mark { width: 72px; height: 72px; margin-bottom: 4px; }
+  .title-word { font-size: clamp(2.5rem, 12vh, 6.5rem); }
+  .title-sub { margin-top: 4px; }
+  .title-temp { margin-top: 10px; }
+  .title-actions { margin-top: 14px; gap: 10px; }
+  .title-fine { margin-top: 12px; }
+  .title-foot { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .title-loop, .journal-loop, .lock-loop, .gen-overlay { display: none; }
   .marquee-text { animation: none; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
