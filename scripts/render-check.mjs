@@ -35,6 +35,21 @@ const executablePath = process.env.RENDER_CHROMIUM || findChromium();
 console.log(`chromium: ${executablePath ?? '(playwright default)'}`);
 const browser = await chromium.launch({ executablePath, headless: true, args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist', '--autoplay-policy=no-user-gesture-required'] });
 const failures = [];
+// Every element on the page honours the hidden attribute (round thirty-seven): a class that sets display beats the UA's
+// [hidden] rule unless the stylesheet re-asserts it, which is how a deployed title kept its local test row (round
+// thirty-six). Each element is hidden for the measure and put back; the Phaser canvas sets its own display and is
+// never hidden by the game.
+const ignoresHidden = () => {
+  const out = [];
+  for (const e of document.querySelectorAll('body *')) {
+    if (['SCRIPT', 'STYLE', 'TEMPLATE', 'CANVAS'].includes(e.tagName)) continue;
+    const was = e.hidden;
+    e.hidden = true;
+    if (getComputedStyle(e).display !== 'none') out.push((e.id ? '#' + e.id : e.tagName.toLowerCase()) + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/).join('.') : ''));
+    e.hidden = was;
+  }
+  return [...new Set(out)];
+};
 try {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
   const errors = [];
@@ -97,6 +112,12 @@ try {
     console.log(`title on short screens: ${cut.length ? cut.join('; ') : 'the mark, the word, the way in and the guest line on the screen at 844x390, 740x360 and 640x360'}`);
   }
 
+  {
+    const loose = await page.evaluate(ignoresHidden);
+    failures.push(...loose.map(e => `title: ${e} shows with hidden set`));
+    console.log(`hidden on the title: ${loose.length ? loose.join(', ') + ' ignore it' : 'every element honours it'}`);
+  }
+
   // Enter the city: the title's primary button, else any key.
   const enter = page.locator('#title button', { hasText: /enter/i }).first();
   if (await enter.count()) await enter.click(); else await page.keyboard.press('Enter');
@@ -142,6 +163,11 @@ try {
   // At 1024x768 too (round twenty-seven): two world events at once keep off the journal's tab and the left column.
   // And short (round thirty-three: a phone on its side, a laptop at 200%): the reach keeps off the minimap, the wink and
   // the bars, and every verb chip stays on the screen.
+  {
+    const loose = await page.evaluate(ignoresHidden);
+    failures.push(...loose.map(e => `hud: ${e} shows with hidden set`));
+    console.log(`hidden in the HUD: ${loose.length ? loose.join(', ') + ' ignore it' : 'every element honours it'}`);
+  }
   const before = page.viewportSize();
   const crowd = [];
   const sizes = [[900, 600], [1024, 768], [844, 390], [740, 360]];

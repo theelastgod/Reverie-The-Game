@@ -2998,6 +2998,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round thirty-seven (2026-10-17; the hidden
+  attribute everywhere). Round thirty-six's title bug was one case of a
+  class: a rule that sets `display` beats the browser's `[hidden]` unless
+  the stylesheet says otherwise. Every element of the game page (title
+  and HUD) and of the landing page was hidden in Chromium and its computed
+  display read. The game page is clean now (the Phaser canvas sets its own
+  display and nothing hides it); eleven landing-page elements set display,
+  but the site's script hides only the log band, which honours it, so
+  nothing there is a defect. Kept as a guard: the render check hides every
+  element on the title and in the HUD and fails on any that stays shown,
+  proven by dropping the `#title [hidden]` rule (five title elements
+  named, the test row among them) and passing with it back; gates green.
 - Review of rounds thirty-three to thirty-five (2026-10-17, round
   thirty-six; code review at medium over 4f0e05d^..8c7cb87). Ten findings,
   each checked against the code; fixed:
