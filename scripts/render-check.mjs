@@ -77,6 +77,7 @@ try {
           const row = document.querySelector('.title-link'); const was = row?.hidden;
           if (row && deployed) row.hidden = true;
           const out = [];
+          const shown = !!(row && deployed && row.getClientRects().length);
           for (const s of ['.title-mark', '.title-word', '#title-enter', '#title-link', '.title-fine']) {
             const e = document.querySelector(s);
             if (!e || !e.getClientRects().length) continue;
@@ -84,9 +85,10 @@ try {
             if (b.top < -1 || b.bottom > innerHeight + 1) out.push(s);
           }
           if (row) row.hidden = was;
-          return out;
+          return { out, shown };
         }, deployed);
-        if (off.length) cut.push(`${w}x${h}${deployed ? ' deployed' : ''}: ${off.join(', ')} off the screen`);
+        if (off.shown) cut.push(`${w}x${h} deployed: the test row still shows with hidden set`);
+        if (off.out.length) cut.push(`${w}x${h}${deployed ? ' deployed' : ''}: ${off.out.join(', ')} off the screen`);
       }
     }
     if (before) await page.setViewportSize(before);
@@ -173,11 +175,16 @@ try {
     for (const chip of document.querySelectorAll('#hud-verbs .chip')) {
       if (chip.getClientRects().length && r(chip).right > innerWidth + 1) bad.push(`a verb chip runs off the screen's edge`);
     }
-    // A banner that stands down while the heard line shows (a short screen, hud.css) is not in the way.
-    for (const ev of getComputedStyle(events).visibility === 'hidden' ? [] : events.children) {
-      if (meets(r(ev), r(journal))) bad.push(`an event banner lies over the journal`);
-      if (meets(r(ev), r(wink))) bad.push(`an event banner lies over the left column`);
-    }
+    // A banner that stands down while the heard line shows (a short screen, hud.css) is not in the way; so the banners
+    // are measured again with the line gone (round thirty-six), when they are back on the screen.
+    const banners = (when) => { for (const ev of getComputedStyle(events).opacity === '0' ? [] : events.children) {
+      if (meets(r(ev), r(journal))) bad.push(`an event banner lies over the journal${when}`);
+      if (meets(r(ev), r(wink))) bad.push(`an event banner lies over the left column${when}`);
+    } };
+    banners('');
+    heard.hidden = true;
+    if (getComputedStyle(events).opacity === '0') bad.push('the banners stay down with no heard line');
+    banners(' (no heard line)');
     events.hidden = was.events[0]; events.replaceChildren(...was.events[1]); wink.hidden = was.wink;
     heard.hidden = was.heard[0]; heard.textContent = was.heard[1];
     prompt.hidden = was.prompt[0]; pname.textContent = was.prompt[1]; pverbs.replaceChildren(...was.prompt[2]);
@@ -197,6 +204,7 @@ try {
     await page.setViewportSize({ width: 740, height: 360 });
     await page.waitForTimeout(200);
     const tab = page.locator('#hud-journal .journal-tab');
+    const journalWas = await page.evaluate(() => document.querySelector('#hud-journal')?.className ?? '');
     await tab.click();
     await page.waitForTimeout(200);
     const found = await page.evaluate(() => {
@@ -214,7 +222,8 @@ try {
       events.hidden = was[0]; events.replaceChildren(...was[1]);
       return bad;
     });
-    await tab.click();
+    // Closing it at this width would leave it `.closed` (journal.ts) for the rest of the run at the desktop size.
+    await page.evaluate((cls) => { const j = document.querySelector('#hud-journal'); if (j) j.className = cls; }, journalWas);
     if (before) await page.setViewportSize(before);
     await page.waitForTimeout(150);
     failures.push(...found.map(f => `short journal: ${f}`));

@@ -125,7 +125,11 @@ describe("the HUD's stacking", () => {
     expect(body).toMatch(/\.hud-left \{[^}]*top: var\(--below-top\);[^}]*width: 240px;/);
     expect(body).toMatch(/\.bars \{[^}]*grid-template-columns: 1fr 1fr;/);
     expect(body).toMatch(/\.reach \{[^}]*left: calc\(var\(--gutter\) \+ 240px \+ 8px\);[^}]*right: calc\(var\(--gutter\) \+ 130px \+ 8px\);/);
-    expect(body).toMatch(/#hud:has\(#hud-heard:not\(\[hidden\]\)\) #hud-events \{ visibility: hidden; \}/);
+    // Only a heard line on the screen sends the banners down, and by opacity so the strip stays a live region (round thirty-six).
+    expect(body).toMatch(/#hud:not\(\.dialogue-open\):not\(:has\(#hud-lock:not\(\[hidden\]\)\)\):has\(#hud-heard:not\(\[hidden\]\)\) #hud-events \{ opacity: 0; \}/);
+    expect(body).not.toMatch(/#hud-events \{ visibility: hidden; \}/);
+    // The layout reads --below-top before hud.ts first measures the chips: a default stands outside every media block.
+    expect(css).toMatch(/\n#hud \{ --below-top: 150px; \}/);
     // Narrow, the journal is a tab at the minimap's width; wide, it stays open and the reach keeps clear of its 214px.
     expect(css).toMatch(/@media \(max-height: 500px\) and \(min-width: 601px\) and \(max-width: 1100px\) \{[^@]*\.journal \{ width: 130px;/);
     expect(css).toMatch(/@media \(max-height: 500px\) and \(min-width: 1101px\) \{\s*\.reach, \.events \{ right: calc\(var\(--gutter\) \+ 214px \+ 8px\); \}/);
@@ -138,6 +142,14 @@ describe("the HUD's stacking", () => {
     expect(narrow![1]).toMatch(/\.journal\.open \{ top: var\(--below-top\); width: 260px; max-height: calc\(100vh - var\(--below-top\) - 16px\); \}/);
     expect(narrow![1]).toMatch(/\.journal\.open \.journal-plate, \.journal\.open \.journal-loop \{ display: none; \}/);
     expect(narrow![1]).toMatch(/#hud:has\(#hud-journal\.open\) #hud-events \{ right: calc\(var\(--gutter\) \+ 260px \+ 8px\); \}/);
+  });
+  it("hides the title's test row when a deployed city says so (round thirty-six)", () => {
+    // `.title-link { display: flex }` beat the attribute: title.ts set hidden and the row stayed on a deployed title.
+    expect(css).toMatch(/\.title-link \{[^}]*display: flex;/);
+    expect(css).toMatch(/\n#title \[hidden\] \{ display: none; \}/);
+  });
+  it("stands the banners down under an open journal below 700 wide (round thirty-six)", () => {
+    expect(css).toMatch(/@media \(max-height: 500px\) and \(min-width: 601px\) and \(max-width: 700px\) \{\s*#hud:has\(#hud-journal\.open\) #hud-events \{ opacity: 0; \}/);
   });
   it("keeps the title's guest line on a short screen (round thirty-four)", () => {
     // The title stays centred and scrolls when it cannot fit; under 560px tall the mark and the word give up height.

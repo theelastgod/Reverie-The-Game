@@ -201,6 +201,7 @@ canvas { display: block; }
   cursor: pointer;
 }
 #title[hidden] { display: none; }
+#title [hidden] { display: none; } /* the local test row (title.ts) sets display: flex, which beat the attribute: a deployed city showed it (round thirty-six) */
 .title-inner {
   display: flex;
   flex-direction: column;
@@ -330,6 +331,7 @@ canvas { display: block; }
 #hud[hidden] { display: none; }
 #hud .interactive { pointer-events: auto; }
 #hud [hidden] { display: none; }
+#hud { --below-top: 150px; } /* until hud.ts measures the top chips; the short and phone layouts read it */
 
 /* top chips */
 .hud-top {
@@ -1018,7 +1020,6 @@ canvas { display: block; }
 @media (max-width: 600px) {
   /* --below-top is where the top chips end plus a gap: the HUD measures them (hud.ts) since a long name or a weather
      chip can wrap them to a fourth row; 150px fits three rows and stands until the first measure. */
-  #hud { --below-top: 150px; }
   .hud-top { gap: 6px; }
   .hud-top .chip { min-height: 32px; padding: 0 8px; font-size: 10px; gap: 6px; }
   .hud-left { top: var(--below-top); width: calc(100vw - 32px - 146px); max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 314px); }
@@ -1058,8 +1059,9 @@ canvas { display: block; }
   .events { top: var(--below-top); left: calc(var(--gutter) + 240px + 8px); right: calc(var(--gutter) + 130px + 8px); transform: none; }
   .event { min-width: 0; width: 100%; }
   /* The banners and the heard line share the middle column here and there is not the height for both: the line is
-     brief, so the banners stand down while it shows and come back when it fades. */
-  #hud:has(#hud-heard:not([hidden])) #hud-events { visibility: hidden; }
+     brief, so the banners stand down while it shows and come back when it fades. Only a line on the screen counts (not
+     one hidden under a dialogue or the lock), and by opacity, so the strip stays a live region (round thirty-six). */
+  #hud:not(.dialogue-open):not(:has(#hud-lock:not([hidden]))):has(#hud-heard:not([hidden])) #hud-events { opacity: 0; }
   .ledger-panel { top: var(--below-top); max-height: calc(100vh - var(--below-top) - 16px); }
   .bars { width: 240px; padding: 6px 10px 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; bottom: 56px; }
   .hud-verbs { bottom: 16px; gap: 6px; }
@@ -1082,7 +1084,13 @@ canvas { display: block; }
   .journal.open { top: var(--below-top); width: 260px; max-height: calc(100vh - var(--below-top) - 16px); }
   .journal.open .journal-plate, .journal.open .journal-loop { display: none; }
   #hud:has(#hud-journal.open) #hud-events { right: calc(var(--gutter) + 260px + 8px); }
-  .chip-connection { bottom: auto; top: calc(var(--below-top) + 108px + 40px); }
+  .chip-connection { bottom: auto; top: calc(var(--below-top) + 108px + 40px); z-index: 1; } /* a reconnect shows over an open journal */
+}
+
+/* Under 700 wide (a laptop at 200%) an open journal leaves the banners some 90px between it and the left column, too
+   narrow for a line: they stand down while the player reads the journal (round thirty-six). */
+@media (max-height: 500px) and (min-width: 601px) and (max-width: 700px) {
+  #hud:has(#hud-journal.open) #hud-events { opacity: 0; }
 }
 
 /* Short and wide (a laptop window under 500px tall): the journal stays open at its full 214px, so the reach and the

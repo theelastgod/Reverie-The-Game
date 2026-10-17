@@ -2998,6 +2998,37 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- Review of rounds thirty-three to thirty-five (2026-10-17, round
+  thirty-six; code review at medium over 4f0e05d^..8c7cb87). Ten findings,
+  each checked against the code; fixed:
+  (1) the title's local test row ("SERIAL · LINK A TEST ANGEL") showed on
+  a deployed city: `.title-link { display: flex }` beat the hidden
+  attribute title.ts sets, and `[hidden]` was only re-asserted inside
+  `#hud`. The server drops the test link unless `MOCK_LINK=1`, so it was
+  a dead control that entered as a guest. Now `#title [hidden]` hides it;
+  (2) the render check's "deployed" pass did not notice, and now fails
+  when the row still shows (proven on the old CSS at all three sizes);
+  (3) the crowded step showed a heard line throughout, so on short screens
+  the banners were never measured; they are now measured again with the
+  line gone, and must come back;
+  (4) the banners stood down for a heard line hidden under a dialogue or
+  the lock too, and by visibility, which took the strip out of the live
+  region; now only a line on the screen counts, by opacity;
+  (5) the journal step left the journal `.closed` for the rest of the run
+  and now restores it;
+  (7) the connection chip stands over an open journal on a short narrow
+  screen;
+  (8) under 700 wide an open journal left the banners some 90px, so they
+  stand down while it is open;
+  (9) `--below-top` has a default outside the phone block.
+  Not taken: (6) a touch phone's verb row at 640 wide with all five chips
+  (at 667x375, the smallest common landscape phone, it fits with 9px to
+  spare; noted under Backlog 11) and (10) hoisting the short layout's
+  lengths into custom properties (a refactor for a later pass). Verified:
+  `src/ui/a11y.test.ts` (849 tests in all), the render check on a fresh
+  Wrangler. Note for the next run: Wrangler dev keeps serving the asset
+  list it started with, so a re-staged build 404s its new CSS until it is
+  restarted; restart it after `stage-play.mjs`.
 - The player-defect sweep, round thirty-five (2026-10-17; the panels a
   player opens, on short screens). The open journal, the ledger (L) and
   the credits at 844x390, 740x360, 640x360, 932x430 and 1280x480. The
@@ -4616,6 +4647,8 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    on its side has its own layout since round thirty-three; the real
    phone should look at that too. Left there: at 640x360 (a laptop at
    200%), a three-row prompt lifts the heard line 5px into the top chips.
+   And at 640 wide on a touch phone, the verb row with all five chips
+   (stance, kit, dodge, use, flag) would pass the edge; 667 fits.
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 
