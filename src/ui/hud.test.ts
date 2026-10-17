@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  auraTier, bearingTo, dodgeLine, formatSerial, heardStep, identityLine, joinNews, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
+  auraTier, bearingTo, dodgeLine, formatSerial, heardStep, identityLine, joinNews, keepHeard, kitLine, kitVerb, ledgerLine, mapLabel, marqueeSeconds,
   lockStep, noticeDiff, pad2, parseSerial, pct, questLabel, questRows, restraintBar, roman, seconds, stanceLine, statusLine,
   glassRows, creditRows, chipVerbs, meterValues,
 } from "./format";
@@ -321,5 +321,15 @@ describe("meterValues (the client review, 2026-10-11)", () => {
     expect(meterValues(57.3125, 100).now).toBe("57");
     expect(meterValues(57.9, 100).now).toBe(meterValues(57.2, 100).now);
     expect(meterValues(NaN, 100).now).toBe("0");
+  });
+});
+
+describe("keepHeard (round fifty-four)", () => {
+  it("keeps the newest first, once in a row, at most six", () => {
+    let kept: string[] = [];
+    for (const line of ["One.", "Two.", "Two.", "  ", "Three.", "Four.", "Five.", "Six.", "Seven."]) kept = keepHeard(kept, line);
+    expect(kept).toEqual(["Seven.", "Six.", "Five.", "Four.", "Three.", "Two."]);
+    expect(keepHeard(["A."], "A.")).toEqual(["A."]);
+    expect(keepHeard(["B.", "A."], "A.")).toEqual(["A.", "B.", "A."]);
   });
 });

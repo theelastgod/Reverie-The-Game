@@ -233,4 +233,8 @@ describe("the HUD's stacking", () => {
     expect(css).toMatch(/\.marquee\.held \.marquee-text \{ animation-play-state: paused; \}/);
     expect(css).toMatch(/\.marquee-tag:focus-visible \{ outline: 3px solid var\(--acid\);/);
   });
+
+  it("keeps what fades in the field notes (round fifty-four)", () => {
+    expect(html).toMatch(/<section class="journal-heard" aria-label="Lately heard" hidden>\s*<div class="journal-glass-head">LATELY HEARD<\/div>\s*<ol class="journal-heard-lines"><\/ol>/);
+  });
 });

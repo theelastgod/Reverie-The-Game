@@ -13,6 +13,8 @@ import { LoopSlot } from "./loops";
 export type JournalPanel = {
   set(objective: Objective | null, you: YouView, side?: readonly SideObjective[], hot?: boolean, glass?: GlassView | null, now?: number): void;
   toggle(): void;
+  /** The lines that faded on the HUD, newest first (round fifty-four). */
+  heard(lines: readonly string[]): void;
   destroy(): void;
 };
 
@@ -30,6 +32,8 @@ export function mountJournal(root: HTMLElement): JournalPanel {
   const glassBox = panel?.querySelector<HTMLElement>(".journal-glass") ?? null;
   const glassLaunch = panel?.querySelector<HTMLElement>(".journal-glass-launch") ?? null;
   const glassFigures = panel?.querySelector<HTMLElement>(".journal-glass-figures") ?? null;
+  const heardBox = panel?.querySelector<HTMLElement>(".journal-heard") ?? null;
+  const heardList = panel?.querySelector<HTMLElement>(".journal-heard-lines") ?? null;
 
   let objectiveSig = "";
   let plateFile = "";
@@ -122,6 +126,15 @@ export function mountJournal(root: HTMLElement): JournalPanel {
       }
     },
     toggle,
+    heard(lines) {
+      if (!heardList) return;
+      heardList.replaceChildren(...lines.map(text => {
+        const li = document.createElement("li");
+        li.textContent = text;
+        return li;
+      }));
+      show(heardBox, lines.length > 0);
+    },
     destroy() {
       tab?.removeEventListener("click", toggle);
     },

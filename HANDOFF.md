@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 861 tests (2026-10-17), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 863 tests (2026-10-17), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty-three on 2026-10-17 (see Done). Since round forty-four a test holds
+  fifty-four on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round fifty-four (2026-10-17; timing, WCAG
+  2.2.1). The lines a player hears from the world fade on their own: a
+  heard line in six seconds whatever its length, a wink in eight, and
+  nothing kept them; a slow reader lost story text for good. Fixed: the
+  field notes keep a LATELY HEARD record (`.journal-heard`, the last six
+  heard lines and winks, newest first, the same line twice in a row kept
+  once; `keepHeard` in format.ts), shown once there is a line, in the
+  journal's scrolling body. Proven: the render check's node step (EXTRACT
+  at the fourth node, heard "Yield. 8 Bestand after the tax of 9...")
+  fails on the old build ("the field notes did not keep the heard line")
+  and passes on the fix; hud.test.ts holds keepHeard (order, repeats,
+  blanks, the cap) and a11y.test.ts the markup. 863 tests.
 - The player-defect sweep, round fifty-three (2026-10-17; round
   fifty-two's hold under live news). A news line that came while the
   ticker was held replaced its text with a new line set to start beyond

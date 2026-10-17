@@ -207,6 +207,17 @@ export function joinNews(news: readonly string[]): string {
   return news.map(s => s.trim()).filter(Boolean).reverse().join(" · ");
 }
 
+/** How many lines the field notes keep of what was heard and winked (round fifty-four). */
+export const HEARD_KEEP = 6;
+
+/** The field notes' record of lines that fade on the HUD (a heard line in 6 s, a wink in 8 s; WCAG 2.2.1, round
+ *  fifty-four): the newest first, the same line twice in a row kept once, at most HEARD_KEEP. */
+export function keepHeard(kept: readonly string[], line: string, max = HEARD_KEEP): string[] {
+  const text = line.trim();
+  if (!text || kept[0] === text) return kept.slice(0, max);
+  return [text, ...kept].slice(0, max);
+}
+
 /** Marquee duration in seconds, scaled to the text length; never below 20 s. */
 export function marqueeSeconds(text: string): number {
   return Math.max(20, Math.round(text.length * 0.16));

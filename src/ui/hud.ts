@@ -10,7 +10,7 @@ import { AURA_MAX, GESTELL_MELTDOWN, MAX_HP, NOTICE_KEEP, NOTICE_TTL, READINESS_
 import { F } from "../sim/content/ids";
 import { CREDITS } from "../sim/content/lines";
 import {
-  auraTier, chipVerbs, districtFourfold, districtName, dodgeLine, heardTracker, identityLine, joinNews, kitLine, ledgerLine, lockStep, marqueeSeconds, noticeDiff, num, pct,
+  auraTier, chipVerbs, districtFourfold, districtName, dodgeLine, heardTracker, identityLine, joinNews, keepHeard, kitLine, ledgerLine, lockStep, marqueeSeconds, noticeDiff, num, pct,
   meterValues, restraintBar, setAttr, setClass, setText, show, stanceLine, statusLine, weatherLine, creditRows,
 } from "./format";
 import { mountDialogue, type DialoguePanel } from "./dialogue";
@@ -135,6 +135,8 @@ export class Hud {
   private winkSaid = "";
   private noticeSig = "";
   private marqueeText = "";
+  /** The heard lines and winks that faded, kept for the field notes (round fifty-four). */
+  private heardKept: string[] = [];
   /** News that came while the ticker was held; it runs when the hold is let go (round fifty-three). */
   private marqueePending: string | null = null;
   private status: HudStatus | "" = "";
@@ -651,6 +653,7 @@ export class Hud {
       window.clearTimeout(this.heardTimer);
       window.clearTimeout(this.heardFade);
       setText(this.heard, step.show);
+      this.keep(step.show);
       this.heard?.classList.remove("fading");
       show(this.heard, true);
     }
@@ -664,6 +667,14 @@ export class Hud {
     }
   }
 
+  /** A line that will fade goes into the field notes too, to be read again (WCAG 2.2.1; round fifty-four). */
+  private keep(line: string): void {
+    const next = keepHeard(this.heardKept, line);
+    if (next.length === this.heardKept.length && next.every((l, i) => l === this.heardKept[i])) return;
+    this.heardKept = next;
+    this.journal.heard(next);
+  }
+
   private updateWink(snap: Snap): void {
     const you = snap.you;
     if (you.winkAt === this.winkAt && you.wink === this.winkSaid) return;
@@ -673,6 +684,7 @@ export class Hud {
     window.clearTimeout(this.winkTimer);
     window.clearTimeout(this.winkFade);
     setText(this.winkText, you.wink);
+    this.keep(you.wink);
     this.wink?.classList.remove("fading");
     show(this.wink, true);
     this.winkTimer = window.setTimeout(() => {

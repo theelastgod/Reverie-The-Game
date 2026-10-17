@@ -584,6 +584,12 @@ try {
     if (await dialogueShown()) seen.push('a dialogue');
     node = seen.length ? `after ${nodeVerb.label} at ${nodeName}: ${seen.join(', ')}` : `no visible answer to ${nodeVerb.label} at ${nodeName}`;
     if (!seen.length) failures.push(`the node's ${nodeVerb.label} verb changed nothing visible`);
+    // A heard line fades in six seconds; the field notes keep it to be read again (WCAG 2.2.1; round fifty-four).
+    if (after.heard && after.heard !== before.heard) {
+      const kept = await page.evaluate(() => [...document.querySelectorAll('#hud-journal .journal-heard-lines li')].map(li => li.textContent.trim()));
+      if (kept[0] !== after.heard) failures.push(`the field notes did not keep the heard line "${after.heard}" (they hold ${JSON.stringify(kept.slice(0, 2))})`);
+      else node += '; kept in the field notes';
+    }
   } else {
     failures.push(`neither Nave node offered a verb (prompt: ${JSON.stringify(promptText.trim())})`);
   }
