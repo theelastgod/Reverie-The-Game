@@ -135,6 +135,8 @@ export class Hud {
   private winkSaid = "";
   private noticeSig = "";
   private marqueeText = "";
+  /** News that came while the ticker was held; it runs when the hold is let go (round fifty-three). */
+  private marqueePending: string | null = null;
   private status: HudStatus | "" = "";
   private creditsSeen = false;
   private locals: LocalNotice[] = [];
@@ -440,6 +442,11 @@ export class Hud {
     this.newsHold.setAttribute("aria-pressed", held ? "true" : "false");
     this.newsHold.setAttribute("aria-label", held ? "Run the news" : "Hold the news");
     setText(q(this.newsHold, ".marquee-hold"), held ? "▶" : "❚❚");
+    if (!held && this.marqueePending !== null) {
+      const next = this.marqueePending;
+      this.marqueePending = null;
+      this.applyMarquee(next);
+    }
   };
 
   /** The chip reads the bus: AUDIO ON 80, or AUDIO OFF. */
@@ -717,6 +724,16 @@ export class Hud {
 
   private updateMarquee(news: string[]): void {
     const text = joinNews(news);
+    // A held ticker keeps the line it holds: a new line would restart the scroll from beyond the right edge and leave
+    // the held bar empty (round fifty-three). It waits, and runs when the hold is let go.
+    if (this.marquee?.classList.contains("held")) {
+      this.marqueePending = text === this.marqueeText ? null : text;
+      return;
+    }
+    this.applyMarquee(text);
+  }
+
+  private applyMarquee(text: string): void {
     if (text === this.marqueeText) return;
     this.marqueeText = text;
     if (!this.marquee || !this.marqueeTrack) return;

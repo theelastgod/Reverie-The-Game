@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty-two on 2026-10-17 (see Done). Since round forty-four a test holds
+  fifty-three on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round fifty-three (2026-10-17; round
+  fifty-two's hold under live news). A news line that came while the
+  ticker was held replaced its text with a new line set to start beyond
+  the right edge, paused there: the held bar stood empty (0px of text
+  inside the track) until the hold was let go. Fixed: a held ticker
+  keeps the line it holds; what comes meanwhile waits and runs when the
+  hold is let go. The render check now keeps the city's socket (an init
+  script) and hands the HUD a slow frame with news as the server would;
+  its news step fails on the old HUD ("a line that came while held left
+  the held bar empty") and passes on the fix. Checked and left: each new
+  line restarts the scroll, but the ticker reads newest first, so the
+  restart leads with the line that just came. 861 tests.
 - The player-defect sweep, round fifty-two (2026-10-17; moving content,
   WCAG 2.2.2). The news ticker at the foot scrolls without end and only
   the system's reduced-motion setting stopped it; a reader without that
@@ -3014,7 +3026,8 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   fix (running → paused, pressed → running); the HUD's focus-ring,
   target and contrast audits pass with the new control. a11y.test.ts
   holds the markup and the rules. Noted, not changed: each new news line
-  restarts the scroll from the right edge. 861 tests.
+  restarts the scroll from the right edge (round fifty-three: the ticker
+  reads newest first, so that is kept). 861 tests.
 - The player-defect sweep, round fifty-one (2026-10-17; labels that
   promise, and page titles). Round fifty's leftover: the lock panel's
   test-link button read "LINK TEST ANGEL #7777" over a refused field (it

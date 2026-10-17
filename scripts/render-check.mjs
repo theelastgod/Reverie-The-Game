@@ -116,6 +116,8 @@ const audit = ({ kind, scope = 'body', reveal = [] }) => {
 };
 try {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+  // The city's socket, kept so a step can hand the HUD a frame as the server would (round fifty-three: news while held).
+  await page.addInitScript(() => { const W = window.WebSocket; window.__sockets = []; window.WebSocket = class extends W { constructor(...a) { super(...a); window.__sockets.push(this); } }; });
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   // A failed resource names only its status in the console; its URL is the message's location, kept so the list
@@ -328,6 +330,26 @@ try {
       if (before.state !== 'running') wrong.push(`the news is ${before.state} before the hold`);
       if (held.state !== 'paused' || held.pressed !== 'true') wrong.push(`the hold left the news ${held.state}, pressed ${held.pressed}`);
       if (after.state !== 'running' || after.pressed !== 'false') wrong.push(`a second press left the news ${after.state}, pressed ${after.pressed}`);
+      // A line that comes while the ticker is held (round fifty-three): the held bar keeps the line it shows, and the new
+      // line runs once the hold is let go. Before, the new line restarted the scroll beyond the right edge, paused there,
+      // and the held bar stood empty.
+      const say = news => page.evaluate(n => window.__sockets.at(-1)?.dispatchEvent(new MessageEvent('message', { data: JSON.stringify({ t: 'slow', v: 3, news: n }) })), news);
+      const glyphs = () => page.evaluate(() => {
+        const m = document.getElementById('hud-marquee'), t = m.querySelector('.marquee-text'), tr = m.querySelector('.marquee-track').getBoundingClientRect();
+        const range = document.createRange(); range.selectNodeContents(t); const g = range.getBoundingClientRect();
+        return { text: t.textContent, seen: Math.max(0, Math.min(g.right, tr.right) - Math.max(g.left, tr.left)) };
+      });
+      await say(['A line on the glass for the render check.']);
+      await page.waitForTimeout(2500);
+      await page.click('#hud-news-hold');
+      await say(['A line on the glass for the render check.', 'A second line, come while the news is held.']);
+      await page.waitForTimeout(300);
+      const heldNew = await glyphs();
+      await page.click('#hud-news-hold');
+      await page.waitForTimeout(2500);
+      const ranNew = await glyphs();
+      if (heldNew.seen < 1) wrong.push(`a line that came while held left the held bar empty ("${heldNew.text.slice(0, 30)}")`);
+      if (!/second line/.test(ranNew.text) || ranNew.seen < 1) wrong.push(`the line that came while held did not run after the hold ("${ranNew.text.slice(0, 30)}")`);
     }
     await page.evaluate(w => { document.getElementById('hud-marquee').hidden = w; }, wasHidden);
     failures.push(...wrong.map(w => `news hold: ${w}`));
