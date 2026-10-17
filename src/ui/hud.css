@@ -1138,6 +1138,13 @@ canvas { display: block; }
   .title-foot { display: none; }
 }
 
+/* Forced colours (Windows High Contrast; round forty-nine): the browser paints every background in the user's Canvas
+   colour, so a bar's fill and its track came out the same and the bars read empty. The fill keeps a colour of its own,
+   the user's text colour, which stands against their Canvas whatever the theme. */
+@media (forced-colors: active) {
+  .bar-fill { forced-color-adjust: none; background: CanvasText !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .title-loop, .journal-loop, .lock-loop, .gen-overlay { display: none; }
   .marquee-text { animation: none; padding-left: 12px; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }

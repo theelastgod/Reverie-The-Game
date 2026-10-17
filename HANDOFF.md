@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 857 tests (2026-10-17), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 858 tests (2026-10-17), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  forty-eight on 2026-10-17 (see Done). Since round forty-four a test holds
+  forty-nine on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round forty-nine (2026-10-17; forced
+  colours, Windows High Contrast). The landing page, the title and the
+  HUD under `forced-colors: active` in a dark and a light theme. Text,
+  borders, the focus rings, the minimap (a canvas, left alone) and the
+  journal's plate all hold. One defect: the browser paints every
+  background in the user's Canvas colour, so each bar's fill and its
+  track came out the same and all four bars read empty (the numbers
+  beside them stayed). Fixed: under forced colours the fill keeps a
+  colour of its own, the user's CanvasText (`forced-color-adjust:
+  none`). Proven: the render check's new step (forced colours emulated
+  on the open page) fails on the old CSS ("the hp bar's fill is its
+  track's colour", restraint likewise) and passes on the fix;
+  a11y.test.ts holds the rule. 858 tests.
 - The player-defect sweep, round forty-eight (2026-10-17; reflow at
   320px, WCAG 1.4.10: the narrowest phone, or a page zoomed to 400%).
   The landing page, the title and every HUD panel at 320x568, 320x480

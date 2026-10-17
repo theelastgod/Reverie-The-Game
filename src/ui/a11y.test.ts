@@ -202,4 +202,10 @@ describe("the HUD's stacking", () => {
     expect(narrow![1]).toMatch(/\.hud-top \.chip \{ padding: 0 6px;/);
     expect(narrow![1]).toMatch(/\.hud-verbs \.chip \{ padding: 0 6px;/);
   });
+
+  it("keeps the bars' fill under forced colours (round forty-nine)", () => {
+    const forced = css.match(/@media \(forced-colors: active\) \{([\s\S]*?)\n\}/);
+    expect(forced).not.toBeNull();
+    expect(forced![1]).toMatch(/\.bar-fill \{ forced-color-adjust: none; background: CanvasText !important; \}/);
+  });
 });

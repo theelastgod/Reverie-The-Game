@@ -273,6 +273,22 @@ try {
     console.log(`contrast in the HUD and its panels: ${dim.length ? dim.join(', ') + ' below AA' : 'every line at AA or better'}`);
   }
   {
+    // Forced colours (Windows High Contrast; round forty-nine): every background becomes the user's Canvas, and a bar
+    // drawn only as a background must still show how full it is. HP at full: its fill must differ from its track.
+    await page.emulateMedia({ forcedColors: 'active' });
+    await page.waitForTimeout(150);
+    const bars = await page.evaluate(() => [...document.querySelectorAll('#hud-bars .bar')].map(b => {
+      const fill = b.querySelector('.bar-fill'), track = b.querySelector('.bar-track');
+      return { bar: b.dataset.bar, width: fill.getBoundingClientRect().width, same: getComputedStyle(fill).backgroundColor === getComputedStyle(track).backgroundColor, forced: matchMedia('(forced-colors: active)').matches };
+    }));
+    await page.emulateMedia({ forcedColors: 'none' });
+    await page.waitForTimeout(150);
+    const blank = bars.filter(b => b.width > 0 && b.same).map(b => b.bar);
+    if (!bars.some(b => b.forced)) failures.push('forced colours: the page did not see the query');
+    failures.push(...blank.map(b => `forced colours: the ${b} bar's fill is its track's colour`));
+    console.log(`bars under forced colours: ${blank.length ? blank.join(', ') + ' read empty' : 'every filled bar shows its fill'}`);
+  }
+  {
     await page.keyboard.press('Shift');
     const bare = await page.evaluate(audit, { kind: 'rings', scope: '#hud' });
     failures.push(...bare.map(e => `hud: ${e} has no focus ring`));
