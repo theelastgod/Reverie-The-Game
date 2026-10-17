@@ -130,7 +130,7 @@ describe("the HUD's stacking", () => {
     expect(body).toMatch(/#hud:not\(\.dialogue-open\):not\(:has\(#hud-lock:not\(\[hidden\]\)\)\):has\(#hud-heard:not\(\[hidden\]\)\) #hud-events \{ opacity: 0; \}/);
     expect(body).not.toMatch(/#hud-events \{ visibility: hidden; \}/);
     // The layout reads --below-top before hud.ts first measures the chips: a default stands outside every media block.
-    expect(css).toMatch(/\n#hud \{ --below-top: 150px; --bars-h: 136px; \}/);
+    expect(css).toMatch(/\n#hud \{ --below-top: 150px; --bars-h: 136px; --verbs-h: 36px; \}/);
     // Narrow, the journal is a tab at the minimap's width; wide, it stays open and the reach keeps clear of its 214px.
     expect(css).toMatch(/@media \(max-height: 500px\) and \(min-width: 601px\) and \(max-width: 1100px\) \{[^@]*\.journal \{ width: 130px;/);
     expect(css).toMatch(/@media \(max-height: 500px\) and \(min-width: 1101px\) \{\s*\.reach, \.events \{ right: calc\(var\(--gutter\) \+ 214px \+ 8px\); \}/);
@@ -185,8 +185,21 @@ describe("the HUD's stacking", () => {
   it("stacks a phone's reach and banners on the bars' measured height, not a guess (round forty-seven)", () => {
     const phone = css.match(/@media \(max-width: 600px\) \{([\s\S]*?)\n\}/);
     expect(phone).not.toBeNull();
-    expect(phone![1]).toMatch(/\.reach \{[^}]*bottom: calc\(var\(--marquee-h\) \+ 16px \+ 44px \+ var\(--bars-h\)\);/);
-    expect(phone![1]).toMatch(/\.events \{[^}]*bottom: calc\(var\(--marquee-h\) \+ 16px \+ 44px \+ var\(--bars-h\) \+ 56px \+ 56px\);/);
+    expect(phone![1]).toMatch(/\.reach \{[^}]*bottom: calc\(var\(--marquee-h\) \+ 16px \+ var\(--verbs-h\) \+ 8px \+ var\(--bars-h\)\);/);
+    expect(phone![1]).toMatch(/\.events \{[^}]*bottom: calc\(var\(--marquee-h\) \+ 16px \+ var\(--verbs-h\) \+ 8px \+ var\(--bars-h\) \+ 56px \+ 56px\);/);
     expect(phone![1]).not.toMatch(/\+ 136px/);
+  });
+
+  it("stacks a phone on the verbs' measured height and fits the narrowest phone's chips (round forty-eight)", () => {
+    expect(css).toMatch(/\n#hud \{ --below-top: 150px; --bars-h: 136px; --verbs-h: 36px; \}/);
+    const phone = css.match(/@media \(max-width: 600px\) \{([\s\S]*?)\n\}/)![1];
+    expect(phone).not.toMatch(/\+ 44px|- 220px|- 314px/);
+    expect(phone).toMatch(/\.bars \{[^}]*bottom: calc\(var\(--marquee-h\) \+ 16px \+ var\(--verbs-h\) \+ 8px\);/);
+    expect(phone).toMatch(/\.chip-connection \{ z-index: 1; \}/);
+    expect(css).toMatch(/\.chip-connection \{[^}]*pointer-events: none;/);
+    const narrow = css.match(/@media \(max-width: 360px\) \{([\s\S]*?)\n\}/);
+    expect(narrow).not.toBeNull();
+    expect(narrow![1]).toMatch(/\.hud-top \.chip \{ padding: 0 6px;/);
+    expect(narrow![1]).toMatch(/\.hud-verbs \.chip \{ padding: 0 6px;/);
   });
 });

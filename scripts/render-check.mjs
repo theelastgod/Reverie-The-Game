@@ -736,6 +736,32 @@ try {
     if (fit.off.length) failures.push(`phone: off the screen: ${fit.off.join('; ')}`);
     if (fit.stacked.length) failures.push(`phone: ${fit.stacked.join('; ')}`);
     if (fit.scrollW > fit.w) failures.push(`phone: the page scrolls sideways (${fit.scrollW} > ${fit.w})`);
+    // The narrowest phone, 320px (WCAG 1.4.10's reflow width; round forty-eight): the top chips, the bars and the verbs,
+    // dodge included, each keep their own place, and the wink and the journal's tab keep room to show between them.
+    {
+      await phone.setViewportSize({ width: 320, height: 568 });
+      await phone.waitForTimeout(400);
+      const narrow = await phone.evaluate(() => {
+        const box = s => document.querySelector(s)?.getBoundingClientRect();
+        const shown = s => { const e = document.querySelector(s); return !!e && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden'; };
+        const out = [];
+        const bars = box('#hud-bars'), reach = box('#hud-reach'), wink = box('#hud-wink'), tab = box('#hud-journal'), minimap = box('#hud-minimap');
+        const verbs = [...document.querySelectorAll('#hud-verbs > *')].filter(e => e.getClientRects().length).map(e => e.getBoundingClientRect());
+        const verbTop = Math.min(...verbs.map(r => r.top));
+        if (verbs.some(r => r.right > innerWidth + 1)) out.push('a verb chip runs off the screen');
+        if (bars.bottom > verbTop + 1) out.push(`the bars end at ${Math.round(bars.bottom)}, under the verbs' top at ${Math.round(verbTop)}`);
+        if (reach.bottom > bars.top + 1) out.push(`the reach ends at ${Math.round(reach.bottom)}, under the bars' top at ${Math.round(bars.top)}`);
+        if (shown('#hud-wink') && wink.height < 24) out.push(`the wink has ${Math.round(wink.height)}px`);
+        if (!shown('#hud-journal') || tab.height < 24) out.push("the journal's tab has no room");
+        else if (tab.bottom > reach.top + 1) out.push(`the journal's tab ends at ${Math.round(tab.bottom)}, under the reach's top at ${Math.round(reach.top)}`);
+        if (minimap.bottom > reach.top + 1) out.push(`the minimap ends at ${Math.round(minimap.bottom)}, under the reach's top at ${Math.round(reach.top)}`);
+        if (document.documentElement.scrollWidth > innerWidth + 1) out.push('the page scrolls sideways');
+        return out;
+      });
+      await phone.screenshot({ path: join(shots, '07-phone-320.png') });
+      failures.push(...narrow.map(n => `phone at 320x568: ${n}`));
+      console.log(`phone at 320x568: ${narrow.length ? narrow.join('; ') : 'the bars over the verbs, the reach over the bars, the wink and the journal tab with room, nothing sideways'}`);
+    }
     // A script error the HUD throws only at this width (a layout that divides by a zero size, a missing element) is a
     // failure the boxes cannot show; the desktop pass only prints its errors, since its list also holds the proxy's.
     const phoneOnly = phoneErrors.filter(e => !errors.includes(e));

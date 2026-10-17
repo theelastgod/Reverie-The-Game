@@ -160,14 +160,15 @@ export class Hud {
       };
       new ResizeObserver(below).observe(top);
     }
-    // And the bars' height (--bars-h): a phone stacks the prompt and the event banners on them, and the bars grow when a
-    // reader widens the text's spacing (round forty-seven), so they are measured, not assumed.
-    const bars = q(root, "#hud-bars");
-    if (bars && typeof ResizeObserver !== "undefined") {
+    // And the heights a phone stacks on, measured, not assumed: the bars (--bars-h) grow when a reader widens the text's
+    // spacing (round forty-seven), and the verb chips (--verbs-h) wrap to a second row at 320px (round forty-eight).
+    for (const [sel, prop] of [["#hud-bars", "--bars-h"], ["#hud-verbs", "--verbs-h"]] as const) {
+      const el = q(root, sel);
+      if (!el || typeof ResizeObserver === "undefined") continue;
       new ResizeObserver(() => {
-        const h = bars.getBoundingClientRect().height;
-        if (h > 0) root.style.setProperty("--bars-h", `${Math.ceil(h)}px`);
-      }).observe(bars);
+        const h = el.getBoundingClientRect().height;
+        if (h > 0) root.style.setProperty(prop, `${Math.ceil(h)}px`);
+      }).observe(el);
     }
 
     this.identity = q(root, "#hud-identity");

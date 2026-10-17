@@ -333,7 +333,7 @@ canvas { display: block; }
 #hud[hidden] { display: none; }
 #hud .interactive { pointer-events: auto; }
 #hud [hidden] { display: none; }
-#hud { --below-top: 150px; --bars-h: 136px; } /* until hud.ts measures the top chips; the short and phone layouts read it */
+#hud { --below-top: 150px; --bars-h: 136px; --verbs-h: 36px; } /* until hud.ts measures the top chips; the short and phone layouts read it */
 
 /* top chips */
 .hud-top {
@@ -359,6 +359,7 @@ canvas { display: block; }
   right: var(--gutter);
   background: var(--grid);
   transition: opacity 400ms linear;
+  pointer-events: none; /* a status, never a target: an online chip, faded out, must not take a tap meant for a verb */
 }
 .chip-connection.online { opacity: 0; }
 .chip-connection.reconnecting, .chip-connection.elsewhere { background: var(--acid); }
@@ -1024,22 +1025,33 @@ canvas { display: block; }
      chip can wrap them to a fourth row; 150px fits three rows and stands until the first measure. */
   .hud-top { gap: 6px; }
   .hud-top .chip { min-height: 32px; padding: 0 8px; font-size: 10px; gap: 6px; }
-  .hud-left { top: var(--below-top); width: calc(100vw - 32px - 146px); max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 314px); }
+  .hud-left { top: var(--below-top); width: calc(100vw - 32px - 146px); max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 16px - var(--verbs-h) - 8px - var(--bars-h) - 118px); }
   .minimap { top: var(--below-top); }
   .minimap canvas { width: 130px; height: 100px; }
-  .journal { top: calc(var(--below-top) + 112px); width: 130px; max-height: calc(100vh - var(--below-top) - 112px - var(--marquee-h) - 220px); }
+  .journal { top: calc(var(--below-top) + 112px); width: 130px; max-height: calc(100vh - var(--below-top) - 112px - var(--marquee-h) - 16px - var(--verbs-h) - 8px - var(--bars-h) - 24px); }
   .journal-tab { font-size: 10px; padding: 6px 8px; }
-  .journal.open { top: var(--below-top); left: var(--gutter); right: var(--gutter); width: auto; max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 220px); }
-  .events { top: auto; left: var(--gutter); right: var(--gutter); bottom: calc(var(--marquee-h) + 16px + 44px + var(--bars-h) + 56px + 56px); }
+  .journal.open { top: var(--below-top); left: var(--gutter); right: var(--gutter); width: auto; max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 16px - var(--verbs-h) - 8px - var(--bars-h) - 24px); }
+  .events { top: auto; left: var(--gutter); right: var(--gutter); bottom: calc(var(--marquee-h) + 16px + var(--verbs-h) + 8px + var(--bars-h) + 56px + 56px); }
   .event { min-width: 0; max-width: calc(100vw - 32px); }
-  .ledger-panel { top: var(--below-top); width: calc(100vw - 32px); max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 220px); }
-  .bars { width: 200px; padding: 6px 10px 8px; gap: 4px; bottom: calc(var(--marquee-h) + 16px + 44px); }
+  .ledger-panel { top: var(--below-top); width: calc(100vw - 32px); max-height: calc(100vh - var(--below-top) - var(--marquee-h) - 16px - var(--verbs-h) - 8px - var(--bars-h) - 24px); }
+  .bars { width: 200px; padding: 6px 10px 8px; gap: 4px; bottom: calc(var(--marquee-h) + 16px + var(--verbs-h) + 8px); }
   .hud-verbs { right: var(--gutter); flex-wrap: wrap; gap: 6px; }
   .hud-verbs .chip { min-height: 36px; padding: 0 8px; font-size: 10px; }
   #hud-stance .chip-hint, .chip-dodge { display: none; }
-  .reach { left: var(--gutter); right: var(--gutter); width: auto; bottom: calc(var(--marquee-h) + 16px + 44px + var(--bars-h)); }
+  .reach { left: var(--gutter); right: var(--gutter); width: auto; bottom: calc(var(--marquee-h) + 16px + var(--verbs-h) + 8px + var(--bars-h)); }
+  .chip-connection { z-index: 1; } /* a reconnect shows over the verbs, which wait on it anyway (round forty-eight) */
   .heard { right: 0; max-width: none; }
   .dialogue { bottom: calc(var(--marquee-h) + 16px + 8px); }
+}
+
+/* The narrowest phone, 320-360px (a small handset, or a page zoomed to 400%; round forty-eight): the top chips and the
+   verb chips draw in their padding and tracking so the chips pair up in three rows instead of five and the verbs, dodge
+   included, keep to one row; at their full size the column between them had no height left for the wink or the journal. */
+@media (max-width: 360px) {
+  .hud-top { gap: 4px; }
+  .hud-top .chip { padding: 0 6px; gap: 4px; letter-spacing: 0.04em; }
+  .hud-verbs { gap: 4px; }
+  .hud-verbs .chip { padding: 0 6px; letter-spacing: 0.04em; }
 }
 
 /* A short screen: a phone on its side, or a laptop at 200% zoom (round thirty-three). The width rules above assume some

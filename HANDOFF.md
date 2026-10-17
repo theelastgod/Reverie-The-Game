@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 856 tests (2026-10-17), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 857 tests (2026-10-17), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  forty-seven on 2026-10-17 (see Done). Since round forty-four a test holds
+  forty-eight on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,29 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round forty-eight (2026-10-17; reflow at
+  320px, WCAG 1.4.10: the narrowest phone, or a page zoomed to 400%).
+  The landing page, the title and every HUD panel at 320x568, 320x480
+  and 360x640 with touch. The landing page and the title reflow clean.
+  Three HUD defects. (1) At 320 the verb chips (stance, kit, dodge)
+  wrapped to a second row, and the bars, seated a fixed 44px above the
+  foot, lay over it: the readiness bar was hidden behind the chips.
+  (2) The top chips stood one to a row (five rows), and the phone's
+  fixed sums left the wink a 42px sliver and pushed the journal's tab
+  into the reach. (3) The connection chip shares the verbs' corner: a
+  RECONNECTING chip drew under the dodge chip, and a faded ONLINE chip
+  could take a tap. Fixed: the HUD measures the verb row into
+  `--verbs-h` (beside round forty-seven's `--bars-h`) and the phone
+  layout stacks the bars, the reach, the banners, the left column, the
+  journal and the ledger on the measured heights; at 360px and under,
+  the top chips and verbs draw in their padding and tracking, so the
+  chips pair up in three rows and the verbs keep one; the connection
+  chip never takes a pointer and, on a phone, shows over the verbs,
+  which wait on it anyway. Proven: the render check's new 320x568 step
+  fails on the old layout ("the bars end at 508, under the verbs' top
+  at 474; the journal's tab ends at 348, under the reach's top at 332")
+  and passes on the fix; a11y.test.ts holds the formulas and the 360px
+  block. Left in Backlog 11: 320x480 upright. 857 tests.
 - The player-defect sweep, round forty-seven (2026-10-17; a reader's
   own text spacing, WCAG 1.4.12). Line height 1.5, letters 0.12em,
   words 0.16em and paragraphs 2em were forced on the title and on the
@@ -4803,6 +4826,9 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    200%), a three-row prompt lifts the heard line 5px into the top chips.
    And at 640 wide on a touch phone, the verb row with all five chips
    (stance, kit, dodge, use, flag) would pass the edge; 667 fits.
+   Since round forty-eight 320x568 holds; at 320x480 upright (a phone
+   from 2010) the journal's tab still sits 16px into the empty reach,
+   and a prompt there would cover the tab's foot. Left as is.
 12. Mainnet stays disarmed: no mint, no `$REVERIE` settlement, claims desk banks
    into `banked` only. Keep the fairness tests green.
 13. **The landing page's hot pink at AA (the owner's call).** Found by round
