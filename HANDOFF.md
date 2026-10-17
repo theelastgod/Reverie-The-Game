@@ -2998,6 +2998,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round forty-one (2026-10-17; target size and
+  page metadata). Every control on the landing page, the title, the HUD,
+  the lock and a dialogue measured against WCAG 2.5.8's 24px target, at
+  1280x800 and on a touch phone both ways; both pages checked for a
+  language, a title, a viewport and one h1 (all present). The game's
+  controls are all 24px or more. The landing page's header links
+  "Controls" and "Rules" were 17px tall (inline text, no padding), small
+  for a thumb; `site/style.css` now gives nav links a block padding that
+  makes them 24px without moving the text. Verified: `src/ui/a11y.test.ts`
+  reads the rule; the render check measures every control on the landing
+  page, the title and in the HUD and fails under 24px, naming both links
+  on the old CSS and passing on the new; gates green (851 tests).
 - The player-defect sweep, round forty (2026-10-17; names and focus
   rings). Every control on the landing page, the title, the HUD, the
   lock, a dialogue and the credits read from Chromium's accessibility tree

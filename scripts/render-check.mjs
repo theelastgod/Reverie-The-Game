@@ -85,6 +85,16 @@ const ringless = (scope) => {
   }
   return [...new Set(out)];
 };
+// Every control is at least 24px on each side (WCAG 2.5.8's target size; round forty-one): names the smaller ones.
+const smallTargets = (scope) => {
+  const out = [];
+  for (const e of document.querySelectorAll(`${scope} :is(button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"]))`)) {
+    if (!e.getClientRects().length || e.disabled || getComputedStyle(e).visibility === 'hidden') continue;
+    const r = e.getBoundingClientRect();
+    if (r.width < 24 || r.height < 24) out.push(`${e.id ? '#' + e.id : e.tagName.toLowerCase()} "${(e.getAttribute('aria-label') || e.textContent || '').trim().slice(0, 16)}" ${Math.round(r.width)}x${Math.round(r.height)}`);
+  }
+  return out;
+};
 const ignoresHidden = () => {
   const out = [];
   for (const e of document.querySelectorAll('body *')) {
@@ -116,6 +126,9 @@ try {
     if (route?.ok && !Array.isArray(route.events)) failures.push('the log route answered without an events array');
     await page.screenshot({ path: join(shots, '00-landing.png'), fullPage: true });
     console.log(`landing: ${shown} log line(s) shown; the route has ${route ? written : 'no answer'}`);
+    const tiny = await page.evaluate(smallTargets, 'body');
+    failures.push(...tiny.map(e => `landing: ${e} is under 24px`));
+    console.log(`targets on the landing page: ${tiny.length ? tiny.join(', ') + ' under 24px' : 'every link 24px or more'}`);
     if (written > 0 && shown === 0) failures.push('the city log has lines but the landing page shows none');
     if (written === 0 && shown > 0) failures.push('the landing page shows log lines the route does not have');
   }
@@ -173,6 +186,11 @@ try {
     const bare = await page.evaluate(ringless, '#title');
     failures.push(...bare.map(e => `title: ${e} has no focus ring`));
     console.log(`focus rings on the title: ${bare.length ? bare.join(', ') + ' without one' : 'every control has one'}`);
+  }
+  {
+    const tiny = await page.evaluate(smallTargets, '#title');
+    failures.push(...tiny.map(e => `title: ${e} is under 24px`));
+    console.log(`targets on the title: ${tiny.length ? tiny.join(', ') + ' under 24px' : 'every control 24px or more'}`);
   }
 
   // Enter the city: the title's primary button, else any key.
@@ -242,6 +260,11 @@ try {
     const bare = await page.evaluate(ringless, '#hud');
     failures.push(...bare.map(e => `hud: ${e} has no focus ring`));
     console.log(`focus rings in the HUD: ${bare.length ? bare.join(', ') + ' without one' : 'every control has one'}`);
+  }
+  {
+    const tiny = await page.evaluate(smallTargets, '#hud');
+    failures.push(...tiny.map(e => `hud: ${e} is under 24px`));
+    console.log(`targets in the HUD: ${tiny.length ? tiny.join(', ') + ' under 24px' : 'every control 24px or more'}`);
   }
   const before = page.viewportSize();
   const crowd = [];

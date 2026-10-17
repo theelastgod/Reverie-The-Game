@@ -27,7 +27,7 @@ html, body { margin: 0; background: var(--paper); color: var(--ink); font-family
   font-family: var(--display); letter-spacing: 0.04em; font-size: 1.15rem; }
 .brand img { background: #000; }
 nav { display: flex; gap: 1.25rem; align-items: center; font-weight: 700; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; }
-nav a { color: var(--ink); text-decoration: none; }
+nav a { display: inline-block; padding: 0.35rem 0; color: var(--ink); text-decoration: none; } /* a 24px tap target at the least (WCAG 2.5.8; round forty-one) */
 nav a:hover { color: var(--hot); }
 nav a.play { border: 3px solid var(--ink); padding: 0.4rem 0.8rem; background: var(--hot); color: #fff; }
 .hero { display: grid; grid-template-columns: 1.1fr 0.9fr; border-bottom: 3px solid var(--ink); }

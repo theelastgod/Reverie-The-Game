@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 const html = readFileSync(resolve(__dirname, "../../index.html"), "utf8");
 const css = readFileSync(resolve(__dirname, "./hud.css"), "utf8");
+const siteCss = readFileSync(resolve(__dirname, "../../site/style.css"), "utf8");
 
 /** The opening tag of the element with this id, attributes and all. */
 function tag(id: string): string {
@@ -151,6 +152,13 @@ describe("the HUD's stacking", () => {
       expect(rule, sel).not.toBeNull();
       expect(rule![1], sel).toMatch(/color: var\(--muted-on-void\);/);
     }
+  });
+  it("gives the landing page's nav links a 24px tap target (round forty-one)", () => {
+    // "Controls" and "Rules" were 17px tall: inline text with no padding. The render check measures every link.
+    const rule = siteCss.match(/\nnav a \{([^}]*)\}/);
+    expect(rule, "the nav link rule").not.toBeNull();
+    expect(rule![1]).toMatch(/display: inline-block;/);
+    expect(rule![1]).toMatch(/padding: 0\.35rem 0;/);
   });
   it("hides the title's test row when a deployed city says so (round thirty-six)", () => {
     // `.title-link { display: flex }` beat the attribute: title.ts set hidden and the row stayed on a deployed title.
