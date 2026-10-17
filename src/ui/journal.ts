@@ -47,7 +47,16 @@ export function mountJournal(root: HTMLElement): JournalPanel {
     const next = journalToggled(panel.classList.contains("open"), panel.classList.contains("closed"), window.innerWidth <= COLLAPSE_WIDTH);
     panel.classList.toggle("open", next.open);
     panel.classList.toggle("closed", next.closed);
+    syncExpanded();
   };
+  // The tab says whether the notes are open (round fifty-five): wide, they are open unless closed; narrow, closed unless
+  // opened (hud.css), so the state is read from the body's own display, and again when the width crosses the line.
+  const body = panel?.querySelector<HTMLElement>(".journal-body") ?? null;
+  const syncExpanded = () => {
+    if (tab && body && typeof getComputedStyle === "function") tab.setAttribute("aria-expanded", String(getComputedStyle(body).display !== "none"));
+  };
+  syncExpanded();
+  if (typeof window !== "undefined") window.addEventListener("resize", syncExpanded);
   tab?.addEventListener("click", toggle);
 
   return {
@@ -136,6 +145,7 @@ export function mountJournal(root: HTMLElement): JournalPanel {
       show(heardBox, lines.length > 0);
     },
     destroy() {
+      if (typeof window !== "undefined") window.removeEventListener("resize", syncExpanded);
       tab?.removeEventListener("click", toggle);
     },
   };

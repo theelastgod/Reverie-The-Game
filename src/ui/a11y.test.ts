@@ -237,4 +237,11 @@ describe("the HUD's stacking", () => {
   it("keeps what fades in the field notes (round fifty-four)", () => {
     expect(html).toMatch(/<section class="journal-heard" aria-label="Lately heard" hidden>\s*<div class="journal-glass-head">LATELY HEARD<\/div>\s*<ol class="journal-heard-lines"><\/ol>/);
   });
+
+  it("lets a finger open the ledger, and says what each toggle has open (round fifty-five)", () => {
+    expect(html).toMatch(/<button id="hud-ledger" class="chip chip-ledger interactive" type="button" aria-expanded="false" aria-controls="hud-ledger-panel"/);
+    expect(html).toMatch(/<button class="journal-tab" type="button" aria-expanded="true" aria-controls="hud-journal-body">/);
+    expect(html).toMatch(/<div id="hud-journal-body" class="journal-body">/);
+    expect(html).toMatch(/<aside id="hud-ledger-panel"/);
+  });
 });

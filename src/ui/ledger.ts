@@ -88,6 +88,8 @@ export function ledgerModel(snap: Pick<Snap, "now" | "you" | "market">): LedgerM
 
 export type LedgerCallbacks = {
   market: (op: "list" | "buy" | "cancel", args: { itemId?: string; listingId?: string; price?: number }) => void;
+  /** The chip that opens the panel; it says whether the panel is open (round fifty-five). */
+  button?: HTMLElement | null;
 };
 
 export type LedgerPanel = { set: (model: LedgerModel) => void; toggle: () => void; open: (on: boolean) => void; isOpen: () => boolean };
@@ -226,8 +228,8 @@ export function mountLedger(root: HTMLElement | null, cb: LedgerCallbacks): Ledg
       body.append(market);
       if (focused) body.querySelector<HTMLInputElement>(`input.ledger-price[data-item="${CSS.escape(focused)}"]`)?.focus();
     },
-    toggle() { opened = !opened; show(root, opened); },
-    open(on) { opened = on; show(root, opened); },
+    toggle() { opened = !opened; show(root, opened); cb.button?.setAttribute("aria-expanded", String(opened)); },
+    open(on) { opened = on; show(root, opened); cb.button?.setAttribute("aria-expanded", String(opened)); },
     isOpen: () => opened,
   };
 }

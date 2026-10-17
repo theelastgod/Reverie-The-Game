@@ -50,10 +50,10 @@
           <span class="chip-small chip-gestell">38</span>
           <span class="chip-tags"></span>
         </div>
-        <div id="hud-ledger" class="chip chip-ledger">
+        <button id="hud-ledger" class="chip chip-ledger interactive" type="button" aria-expanded="false" aria-controls="hud-ledger-panel" title="L opens the ledger">
           <img class="chip-icon" src="/assets/hud/coin.png" alt="" />
           <span class="chip-text">BESTAND 0</span>
-        </div>
+        </button>
         <button id="hud-audio" class="chip chip-audio interactive" type="button" aria-pressed="false" title="O mutes · [ and ] set the volume">
           <span class="chip-text">AUDIO ON</span>
           <span class="chip-small">80</span>
@@ -78,8 +78,8 @@
       </div>
 
       <aside id="hud-journal" class="panel interactive journal" aria-label="Field notes">
-        <button class="journal-tab" type="button"><span class="num">01</span> FIELD NOTES</button>
-        <div class="journal-body">
+        <button class="journal-tab" type="button" aria-expanded="true" aria-controls="hud-journal-body"><span class="num">01</span> FIELD NOTES</button>
+        <div id="hud-journal-body" class="journal-body">
           <img class="journal-plate" src="/assets/plate-arena.jpg" alt="" />
           <div class="journal-movement">MOVEMENT I</div>
           <h2 class="journal-title">The city</h2>

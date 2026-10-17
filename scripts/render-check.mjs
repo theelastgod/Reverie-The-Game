@@ -607,6 +607,31 @@ try {
   else console.log(`ledger: ${ledgerPanel.text.slice(0, 120)}`);
   await page.keyboard.press('KeyL');
   await page.waitForTimeout(200);
+  {
+    // The purse's chip opens the ledger too (round fifty-five): a finger has no L, and before this the chip was a div
+    // the canvas took the click through. It says whether the panel is open, as the journal's tab says of the notes.
+    const state = () => page.evaluate(() => ({
+      panel: !document.getElementById('hud-ledger-panel')?.hidden,
+      chip: document.getElementById('hud-ledger')?.getAttribute('aria-expanded') ?? null,
+      tab: document.querySelector('#hud-journal .journal-tab')?.getAttribute('aria-expanded') ?? null,
+      notes: getComputedStyle(document.querySelector('#hud-journal .journal-body')).display !== 'none',
+    }));
+    const wrong = [];
+    const clicked = await page.click('#hud-ledger', { timeout: 3000 }).then(() => true, () => false);
+    await page.waitForTimeout(200);
+    const opened = await state();
+    if (!clicked) wrong.push('the purse chip takes no click');
+    else {
+      await page.click('#hud-ledger', { timeout: 3000 });
+      await page.waitForTimeout(200);
+      const closed = await state();
+      if (!opened.panel || opened.chip !== 'true') wrong.push(`a click left the ledger ${opened.panel ? 'open' : 'closed'}, the chip expanded ${opened.chip}`);
+      if (closed.panel || closed.chip !== 'false') wrong.push(`a second click left the ledger ${closed.panel ? 'open' : 'closed'}, the chip expanded ${closed.chip}`);
+    }
+    if (opened.tab !== String(opened.notes)) wrong.push(`the journal tab says expanded ${opened.tab} with the notes ${opened.notes ? 'shown' : 'hidden'}`);
+    failures.push(...wrong.map(w => `ledger chip: ${w}`));
+    console.log(`the purse chip and the journal tab: ${wrong.length ? wrong.join('; ') : 'the chip opens and closes the ledger and says so; the tab says the notes are open'}`);
+  }
 
   // Keyboard reach: from the canvas, Shift+Tab enters the HUD's controls (the browser starts from their end),
   // another Shift+Tab moves within them, and Escape hands the keys back to the game (focus leaves the HUD).

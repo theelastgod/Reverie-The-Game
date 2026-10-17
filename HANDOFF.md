@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 863 tests (2026-10-17), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 864 tests (2026-10-17), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty-four on 2026-10-17 (see Done). Since round forty-four a test holds
+  fifty-five on 2026-10-17 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round fifty-five (2026-10-17; name, role,
+  value, WCAG 4.1.2). Two defects. (1) The ledger opened only with the L
+  key: the purse chip that shows it was a div the canvas took clicks
+  through, so on a phone, with no L, a player could never open the
+  ledger to buy, list or cancel on the Grid. Now the chip is a button
+  (`aria-expanded`, `aria-controls="hud-ledger-panel"`, "L opens the
+  ledger") that toggles the panel as L does, and the panel keeps the
+  chip's expanded state whichever way it opens (the key, the chip, a
+  desk). (2) The journal's tab toggles the field notes without saying
+  whether they are open; it now carries `aria-expanded`, read from the
+  notes' own display (open wide, closed narrow) on each toggle and on
+  resize. Proven: the render check's new step fails on the old build
+  ("the purse chip takes no click"; "the journal tab says expanded null")
+  and passes on the fix; a probe taps the chip on a 390x844 touch phone
+  and the ledger opens. The HUD's focus-ring, target and hidden audits
+  pass with the new button. a11y.test.ts holds the markup. 864 tests.
 - The player-defect sweep, round fifty-four (2026-10-17; timing, WCAG
   2.2.1). The lines a player hears from the world fade on their own: a
   heard line in six seconds whatever its length, a wink in eight, and

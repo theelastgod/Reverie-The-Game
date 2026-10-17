@@ -115,6 +115,8 @@ export class Hud {
   private readonly creditsFocus: FocusKeeper;
   private readonly audioChip: HTMLButtonElement | null;
   private readonly newsHold: HTMLButtonElement | null;
+  /** The purse's chip opens the ledger: a finger has no L (round fifty-five). */
+  private readonly ledgerChip: HTMLButtonElement | null;
   private readonly loading: HTMLElement | null;
   private readonly loadingText: HTMLElement | null;
   private readonly loadingPct: HTMLElement | null;
@@ -256,7 +258,8 @@ export class Hud {
     this.minimap = mountMinimap(root);
     this.lock = mountLock(root, serial => this.cb.link(serial), () => this.cb.wallet());
     this.events = mountEvents(q(root, "#hud-events"));
-    this.ledger = mountLedger(q(root, "#hud-ledger-panel"), { market: (op, args) => this.cb.market(op, args) });
+    this.ledgerChip = q(root, "#hud-ledger");
+    this.ledger = mountLedger(q(root, "#hud-ledger-panel"), { market: (op, args) => this.cb.market(op, args), button: this.ledgerChip });
 
     this.stance?.addEventListener("click", this.onStance);
     this.kit?.addEventListener("click", this.onKit);
@@ -268,6 +271,7 @@ export class Hud {
     this.credits?.addEventListener("keydown", this.onCreditsKey);
     this.audioChip?.addEventListener("click", this.onAudio);
     this.newsHold?.addEventListener("click", this.onNewsHold);
+    this.ledgerChip?.addEventListener("click", this.onLedgerChip);
     audio.onChange = () => this.syncAudio();
     this.syncAudio();
 
@@ -380,6 +384,7 @@ export class Hud {
     this.credits?.removeEventListener("keydown", this.onCreditsKey);
     this.audioChip?.removeEventListener("click", this.onAudio);
     this.newsHold?.removeEventListener("click", this.onNewsHold);
+    this.ledgerChip?.removeEventListener("click", this.onLedgerChip);
     if (audio.onChange) audio.onChange = null;
     this.dialogue.destroy();
     this.journal.destroy();
@@ -436,6 +441,7 @@ export class Hud {
     this.onCredits();
   };
   private readonly onAudio = () => { audio.toggleMuted(); };
+  private readonly onLedgerChip = () => { this.toggleLedger(); };
   // The news runs without end; its tag holds it still and lets it run again (WCAG 2.2.2; round fifty-two). The hold
   // stays across new lines, which replace the text but keep the class on the bar.
   private readonly onNewsHold = () => {
