@@ -2998,6 +2998,12 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- After the server change, on GitHub's runner and under the fuzzer
+  (2026-10-17, round forty-five). The Deploy workflow's check mode at
+  d397ff5 (the wallet body bound and the entry-module test): run
+  39027271765, success. The session fuzzer on fresh seeds after the bound,
+  15001-15060 fight-biased and 17001-17060 plain, 300 steps each, 36,000
+  steps, no violation. Nothing to fix.
 - A guard for the Worker's entry module (2026-10-17, round forty-four).
   Round forty-three exported a constant from `server/src/index.ts`, and
   workerd refused to start ("Incorrect type for map entry"): the unit
