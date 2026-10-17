@@ -2998,6 +2998,17 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- A guard for the Worker's entry module (2026-10-17, round forty-four).
+  Round forty-three exported a constant from `server/src/index.ts`, and
+  workerd refused to start ("Incorrect type for map entry"): the unit
+  tests, the typecheck and the dry-run bundle all passed, and only a
+  Wrangler run caught it. `server/src/entry.test.ts` reads `main` from
+  wrangler.toml, imports that module and holds it to workerd's rule:
+  every named export a function or a class, the default a handler with
+  `fetch`, and every Durable Object class wrangler.toml binds exported as
+  a class. Proven by appending `export const PROBE_CONSTANT = 4096`: the
+  test names it and fails; it passes on the real module. Gates green
+  (855 tests), and the Deploy workflow's check mode runs it with the rest.
 - The player-defect sweep, round forty-three (2026-10-17; the HTTP routes
   under malformed input). Fifty requests at every route on a fresh local
   Worker: odd and hostile query strings on /log/recent, oversized URLs,
