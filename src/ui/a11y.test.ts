@@ -45,6 +45,13 @@ describe("the HUD's markup for assistive technology", () => {
     // centred without a transform: .chip-btn:active's press transform would undo it and move the button off the pointer
     expect(css).not.toMatch(/\.chip-reclaim[^{]*\{[^}]*transform/);
   });
+  it("keeps the canvas's touches for the game and the buttons' taps from zooming (round sixty-seven)", () => {
+    expect(css).toMatch(/\ncanvas \{[^}]*touch-action: none/);
+    expect(css).toMatch(/\ncanvas \{[^}]*-webkit-touch-callout: none/);
+    expect(css).toMatch(/html, body \{[^}]*overscroll-behavior: none/);
+    expect(css).toMatch(/\nbutton \{[^}]*touch-action: manipulation/);
+    expect(css).toMatch(/\n\.chip \{[^}]*user-select: none/);
+  });
   it("announces what changes on its own", () => {
     has(tag("hud-connection"), 'role="status"');
     has(tag("hud-events"), 'aria-live="polite"');

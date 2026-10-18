@@ -42,9 +42,16 @@ html, body {
   font-family: var(--ui);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none; /* a stick dragged down from the top of a phone is a walk, never a pull-to-refresh */
 }
 
-canvas { display: block; }
+/* The canvas's touches are the game's (round sixty-seven): with the browser's touch-action left on, two quick taps
+   (two strikes) zoomed the page, the stick and a second finger read as a pinch, and a drag could pan, each of which
+   cancels the stick. A long press there selects nothing and opens no callout. */
+canvas { display: block; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+/* Buttons take a tap at once, never a double-tap zoom; a chip's label is a control, not text to select. */
+button { touch-action: manipulation; }
+.chip { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 
 /* ------------------------------------------------------------ primitives */
 

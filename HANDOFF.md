@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 881 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 882 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty-six on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty-seven on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round sixty-seven (2026-10-18; the phone's
+  own gestures). Nothing kept the browser's touch gestures off the game:
+  the canvas, the page and the buttons all read touch-action auto and
+  overscroll auto (probed on e455030's client at 390 by 844). On a real
+  phone two quick taps (two strikes) could double-tap zoom the page, the
+  stick and a second finger could read as a pinch, a drag could pan, a
+  stick dragged down from the top could pull-to-refresh (a reload
+  mid-fight), and each cancels the stick; a long press selected chip
+  labels. Fixed in `src/ui/hud.css`: the canvas takes `touch-action:
+  none` and no selection or callout, the page `overscroll-behavior:
+  none`, every button `touch-action: manipulation`, and chip labels are
+  not selectable (text in panels and the inputs stays selectable).
+  a11y.test.ts holds the rules; a new step in the render check's phone
+  pass reads them computed (canvas none, page overscroll none, the dodge
+  button manipulation, its label unselectable), after the touch step,
+  which still walks, strikes, heavies and dodges. Verified: typecheck,
+  882 tests, the build, the render check and the session smoke on a
+  fresh local Worker.
 - The player-defect sweep, round sixty-six (2026-10-18; keyboard
   layouts). Every key was read by its position (`e.code`), which is right
   for the walk (WASD by position is ZQSD on AZERTY) but wrong for the

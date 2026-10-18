@@ -996,6 +996,24 @@ try {
     if (tapSent.join() !== 'strike') failures.push(`a tap on the canvas sent [${tapSent}], not one strike`);
     if (!dodgeVisible) failures.push(`the dodge chip is not a visible button on a coarse pointer (${dodgeState})`);
     else if (!/STEP/.test(dodgeText)) failures.push(`the dodge button did not start a cooldown ("${dodgeText.trim()}")`);
+    // The canvas's touches are the game's (round sixty-seven): the browser must not take them for a double-tap zoom, a
+    // pinch, a pan or a pull-to-refresh, each of which would cancel the stick; buttons take taps without a zoom.
+    {
+      const touch = await phone.evaluate(() => {
+        const c = s => { const el = document.querySelector(s); return el ? getComputedStyle(el) : null; };
+        return {
+          canvas: c('body > canvas')?.touchAction ?? 'no canvas',
+          overscroll: c('html')?.overscrollBehaviorY ?? '?',
+          button: c('#hud-dodge')?.touchAction ?? 'no chip',
+          select: c('#hud-dodge')?.userSelect ?? c('#hud-dodge')?.webkitUserSelect ?? '?',
+        };
+      });
+      console.log(`touch: canvas touch-action ${touch.canvas}, page overscroll ${touch.overscroll}, dodge button touch-action ${touch.button}, user-select ${touch.select}`);
+      if (touch.canvas !== 'none') failures.push(`the game canvas leaves its touches to the browser (touch-action ${touch.canvas})`);
+      if (touch.overscroll !== 'none') failures.push(`the page can pull-to-refresh (overscroll-behavior ${touch.overscroll})`);
+      if (touch.button !== 'manipulation') failures.push(`a HUD button can double-tap zoom (touch-action ${touch.button})`);
+      if (touch.select !== 'none') failures.push(`a HUD chip's label can be selected by a long press (user-select ${touch.select})`);
+    }
     // A hidden page (round sixty-one): one audio context, the bus's (Phaser's own manager is off), suspended while
     // the page is hidden so the bed and the music do not loop on in a background tab, and running again on return.
     {
