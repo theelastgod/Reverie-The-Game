@@ -4,11 +4,11 @@
  * (1 s doubling to 10 s); close code 4001 means the Angel is active in another
  * tab and this one stands down. Every sender emits the exact ClientMsg shape.
  */
-import type { ClientMsg, FastFrame, Hello, ServerMsg, Snap, YouView } from "../sim/protocol";
+import { PROTOCOL_VERSION, type ClientMsg, type FastFrame, type Hello, type ServerMsg, type Snap, type YouView } from "../sim/protocol";
 import type { Intent } from "../sim/types";
 import { applySlow, mergeFrames, type SlowState } from "../sim/frames";
 
-export type SocketStatus = "connecting" | "online" | "reconnecting" | "elsewhere" | "nocookie" | "closed";
+export type SocketStatus = "connecting" | "online" | "reconnecting" | "elsewhere" | "nocookie" | "stale" | "closed";
 
 export const INTENT_THROTTLE_MS = 250;
 export const RECONNECT_MIN_MS = 1000;
@@ -96,6 +96,13 @@ export class WorldSocket {
         }
         if (!data || typeof data !== "object") return;
         if (data.t === "hello") {
+          // A city that speaks another protocol (a deploy while this tab stood open) would be misread frame by frame:
+          // this page stands down and asks for a reload instead (the player-defect sweep, round seventy-four).
+          if ((data as { v?: unknown }).v !== PROTOCOL_VERSION) {
+            this.standDown("stale");
+            ws.close();
+            return;
+          }
           this.id = data.id;
           this.you = data.you;
           this.attempts = 0;
@@ -163,10 +170,17 @@ export class WorldSocket {
 
   /** No cookie, no body: the page stands down with the reason, and reconnects no more until it is reloaded. */
   private standDownNoCookie(): void {
+    this.standDown("nocookie");
+  }
+
+  /** Stands down for a reason only a reload can mend (no cookie, a city on another protocol): no more reconnects. */
+  private standDown(status: "nocookie" | "stale"): void {
     this.stopped = true;
     if (this.retry) clearTimeout(this.retry);
     this.retry = null;
-    this.setStatus("nocookie");
+    if (this.watchdog) clearInterval(this.watchdog);
+    this.watchdog = null;
+    this.setStatus(status);
   }
 
   private scheduleReconnect(): void {

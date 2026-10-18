@@ -359,6 +359,24 @@ describe("a browser that keeps no cookie (the player-defect sweep, round seventy
   });
 });
 
+describe("a city on another protocol (the player-defect sweep, round seventy-four)", () => {
+  it("stands down asking for a reload, reads none of its frames and reconnects no more", async () => {
+    const net = new WorldSocket();
+    let snaps = 0;
+    net.onSnap = () => snaps++;
+    await net.connect();
+    const ws = FakeSocket.instances[0];
+    ws.open();
+    ws.message({ t: "hello", v: PROTOCOL_VERSION + 1, id: "p1", guest: true, you: { id: "p1", name: "GUEST", x: 1, y: 2 } });
+    expect(net.status).toBe("stale");
+    expect(net.id).toBeNull();
+    ws.message({ t: "snap", v: PROTOCOL_VERSION + 1, you: { id: "p1" }, players: [] });
+    expect(snaps).toBe(0);
+    await vi.advanceTimersByTimeAsync(30000);
+    expect(FakeSocket.instances).toHaveLength(1);
+  });
+});
+
 describe("intent throttling", () => {
   it("sends unchanged intent at most every 250 ms, changed intent at once", async () => {
     const { net, ws } = await online();

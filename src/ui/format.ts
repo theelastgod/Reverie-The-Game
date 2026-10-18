@@ -266,13 +266,14 @@ export function kitLine(messenger: Messenger, cooldown: number, active: boolean)
 /** The browser keeps no cookie, and the city knows a body only by its cookie (the player-defect sweep, round seventy-one). */
 export const NO_COOKIE_LINE = "THIS BROWSER KEEPS NO COOKIE · ALLOW THIS SITE'S COOKIES AND RELOAD";
 
-export function statusLine(status: "connecting" | "online" | "reconnecting" | "elsewhere" | "nocookie" | "closed"): string {
+export function statusLine(status: "connecting" | "online" | "reconnecting" | "elsewhere" | "nocookie" | "stale" | "closed"): string {
   switch (status) {
     case "connecting": return "CONNECTING";
     case "online": return "ONLINE";
     case "reconnecting": return "RECONNECTING";
     case "elsewhere": return "OPEN IN ANOTHER TAB · THIS ONE IS IDLE";
     case "nocookie": return NO_COOKIE_LINE;
+    case "stale": return "THE CITY WAS UPDATED · RELOAD TO WALK IN IT";
     case "closed": return "CONNECTION CLOSED";
   }
 }

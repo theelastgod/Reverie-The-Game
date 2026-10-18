@@ -53,6 +53,12 @@ describe("the HUD's markup for assistive technology", () => {
     expect(css).toMatch(/\nbutton \{[^}]*touch-action: manipulation/);
     expect(css).toMatch(/\n\.chip \{[^}]*user-select: none/);
   });
+  it("offers RELOAD when the city was updated under an open tab, hidden until then (round seventy-four)", () => {
+    const opening = tag("hud-reload");
+    has(opening, 'type="button"');
+    has(opening, " hidden");
+    expect(html).toMatch(/id="hud-reload"[^>]*>RELOAD</);
+  });
   it("keeps a press on the title made before the game's script arrives (round seventy-three)", () => {
     const catcher = html.indexOf("window.__titleEarly = what");
     const moduleScript = html.indexOf('<script type="module"');

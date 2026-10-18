@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 892 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 894 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  seventy-three on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy-four on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,24 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round seventy-four (2026-10-18; a deploy
+  under an open tab). A deploy restarts the city, so every open tab
+  reconnects, but to a city that may speak another protocol than the
+  client the tab still runs; the client never looked at the hello's
+  version, so it would read the new city's frames by the old shapes and
+  break quietly. Fixed: a hello whose `v` is not the client's
+  `PROTOCOL_VERSION` stands the page down ("THE CITY WAS UPDATED ·
+  RELOAD TO WALK IN IT", status `stale`, the closed chip's colours),
+  reads none of that city's frames and reconnects no more; a RELOAD
+  button (`#hud-reload`, placed as PLAY HERE is) reloads the page onto
+  the new client. worldSocket.test.ts holds the stand-down, a11y.test.ts
+  the button; a new render-check step routes the city's socket and
+  raises the hello's version by one (the chip reads UPDATED, RELOAD
+  shown). Proven: on aec6086's client the step fails (the chip read
+  ONLINE). For the deploy itself: bump `PROTOCOL_VERSION` whenever a
+  frame's shape changes, or open tabs cannot tell. Verified: typecheck,
+  894 tests, the build, the render check and the session smoke on a
+  fresh local Worker.
 - The player-defect sweep, round seventy-three (2026-10-18; a slow
   first load). The game's script is 396 KB gzipped, so on a slow line
   the title (plain HTML) shows for seconds before anything can answer

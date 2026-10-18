@@ -372,7 +372,7 @@ button { touch-action: manipulation; }
 }
 .chip-connection.online { opacity: 0; }
 .chip-connection.reconnecting, .chip-connection.elsewhere { background: var(--acid); }
-.chip-connection.closed, .chip-connection.nocookie { background: var(--hot); color: var(--paper); }
+.chip-connection.closed, .chip-connection.nocookie, .chip-connection.stale { background: var(--hot); color: var(--paper); }
 /* Over everything at the screen's middle: the tab is idle, nothing under it answers (round sixty-three). */
 /* Centred by margin, not by transform: .chip-btn:active presses with a transform of its own, which would undo a
    centring one mid-press and pull the button from under the pointer, so the release (and the click) missed it. */

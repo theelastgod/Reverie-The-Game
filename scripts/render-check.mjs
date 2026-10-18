@@ -1149,6 +1149,34 @@ try {
   } finally {
     await phone.close();
   }
+  // A city updated under an open tab (round seventy-four): the hello says another protocol version; the page must stand
+  // down with the reason and a RELOAD button rather than read the city's frames wrong.
+  {
+    const stale = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    try {
+      await stale.routeWebSocket(/\/ws$/, ws => {
+        const server = ws.connectToServer();
+        server.onMessage(m => {
+          let text = String(m);
+          try { const d = JSON.parse(text); if (d.t === 'hello') { d.v = Number(d.v) + 1; text = JSON.stringify(d); } } catch { /* pass through */ }
+          ws.send(text);
+        });
+        ws.onMessage(m => server.send(m));
+      });
+      await stale.goto(origin, { waitUntil: 'load', timeout: 30000 });
+      await stale.waitForSelector('#title', { timeout: 15000 });
+      const go = stale.locator('#title button', { hasText: /enter/i }).first();
+      if (await go.count()) await go.click(); else await stale.keyboard.press('Enter');
+      await stale.waitForFunction(() => /UPDATED/.test(document.getElementById('hud-connection')?.textContent ?? ''), null, { timeout: 20000 }).catch(() => {});
+      const line = await stale.evaluate(() => document.getElementById('hud-connection')?.textContent ?? '');
+      const offered = await stale.evaluate(() => { const b = document.getElementById('hud-reload'); return !!b && !b.hidden; });
+      console.log(`stale city: "${line}", RELOAD ${offered ? 'offered' : 'not offered'}`);
+      if (!/UPDATED/.test(line)) failures.push(`a hello on another protocol version did not stand the page down ("${line}")`);
+      else if (!offered) failures.push('a page standing down for an updated city offers no RELOAD');
+    } finally {
+      await stale.close();
+    }
+  }
   // A slow line (round seventy-three): the game's script held back four seconds, ENTER pressed once while it is on its
   // way. The press must show it was taken and, when the script lands, open the city with no second press.
   {
