@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 876 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 881 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty-five on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty-six on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,22 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round sixty-six (2026-10-18; keyboard
+  layouts). Every key was read by its position (`e.code`), which is right
+  for the walk (WASD by position is ZQSD on AZERTY) but wrong for the
+  commands, which the HUD names by letter: on AZERTY the key marked M
+  sends Semicolon, so M never opened the map, and the same held for the
+  other command letters on any layout that moves them. Fixed: a command
+  follows the letter on the key (`commandCode` in `src/ui/keys.ts`, over
+  `COMMAND_LETTERS`: R K F E Q V T I J M L O), and a key whose letter is
+  no command keeps its position, so every command stays reachable (a
+  Cyrillic layout by position; AZERTY's A on QWERTY's Q still the Q
+  verb, since AZERTY's Q is a walk key). keys.test.ts holds it (five
+  cases); a new render-check step sends AZERTY's M (code Semicolon, key
+  m) twice and reads the map hidden and shown again. Proven: on f66faf3's
+  client the step fails (the map did not move). Verified: typecheck, 881
+  tests, the build, the render check and the session smoke on a fresh
+  local Worker.
 - The player-defect sweep, round sixty-five (2026-10-18; the browser's
   chords). The keys ignored Ctrl, Cmd and Alt, so the browser's own
   shortcuts did game things too: Ctrl+1 to 9 (switch tabs) picked a

@@ -790,6 +790,26 @@ try {
     if (lastIntent !== 'still') failures.push(`a walk key held through Cmd kept walking after Cmd was let go (${lastIntent})`);
   }
 
+  // Another layout (round sixty-six): on AZERTY the key marked M sends the code Semicolon; it must toggle the map, as M
+  // does on QWERTY, and a second press brings it back.
+  {
+    const mapHidden = () => page.evaluate(() => document.getElementById('hud-minimap')?.hidden ?? null);
+    const press = () => page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Semicolon', key: 'm', bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'Semicolon', key: 'm', bubbles: true }));
+    });
+    const before = await mapHidden();
+    await press();
+    await page.waitForTimeout(150);
+    const once = await mapHidden();
+    await press();
+    await page.waitForTimeout(150);
+    const twice = await mapHidden();
+    console.log(`layouts: AZERTY's M → map hidden ${before} → ${once} → ${twice}`);
+    if (once === before) failures.push("AZERTY's M (code Semicolon) did not toggle the map");
+    else if (twice !== before) failures.push("a second AZERTY M did not bring the map back");
+  }
+
   // A second tab with the same cookie (round sixty-three): the city takes the newest, so this tab stands down with
   // "OPEN IN ANOTHER TAB" and a PLAY HERE button; pressing it takes the city back here and the second tab stands down.
   {

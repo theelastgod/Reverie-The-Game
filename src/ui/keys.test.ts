@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PAPER_INSURANCE, PAPER_REPAIR, UNHEARD_GAP_MS, browserOwns, escapeDoes, focusAfterClose, hudControlFocused, isBrowserChord, paperToUse, pointerReleasesFocus, releasesHeld, tellUnheard } from "./keys";
+import { PAPER_INSURANCE, PAPER_REPAIR, UNHEARD_GAP_MS, COMMAND_LETTERS, browserOwns, commandCode, escapeDoes, focusAfterClose, hudControlFocused, isBrowserChord, paperToUse, pointerReleasesFocus, releasesHeld, tellUnheard } from "./keys";
 import { ITEM_INSURANCE, ITEM_REPAIR } from "../sim/economy";
 
 /** A fake element: what it matches, whom it contains, and whether it is still in the document. */
@@ -45,6 +45,32 @@ describe("chords with Ctrl, Cmd or Alt (the player-defect sweep, round sixty-fiv
   it("letting go of Cmd drops the held directions (macOS sends no keyup for a key held with it); other keys do not", () => {
     for (const code of ["MetaLeft", "MetaRight"]) expect(releasesHeld(code)).toBe(true);
     for (const code of ["ControlLeft", "AltLeft", "ShiftLeft", "KeyW", "ArrowUp", "Tab"]) expect(releasesHeld(code)).toBe(false);
+  });
+});
+
+describe("command keys by the letter on the key (the player-defect sweep, round sixty-six)", () => {
+  it("AZERTY's M (sent as Semicolon) opens the map", () => {
+    expect(commandCode("Semicolon", "m")).toBe("KeyM");
+    // the comma at QWERTY's M keeps its position too: a second way to the map, never a lost one
+    expect(commandCode("KeyM", ",")).toBe("KeyM");
+  });
+  it("follows the letter, either case, on any layout", () => {
+    expect(commandCode("KeyC", "j")).toBe("KeyJ"); // Dvorak's J
+    expect(commandCode("KeyJ", "J")).toBe("KeyJ");
+    expect(commandCode("KeyX", "q")).toBe("KeyQ");
+  });
+  it("keeps the position when the key's letter is no command, so every command stays reachable", () => {
+    expect(commandCode("KeyQ", "a")).toBe("KeyQ"); // AZERTY's A on QWERTY's Q: the Q verb
+    expect(commandCode("KeyM", "ь")).toBe("KeyM"); // a Cyrillic layout: by position
+    expect(commandCode("KeyZ", "w")).toBe("KeyZ");
+  });
+  it("passes every other code through", () => {
+    for (const [code, key] of [["Space", " "], ["Tab", "Tab"], ["Escape", "Escape"], ["Digit1", "&"], ["BracketLeft", "["], ["ShiftLeft", "Shift"]]) {
+      expect(commandCode(code, key)).toBe(code);
+    }
+  });
+  it("names every command letter once", () => {
+    expect(new Set(COMMAND_LETTERS).size).toBe(COMMAND_LETTERS.length);
   });
 });
 

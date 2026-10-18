@@ -51,6 +51,22 @@ export function releasesHeld(code: string): boolean {
   return code === "MetaLeft" || code === "MetaRight";
 }
 
+/** The letters the game names its commands by (R heavy, K kit, F/E/Q the place's verbs, V flag, T truce, I paper,
+ *  J journal, M map, L ledger, O sound). The walk keys stay where the hand is (WASD by position, ZQSD on AZERTY). */
+export const COMMAND_LETTERS = "RKFEQVTIJMLO";
+
+/**
+ * The code a command key stands for. A command is named by its letter, so it follows the letter printed on the key,
+ * whatever the layout: on AZERTY the key marked M sends Semicolon and would never open the map by position (the
+ * player-defect sweep, round sixty-six). A key whose letter is no command (a non-Latin layout, or AZERTY's A on the
+ * Q position) keeps its position, so every command stays reachable. Every other code passes through.
+ */
+export function commandCode(code: string, key: string): string {
+  const letter = key.length === 1 ? key.toUpperCase() : "";
+  if (letter >= "A" && letter <= "Z" && COMMAND_LETTERS.includes(letter)) return `Key${letter}`;
+  return code;
+}
+
 /**
  * What Escape does. A HUD control outside the dialogue hands the keys back (the scene blurs it). Inside the
  * dialogue, or with no control focused, Escape closes the dialogue when one is open (closing returns focus, see

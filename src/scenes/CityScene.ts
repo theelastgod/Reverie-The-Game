@@ -17,7 +17,7 @@ import { VOLUME_STEP } from "../audio/settings";
 import { rebased, riteHeard } from "../audio/cues";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
-import { UNHEARD_LINE, browserOwns, escapeDoes, hudControlFocused, isBrowserChord, paperToUse, releasesHeld, tellUnheard } from "../ui/keys";
+import { UNHEARD_LINE, browserOwns, commandCode, escapeDoes, hudControlFocused, isBrowserChord, paperToUse, releasesHeld, tellUnheard } from "../ui/keys";
 import { MAX_HP } from "../sim/constants";
 import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, mouseStrike, secondFinger, stickIntent } from "../ui/stick";
 
@@ -230,7 +230,9 @@ export class CityScene extends Phaser.Scene {
       return;
     }
     if (e.repeat) return;
-    switch (e.code) {
+    // the walk keys above are by position; a command follows the letter on the key (round sixty-six)
+    const code = commandCode(e.code, e.key);
+    switch (code) {
       case "Tab":
         e.preventDefault();
         if (!dialogue) this.orUnheard(this.net.stance());
@@ -266,7 +268,7 @@ export class CityScene extends Phaser.Scene {
         return;
     }
     if (dialogue) return;
-    switch (e.code) {
+    switch (code) {
       case "Space":
         e.preventDefault();
         this.strike(false);
