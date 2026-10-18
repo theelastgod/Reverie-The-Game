@@ -810,6 +810,24 @@ try {
     else if (twice !== before) failures.push("a second AZERTY M did not bring the map back");
   }
 
+  // Back (round sixty-eight): with the ledger open, the browser's (or the phone's) Back closes the ledger and leaves the
+  // player in the city, where before it left the page.
+  {
+    const ledgerOpen = () => page.evaluate(() => !document.getElementById('hud-ledger-panel')?.hidden);
+    if (!(await ledgerOpen())) await page.keyboard.press('KeyL');
+    await page.waitForTimeout(200);
+    const opened = await ledgerOpen();
+    const url = page.url();
+    await page.evaluate(() => history.back());
+    await page.waitForTimeout(600);
+    const stayed = page.url() === url && await page.evaluate(() => !!document.getElementById('hud') && !document.getElementById('hud').hidden).catch(() => false);
+    const closed = stayed && !(await ledgerOpen());
+    console.log(`back: ledger ${opened ? 'open' : 'not open'} → Back → ${stayed ? 'still in the city' : `left for ${page.url()}`}, ledger ${closed ? 'closed' : 'still open'}`);
+    if (!opened) failures.push('L did not open the ledger before the Back step');
+    else if (!stayed) failures.push(`Back with the ledger open left the city (${page.url()})`);
+    else if (!closed) failures.push('Back with the ledger open did not close it');
+  }
+
   // A second tab with the same cookie (round sixty-three): the city takes the newest, so this tab stands down with
   // "OPEN IN ANOTHER TAB" and a PLAY HERE button; pressing it takes the city back here and the second tab stands down.
   {

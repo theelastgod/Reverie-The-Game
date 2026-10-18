@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 882 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 884 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty-seven on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty-eight on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round sixty-eight (2026-10-18; Back). The
+  city kept no history entry of its own, so the phone's Back (the
+  gesture on Android, the browser's button anywhere), which players use
+  to close what is open, left the city altogether with the ledger, the
+  notes or a dialogue open. Fixed: entering the city lays one history
+  entry, and Back closes the topmost open panel first, in the order they
+  stack (the dialogue, then the ledger, then the opened notes;
+  `backCloses` in `src/ui/keys.ts`, `Hud.closeTop`), laying the entry
+  down again each time; with nothing open, Back goes on and leaves as it
+  always did. keys.test.ts holds the order (two cases); a new
+  render-check step opens the ledger and presses Back (still in the
+  city, the ledger closed). Proven: on cb3c494's client the step fails
+  (Back left for the landing page with the ledger open). Verified:
+  typecheck, 884 tests, the build, the render check and the session
+  smoke on a fresh local Worker.
 - The player-defect sweep, round sixty-seven (2026-10-18; the phone's
   own gestures). Nothing kept the browser's touch gestures off the game:
   the canvas, the page and the buttons all read touch-action auto and

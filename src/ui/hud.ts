@@ -24,7 +24,7 @@ import { eventRows, mountEvents, type EventsPanel } from "./events";
 import { ledgerModel, mountLedger, type LedgerPanel } from "./ledger";
 import { gen, genFailed, setImageSrc } from "../assets/gen";
 import { badgeFor, sealFor } from "../assets/slots";
-import { paperWorthUsing, pointerReleasesFocus } from "./keys";
+import { backCloses, paperWorthUsing, pointerReleasesFocus } from "./keys";
 
 export type HudCallbacks = {
   choose: (choiceId: string, node?: string) => void; // dialogue choice clicked, against the window it was drawn for
@@ -377,6 +377,17 @@ export class Hud {
     if (this.ledger.isOpen()) this.ledger.set(ledgerModel(snap));
   }
   toggleMinimap(): void { this.minimap.toggle(); }
+
+  /** Back pressed: closes the topmost open panel (keys.ts backCloses) and says whether it closed one. */
+  closeTop(): boolean {
+    const dialogue = this.last?.you?.dialogue;
+    const journal = !!this.root.querySelector("#hud-journal.open");
+    const shut = backCloses({ dialogue: !!dialogue, ledger: this.ledger.isOpen(), journal });
+    if (shut === "dialogue") this.cb.close(dialogue?.node);
+    else if (shut === "ledger") this.toggleLedger();
+    else if (shut === "journal") this.toggleJournal();
+    return shut !== null;
+  }
 
   destroy(): void {
     for (const watch of this.measures) watch.disconnect();

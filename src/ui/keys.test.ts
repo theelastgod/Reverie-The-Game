@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PAPER_INSURANCE, PAPER_REPAIR, UNHEARD_GAP_MS, COMMAND_LETTERS, browserOwns, commandCode, escapeDoes, focusAfterClose, hudControlFocused, isBrowserChord, paperToUse, pointerReleasesFocus, releasesHeld, tellUnheard } from "./keys";
+import { PAPER_INSURANCE, PAPER_REPAIR, UNHEARD_GAP_MS, COMMAND_LETTERS, backCloses, browserOwns, commandCode, escapeDoes, focusAfterClose, hudControlFocused, isBrowserChord, paperToUse, pointerReleasesFocus, releasesHeld, tellUnheard } from "./keys";
 import { ITEM_INSURANCE, ITEM_REPAIR } from "../sim/economy";
 
 /** A fake element: what it matches, whom it contains, and whether it is still in the document. */
@@ -71,6 +71,17 @@ describe("command keys by the letter on the key (the player-defect sweep, round 
   });
   it("names every command letter once", () => {
     expect(new Set(COMMAND_LETTERS).size).toBe(COMMAND_LETTERS.length);
+  });
+});
+
+describe("what Back closes (the player-defect sweep, round sixty-eight)", () => {
+  it("closes the topmost panel first: the dialogue, then the ledger, then the notes", () => {
+    expect(backCloses({ dialogue: true, ledger: true, journal: true })).toBe("dialogue");
+    expect(backCloses({ dialogue: false, ledger: true, journal: true })).toBe("ledger");
+    expect(backCloses({ dialogue: false, ledger: false, journal: true })).toBe("journal");
+  });
+  it("closes nothing when nothing is open, so Back leaves the page", () => {
+    expect(backCloses({ dialogue: false, ledger: false, journal: false })).toBeNull();
   });
 });
 

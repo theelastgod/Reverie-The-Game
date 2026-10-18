@@ -61,9 +61,22 @@ audio.followVisibility(document);
 let game: Phaser.Game | null = null;
 let starting = false;
 
+/**
+ * The phone's Back closes the open panel before it leaves the city (round sixty-eight): entering the city leaves one
+ * history entry of our own, and each Back that closes a panel lays it down again. With nothing open, Back goes on.
+ */
+function armBack(): void {
+  history.pushState({ city: true }, "");
+  window.addEventListener("popstate", () => {
+    if (hud.closeTop()) history.pushState({ city: true }, "");
+    else history.back();
+  });
+}
+
 function start(): void {
   if (game || starting) return;
   starting = true;
+  armBack();
   audio.unlock();
   audio.setScene("city");
   const pre = getPreselectedSerial();

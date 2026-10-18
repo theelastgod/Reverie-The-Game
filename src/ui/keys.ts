@@ -68,6 +68,18 @@ export function commandCode(code: string, key: string): string {
 }
 
 /**
+ * What the phone's Back (or the browser's) closes first, in the order a player sees them stacked: the dialogue, then
+ * the ledger, then the opened field notes. Nothing open: null, and Back leaves the page as it always did (the
+ * player-defect sweep, round sixty-eight: Back left the city with a panel open, mid-sentence).
+ */
+export function backCloses(open: { dialogue: boolean; ledger: boolean; journal: boolean }): "dialogue" | "ledger" | "journal" | null {
+  if (open.dialogue) return "dialogue";
+  if (open.ledger) return "ledger";
+  if (open.journal) return "journal";
+  return null;
+}
+
+/**
  * What Escape does. A HUD control outside the dialogue hands the keys back (the scene blurs it). Inside the
  * dialogue, or with no control focused, Escape closes the dialogue when one is open (closing returns focus, see
  * `focusAfterClose`). Otherwise nothing.
