@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  seventy-one on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy-two on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,16 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round seventy-two (2026-10-18; locale, then
+  the fuzzers run deep). Locale: the one number formatted for show is
+  pinned to `en-US`, no date or time is formatted from the browser's
+  locale, and both pages declare `lang="en"`; nothing to fix. Then both
+  fuzzers far past their defaults: the server session fuzzer (round
+  twenty-two) 1,500 runs, and the sim's seeded random play (round
+  twenty-one, strict) over 2,000 fresh seeds (1001 to 3000, 250 actions
+  each, in two parallel runs of 1,000; one run of 3,000 overran the
+  test's ten-minute timeout, which is no finding). Every invariant held;
+  no finding. No code changed.
 - The player-defect sweep, round seventy-one (2026-10-18; a browser that
   keeps no cookie: Safari's "block all cookies", strict privacy modes,
   the city framed on another site). The city knows a body only by its
