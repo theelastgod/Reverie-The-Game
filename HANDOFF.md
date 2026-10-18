@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty-seven on 2026-10-17 (see Done). Since round forty-four a test holds
+  fifty-eight on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round fifty-eight (2026-10-18; orientation,
+  WCAG 1.3.4). A phone turned with the field notes open (390x844 to
+  844x390 and back): the HUD measures again (--below-top, the bars, the
+  verbs), nothing runs off the screen, the open notes stay an overlay as
+  designed, and the journal tab's expanded state stays true. No defect.
+  The render check's phone pass now widens the window to 1280x800 (where
+  the notes open by themselves), turns it to 844x390 and back to
+  390x844, and checks each; with the journal's resize listener taken out
+  the step fails ("1280x800: the journal tab says expanded false with
+  the notes shown"), and it passes as built. A turn alone could not have
+  caught that: a phone never crosses 1100px, where the notes' rule
+  flips. 864 tests.
 - The player-defect sweep, round fifty-seven (2026-10-17; the ledger in a
   hand). Round fifty-five made the purse chip open the ledger; this round
   read the ledger on touch screens, as a guest and as a linked Angel, at

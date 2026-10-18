@@ -908,6 +908,31 @@ try {
       failures.push(...narrow.map(n => `phone at 320x568: ${n}`));
       console.log(`phone at 320x568: ${narrow.length ? narrow.join('; ') : 'the bars over the verbs, the reach over the bars, the wink and the journal tab with room, nothing sideways'}`);
     }
+    // A turn of the phone (WCAG 1.3.4; round fifty-eight), and first a window widened past 1100px, where the notes open
+    // by themselves: the HUD measures again each time, nothing runs off the screen, and the journal's tab still says
+    // whether the notes are open under each layout's rule (the wide one shows them, the narrow ones hide them).
+    {
+      const turned = [];
+      for (const [w, h] of [[1280, 800], [844, 390], [390, 844]]) {
+        await phone.setViewportSize({ width: w, height: h });
+        await phone.waitForTimeout(500);
+        const r = await phone.evaluate(() => {
+          const out = [];
+          for (const el of document.querySelectorAll('#hud .chip, #hud .panel')) {
+            const b = el.getBoundingClientRect(), cs = getComputedStyle(el);
+            if (!b.width || !b.height || cs.visibility === 'hidden') continue;
+            if (b.right > innerWidth + 1 || b.bottom > innerHeight + 1 || b.left < -1 || b.top < -1) out.push(`${el.id || el.className.split(' ')[0]} off the screen`);
+          }
+          const tab = document.querySelector('#hud-journal .journal-tab'), body = document.querySelector('#hud-journal .journal-body');
+          if (tab.getAttribute('aria-expanded') !== String(getComputedStyle(body).display !== 'none')) out.push(`the journal tab says expanded ${tab.getAttribute('aria-expanded')} with the notes ${getComputedStyle(body).display === 'none' ? 'hidden' : 'shown'}`);
+          if (document.documentElement.scrollWidth > innerWidth + 1) out.push('the page scrolls sideways');
+          return out;
+        });
+        turned.push(...r.map(x => `${w}x${h}: ${x}`));
+      }
+      failures.push(...turned.map(t => `phone turned: ${t}`));
+      console.log(`phone widened, turned to its side and back: ${turned.length ? turned.join('; ') : 'nothing off the screen, the journal tab true to the notes at 1280x800, 844x390 and 390x844'}`);
+    }
     // A script error the HUD throws only at this width (a layout that divides by a zero size, a missing element) is a
     // failure the boxes cannot show; the desktop pass only prints its errors, since its list also holds the proxy's.
     const phoneOnly = phoneErrors.filter(e => !errors.includes(e));
