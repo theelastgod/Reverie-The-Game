@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty-nine on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- A review of the day's client changes, round sixty (2026-10-18; the
+  HUD, journal, ledger, lock, title and dialogue as changed by rounds
+  forty-six to fifty-eight, 4999402..d198c57). Read for state that can
+  go stale, listeners that outlive their HUD, and paths a second caller
+  can reach: the journal's open state changes only through its toggle
+  (which syncs the tab) and the resize listener; the ledger's chip state
+  follows both toggle and open (a desk opening it); the held ticker's
+  pending line resolves to the last news or to nothing; the LEAVE button
+  sends the same close Escape always did. One thing fixed: the three
+  ResizeObservers the HUD makes (the top chips, the bars, the verbs) were
+  never let go; the HUD now keeps them and disconnects them in destroy().
+  No player-facing defect. Verified: typecheck, 864 tests, the build and
+  the render check (every phone step, the measures included).
 - Dependency hygiene, round fifty-nine (2026-10-18). `npm audit` reads
   0; `npm outdated` listed three patch releases inside the ranges
   already declared (playwright-core 1.63.0 → 1.64.1, vite 8.3.2 → 8.3.4,

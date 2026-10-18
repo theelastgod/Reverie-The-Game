@@ -139,6 +139,8 @@ export class Hud {
   private marqueeText = "";
   /** The heard lines and winks that faded, kept for the field notes (round fifty-four). */
   private heardKept: string[] = [];
+  /** The observers that measure the top chips, the bars and the verbs; let go with the HUD (round sixty). */
+  private readonly measures: ResizeObserver[] = [];
   /** News that came while the ticker was held; it runs when the hold is let go (round fifty-three). */
   private marqueePending: string | null = null;
   private status: HudStatus | "" = "";
@@ -165,17 +167,21 @@ export class Hud {
         const bottom = top.getBoundingClientRect().bottom;
         if (bottom > 0) root.style.setProperty("--below-top", `${Math.ceil(bottom) + 12}px`);
       };
-      new ResizeObserver(below).observe(top);
+      const watch = new ResizeObserver(below);
+      watch.observe(top);
+      this.measures.push(watch);
     }
     // And the heights a phone stacks on, measured, not assumed: the bars (--bars-h) grow when a reader widens the text's
     // spacing (round forty-seven), and the verb chips (--verbs-h) wrap to a second row at 320px (round forty-eight).
     for (const [sel, prop] of [["#hud-bars", "--bars-h"], ["#hud-verbs", "--verbs-h"]] as const) {
       const el = q(root, sel);
       if (!el || typeof ResizeObserver === "undefined") continue;
-      new ResizeObserver(() => {
+      const watch = new ResizeObserver(() => {
         const h = el.getBoundingClientRect().height;
         if (h > 0) root.style.setProperty(prop, `${Math.ceil(h)}px`);
-      }).observe(el);
+      });
+      watch.observe(el);
+      this.measures.push(watch);
     }
 
     this.identity = q(root, "#hud-identity");
@@ -367,6 +373,8 @@ export class Hud {
   toggleMinimap(): void { this.minimap.toggle(); }
 
   destroy(): void {
+    for (const watch of this.measures) watch.disconnect();
+    this.measures.length = 0;
     window.clearTimeout(this.heardTimer);
     window.clearTimeout(this.heardFade);
     window.clearTimeout(this.winkTimer);
