@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PAPER_INSURANCE, PAPER_REPAIR, UNHEARD_GAP_MS, browserOwns, escapeDoes, focusAfterClose, hudControlFocused, paperToUse, pointerReleasesFocus, tellUnheard } from "./keys";
+import { PAPER_INSURANCE, PAPER_REPAIR, UNHEARD_GAP_MS, browserOwns, escapeDoes, focusAfterClose, hudControlFocused, isBrowserChord, paperToUse, pointerReleasesFocus, releasesHeld, tellUnheard } from "./keys";
 import { ITEM_INSURANCE, ITEM_REPAIR } from "../sim/economy";
 
 /** A fake element: what it matches, whom it contains, and whether it is still in the document. */
@@ -32,6 +32,19 @@ describe("hudControlFocused", () => {
     expect(hudControlFocused(outside as unknown as Element, hud as unknown as Element)).toBe(false);
     expect(hudControlFocused(null, hud as unknown as Element)).toBe(false);
     expect(hudControlFocused(button as unknown as Element, null)).toBe(false);
+  });
+});
+
+describe("chords with Ctrl, Cmd or Alt (the player-defect sweep, round sixty-five)", () => {
+  it("belong to the browser; Shift alone stays the game's", () => {
+    expect(isBrowserChord({ ctrlKey: true, metaKey: false, altKey: false })).toBe(true);
+    expect(isBrowserChord({ ctrlKey: false, metaKey: true, altKey: false })).toBe(true);
+    expect(isBrowserChord({ ctrlKey: false, metaKey: false, altKey: true })).toBe(true);
+    expect(isBrowserChord({ ctrlKey: false, metaKey: false, altKey: false })).toBe(false);
+  });
+  it("letting go of Cmd drops the held directions (macOS sends no keyup for a key held with it); other keys do not", () => {
+    for (const code of ["MetaLeft", "MetaRight"]) expect(releasesHeld(code)).toBe(true);
+    for (const code of ["ControlLeft", "AltLeft", "ShiftLeft", "KeyW", "ArrowUp", "Tab"]) expect(releasesHeld(code)).toBe(false);
   });
 });
 

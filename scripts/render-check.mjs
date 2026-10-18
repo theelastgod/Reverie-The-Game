@@ -744,6 +744,52 @@ try {
     if (primary.join() !== 'strike') failures.push(`a left click on the canvas sent [${primary}], not one strike`);
   }
 
+  // Chords (round sixty-five): Ctrl+L, Ctrl+J and Ctrl+M are the browser's, so the ledger, the journal and the map do
+  // not toggle and the browser's default is not taken; Ctrl+S (a walk key under Ctrl) sends no walk; and a walk key held
+  // through Cmd, whose keyup macOS never sends, stops when Cmd is let go.
+  {
+    await page.locator('canvas').first().click({ position: { x: 5, y: 5 }, force: true }).catch(() => {});
+    await page.evaluate(() => {
+      window.__chordSent = [];
+      window.__chordTaken = [];
+      const send = WebSocket.prototype.send;
+      WebSocket.prototype.send = function (data) {
+        try { window.__chordSent.push(JSON.parse(String(data))); } catch { /* not ours */ }
+        return send.call(this, data);
+      };
+      window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.defaultPrevented) window.__chordTaken.push(e.code); });
+    });
+    await page.waitForTimeout(600); // past the strike step's sends
+    const panels = () => page.evaluate(() => ({
+      ledger: !document.getElementById('hud-ledger-panel')?.hidden,
+      journal: document.getElementById('hud-journal')?.classList.contains('open') ?? false,
+      map: document.getElementById('hud-minimap')?.hidden ?? false,
+    }));
+    const before = await panels();
+    const mark = await page.evaluate(() => window.__chordSent.length);
+    for (const k of ['Control+KeyL', 'Control+KeyJ', 'Control+KeyM', 'Control+KeyS']) await page.keyboard.press(k);
+    await page.waitForTimeout(400);
+    const after = await panels();
+    const chordWalk = await page.evaluate(n => window.__chordSent.slice(n).filter(m => m.t === 'intent' && m.intent.down).length, mark);
+    const taken = await page.evaluate(() => [...window.__chordTaken]);
+    // Cmd held, D pressed under it, Cmd let go with D's keyup never sent (as macOS does): the last intent must be still.
+    await page.keyboard.down('KeyD');
+    await page.waitForTimeout(300);
+    await page.evaluate(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { code: 'MetaLeft', key: 'Meta', metaKey: true, bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent('keyup', { code: 'MetaLeft', key: 'Meta', bubbles: true }));
+    });
+    await page.waitForTimeout(500);
+    const lastIntent = await page.evaluate(() => { const i = window.__chordSent.filter(m => m.t === 'intent').at(-1)?.intent; return i ? Object.entries(i).filter(([, v]) => v).map(([k]) => k).join('+') || 'still' : 'none'; });
+    await page.keyboard.up('KeyD');
+    const toggled = Object.keys(before).filter(k => before[k] !== after[k]);
+    console.log(`chords: Ctrl+L/J/M toggled [${toggled}], defaults taken [${taken}], Ctrl+S walked ${chordWalk}; Cmd let go over a held D → last intent ${lastIntent}`);
+    if (toggled.length) failures.push(`a Ctrl chord toggled the HUD's ${toggled.join(', ')}`);
+    if (taken.length) failures.push(`the game took the browser's default for ${taken.join(', ')}`);
+    if (chordWalk) failures.push('Ctrl+S walked the body');
+    if (lastIntent !== 'still') failures.push(`a walk key held through Cmd kept walking after Cmd was let go (${lastIntent})`);
+  }
+
   // A second tab with the same cookie (round sixty-three): the city takes the newest, so this tab stands down with
   // "OPEN IN ANOTHER TAB" and a PLAY HERE button; pressing it takes the city back here and the second tab stands down.
   {

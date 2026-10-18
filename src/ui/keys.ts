@@ -34,6 +34,24 @@ export function browserOwns(code: string, shiftKey: boolean, focused: boolean): 
 }
 
 /**
+ * A chord with Ctrl, Cmd or Alt is the browser's or the system's (Ctrl+1 to switch tabs, Ctrl+L, Cmd+S, Ctrl+Tab),
+ * never a game key: the game neither acts on it nor takes it from the browser (the player-defect sweep, round
+ * sixty-five). Shift stays the game's (the dodge, the heavy).
+ */
+export function isBrowserChord(e: { ctrlKey: boolean; metaKey: boolean; altKey: boolean }): boolean {
+  return e.ctrlKey || e.metaKey || e.altKey;
+}
+
+/**
+ * The modifier whose release can strand a held key: on macOS a key pressed or held with Cmd sends no keyup, so the
+ * walk it started would never end. Letting go of Cmd drops every held direction. Ctrl and Alt deliver their keyups,
+ * so letting go of them leaves a walk the player is still holding alone.
+ */
+export function releasesHeld(code: string): boolean {
+  return code === "MetaLeft" || code === "MetaRight";
+}
+
+/**
  * What Escape does. A HUD control outside the dialogue hands the keys back (the scene blurs it). Inside the
  * dialogue, or with no control focused, Escape closes the dialogue when one is open (closing returns focus, see
  * `focusAfterClose`). Otherwise nothing.

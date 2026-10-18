@@ -17,7 +17,7 @@ import { VOLUME_STEP } from "../audio/settings";
 import { rebased, riteHeard } from "../audio/cues";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
-import { UNHEARD_LINE, browserOwns, escapeDoes, hudControlFocused, paperToUse, tellUnheard } from "../ui/keys";
+import { UNHEARD_LINE, browserOwns, escapeDoes, hudControlFocused, isBrowserChord, paperToUse, releasesHeld, tellUnheard } from "../ui/keys";
 import { MAX_HP } from "../sim/constants";
 import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, mouseStrike, secondFinger, stickIntent } from "../ui/stick";
 
@@ -214,6 +214,7 @@ export class CityScene extends Phaser.Scene {
 
   private keyDown(e: KeyboardEvent): void {
     if (isTyping(e.target)) return;
+    if (isBrowserChord(e)) return; // Ctrl+1, Ctrl+L, Cmd+S, Ctrl+Tab: the browser's, untouched (round sixty-five)
     // A HUD control with focus (reached by Shift+Tab from the canvas) keeps the keys that work it: Tab and
     // Shift+Tab move focus, Space and Enter activate, Escape hands the keys back to the game. See ../ui/keys.ts.
     const focused = hudControlFocused(document.activeElement, document.getElementById("hud"));
@@ -307,6 +308,12 @@ export class CityScene extends Phaser.Scene {
   }
 
   private keyUp(e: KeyboardEvent): void {
+    if (releasesHeld(e.code)) {
+      // a direction held through a Cmd chord may never send its keyup (macOS): the walk ends with the chord
+      this.held.clear();
+      this.sendIntent();
+      return;
+    }
     const move = MOVE_KEYS[e.code];
     if (move) this.held.delete(move);
   }

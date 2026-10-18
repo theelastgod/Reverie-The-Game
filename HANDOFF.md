@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 874 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 876 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty-four on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty-five on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round sixty-five (2026-10-18; the browser's
+  chords). The keys ignored Ctrl, Cmd and Alt, so the browser's own
+  shortcuts did game things too: Ctrl+1 to 9 (switch tabs) picked a
+  dialogue choice, Ctrl+Tab flipped the stance, Ctrl+L and Ctrl+M opened
+  the ledger and hid the map, and Ctrl+S, Ctrl+D, Ctrl+A and Ctrl+W
+  walked the body and had their defaults taken (no save, no bookmark).
+  And on macOS a key held under Cmd sends no keyup, so after Cmd+S the
+  body walked on until S was pressed again. Fixed: a chord with Ctrl,
+  Cmd or Alt is the browser's, untouched (`isBrowserChord` in
+  `src/ui/keys.ts`; Shift stays the game's), and letting go of Cmd drops
+  every held direction (`releasesHeld`; Ctrl and Alt deliver their keyups,
+  so letting go of them leaves a held walk alone). keys.test.ts holds
+  both; a new render-check step presses Ctrl+L, J, M and S (nothing
+  toggled, no default taken, no walk) and lets go of Cmd over a held D
+  whose keyup never comes (the last intent is still). Proven: on
+  2618229's client the step fails (the ledger and the map toggled, Ctrl+S
+  taken and walked, the body still walking right). Verified: typecheck,
+  876 tests, the build, the render check and the session smoke on a
+  fresh local Worker.
 - The player-defect sweep, round sixty-four (2026-10-18; the mouse's
   other buttons). Every mouse button on the canvas struck: a right-click
   (to look at something, or by habit) swung and opened the browser's
