@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  fifty-eight on 2026-10-18 (see Done). Since round forty-four a test holds
+  fifty-nine on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,15 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- Dependency hygiene, round fifty-nine (2026-10-18). `npm audit` reads
+  0; `npm outdated` listed three patch releases inside the ranges
+  already declared (playwright-core 1.63.0 → 1.64.1, vite 8.3.2 → 8.3.4,
+  vitest 5.0.3 → 5.0.5), taken by `npm update` (the lockfile only).
+  Verified on them: typecheck, 864 tests, the build, the client staged,
+  the session smoke, the render check (the local Chromium is named by
+  path; the runner's job installs the one its playwright-core asks for)
+  and the dry-run bundle (684.32 KiB, 183.06 KiB gzipped, unchanged).
+  `npm outdated` now lists nothing.
 - The player-defect sweep, round fifty-eight (2026-10-18; orientation,
   WCAG 1.3.4). A phone turned with the field notes open (390x844 to
   844x390 and back): the HUD measures again (--below-top, the bars, the
