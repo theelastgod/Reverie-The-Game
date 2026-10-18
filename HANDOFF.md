@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 898 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 899 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  seventy-seven on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy-eight on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,28 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- Round seventy-eight (2026-10-18; a code review of rounds 75 to 77,
+  3cee70c..15a6fe2). Eight findings, six fixed, two folded in:
+  (1, 2, confirmed in a browser) `fitCanvas` set the canvas's CSS size
+  after Phaser's `setZoom`/`resize` had measured it, and nothing
+  measured again, so the pointer was mapped through a stale size: after
+  a resize at 1x a touch at 600,500 planted the stick at 439,456, and
+  after 2x and back at 300,250. Fixed: the style is set last and
+  `game.scale.refresh()` measures again. (3) the camera's layout zoom
+  read a CSS width rebuilt from the rounded canvas, which could fall
+  under 1280 at a fractional density; it reads `window.innerWidth`.
+  (4, 5) the world's text (names, ledger ticks, the going-under word,
+  the gate words, which had no resolution at all) is rasterised at
+  `textResolution`: the camera's largest zoom at the density, rounded
+  up (2 on 1x, 3 on 2x). (6) the minimap's backing store is its shown
+  box at the density (260x200 on a phone, not 416x320). (7) the game
+  config computes the density once. (8) the render check's density
+  step now walks 1000x700@1x, @2x, @1x and back to 1366x768, and at
+  each plants the touch stick at 600,500 and reads where it landed; the
+  phone pass and the step find the city canvas the same way. Proven:
+  on 15a6fe2's client the step fails (439,456; 300,250; 820,549; the
+  phone's map 416x320). Verified: typecheck, 899 tests, the build and
+  the render check on a fresh local Worker (17.6 fps, as before).
 - Round seventy-seven (2026-10-18; CI red on f129fae). The live job's
   render check failed at round seventy-six's new step: in CI's Google
   Chrome 155 the `(resolution: Ndppx)` media query's change event did

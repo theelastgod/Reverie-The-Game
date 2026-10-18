@@ -103,8 +103,8 @@ export class CityScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(0, 0, WORLD_W, WORLD_H);
     cam.setBackgroundColor("#0a0a0a");
-    this.applyZoom(this.scale.width);
-    this.scale.on(Phaser.Scale.Events.RESIZE, (size: { width: number }) => this.applyZoom(size.width));
+    this.applyZoom();
+    this.scale.on(Phaser.Scale.Events.RESIZE, () => this.applyZoom());
 
     this.net = new WorldSocket();
     bus.net = this.net;
@@ -144,9 +144,10 @@ export class CityScene extends Phaser.Scene {
   }
 
   /** The canvas is in device pixels (main.ts): the layout reads the CSS width, and the camera draws at the density. */
-  private applyZoom(width: number): void {
-    const density = 1 / this.scale.zoom;
-    this.cameras.main.setZoom(cameraZoom(width / density, density));
+  private applyZoom(): void {
+    // The window's own CSS width: one rebuilt from the rounded canvas could fall under the 1280 line at a fractional
+    // density (round seventy-eight's review).
+    this.cameras.main.setZoom(cameraZoom(window.innerWidth, 1 / this.scale.zoom));
   }
 
   /** A pointer's place in CSS pixels, where the HUD's stick is drawn and its reach is measured. */

@@ -11,6 +11,7 @@ import { DISTRICT_BY_ID, POIS, POI_LIST, TILE } from "../sim/map";
 import type { EnemyView, NodeView, NpcView, PublicPlayer, Snap, WreckageView, YouView } from "../sim/protocol";
 import type { Messenger, Stance } from "../sim/types";
 import { COLOR, DEPTH, NPC_SPRITES, TEX, UI_FONT, bodyDepth } from "./floors";
+import { textResolution } from "./density";
 import { pulseAt, reducedMotion } from "./motion";
 import { propTarget, spriteFor } from "../assets/slots";
 import { npcLabel } from "./labels";
@@ -758,7 +759,7 @@ export class Entities {
         .text(0, 0, "", { fontFamily: UI_FONT, fontSize: "11px", fontStyle: "500", color: "#ffffff", backgroundColor: "rgba(10,10,10,0.72)", padding: { x: 5, y: 2 } })
         .setOrigin(0.5, 1)
         .setDepth(DEPTH.label)
-        .setResolution(2);
+        .setResolution(textResolution(window.devicePixelRatio));
       t.setVisible(true);
       this.labelById.set(id, t);
     }

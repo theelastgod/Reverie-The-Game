@@ -6,6 +6,7 @@
  * tints and overlay visibility, which change only when the snapshot says so.
  */
 import Phaser from "phaser";
+import { textResolution } from "./density";
 import {
   COLS, DISTRICTS, DISTRICT_BY_ID, FLOOR_FILES, GATES, NODE_LIST, PATCHES, POI_LIST, ROWS, TILE, WORLD_H, WORLD_W,
   gateOpenFor, isWall,
@@ -336,7 +337,8 @@ export class Floors {
           letterSpacing: 2,
         })
         .setOrigin(0.5)
-        .setDepth(DEPTH.prop + 0.1);
+        .setDepth(DEPTH.prop + 0.1)
+        .setResolution(textResolution(window.devicePixelRatio));
       this.gateFields.push({ gate, field, label });
     }
   }

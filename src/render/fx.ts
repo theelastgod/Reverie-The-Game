@@ -8,6 +8,7 @@
 import Phaser from "phaser";
 import type { PassingOutcome } from "../sim/types";
 import { COLOR, DEPTH, TEX, UI_FONT } from "./floors";
+import { textResolution } from "./density";
 import { reducedMotion, stillTween } from "./motion";
 
 const STRIKE_MS = 120;
@@ -38,7 +39,7 @@ export class Fx {
       .setOrigin(0.5)
       .setScrollFactor(0)
       .setDepth(DEPTH.fx + 6)
-      .setResolution(2)
+      .setResolution(textResolution(window.devicePixelRatio))
       .setVisible(false);
     this.scan = scene.add.tileSprite(0, 0, 10, 10, TEX.scanline).setScrollFactor(0).setDepth(DEPTH.fx + 4).setVisible(false);
   }
@@ -111,7 +112,7 @@ export class Fx {
         .text(0, 0, "", { fontFamily: UI_FONT, fontSize: "12px", fontStyle: "700", color: "#ffffff", backgroundColor: "rgba(10,10,10,0.78)", padding: { x: 4, y: 1 } })
         .setOrigin(0.5, 1)
         .setDepth(DEPTH.fx)
-        .setResolution(2);
+        .setResolution(textResolution(window.devicePixelRatio));
       this.ledgers.push(t);
     }
     t.setText(text).setColor(Fx.LEDGER_TONE[tone]).setPosition(Math.round(x + (Math.random() - 0.5) * 16), Math.round(y)).setAlpha(1).setVisible(true);

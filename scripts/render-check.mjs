@@ -877,24 +877,40 @@ try {
   }
 
   // The window dragged to a 2x screen and back (round seventy-six): the city and the map follow the density, and the
-  // canvas keeps the window's CSS size throughout (round seventy-five's fitCanvas and its density watch).
+  // canvas keeps the window's CSS size throughout (round seventy-five's fitCanvas, read each frame since round
+  // seventy-seven). A touch must land where the finger is after a resize and after each move (round seventy-eight: the
+  // canvas was measured before its CSS size was set, so the stick was planted off the finger, at half its place after
+  // 2x and back): the touch stick is planted at the touched point, so its CSS place is the pointer's mapping.
   {
     const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 2 });
     const read = () => page.evaluate(() => {
       const city = [...document.querySelectorAll('canvas')].find(c => !c.closest('#hud'));
       const map = document.querySelector('#hud-minimap canvas');
       const r = city?.getBoundingClientRect();
-      return city && map ? [city.width, city.height, Math.round(r.width), Math.round(r.height), map.width] : null;
+      return city && map ? [city.width, city.height, Math.round(r.width), Math.round(r.height), map.width === Math.round(map.clientWidth * devicePixelRatio)] : null;
     });
+    const plant = async (x, y) => {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+      await page.waitForTimeout(150);
+      const at = await page.evaluate(() => { const s = document.getElementById('hud-stick'); return s ? [Math.round(parseFloat(s.style.left)), Math.round(parseFloat(s.style.top))] : null; });
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await page.waitForTimeout(250);
+      return at;
+    };
     const seen = [];
-    for (const f of [2, 1]) {
-      await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: f, mobile: false });
+    const moves = [[1000, 700, 1], [1000, 700, 2], [1000, 700, 1], [1366, 768, 1]];
+    for (const [w, h, f] of moves) {
+      await cdp.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: f, mobile: false });
       await page.waitForTimeout(1200);
       const got = await read();
-      seen.push(`${f}x ${JSON.stringify(got)}`);
-      const want = [1366 * f, 768 * f, 1366, 768, 208 * f];
-      if (JSON.stringify(got) !== JSON.stringify(want)) failures.push(`density ${f}x: the canvases read ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+      const at = await plant(600, 500);
+      seen.push(`${w}x${h}@${f}x ${JSON.stringify(got)} touch→${JSON.stringify(at)}`);
+      const want = [w * f, h * f, w, h, true];
+      if (JSON.stringify(got) !== JSON.stringify(want)) failures.push(`density ${w}x${h}@${f}x: the canvases read ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+      if (!at || Math.abs(at[0] - 600) > 1 || Math.abs(at[1] - 500) > 1) failures.push(`density ${w}x${h}@${f}x: a touch at 600,500 planted the stick at ${JSON.stringify(at)}`);
     }
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false });
     await cdp.send('Emulation.clearDeviceMetricsOverride');
     await cdp.detach();
     console.log(`density moves: ${seen.join(' → ')}`);
@@ -942,15 +958,16 @@ try {
     console.log(`phone pointer: ${await phone.evaluate(() => `coarse ${matchMedia('(pointer: coarse)').matches}, touch points ${navigator.maxTouchPoints}, width ${window.innerWidth}`)}`);
     // A 2x screen: the city and the map draw at the screen's density, not at CSS size upscaled (round seventy-five).
     const sharp = await phone.evaluate(() => {
-      const city = document.querySelector('body > canvas, canvas:not(#hud canvas)');
+      const city = [...document.querySelectorAll('canvas')].find(c => !c.closest('#hud'));
       const map = document.querySelector('#hud-minimap canvas');
       const r = city?.getBoundingClientRect();
-      return { dpr: devicePixelRatio, city: city ? [city.width, city.height, Math.round(r.width), Math.round(r.height)] : null, map: map ? [map.width, map.height] : null };
+      return { dpr: devicePixelRatio, city: city ? [city.width, city.height, Math.round(r.width), Math.round(r.height)] : null, map: map ? [map.width, map.height, map.clientWidth, map.clientHeight] : null };
     });
     console.log(`phone density: ${JSON.stringify(sharp)}`);
     if (!sharp.city || sharp.city[0] !== sharp.city[2] * 2 || sharp.city[1] !== sharp.city[3] * 2) failures.push(`phone: the city canvas is not drawn at the screen's density (${JSON.stringify(sharp.city)})`);
     if (!sharp.city || sharp.city[2] !== 390 || sharp.city[3] !== 844) failures.push(`phone: the city canvas does not fill the screen (${JSON.stringify(sharp.city)})`);
-    if (!sharp.map || sharp.map[0] !== 416 || sharp.map[1] !== 320) failures.push(`phone: the map is not drawn at the screen's density (${JSON.stringify(sharp.map)})`);
+    // The map's backing store is its shown box at the density (130x100 on a phone: 260x200; round seventy-eight).
+    if (!sharp.map || sharp.map[0] !== sharp.map[2] * 2 || sharp.map[1] !== sharp.map[3] * 2) failures.push(`phone: the map is not drawn at the screen's density (${JSON.stringify(sharp.map)})`);
     const fit = await phone.evaluate(() => {
       const w = window.innerWidth;
       const h = window.innerHeight;

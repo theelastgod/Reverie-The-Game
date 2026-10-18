@@ -50,10 +50,14 @@ export function mountMinimap(root: HTMLElement): MinimapPanel {
   const draw = (snap: Snap, now: number) => {
     if (!ctx || !canvas) return;
     // The map's backing store at the screen's density, drawn in its own 208x160 units (round seventy-five).
+    // Sized from the box it is shown in (130x100 on a phone), not the 208x160 it is drawn in, so a phone fills no
+    // pixels it would throw away (round seventy-eight's review).
     const d = renderDensity(window.devicePixelRatio);
-    if (canvas.width !== Math.round(W * d)) {
-      canvas.width = Math.round(W * d);
-      canvas.height = Math.round(H * d);
+    const bw = Math.max(1, Math.round((canvas.clientWidth || W) * d));
+    const bh = Math.max(1, Math.round((canvas.clientHeight || H) * d));
+    if (canvas.width !== bw || canvas.height !== bh) {
+      canvas.width = bw;
+      canvas.height = bh;
     }
     ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
     ctx.clearRect(0, 0, W, H);

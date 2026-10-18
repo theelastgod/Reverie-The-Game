@@ -82,8 +82,12 @@ function fitCanvas(): void {
   const { width, height } = canvasSize(window.innerWidth, window.innerHeight, d);
   if (game.scale.zoom !== 1 / d) game.scale.setZoom(1 / d);
   if (game.scale.width !== width || game.scale.height !== height) game.scale.resize(width, height);
+  // Phaser measured the canvas inside those calls, at the CSS size it had then; the pointer is mapped through that
+  // measure, so a touch after a resize or a density move landed off the finger (round seventy-eight's review). The
+  // style is set last and the canvas measured again.
   game.canvas.style.width = `${window.innerWidth}px`;
   game.canvas.style.height = `${window.innerHeight}px`;
+  game.scale.refresh();
 }
 
 /**
@@ -133,6 +137,7 @@ function start(): void {
   // Boot only knows which generated textures to load once the manifest has answered (or failed).
   void manifest.then(() => {
     if (game) return;
+    const density = renderDensity(window.devicePixelRatio);
     game = new Phaser.Game({
       type: Phaser.AUTO,
       parent: document.body,
@@ -141,7 +146,7 @@ function start(): void {
       antialias: true,
       roundPixels: true,
       // Device pixels at the window's CSS size; fitCanvas keeps it so (round seventy-five).
-      scale: { mode: Phaser.Scale.NONE, ...canvasSize(window.innerWidth, window.innerHeight, renderDensity(window.devicePixelRatio)), zoom: 1 / renderDensity(window.devicePixelRatio), autoCenter: Phaser.Scale.NO_CENTER },
+      scale: { mode: Phaser.Scale.NONE, ...canvasSize(window.innerWidth, window.innerHeight, density), zoom: 1 / density, autoCenter: Phaser.Scale.NO_CENTER },
       input: { keyboard: false, mouse: true, touch: true },
       // The canvas's right-click opens no menu over the city (round sixty-four); the HUD's own controls keep theirs.
       disableContextMenu: true,

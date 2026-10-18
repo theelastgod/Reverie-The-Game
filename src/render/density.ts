@@ -22,3 +22,13 @@ export function canvasSize(cssWidth: number, cssHeight: number, density: number)
 export function cameraZoom(cssWidth: number, density: number): number {
   return (cssWidth >= 1280 ? 1.15 : 1) * density;
 }
+
+/**
+ * The resolution the world's text is rasterised at when it is made: the camera's largest zoom at this density,
+ * rounded up (2 on a 1x screen, 3 on a 2x one). Text below it is drawn small and stretched by the camera, softer than
+ * the art around it; above it, it costs texture for nothing (round seventy-eight's review). Text made before a density
+ * change keeps its resolution until it is made again.
+ */
+export function textResolution(devicePixelRatio: number | undefined): number {
+  return Math.ceil(cameraZoom(1280, renderDensity(devicePixelRatio)));
+}

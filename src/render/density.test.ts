@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_DENSITY, cameraZoom, canvasSize, renderDensity } from "./density";
+import { MAX_DENSITY, cameraZoom, canvasSize, renderDensity, textResolution } from "./density";
 
 describe("render density (round seventy-five)", () => {
   it("draws at the screen's density, from 1 to the cap", () => {
@@ -27,5 +27,13 @@ describe("render density (round seventy-five)", () => {
     expect(cameraZoom(1279, 1)).toBe(1);
     expect(cameraZoom(1280, 2)).toBeCloseTo(2.3);
     expect(cameraZoom(390, 2)).toBe(2);
+  });
+
+  it("rasterises text at the camera's largest zoom for the density, rounded up (round seventy-eight)", () => {
+    expect(textResolution(1)).toBe(2);
+    expect(textResolution(1.5)).toBe(2);
+    expect(textResolution(2)).toBe(3);
+    expect(textResolution(3)).toBe(3);
+    expect(textResolution(undefined)).toBe(2);
   });
 });
