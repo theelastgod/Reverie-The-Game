@@ -74,7 +74,7 @@ let starting = false;
 /**
  * The canvas holds the screen's device pixels and shows at the window's CSS size (round seventy-five): Phaser's own
  * RESIZE mode sizes it in CSS pixels, which a 2x screen upscales and blurs. Run on every resize and whenever the
- * density changes (a window dragged to another screen, the page zoomed).
+ * density changes (a window dragged to another screen, the page zoomed; see followDensity).
  */
 function fitCanvas(): void {
   if (!game) return;
@@ -86,9 +86,13 @@ function fitCanvas(): void {
   game.canvas.style.height = `${window.innerHeight}px`;
 }
 
-function watchDensity(): void {
-  const query = window.matchMedia?.(`(resolution: ${window.devicePixelRatio}dppx)`);
-  query?.addEventListener("change", () => { fitCanvas(); watchDensity(); }, { once: true });
+/**
+ * A window dragged to another screen changes the density with no resize event, and the `(resolution)` media query's
+ * change event did not fire in Chrome 155 (round seventy-seven, found by CI): the density is read once a frame instead,
+ * a number compare, and the canvas refitted the frame it differs (the minimap does the same per draw).
+ */
+function followDensity(): void {
+  if (game && game.scale.zoom !== 1 / renderDensity(window.devicePixelRatio)) fitCanvas();
 }
 
 /**
@@ -147,7 +151,7 @@ function start(): void {
     });
     game.events.once(Phaser.Core.Events.READY, fitCanvas);
     window.addEventListener("resize", fitCanvas);
-    watchDensity();
+    game.events.on(Phaser.Core.Events.PRE_STEP, followDensity);
   });
 }
 

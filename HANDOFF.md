@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  seventy-six on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy-seven on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- Round seventy-seven (2026-10-18; CI red on f129fae). The live job's
+  render check failed at round seventy-six's new step: in CI's Google
+  Chrome 155 the `(resolution: Ndppx)` media query's change event did
+  not fire when the density changed by CDP, so the city canvas stayed
+  at 1366x768 on the 2x screen (the map, which reads the density per
+  draw, followed). The container's Chromium fires it, which is why the
+  step passed here. Fixed without the event: `followDensity` in main.ts
+  reads the density once a frame (Phaser's PRE_STEP; a number compare)
+  and refits the canvas the frame it differs; the media-query watch is
+  gone. Verified: typecheck, 898 tests, the build and the render check
+  on a fresh local Worker (density moves 2x [2732,1536] → 1x
+  [1366,768]); CI is the judge for Chrome 155.
 - The player-defect sweep, round seventy-six (2026-10-18; a long
   session where bodies come and go, and a window moved between
   screens). Six rounds of 40 load-check bots joining, walking and
