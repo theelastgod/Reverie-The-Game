@@ -876,6 +876,30 @@ try {
     if (!line) failures.push('the second-tab step did not run');
   }
 
+  // The window dragged to a 2x screen and back (round seventy-six): the city and the map follow the density, and the
+  // canvas keeps the window's CSS size throughout (round seventy-five's fitCanvas and its density watch).
+  {
+    const cdp = await page.context().newCDPSession(page);
+    const read = () => page.evaluate(() => {
+      const city = [...document.querySelectorAll('canvas')].find(c => !c.closest('#hud'));
+      const map = document.querySelector('#hud-minimap canvas');
+      const r = city?.getBoundingClientRect();
+      return city && map ? [city.width, city.height, Math.round(r.width), Math.round(r.height), map.width] : null;
+    });
+    const seen = [];
+    for (const f of [2, 1]) {
+      await cdp.send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: f, mobile: false });
+      await page.waitForTimeout(1200);
+      const got = await read();
+      seen.push(`${f}x ${JSON.stringify(got)}`);
+      const want = [1366 * f, 768 * f, 1366, 768, 208 * f];
+      if (JSON.stringify(got) !== JSON.stringify(want)) failures.push(`density ${f}x: the canvases read ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+    }
+    await cdp.send('Emulation.clearDeviceMetricsOverride');
+    await cdp.detach();
+    console.log(`density moves: ${seen.join(' → ')}`);
+  }
+
   // A phone, 390 by 844: the landing page, then the city. Nothing of the HUD may run off the screen, the page must not
   // scroll sideways, and the minimap and the journal's tab must sit under the top chips, not on them. The desktop page
   // closes first: two cities rendering in software at once starve each other's boot. This pass also asks for reduced

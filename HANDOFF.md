@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  seventy-five on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy-six on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,23 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round seventy-six (2026-10-18; a long
+  session where bodies come and go, and a window moved between
+  screens). Six rounds of 40 load-check bots joining, walking and
+  leaving around an open desktop client (240 bodies through its view):
+  the page's heap held at 17–18 MB after a collection and its DOM at
+  178 nodes; the entity pools sweep what leaves, the label and flash
+  pools reuse, the notices are capped. No finding. The density watch
+  round seventy-five added had no check: a new render-check step moves
+  the desktop page to a 2x screen and back by CDP (no resize event, as
+  when a window is dragged across monitors) and reads the city canvas at
+  2732x1536 then 1366x768 behind 1366x768, the map at 416 then 208.
+  Proven: with the watch disabled the step fails (the canvas stayed at
+  1366x768 on the 2x screen). Verified: typecheck, 898 tests, the build
+  and the render check on a fresh local Worker. (Running the load check
+  beside a rendering browser in this container drops a step now and
+  then, the load check's own stall gate; that is the container's CPU,
+  not the city.)
 - The player-defect sweep, round seventy-five (2026-10-18; a 2x
   screen). Phaser's RESIZE mode sizes the canvas in CSS pixels, so on
   every Mac and every phone the city was drawn at half the screen's
