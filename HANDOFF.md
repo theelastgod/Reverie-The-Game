@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  seventy-eight on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy-nine on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,18 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round seventy-nine (2026-10-18; a wrong
+  device clock, and pinch and scroll on a phone). No finding. Every
+  countdown the HUD shows (the war, the next war, the contest, the
+  duel) is measured against the frame's `now`, the server's clock; the
+  client's own timers (notices, the stick's tap and hold, the unheard
+  line, the map's pulse) run on `performance.now()`, never against a
+  server time, so a device clock hours off changes nothing a player
+  reads. A pinch can zoom the page only when both fingers start on the
+  HUD (the canvas is `touch-action: none`, and Chromium needs both
+  pointers to allow it); that is the browser's own zoom, which WCAG
+  1.4.4 asks a page not to take away, so it stays. Backlog 14 decided
+  (see it): no change.
 - Round seventy-eight (2026-10-18; a code review of rounds 75 to 77,
   3cee70c..15a6fe2). Eight findings, six fixed, two folded in:
   (1, 2, confirmed in a browser) `fitCanvas` set the canvas's CSS size
@@ -5312,14 +5324,16 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    a deeper pink such as `#d6004a` for both fills and text (5.3:1), or the
    button text at 19px bold, where 3:1 is enough. The game itself (title,
    HUD, panels, credits) is at AA and the render check keeps it there.
-14. **Small calls left by round sixty-nine's review** (none blocks play):
-   on Dvorak the letter O sits on a walk key and its QWERTY position
-   carries R, so mute has no key there (the audio chip still mutes; a
-   fix would let a command take a walk position only where the layout
-   puts no walk); PLAY HERE pressed back and forth in two tabs costs a
-   join each time with no backoff (a person's pace, inside the join
-   budget). The other two (two visibility listeners; the render check's
-   stacked send wrappers) were taken in round seventy.
+14. **Small calls left by round sixty-nine's review: decided (round
+   seventy-nine).** On Dvorak the letter O sits on a walk key (WASD by
+   position, where the hand is on every layout), so the key printed O
+   walks and the mute has no key of its own; any other key given to it
+   would be one no label names. The audio chip is the mute there (mouse,
+   tap, or Shift+Tab then Space), and its tooltip names O for every
+   layout where O is free. PLAY HERE pressed back and forth in two tabs
+   costs a join each time with no backoff; at a person's pace it stays
+   inside the join budget (30 deep, 10/s per address). Neither is
+   changed. (The other two calls were taken in round seventy.)
 
 ## Rules
 
