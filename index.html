@@ -32,6 +32,32 @@
       </div>
       <div class="title-foot">01 · REVERIE: THE GAME</div>
     </div>
+    <script>
+      // The game's script is large; on a slow line the title shows seconds before it can answer. A press made in that
+      // time is kept here and carried out when the title mounts (src/ui/title.ts), and the button says it was taken
+      // (the player-defect sweep, round seventy-three). Nothing here runs once the title is mounted.
+      (function () {
+        var title = document.getElementById("title");
+        if (!title) return;
+        var take = function (what) {
+          if (window.__titleMounted || window.__titleEarly) return;
+          window.__titleEarly = what;
+          var btn = document.getElementById(what === "link" ? "title-link" : "title-enter");
+          if (btn) { btn.setAttribute("data-label", btn.textContent); btn.textContent = "OPENING THE CITY…"; btn.setAttribute("aria-busy", "true"); }
+        };
+        title.addEventListener("click", function (ev) {
+          var t = ev.target;
+          if (t && t.closest && t.closest("#title-link")) take("link");
+          else if (!(t && t.closest && t.closest(".title-link"))) take("enter");
+        });
+        window.addEventListener("keydown", function (ev) {
+          var t = ev.target;
+          if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+          if (["Tab", "Shift", "Control", "Alt", "Meta"].indexOf(ev.key) >= 0) return;
+          take("enter");
+        }, true);
+      })();
+    </script>
 
     <!-- HUD root; D1 only touches it through Hud -->
     <div id="hud" hidden>

@@ -1149,6 +1149,26 @@ try {
   } finally {
     await phone.close();
   }
+  // A slow line (round seventy-three): the game's script held back four seconds, ENTER pressed once while it is on its
+  // way. The press must show it was taken and, when the script lands, open the city with no second press.
+  {
+    const slow = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    try {
+      await slow.route(/\/assets\/index-[^/]*\.js$/, async route => { await new Promise(r => setTimeout(r, 4000)); await route.continue(); });
+      // 'commit', not 'domcontentloaded': the DOM's ready waits for module scripts, which is the very wait this step stands in
+      await slow.goto(origin, { waitUntil: 'commit', timeout: 30000 });
+      await slow.waitForSelector('#title-enter', { timeout: 15000 });
+      await slow.locator('#title-enter').click({ timeout: 5000 });
+      const said = (await slow.locator('#title-enter').textContent()) ?? '';
+      const opened = await slow.waitForSelector('#hud:not([hidden])', { timeout: 30000 }).then(() => true, () => false);
+      const restored = (await slow.locator('#title-enter').textContent()) ?? '';
+      console.log(`slow line: ENTER pressed before the script → "${said.trim()}"; the city ${opened ? 'opened with no second press' : 'did not open'}; the button reads "${restored.trim()}" after`);
+      if (!/OPENING/.test(said)) failures.push(`an ENTER pressed before the script arrived showed nothing ("${said.trim()}")`);
+      if (!opened) failures.push('an ENTER pressed before the script arrived was lost: the city did not open');
+    } finally {
+      await slow.close();
+    }
+  }
 } catch (error) {
   failures.push(error.message);
 } finally {

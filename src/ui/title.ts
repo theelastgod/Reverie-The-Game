@@ -31,6 +31,7 @@ export function mountTitle(onEnter: () => void): void {
   }
   if (mounted) return;
   mounted = true;
+  const early = earlyPress(window as unknown as EarlyWindow);
 
   const enterBtn = title.querySelector<HTMLButtonElement>("#title-enter");
   const linkBtn = title.querySelector<HTMLButtonElement>("#title-link");
@@ -103,4 +104,22 @@ export function mountTitle(onEnter: () => void): void {
     enter(null);
   }
   window.addEventListener("keydown", onKey, true);
+  // A press made before the script arrived (index.html keeps it): carried out now, as if made just now. The button the
+  // catcher relabelled gets its own label back first, so a link refused for its serial does not stand there "opening".
+  for (const btn of [enterBtn, linkBtn]) {
+    if (btn?.dataset.label) { btn.textContent = btn.dataset.label; delete btn.dataset.label; btn.removeAttribute("aria-busy"); }
+  }
+  if (early === "enter") enter(null);
+  else if (early === "link") link();
+}
+
+/** What index.html's early catcher kept: the window it writes to. */
+export type EarlyWindow = { __titleEarly?: unknown; __titleMounted?: boolean };
+
+/** Marks the title mounted (the catcher stands down) and returns the press it kept, if any (round seventy-three). */
+export function earlyPress(w: EarlyWindow): "enter" | "link" | null {
+  w.__titleMounted = true;
+  const kept = w.__titleEarly;
+  w.__titleEarly = undefined;
+  return kept === "enter" || kept === "link" ? kept : null;
 }

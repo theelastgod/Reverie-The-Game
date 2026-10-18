@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 891 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 892 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  seventy-two on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy-three on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round seventy-three (2026-10-18; a slow
+  first load). The game's script is 396 KB gzipped, so on a slow line
+  the title (plain HTML) shows for seconds before anything can answer
+  it, and an ENTER pressed then was lost: nothing showed, nothing
+  happened when the script arrived, and the player had to press again.
+  Fixed: a small classic script in `index.html`, run before the module,
+  keeps the first press on the title (ENTER, the void, a key, or LINK)
+  and relabels the button "OPENING THE CITY…" (aria-busy); `mountTitle`
+  takes the kept press (`earlyPress` in `src/ui/title.ts`), gives the
+  button its own label back, and carries the press out; the catcher
+  stands down once the title is mounted. a11y.test.ts holds the
+  catcher's place before the module and `earlyPress`; a new step in the
+  render check holds the game's script back four seconds, presses ENTER
+  once, and reads the button ("OPENING THE CITY…") and the city opening
+  with no second press. Proven: on e48846d's client the step fails (the
+  button unchanged, the city never opened). Found on the way: the step
+  must load the page to `commit`, not `domcontentloaded`, which waits
+  for module scripts. Verified: typecheck, 892 tests, the build, the
+  render check and the session smoke on a fresh local Worker.
 - The player-defect sweep, round seventy-two (2026-10-18; locale, then
   the fuzzers run deep). Locale: the one number formatted for show is
   pinned to `en-US`, no date or time is formatted from the browser's

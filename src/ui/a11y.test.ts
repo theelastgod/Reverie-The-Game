@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { lockLinkLabel, SERIAL_RANGE_LINE } from "./format";
+import { earlyPress } from "./title";
 
 const html = readFileSync(resolve(__dirname, "../../index.html"), "utf8");
 const css = readFileSync(resolve(__dirname, "./hud.css"), "utf8");
@@ -51,6 +52,19 @@ describe("the HUD's markup for assistive technology", () => {
     expect(css).toMatch(/html, body \{[^}]*overscroll-behavior: none/);
     expect(css).toMatch(/\nbutton \{[^}]*touch-action: manipulation/);
     expect(css).toMatch(/\n\.chip \{[^}]*user-select: none/);
+  });
+  it("keeps a press on the title made before the game's script arrives (round seventy-three)", () => {
+    const catcher = html.indexOf("window.__titleEarly = what");
+    const moduleScript = html.indexOf('<script type="module"');
+    expect(catcher).toBeGreaterThan(0);
+    expect(catcher).toBeLessThan(moduleScript); // a classic script, run before the module loads
+    expect(html).toContain("window.__titleMounted || window.__titleEarly"); // stands down once the title mounts
+    expect(earlyPress({ __titleEarly: "enter" })).toBe("enter");
+    expect(earlyPress({ __titleEarly: "link" })).toBe("link");
+    const w: { __titleEarly?: unknown; __titleMounted?: boolean } = { __titleEarly: "nonsense" };
+    expect(earlyPress(w)).toBeNull();
+    expect(w.__titleMounted).toBe(true);
+    expect(earlyPress({})).toBeNull();
   });
   it("announces what changes on its own", () => {
     has(tag("hud-connection"), 'role="status"');
