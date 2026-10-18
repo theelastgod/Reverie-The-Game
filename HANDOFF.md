@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 864 tests (2026-10-17), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 867 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty-one on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,25 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round sixty-one (2026-10-18; a page hidden
+  and shown again: a tab switched away, an app put behind another, a
+  finger's touch cancelled by the system). Held keys already clear on
+  the window's blur, and a cancelled touch already drops the stick and
+  sends a still intent (probed with a real touchcancel). Fixed: the audio
+  bus never followed the page's visibility, so the district's bed and the
+  music looped on in a background tab, frozen on the last decision the
+  paused frame loop made; the bus now suspends its context when the page
+  is hidden and resumes it on return, and leaves alone a context it did
+  not suspend (`AudioBus.followVisibility`, from `main.ts`). Also fixed:
+  Phaser's own sound manager opened a second AudioContext that nothing
+  plays through; the game config now sets `audio: { noAudio: true }`.
+  `src/audio/bus.test.ts` (three cases) holds the bus; the render check's
+  phone pass counts the page's audio contexts (one) and reads it
+  suspended while hidden and running again when shown. Proven: on
+  697bee6's client the step fails ("the page opened 2 audio contexts",
+  both still running while hidden); with the fix it passes. Verified:
+  typecheck, 867 tests, the build, the render check and the session
+  smoke on a fresh local Worker.
 - A review of the day's client changes, round sixty (2026-10-18; the
   HUD, journal, ledger, lock, title and dialogue as changed by rounds
   forty-six to fifty-eight, 4999402..d198c57). Read for state that can

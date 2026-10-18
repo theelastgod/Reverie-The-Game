@@ -43,6 +43,8 @@ export class AudioBus {
   private lastSnap: Snap | null = null;
   private settings: AudioSettings;
   private armed = false;
+  /** The context was running when the page was hidden: suspended by us, resumed when the page shows again. */
+  private hiddenPaused = false;
   /** The HUD listens here to redraw its chip. */
   onChange: (() => void) | null = null;
 
@@ -71,6 +73,26 @@ export class AudioBus {
     };
     win.addEventListener("pointerdown", once);
     win.addEventListener("keydown", once);
+  }
+
+  /** Follows the page's visibility once, from boot. */
+  followVisibility(doc: Pick<Document, "visibilityState" | "addEventListener">): void {
+    doc.addEventListener("visibilitychange", () => this.setHidden(doc.visibilityState === "hidden"));
+  }
+
+  /** A hidden page is silent: the bed and the music would otherwise loop on in a background tab, frozen on the last
+   *  decision the paused frame loop made. A context we did not suspend (never unlocked, or the browser's own) is left as it is. */
+  setHidden(hidden: boolean): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    if (hidden) {
+      if (ctx.state !== "running") return;
+      this.hiddenPaused = true;
+      void ctx.suspend().catch(() => undefined);
+    } else if (this.hiddenPaused) {
+      this.hiddenPaused = false;
+      void ctx.resume().catch(() => undefined);
+    }
   }
 
   /** Called from inside a user gesture: builds the context and resumes it. */

@@ -727,6 +727,12 @@ try {
   // sends is noted by its kind, and the touch step asks what a tap and a held second finger sent.
   await phone.addInitScript(() => {
     window.__sent = [];
+    // Every audio context the page opens, for the hidden-page step (round sixty-one).
+    window.__contexts = [];
+    if (window.AudioContext) {
+      const Context = window.AudioContext;
+      window.AudioContext = class extends Context { constructor(...a) { super(...a); window.__contexts.push(this); } };
+    }
     const send = WebSocket.prototype.send;
     WebSocket.prototype.send = function (data) {
       try { window.__sent.push(JSON.parse(String(data)).t); } catch { /* not a message of ours */ }
@@ -855,6 +861,28 @@ try {
     if (tapSent.join() !== 'strike') failures.push(`a tap on the canvas sent [${tapSent}], not one strike`);
     if (!dodgeVisible) failures.push(`the dodge chip is not a visible button on a coarse pointer (${dodgeState})`);
     else if (!/STEP/.test(dodgeText)) failures.push(`the dodge button did not start a cooldown ("${dodgeText.trim()}")`);
+    // A hidden page (round sixty-one): one audio context, the bus's (Phaser's own manager is off), suspended while
+    // the page is hidden so the bed and the music do not loop on in a background tab, and running again on return.
+    {
+      const heard = await phone.evaluate(async () => {
+        const states = () => window.__contexts.map(c => c.state).join(',');
+        const show = state => {
+          Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+          document.dispatchEvent(new Event('visibilitychange'));
+          return new Promise(r => setTimeout(r, 300));
+        };
+        const before = states();
+        await show('hidden');
+        const hidden = states();
+        await show('visible');
+        delete document.visibilityState;
+        return { before, hidden, shown: states() };
+      });
+      console.log(`hidden page: audio contexts ${heard.before || 'none'} → hidden ${heard.hidden || 'none'} → shown ${heard.shown || 'none'}`);
+      if (heard.before.split(',').length !== 1 || !heard.before) failures.push(`the page opened ${heard.before ? heard.before.split(',').length : 0} audio contexts, not the bus's one`);
+      else if (heard.hidden !== 'suspended') failures.push(`a hidden page left its audio ${heard.hidden}`);
+      else if (heard.shown !== 'running') failures.push(`the page shown again left its audio ${heard.shown}`);
+    }
     // The ledger by touch (rounds fifty-five and fifty-seven): a finger has no L, so the purse chip opens it; a tap opens
     // the panel inside the screen, the chip stays on top to close it, and a second tap closes it.
     {
