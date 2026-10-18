@@ -84,6 +84,8 @@ export class CityScene extends Phaser.Scene {
   private onKeyDown = (e: KeyboardEvent) => this.keyDown(e);
   private onKeyUp = (e: KeyboardEvent) => this.keyUp(e);
   private onBlur = () => this.blur();
+  /** Back on the page, or back on the network: a reconnect waiting out its backoff goes now (round sixty-two). */
+  private onWake = () => { if (document.visibilityState !== "hidden") this.net.wake(); };
 
   constructor() {
     super("city");
@@ -122,6 +124,8 @@ export class CityScene extends Phaser.Scene {
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("keyup", this.onKeyUp);
     window.addEventListener("blur", this.onBlur);
+    window.addEventListener("online", this.onWake);
+    document.addEventListener("visibilitychange", this.onWake);
     this.input.addPointer(1); // two fingers at once: the stick and a strike
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (p: Phaser.Input.Pointer) => this.pointerDown(p));
     this.input.on(Phaser.Input.Events.POINTER_MOVE, (p: Phaser.Input.Pointer) => this.pointerMove(p));
@@ -135,6 +139,8 @@ export class CityScene extends Phaser.Scene {
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     window.removeEventListener("blur", this.onBlur);
+    window.removeEventListener("online", this.onWake);
+    document.removeEventListener("visibilitychange", this.onWake);
     this.net.disconnect();
     if (bus.net === this.net) bus.net = null;
     bus.actions = null;

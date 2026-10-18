@@ -239,6 +239,50 @@ describe("reconnect", () => {
   });
 });
 
+describe("waking a waiting reconnect (the player-defect sweep, round sixty-two)", () => {
+  it("a reconnect waiting out a long backoff tries at once when woken, and the backoff goes on from there", async () => {
+    const net = new WorldSocket();
+    await net.connect();
+    FakeSocket.instances[0].hello();
+    // four failures in a row: the next wait is 10 s
+    for (let i = 0; i < 4; i++) {
+      FakeSocket.instances[FakeSocket.instances.length - 1].close(1006);
+      await vi.advanceTimersByTimeAsync(10000);
+    }
+    FakeSocket.instances[FakeSocket.instances.length - 1].close(1006);
+    const before = FakeSocket.instances.length;
+    await vi.advanceTimersByTimeAsync(100);
+    expect(FakeSocket.instances).toHaveLength(before);
+    expect(net.wake()).toBe(true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(FakeSocket.instances).toHaveLength(before + 1);
+    // the old timer is gone: no second socket when it would have fired
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(FakeSocket.instances).toHaveLength(before + 1);
+    FakeSocket.instances[before].hello();
+    expect(net.status).toBe("online");
+    net.disconnect();
+  });
+
+  it("does nothing online, standing down elsewhere, or after disconnect", async () => {
+    const { net, ws } = await online();
+    expect(net.wake()).toBe(false);
+    expect(FakeSocket.instances).toHaveLength(1);
+    ws.close(4001);
+    expect(net.wake()).toBe(false);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(FakeSocket.instances).toHaveLength(1);
+    const other = new WorldSocket();
+    await other.connect();
+    FakeSocket.instances[1].close(1006);
+    other.disconnect();
+    expect(other.wake()).toBe(false);
+    await vi.advanceTimersByTimeAsync(20000);
+    expect(FakeSocket.instances).toHaveLength(2);
+    net.disconnect();
+  });
+});
+
 describe("intent throttling", () => {
   it("sends unchanged intent at most every 250 ms, changed intent at once", async () => {
     const { net, ws } = await online();

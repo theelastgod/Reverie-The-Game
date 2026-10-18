@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 867 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 869 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty-one on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty-two on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,20 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round sixty-two (2026-10-18; the page shown
+  again, second part: the connection). A phone put away while the
+  network drops comes back to a reconnect waiting out its backoff, which
+  doubles to 10 s; nothing told it the page or the network was back, so
+  the player stood at RECONNECTING for up to ten seconds with the city
+  already reachable. Fixed: `WorldSocket.wake()` tries a waiting
+  reconnect at once (and does nothing online, mid-connect, standing down
+  elsewhere or after disconnect); the city scene calls it on the window's
+  `online` and on the page turning visible. `worldSocket.test.ts` holds
+  both (two cases, failing on cca75dc). Proven in a browser on a local
+  Worker (sockets dropped and `/session` refused for 16 s, then the
+  network back and the page shown): ONLINE again 9.8 s later on cca75dc's
+  client, 0.25 s later with the fix. Verified: typecheck, 869 tests, the
+  build, the render check and the session smoke on a fresh local Worker.
 - The player-defect sweep, round sixty-one (2026-10-18; a page hidden
   and shown again: a tab switched away, an app put behind another, a
   finger's touch cancelled by the system). Held keys already clear on

@@ -154,6 +154,18 @@ export class WorldSocket {
     }, delay);
   }
 
+  /**
+   * The page shown again, or the network back: a reconnect waiting out its backoff (up to RECONNECT_MAX_MS after a
+   * long time away) tries now instead. Nothing happens online, mid-connect, standing down elsewhere, or after disconnect.
+   */
+  wake(): boolean {
+    if (this.stopped || !this.retry) return false;
+    clearTimeout(this.retry);
+    this.retry = null;
+    void this.connect();
+    return true;
+  }
+
   disconnect(): void {
     this.stopped = true;
     if (this.watchdog) clearInterval(this.watchdog);
