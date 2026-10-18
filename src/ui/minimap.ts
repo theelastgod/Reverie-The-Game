@@ -6,6 +6,7 @@
 import { DISTRICTS, GATES, TILE, WORLD_H, WORLD_W } from "../sim/map";
 import type { Snap } from "../sim/protocol";
 import { reducedMotion } from "../render/motion";
+import { renderDensity } from "../render/density";
 import { assetUrl, mapLabel, setAttr } from "./format";
 
 export type MinimapPanel = {
@@ -47,7 +48,14 @@ export function mountMinimap(root: HTMLElement): MinimapPanel {
   const reduced = reducedMotion();
 
   const draw = (snap: Snap, now: number) => {
-    if (!ctx) return;
+    if (!ctx || !canvas) return;
+    // The map's backing store at the screen's density, drawn in its own 208x160 units (round seventy-five).
+    const d = renderDensity(window.devicePixelRatio);
+    if (canvas.width !== Math.round(W * d)) {
+      canvas.width = Math.round(W * d);
+      canvas.height = Math.round(H * d);
+    }
+    ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = VOID;
     ctx.fillRect(0, 0, W, H);

@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 894 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 898 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  seventy-four on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy-five on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round seventy-five (2026-10-18; a 2x
+  screen). Phaser's RESIZE mode sizes the canvas in CSS pixels, so on
+  every Mac and every phone the city was drawn at half the screen's
+  resolution and upscaled: the art, the names over heads and the map
+  all soft. Fixed: the canvas holds the screen's device pixels
+  (`src/render/density.ts`: the density capped at 2, never under 1) and
+  shows at the window's CSS size (Phaser's NONE mode with zoom 1/density,
+  `fitCanvas` in main.ts on every resize and when the density changes,
+  as when a window moves to another screen or the page is zoomed); the
+  camera's zoom is the layout's (1.15 from 1280 CSS pixels) times the
+  density, so the world is the same size on screen; the touch stick
+  reads its pointer in CSS pixels, so its reach is unchanged; the
+  minimap's backing store follows the density too. density.test.ts holds
+  the numbers; the render check's phone pass (390x844 at 2x) asserts the
+  city canvas at 780x1688 behind 390x844 and the map at 416x320, and
+  its touch step (stick, tap, second finger, dodge) still passes on the
+  2x canvas. Proven: on 3cee70c's client the step fails (390x844 and
+  208x160). Verified: typecheck, 898 tests, the build and the render
+  check on a fresh local Worker. A real phone should judge the frame
+  rate at 2x (swiftshader here is no guide; Backlog 11).
 - The player-defect sweep, round seventy-four (2026-10-18; a deploy
   under an open tab). A deploy restarts the city, so every open tab
   reconnects, but to a city that may speak another protocol than the
@@ -5210,6 +5230,8 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    events and reads what they send. Left: a pass on a real phone, which
    this container cannot do (Chromium's touch emulation is what the check
    has; the heavy's hold length in particular wants a thumb's judgement).
+   Since round seventy-five the city draws at the screen's density (2x at
+   most): the real phone should also say whether the frame rate holds.
    Found by round twenty-four's crowding probe and left for that pass: on
    a phone, a three-line heard line over a prompt wrapped to three rows
    meets the bottom of the notices column, and an Angel with both Use and

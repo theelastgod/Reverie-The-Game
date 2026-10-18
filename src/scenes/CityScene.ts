@@ -17,6 +17,7 @@ import { VOLUME_STEP } from "../audio/settings";
 import { rebased, riteHeard } from "../audio/cues";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
+import { cameraZoom } from "../render/density";
 import { UNHEARD_LINE, browserOwns, commandCode, escapeDoes, hudControlFocused, isBrowserChord, onMac, paperToUse, releasesHeld, tellUnheard } from "../ui/keys";
 import { MAX_HP } from "../sim/constants";
 import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, mouseStrike, secondFinger, stickIntent } from "../ui/stick";
@@ -142,8 +143,15 @@ export class CityScene extends Phaser.Scene {
     this.fx.destroy();
   }
 
+  /** The canvas is in device pixels (main.ts): the layout reads the CSS width, and the camera draws at the density. */
   private applyZoom(width: number): void {
-    this.cameras.main.setZoom(width >= 1280 ? 1.15 : 1);
+    const density = 1 / this.scale.zoom;
+    this.cameras.main.setZoom(cameraZoom(width / density, density));
+  }
+
+  /** A pointer's place in CSS pixels, where the HUD's stick is drawn and its reach is measured. */
+  private cssPoint(p: Phaser.Input.Pointer): { x: number; y: number } {
+    return { x: p.x * this.scale.zoom, y: p.y * this.scale.zoom };
   }
 
   // ------------------------------------------------------------ hud seam
@@ -350,9 +358,10 @@ export class CityScene extends Phaser.Scene {
       this.second = { id: p.id, at: performance.now(), timer, fired: false };
       return;
     }
-    this.stick = { id: p.id, ox: p.x, oy: p.y, at: performance.now(), travelled: 0 };
+    const at = this.cssPoint(p);
+    this.stick = { id: p.id, ox: at.x, oy: at.y, at: performance.now(), travelled: 0 };
     this.stickIntent = STILL;
-    bus.hud?.showStick(p.x, p.y);
+    bus.hud?.showStick(at.x, at.y);
   }
 
   /** The second finger lifts: a light strike unless the heavy already fired. */
@@ -368,8 +377,9 @@ export class CityScene extends Phaser.Scene {
   private pointerMove(p: Phaser.Input.Pointer): void {
     const s = this.stick;
     if (!s || p.id !== s.id) return;
-    const dx = p.x - s.ox;
-    const dy = p.y - s.oy;
+    const at = this.cssPoint(p);
+    const dx = at.x - s.ox;
+    const dy = at.y - s.oy;
     s.travelled = Math.max(s.travelled, Math.hypot(dx, dy));
     this.stickIntent = stickIntent(dx, dy);
     const k = knobOffset(dx, dy);

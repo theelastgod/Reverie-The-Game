@@ -13,6 +13,7 @@ import { loopFor } from "./assets/slots";
 import { LoopSlot } from "./ui/loops";
 import { BootScene } from "./scenes/BootScene";
 import { CityScene } from "./scenes/CityScene";
+import { canvasSize, renderDensity } from "./render/density";
 
 // The generated-asset manifest: one small request, before anything asks for a generated file.
 const manifest = gen.load().then(() => {
@@ -71,6 +72,26 @@ let game: Phaser.Game | null = null;
 let starting = false;
 
 /**
+ * The canvas holds the screen's device pixels and shows at the window's CSS size (round seventy-five): Phaser's own
+ * RESIZE mode sizes it in CSS pixels, which a 2x screen upscales and blurs. Run on every resize and whenever the
+ * density changes (a window dragged to another screen, the page zoomed).
+ */
+function fitCanvas(): void {
+  if (!game) return;
+  const d = renderDensity(window.devicePixelRatio);
+  const { width, height } = canvasSize(window.innerWidth, window.innerHeight, d);
+  if (game.scale.zoom !== 1 / d) game.scale.setZoom(1 / d);
+  if (game.scale.width !== width || game.scale.height !== height) game.scale.resize(width, height);
+  game.canvas.style.width = `${window.innerWidth}px`;
+  game.canvas.style.height = `${window.innerHeight}px`;
+}
+
+function watchDensity(): void {
+  const query = window.matchMedia?.(`(resolution: ${window.devicePixelRatio}dppx)`);
+  query?.addEventListener("change", () => { fitCanvas(); watchDensity(); }, { once: true });
+}
+
+/**
  * The phone's Back closes the open panel before it leaves the city (round sixty-eight): entering the city leaves one
  * history entry of our own, and each Back that closes a panel lays it down again. With nothing open, Back goes on.
  */
@@ -115,7 +136,8 @@ function start(): void {
       pixelArt: false,
       antialias: true,
       roundPixels: true,
-      scale: { mode: Phaser.Scale.RESIZE, width: "100%", height: "100%", autoCenter: Phaser.Scale.NO_CENTER },
+      // Device pixels at the window's CSS size; fitCanvas keeps it so (round seventy-five).
+      scale: { mode: Phaser.Scale.NONE, ...canvasSize(window.innerWidth, window.innerHeight, renderDensity(window.devicePixelRatio)), zoom: 1 / renderDensity(window.devicePixelRatio), autoCenter: Phaser.Scale.NO_CENTER },
       input: { keyboard: false, mouse: true, touch: true },
       // The canvas's right-click opens no menu over the city (round sixty-four); the HUD's own controls keep theirs.
       disableContextMenu: true,
@@ -123,6 +145,9 @@ function start(): void {
       audio: { noAudio: true },
       scene: [BootScene, CityScene],
     });
+    game.events.once(Phaser.Core.Events.READY, fitCanvas);
+    window.addEventListener("resize", fitCanvas);
+    watchDensity();
   });
 }
 

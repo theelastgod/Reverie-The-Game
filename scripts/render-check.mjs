@@ -916,6 +916,17 @@ try {
     await phone.waitForSelector('#hud:not([hidden])', { timeout: 30000 });
     await phone.waitForTimeout(1500);
     console.log(`phone pointer: ${await phone.evaluate(() => `coarse ${matchMedia('(pointer: coarse)').matches}, touch points ${navigator.maxTouchPoints}, width ${window.innerWidth}`)}`);
+    // A 2x screen: the city and the map draw at the screen's density, not at CSS size upscaled (round seventy-five).
+    const sharp = await phone.evaluate(() => {
+      const city = document.querySelector('body > canvas, canvas:not(#hud canvas)');
+      const map = document.querySelector('#hud-minimap canvas');
+      const r = city?.getBoundingClientRect();
+      return { dpr: devicePixelRatio, city: city ? [city.width, city.height, Math.round(r.width), Math.round(r.height)] : null, map: map ? [map.width, map.height] : null };
+    });
+    console.log(`phone density: ${JSON.stringify(sharp)}`);
+    if (!sharp.city || sharp.city[0] !== sharp.city[2] * 2 || sharp.city[1] !== sharp.city[3] * 2) failures.push(`phone: the city canvas is not drawn at the screen's density (${JSON.stringify(sharp.city)})`);
+    if (!sharp.city || sharp.city[2] !== 390 || sharp.city[3] !== 844) failures.push(`phone: the city canvas does not fill the screen (${JSON.stringify(sharp.city)})`);
+    if (!sharp.map || sharp.map[0] !== 416 || sharp.map[1] !== 320) failures.push(`phone: the map is not drawn at the screen's density (${JSON.stringify(sharp.map)})`);
     const fit = await phone.evaluate(() => {
       const w = window.innerWidth;
       const h = window.innerHeight;
