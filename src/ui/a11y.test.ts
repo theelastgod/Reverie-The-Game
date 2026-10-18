@@ -35,6 +35,16 @@ describe("the HUD's markup for assistive technology", () => {
     has(tag("hud-credits"), 'aria-label=');
     has(tag("hud-credits"), 'tabindex="-1"'); // it takes focus when it rolls, and Enter, Space or Escape close it (src/ui/hud.ts)
   });
+  it("offers PLAY HERE in a tab that stood down for another, a button kept hidden until then (round sixty-three)", () => {
+    const opening = tag("hud-reclaim");
+    has(opening, "<button");
+    has(opening, 'type="button"');
+    has(opening, " hidden");
+    expect(html).toMatch(/id="hud-reclaim"[^>]*>PLAY HERE</);
+    expect(css).toMatch(/\.chip-reclaim \{[^}]*z-index: 3/);
+    // centred without a transform: .chip-btn:active's press transform would undo it and move the button off the pointer
+    expect(css).not.toMatch(/\.chip-reclaim[^{]*\{[^}]*transform/);
+  });
   it("announces what changes on its own", () => {
     has(tag("hud-connection"), 'role="status"');
     has(tag("hud-events"), 'aria-live="polite"');

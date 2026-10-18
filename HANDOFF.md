@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 869 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 872 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty-two on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty-three on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,27 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round sixty-three (2026-10-18; two tabs). A
+  second tab on the same cookie takes the city and the first stands down
+  with "OPEN IN ANOTHER TAB · THIS ONE IS IDLE", which was a dead end: no
+  control in it, only a reload took the city back. Fixed: a PLAY HERE
+  button (`#hud-reclaim`, centred over the idle screen, shown only while
+  the tab stands down) calls `WorldSocket.reclaim()`, a fresh socket the
+  city takes as the newest, so the other tab stands down in turn with its
+  own PLAY HERE. Found on the way: the button first centred itself with a
+  transform, and `.chip-btn:active`'s press transform (later in the
+  sheet, same weight) replaced it mid-press, so the button jumped from
+  under the pointer and the release, and so the click, missed it; it is
+  centred by margin now, and a11y.test.ts holds that no transform centres
+  it. No other button centres by transform. Held by: worldSocket.test.ts
+  (reclaim from elsewhere, and not online, reconnecting or after
+  disconnect), a11y.test.ts (the markup) and a new render-check step (a
+  second browser context with the first's cookies; the first stands
+  down, PLAY HERE pressed with a real mouse takes the city back, and the
+  second stands down with its own PLAY HERE). Proven: on 1591084's client
+  the step fails ("offers no PLAY HERE"). Verified: typecheck, 872 tests,
+  the build, the render check and the session smoke on a fresh local
+  Worker.
 - The player-defect sweep, round sixty-two (2026-10-18; the page shown
   again, second part: the connection). A phone put away while the
   network drops comes back to a reconnect waiting out its backoff, which

@@ -166,6 +166,17 @@ export class WorldSocket {
     return true;
   }
 
+  /**
+   * The player asks for the city back in a tab that stood down (4001): a fresh socket, which the city takes as the
+   * newest and so closes the other tab's with 4001 in turn. Only from "elsewhere"; the backoff starts over.
+   */
+  reclaim(): boolean {
+    if (this.stopped || this.status !== "elsewhere" || this.ws) return false;
+    this.attempts = 0;
+    void this.connect();
+    return true;
+  }
+
   disconnect(): void {
     this.stopped = true;
     if (this.watchdog) clearInterval(this.watchdog);

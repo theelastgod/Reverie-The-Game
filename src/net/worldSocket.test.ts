@@ -283,6 +283,33 @@ describe("waking a waiting reconnect (the player-defect sweep, round sixty-two)"
   });
 });
 
+describe("taking the city back in a tab that stood down (the player-defect sweep, round sixty-three)", () => {
+  it("reclaim() opens a fresh socket from elsewhere, online again on its hello", async () => {
+    const { net, ws } = await online();
+    ws.close(4001);
+    expect(net.status).toBe("elsewhere");
+    expect(net.reclaim()).toBe(true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(FakeSocket.instances).toHaveLength(2);
+    FakeSocket.instances[1].hello();
+    expect(net.status).toBe("online");
+    expect(net.strike()).toBe(true);
+    net.disconnect();
+  });
+
+  it("does nothing online, reconnecting, or after disconnect", async () => {
+    const { net, ws } = await online();
+    expect(net.reclaim()).toBe(false);
+    ws.close(1006);
+    expect(net.status).toBe("reconnecting");
+    expect(net.reclaim()).toBe(false);
+    net.disconnect();
+    expect(net.reclaim()).toBe(false);
+    await vi.advanceTimersByTimeAsync(20000);
+    expect(FakeSocket.instances).toHaveLength(1);
+  });
+});
+
 describe("intent throttling", () => {
   it("sends unchanged intent at most every 250 ms, changed intent at once", async () => {
     const { net, ws } = await online();

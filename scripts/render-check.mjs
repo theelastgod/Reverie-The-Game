@@ -714,6 +714,45 @@ try {
   if (canvases === 0) failures.push('no canvas rendered');
   if (fps < MIN_FPS) failures.push(`fps ${fps.toFixed(1)} < ${MIN_FPS}`);
 
+  // A second tab with the same cookie (round sixty-three): the city takes the newest, so this tab stands down with
+  // "OPEN IN ANOTHER TAB" and a PLAY HERE button; pressing it takes the city back here and the second tab stands down.
+  {
+    const chip = p => p.evaluate(() => document.getElementById('hud-connection')?.textContent ?? '');
+    const reclaimShown = p => p.evaluate(() => { const b = document.getElementById('hud-reclaim'); return !!b && !b.hidden && b.getBoundingClientRect().width > 0; });
+    // a page from browser.newPage() owns its context, so the second tab is a new context carrying the same cookies
+    const secondContext = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+    await secondContext.addCookies(await page.context().cookies());
+    const second = await secondContext.newPage();
+    let line = '';
+    try {
+      await second.goto(origin, { waitUntil: 'load', timeout: 30000 });
+      await second.waitForSelector('#title', { timeout: 15000 });
+      const enter2 = second.locator('#title button', { hasText: /enter/i }).first();
+      if (await enter2.count()) await enter2.click(); else await second.keyboard.press('Enter');
+      await second.waitForFunction(() => document.getElementById('hud-connection')?.textContent === 'ONLINE', null, { timeout: 30000 });
+      await page.waitForFunction(() => /ANOTHER TAB/.test(document.getElementById('hud-connection')?.textContent ?? ''), null, { timeout: 10000 }).catch(() => {});
+      const idle = await chip(page);
+      const offered = await reclaimShown(page);
+      // a real mouse press and release at the button's centre: the release must land on the button too (a centring
+      // transform the press style replaced once moved it from under the pointer, and the click went to the page)
+      if (offered) await page.locator('#hud-reclaim').click({ timeout: 5000 }).catch(() => {});
+      await page.waitForFunction(() => document.getElementById('hud-connection')?.textContent === 'ONLINE', null, { timeout: 15000 }).catch(() => {});
+      await second.waitForFunction(() => /ANOTHER TAB/.test(document.getElementById('hud-connection')?.textContent ?? ''), null, { timeout: 10000 }).catch(() => {});
+      const back = await chip(page), other = await chip(second);
+      const hiddenAgain = !(await reclaimShown(page)), offeredThere = await reclaimShown(second);
+      line = `second tab: this one "${idle}", PLAY HERE ${offered ? 'offered' : 'not offered'}; pressed → this one "${back}"${hiddenAgain ? '' : ' (button still shown)'}, the other "${other}"${offeredThere ? ' with PLAY HERE' : ''}`;
+      if (!/ANOTHER TAB/.test(idle)) failures.push(`a second tab with the same cookie did not stand this one down ("${idle}")`);
+      else if (!offered) failures.push('a tab that stood down for another offers no PLAY HERE');
+      else if (back !== 'ONLINE') failures.push(`PLAY HERE did not take the city back ("${back}")`);
+      else if (!hiddenAgain) failures.push('PLAY HERE stayed on screen after the city came back');
+      else if (!/ANOTHER TAB/.test(other) || !offeredThere) failures.push(`PLAY HERE did not stand the other tab down with its own PLAY HERE ("${other}")`);
+    } finally {
+      await secondContext.close();
+    }
+    console.log(line || 'second tab: did not run');
+    if (!line) failures.push('the second-tab step did not run');
+  }
+
   // A phone, 390 by 844: the landing page, then the city. Nothing of the HUD may run off the screen, the page must not
   // scroll sideways, and the minimap and the journal's tab must sit under the top chips, not on them. The desktop page
   // closes first: two cities rendering in software at once starve each other's boot. This pass also asks for reduced

@@ -34,6 +34,7 @@ export type HudCallbacks = {
   interact: (targetId: string, choice: string) => void; // prompt verb clicked (touch/mouse)
   stance: () => void; kit: () => void; flag: () => void; truce: () => void; use: () => void;
   dodge: () => void; // the dodge chip pressed (a finger has no Shift): the way the stick points, else the facing
+  reclaim: () => void; // PLAY HERE pressed in a tab that stood down for another (round sixty-three)
   market: (op: "list" | "buy" | "cancel", args: { itemId?: string; listingId?: string; price?: number }) => void;
 };
 
@@ -96,6 +97,7 @@ export class Hud {
   private readonly dodge: HTMLElement | null;
   private readonly useChip: HTMLButtonElement | null;
   private readonly flagChip: HTMLButtonElement | null;
+  private readonly reclaimBtn: HTMLButtonElement | null;
   private readonly dodgeText: HTMLElement | null;
   private readonly stick: HTMLElement | null;
   private readonly stickKnob: HTMLElement | null;
@@ -227,6 +229,7 @@ export class Hud {
     this.kitText?.before(this.kitBadge);
     this.useChip = q<HTMLButtonElement>(root, "#hud-use");
     this.flagChip = q<HTMLButtonElement>(root, "#hud-flag");
+    this.reclaimBtn = q<HTMLButtonElement>(root, "#hud-reclaim");
     this.dodge = q(root, "#hud-dodge");
     this.dodgeText = this.dodge ? q(this.dodge, ".chip-text") : null;
     this.stick = q(root, "#hud-stick");
@@ -272,6 +275,7 @@ export class Hud {
     this.dodge?.addEventListener("click", this.onDodge);
     this.useChip?.addEventListener("click", this.onUse);
     this.flagChip?.addEventListener("click", this.onFlag);
+    this.reclaimBtn?.addEventListener("click", this.onReclaim);
     this.promptVerbs?.addEventListener("click", this.onVerb);
     this.credits?.addEventListener("click", this.onCredits);
     this.credits?.addEventListener("keydown", this.onCreditsKey);
@@ -293,6 +297,8 @@ export class Hud {
     this.status = status;
     setText(this.connection, statusLine(status));
     show(this.connection, true);
+    // A tab that stood down for another is not a dead end: PLAY HERE takes the city back (round sixty-three).
+    show(this.reclaimBtn, status === "elsewhere");
     window.clearTimeout(this.statusTimer);
     if (status === "online") {
       // "ONLINE" is shown, then fades; every other state stays.
@@ -387,6 +393,7 @@ export class Hud {
     this.dodge?.removeEventListener("click", this.onDodge);
     this.useChip?.removeEventListener("click", this.onUse);
     this.flagChip?.removeEventListener("click", this.onFlag);
+    this.reclaimBtn?.removeEventListener("click", this.onReclaim);
     this.promptVerbs?.removeEventListener("click", this.onVerb);
     this.credits?.removeEventListener("click", this.onCredits);
     this.credits?.removeEventListener("keydown", this.onCreditsKey);
@@ -409,6 +416,7 @@ export class Hud {
   private readonly onDodge = (ev: Event) => { ev.preventDefault(); this.cb.dodge(); };
   private readonly onUse = (ev: Event) => { ev.preventDefault(); this.cb.use(); };
   private readonly onFlag = (ev: Event) => { ev.preventDefault(); this.cb.flag(); };
+  private readonly onReclaim = (ev: Event) => { ev.preventDefault(); this.cb.reclaim(); };
 
   // ------------------------------------------------------------ the touch stick (drawn here, decided in the scene)
 
