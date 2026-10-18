@@ -75,11 +75,6 @@ export class AudioBus {
     win.addEventListener("keydown", once);
   }
 
-  /** Follows the page's visibility once, from boot. */
-  followVisibility(doc: Pick<Document, "visibilityState" | "addEventListener">): void {
-    doc.addEventListener("visibilitychange", () => this.setHidden(doc.visibilityState === "hidden"));
-  }
-
   /** A hidden page is silent: the bed and the music would otherwise loop on in a background tab, frozen on the last
    *  decision the paused frame loop made. A context we did not suspend (never unlocked, or the browser's own) is left as it is. */
   setHidden(hidden: boolean): void {

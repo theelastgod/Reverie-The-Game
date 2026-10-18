@@ -56,7 +56,16 @@ const hud = new Hud(hudRoot(), callbacks);
 bus.hud = hud;
 hud.setStatus("connecting");
 
-audio.followVisibility(document);
+/**
+ * The page's one visibility listener (round seventy; there were two). Hidden, the city is silent (round sixty-one);
+ * shown again, or back on the network, a reconnect waiting out its backoff goes at once (round sixty-two).
+ */
+document.addEventListener("visibilitychange", () => {
+  const hidden = document.visibilityState === "hidden";
+  audio.setHidden(hidden);
+  if (!hidden) bus.net?.wake();
+});
+window.addEventListener("online", () => bus.net?.wake());
 
 let game: Phaser.Game | null = null;
 let starting = false;

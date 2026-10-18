@@ -21,10 +21,8 @@ function rig() {
   const Ctor = function (this: unknown) { made = new FakeContext(); return made; } as unknown as new () => AudioContext;
   const fetcher = (() => Promise.resolve(new Response("{}", { status: 404 }))) as typeof fetch;
   const bus = new AudioBus(t => t, null, fetcher, Ctor);
-  const listeners: (() => void)[] = [];
-  const doc = { visibilityState: "visible" as DocumentVisibilityState, addEventListener: (_: string, f: () => void) => { listeners.push(f); } };
-  bus.followVisibility(doc as unknown as Document);
-  const show = (state: DocumentVisibilityState) => { doc.visibilityState = state; for (const f of listeners) f(); };
+  // main.ts's one page listener hands the bus the page's visibility (round seventy)
+  const show = (state: DocumentVisibilityState) => bus.setHidden(state === "hidden");
   return { bus, show, ctx: () => made as FakeContext | null };
 }
 

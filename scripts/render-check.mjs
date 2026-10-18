@@ -118,6 +118,16 @@ try {
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
   // The city's socket, kept so a step can hand the HUD a frame as the server would (round fifty-three: news while held).
   await page.addInitScript(() => { const W = window.WebSocket; window.__sockets = []; window.WebSocket = class extends W { constructor(...a) { super(...a); window.__sockets.push(this); } }; });
+  // Every message the page sends, parsed once, for the steps that ask what a press sent (round seventy: one recorder,
+  // where each step had wrapped send again over the last).
+  await page.addInitScript(() => {
+    window.__wire = [];
+    const send = WebSocket.prototype.send;
+    WebSocket.prototype.send = function (data) {
+      try { window.__wire.push(JSON.parse(String(data))); } catch { /* not a message of ours */ }
+      return send.call(this, data);
+    };
+  });
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
   // A failed resource names only its status in the console; its URL is the message's location, kept so the list
@@ -718,13 +728,8 @@ try {
   // nothing, nor does the wheel's button; the primary button still strikes.
   {
     await page.evaluate(() => {
-      window.__mouseSent = [];
+      window.__mouseFrom = window.__wire.length;
       window.__menus = [];
-      const send = WebSocket.prototype.send;
-      WebSocket.prototype.send = function (data) {
-        try { const t = JSON.parse(String(data)).t; if (t !== 'intent') window.__mouseSent.push(t); } catch { /* not ours */ }
-        return send.call(this, data);
-      };
       window.addEventListener('contextmenu', e => window.__menus.push(e.defaultPrevented ? 'kept shut' : 'opened'));
     });
     const box = await page.locator('canvas').first().boundingBox();
@@ -733,11 +738,12 @@ try {
     await page.mouse.click(x, y, { button: 'right' });
     await page.mouse.click(x, y, { button: 'middle' });
     await page.waitForTimeout(400);
-    const other = await page.evaluate(() => ({ sent: [...window.__mouseSent], menus: [...window.__menus] }));
+    const sentSinceMark = () => page.evaluate(() => window.__wire.slice(window.__mouseFrom).map(m => m.t).filter(t => t !== 'intent'));
+    const other = { sent: await sentSinceMark(), menus: await page.evaluate(() => [...window.__menus]) };
     await page.waitForTimeout(400);
     await page.mouse.click(x, y);
     await page.waitForTimeout(400);
-    const primary = await page.evaluate(n => window.__mouseSent.slice(n), other.sent.length);
+    const primary = (await sentSinceMark()).slice(other.sent.length);
     console.log(`mouse: right and middle → sent [${other.sent}], menu ${other.menus.join(', ') || 'not asked'}; left → sent [${primary}]`);
     if (other.sent.length) failures.push(`a right or middle click on the canvas sent [${other.sent}]`);
     if (other.menus.includes('opened')) failures.push('a right-click on the canvas opened the browser menu over the city');
@@ -750,13 +756,7 @@ try {
   {
     await page.locator('canvas').first().click({ position: { x: 5, y: 5 }, force: true }).catch(() => {});
     await page.evaluate(() => {
-      window.__chordSent = [];
       window.__chordTaken = [];
-      const send = WebSocket.prototype.send;
-      WebSocket.prototype.send = function (data) {
-        try { window.__chordSent.push(JSON.parse(String(data))); } catch { /* not ours */ }
-        return send.call(this, data);
-      };
       window.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.defaultPrevented) window.__chordTaken.push(e.code); });
     });
     await page.waitForTimeout(600); // past the strike step's sends
@@ -766,11 +766,11 @@ try {
       map: document.getElementById('hud-minimap')?.hidden ?? false,
     }));
     const before = await panels();
-    const mark = await page.evaluate(() => window.__chordSent.length);
+    const mark = await page.evaluate(() => window.__wire.length);
     for (const k of ['Control+KeyL', 'Control+KeyJ', 'Control+KeyM', 'Control+KeyS']) await page.keyboard.press(k);
     await page.waitForTimeout(400);
     const after = await panels();
-    const chordWalk = await page.evaluate(n => window.__chordSent.slice(n).filter(m => m.t === 'intent' && m.intent.down).length, mark);
+    const chordWalk = await page.evaluate(n => window.__wire.slice(n).filter(m => m.t === 'intent' && m.intent.down).length, mark);
     const taken = await page.evaluate(() => [...window.__chordTaken]);
     // On macOS: Cmd held, D pressed under it, Cmd let go with D's keyup never sent (as macOS does): the last intent must be
     // still. Elsewhere (round sixty-nine) the Windows or Super key's release must not stop a walk still held.
@@ -778,7 +778,7 @@ try {
       window.dispatchEvent(new KeyboardEvent('keydown', { code: 'MetaLeft', key: 'Meta', metaKey: true, bubbles: true }));
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'MetaLeft', key: 'Meta', bubbles: true }));
     });
-    const lastIntentNow = () => page.evaluate(() => { const i = window.__chordSent.filter(m => m.t === 'intent').at(-1)?.intent; return i ? Object.entries(i).filter(([, v]) => v).map(([k]) => k).join('+') || 'still' : 'none'; });
+    const lastIntentNow = () => page.evaluate(() => { const i = window.__wire.filter(m => m.t === 'intent').at(-1)?.intent; return i ? Object.entries(i).filter(([, v]) => v).map(([k]) => k).join('+') || 'still' : 'none'; });
     await page.keyboard.down('KeyD');
     await page.waitForTimeout(300);
     await metaTap(); // this browser runs on Linux: the Super key

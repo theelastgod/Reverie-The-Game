@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty-nine on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,21 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- Hygiene, round seventy (2026-10-18; two of Backlog 14's calls). The
+  page had two visibility listeners, the audio bus's (round sixty-one)
+  and the scene's wake (round sixty-two); `main.ts` now keeps the one:
+  hidden, the bus is silent; shown, or back on the network, a waiting
+  reconnect goes at once (`AudioBus.followVisibility` and the scene's
+  `onWake` are gone; bus.test.ts calls `setHidden` as main does). The
+  render check's desktop page had each step wrap
+  `WebSocket.prototype.send` again over the last; it now records every
+  sent message once (`window.__wire`, an init script) and each step
+  slices it from its own mark. No behaviour change. Verified:
+  typecheck, 887 tests, the build, the render check (the mouse, chord,
+  hidden-page, back and second-tab steps as before), the session smoke,
+  and the outage probe of round sixty-two (ONLINE 0.3 s after the
+  network returned) and the audio probe of round sixty-one (suspended
+  hidden, running shown) on a fresh local Worker.
 - A review of rounds sixty-one to sixty-eight, round sixty-nine
   (2026-10-18; the code-review skill at medium over 697bee6..fb6cddb,
   nine findings, each read against the code). Five fixed: Back with a
@@ -5163,10 +5178,8 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    fix would let a command take a walk position only where the layout
    puts no walk); PLAY HERE pressed back and forth in two tabs costs a
    join each time with no backoff (a person's pace, inside the join
-   budget); the page has two visibility listeners (the audio bus's and
-   the scene's wake) where one could serve both; the render check's
-   later steps wrap `WebSocket.prototype.send` again over the earlier
-   wrappers (one recorder sliced per step would do).
+   budget). The other two (two visibility listeners; the render check's
+   stacked send wrappers) were taken in round seventy.
 
 ## Rules
 
