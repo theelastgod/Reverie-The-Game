@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 887 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 891 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  seventy on 2026-10-18 (see Done). Since round forty-four a test holds
+  seventy-one on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,26 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round seventy-one (2026-10-18; a browser that
+  keeps no cookie: Safari's "block all cookies", strict privacy modes,
+  the city framed on another site). The city knows a body only by its
+  session cookie, so with none every socket is refused (403), and the
+  client retried forever under RECONNECTING with no word of why. Fixed:
+  `/session` now says whether its request carried a session already
+  (`X-Session: known` or `new`); a page told "new" twice after it was
+  handed one, or whose browser reports `navigator.cookieEnabled` false,
+  stands down with "THIS BROWSER KEEPS NO COOKIE · ALLOW THIS SITE'S
+  COOKIES AND RELOAD" (status `nocookie`, the closed chip's colours) and
+  reconnects no more. A cookie cleared once and kept again is no
+  refusal. Local storage was read too: only the audio settings use it,
+  already behind try/catch. Tests: session.test.ts (the header, both
+  ways) and worldSocket.test.ts (refused twice, cleared once, cookies
+  off; three cases). Proven in a browser on a local Worker whose
+  `/session` answers reach the page without their Set-Cookie: after 12 s
+  ed79a47's client still read RECONNECTING, this one the line above.
+  Verified: typecheck, 891 tests, the build, the session smoke, the
+  Movement I campaign smoke, the render check and the probe on a fresh
+  local Worker.
 - Hygiene, round seventy (2026-10-18; two of Backlog 14's calls). The
   page had two visibility listeners, the audio bus's (round sixty-one)
   and the scene's wake (round sixty-two); `main.ts` now keeps the one:

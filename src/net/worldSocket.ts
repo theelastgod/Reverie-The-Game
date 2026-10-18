@@ -8,7 +8,7 @@ import type { ClientMsg, FastFrame, Hello, ServerMsg, Snap, YouView } from "../s
 import type { Intent } from "../sim/types";
 import { applySlow, mergeFrames, type SlowState } from "../sim/frames";
 
-export type SocketStatus = "connecting" | "online" | "reconnecting" | "elsewhere" | "closed";
+export type SocketStatus = "connecting" | "online" | "reconnecting" | "elsewhere" | "nocookie" | "closed";
 
 export const INTENT_THROTTLE_MS = 250;
 export const RECONNECT_MIN_MS = 1000;
@@ -43,6 +43,10 @@ export class WorldSocket {
   private lastFast: FastFrame | null = null;
   private lastFrameAt = 0;
   private watchdog: ReturnType<typeof setInterval> | null = null;
+  /** The city has handed this page a session at least once. */
+  private minted = false;
+  /** /session answers in a row, after `minted`, that said the request carried no session: the browser kept none. */
+  private unknownStreak = 0;
 
   /** Monotonic counter bumped on every snapshot, so the scene can tell a new one apart. */
   get seq(): number {
@@ -55,11 +59,25 @@ export class WorldSocket {
 
   async connect(): Promise<void> {
     if (this.stopped || this.ws) return;
+    if (typeof navigator !== "undefined" && navigator.cookieEnabled === false) {
+      this.standDownNoCookie();
+      return;
+    }
     this.setStatus(this.attempts ? "reconnecting" : "connecting");
     try {
       const session = await fetch("/session", { method: "POST", credentials: "same-origin" });
       if (!session.ok) throw new Error("session unavailable");
       if (this.stopped || this.ws) return;
+      // Told "new" twice after a session was handed out: the browser is not keeping the cookie, and every socket will be
+      // refused. Say so and stop, rather than RECONNECTING forever (round seventy-one). Once is a cleared cookie.
+      const known = session.headers?.get?.("X-Session") !== "new";
+      if (known) this.unknownStreak = 0;
+      else if (this.minted) this.unknownStreak++;
+      this.minted = true;
+      if (this.unknownStreak >= 2) {
+        this.standDownNoCookie();
+        return;
+      }
       const proto = location.protocol === "https:" ? "wss" : "ws";
       const ws = new WebSocket(`${proto}://${location.host}/ws`);
       this.ws = ws;
@@ -141,6 +159,14 @@ export class WorldSocket {
     this.you = snap.you;
     this.snapSeq++;
     this.onSnap?.(snap);
+  }
+
+  /** No cookie, no body: the page stands down with the reason, and reconnects no more until it is reloaded. */
+  private standDownNoCookie(): void {
+    this.stopped = true;
+    if (this.retry) clearTimeout(this.retry);
+    this.retry = null;
+    this.setStatus("nocookie");
   }
 
   private scheduleReconnect(): void {

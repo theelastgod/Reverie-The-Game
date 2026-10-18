@@ -38,13 +38,13 @@ export type HudCallbacks = {
   market: (op: "list" | "buy" | "cancel", args: { itemId?: string; listingId?: string; price?: number }) => void;
 };
 
-export type HudStatus = "connecting" | "online" | "reconnecting" | "elsewhere" | "closed";
+export type HudStatus = "connecting" | "online" | "reconnecting" | "elsewhere" | "nocookie" | "closed";
 export type NoticeTone = Notice["tone"];
 
 const HEARD_MS = 6000;
 const WINK_MS = 8000;
 const FADE_MS = 900;
-const STATUSES: HudStatus[] = ["connecting", "online", "reconnecting", "elsewhere", "closed"];
+const STATUSES: HudStatus[] = ["connecting", "online", "reconnecting", "elsewhere", "nocookie", "closed"];
 
 type LocalNotice = { text: string; tone: NoticeTone; expires: number };
 

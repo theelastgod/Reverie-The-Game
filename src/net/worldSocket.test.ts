@@ -310,6 +310,55 @@ describe("taking the city back in a tab that stood down (the player-defect sweep
   });
 });
 
+describe("a browser that keeps no cookie (the player-defect sweep, round seventy-one)", () => {
+  const answer = (said: string) => ({ ok: true, headers: { get: (k: string) => (k === "X-Session" ? said : null) } });
+
+  it("stands down with the reason after two refusals of the cookie it was given, instead of reconnecting forever", async () => {
+    fetchMock.mockImplementation(async () => answer("new") as never);
+    const net = new WorldSocket();
+    const seen: string[] = [];
+    net.onStatus = s => seen.push(s);
+    await net.connect();
+    FakeSocket.instances[0].close(1006); // the city refuses a socket with no cookie
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(FakeSocket.instances).toHaveLength(2); // one "new" after the first: a cleared cookie, perhaps
+    FakeSocket.instances[1].close(1006);
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(net.status).toBe("nocookie");
+    expect(FakeSocket.instances).toHaveLength(2);
+    await vi.advanceTimersByTimeAsync(30000);
+    expect(FakeSocket.instances).toHaveLength(2);
+    expect(seen.at(-1)).toBe("nocookie");
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async () => ({ ok: true }) as never);
+  });
+
+  it("a cookie cleared once and kept again is no refusal", async () => {
+    const said = ["new", "new", "known", "new", "known"];
+    fetchMock.mockImplementation(async () => answer(said.shift() ?? "known") as never);
+    const net = new WorldSocket();
+    await net.connect();
+    for (let i = 0; i < 4; i++) {
+      FakeSocket.instances[FakeSocket.instances.length - 1].close(1006);
+      await vi.advanceTimersByTimeAsync(10000);
+    }
+    expect(net.status).not.toBe("nocookie");
+    expect(FakeSocket.instances).toHaveLength(5);
+    net.disconnect();
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async () => ({ ok: true }) as never);
+  });
+
+  it("says so at once when the browser reports its cookies off", async () => {
+    vi.stubGlobal("navigator", { cookieEnabled: false });
+    const net = new WorldSocket();
+    await net.connect();
+    expect(net.status).toBe("nocookie");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(FakeSocket.instances).toHaveLength(0);
+  });
+});
+
 describe("intent throttling", () => {
   it("sends unchanged intent at most every 250 ms, changed intent at once", async () => {
     const { net, ws } = await online();

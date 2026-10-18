@@ -378,6 +378,13 @@ describe("browser session boundary", () => {
     expect((await worker.fetch(bad, {} as never)).status).toBe(403);
     expect((await worker.fetch(new Request("https://game.example/session"), {} as never)).status).toBe(405);
   });
+  it("says whether the request carried a session already (round seventy-one)", async () => {
+    const fresh = await worker.fetch(new Request("https://game.example/session", { method: "POST", headers: { Origin: "https://game.example" } }), {} as never);
+    expect(fresh.headers.get("X-Session")).toBe("new");
+    const back = await worker.fetch(new Request("https://game.example/session", { method: "POST", headers: { Origin: "https://game.example", Cookie: `reverie_session=${token}` } }), {} as never);
+    expect(back.headers.get("X-Session")).toBe("known");
+    expect(back.headers.get("Set-Cookie")).toContain(token);
+  });
   it("only accepts opaque session tokens, never public player ids", () => {
     expect(sessionToken(new Request("https://game.example", { headers: { Cookie: `other=x; reverie_session=${token}` } }))).toBe(token);
     expect(sessionToken(new Request("https://game.example", { headers: { Cookie: "reverie_session=player-a" } }))).toBeNull();

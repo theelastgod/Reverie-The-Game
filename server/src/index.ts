@@ -928,9 +928,13 @@ export default {
     if (url.pathname === "/session") {
       if (req.method !== "POST") return new Response("POST required", { status: 405 });
       if (!sameOrigin(req)) return new Response("Same origin required", { status: 403 });
-      const token = sessionToken(req) ?? crypto.randomUUID();
+      const known = sessionToken(req);
+      const token = known ?? crypto.randomUUID();
       return new Response(null, { status: 204, headers: {
         "Cache-Control": "no-store",
+        // Whether this request carried a session already: a client told "new" again after it was given one has a browser
+        // that keeps no cookie, and can say so instead of reconnecting forever (the player-defect sweep, round seventy-one).
+        "X-Session": known ? "known" : "new",
         "Set-Cookie": `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000${url.protocol === "https:" ? "; Secure" : ""}`,
       } });
     }
