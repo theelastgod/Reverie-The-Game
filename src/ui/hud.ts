@@ -382,7 +382,8 @@ export class Hud {
   closeTop(): boolean {
     const dialogue = this.last?.you?.dialogue;
     const journal = !!this.root.querySelector("#hud-journal.open");
-    const shut = backCloses({ dialogue: !!dialogue, ledger: this.ledger.isOpen(), journal });
+    // a dialogue close goes out only online; offline, Back must not be held on a close that never leaves (round sixty-nine)
+    const shut = backCloses({ dialogue: !!dialogue && this.status === "online", ledger: this.ledger.isOpen(), journal });
     if (shut === "dialogue") this.cb.close(dialogue?.node);
     else if (shut === "ledger") this.toggleLedger();
     else if (shut === "journal") this.toggleJournal();

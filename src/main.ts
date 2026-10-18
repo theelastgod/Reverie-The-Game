@@ -66,11 +66,26 @@ let starting = false;
  * history entry of our own, and each Back that closes a panel lays it down again. With nothing open, Back goes on.
  */
 function armBack(): void {
+  let armed = true;
   history.pushState({ city: true }, "");
   window.addEventListener("popstate", () => {
-    if (hud.closeTop()) history.pushState({ city: true }, "");
-    else history.back();
+    if (hud.closeTop()) {
+      history.pushState({ city: true }, "");
+      return;
+    }
+    // Nothing open: Back goes on. Where the city is the tab's first page there is nowhere to go and the browser stays,
+    // so the entry is laid down again at the next touch or key (round sixty-nine), or a later Back on a panel would
+    // close the tab instead of the panel.
+    armed = false;
+    history.back();
   });
+  const rearm = () => {
+    if (armed) return;
+    armed = true;
+    history.pushState({ city: true }, "");
+  };
+  window.addEventListener("pointerdown", rearm, true);
+  window.addEventListener("keydown", rearm, true);
 }
 
 function start(): void {

@@ -86,7 +86,10 @@ export class AudioBus {
     const ctx = this.ctx;
     if (!ctx) return;
     if (hidden) {
-      if (ctx.state !== "running") return;
+      // Suspended too when not yet running: unlock()'s resume may still be pending (a tab switched right after ENTER)
+      // or the system may hold it ("interrupted" on iOS) and start it later; either would play on in a hidden tab
+      // (round sixty-nine). Only a closed context is left alone.
+      if (ctx.state === "closed" || this.hiddenPaused) return;
       this.hiddenPaused = true;
       void ctx.suspend().catch(() => undefined);
     } else if (this.hiddenPaused) {

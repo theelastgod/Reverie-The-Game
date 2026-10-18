@@ -49,15 +49,28 @@ describe("the audio bus and a hidden page (the player-defect sweep, round sixty-
     expect(ctx()).toBeNull();
   });
 
-  it("does not resume a context it did not suspend", () => {
+  it("suspends a context not yet running (the unlock's resume still pending) and resumes it on return (round sixty-nine)", () => {
     const { bus, show, ctx } = rig();
     bus.unlock();
     const c = ctx()!;
-    c.state = "suspended"; // the browser's own suspension, before the page was hidden
+    c.state = "suspended"; // ENTER's resume not yet resolved when the tab is switched away
     show("hidden");
+    expect(c.suspends).toBe(1);
     show("visible");
-    expect(c.suspends).toBe(0);
-    expect(c.resumes).toBe(1); // the unlock's only
-    expect(c.state).toBe("suspended");
+    expect(c.resumes).toBe(2);
+    expect(c.state).toBe("running");
+  });
+
+  it("leaves a closed context alone and suspends once for repeated hides", () => {
+    const { bus, show, ctx } = rig();
+    bus.unlock();
+    const c = ctx()!;
+    show("hidden");
+    show("hidden");
+    expect(c.suspends).toBe(1);
+    show("visible");
+    c.state = "closed";
+    show("hidden");
+    expect(c.suspends).toBe(1);
   });
 });

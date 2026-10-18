@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PAPER_INSURANCE, PAPER_REPAIR, UNHEARD_GAP_MS, COMMAND_LETTERS, backCloses, browserOwns, commandCode, escapeDoes, focusAfterClose, hudControlFocused, isBrowserChord, paperToUse, pointerReleasesFocus, releasesHeld, tellUnheard } from "./keys";
+import { PAPER_INSURANCE, PAPER_REPAIR, UNHEARD_GAP_MS, COMMAND_LETTERS, backCloses, browserOwns, commandCode, escapeDoes, focusAfterClose, hudControlFocused, isBrowserChord, onMac, paperToUse, pointerReleasesFocus, releasesHeld, tellUnheard } from "./keys";
 import { ITEM_INSURANCE, ITEM_REPAIR } from "../sim/economy";
 
 /** A fake element: what it matches, whom it contains, and whether it is still in the document. */
@@ -42,9 +42,22 @@ describe("chords with Ctrl, Cmd or Alt (the player-defect sweep, round sixty-fiv
     expect(isBrowserChord({ ctrlKey: false, metaKey: false, altKey: true })).toBe(true);
     expect(isBrowserChord({ ctrlKey: false, metaKey: false, altKey: false })).toBe(false);
   });
-  it("letting go of Cmd drops the held directions (macOS sends no keyup for a key held with it); other keys do not", () => {
-    for (const code of ["MetaLeft", "MetaRight"]) expect(releasesHeld(code)).toBe(true);
-    for (const code of ["ControlLeft", "AltLeft", "ShiftLeft", "KeyW", "ArrowUp", "Tab"]) expect(releasesHeld(code)).toBe(false);
+  it("letting go of Cmd on macOS drops the held directions (macOS sends no keyup for a key held with it); other keys do not", () => {
+    for (const code of ["MetaLeft", "MetaRight"]) expect(releasesHeld(code, true)).toBe(true);
+    for (const code of ["ControlLeft", "AltLeft", "ShiftLeft", "KeyW", "ArrowUp", "Tab"]) expect(releasesHeld(code, true)).toBe(false);
+  });
+  it("elsewhere the Windows or Super key is let go without stopping a held walk (round sixty-nine)", () => {
+    for (const code of ["MetaLeft", "MetaRight"]) expect(releasesHeld(code, false)).toBe(false);
+    expect(onMac({ platform: "MacIntel" })).toBe(true);
+    expect(onMac({ platform: "", userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)" })).toBe(true);
+    expect(onMac({ platform: "Win32" })).toBe(false);
+    expect(onMac({ platform: "Linux x86_64" })).toBe(false);
+  });
+  it("AltGr (Ctrl and Alt together) is typing, not a chord, and Escape is always the game's (round sixty-nine)", () => {
+    expect(isBrowserChord({ ctrlKey: true, metaKey: false, altKey: true })).toBe(false);
+    expect(isBrowserChord({ ctrlKey: false, metaKey: false, altKey: true, code: "Escape" })).toBe(false);
+    expect(isBrowserChord({ ctrlKey: true, metaKey: false, altKey: false, code: "Escape" })).toBe(false);
+    expect(isBrowserChord({ ctrlKey: true, metaKey: false, altKey: false, code: "KeyL" })).toBe(true);
   });
 });
 

@@ -772,18 +772,27 @@ try {
     const after = await panels();
     const chordWalk = await page.evaluate(n => window.__chordSent.slice(n).filter(m => m.t === 'intent' && m.intent.down).length, mark);
     const taken = await page.evaluate(() => [...window.__chordTaken]);
-    // Cmd held, D pressed under it, Cmd let go with D's keyup never sent (as macOS does): the last intent must be still.
-    await page.keyboard.down('KeyD');
-    await page.waitForTimeout(300);
-    await page.evaluate(() => {
+    // On macOS: Cmd held, D pressed under it, Cmd let go with D's keyup never sent (as macOS does): the last intent must be
+    // still. Elsewhere (round sixty-nine) the Windows or Super key's release must not stop a walk still held.
+    const metaTap = () => page.evaluate(() => {
       window.dispatchEvent(new KeyboardEvent('keydown', { code: 'MetaLeft', key: 'Meta', metaKey: true, bubbles: true }));
       window.dispatchEvent(new KeyboardEvent('keyup', { code: 'MetaLeft', key: 'Meta', bubbles: true }));
     });
+    const lastIntentNow = () => page.evaluate(() => { const i = window.__chordSent.filter(m => m.t === 'intent').at(-1)?.intent; return i ? Object.entries(i).filter(([, v]) => v).map(([k]) => k).join('+') || 'still' : 'none'; });
+    await page.keyboard.down('KeyD');
+    await page.waitForTimeout(300);
+    await metaTap(); // this browser runs on Linux: the Super key
     await page.waitForTimeout(500);
-    const lastIntent = await page.evaluate(() => { const i = window.__chordSent.filter(m => m.t === 'intent').at(-1)?.intent; return i ? Object.entries(i).filter(([, v]) => v).map(([k]) => k).join('+') || 'still' : 'none'; });
+    const superIntent = await lastIntentNow();
+    await page.evaluate(() => Object.defineProperty(navigator, 'platform', { configurable: true, get: () => 'MacIntel' }));
+    await metaTap();
+    await page.waitForTimeout(500);
+    const lastIntent = await lastIntentNow();
+    await page.evaluate(() => { delete navigator.platform; });
     await page.keyboard.up('KeyD');
+    if (superIntent !== 'right') failures.push(`letting go of the Super key stopped a walk still held (${superIntent})`);
     const toggled = Object.keys(before).filter(k => before[k] !== after[k]);
-    console.log(`chords: Ctrl+L/J/M toggled [${toggled}], defaults taken [${taken}], Ctrl+S walked ${chordWalk}; Cmd let go over a held D → last intent ${lastIntent}`);
+    console.log(`chords: Ctrl+L/J/M toggled [${toggled}], defaults taken [${taken}], Ctrl+S walked ${chordWalk}; Super let go over a held D → ${superIntent}; Cmd (macOS) let go over it → last intent ${lastIntent}`);
     if (toggled.length) failures.push(`a Ctrl chord toggled the HUD's ${toggled.join(', ')}`);
     if (taken.length) failures.push(`the game took the browser's default for ${taken.join(', ')}`);
     if (chordWalk) failures.push('Ctrl+S walked the body');

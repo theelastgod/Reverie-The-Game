@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 884 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 887 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty-eight on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty-nine on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,30 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- A review of rounds sixty-one to sixty-eight, round sixty-nine
+  (2026-10-18; the code-review skill at medium over 697bee6..fb6cddb,
+  nine findings, each read against the code). Five fixed: Back with a
+  dialogue open while the socket was down counted the dialogue as
+  closed though no close could go out, so Back stayed in the page for
+  good (now a dialogue counts only online); where the city is the tab's
+  first page, a Back with nothing open used up the history entry, so a
+  later Back on a panel closed the tab (the entry is laid down again at
+  the next touch or key); the audio bus skipped a context not yet
+  running when the page hid, so ENTER's resume still pending (or iOS's
+  "interrupted") could start the music in a hidden tab (it is suspended
+  whatever its state but closed, once); letting go of Meta stopped a
+  held walk everywhere, though only macOS strands keyups under Cmd (now
+  macOS only, read at the keyup; on Windows and Linux it is the Windows
+  or Super key); and AltGr (Ctrl and Alt together, third-level typing)
+  and Escape under any modifier were dropped as browser chords (AltGr
+  is no chord now, and Escape is always the game's). Four noted in
+  Backlog 14. keys.test.ts and bus.test.ts hold the fixes (six new
+  cases); the render check's chord step now also lets go of the Super
+  key over a held D (the walk goes on) before the macOS Cmd case (it
+  stops). Verified: typecheck, 887 tests, the build, the render check
+  (every step) and the session smoke on a fresh local Worker. The Super
+  key's line was not run against fb6cddb's client; there any Meta
+  release cleared the held keys, so it would read still.
 - The player-defect sweep, round sixty-eight (2026-10-18; Back). The
   city kept no history entry of its own, so the phone's Back (the
   gesture on Android, the browser's button anywhere), which players use
@@ -5133,6 +5157,16 @@ A. **The rebuild around `SYNOPSIS.md`** (the owner's brief of 2026-10-02:
    a deeper pink such as `#d6004a` for both fills and text (5.3:1), or the
    button text at 19px bold, where 3:1 is enough. The game itself (title,
    HUD, panels, credits) is at AA and the render check keeps it there.
+14. **Small calls left by round sixty-nine's review** (none blocks play):
+   on Dvorak the letter O sits on a walk key and its QWERTY position
+   carries R, so mute has no key there (the audio chip still mutes; a
+   fix would let a command take a walk position only where the layout
+   puts no walk); PLAY HERE pressed back and forth in two tabs costs a
+   join each time with no backoff (a person's pace, inside the join
+   budget); the page has two visibility listeners (the audio bus's and
+   the scene's wake) where one could serve both; the render check's
+   later steps wrap `WebSocket.prototype.send` again over the earlier
+   wrappers (one recorder sliced per step would do).
 
 ## Rules
 

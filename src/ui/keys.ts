@@ -38,8 +38,11 @@ export function browserOwns(code: string, shiftKey: boolean, focused: boolean): 
  * never a game key: the game neither acts on it nor takes it from the browser (the player-defect sweep, round
  * sixty-five). Shift stays the game's (the dodge, the heavy).
  */
-export function isBrowserChord(e: { ctrlKey: boolean; metaKey: boolean; altKey: boolean }): boolean {
-  return e.ctrlKey || e.metaKey || e.altKey;
+export function isBrowserChord(e: { ctrlKey: boolean; metaKey: boolean; altKey: boolean; code?: string }): boolean {
+  // Escape is always the game's: it closes the dialogue and hands the keys back, whatever is held (round sixty-nine).
+  if (e.code === "Escape") return false;
+  // AltGr (a third-level key on many layouts) reports Ctrl and Alt together: that is typing, not a shortcut.
+  return e.metaKey || e.ctrlKey !== e.altKey;
 }
 
 /**
@@ -47,8 +50,15 @@ export function isBrowserChord(e: { ctrlKey: boolean; metaKey: boolean; altKey: 
  * walk it started would never end. Letting go of Cmd drops every held direction. Ctrl and Alt deliver their keyups,
  * so letting go of them leaves a walk the player is still holding alone.
  */
-export function releasesHeld(code: string): boolean {
-  return code === "MetaLeft" || code === "MetaRight";
+export function releasesHeld(code: string, mac: boolean): boolean {
+  // Only macOS strands keyups under Cmd; elsewhere Meta is the Windows or Super key, whose release must not stop a walk
+  // still held (round sixty-nine).
+  return mac && (code === "MetaLeft" || code === "MetaRight");
+}
+
+/** Whether this browser runs on macOS, where Cmd swallows keyups. */
+export function onMac(nav: { platform?: string; userAgent?: string } | undefined = typeof navigator !== "undefined" ? navigator : undefined): boolean {
+  return /Mac|iPhone|iPad|iPod/i.test(nav?.platform || nav?.userAgent || "");
 }
 
 /** The letters the game names its commands by (R heavy, K kit, F/E/Q the place's verbs, V flag, T truce, I paper,

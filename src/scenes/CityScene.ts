@@ -17,7 +17,7 @@ import { VOLUME_STEP } from "../audio/settings";
 import { rebased, riteHeard } from "../audio/cues";
 import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
-import { UNHEARD_LINE, browserOwns, commandCode, escapeDoes, hudControlFocused, isBrowserChord, paperToUse, releasesHeld, tellUnheard } from "../ui/keys";
+import { UNHEARD_LINE, browserOwns, commandCode, escapeDoes, hudControlFocused, isBrowserChord, onMac, paperToUse, releasesHeld, tellUnheard } from "../ui/keys";
 import { MAX_HP } from "../sim/constants";
 import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, mouseStrike, secondFinger, stickIntent } from "../ui/stick";
 
@@ -310,7 +310,7 @@ export class CityScene extends Phaser.Scene {
   }
 
   private keyUp(e: KeyboardEvent): void {
-    if (releasesHeld(e.code)) {
+    if (releasesHeld(e.code, onMac())) {
       // a direction held through a Cmd chord may never send its keyup (macOS): the walk ends with the chord
       this.held.clear();
       this.sendIntent();
