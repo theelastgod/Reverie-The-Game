@@ -80,6 +80,8 @@ function start(): void {
       roundPixels: true,
       scale: { mode: Phaser.Scale.RESIZE, width: "100%", height: "100%", autoCenter: Phaser.Scale.NO_CENTER },
       input: { keyboard: false, mouse: true, touch: true },
+      // The canvas's right-click opens no menu over the city (round sixty-four); the HUD's own controls keep theirs.
+      disableContextMenu: true,
       // Every sound goes through the audio bus; Phaser's own manager would open a second context that plays nothing.
       audio: { noAudio: true },
       scene: [BootScene, CityScene],

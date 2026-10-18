@@ -51,6 +51,16 @@ export function secondFinger(heldMs: number, maxMs = HEAVY_MS): "strike" | "heav
   return heldMs < maxMs ? "strike" : "heavy";
 }
 
+/**
+ * What a mouse press on the canvas does: the primary button strikes, light or (with Shift) heavy; any other button
+ * (the menu's, the wheel's, a side button) does nothing, so a right-click to look at something does not swing
+ * (the player-defect sweep, round sixty-four).
+ */
+export function mouseStrike(button: number, shift: boolean): "strike" | "heavy" | null {
+  if (button !== 0) return null;
+  return shift ? "heavy" : "strike";
+}
+
 /** The dodge direction: the way the intent points, else the way the body faces; null when neither points anywhere. */
 export function dodgeDirection(intent: Intent, facing: { dx: number; dy: number }): { dx: number; dy: number } | null {
   const dx = (intent.right ? 1 : 0) - (intent.left ? 1 : 0);

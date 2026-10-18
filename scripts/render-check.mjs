@@ -714,6 +714,36 @@ try {
   if (canvases === 0) failures.push('no canvas rendered');
   if (fps < MIN_FPS) failures.push(`fps ${fps.toFixed(1)} < ${MIN_FPS}`);
 
+  // The mouse's other buttons (round sixty-four): a right-click on the canvas opens no menu over the city and sends
+  // nothing, nor does the wheel's button; the primary button still strikes.
+  {
+    await page.evaluate(() => {
+      window.__mouseSent = [];
+      window.__menus = [];
+      const send = WebSocket.prototype.send;
+      WebSocket.prototype.send = function (data) {
+        try { const t = JSON.parse(String(data)).t; if (t !== 'intent') window.__mouseSent.push(t); } catch { /* not ours */ }
+        return send.call(this, data);
+      };
+      window.addEventListener('contextmenu', e => window.__menus.push(e.defaultPrevented ? 'kept shut' : 'opened'));
+    });
+    const box = await page.locator('canvas').first().boundingBox();
+    const x = box.x + box.width * 0.62, y = box.y + box.height * 0.4;
+    await page.waitForTimeout(700); // past the strike's cooldown from the steps before
+    await page.mouse.click(x, y, { button: 'right' });
+    await page.mouse.click(x, y, { button: 'middle' });
+    await page.waitForTimeout(400);
+    const other = await page.evaluate(() => ({ sent: [...window.__mouseSent], menus: [...window.__menus] }));
+    await page.waitForTimeout(400);
+    await page.mouse.click(x, y);
+    await page.waitForTimeout(400);
+    const primary = await page.evaluate(n => window.__mouseSent.slice(n), other.sent.length);
+    console.log(`mouse: right and middle → sent [${other.sent}], menu ${other.menus.join(', ') || 'not asked'}; left → sent [${primary}]`);
+    if (other.sent.length) failures.push(`a right or middle click on the canvas sent [${other.sent}]`);
+    if (other.menus.includes('opened')) failures.push('a right-click on the canvas opened the browser menu over the city');
+    if (primary.join() !== 'strike') failures.push(`a left click on the canvas sent [${primary}], not one strike`);
+  }
+
   // A second tab with the same cookie (round sixty-three): the city takes the newest, so this tab stands down with
   // "OPEN IN ANOTHER TAB" and a PLAY HERE button; pressing it takes the city back here and the second tab stands down.
   {

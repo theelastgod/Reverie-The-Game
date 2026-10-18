@@ -8,7 +8,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
 
 - **Built and verified on this branch:** the whole campaign (four movements,
   nineteen decisions, about 59 minutes on the spine; see Length below) plays
-  over the wire on a fresh world; 872 tests (2026-10-18), the session smoke, the campaign smoke and the
+  over the wire on a fresh world; 874 tests (2026-10-18), the session smoke, the campaign smoke and the
   Playwright render check (desktop and phone, through a real dialogue
   with Nara Vale, a node, and the phone's touch stick with its strike and
   heavy) pass; the Worker bundles
@@ -37,7 +37,7 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   wallet as the login, a fifth (2026-10-05) sixteen, a sixth (2026-10-05)
   twenty-three, among them two PvP exploits, and a seventh (2026-10-05)
   fourteen; the sweeps have run every round since, through round
-  sixty-three on 2026-10-18 (see Done). Since round forty-four a test holds
+  sixty-four on 2026-10-18 (see Done). Since round forty-four a test holds
   the Worker's entry module to what workerd loads (functions and classes
   only), and since round forty-six the render check's contrast audit
   judges settled frames.
@@ -3002,6 +3002,19 @@ brief is `PROMPT.md`. This document replaces the stage log of the prototype.
   never back, no guest under, in a gated district, with a claim, a flag,
   a Wink or a listing, every bearing resolved and walkable, every
   offered verb doing something or saying why, every earner with a sink.
+- The player-defect sweep, round sixty-four (2026-10-18; the mouse's
+  other buttons). Every mouse button on the canvas struck: a right-click
+  (to look at something, or by habit) swung and opened the browser's
+  menu over the city, and the wheel's button swung too. Fixed: only the
+  primary button strikes (`mouseStrike` in `src/ui/stick.ts`, Shift for
+  the heavy as before), and the game config sets `disableContextMenu`,
+  so the canvas opens no menu; the HUD's own controls keep theirs.
+  `stick.test.ts` holds the helper; a new render-check step right- and
+  middle-clicks the canvas (nothing sent, the menu kept shut) and
+  left-clicks it (one strike). Proven: on 34a572c's client the step fails
+  (right and middle sent [strike,strike], the menu opened). Verified:
+  typecheck, 874 tests, the build, the render check and the session
+  smoke on a fresh local Worker.
 - The player-defect sweep, round sixty-three (2026-10-18; two tabs). A
   second tab on the same cookie takes the city and the first stands down
   with "OPEN IN ANOTHER TAB · THIS ONE IS IDLE", which was a dead end: no

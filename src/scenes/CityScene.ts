@@ -19,7 +19,7 @@ import { loopFor, passingLoopFor } from "../assets/slots";
 import { overlayLoop } from "../ui/loops";
 import { UNHEARD_LINE, browserOwns, escapeDoes, hudControlFocused, paperToUse, tellUnheard } from "../ui/keys";
 import { MAX_HP } from "../sim/constants";
-import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, secondFinger, stickIntent } from "../ui/stick";
+import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, mouseStrike, secondFinger, stickIntent } from "../ui/stick";
 
 const IDLE: Intent = { up: false, down: false, left: false, right: false };
 const MOVE_KEYS: Record<string, keyof Intent> = {
@@ -324,7 +324,8 @@ export class CityScene extends Phaser.Scene {
       return;
     }
     const ev = p.event as MouseEvent | undefined;
-    this.strike(!!ev && ev.shiftKey);
+    const does = mouseStrike(ev?.button ?? 0, !!ev && ev.shiftKey);
+    if (does) this.strike(does === "heavy");
   }
 
   // ------------------------------------------------------------ the touch stick

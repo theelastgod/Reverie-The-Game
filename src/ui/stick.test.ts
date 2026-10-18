@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, secondFinger, stickIntent } from "./stick";
+import { HEAVY_MS, STILL, dodgeDirection, isTap, knobOffset, mergeIntent, mouseStrike, secondFinger, stickIntent } from "./stick";
+
+describe("a mouse press on the canvas (the player-defect sweep, round sixty-four)", () => {
+  it("the primary button strikes, heavy with Shift", () => {
+    expect(mouseStrike(0, false)).toBe("strike");
+    expect(mouseStrike(0, true)).toBe("heavy");
+  });
+  it("the wheel, the menu's button and the side buttons do nothing", () => {
+    for (const b of [1, 2, 3, 4]) {
+      expect(mouseStrike(b, false)).toBeNull();
+      expect(mouseStrike(b, true)).toBeNull();
+    }
+  });
+});
 
 const only = (...on: (keyof typeof STILL)[]) => ({ ...STILL, ...Object.fromEntries(on.map(k => [k, true])) });
 
